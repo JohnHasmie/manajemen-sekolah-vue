@@ -1701,7 +1701,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         _filteredSiswaList = _siswaList
             .where(
               (siswa) =>
-                  siswa.nama.toLowerCase().contains(query) ||
+                  siswa.name.toLowerCase().contains(query) ||
                   siswa.nis.toLowerCase().contains(query),
             )
             .toList();
@@ -2336,7 +2336,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    siswa.nama,
+                                    siswa.name,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -2803,7 +2803,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            siswa.nama,
+                            siswa.name,
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 12,
@@ -3401,7 +3401,7 @@ class GradeInputFormState extends State<GradeInputForm> {
                             Icon(Icons.person, color: _getPrimaryColor()),
                             SizedBox(width: 8),
                             Text(
-                              '${languageProvider.getTranslatedText({'en': 'Student', 'id': 'Siswa'})}: ${widget.siswa.nama}',
+                              '${languageProvider.getTranslatedText({'en': 'Student', 'id': 'Siswa'})}: ${widget.siswa.name}',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: _getPrimaryColor(),
@@ -3913,7 +3913,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              siswa.nama,
+                              siswa.name,
                               style: TextStyle(fontWeight: FontWeight.w500),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

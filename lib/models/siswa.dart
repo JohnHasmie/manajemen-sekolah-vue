@@ -1,7 +1,7 @@
 class Siswa {
   final String id;
-  final String nama;
-  final String kelas;
+  final String name;
+  final String className;
   final String nis;
   final String alamat;
   final String nameParent;
@@ -10,8 +10,8 @@ class Siswa {
 
   Siswa({
     required this.id,
-    required this.nama,
-    required this.kelas,
+    required this.name,
+    required this.className,
     required this.nis,
     required this.alamat,
     required this.nameParent,
@@ -22,8 +22,8 @@ class Siswa {
   factory Siswa.fromJson(Map<String, dynamic> json) {
     return Siswa(
       id: json['id'].toString(),
-      nama: json['name'] ?? '',
-      kelas: json['kelas_nama'] ?? '',
+      name: json['name'] ?? '',
+      className: json['kelas_nama'] ?? '',
       nis: json['student_number'] ?? '',
       alamat: json['address'] ?? '',
       nameParent: json['guardian_name'] ?? '',

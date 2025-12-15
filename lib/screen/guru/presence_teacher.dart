@@ -324,7 +324,7 @@ class PresencePageState extends State<PresencePage>
 
     try {
       final absensiData = await ApiService.getAbsensi(
-        guruId: widget.guru['id'],
+        teacherId: widget.guru['id'],
       );
 
       final Map<String, AbsensiSummary> summaryMap = {};
@@ -954,7 +954,7 @@ class PresencePageState extends State<PresencePage>
         // Search filter
         final matchesSearch =
             searchTerm.isEmpty ||
-            siswa.nama.toLowerCase().contains(searchTerm) ||
+            siswa.name.toLowerCase().contains(searchTerm) ||
             siswa.nis.toLowerCase().contains(searchTerm);
 
         // Status filter
@@ -2308,9 +2308,9 @@ class PresencePageState extends State<PresencePage>
   Widget _buildStudentItem(Siswa siswa, LanguageProvider languageProvider) {
     final status = _absensiStatus[siswa.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
-    final Color avatarColor = _getAvatarColor(siswa.nama);
-    final String initial = siswa.nama.isNotEmpty
-        ? siswa.nama[0].toUpperCase()
+    final Color avatarColor = _getAvatarColor(siswa.name);
+    final String initial = siswa.name.isNotEmpty
+        ? siswa.name[0].toUpperCase()
         : '?';
 
     // Warna background berdasarkan status
@@ -2385,7 +2385,7 @@ class PresencePageState extends State<PresencePage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      siswa.nama,
+                      siswa.name,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -2595,7 +2595,7 @@ class PresencePageState extends State<PresencePage>
           await Future.delayed(const Duration(milliseconds: 50));
         } catch (e) {
           errorCount++;
-          errorMessages.add('${siswa.nama}: $e');
+          errorMessages.add('${siswa.name}: $e');
         }
       }
 
@@ -2964,7 +2964,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       final [siswaData, absensiData, kelasData] = await Future.wait([
         ApiStudentService.getStudent(),
         ApiService.getAbsensi(
-          guruId: widget.guru['id'],
+          teacherId: widget.guru['id'],
           mataPelajaranId: widget.mataPelajaranId,
           tanggal: DateFormat('yyyy-MM-dd').format(widget.tanggal),
         ),
@@ -3037,12 +3037,12 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: _getAvatarColor(siswa.nama),
+              color: _getAvatarColor(siswa.name),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
-                siswa.nama.isNotEmpty ? siswa.nama[0].toUpperCase() : '?',
+                siswa.name.isNotEmpty ? siswa.name[0].toUpperCase() : '?',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -3058,7 +3058,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  siswa.nama,
+                  siswa.name,
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 Text(
@@ -3550,7 +3550,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
       final absensiData = await ApiService.getAbsensi(
         mataPelajaranId: widget.mataPelajaranId,
         tanggal: DateFormat('yyyy-MM-dd').format(widget.tanggal),
-        guruId: widget.guru['id'],
+        teacherId: widget.guru['id'],
       );
 
       // 2. Load students by class ID
@@ -3668,7 +3668,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
             successCount++;
           } catch (e) {
             errorCount++;
-            print('Error updating attendance for ${siswa.nama}: $e');
+            print('Error updating attendance for ${siswa.name}: $e');
           }
         }
       }
@@ -3821,8 +3821,8 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                           ),
                           child: Center(
                             child: Text(
-                              siswa.nama.isNotEmpty
-                                  ? siswa.nama[0].toUpperCase()
+                              siswa.name.isNotEmpty
+                                  ? siswa.name[0].toUpperCase()
                                   : '?',
                               style: TextStyle(
                                 color: _getPrimaryColor(),
@@ -3840,7 +3840,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                siswa.nama,
+                                siswa.name,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

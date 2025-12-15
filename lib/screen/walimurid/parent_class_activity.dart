@@ -1,6 +1,7 @@
 // parent_class_activity.dart
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
@@ -49,7 +50,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       await _loadStudentsForParent();
     } catch (e) {
       setState(() => _isLoading = false);
-      print('Error load user data: $e');
+      if (kDebugMode) {
+        print('Error load user data: $e');
+      }
     }
   }
 
@@ -75,7 +78,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                 student['id'] == userData['siswa_id']);
       }).toList();
 
-      print('DEBUG: User Data: $userData');
+      if (kDebugMode) {
+        print('DEBUG: User Data: $userData');
+      }
 
       setState(() {
         _studentList = filteredStudents;
@@ -92,7 +97,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      print('Error load students for parent: $e');
+      if (kDebugMode) {
+        print('Error load students for parent: $e');
+      }
     }
   }
 
@@ -125,7 +132,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      print('Error load activities: $e');
+      if (kDebugMode) {
+        print('Error load activities: $e');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal memuat aktivitas: $e'),

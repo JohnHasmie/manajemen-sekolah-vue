@@ -1603,8 +1603,8 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                           ),
                           child: Center(
                             child: Text(
-                              siswa.nama.isNotEmpty
-                                  ? siswa.nama[0].toUpperCase()
+                              siswa.name.isNotEmpty
+                                  ? siswa.name[0].toUpperCase()
                                   : '?',
                               style: TextStyle(
                                 color: _getPrimaryColor(),
@@ -1622,7 +1622,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                siswa.nama,
+                                siswa.name,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

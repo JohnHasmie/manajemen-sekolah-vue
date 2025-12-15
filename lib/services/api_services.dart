@@ -668,17 +668,17 @@ class ApiService {
 
   // Absensi
   static Future<List<dynamic>> getAbsensi({
-    String? guruId,
+    String? teacherId,
     String? tanggal,
     String? mataPelajaranId,
-    String? siswaId,
+    String? studentId,
     String? classId,
   }) async {
     String url = '$baseUrl/attendance?';
-    if (guruId != null) url += 'teacher_id=$guruId&';
+    if (teacherId != null) url += 'teacher_id=$teacherId&';
     if (tanggal != null) url += 'date=$tanggal&';
     if (mataPelajaranId != null) url += 'subject_id=$mataPelajaranId&';
-    if (siswaId != null) url += 'student_id=$siswaId&';
+    if (studentId != null) url += 'student_id=$studentId&';
     if (classId != null) url += 'class_id=$classId&';
 
     if (kDebugMode) {

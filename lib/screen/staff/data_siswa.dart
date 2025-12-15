@@ -16,13 +16,13 @@ class DataSiswaScreen extends StatelessWidget {
           return Card(
             margin: EdgeInsets.all(8),
             child: ListTile(
-              leading: CircleAvatar(child: Text(siswa.nama[0])),
-              title: Text(siswa.nama),
+              leading: CircleAvatar(child: Text(siswa.name[0])),
+              title: Text(siswa.name),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('NIS: ${siswa.nis}'),
-                  Text('Kelas: ${siswa.kelas}'),
+                  Text('Kelas: ${siswa.className}'),
                   Text('Wali: ${siswa.nameParent}'),
                   Text('Alamat: ${siswa.alamat}'),
                 ],
@@ -42,13 +42,13 @@ class DataSiswaScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Detail ${siswa.nama}'),
+        title: Text('Detail ${siswa.name}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('NIS: ${siswa.nis}'),
-            Text('Kelas: ${siswa.kelas}'),
+            Text('Kelas: ${siswa.className}'),
             Text('Alamat: ${siswa.alamat}'),
             Text('Nama Wali: ${siswa.nameParent}'),
             Text('No. Telepon: ${siswa.noTelepon}'),

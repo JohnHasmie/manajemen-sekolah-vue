@@ -3,8 +3,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
@@ -23,7 +25,7 @@ class ParentBillingScreen extends StatefulWidget {
 class ParentBillingScreenState extends State<ParentBillingScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
-  List<dynamic> _tagihanList = [];
+  List<dynamic> _billingList = [];
   bool _isLoading = true;
   String _errorMessage = '';
 
@@ -38,6 +40,22 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
   // Search and Enhanced Filters
   final TextEditingController _searchController = TextEditingController();
+
+  String _formatCurrency(dynamic amount) {
+    if (amount == null) return 'Rp 0';
+    try {
+      double value = double.parse(amount.toString());
+      final formatter = NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: 'Rp ',
+        decimalDigits: 0,
+      );
+      return formatter.format(value);
+    } catch (e) {
+      return 'Rp $amount';
+    }
+  }
+
   String? _selectedStatusFilter; // 'unpaid', 'pending', 'verified'
   String? _selectedPeriodeFilter; // 'bulanan', 'tahunan'
   bool _hasActiveFilter = false;
@@ -111,10 +129,12 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     try {
       final response = await _apiService.get('/bill/parent');
       setState(() {
-        _tagihanList = response is List ? response : [];
+        _billingList = response is List ? response : [];
       });
     } catch (error) {
-      print('Error loading tagihan: $error');
+      if (kDebugMode) {
+        print('Error loading tagihan: $error');
+      }
     }
   }
 
@@ -153,7 +173,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
         _isLoadingMore = false;
       });
     } catch (e) {
-      print('Error loading more tagihan: $e');
+      if (kDebugMode) {
+        print('Error loading more tagihan: $e');
+      }
       setState(() {
         _isLoadingMore = false;
       });
@@ -534,12 +556,16 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
             selectedFile = File(file.path);
           });
 
-          print('File selected: ${file.path}');
-          print('File extension: $fileExtension');
+          if (kDebugMode) {
+            print('File selected: ${file.path}');
+            print('File extension: $fileExtension');
+          }
         }
       }
     } catch (e) {
-      print('Error picking image: $e');
+      if (kDebugMode) {
+        print('Error picking image: $e');
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -567,10 +593,14 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
           selectedFile = file;
         });
 
-        print('PDF selected: ${file.path}');
+        if (kDebugMode) {
+          print('PDF selected: ${file.path}');
+        }
       }
     } catch (e) {
-      print('Error picking PDF: $e');
+      if (kDebugMode) {
+        print('Error picking PDF: $e');
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -608,7 +638,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
         await _pickPDF(setDialogState);
       }
     } catch (e) {
-      print('Error picking file: $e');
+      if (kDebugMode) {
+        print('Error picking file: $e');
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -620,18 +652,18 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     }
   }
 
-  List<dynamic> _getFilteredTagihan() {
-    return _tagihanList.where((item) {
+  List<dynamic> _getFilteredBilling() {
+    return _billingList.where((item) {
       final searchTerm = _searchController.text.toLowerCase();
-      final nama =
+      final name =
           item['jenis_pembayaran_nama']?.toString().toLowerCase() ?? '';
-      final deskripsi =
+      final description =
           item['jenis_pembayaran_deskripsi']?.toString().toLowerCase() ?? '';
 
       final matchesSearch =
           searchTerm.isEmpty ||
-          nama.contains(searchTerm) ||
-          deskripsi.contains(searchTerm);
+          name.contains(searchTerm) ||
+          description.contains(searchTerm);
 
       // Status filter matching
       final matchesStatus =
@@ -665,12 +697,12 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     }
   }
 
-  String _getStatusText(Map<String, dynamic> tagihan) {
-    if (tagihan['pembayaran_status'] == 'verified') {
+  String _getStatusText(Map<String, dynamic> billing) {
+    if (billing['pembayaran_status'] == 'verified') {
       return 'Lunas';
-    } else if (tagihan['pembayaran_status'] == 'pending') {
+    } else if (billing['pembayaran_status'] == 'pending') {
       return 'Menunggu Verifikasi';
-    } else if (tagihan['pembayaran_status'] == 'rejected') {
+    } else if (billing['pembayaran_status'] == 'rejected') {
       return 'Ditolak';
     } else {
       return 'Belum Bayar';
@@ -692,12 +724,12 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     }
   }
 
-  void _showUploadBuktiDialog(Map<String, dynamic> tagihan) {
-    final metodeBayarController = TextEditingController();
-    final jumlahBayarController = TextEditingController(
-      text: tagihan['jumlah']?.toString(),
+  void _showUploadPaymentDialog(Map<String, dynamic> billing) {
+    final paymentMethodController = TextEditingController();
+    final amountController = TextEditingController(
+      text: billing['jumlah']?.toString(),
     );
-    final tanggalBayarController = TextEditingController(
+    final paymentDateController = TextEditingController(
       text: DateTime.now().toString().split(' ')[0],
     );
 
@@ -762,14 +794,14 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                         // Info Tagihan
                         _buildInfoItem(
                           'Jenis Pembayaran',
-                          tagihan['jenis_pembayaran_nama'] ?? '-',
+                          billing['jenis_pembayaran_nama'] ?? '-',
                         ),
                         _buildInfoItem(
                           'Jumlah Tagihan',
-                          'Rp ${tagihan['jumlah'] ?? '-'}',
+                          'Rp ${billing['jumlah'] ?? '-'}',
                         ),
-                        _buildInfoItem('Siswa', tagihan['siswa_nama'] ?? '-'),
-                        _buildInfoItem('Kelas', tagihan['kelas_nama'] ?? '-'),
+                        _buildInfoItem('Siswa', billing['siswa_nama'] ?? '-'),
+                        _buildInfoItem('Kelas', billing['kelas_nama'] ?? '-'),
 
                         SizedBox(height: 16),
                         Divider(),
@@ -777,21 +809,21 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
                         // Form Pembayaran
                         _buildDialogTextField(
-                          controller: metodeBayarController,
+                          controller: paymentMethodController,
                           label: 'Metode Pembayaran',
                           icon: Icons.payment,
                           hint: 'Transfer Bank, Tunai, dll.',
                         ),
                         SizedBox(height: 12),
                         _buildDialogTextField(
-                          controller: jumlahBayarController,
+                          controller: amountController,
                           label: 'Jumlah Bayar',
                           icon: Icons.attach_money,
                           keyboardType: TextInputType.number,
                         ),
                         SizedBox(height: 12),
                         _buildDialogTextField(
-                          controller: tanggalBayarController,
+                          controller: paymentDateController,
                           label: 'Tanggal Bayar',
                           icon: Icons.calendar_today,
                           onTap: () async {
@@ -802,7 +834,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                               lastDate: DateTime.now(),
                             );
                             if (date != null) {
-                              tanggalBayarController.text = date
+                              paymentDateController.text = date
                                   .toString()
                                   .split(' ')[0];
                             }
@@ -911,21 +943,21 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           child: ElevatedButton(
                             onPressed:
                                 selectedFile == null ||
-                                    metodeBayarController.text.isEmpty ||
-                                    jumlahBayarController.text.isEmpty ||
-                                    tanggalBayarController.text.isEmpty
+                                    paymentMethodController.text.isEmpty ||
+                                    amountController.text.isEmpty ||
+                                    paymentDateController.text.isEmpty
                                 ? null
                                 : () async {
                                     try {
                                       // Upload file dan data
-                                      await _uploadPembayaran(
-                                        tagihanId: tagihan['id'],
-                                        metodeBayar: metodeBayarController.text,
-                                        jumlahBayar: double.parse(
-                                          jumlahBayarController.text,
+                                      await _uploadPayment(
+                                        billingId: billing['id'],
+                                        paymentMethod:
+                                            paymentMethodController.text,
+                                        amount: double.parse(
+                                          amountController.text,
                                         ),
-                                        tanggalBayar:
-                                            tanggalBayarController.text,
+                                        paymentDate: paymentDateController.text,
                                         file: selectedFile!,
                                       );
 
@@ -988,11 +1020,11 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     );
   }
 
-  Future<void> _uploadPembayaran({
-    required String tagihanId,
-    required String metodeBayar,
-    required double jumlahBayar,
-    required String tanggalBayar,
+  Future<void> _uploadPayment({
+    required String billingId,
+    required String paymentMethod,
+    required double amount,
+    required String paymentDate,
     required File file,
   }) async {
     try {
@@ -1007,25 +1039,25 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
         );
       }
 
-      print('=== UPLOAD DEBUG INFO ===');
-      print('File path: ${file.path}');
-      print('File extension: $fileExtension');
-      print('File size: ${await file.length()} bytes');
-      print('Tagihan ID: $tagihanId');
-      print('Metode Bayar: $metodeBayar');
-      print('Jumlah Bayar: $jumlahBayar');
-      print('Tanggal Bayar: $tanggalBayar');
-      print('========================');
+      // print('=== UPLOAD DEBUG INFO ===');
+      // print('File path: ${file.path}');
+      // print('File extension: $fileExtension');
+      // print('File size: ${await file.length()} bytes');
+      // print('Tagihan ID: $billingId');
+      // print('Metode Bayar: $metodeBayar');
+      // print('Jumlah Bayar: $jumlahBayar');
+      // print('Tanggal Bayar: $tanggalBayar');
+      // print('========================');
 
       // Upload file menggunakan multipart
       await _apiService.uploadFile(
         '/pembayaran/upload',
         file,
         data: {
-          'tagihan_id': tagihanId,
-          'metode_bayar': metodeBayar,
-          'jumlah_bayar': jumlahBayar.toString(),
-          'tanggal_bayar': tanggalBayar,
+          'bill_id': billingId,
+          'metode_bayar': paymentMethod,
+          'jumlah_bayar': amount.toString(),
+          'tanggal_bayar': paymentDate,
         },
       );
     } catch (error) {
@@ -1079,10 +1111,10 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     );
   }
 
-  Widget _buildTagihanCard(Map<String, dynamic> tagihan, int index) {
-    final status = _getStatusText(tagihan);
+  Widget _buildTagihanCard(Map<String, dynamic> billing, int index) {
+    final status = _getStatusText(billing);
     final statusColor = _getStatusColor(
-      tagihan['pembayaran_status'] ?? tagihan['status'],
+      billing['pembayaran_status'] ?? billing['status'],
     );
 
     return AnimatedBuilder(
@@ -1189,7 +1221,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                tagihan['jenis_pembayaran_nama'] ?? 'No Name',
+                                billing['jenis_pembayaran_nama'] ?? 'No Name',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -1199,7 +1231,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Rp ${tagihan['jumlah']}',
+                                _formatCurrency(billing['jumlah']),
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey.shade600,
@@ -1212,10 +1244,10 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
                         SizedBox(height: 8),
 
-                        if (tagihan['jenis_pembayaran_deskripsi'] != null &&
-                            tagihan['jenis_pembayaran_deskripsi'].isNotEmpty)
+                        if (billing['jenis_pembayaran_deskripsi'] != null &&
+                            billing['jenis_pembayaran_deskripsi'].isNotEmpty)
                           Text(
-                            tagihan['jenis_pembayaran_deskripsi'],
+                            billing['jenis_pembayaran_deskripsi'],
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
@@ -1231,7 +1263,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                             Icon(Icons.person, size: 12, color: Colors.grey),
                             SizedBox(width: 4),
                             Text(
-                              tagihan['siswa_nama'] ?? '-',
+                              billing['siswa_nama'] ?? '-',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -1241,7 +1273,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                             Icon(Icons.school, size: 12, color: Colors.grey),
                             SizedBox(width: 4),
                             Text(
-                              tagihan['kelas_nama'] ?? '-',
+                              billing['kelas_nama'] ?? '-',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -1261,7 +1293,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                             ),
                             SizedBox(width: 4),
                             Text(
-                              'Jatuh Tempo: ${tagihan['jatuh_tempo']?.split('T')[0] ?? '-'}',
+                              'Jatuh Tempo: ${billing['jatuh_tempo']?.split('T')[0] ?? '-'}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -1270,8 +1302,8 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           ],
                         ),
 
-                        if (tagihan['pembayaran_status'] == 'rejected' &&
-                            tagihan['admin_notes'] != null)
+                        if (billing['pembayaran_status'] == 'rejected' &&
+                            billing['admin_notes'] != null)
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1295,7 +1327,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                                     SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
-                                        'Catatan: ${tagihan['admin_notes']}',
+                                        'Catatan: ${billing['admin_notes']}',
                                         style: TextStyle(
                                           fontSize: 10,
                                           color: Colors.red.shade700,
@@ -1310,12 +1342,13 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
                         SizedBox(height: 12),
 
-                        if (tagihan['status'] == 'unpaid' ||
-                            tagihan['pembayaran_status'] == 'rejected')
+                        if (billing['status'] == 'unpaid' ||
+                            billing['pembayaran_status'] == 'rejected')
                           Align(
                             alignment: Alignment.centerRight,
                             child: ElevatedButton(
-                              onPressed: () => _showUploadBuktiDialog(tagihan),
+                              onPressed: () =>
+                                  _showUploadPaymentDialog(billing),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _getPrimaryColor(),
                                 shape: RoundedRectangleBorder(
@@ -1468,7 +1501,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
           return ErrorScreen(errorMessage: _errorMessage, onRetry: _loadData);
         }
 
-        final filteredTagihan = _getFilteredTagihan();
+        final filteredBilling = _getFilteredBilling();
 
         return Scaffold(
           backgroundColor: Color(0xFFF8F9FA),
@@ -1556,7 +1589,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: _loadData,
-                  child: filteredTagihan.isEmpty
+                  child: filteredBilling.isEmpty
                       ? ListView(
                           children: [
                             SizedBox(height: 100),
@@ -1575,9 +1608,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           controller: _scrollController,
                           padding: EdgeInsets.only(top: 8, bottom: 16),
                           itemCount:
-                              filteredTagihan.length + (_isLoadingMore ? 1 : 0),
+                              filteredBilling.length + (_isLoadingMore ? 1 : 0),
                           itemBuilder: (context, index) {
-                            if (index == filteredTagihan.length) {
+                            if (index == filteredBilling.length) {
                               return Container(
                                 padding: EdgeInsets.symmetric(vertical: 16),
                                 alignment: Alignment.center,
@@ -1590,7 +1623,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                               );
                             }
                             return _buildTagihanCard(
-                              filteredTagihan[index],
+                              filteredBilling[index],
                               index,
                             );
                           },

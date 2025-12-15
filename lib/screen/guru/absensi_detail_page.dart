@@ -6,17 +6,17 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 
 class AbsensiDetailPage extends StatefulWidget {
-  final Map<String, dynamic> guru;
-  final String mataPelajaranId;
-  final String mataPelajaranNama;
-  final DateTime tanggal;
+  final Map<String, dynamic> teacher;
+  final String subjectId;
+  final String subjectName;
+  final DateTime date;
 
   const AbsensiDetailPage({
     super.key,
-    required this.guru,
-    required this.mataPelajaranId,
-    required this.mataPelajaranNama,
-    required this.tanggal,
+    required this.teacher,
+    required this.subjectId,
+    required this.subjectName,
+    required this.date,
   });
 
   @override
@@ -25,8 +25,8 @@ class AbsensiDetailPage extends StatefulWidget {
 
 class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   List<dynamic> _absensiData = [];
-  List<Siswa> _siswaList = [];
-  List<Siswa> _filteredSiswaList = [];
+  List<Siswa> _studentList = [];
+  List<Siswa> _filteredStudentList = [];
   final Map<String, String> _absensiStatus = {};
   bool _isLoading = true;
   bool _isSubmitting = false;
@@ -49,11 +49,11 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     final query = _searchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        _filteredSiswaList = List.from(_siswaList);
+        _filteredStudentList = List.from(_studentList);
       } else {
-        _filteredSiswaList = _siswaList
+        _filteredStudentList = _studentList
             .where((siswa) =>
-                siswa.nama.toLowerCase().contains(query) ||
+                siswa.name.toLowerCase().contains(query) ||
                 siswa.nis.toLowerCase().contains(query))
             .toList();
       }
@@ -63,18 +63,18 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   Future<void> _loadData() async {
     try {
       // Load siswa dan absensi data
-      final [siswaData, absensiData] = await Future.wait([
+      final [studentData, absensiData] = await Future.wait([
         ApiStudentService.getStudent(),
         ApiService.getAbsensi(
-          guruId: widget.guru['id'],
-          mataPelajaranId: widget.mataPelajaranId,
-          tanggal: DateFormat('yyyy-MM-dd').format(widget.tanggal),
+          teacherId: widget.teacher['id'],
+          mataPelajaranId: widget.subjectId,
+          tanggal: DateFormat('yyyy-MM-dd').format(widget.date),
         ),
       ]);
 
       setState(() {
-        _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
-        _filteredSiswaList = List.from(_siswaList);
+        _studentList = studentData.map((s) => Siswa.fromJson(s)).toList();
+        _filteredStudentList = List.from(_studentList);
         _absensiData = absensiData;
 
         // Map status absensi
@@ -83,8 +83,8 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         }
 
         // Set default untuk siswa yang belum ada data
-        for (var siswa in _siswaList) {
-          _absensiStatus[siswa.id] ??= 'hadir';
+        for (var student in _studentList) {
+          _absensiStatus[student.id] ??= 'hadir';
         }
 
         _isLoading = false;
@@ -97,8 +97,8 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     }
   }
 
-  Widget _buildStudentItem(Siswa siswa) {
-    final status = _absensiStatus[siswa.id] ?? 'hadir';
+  Widget _buildStudentItem(Siswa student) {
+    final status = _absensiStatus[student.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
     final String statusText = _getStatusText(status);
 
@@ -106,17 +106,17 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getAvatarColor(siswa.nama),
+          backgroundColor: _getAvatarColor(student.name),
           child: Text(
-            siswa.nama.isNotEmpty ? siswa.nama[0].toUpperCase() : '?',
+            student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
             style: const TextStyle(color: Colors.white),
           ),
         ),
         title: Text(
-          siswa.nama,
+          student.name,
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
-        subtitle: Text('NIS: ${siswa.nis}'),
+        subtitle: Text('NIS: ${student.nis}'),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
@@ -181,7 +181,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
             ],
             onChanged: (value) {
               setState(() {
-                _absensiStatus[siswa.id] = value!;
+                _absensiStatus[student.id] = value!;
               });
             },
           ),
@@ -198,14 +198,14 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     try {
       int successCount = 0;
 
-      for (var siswa in _siswaList) {
-        final status = _absensiStatus[siswa.id]!;
+      for (var student in _studentList) {
+        final status = _absensiStatus[student.id]!;
         
         await ApiService.tambahAbsensi({
-          'siswa_id': siswa.id,
-          'guru_id': widget.guru['id'],
-          'mata_pelajaran_id': widget.mataPelajaranId,
-          'tanggal': DateFormat('yyyy-MM-dd').format(widget.tanggal),
+          'siswa_id': student.id,
+          'guru_id': widget.teacher['id'],
+          'mata_pelajaran_id': widget.subjectId,
+          'tanggal': DateFormat('yyyy-MM-dd').format(widget.date),
           'status': status,
           'keterangan': '',
         });
@@ -271,7 +271,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detail Absensi - ${widget.mataPelajaranNama}'),
+        title: Text('Detail Absensi - ${widget.subjectName}'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
@@ -293,7 +293,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                   child: Column(
                     children: [
                       Text(
-                        widget.mataPelajaranNama,
+                        widget.subjectName,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -302,7 +302,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(widget.tanggal),
+                        DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(widget.date),
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.blueGrey,
@@ -352,7 +352,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                         ),
                       ),
                       Text(
-                        '${_filteredSiswaList.length} siswa',
+                        '${_filteredStudentList.length} siswa',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -364,7 +364,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 const SizedBox(height: 8),
                 // Student List
                 Expanded(
-                  child: _filteredSiswaList.isEmpty
+                  child: _filteredStudentList.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -386,8 +386,8 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                           ),
                         )
                       : ListView.builder(
-                          itemCount: _filteredSiswaList.length,
-                          itemBuilder: (context, index) => _buildStudentItem(_filteredSiswaList[index]),
+                          itemCount: _filteredStudentList.length,
+                          itemBuilder: (context, index) => _buildStudentItem(_filteredStudentList[index]),
                         ),
                 ),
                 // Update Button

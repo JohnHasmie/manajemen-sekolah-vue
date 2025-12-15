@@ -2157,7 +2157,7 @@ class _DashboardState extends State<Dashboard>
               MaterialPageRoute(
                 builder: (context) => PresenceParentPage(
                   parent: userData,
-                  siswaId: studentsData[0]['id'],
+                  studentId: studentsData[0]['id'],
                 ),
               ),
             );
@@ -2225,7 +2225,7 @@ void _showStudentSelectionDialog(
                     MaterialPageRoute(
                       builder: (context) => PresenceParentPage(
                         parent: parent,
-                        siswaId: student['id'],
+                        studentId: student['id'],
                       ),
                     ),
                   );

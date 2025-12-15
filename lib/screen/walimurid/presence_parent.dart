@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/models/siswa.dart';
@@ -7,12 +8,12 @@ import 'package:manajemensekolah/utils/date_utils.dart';
 
 class PresenceParentPage extends StatefulWidget {
   final Map<String, dynamic> parent;
-  final String siswaId; // ID siswa yang merupakan anak dari wali murid
+  final String studentId; // ID siswa yang merupakan anak dari wali murid
 
   const PresenceParentPage({
     super.key,
     required this.parent,
-    required this.siswaId,
+    required this.studentId,
   });
 
   @override
@@ -21,7 +22,7 @@ class PresenceParentPage extends StatefulWidget {
 
 class PresenceParentPageState extends State<PresenceParentPage> {
   List<dynamic> _absensiData = [];
-  Siswa? _siswa;
+  Siswa? _student;
   bool _isLoading = true;
   DateTime _selectedMonth = DateTime.now();
   final Map<String, int> _monthlySummary = {
@@ -45,13 +46,15 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
     try {
       // Load data siswa
-      final siswaData = await ApiStudentService.getStudent();
-      final siswa = siswaData
+      final studentData = await ApiStudentService.getStudent();
+      final student = studentData
           .map((s) => Siswa.fromJson(s))
-          .firstWhere((s) => s.id == widget.siswaId);
+          .firstWhere((s) => s.id == widget.studentId);
 
       // Load data absensi
-      final absensiData = await ApiService.getAbsensi(siswaId: widget.siswaId);
+      final absensiData = await ApiService.getAbsensi(
+        studentId: widget.studentId,
+      );
 
       // Find the most recent month with data
       DateTime? latestMonth;
@@ -67,24 +70,30 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         // Set selected month to the month of the most recent attendance record
         if (latestMonth != null) {
           _selectedMonth = DateTime(latestMonth.year, latestMonth.month, 1);
-          print(
-            '🎯 Auto-selected month with latest data: ${_selectedMonth.month}/${_selectedMonth.year}',
-          );
+          if (kDebugMode) {
+            print(
+              '🎯 Auto-selected month with latest data: ${_selectedMonth.month}/${_selectedMonth.year}',
+            );
+          }
         }
       }
 
       setState(() {
-        _siswa = siswa;
+        _student = student;
         _absensiData = absensiData;
         _calculateMonthlySummary();
         _isLoading = false;
       });
 
-      print(
-        'Loaded ${_absensiData.length} absensi records for student ${_siswa?.nama}',
-      );
+      if (kDebugMode) {
+        print(
+          'Loaded ${_absensiData.length} absensi records for student ${_student?.name}',
+        );
+      }
     } catch (e) {
-      print('Error loading parent presence data: $e');
+      if (kDebugMode) {
+        print('Error loading parent presence data: $e');
+      }
       setState(() {
         _isLoading = false;
       });
@@ -98,9 +107,13 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     final monthStart = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
     final monthEnd = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0);
 
-    print('📅 Selected month: ${_selectedMonth.month}/${_selectedMonth.year}');
-    print('📅 Month range: $monthStart to $monthEnd');
-    print('📊 Total absensi records: ${_absensiData.length}');
+    if (kDebugMode) {
+      print(
+        '📅 Selected month: ${_selectedMonth.month}/${_selectedMonth.year}',
+      );
+      print('📅 Month range: $monthStart to $monthEnd');
+      print('📊 Total absensi records: ${_absensiData.length}');
+    }
 
     int matchCount = 0;
     for (var absen in _absensiData) {
@@ -109,9 +122,11 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           absenDate.isAfter(monthStart.subtract(const Duration(days: 1))) &&
           absenDate.isBefore(monthEnd.add(const Duration(days: 1)));
 
-      print(
-        '  📌 Record date: ${absen['tanggal']} -> parsed: $absenDate -> matches: $matches',
-      );
+      if (kDebugMode) {
+        print(
+          '  📌 Record date: ${absen['tanggal']} -> parsed: $absenDate -> matches: $matches',
+        );
+      }
 
       if (matches) {
         matchCount++;
@@ -119,8 +134,10 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         _monthlySummary[status] = (_monthlySummary[status] ?? 0) + 1;
       }
     }
-    print('✅ Records matching current month: $matchCount');
-    print('📈 Summary: $_monthlySummary');
+    if (kDebugMode) {
+      print('✅ Records matching current month: $matchCount');
+      print('📈 Summary: $_monthlySummary');
+    }
   }
 
   Future<void> _selectMonth(BuildContext context) async {
@@ -143,7 +160,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
   Widget _buildMonthlySummary() {
     final totalDays = _monthlySummary.values.reduce((a, b) => a + b);
-    final presentaseKehadiran = totalDays > 0
+    final presentaseAbsensi = totalDays > 0
         ? ((_monthlySummary['hadir']! + _monthlySummary['terlambat']!) /
                   totalDays *
                   100)
@@ -151,8 +168,8 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         : 0;
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -172,14 +189,14 @@ class PresenceParentPageState extends State<PresenceParentPage> {
             children: [
               const Text(
                 'Rekap Bulanan',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: () => _selectMonth(context),
                 child: Text(
                   DateFormat('MMMM yyyy', 'id_ID').format(_selectedMonth),
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 13,
                     color: Colors.blue,
                     fontWeight: FontWeight.w500,
                   ),
@@ -187,30 +204,31 @@ class PresenceParentPageState extends State<PresenceParentPage> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           // Persentase kehadiran
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             decoration: BoxDecoration(
               color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '$presentaseKehadiran%',
+                  '$presentaseAbsensi%',
                   style: const TextStyle(
-                    fontSize: 32,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(width: 8),
                 const Text(
                   'Tingkat Kehadiran',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     color: Colors.blue,
                     fontWeight: FontWeight.w500,
                   ),
@@ -218,7 +236,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Detail status
           Row(
@@ -252,8 +270,8 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     return Column(
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             shape: BoxShape.circle,
@@ -265,7 +283,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontSize: 12,
               ),
             ),
           ),
@@ -273,7 +291,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: Colors.grey),
+          style: const TextStyle(fontSize: 9, color: Colors.grey),
           textAlign: TextAlign.center,
         ),
       ],
@@ -337,11 +355,11 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
   Widget _buildAbsensiItem(Map<String, dynamic> absen) {
     final status = _normalizeStatus(absen['status']);
-    final tanggal = _parseLocalDate(absen['tanggal']);
-    final mataPelajaranNama = absen['mata_pelajaran_nama'] ?? 'Mata Pelajaran';
+    final date = _parseLocalDate(absen['tanggal']);
+    final subjectName = absen['mata_pelajaran_nama'] ?? 'Mata Pelajaran';
     final Color statusColor = _getStatusColor(status);
     final String statusText = _getStatusText(status);
-    final String hari = DateFormat('EEEE', 'id_ID').format(tanggal);
+    final String day = DateFormat('EEEE', 'id_ID').format(date);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -437,7 +455,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              DateFormat('dd').format(tanggal),
+                              DateFormat('dd').format(date),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -445,7 +463,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                               ),
                             ),
                             Text(
-                              DateFormat('MMM').format(tanggal),
+                              DateFormat('MMM').format(date),
                               style: TextStyle(
                                 fontSize: 10,
                                 color: _getPrimaryColor(),
@@ -464,7 +482,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                hari,
+                                day,
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey,
@@ -472,7 +490,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                mataPelajaranNama,
+                                subjectName,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
@@ -483,7 +501,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                 DateFormat(
                                   'dd MMMM yyyy',
                                   'id_ID',
-                                ).format(tanggal),
+                                ).format(date),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey,
@@ -628,7 +646,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      _siswa?.nama ?? 'Nama Siswa',
+                      _student?.name ?? 'Nama Siswa',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),
@@ -705,7 +723,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _siswa?.nama ?? 'Nama Siswa',
+                                    _student?.name ?? 'Nama Siswa',
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -713,14 +731,14 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'NIS: ${_siswa?.nis ?? '-'}',
+                                    'NIS: ${_student?.nis ?? '-'}',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey,
                                     ),
                                   ),
                                   Text(
-                                    'Kelas: ${_siswa?.kelas ?? '-'}',
+                                    'Kelas: ${_student?.className ?? '-'}',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey,

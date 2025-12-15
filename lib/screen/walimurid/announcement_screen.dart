@@ -21,7 +21,7 @@ class AnnouncementScreen extends StatefulWidget {
 
 class AnnouncementScreenState extends State<AnnouncementScreen> {
   final ApiService _apiService = ApiService();
-  List<dynamic> _pengumuman = [];
+  List<dynamic> _announcementList = [];
   bool _isLoading = true;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
@@ -60,21 +60,21 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       }
 
       // Handle response structure: {success, data, pagination}
-      List<dynamic> pengumumanList = [];
+      List<dynamic> announcementList = [];
       if (response is Map<String, dynamic> && response['data'] != null) {
-        pengumumanList = response['data'] is List ? response['data'] : [];
+        announcementList = response['data'] is List ? response['data'] : [];
       } else if (response is List) {
         // Fallback for direct list response
-        pengumumanList = response;
+        announcementList = response;
       }
 
       setState(() {
-        _pengumuman = pengumumanList;
+        _announcementList = announcementList;
         _isLoading = false;
       });
 
       if (kDebugMode) {
-        print('📊 Data berhasil dimuat: ${_pengumuman.length} pengumuman');
+        print('📊 Data berhasil dimuat: ${_announcementList.length} pengumuman');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -87,19 +87,19 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     }
   }
 
-  List<dynamic> get _filteredPengumuman {
+  List<dynamic> get _filteredAnnouncement {
     if (_searchController.text.isEmpty) {
-      return _pengumuman;
+      return _announcementList;
     }
 
     final searchLower = _searchController.text.toLowerCase();
-    return _pengumuman.where((p) {
-      final judul = p['title']?.toString().toLowerCase() ?? '';
-      final konten = p['content']?.toString().toLowerCase() ?? '';
-      final pembuat = p['pembuat_nama']?.toString().toLowerCase() ?? '';
-      return judul.contains(searchLower) ||
-          konten.contains(searchLower) ||
-          pembuat.contains(searchLower);
+    return _announcementList.where((p) {
+      final title = p['title']?.toString().toLowerCase() ?? '';
+      final content = p['content']?.toString().toLowerCase() ?? '';
+      final creatorName = p['pembuat_nama']?.toString().toLowerCase() ?? '';
+      return title.contains(searchLower) ||
+          content.contains(searchLower) ||
+          creatorName.contains(searchLower);
     }).toList();
   }
 
@@ -128,30 +128,30 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
   }
 
   String _getTargetText(
-    Map<String, dynamic> pengumumanData,
+    Map<String, dynamic> announcementData,
     LanguageProvider languageProvider,
   ) {
-    final roleTarget = (pengumumanData['role_target'] ?? 'all')
+    final roleTarget = (announcementData['role_target'] ?? 'all')
         .toString()
         .toLowerCase()
         .trim();
-    final kelasNama = pengumumanData['kelas_nama'];
+    final className = announcementData['kelas_nama'];
 
     // Handle both 'all' (English) and 'semua' (Indonesian) from backend
     if ((roleTarget == 'all' || roleTarget == 'semua' || roleTarget == '') &&
-        kelasNama == null) {
+        className == null) {
       return languageProvider.getTranslatedText({
         'en': 'All Users',
         'id': 'Semua Pengguna',
       });
-    } else if (kelasNama != null) {
-      return '$kelasNama (${roleTarget.toUpperCase()})';
+    } else if (className != null) {
+      return '$className (${roleTarget.toUpperCase()})';
     } else {
       return roleTarget.toUpperCase();
     }
   }
 
-  void _showPengumumanDetail(Map<String, dynamic> pengumumanData) {
+  void _showAnnouncementDetail(Map<String, dynamic> announcementData) {
     final languageProvider = context.read<LanguageProvider>();
 
     showDialog(
@@ -195,7 +195,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                         SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            pengumumanData['title'] ?? 'No Title',
+                            announcementData['title'] ?? 'No Title',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -207,7 +207,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      _formatDate(pengumumanData['created_at']),
+                      _formatDate(announcementData['created_at']),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -224,8 +224,8 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Priority badge
-                    if (pengumumanData['priority'] == 'important' ||
-                        pengumumanData['priority'] == 'penting')
+                    if (announcementData['priority'] == 'important' ||
+                        announcementData['priority'] == 'penting')
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -260,7 +260,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
                     // Content text
                     Text(
-                      pengumumanData['content'] ?? '',
+                      announcementData['content'] ?? '',
                       style: TextStyle(
                         fontSize: 16,
                         height: 1.6,
@@ -285,7 +285,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                               'en': 'Created by',
                               'id': 'Dibuat oleh',
                             }),
-                            value: pengumumanData['pembuat_nama'] ?? 'Unknown',
+                            value: announcementData['pembuat_nama'] ?? 'Unknown',
                           ),
                           SizedBox(height: 8),
                           _buildDetailRow(
@@ -295,31 +295,31 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                               'id': 'Role Target',
                             }),
                             value: _getTargetText(
-                              pengumumanData,
+                              announcementData,
                               languageProvider,
                             ),
                           ),
-                          if (pengumumanData['start_date'] != null)
+                          if (announcementData['start_date'] != null)
                             SizedBox(height: 8),
-                          if (pengumumanData['start_date'] != null)
+                          if (announcementData['start_date'] != null)
                             _buildDetailRow(
                               icon: Icons.calendar_today,
                               label: languageProvider.getTranslatedText({
                                 'en': 'Start Date',
                                 'id': 'Tanggal Mulai',
                               }),
-                              value: _formatDate(pengumumanData['start_date']),
+                              value: _formatDate(announcementData['start_date']),
                             ),
-                          if (pengumumanData['end_date'] != null)
+                          if (announcementData['end_date'] != null)
                             SizedBox(height: 8),
-                          if (pengumumanData['end_date'] != null)
+                          if (announcementData['end_date'] != null)
                             _buildDetailRow(
                               icon: Icons.event_busy,
                               label: languageProvider.getTranslatedText({
                                 'en': 'End Date',
                                 'id': 'Tanggal Berakhir',
                               }),
-                              value: _formatDate(pengumumanData['end_date']),
+                              value: _formatDate(announcementData['end_date']),
                             ),
                         ],
                       ),
@@ -395,19 +395,19 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     );
   }
 
-  Widget _buildPengumumanCard(Map<String, dynamic> pengumumanData, int index) {
+  Widget _buildAnnouncementCard(Map<String, dynamic> announcementData, int index) {
     final languageProvider = context.read<LanguageProvider>();
 
     return GestureDetector(
       onTap: () {
-        _showPengumumanDetail(pengumumanData);
+        _showAnnouncementDetail(announcementData);
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => _showPengumumanDetail(pengumumanData),
+            onTap: () => _showAnnouncementDetail(announcementData),
             borderRadius: BorderRadius.circular(16),
             child: Container(
               decoration: BoxDecoration(
@@ -455,8 +455,8 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                   ),
 
                   // Priority badge
-                  if (pengumumanData['priority'] == 'important' ||
-                      pengumumanData['priority'] == 'penting')
+                  if (announcementData['priority'] == 'important' ||
+                      announcementData['priority'] == 'penting')
                     Positioned(
                       top: 12,
                       right: 12,
@@ -504,7 +504,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    pengumumanData['title'] ?? 'No Title',
+                                    announcementData['title'] ?? 'No Title',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -515,7 +515,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                   ),
                                   SizedBox(height: 2),
                                   Text(
-                                    _formatDate(pengumumanData['created_at']),
+                                    _formatDate(announcementData['created_at']),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey.shade600,
@@ -565,7 +565,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                   ),
                                   SizedBox(height: 1),
                                   Text(
-                                    pengumumanData['content'] ?? '',
+                                    announcementData['content'] ?? '',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -618,7 +618,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                   ),
                                   SizedBox(height: 1),
                                   Text(
-                                    pengumumanData['pembuat_nama'] ?? 'Unknown',
+                                    announcementData['pembuat_nama'] ?? 'Unknown',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -670,7 +670,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                   SizedBox(height: 1),
                                   Text(
                                     _getTargetText(
-                                      pengumumanData,
+                                      announcementData,
                                       languageProvider,
                                     ),
                                     style: TextStyle(
@@ -818,7 +818,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                         errorMessage: _errorMessage!,
                         onRetry: _loadData,
                       )
-                    : _filteredPengumuman.isEmpty
+                    : _filteredAnnouncement.isEmpty
                     ? EmptyState(
                         icon: Icons.announcement_outlined,
                         title: languageProvider.getTranslatedText({
@@ -845,10 +845,10 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                         backgroundColor: Colors.white,
                         child: ListView.builder(
                           padding: EdgeInsets.only(top: 8, bottom: 16),
-                          itemCount: _filteredPengumuman.length,
+                          itemCount: _filteredAnnouncement.length,
                           itemBuilder: (context, index) {
-                            return _buildPengumumanCard(
-                              _filteredPengumuman[index],
+                            return _buildAnnouncementCard(
+                              _filteredAnnouncement[index],
                               index,
                             );
                           },
