@@ -115,7 +115,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
       if (matches) {
         matchCount++;
-        final status = absen['status'] ?? 'alpha';
+        final status = _normalizeStatus(absen['status']);
         _monthlySummary[status] = (_monthlySummary[status] ?? 0) + 1;
       }
     }
@@ -281,17 +281,28 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   }
 
   Widget _buildAbsensiList() {
-    final monthAbsensi = _absensiData.where((absen) {
-      final absenDate = _parseLocalDate(absen['tanggal']);
-      final monthStart = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
-      final monthEnd = DateTime(
-        _selectedMonth.year,
-        _selectedMonth.month + 1,
-        0,
-      );
-      return absenDate.isAfter(monthStart.subtract(const Duration(days: 1))) &&
-          absenDate.isBefore(monthEnd.add(const Duration(days: 1)));
-    }).toList()..sort((a, b) => b['tanggal'].compareTo(a['tanggal']));
+    final monthAbsensi =
+        _absensiData.where((absen) {
+          final absenDate = _parseLocalDate(absen['tanggal']);
+          final monthStart = DateTime(
+            _selectedMonth.year,
+            _selectedMonth.month,
+            1,
+          );
+          final monthEnd = DateTime(
+            _selectedMonth.year,
+            _selectedMonth.month + 1,
+            0,
+          );
+          return absenDate.isAfter(
+                monthStart.subtract(const Duration(days: 1)),
+              ) &&
+              absenDate.isBefore(monthEnd.add(const Duration(days: 1)));
+        }).toList()..sort((a, b) {
+          final dateA = a['tanggal']?.toString() ?? '';
+          final dateB = b['tanggal']?.toString() ?? '';
+          return dateB.compareTo(dateA);
+        });
 
     if (monthAbsensi.isEmpty) {
       return Center(
@@ -325,7 +336,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   }
 
   Widget _buildAbsensiItem(Map<String, dynamic> absen) {
-    final status = absen['status'] ?? 'alpha';
+    final status = _normalizeStatus(absen['status']);
     final tanggal = _parseLocalDate(absen['tanggal']);
     final mataPelajaranNama = absen['mata_pelajaran_nama'] ?? 'Mata Pelajaran';
     final Color statusColor = _getStatusColor(status);
@@ -523,10 +534,34 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     }
   }
 
+  String _normalizeStatus(dynamic rawStatus) {
+    String status = (rawStatus ?? 'alpha').toString().toLowerCase();
+
+    // Map English/Mixed to standard keys
+    if (status == 'present') return 'hadir';
+    if (status == 'permission') return 'izin';
+    if (status == 'sick') return 'sakit';
+    if (status == 'late') return 'terlambat';
+    if (status == 'absent') return 'alpha';
+
+    // Map capitalized Indonesian to lowercase
+    if (status == 'hadir') return 'hadir';
+    if (status == 'izin') return 'izin';
+    if (status == 'sakit') return 'sakit';
+    if (status == 'terlambat') return 'terlambat';
+    if (status == 'alpha') return 'alpha';
+    if (status == 'alpa') return 'alpha';
+
+    // Default fallback if it matches one of our keys
+    if (_monthlySummary.containsKey(status)) return status;
+
+    return 'hadir'; // Default safe fallback
+  }
+
   // Helper function to parse date string as local date (not UTC)
-  DateTime _parseLocalDate(String dateString) {
+  DateTime _parseLocalDate(dynamic dateValue) {
     // Gunakan AppDateUtils untuk parsing yang konsisten dan benar
-    return AppDateUtils.parseApiDate(dateString) ?? DateTime.now();
+    return AppDateUtils.parseApiDate(dateValue) ?? DateTime.now();
   }
 
   Color _getPrimaryColor() {

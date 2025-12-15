@@ -64,14 +64,18 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
       // Filter siswa berdasarkan berbagai kemungkinan relasi
       final filteredStudents = allStudents.where((student) {
-        // Cek berbagai kemungkinan field yang menghubungkan siswa dengan wali
-        return student['email_wali'] == userData['email'] ||
+        return student['guardian_email'] ==
+                userData['email'] || // Corrected from email_wali
             student['guardian_name'] == userData['nama'] ||
             student['parent_id'] == parentId ||
-            student['wali_id'] == parentId ||
+            student['wali_id'] == parentId || // Keep legacy check just in case
+            (userData['student_id'] != null &&
+                student['id'] == userData['student_id']) || // Check student_id
             (userData['siswa_id'] != null &&
                 student['id'] == userData['siswa_id']);
       }).toList();
+
+      print('DEBUG: User Data: $userData');
 
       setState(() {
         _studentList = filteredStudents;
@@ -103,9 +107,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         orElse: () => {},
       );
 
-      if (selectedStudent.isNotEmpty && selectedStudent['kelas_id'] != null) {
+      if (selectedStudent.isNotEmpty && selectedStudent['class_id'] != null) {
         final activities = await ApiClassActivityService.getKegiatanByKelas(
-          selectedStudent['kelas_id'],
+          selectedStudent['class_id'],
           siswaId: _selectedStudentId,
         );
 
@@ -197,14 +201,14 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            student['nama'] ?? 'Nama tidak tersedia',
+                            student['name'] ?? 'Nama tidak tersedia',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
                           ),
                           Text(
-                            'Kelas: ${student['kelas_nama'] ?? '-'} • NIS: ${student['nis'] ?? '-'}',
+                            'Kelas: ${student['kelas_nama'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade600,
