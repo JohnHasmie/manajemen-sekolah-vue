@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 class RppScreen extends StatefulWidget {
@@ -189,31 +192,31 @@ class RppScreenState extends State<RppScreen>
                             ),
                             _buildStatusChip(
                               label: 'Menunggu',
-                              value: 'Menunggu',
+                              value: 'Pending',
                               selectedValue: tempSelectedStatus,
                               onSelected: () {
                                 setModalState(() {
-                                  tempSelectedStatus = 'Menunggu';
+                                  tempSelectedStatus = 'Pending';
                                 });
                               },
                             ),
                             _buildStatusChip(
                               label: 'Disetujui',
-                              value: 'Disetujui',
+                              value: 'Approved',
                               selectedValue: tempSelectedStatus,
                               onSelected: () {
                                 setModalState(() {
-                                  tempSelectedStatus = 'Disetujui';
+                                  tempSelectedStatus = 'Approved';
                                 });
                               },
                             ),
                             _buildStatusChip(
                               label: 'Ditolak',
-                              value: 'Ditolak',
+                              value: 'Rejected',
                               selectedValue: tempSelectedStatus,
                               onSelected: () {
                                 setModalState(() {
-                                  tempSelectedStatus = 'Ditolak';
+                                  tempSelectedStatus = 'Rejected';
                                 });
                               },
                             ),
@@ -267,6 +270,7 @@ class RppScreenState extends State<RppScreen>
                             });
                             _checkActiveFilter();
                             Navigator.pop(context);
+                            _loadRpp();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _getPrimaryColor(),
@@ -325,7 +329,11 @@ class RppScreenState extends State<RppScreen>
         _errorMessage = null;
       });
 
-      final rppData = await ApiService.getRPP(teacherId: widget.teacherId);
+      final rppData = await ApiService.getRPP(
+        teacherId: widget.teacherId,
+        search: _searchController.text,
+        status: _selectedStatusFilter,
+      );
 
       setState(() {
         _rppList = rppData;
@@ -334,10 +342,12 @@ class RppScreenState extends State<RppScreen>
 
       _animationController.forward();
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString();
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+      }
     }
   }
 
@@ -434,10 +444,13 @@ class RppScreenState extends State<RppScreen>
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Disetujui':
+      case 'Approved':
         return Colors.green;
       case 'Menunggu':
+      case 'Pending':
         return Colors.orange;
       case 'Ditolak':
+      case 'Rejected':
         return Colors.red;
       default:
         return Colors.grey;
@@ -447,10 +460,13 @@ class RppScreenState extends State<RppScreen>
   IconData _getStatusIcon(String status) {
     switch (status) {
       case 'Disetujui':
+      case 'Approved':
         return Icons.check_circle;
       case 'Menunggu':
+      case 'Pending':
         return Icons.access_time;
       case 'Ditolak':
+      case 'Rejected':
         return Icons.cancel;
       default:
         return Icons.help;
@@ -591,9 +607,11 @@ class RppScreenState extends State<RppScreen>
                                 ),
                               ),
                               child: Text(
-                                rpp['status'] == 'Menunggu'
+                                rpp['status'] == 'Pending' ||
+                                        rpp['status'] == 'Menunggu'
                                     ? 'Menunggu'
-                                    : rpp['status'] == 'Disetujui'
+                                    : rpp['status'] == 'Approved' ||
+                                          rpp['status'] == 'Disetujui'
                                     ? 'Disetujui'
                                     : 'Ditolak',
                                 style: TextStyle(
@@ -782,22 +800,7 @@ class RppScreenState extends State<RppScreen>
           );
         }
 
-        final filteredRpp = _rppList.where((rpp) {
-          final searchTerm = _searchController.text.toLowerCase();
-          final matchesSearch =
-              searchTerm.isEmpty ||
-              (rpp['judul']?.toLowerCase().contains(searchTerm) ?? false) ||
-              (rpp['mata_pelajaran_nama']?.toLowerCase().contains(searchTerm) ??
-                  false) ||
-              (rpp['kelas_nama']?.toLowerCase().contains(searchTerm) ?? false);
-
-          // Status filter
-          final matchesStatusFilter =
-              _selectedStatusFilter == null ||
-              rpp['status'] == _selectedStatusFilter;
-
-          return matchesSearch && matchesStatusFilter;
-        }).toList();
+        final filteredRpp = _rppList;
 
         return Scaffold(
           backgroundColor: Color(0xFFF8F9FA),
@@ -887,7 +890,7 @@ class RppScreenState extends State<RppScreen>
                             ),
                             child: TextField(
                               controller: _searchController,
-                              onChanged: (value) => setState(() {}),
+                              onChanged: (value) => _loadRpp(),
                               style: TextStyle(color: Colors.black87),
                               decoration: InputDecoration(
                                 hintText: languageProvider.getTranslatedText({
@@ -1091,10 +1094,15 @@ class _RppFormDialogState extends State<RppFormDialog> {
     if (widget.rppData != null) {
       _judulController.text = widget.rppData!['judul'] ?? '';
       _tahunAjaranController.text = widget.rppData!['tahun_ajaran'] ?? '';
-      _selectedMataPelajaranId = widget.rppData!['mata_pelajaran_id'];
-      _selectedClassId = widget.rppData!['kelas_id'];
+      _selectedMataPelajaranId = widget.rppData!['mata_pelajaran_id']
+          ?.toString();
+      _selectedClassId = widget.rppData!['kelas_id']?.toString();
       _selectedSemester = widget.rppData!['semester'] ?? 'Ganjil';
       _selectedFileName = widget.rppData!['file_path'];
+
+      if (_selectedMataPelajaranId != null) {
+        _loadKelasByMataPelajaran(_selectedMataPelajaranId!);
+      }
     } else {
       // Mode tambah baru: set default tahun ajaran
       _tahunAjaranController.text = DateTime.now().year.toString();
@@ -1205,32 +1213,18 @@ class _RppFormDialogState extends State<RppFormDialog> {
             _selectedFileName = file.name;
             _selectedFile = selectedFile;
           });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('File dipilih: ${file.name} (${file.size} bytes)'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('File tidak ditemukan di path tersebut'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
-      } else {
-        print('Pemilihan file dibatalkan atau path null');
       }
     } catch (e) {
-      print('Error memilih file: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error memilih file: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (kDebugMode) print('Error picking file: $e');
+    }
+  }
+
+  Future<void> _viewCurrentFile() async {
+    final filePath = widget.rppData?['file_path'];
+    if (filePath != null) {
+      // Use the helper function defined at the bottom of the file
+      await _downloadAndOpenFile(context, filePath);
     }
   }
 
@@ -1393,7 +1387,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
                 items: _kelasList.map((kelas) {
                   return DropdownMenuItem(
                     value: kelas['id'],
-                    child: Text(kelas['nama']),
+                    child: Text(kelas['name']),
                   );
                 }).toList(),
                 initialValue: _selectedClassId,
@@ -1448,23 +1442,47 @@ class _RppFormDialogState extends State<RppFormDialog> {
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      'File RPP',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-                    if (_selectedFileName != null)
-                      Text(
-                        _selectedFileName!,
-                        style: TextStyle(color: Colors.green),
+                    Icon(Icons.description, color: Colors.grey),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _selectedFileName ??
+                            languageProvider.getTranslatedText({
+                              'en': 'No file selected',
+                              'id': 'Belum ada file dipilih',
+                            }),
+                        style: TextStyle(
+                          color: _selectedFileName != null
+                              ? Colors.black87
+                              : Colors.grey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    SizedBox(height: 8),
+                    ),
+                    if (widget.rppData != null &&
+                        widget.rppData!['file_path'] != null)
+                      IconButton(
+                        icon: Icon(Icons.visibility, color: Colors.blue),
+                        onPressed: _viewCurrentFile,
+                        tooltip: 'Lihat File',
+                      ),
+                    SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: _showFilePickerDialog,
-                      child: Text('Pilih File'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black87,
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Choose',
+                          'id': 'Pilih',
+                        }),
+                      ),
                     ),
                   ],
                 ),
@@ -1494,6 +1512,64 @@ class _RppFormDialogState extends State<RppFormDialog> {
 }
 
 // RppDetailPage tetap sama seperti sebelumnya
+// Helper to download and open file
+Future<void> _downloadAndOpenFile(BuildContext context, String filePath) async {
+  try {
+    // Construct full URL
+    // Remove /uploads prefix or handle correctly if it's relative
+    // If filePath starts with /uploads, append to baseUrl (stripping /api if needed or just use host)
+    // ApiService.baseUrl usually implies /api or just host?
+    // Let's assume ApiService.baseUrl is "http://host:port/api"
+    // And static files are at "http://host:port/uploads/..."
+    // We need to parse baseUrl to get root.
+
+    final baseUrl = ApiService.baseUrl;
+    final uri = Uri.parse(baseUrl);
+    final rootUrl = '${uri.scheme}://${uri.host}:${uri.port}';
+
+    // Ensure filePath doesn't double slash
+    final cleanPath = filePath.startsWith('/') ? filePath : '/$filePath';
+    final fullUrl = '$rootUrl$cleanPath';
+
+    if (kDebugMode) {
+      print('Downloading file from: $fullUrl');
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Mengunduh file...')));
+
+    final response = await http.get(Uri.parse(fullUrl));
+
+    if (response.statusCode == 200) {
+      final dir = await getTemporaryDirectory();
+      // Extract filename
+      final fileName = cleanPath.split('/').last;
+      final file = File('${dir.path}/$fileName');
+
+      await file.writeAsBytes(response.bodyBytes);
+
+      if (kDebugMode) {
+        print('File saved to: ${file.path}');
+      }
+
+      await OpenFile.open(file.path);
+    } else {
+      throw Exception('Failed to download file: ${response.statusCode}');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Error opening file: $e');
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Gagal membuka file: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
 class RppDetailPage extends StatelessWidget {
   final Map<String, dynamic> rpp;
 
@@ -1502,40 +1578,281 @@ class RppDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
+
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.rppDetails.tr)),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              rpp['judul'] ?? 'No Title',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text('Mata Pelajaran: ${rpp['mata_pelajaran_nama']}'),
-            Text('Kelas: ${rpp['kelas_nama']}'),
-            Text('Semester: ${rpp['semester']}'),
-            Text('Tahun Ajaran: ${rpp['tahun_ajaran']}'),
-            Text('Status: ${rpp['status']}'),
-            if (rpp['file_path'] != null) ...[
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement file download
-                },
-                child: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Download File',
-                    'id': 'Unduh File',
-                  }),
+      backgroundColor: Color(0xFFF8F9FA), // Light grey background
+      body: CustomScrollView(
+        slivers: [
+          // Header Gradient with Back Button
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: Colors.transparent,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    ColorUtils.getRoleColor('guru').withOpacity(0.8),
+                    ColorUtils.getRoleColor('guru'),
+                  ],
                 ),
               ),
-            ],
+              child: FlexibleSpaceBar(
+                centerTitle: false,
+                titlePadding: EdgeInsets.only(left: 56, bottom: 16),
+                title: Text(
+                  AppLocalizations.rppDetails.tr,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ),
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+
+          // Content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title Card
+                  _buildDetailCard(
+                    title: languageProvider.getTranslatedText({
+                      'en': 'Title',
+                      'id': 'Judul',
+                    }),
+                    content: rpp['judul'] ?? 'No Title',
+                    icon: Icons.title,
+                    isTitle: true,
+                  ),
+                  SizedBox(height: 16),
+
+                  // Info Card
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          _buildDetailRow(
+                            icon: Icons.book,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Subject',
+                              'id': 'Mata Pelajaran',
+                            }),
+                            value: rpp['mata_pelajaran_nama'] ?? '-',
+                          ),
+                          Divider(),
+                          _buildDetailRow(
+                            icon: Icons.class_,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Class',
+                              'id': 'Kelas',
+                            }),
+                            value: rpp['kelas_nama'] ?? '-',
+                          ),
+                          Divider(),
+                          _buildDetailRow(
+                            icon: Icons.calendar_today,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Academic Year',
+                              'id': 'Tahun Ajaran',
+                            }),
+                            value:
+                                '${rpp['semester'] ?? '-'} ${rpp['tahun_ajaran'] ?? '-'}',
+                          ),
+                          Divider(),
+                          _buildDetailRow(
+                            icon: Icons.info_outline,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Status',
+                              'id': 'Status',
+                            }),
+                            value: rpp['status'] ?? '-',
+                            valueColor: _getStatusColor(rpp['status']),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // File Section
+                  if (rpp['file_path'] != null)
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: InkWell(
+                        onTap: () =>
+                            _downloadAndOpenFile(context, rpp['file_path']),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.picture_as_pdf,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Attached File',
+                                        'id': 'File Terlampir',
+                                      }),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      rpp['file_path'].split('/').last,
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.download_rounded, color: Colors.grey),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailCard({
+    required String title,
+    required String content,
+    required IconData icon,
+    bool isTitle = false,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isTitle
+                    ? Colors.blue.withOpacity(0.1)
+                    : Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: isTitle ? Colors.blue : Colors.grey[700],
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    content,
+                    style: TextStyle(
+                      fontSize: isTitle ? 18 : 16,
+                      fontWeight: isTitle ? FontWeight.bold : FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.grey[600]),
+          SizedBox(width: 12),
+          Text(label, style: TextStyle(color: Colors.grey[700])),
+          Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'Disetujui':
+      case 'Approved':
+        return Colors.green;
+      case 'Menunggu':
+      case 'Pending':
+        return Colors.orange;
+      case 'Ditolak':
+      case 'Rejected':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

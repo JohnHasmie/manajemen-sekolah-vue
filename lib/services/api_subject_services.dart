@@ -433,10 +433,23 @@ class ApiSubjectService {
   static Future<dynamic> batchSaveMateriProgress(
     Map<String, dynamic> data,
   ) async {
+    // Remap keys to match backend expectations
+    final requestData = {
+      'teacher_id': data['guru_id'],
+      'subject_id': data['mata_pelajaran_id'],
+      'progress_items': (data['progress_items'] as List).map((item) {
+        return {
+          'chapter_id': item['bab_id'],
+          'sub_chapter_id': item['sub_bab_id'],
+          'is_checked': item['is_checked'],
+        };
+      }).toList(),
+    };
+
     final response = await http.post(
       Uri.parse('$baseUrl/material-progress/batch'),
       headers: await _getHeaders(),
-      body: json.encode(data),
+      body: json.encode(requestData),
     );
 
     return _handleResponse(response);
@@ -444,10 +457,22 @@ class ApiSubjectService {
 
   // Mark materi as generated (after RPP/activity generation)
   static Future<dynamic> markMateriGenerated(Map<String, dynamic> data) async {
+    // Remap keys
+    final requestData = {
+      'teacher_id': data['guru_id'],
+      'subject_id': data['mata_pelajaran_id'],
+      'items': (data['items'] as List).map((item) {
+        return {
+          'chapter_id': item['bab_id'],
+          'sub_chapter_id': item['sub_bab_id'],
+        };
+      }).toList(),
+    };
+
     final response = await http.post(
       Uri.parse('$baseUrl/material-progress/mark-generated'),
       headers: await _getHeaders(),
-      body: json.encode(data),
+      body: json.encode(requestData),
     );
 
     return _handleResponse(response);
@@ -455,10 +480,22 @@ class ApiSubjectService {
 
   // Reset generated status (to allow regeneration)
   static Future<dynamic> resetMateriGenerated(Map<String, dynamic> data) async {
+    // Remap keys
+    final requestData = {
+      'teacher_id': data['guru_id'],
+      'subject_id': data['mata_pelajaran_id'],
+      'items': (data['items'] as List).map((item) {
+        return {
+          'chapter_id': item['bab_id'],
+          'sub_chapter_id': item['sub_bab_id'],
+        };
+      }).toList(),
+    };
+
     final response = await http.post(
       Uri.parse('$baseUrl/material-progress/reset-generated'),
       headers: await _getHeaders(),
-      body: json.encode(data),
+      body: json.encode(requestData),
     );
 
     return _handleResponse(response);

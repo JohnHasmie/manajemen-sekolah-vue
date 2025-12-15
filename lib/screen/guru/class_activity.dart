@@ -211,43 +211,43 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       // Use provided userId or fall back to _teacherId
       final guruIdToUse = userId ?? _teacherId;
 
-      if (kDebugMode) {
-        print('===== LOADING SCHEDULE =====');
-        print('Teacher ID (for API): $guruIdToUse');
-        print('Academic Year: $tahunAjaran');
-        print('calling ApiScheduleService.getScheduleByGuru...');
-      }
+      // if (kDebugMode) {
+      //   print('===== LOADING SCHEDULE =====');
+      //   print('Teacher ID (for API): $guruIdToUse');
+      //   print('Academic Year: $tahunAjaran');
+      //   print('calling ApiScheduleService.getScheduleByGuru...');
+      // }
 
       final schedule = await ApiScheduleService.getScheduleByGuru(
         guruId: guruIdToUse,
         tahunAjaran: tahunAjaran,
       );
 
-      if (kDebugMode) {
-        print('Total schedules loaded: ${schedule.length}');
-      }
+      // if (kDebugMode) {
+      //   print('Total schedules loaded: ${schedule.length}');
+      // }
 
       // If no schedule found for current year, try loading all schedules
       List<dynamic> finalSchedule = schedule;
       if (schedule.isEmpty) {
-        if (kDebugMode) {
-          print(
-            'No schedule found for $tahunAjaran, trying to load all schedules...',
-          );
-        }
+        // if (kDebugMode) {
+        //   print(
+        //     'No schedule found for $tahunAjaran, trying to load all schedules...',
+        //   );
+        // }
         try {
           finalSchedule = await ApiScheduleService.getScheduleByGuru(
             guruId: guruIdToUse,
           );
-          if (kDebugMode) {
-            print(
-              'Total schedules loaded (all years): ${finalSchedule.length}',
-            );
-          }
+          // if (kDebugMode) {
+          //   print(
+          //     'Total schedules loaded (all years): ${finalSchedule.length}',
+          //   );
+          // }
         } catch (e) {
-          if (kDebugMode) {
-            print('Failed to load all schedules: $e');
-          }
+          // if (kDebugMode) {
+          //   print('Failed to load all schedules: $e');
+          // }
         }
       }
 
@@ -264,11 +264,11 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             ?.toString();
         final className = scheduleItem['kelas_nama']?.toString();
 
-        if (kDebugMode) {
-          print(
-            'Schedule item: $subjectName (ID: $subjectId), Class: $className (ID: $classId), Day: ${scheduleItem['hari_nama']}, Time: ${scheduleItem['start_time'] ?? scheduleItem['jam_mulai']} - ${scheduleItem['end_time'] ?? scheduleItem['jam_selesai']}',
-          );
-        }
+        // if (kDebugMode) {
+        //   print(
+        //     'Schedule item: $subjectName (ID: $subjectId), Class: $className (ID: $classId), Day: ${scheduleItem['hari_nama']}, Time: ${scheduleItem['start_time'] ?? scheduleItem['jam_mulai']} - ${scheduleItem['end_time'] ?? scheduleItem['jam_selesai']}',
+        //   );
+        // }
 
         if (subjectId != null && !uniqueSubjects.containsKey(subjectId)) {
           uniqueSubjects[subjectId] = {'id': subjectId, 'nama': subjectName};
@@ -279,25 +279,25 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         }
       }
 
-      if (kDebugMode) {
-        print('Unique subjects: ${uniqueSubjects.length}');
-        print(
-          'Subject list: ${uniqueSubjects.values.map((s) => s['nama']).toList()}',
-        );
-        print('Subject IDs: ${uniqueSubjects.keys.toList()}');
-        print('Unique classes: ${uniqueClasses.length}');
-        print('===========================');
-      }
+      // if (kDebugMode) {
+      //   print('Unique subjects: ${uniqueSubjects.length}');
+      //   print(
+      //     'Subject list: ${uniqueSubjects.values.map((s) => s['nama']).toList()}',
+      //   );
+      //   print('Subject IDs: ${uniqueSubjects.keys.toList()}');
+      //   print('Unique classes: ${uniqueClasses.length}');
+      //   print('===========================');
+      // }
 
       setState(() {
         _scheduleList = finalSchedule;
         _subjectList = uniqueSubjects.values.toList();
       });
 
-      if (kDebugMode) {
-        print('✅ _subjectList after setState: ${_subjectList.length} subjects');
-        print('Subject list content: $_subjectList');
-      }
+      // if (kDebugMode) {
+      //   print('✅ _subjectList after setState: ${_subjectList.length} subjects');
+      //   print('Subject list content: $_subjectList');
+      // }
     } catch (e) {
       if (kDebugMode) {
         print('ERROR loading schedule: $e');
@@ -1624,11 +1624,11 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             : null,
       );
 
-      if (kDebugMode) {
-        print(
-          'Loaded activities page $_currentPage: ${response['data']?.length ?? 0} items',
-        );
-      }
+      // if (kDebugMode) {
+      //   print(
+      //     'Loaded activities page $_currentPage: ${response['data']?.length ?? 0} items',
+      //   );
+      // }
 
       setState(() {
         if (_currentPage == 1) {
@@ -1804,19 +1804,19 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     }
 
     // Debug logging
-    if (kDebugMode) {
-      print('===== AddActivityDialog INIT =====');
-      print('Subject list count: ${widget.subjectList.length}');
-      print('Schedule list count: ${widget.scheduleList.length}');
-      print('Activity type: ${widget.activityType}');
-      print('Initial target: ${widget.initialTarget}');
-      print('Initial subject ID: $_selectedSubjectId');
-      print('Initial class ID: $_selectedClassId');
-      print('Initial bab ID: $_selectedBabId');
-      print('Initial sub bab ID: $_selectedSubBabId');
-      print('Use materi title: $_useMateriTitle');
-      print('Initial date: $_selectedDate');
-    }
+    // if (kDebugMode) {
+    //   print('===== AddActivityDialog INIT =====');
+    //   print('Subject list count: ${widget.subjectList.length}');
+    //   print('Schedule list count: ${widget.scheduleList.length}');
+    //   print('Activity type: ${widget.activityType}');
+    //   print('Initial target: ${widget.initialTarget}');
+    //   print('Initial subject ID: $_selectedSubjectId');
+    //   print('Initial class ID: $_selectedClassId');
+    //   print('Initial bab ID: $_selectedBabId');
+    //   print('Initial sub bab ID: $_selectedSubBabId');
+    //   print('Use materi title: $_useMateriTitle');
+    //   print('Initial date: $_selectedDate');
+    // }
 
     // If initial subject is provided, load its data
     if (_selectedSubjectId != null) {
@@ -1887,14 +1887,15 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       );
 
       if (!mounted) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('[_loadStudents] Widget unmounted, skipping setState');
+        }
         return;
       }
 
-      if (kDebugMode) {
-        print('[_loadStudents] Loaded ${students.length} students');
-      }
+      // if (kDebugMode) {
+      //   print('[_loadStudents] Loaded ${students.length} students');
+      // }
 
       setState(() {
         _studentList = students ?? [];
@@ -2085,14 +2086,14 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       'Minggu',
     ][now.weekday - 1];
 
-    if (kDebugMode) {
-      print('Getting unique classes for subject: $_selectedSubjectId');
-      print(
-        'Current day: $currentDay, Current time: ${now.hour}:${now.minute}',
-      );
-      print('Target: ${widget.initialTarget}');
-      print('Initial class ID from widget: ${widget.initialClassId}');
-    }
+    // if (kDebugMode) {
+    //   print('Getting unique classes for subject: $_selectedSubjectId');
+    //   print(
+    //     'Current day: $currentDay, Current time: ${now.hour}:${now.minute}',
+    //   );
+    //   print('Target: ${widget.initialTarget}');
+    //   print('Initial class ID from widget: ${widget.initialClassId}');
+    // }
 
     // Filter schedules by selected subject and deduplicate by class_id
     for (var schedule in widget.scheduleList) {
@@ -2155,12 +2156,12 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
               scheduleDay = dayMap[scheduleDay]!;
             }
 
-            if (kDebugMode) {
-              print(
-                'Schedule: ${schedule['kelas_nama']}, Day: $scheduleDay, Start: $jamMulai',
-              );
-              print('Checking against Current Day: $currentDay');
-            }
+            // if (kDebugMode) {
+            //   print(
+            //     'Schedule: ${schedule['kelas_nama']}, Day: $scheduleDay, Start: $jamMulai',
+            //   );
+            //   print('Checking against Current Day: $currentDay');
+            // }
 
             // Check if schedule is today
             if (scheduleDay == currentDay && jamMulai.isNotEmpty) {
@@ -2205,9 +2206,9 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       }
     }
 
-    if (kDebugMode) {
-      print('Unique classes found: ${uniqueClasses.length}');
-    }
+    // if (kDebugMode) {
+    //   print('Unique classes found: ${uniqueClasses.length}');
+    // }
 
     // Convert to dropdown items safely
     try {
@@ -2286,6 +2287,32 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       } else {
         // Create new activity
         await ApiClassActivityService.tambahKegiatan(requestData);
+      }
+
+      // Automatically mark material as generated (checked)
+      if (data['chapter_id'] != null) {
+        try {
+          // Construct items list for markGenerated
+          final List<Map<String, dynamic>> items = [
+            {
+              'bab_id': data['chapter_id'],
+              'sub_bab_id': data['sub_chapter_id'],
+            },
+          ];
+
+          await ApiSubjectService.markMateriGenerated({
+            'guru_id': widget.teacherId,
+            'mata_pelajaran_id': _selectedSubjectId,
+            'items': items,
+          });
+          if (kDebugMode) {
+            print('Auto-marked material as generated: ${data['chapter_id']}');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error auto-marking material: $e');
+          }
+        }
       }
 
       if (!mounted) return;
@@ -2498,26 +2525,25 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                   prefixIcon: Icon(Icons.class_),
                   border: OutlineInputBorder(),
                 ),
-                initialValue: _selectedClassId,
-                isExpanded: true,
-                items: _selectedSubjectId == null
-                    ? null
-                    : _getUniqueClassItems(),
-                value:
+                initialValue:
                     (_selectedClassId != null &&
                         _getUniqueClassItems().any(
                           (item) => item.value == _selectedClassId,
                         ))
                     ? _selectedClassId
                     : null,
+                isExpanded: true,
+                items: _selectedSubjectId == null
+                    ? null
+                    : _getUniqueClassItems(),
                 onChanged: _selectedSubjectId == null
                     ? null
                     : (value) {
-                        if (kDebugMode) {
-                          print(
-                            'Class Dropdown onChanged: $value, target: ${widget.initialTarget}',
-                          );
-                        }
+                        // if (kDebugMode) {
+                        //   print(
+                        //     'Class Dropdown onChanged: $value, target: ${widget.initialTarget}',
+                        //   );
+                        // }
                         setState(() {
                           _selectedClassId = value;
                         });

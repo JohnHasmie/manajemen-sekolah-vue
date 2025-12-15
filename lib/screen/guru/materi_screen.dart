@@ -58,6 +58,10 @@ class MateriPageState extends State<MateriPage> {
   final Map<String, bool> _generatedBab = {};
   final Map<String, bool> _generatedSubBab = {};
 
+  // State untuk used (sudah digunakan di class activity) - Blue Check
+  final Map<String, bool> _usedBab = {};
+  final Map<String, bool> _usedSubBab = {};
+
   // Fungsi untuk mendapatkan bab yang dicentang tapi belum di-generate
   List<Map<String, dynamic>> _getCheckedNotGeneratedBab() {
     return _babMateriList
@@ -126,7 +130,7 @@ class MateriPageState extends State<MateriPage> {
 
     if (!mounted) return;
 
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ClassActifityScreen(
@@ -140,6 +144,11 @@ class MateriPageState extends State<MateriPage> {
         ),
       ),
     );
+
+    // Refresh data after returning
+    if (mounted && _selectedMataPelajaran != null) {
+      _loadBabMateri(_selectedMataPelajaran!);
+    }
   }
 
   // Mark selected materials as generated
@@ -313,11 +322,14 @@ class MateriPageState extends State<MateriPage> {
         _checkedSubBab.clear();
         _generatedBab.clear();
         _generatedSubBab.clear();
+        _usedBab.clear(); // Clear used state
+        _usedSubBab.clear(); // Clear used state
         // Inisialisasi state expanded dan checked untuk setiap bab
         for (var bab in babMateri) {
           _expandedBab[bab['id']] = false;
           _checkedBab[bab['id']] = false;
           _generatedBab[bab['id']] = false;
+          _usedBab[bab['id']] = false; // Initialize used state
         }
         _debugInfo = '${babMateri.length} bab materi ditemukan';
       });
@@ -372,8 +384,9 @@ class MateriPageState extends State<MateriPage> {
 
   // Fungsi untuk menangani perubahan ceklis pada sub bab
   void _handleSubBabCheck(String subBabId, String babId, bool? value) {
-    // Prevent unchecking if already checked
-    if (_checkedSubBab[subBabId] == true && value == false) {
+    // Prevent unchecking if already generated (Purple) or Used (Blue)
+    if ((_generatedSubBab[subBabId] == true || _usedSubBab[subBabId] == true) &&
+        value == false) {
       return;
     }
 
@@ -395,22 +408,29 @@ class MateriPageState extends State<MateriPage> {
 
   // Fungsi untuk menangani perubahan ceklis pada bab
   void _handleBabCheck(String babId, bool? value) {
-    // Prevent unchecking if already checked
-    if (_checkedBab[babId] == true && value == false) {
+    // Prevent unchecking if already generated (Purple) or Used (Blue)
+    if ((_generatedBab[babId] == true || _usedBab[babId] == true) &&
+        value == false) {
       return;
     }
 
     setState(() {
       _checkedBab[babId] = value ?? false;
 
-      // Jika bab dicentang, set semua sub bab dalam bab tersebut dengan nilai yang sama
-      // Tapi jangan uncheck sub bab yang sudah checked
+      // Update sub-babs logic:
+      // If checking Bab (True): Check all sub-babs.
+      // If unchecking Bab (False): Uncheck all sub-babs EXCEPT those that are Generated (Purple).
       for (var subBab in _subBabMateriList.where(
         (subBab) => subBab['bab_id'] == babId,
       )) {
-        // Only check, don't uncheck
         if (value == true) {
           _checkedSubBab[subBab['id']] = true;
+        } else {
+          // If unchecking, only uncheck if NOT generated and NOT used
+          if (_generatedSubBab[subBab['id']] != true &&
+              _usedSubBab[subBab['id']] != true) {
+            _checkedSubBab[subBab['id']] = false;
+          }
         }
       }
     });
@@ -443,15 +463,18 @@ class MateriPageState extends State<MateriPage> {
               item['is_checked'] == 1 || item['is_checked'] == true;
           final isGenerated =
               item['is_generated'] == 1 || item['is_generated'] == true;
+          final isUsed = item['is_used'] == 1 || item['is_used'] == true;
 
           if (subBabId != null) {
             // Sub bab checked and generated status
             _checkedSubBab[subBabId.toString()] = isChecked;
             _generatedSubBab[subBabId.toString()] = isGenerated;
+            _usedSubBab[subBabId.toString()] = isUsed;
           } else if (babId != null) {
             // Bab checked and generated status (no specific sub bab)
             _checkedBab[babId.toString()] = isChecked;
             _generatedBab[babId.toString()] = isGenerated;
+            _usedBab[babId.toString()] = isUsed;
           }
         }
       });
@@ -508,10 +531,24 @@ class MateriPageState extends State<MateriPage> {
         'is_checked': isChecked,
       });
 
+      // Debug sub-bab count
+      final subBabsForThisBab = _subBabMateriList
+          .where((sb) => sb['bab_id'].toString() == babId.toString())
+          .toList();
+
+      if (kDebugMode) {
+        print('Found ${subBabsForThisBab.length} sub-babs for bab $babId');
+      }
+
       // Add all sub-babs of this bab
-      for (var subBab in _subBabMateriList.where(
-        (sb) => sb['bab_id'] == babId,
-      )) {
+      for (var subBab in subBabsForThisBab) {
+        // Respect locks: If unchecking, don't include if Generated or Used
+        if (isChecked == false) {
+          final isGenerated = _generatedSubBab[subBab['id']] == true;
+          final isUsed = _usedSubBab[subBab['id']] == true;
+          if (isGenerated || isUsed) continue;
+        }
+
         progressItems.add({
           'bab_id': babId,
           'sub_bab_id': subBab['id'],
@@ -1090,7 +1127,9 @@ class MateriPageState extends State<MateriPage> {
                                 onChanged: (value) {
                                   _handleBabCheck(bab['id'], value);
                                 },
-                                activeColor: _generatedBab[bab['id']] == true
+                                activeColor: _usedBab[bab['id']] == true
+                                    ? Colors.blue
+                                    : _generatedBab[bab['id']] == true
                                     ? Color(0xFF8B5CF6)
                                     : Color(0xFF10B981),
                               ),
@@ -1174,7 +1213,9 @@ class MateriPageState extends State<MateriPage> {
                     onChanged: (value) {
                       _handleSubBabCheck(subBab['id'], bab['id'], value);
                     },
-                    activeColor: _generatedSubBab[subBab['id']] == true
+                    activeColor: _usedSubBab[subBab['id']] == true
+                        ? Colors.blue
+                        : _generatedSubBab[subBab['id']] == true
                         ? Color(0xFF8B5CF6)
                         : Color(0xFF10B981),
                   ),

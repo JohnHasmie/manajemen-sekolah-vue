@@ -450,10 +450,12 @@ class ApiService {
   static Future<List<dynamic>> getRPP({
     String? teacherId,
     String? status,
+    String? search,
   }) async {
     String url = '$baseUrl/rpp?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
     if (status != null) url += 'status=$status&';
+    if (search != null) url += 'search=$search&';
 
     final response = await http.get(
       Uri.parse(url),
@@ -461,6 +463,11 @@ class ApiService {
     );
 
     final result = _handleResponse(response);
+
+    if (result is Map && result.containsKey('data')) {
+      return result['data'] is List ? result['data'] : [];
+    }
+
     return result is List ? result : [];
   }
 
