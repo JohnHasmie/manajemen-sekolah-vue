@@ -19,46 +19,46 @@ import 'package:provider/provider.dart';
 
 // Model untuk Summary Absensi
 class AbsensiSummary {
-  final String mataPelajaranId;
-  final String mataPelajaranNama;
-  final DateTime tanggal;
-  final int totalSiswa;
-  final int hadir;
-  final int tidakHadir;
+  final String subjectId;
+  final String subjectName;
+  final DateTime date;
+  final int totalStudent;
+  final int present;
+  final int absent;
   final String? classId;
   final String? className;
 
   AbsensiSummary({
-    required this.mataPelajaranId,
-    required this.mataPelajaranNama,
-    required this.tanggal,
-    required this.totalSiswa,
-    required this.hadir,
-    required this.tidakHadir,
+    required this.subjectId,
+    required this.subjectName,
+    required this.date,
+    required this.totalStudent,
+    required this.present,
+    required this.absent,
     this.classId,
     this.className,
   });
 
   String get key =>
-      '$mataPelajaranId-${DateFormat('yyyy-MM-dd').format(tanggal)}';
+      '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}';
 }
 
 class PresencePage extends StatefulWidget {
-  final Map<String, dynamic> guru;
+  final Map<String, dynamic> teacher;
   final DateTime? initialDate;
-  final String? initialMataPelajaranId;
-  final String? initialMataPelajaranNama;
+  final String? initialSubjectId;
+  final String? initialSubjectName;
   final String? initialclassId;
-  final String? initialKelasNama;
+  final String? initialClassName;
 
   const PresencePage({
     super.key,
-    required this.guru,
+    required this.teacher,
     this.initialDate,
-    this.initialMataPelajaranId,
-    this.initialMataPelajaranNama,
+    this.initialSubjectId,
+    this.initialSubjectName,
     this.initialclassId,
-    this.initialKelasNama,
+    this.initialClassName,
   });
 
   @override
@@ -76,16 +76,16 @@ class PresencePageState extends State<PresencePage>
 
   // Data untuk mode Input Absensi
   DateTime _selectedDate = DateTime.now();
-  String? _selectedMataPelajaran;
-  String? _selectedMataPelajaranNama;
-  String? _selectedKelas;
-  String? _selectedKelasNama;
+  String? _selectedSubjectId;
+  String? _selectedSubjectName;
+  String? _selectedClassId;
+  String? _selectedClassName;
   String? _selectedDateFilter;
-  List<dynamic> _mataPelajaranList = [];
-  List<dynamic> _mataPelajaranDiampu = [];
-  List<dynamic> _kelasList = [];
-  List<Siswa> _siswaList = [];
-  List<Siswa> _filteredSiswaList = [];
+  List<dynamic> _subjectList = [];
+  List<dynamic> _subjectTeacher = [];
+  List<dynamic> _classList = [];
+  List<Siswa> _studentList = [];
+  List<Siswa> _filteredStudentList = [];
   List<String> _selectedSubjectIds = [];
   final Map<String, String> _absensiStatus = {};
   bool _isLoadingInput = true;
@@ -115,13 +115,13 @@ class PresencePageState extends State<PresencePage>
     if (widget.initialDate != null) {
       _selectedDate = widget.initialDate!;
     }
-    if (widget.initialMataPelajaranId != null) {
-      _selectedMataPelajaran = widget.initialMataPelajaranId;
-      _selectedMataPelajaranNama = widget.initialMataPelajaranNama;
+    if (widget.initialSubjectId != null) {
+      _selectedSubjectId = widget.initialSubjectId;
+      _selectedSubjectName = widget.initialSubjectName;
     }
     if (widget.initialclassId != null) {
-      _selectedKelas = widget.initialclassId;
-      _selectedKelasNama = widget.initialKelasNama;
+      _selectedClassId = widget.initialclassId;
+      _selectedClassName = widget.initialClassName;
     }
 
     _tabController = TabController(length: 2, vsync: this);
@@ -148,30 +148,29 @@ class PresencePageState extends State<PresencePage>
   Future<void> _loadInitialData() async {
     try {
       final apiServiceClass = ApiClassService();
-      final [mataPelajaranDiampu, kelas, siswa] = await Future.wait([
+      final [subjectTeacher, classList, studentList] = await Future.wait([
         // Ambil mata pelajaran yang diampu oleh guru
-        _getMataPelajaranByGuru(widget.guru['id']),
+        _getSubjectByTeacher(widget.teacher['id']),
         apiServiceClass.getClass(),
         ApiStudentService.getStudent(),
       ]);
 
       setState(() {
-        _mataPelajaranDiampu = mataPelajaranDiampu;
-        _mataPelajaranList = mataPelajaranDiampu; // Gunakan yang diampu saja
-        _kelasList = kelas;
-        _siswaList = siswa.map((s) => Siswa.fromJson(s)).toList();
-        _filteredSiswaList = _siswaList;
+        _subjectTeacher = subjectTeacher;
+        _classList = classList;
+        _studentList = studentList.map((s) => Siswa.fromJson(s)).toList();
+        _filteredStudentList = _studentList;
 
         // Set default status untuk semua siswa
-        for (var siswa in _siswaList) {
-          _absensiStatus[siswa.id] = 'hadir';
+        for (var student in _studentList) {
+          _absensiStatus[student.id] = 'hadir';
         }
 
         _isLoadingInput = false;
       });
 
       // Auto-detect current schedule if not initialized from teaching_schedule
-      if (widget.initialMataPelajaranId == null) {
+      if (widget.initialSubjectId == null) {
         await _detectCurrentSchedule();
       }
 
@@ -198,10 +197,10 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
-  Future<List<dynamic>> _getMataPelajaranByGuru(String guruId) async {
+  Future<List<dynamic>> _getSubjectByTeacher(String teacherId) async {
     try {
       final apiTeacherService = ApiTeacherService();
-      final result = await apiTeacherService.getSubjectByTeacher(guruId);
+      final result = await apiTeacherService.getSubjectByTeacher(teacherId);
       return result;
     } catch (e) {
       print('Error getting mata pelajaran by guru: $e');
@@ -270,10 +269,10 @@ class PresencePageState extends State<PresencePage>
   Future<void> _detectCurrentSchedule() async {
     try {
       final schedules = await ApiScheduleService.getSchedule(
-        guruId: widget.guru['id'],
-        hariId: _getCurrentDayId(),
+        teacherId: widget.teacher['id'],
+        dayId: _getCurrentDayId(),
         semesterId: _getCurrentSemester(),
-        tahunAjaran: _getCurrentAcademicYear(),
+        academicYear: _getCurrentAcademicYear(),
       );
 
       setState(() {
@@ -281,10 +280,10 @@ class PresencePageState extends State<PresencePage>
           // Find current schedule based on time
           Map<String, dynamic>? currentSchedule;
           for (var schedule in schedules) {
-            final jamMulai = schedule['jam_mulai']?.toString() ?? '';
-            final jamSelesai = schedule['jam_selesai']?.toString() ?? '';
+            final startTime = schedule['jam_mulai']?.toString() ?? '';
+            final endTime = schedule['jam_selesai']?.toString() ?? '';
 
-            if (_isWithinScheduleTime(jamMulai, jamSelesai)) {
+            if (_isWithinScheduleTime(startTime, endTime)) {
               currentSchedule = schedule;
               break;
             }
@@ -292,13 +291,13 @@ class PresencePageState extends State<PresencePage>
 
           if (currentSchedule != null) {
             _currentSchedule = currentSchedule;
-            _selectedMataPelajaran = currentSchedule['mata_pelajaran_id']
+            _selectedSubjectId = currentSchedule['mata_pelajaran_id']
                 ?.toString();
-            _selectedMataPelajaranNama = currentSchedule['mata_pelajaran_nama']
+            _selectedSubjectName = currentSchedule['mata_pelajaran_nama']
                 ?.toString();
-            _selectedKelas = currentSchedule['kelas_id']?.toString();
-            _selectedKelasNama = currentSchedule['kelas_nama']?.toString();
-            _filterStudentsByClass(_selectedKelas);
+            _selectedClassId = currentSchedule['kelas_id']?.toString();
+            _selectedClassName = currentSchedule['kelas_nama']?.toString();
+            _filterStudentsByClass(_selectedClassId);
           } else {
             _currentSchedule = null;
           }
@@ -324,7 +323,7 @@ class PresencePageState extends State<PresencePage>
 
     try {
       final absensiData = await ApiService.getAbsensi(
-        teacherId: widget.guru['id'],
+        teacherId: widget.teacher['id'],
       );
 
       final Map<String, AbsensiSummary> summaryMap = {};
@@ -335,20 +334,20 @@ class PresencePageState extends State<PresencePage>
         final key = '${absen['subject_id']}-${absen['date']}-$classId';
 
         // Use name from API if available, otherwise fallback to lookup
-        final mataPelajaranNama =
+        final subjectName =
             absen['mata_pelajaran_nama'] ??
-            _getMataPelajaranName(absen['subject_id']);
+            _getSubjectName(absen['subject_id']);
 
         final className = absen['kelas_nama'];
 
         if (!summaryMap.containsKey(key)) {
           summaryMap[key] = AbsensiSummary(
-            mataPelajaranId: absen['subject_id'],
-            mataPelajaranNama: mataPelajaranNama,
-            tanggal: _parseLocalDate(absen['date']),
-            totalSiswa: 0,
-            hadir: 0,
-            tidakHadir: 0,
+            subjectId: absen['subject_id'],
+            subjectName: subjectName,
+            date: _parseLocalDate(absen['date']),
+            totalStudent: 0,
+            present: 0,
+            absent: 0,
             classId: classId.isNotEmpty ? classId : null,
             className: className,
           );
@@ -359,12 +358,12 @@ class PresencePageState extends State<PresencePage>
         final isPresent = status == 'hadir' || status == 'present';
 
         summaryMap[key] = AbsensiSummary(
-          mataPelajaranId: summary.mataPelajaranId,
-          mataPelajaranNama: summary.mataPelajaranNama,
-          tanggal: summary.tanggal,
-          totalSiswa: summary.totalSiswa + 1,
-          hadir: summary.hadir + (isPresent ? 1 : 0),
-          tidakHadir: summary.tidakHadir + (!isPresent ? 1 : 0),
+          subjectId: summary.subjectId,
+          subjectName: summary.subjectName,
+          date: summary.date,
+          totalStudent: summary.totalStudent + 1,
+          present: summary.present + (isPresent ? 1 : 0),
+          absent: summary.absent + (!isPresent ? 1 : 0),
           classId: summary.classId,
           className: summary.className,
         );
@@ -375,7 +374,7 @@ class PresencePageState extends State<PresencePage>
 
       setState(() {
         _absensiSummaryList = summaryMap.values.toList()
-          ..sort((a, b) => b.tanggal.compareTo(a.tanggal));
+          ..sort((a, b) => b.date.compareTo(a.date));
         _isLoadingSummary = false;
       });
 
@@ -395,51 +394,51 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
-  String _getMataPelajaranName(String mataPelajaranId) {
+  String _getSubjectName(String subjectId) {
     try {
-      final mataPelajaran = _mataPelajaranList.firstWhere(
-        (mp) => mp['id'] == mataPelajaranId,
+      final subject = _subjectList.firstWhere(
+        (mp) => mp['id'] == subjectId,
         orElse: () => {'nama': 'Unknown'},
       );
-      return mataPelajaran['nama'] ?? mataPelajaran['name'] ?? 'Unknown';
+      return subject['nama'] ?? subject['name'] ?? 'Unknown';
     } catch (e) {
       return 'Unknown';
     }
   }
 
-  String _getMataPelajaranSelectedName() {
-    if (_selectedMataPelajaran == null) return '-';
+  String _getSubjectSelectedName() {
+    if (_selectedSubjectId == null) return '-';
     try {
-      final mataPelajaran = _mataPelajaranDiampu.firstWhere(
-        (mp) => mp['id'] == _selectedMataPelajaran,
+      final subject = _subjectList.firstWhere(
+        (mp) => mp['id'] == _selectedSubjectId,
         orElse: () => {'nama': 'Unknown'},
       );
-      return mataPelajaran['nama'] ?? mataPelajaran['name'] ?? 'Unknown';
+      return subject['nama'] ?? subject['name'] ?? 'Unknown';
     } catch (e) {
       return 'Unknown';
     }
   }
 
-  String _getKelasNameWithCount(String classId) {
+  String _getClassNameWithCount(String classId) {
     // Use provided kelas name if available
-    if (_selectedKelasNama != null) {
-      final count = _filteredSiswaList
+    if (_selectedClassName != null) {
+      final count = _filteredStudentList
           .where((s) => s.classId == classId)
           .length;
-      return '$_selectedKelasNama - $count siswa';
+      return '$_selectedClassName - $count siswa';
     }
 
     // Fallback to finding from list
     try {
-      final kelas = _kelasList.firstWhere(
+      final classList = _classList.firstWhere(
         (k) => k['id'].toString() == classId,
         orElse: () => {'nama': 'Unknown Class'},
       );
-      final kelasName = kelas['nama'] ?? kelas['name'] ?? 'Unknown Class';
-      final count = _filteredSiswaList
+      final className = classList['nama'] ?? classList['name'] ?? 'Unknown Class';
+      final count = _filteredStudentList
           .where((s) => s.classId == classId)
           .length;
-      return '$kelasName - $count siswa';
+      return '$className - $count siswa';
     } catch (e) {
       return 'Unknown Class';
     }
@@ -518,8 +517,8 @@ class PresencePageState extends State<PresencePage>
 
   void _setAllStatus(String status, LanguageProvider languageProvider) {
     setState(() {
-      for (var siswa in _filteredSiswaList) {
-        _absensiStatus[siswa.id] = status;
+      for (var student in _filteredStudentList) {
+        _absensiStatus[student.id] = status;
       }
     });
 
@@ -703,7 +702,7 @@ class PresencePageState extends State<PresencePage>
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: DropdownButton<String>(
-                              value: _selectedKelas,
+                              value: _selectedClassId,
                               isExpanded: true,
                               underline: Container(),
                               icon: Icon(Icons.arrow_drop_down),
@@ -721,16 +720,16 @@ class PresencePageState extends State<PresencePage>
                                     }),
                                   ),
                                 ),
-                                ..._kelasList.map(
-                                  (kelas) => DropdownMenuItem(
-                                    value: kelas['id'],
-                                    child: Text(kelas['name']),
+                                ..._classList.map(
+                                  (classItem) => DropdownMenuItem(
+                                    value: classItem['id'],
+                                    child: Text(classItem['name']),
                                   ),
                                 ),
                               ],
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedKelas = value;
+                                  _selectedClassId = value;
                                   _filterStudentsByClass(value);
                                 });
                                 setModalState(() {});
@@ -762,7 +761,7 @@ class PresencePageState extends State<PresencePage>
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: DropdownButton<String>(
-                              value: _selectedMataPelajaran,
+                              value: _selectedSubjectId,
                               isExpanded: true,
                               underline: Container(),
                               icon: Icon(Icons.arrow_drop_down),
@@ -780,7 +779,7 @@ class PresencePageState extends State<PresencePage>
                                     }),
                                   ),
                                 ),
-                                ..._mataPelajaranDiampu.map(
+                                ..._subjectTeacher.map(
                                   (mp) => DropdownMenuItem(
                                     value: mp['id'],
                                     child: Text(
@@ -794,14 +793,14 @@ class PresencePageState extends State<PresencePage>
                               ],
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedMataPelajaran = value;
+                                  _selectedSubjectId = value;
                                   // Update nama mata pelajaran
-                                  final selected = _mataPelajaranDiampu
+                                  final selected = _subjectTeacher
                                       .firstWhere(
                                         (mp) => mp['id'] == value,
                                         orElse: () => {},
                                       );
-                                  _selectedMataPelajaranNama =
+                                  _selectedSubjectName =
                                       selected['nama'] ??
                                       selected['mata_pelajaran_nama'];
                                 });
@@ -810,7 +809,7 @@ class PresencePageState extends State<PresencePage>
                             ),
                           ),
 
-                          if (_mataPelajaranDiampu.isEmpty)
+                          if (_subjectTeacher.isEmpty)
                             Container(
                               margin: EdgeInsets.only(top: 12),
                               padding: EdgeInsets.all(12),
@@ -891,7 +890,7 @@ class PresencePageState extends State<PresencePage>
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              if (_selectedMataPelajaran != null) {
+                              if (_selectedSubjectId != null) {
                                 Navigator.pop(context);
                                 setState(() {
                                   // Reset auto schedule since this is manual
@@ -950,21 +949,21 @@ class PresencePageState extends State<PresencePage>
     final searchTerm = _searchControllerInput.text.toLowerCase();
 
     setState(() {
-      _filteredSiswaList = _siswaList.where((siswa) {
+      _filteredStudentList = _studentList.where((student) {
         // Search filter
         final matchesSearch =
             searchTerm.isEmpty ||
-            siswa.name.toLowerCase().contains(searchTerm) ||
-            siswa.nis.toLowerCase().contains(searchTerm);
+            student.name.toLowerCase().contains(searchTerm) ||
+            student.nis.toLowerCase().contains(searchTerm);
 
         // Status filter
         final matchesStatus =
             _selectedStatusFilter == null ||
-            (_absensiStatus[siswa.id] ?? 'hadir') == _selectedStatusFilter;
+            (_absensiStatus[student.id] ?? 'hadir') == _selectedStatusFilter;
 
         // Class filter
         final matchesClass =
-            _selectedKelas == null || siswa.classId == _selectedKelas;
+            _selectedClassId == null || student.classId == _selectedClassId;
 
         return matchesSearch && matchesStatus && matchesClass;
       }).toList();
@@ -1281,32 +1280,32 @@ class PresencePageState extends State<PresencePage>
       // Search filter
       final matchesSearch =
           searchTerm.isEmpty ||
-          summary.mataPelajaranNama.toLowerCase().contains(searchTerm);
+          summary.subjectName.toLowerCase().contains(searchTerm);
 
       // Date filter
       bool matchesDateFilter = true;
       if (_selectedDateFilter != null) {
         if (_selectedDateFilter == 'today') {
-          matchesDateFilter = _isSameDay(summary.tanggal, now);
+          matchesDateFilter = _isSameDay(summary.date, now);
         } else if (_selectedDateFilter == 'week') {
           matchesDateFilter =
-              summary.tanggal.isAfter(
+              summary.date.isAfter(
                 startOfWeek.subtract(Duration(days: 1)),
               ) &&
-              summary.tanggal.isBefore(endOfWeek.add(Duration(days: 1)));
+              summary.date.isBefore(endOfWeek.add(Duration(days: 1)));
         } else if (_selectedDateFilter == 'month') {
           matchesDateFilter =
-              summary.tanggal.isAfter(
+              summary.date.isAfter(
                 startOfMonth.subtract(Duration(days: 1)),
               ) &&
-              summary.tanggal.isBefore(endOfMonth.add(Duration(days: 1)));
+              summary.date.isBefore(endOfMonth.add(Duration(days: 1)));
         }
       }
 
       // Subject filter
       final matchesSubject =
           _selectedSubjectIds.isEmpty ||
-          _selectedSubjectIds.contains(summary.mataPelajaranId);
+          _selectedSubjectIds.contains(summary.subjectId);
 
       return matchesSearch && matchesDateFilter && matchesSubject;
     }).toList();
@@ -1511,7 +1510,7 @@ class PresencePageState extends State<PresencePage>
                 'en': 'Subject',
                 'id': 'Mata Pelajaran',
               }),
-              options: _mataPelajaranDiampu.map((subject) {
+              options: _subjectTeacher.map((subject) {
                 return FilterOption(
                   label:
                       subject['nama'] ??
@@ -1594,8 +1593,8 @@ class PresencePageState extends State<PresencePage>
     AbsensiSummary summary,
     LanguageProvider languageProvider,
   ) {
-    final presentaseHadir = summary.totalSiswa > 0
-        ? (summary.hadir / summary.totalSiswa * 100).round()
+    final presentaseHadir = summary.totalStudent > 0
+        ? (summary.present / summary.totalStudent * 100).round()
         : 0;
 
     return Container(
@@ -1688,7 +1687,7 @@ class PresencePageState extends State<PresencePage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                summary.mataPelajaranNama,
+                                summary.subjectName,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -1713,7 +1712,7 @@ class PresencePageState extends State<PresencePage>
                                 DateFormat(
                                   'EEEE, dd MMMM yyyy',
                                   'id_ID',
-                                ).format(summary.tanggal),
+                                ).format(summary.date),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey[600],
@@ -1760,7 +1759,7 @@ class PresencePageState extends State<PresencePage>
                               ),
                               SizedBox(height: 1),
                               Text(
-                                '${summary.hadir} Hadir • ${summary.tidakHadir} Tidak Hadir',
+                                '${summary.present} Hadir • ${summary.absent} Tidak Hadir',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1789,8 +1788,8 @@ class PresencePageState extends State<PresencePage>
                               return Container(
                                 width:
                                     constraints.maxWidth *
-                                    (summary.totalSiswa > 0
-                                        ? summary.hadir / summary.totalSiswa
+                                    (summary.totalStudent > 0
+                                        ? summary.present / summary.totalStudent
                                         : 0),
                                 decoration: BoxDecoration(
                                   color: presentaseHadir >= 80
@@ -1875,12 +1874,12 @@ class PresencePageState extends State<PresencePage>
       context,
       MaterialPageRoute(
         builder: (context) => TeacherAbsensiDetailPage(
-          mataPelajaranId: summary.mataPelajaranId,
-          mataPelajaranNama: summary.mataPelajaranNama,
-          tanggal: summary.tanggal,
+          subjectId: summary.subjectId,
+          subjectName: summary.subjectName,
+          date: summary.date,
           classId: summary.classId ?? '',
-          kelasNama: summary.className ?? 'Unknown Class',
-          guru: widget.guru,
+          className: summary.className ?? 'Unknown Class',
+          teacher: widget.teacher,
         ),
       ),
     );
@@ -1926,13 +1925,13 @@ class PresencePageState extends State<PresencePage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Subject and Class Info or No Schedule Message
-                            if (_selectedMataPelajaran != null) ...[
+                            if (_selectedSubjectId != null) ...[
                               Row(
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      _selectedMataPelajaranNama ??
-                                          _getMataPelajaranSelectedName(),
+                                      _selectedSubjectName ??
+                                          _getSubjectSelectedName(),
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -1981,9 +1980,9 @@ class PresencePageState extends State<PresencePage>
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              if (_selectedKelas != null)
+                              if (_selectedClassId != null)
                                 Text(
-                                  _getKelasNameWithCount(_selectedKelas!),
+                                  _getClassNameWithCount(_selectedClassId!),
                                   style: TextStyle(
                                     color: _getPrimaryColor(),
                                     fontSize: 14,
@@ -2134,7 +2133,7 @@ class PresencePageState extends State<PresencePage>
             ),
 
             // Search Bar untuk Input Mode - hanya muncul jika _showSearch = true dan ada schedule
-            if (_showSearch && _selectedMataPelajaran != null) ...[
+            if (_showSearch && _selectedSubjectId != null) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Container(
@@ -2186,7 +2185,7 @@ class PresencePageState extends State<PresencePage>
 
             // Student List or Empty State
             Expanded(
-              child: _selectedMataPelajaran == null
+              child: _selectedSubjectId == null
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(40),
@@ -2229,7 +2228,7 @@ class PresencePageState extends State<PresencePage>
                         ),
                       ),
                     )
-                  : _filteredSiswaList.isEmpty
+                  : _filteredStudentList.isEmpty
                   ? EmptyState(
                       title: languageProvider.getTranslatedText({
                         'en': 'No Students',
@@ -2243,16 +2242,16 @@ class PresencePageState extends State<PresencePage>
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.only(top: 8),
-                      itemCount: _filteredSiswaList.length,
+                      itemCount: _filteredStudentList.length,
                       itemBuilder: (context, index) => _buildStudentItem(
-                        _filteredSiswaList[index],
+                        _filteredStudentList[index],
                         languageProvider,
                       ),
                     ),
             ),
 
             // Submit Button
-            if (_selectedMataPelajaran != null)
+            if (_selectedSubjectId != null)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: SizedBox(
@@ -2508,7 +2507,7 @@ class PresencePageState extends State<PresencePage>
 
   void _filterStudentsByClass(String? classId) {
     setState(() {
-      _selectedKelas = classId;
+      _selectedClassId = classId;
       _filterStudents();
     });
   }
@@ -2517,8 +2516,8 @@ class PresencePageState extends State<PresencePage>
     final languageProvider = context.read<LanguageProvider>();
 
     // Validasi guru_id
-    final guruId = widget.guru['id'];
-    if (guruId == null) {
+    final teacherId = widget.teacher['id'];
+    if (teacherId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -2534,7 +2533,7 @@ class PresencePageState extends State<PresencePage>
       return;
     }
 
-    if (_selectedMataPelajaran == null) {
+    if (_selectedSubjectId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -2550,7 +2549,7 @@ class PresencePageState extends State<PresencePage>
       return;
     }
 
-    if (_filteredSiswaList.isEmpty) {
+    if (_filteredStudentList.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -2575,18 +2574,18 @@ class PresencePageState extends State<PresencePage>
       int errorCount = 0;
       List<String> errorMessages = [];
 
-      final tanggal = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      final date = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
-      for (var siswa in _filteredSiswaList) {
+      for (var student in _filteredStudentList) {
         try {
-          final status = _absensiStatus[siswa.id] ?? 'hadir';
+          final status = _absensiStatus[student.id] ?? 'hadir';
 
           await ApiService.tambahAbsensi({
-            'student_id': siswa.id,
-            'teacher_id': guruId,
-            'subject_id': _selectedMataPelajaran,
-            'class_id': siswa.classId,
-            'date': tanggal,
+            'student_id': student.id,
+            'teacher_id': teacherId,
+            'subject_id': _selectedSubjectId,
+            'class_id': student.classId,
+            'date': date,
             'status': _mapStatusToBackend(status),
             'notes': '',
           });
@@ -2595,7 +2594,7 @@ class PresencePageState extends State<PresencePage>
           await Future.delayed(const Duration(milliseconds: 50));
         } catch (e) {
           errorCount++;
-          errorMessages.add('${siswa.name}: $e');
+          errorMessages.add('${student.name}: $e');
         }
       }
 
@@ -2709,11 +2708,11 @@ class PresencePageState extends State<PresencePage>
   void _resetForm() {
     setState(() {
       // Reset status absensi ke default
-      for (var siswa in _siswaList) {
-        _absensiStatus[siswa.id] = 'hadir';
+      for (var student in _studentList) {
+        _absensiStatus[student.id] = 'hadir';
       }
       // Reset filter kelas
-      _selectedKelas = null;
+      _selectedClassId = null;
       _selectedStatusFilter = null;
       _searchControllerInput.clear();
       _hasActiveFilterInput = false;
@@ -2810,9 +2809,9 @@ class PresencePageState extends State<PresencePage>
         content: Text(
           languageProvider.getTranslatedText({
             'en':
-                'Are you sure you want to delete attendance for ${summary.mataPelajaranNama} on ${DateFormat('dd MMMM yyyy', 'id_ID').format(summary.tanggal)}?',
+                'Are you sure you want to delete attendance for ${summary.subjectName} on ${DateFormat('dd MMMM yyyy', 'id_ID').format(summary.date)}?',
             'id':
-                'Apakah Anda yakin ingin menghapus absensi ${summary.mataPelajaranNama} pada ${DateFormat('dd MMMM yyyy', 'id_ID').format(summary.tanggal)}?',
+                'Apakah Anda yakin ingin menghapus absensi ${summary.subjectName} pada ${DateFormat('dd MMMM yyyy', 'id_ID').format(summary.date)}?',
           }),
         ),
         actions: [
@@ -2843,9 +2842,9 @@ class PresencePageState extends State<PresencePage>
 
     try {
       await ApiService.deleteAbsensiSummary(
-        guruId: widget.guru['id'],
-        subjectId: summary.mataPelajaranId,
-        date: DateFormat('yyyy-MM-dd').format(summary.tanggal),
+        teacherId: widget.teacher['id'],
+        subjectId: summary.subjectId,
+        date: DateFormat('yyyy-MM-dd').format(summary.date),
         classId: summary.classId,
       );
 
@@ -2924,18 +2923,18 @@ class PresencePageState extends State<PresencePage>
 
 // ========== ABSENSI DETAIL PAGE ==========
 class AbsensiDetailPage extends StatefulWidget {
-  final Map<String, dynamic> guru;
-  final String mataPelajaranId;
-  final String mataPelajaranNama;
-  final DateTime tanggal;
+  final Map<String, dynamic> teacher;
+  final String subjectId;
+  final String subjectName;
+  final DateTime date;
   final String? classId;
 
   const AbsensiDetailPage({
     super.key,
-    required this.guru,
-    required this.mataPelajaranId,
-    required this.mataPelajaranNama,
-    required this.tanggal,
+    required this.teacher,
+    required this.subjectId,
+    required this.subjectName,
+    required this.date,
     this.classId,
   });
 
@@ -2945,8 +2944,8 @@ class AbsensiDetailPage extends StatefulWidget {
 
 class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   List<dynamic> _absensiData = [];
-  List<Siswa> _siswaList = [];
-  List<dynamic> _kelasList = [];
+  List<Siswa> _studentList = [];
+  List<dynamic> _classList = [];
   final Map<String, String> _absensiStatus = {};
   bool _isLoading = true;
   bool _isSubmitting = false;
@@ -2961,48 +2960,48 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     try {
       // Load siswa, absensi, dan kelas data
       final apiServiceClass = ApiClassService();
-      final [siswaData, absensiData, kelasData] = await Future.wait([
+      final [studentData, absensiData, classData] = await Future.wait([
         ApiStudentService.getStudent(),
         ApiService.getAbsensi(
-          teacherId: widget.guru['id'],
-          mataPelajaranId: widget.mataPelajaranId,
-          tanggal: DateFormat('yyyy-MM-dd').format(widget.tanggal),
+          teacherId: widget.teacher['id'],
+          subjectId: widget.subjectId,
+          date: DateFormat('yyyy-MM-dd').format(widget.date),
         ),
         apiServiceClass.getClass(),
       ]);
 
       setState(() {
         // Filter siswa by class if classId is provided
-        List<Siswa> allSiswa = siswaData.map((s) => Siswa.fromJson(s)).toList();
+        List<Siswa> allStudent = studentData.map((s) => Siswa.fromJson(s)).toList();
         if (widget.classId != null && widget.classId!.isNotEmpty) {
-          _siswaList = allSiswa
+          _studentList = allStudent
               .where((siswa) => siswa.classId == widget.classId)
               .toList();
         } else {
-          _siswaList = allSiswa;
+          _studentList = allStudent;
         }
 
-        _kelasList = kelasData;
+        _classList = classData;
         _absensiData = absensiData;
 
         // Map status absensi only for students in this class
         for (var absen in _absensiData) {
-          final siswaId = absen['siswa_id']?.toString();
-          if (siswaId != null && _siswaList.any((s) => s.id == siswaId)) {
-            _absensiStatus[siswaId] = absen['status'];
+          final studentId = absen['student_id']?.toString();
+          if (studentId != null && _studentList.any((s) => s.id == studentId)) {
+            _absensiStatus[studentId] = absen['status'];
           }
         }
 
         // Set default untuk siswa yang belum ada data absensi
-        for (var siswa in _siswaList) {
-          _absensiStatus[siswa.id] ??= 'hadir';
+        for (var student in _studentList) {
+          _absensiStatus[student.id] ??= 'hadir';
         }
 
         _isLoading = false;
       });
 
       print(
-        'Loaded ${_absensiData.length} absensi records for ${_siswaList.length} students in class ${widget.classId ?? "all"}',
+        'Loaded ${_absensiData.length} absensi records for ${_studentList.length} students in class ${widget.classId ?? "all"}',
       );
     } catch (e) {
       print('Error loading absensi detail: $e');
@@ -3165,15 +3164,15 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     try {
       int successCount = 0;
 
-      for (var siswa in _siswaList) {
-        final status = _absensiStatus[siswa.id]!;
+      for (var student in _studentList) {
+        final status = _absensiStatus[student.id]!;
 
         await ApiService.tambahAbsensi({
-          'student_id': siswa.id,
-          'teacher_id': widget.guru['id'],
-          'subject_id': widget.mataPelajaranId,
-          'class_id': siswa.classId,
-          'date': DateFormat('yyyy-MM-dd').format(widget.tanggal),
+          'student_id': student.id,
+          'teacher_id': widget.teacher['id'],
+          'subject_id': widget.subjectId,
+          'class_id': student.classId,
+          'date': DateFormat('yyyy-MM-dd').format(widget.date),
           'status': _mapStatusToBackend(status),
           'notes': '',
         });
@@ -3241,7 +3240,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
 
   String _getKelasName(String classId) {
     try {
-      final kelas = _kelasList.firstWhere(
+      final kelas = _classList.firstWhere(
         (k) => k['id'].toString() == classId,
         orElse: () => {'nama': 'Unknown Class'},
       );
@@ -3337,7 +3336,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                       child: Column(
                         children: [
                           Text(
-                            widget.mataPelajaranNama,
+                            widget.subjectName,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -3361,7 +3360,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                             DateFormat(
                               'EEEE, dd MMMM yyyy',
                               'id_ID',
-                            ).format(widget.tanggal),
+                            ).format(widget.date),
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 14,
@@ -3370,7 +3369,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '${_siswaList.length} ${languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'})}',
+                            '${_studentList.length} ${languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'})}',
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
@@ -3412,9 +3411,9 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                     Expanded(
                       child: ListView.builder(
                         padding: const EdgeInsets.only(top: 8),
-                        itemCount: _siswaList.length,
+                        itemCount: _studentList.length,
                         itemBuilder: (context, index) => _buildStudentItem(
-                          _siswaList[index],
+                          _studentList[index],
                           languageProvider,
                         ),
                       ),
@@ -3489,21 +3488,21 @@ LinearGradient _getCardGradient() {
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
 class TeacherAbsensiDetailPage extends StatefulWidget {
-  final String mataPelajaranId;
-  final String mataPelajaranNama;
-  final DateTime tanggal;
+  final String subjectId;
+  final String subjectName;
+  final DateTime date;
   final String classId;
-  final String kelasNama;
-  final Map<String, dynamic> guru;
+  final String className;
+  final Map<String, dynamic> teacher;
 
   const TeacherAbsensiDetailPage({
     super.key,
-    required this.mataPelajaranId,
-    required this.mataPelajaranNama,
-    required this.tanggal,
+    required this.subjectId,
+    required this.subjectName,
+    required this.date,
     required this.classId,
-    required this.kelasNama,
-    required this.guru,
+    required this.className,
+    required this.teacher,
   });
 
   @override
@@ -3548,9 +3547,9 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
     try {
       // 1. Load attendance data
       final absensiData = await ApiService.getAbsensi(
-        mataPelajaranId: widget.mataPelajaranId,
-        tanggal: DateFormat('yyyy-MM-dd').format(widget.tanggal),
-        teacherId: widget.guru['id'],
+        subjectId: widget.subjectId,
+        date: DateFormat('yyyy-MM-dd').format(widget.date),
+        teacherId: widget.teacher['id'],
       );
 
       // 2. Load students by class ID
@@ -3658,10 +3657,10 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
           try {
             await ApiService.tambahAbsensi({
               'student_id': siswa.id,
-              'teacher_id': widget.guru['id'],
-              'subject_id': widget.mataPelajaranId,
+              'teacher_id': widget.teacher['id'],
+              'subject_id': widget.subjectId,
               'class_id': _detectedClassId ?? siswa.classId ?? '',
-              'date': DateFormat('yyyy-MM-dd').format(widget.tanggal),
+              'date': DateFormat('yyyy-MM-dd').format(widget.date),
               'status': newStatus,
               'notes': '',
             });
@@ -4194,7 +4193,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                             child: Column(
                               children: [
                                 Text(
-                                  widget.mataPelajaranNama,
+                                  widget.subjectName,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -4207,7 +4206,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                                   DateFormat(
                                     'EEEE, dd MMMM yyyy',
                                     'id_ID',
-                                  ).format(widget.tanggal),
+                                  ).format(widget.date),
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.9),
                                     fontSize: 14,

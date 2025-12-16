@@ -32,15 +32,15 @@ class MateriPage extends StatefulWidget {
 
 class MateriPageState extends State<MateriPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _judulController = TextEditingController();
-  final TextEditingController _deskripsiController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
-  String? _selectedMataPelajaran;
-  List<dynamic> _mataPelajaranList = [];
+  String? _selectedSubject;
+  List<dynamic> _subjectList = [];
   List<dynamic> _materiList = [];
   List<dynamic> _babMateriList = [];
   List<dynamic> _subBabMateriList = [];
-  List<dynamic> _kontenMateriList = [];
+  List<dynamic> _contentMateriList = [];
 
   // Search dan Filter
   final TextEditingController _searchController = TextEditingController();
@@ -134,8 +134,8 @@ class MateriPageState extends State<MateriPage> {
       context,
       MaterialPageRoute(
         builder: (context) => ClassActifityScreen(
-          initialSubjectId: _selectedMataPelajaran,
-          initialSubjectName: _getSelectedMataPelajaranName(),
+          initialSubjectId: _selectedSubject,
+          initialSubjectName: _getSelectedSubjectName(),
           initialClassId: widget.initialClassId,
           initialClassName: widget.initialClassName,
           initialBabId: selectedBabId,
@@ -146,8 +146,8 @@ class MateriPageState extends State<MateriPage> {
     );
 
     // Refresh data after returning
-    if (mounted && _selectedMataPelajaran != null) {
-      _loadBabMateri(_selectedMataPelajaran!);
+    if (mounted && _selectedSubject != null) {
+      _loadBabMateri(_selectedSubject!);
     }
   }
 
@@ -158,7 +158,7 @@ class MateriPageState extends State<MateriPage> {
   ) async {
     try {
       final String? teacherId = widget.teacher['id'];
-      if (teacherId == null || _selectedMataPelajaran == null) return;
+      if (teacherId == null || _selectedSubject == null) return;
 
       final List<Map<String, dynamic>> items = [];
 
@@ -176,7 +176,7 @@ class MateriPageState extends State<MateriPage> {
 
       await ApiSubjectService.markMateriGenerated({
         'guru_id': teacherId,
-        'mata_pelajaran_id': _selectedMataPelajaran,
+        'mata_pelajaran_id': _selectedSubject,
         'items': items,
       });
 
@@ -257,19 +257,17 @@ class MateriPageState extends State<MateriPage> {
       }
 
       final ApiTeacherService apiTeacherService = ApiTeacherService();
-      final mataPelajaran = await apiTeacherService.getSubjectByTeacher(
-        teacherId,
-      );
+      final subject = await apiTeacherService.getSubjectByTeacher(teacherId);
 
       if (kDebugMode) {
-        print('Mata pelajaran found: ${mataPelajaran.length}');
+        print('Mata pelajaran found: ${subject.length}');
       }
 
       // Jika guru tidak memiliki mata pelajaran, tampilkan pesan
-      if (mataPelajaran.isEmpty) {
+      if (subject.isEmpty) {
         setState(() {
           _isLoading = false;
-          _mataPelajaranList = [];
+          _subjectList = [];
           _debugInfo = 'Guru ini belum memiliki mata pelajaran yang ditugaskan';
         });
         return;
@@ -278,19 +276,19 @@ class MateriPageState extends State<MateriPage> {
       final materi = await ApiSubjectService.getMateri(teacherId: teacherId);
 
       setState(() {
-        _mataPelajaranList = mataPelajaran;
+        _subjectList = subject;
         _materiList = materi;
         _isLoading = false;
-        _debugInfo = '${mataPelajaran.length} mata pelajaran ditemukan';
+        _debugInfo = '${subject.length} mata pelajaran ditemukan';
 
         // Use initialSubjectId if provided, otherwise use first subject
         if (widget.initialSubjectId != null &&
-            mataPelajaran.any((mp) => mp['id'] == widget.initialSubjectId)) {
-          _selectedMataPelajaran = widget.initialSubjectId;
-          _loadBabMateri(_selectedMataPelajaran!);
-        } else if (mataPelajaran.isNotEmpty) {
-          _selectedMataPelajaran = mataPelajaran[0]['id'];
-          _loadBabMateri(_selectedMataPelajaran!);
+            subject.any((mp) => mp['id'] == widget.initialSubjectId)) {
+          _selectedSubject = widget.initialSubjectId;
+          _loadBabMateri(_selectedSubject!);
+        } else if (subject.isNotEmpty) {
+          _selectedSubject = subject[0]['id'];
+          _loadBabMateri(_selectedSubject!);
         }
       });
     } catch (e) {
@@ -306,10 +304,10 @@ class MateriPageState extends State<MateriPage> {
     }
   }
 
-  Future<void> _loadBabMateri(String mataPelajaranId) async {
+  Future<void> _loadBabMateri(String subjectId) async {
     try {
       final babMateri = await ApiSubjectService.getBabMateri(
-        mataPelajaranId: mataPelajaranId,
+        subjectId: subjectId,
       );
 
       setState(() {
@@ -335,7 +333,7 @@ class MateriPageState extends State<MateriPage> {
       });
 
       // Load progress dari database
-      await _loadMateriProgress(mataPelajaranId);
+      await _loadMateriProgress(subjectId);
     } catch (e) {
       setState(() {
         _debugInfo = 'Error: $e';
@@ -493,13 +491,13 @@ class MateriPageState extends State<MateriPage> {
   ) async {
     try {
       final String? teacherId = widget.teacher['id'];
-      if (teacherId == null || _selectedMataPelajaran == null) return;
+      if (teacherId == null || _selectedSubject == null) return;
 
       await ApiSubjectService.saveMateriProgress({
-        'guru_id': teacherId,
-        'mata_pelajaran_id': _selectedMataPelajaran,
-        'bab_id': babId,
-        'sub_bab_id': subBabId,
+        'teacher_id': teacherId,
+        'subject_id': _selectedSubject,
+        'chapter_id': babId,
+        'sub_chapter_id': subBabId,
         'is_checked': isChecked,
       });
 
@@ -519,15 +517,15 @@ class MateriPageState extends State<MateriPage> {
   Future<void> _saveBabAndSubBabsProgress(String babId, bool isChecked) async {
     try {
       final String? teacherId = widget.teacher['id'];
-      if (teacherId == null || _selectedMataPelajaran == null) return;
+      if (teacherId == null || _selectedSubject == null) return;
 
       // Prepare batch items
       final List<Map<String, dynamic>> progressItems = [];
 
       // Add bab itself
       progressItems.add({
-        'bab_id': babId,
-        'sub_bab_id': null,
+        'chapter_id': babId,
+        'sub_chapter_id': null,
         'is_checked': isChecked,
       });
 
@@ -550,16 +548,16 @@ class MateriPageState extends State<MateriPage> {
         }
 
         progressItems.add({
-          'bab_id': babId,
-          'sub_bab_id': subBab['id'],
+          'chapter_id': babId,
+          'sub_chapter_id': subBab['id'],
           'is_checked': isChecked,
         });
       }
 
       // Batch save
       await ApiSubjectService.batchSaveMateriProgress({
-        'guru_id': teacherId,
-        'mata_pelajaran_id': _selectedMataPelajaran,
+        'teacher_id': teacherId,
+        'subject_id': _selectedSubject,
         'progress_items': progressItems,
       });
 
@@ -818,7 +816,7 @@ class MateriPageState extends State<MateriPage> {
                           'id': 'Memuat materi...',
                         }),
                       )
-                    : _selectedMataPelajaran == null
+                    : _selectedSubject == null
                     ? _buildEmptyState(
                         languageProvider.getTranslatedText({
                           'en': 'Select subject to view materials',
@@ -879,12 +877,12 @@ class MateriPageState extends State<MateriPage> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    _mataPelajaranList.isEmpty
+                    _subjectList.isEmpty
                         ? languageProvider.getTranslatedText({
                             'en': 'No subjects available',
                             'id': 'Tidak ada mata pelajaran',
                           })
-                        : '${_babMateriList.length} ${languageProvider.getTranslatedText({'en': 'materials', 'id': 'bab materi'})} • ${_getSelectedMataPelajaranName()}',
+                        : '${_babMateriList.length} ${languageProvider.getTranslatedText({'en': 'materials', 'id': 'bab materi'})} • ${_getSelectedSubjectName()}',
                     style: TextStyle(fontSize: 12, color: Colors.blue.shade800),
                   ),
                 ),
@@ -950,10 +948,10 @@ class MateriPageState extends State<MateriPage> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: _selectedMataPelajaran,
+              value: _selectedSubject,
               isExpanded: true,
               icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
-              items: _mataPelajaranList.map((mp) {
+              items: _subjectList.map((mp) {
                 return DropdownMenuItem<String>(
                   value: mp['id'],
                   child: Padding(
@@ -975,10 +973,10 @@ class MateriPageState extends State<MateriPage> {
               onChanged: (String? newValue) {
                 if (newValue != null) {
                   setState(() {
-                    _selectedMataPelajaran = newValue;
+                    _selectedSubject = newValue;
                     _babMateriList = [];
                     _subBabMateriList = [];
-                    _kontenMateriList = [];
+                    _contentMateriList = [];
                     _searchController.clear();
                   });
                   _loadBabMateri(newValue);
@@ -1230,10 +1228,10 @@ class MateriPageState extends State<MateriPage> {
     );
   }
 
-  String _getSelectedMataPelajaranName() {
-    if (_selectedMataPelajaran == null) return '-';
-    final mp = _mataPelajaranList.firstWhere(
-      (mp) => mp['id'] == _selectedMataPelajaran,
+  String _getSelectedSubjectName() {
+    if (_selectedSubject == null) return '-';
+    final mp = _subjectList.firstWhere(
+      (mp) => mp['id'] == _selectedSubject,
       orElse: () => {'nama': '-'},
     );
     return mp['nama'] ?? '-';
@@ -1274,17 +1272,17 @@ class SubBabDetailPage extends StatefulWidget {
 
 class SubBabDetailPageState extends State<SubBabDetailPage> {
   late bool _isChecked;
-  List<dynamic> _kontenMateriList = [];
+  List<dynamic> _contentMateriList = [];
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _isChecked = widget.checked;
-    _loadKontenMateri();
+    _loadContentMateri();
   }
 
-  Future<void> _loadKontenMateri() async {
+  Future<void> _loadContentMateri() async {
     try {
       setState(() {
         _isLoading = true;
@@ -1295,7 +1293,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
       );
 
       setState(() {
-        _kontenMateriList = kontenMateri
+        _contentMateriList = kontenMateri
             .where((konten) => konten['sub_bab_id'] == widget.subBab['id'])
             .toList();
         _isLoading = false;
@@ -1490,7 +1488,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                           'id': 'Memuat konten...',
                         }),
                       )
-                    : _kontenMateriList.isEmpty
+                    : _contentMateriList.isEmpty
                     ? _buildEmptyContent(languageProvider)
                     : _buildContentList(),
               ),
@@ -1518,9 +1516,9 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
   Widget _buildContentList() {
     return ListView.builder(
       padding: EdgeInsets.all(16),
-      itemCount: _kontenMateriList.length,
+      itemCount: _contentMateriList.length,
       itemBuilder: (context, index) {
-        final konten = _kontenMateriList[index];
+        final content = _contentMateriList[index];
         final cardColor = _getCardColor(index);
 
         return Container(
@@ -1580,7 +1578,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          konten['judul_konten'] ?? 'Judul Konten',
+                          content['judul_konten'] ?? 'Judul Konten',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -1590,7 +1588,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          konten['isi_konten'] ?? 'Isi konten tidak tersedia',
+                          content['isi_konten'] ?? 'Isi konten tidak tersedia',
                           style: TextStyle(
                             color: Colors.grey.shade700,
                             fontSize: 14,

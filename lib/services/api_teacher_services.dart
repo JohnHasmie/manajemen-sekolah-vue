@@ -234,7 +234,7 @@ class ApiTeacherService {
 
   // Get Subjects by Teacher with Pagination & Filters (Recommended)
   static Future<Map<String, dynamic>> getSubjectsByTeacherPaginated({
-    required String guruId,
+    required String teacherId,
     int page = 1,
     int limit = 10,
     String? search,
@@ -259,12 +259,12 @@ class ApiTeacherService {
 
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/teacher/$guruId/subjects?$queryString'),
+        Uri.parse('$baseUrl/teacher/$teacherId/subjects?$queryString'),
         headers: await _getHeaders(),
       );
 
       print(
-        'GET /teacher/$guruId/subjects?$queryString - Status: ${response.statusCode}',
+        'GET /teacher/$teacherId/subjects?$queryString - Status: ${response.statusCode}',
       );
 
       final result = _handleResponse(response);

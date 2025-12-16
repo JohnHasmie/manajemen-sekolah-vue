@@ -28,8 +28,8 @@ class GradePageState extends State<GradePage> {
   final ApiSubjectService apiSubjectService = ApiSubjectService();
   final ApiTeacherService apiTeacherService = ApiTeacherService();
 
-  List<dynamic> _mataPelajaranList = [];
-  final List<dynamic> _filteredMataPelajaranList = [];
+  List<dynamic> _subjectList = [];
+  final List<dynamic> _filteredSubjectList = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
@@ -106,22 +106,22 @@ class GradePageState extends State<GradePage> {
           _isLoading = true;
           _currentPage = 1;
           _hasMoreData = true;
-          _mataPelajaranList = []; // Reset list
+          _subjectList = []; // Reset list
         });
       }
 
-      List<dynamic> mataPelajaran;
+      List<dynamic> subjects;
 
       if (widget.teacher['role'] == 'guru') {
         // For teachers, get subjects by teacher with pagination
         final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
-          guruId: widget.teacher['id'],
+          teacherId: widget.teacher['id'],
           page: _currentPage,
           limit: _perPage,
           search: _searchController.text,
           subjectIds: _selectedSubjectIds,
         );
-        mataPelajaran = response['data'] ?? [];
+        subjects = response['data'] ?? [];
         _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
       } else {
@@ -132,13 +132,13 @@ class GradePageState extends State<GradePage> {
           search: _searchController.text,
           subjectIds: _selectedSubjectIds,
         );
-        mataPelajaran = response['data'] ?? [];
+        subjects = response['data'] ?? [];
         _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
       }
 
       setState(() {
-        _mataPelajaranList = mataPelajaran;
+        _subjectList = subjects;
         _isLoading = false;
       });
     } catch (e) {
@@ -165,7 +165,7 @@ class GradePageState extends State<GradePage> {
       if (widget.teacher['role'] == 'guru') {
         // For teachers, get subjects by teacher
         final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
-          guruId: widget.teacher['id'],
+          teacherId: widget.teacher['id'],
           page: _currentPage,
           limit: _perPage,
           search: _searchController.text,
@@ -189,12 +189,12 @@ class GradePageState extends State<GradePage> {
 
       setState(() {
         // Append new data to existing list
-        _mataPelajaranList.addAll(newSubjects);
+        _subjectList.addAll(newSubjects);
         _isLoadingMore = false;
       });
 
       print(
-        '✅ Loaded more subjects: Page $_currentPage, Total: ${_mataPelajaranList.length}',
+        '✅ Loaded more subjects: Page $_currentPage, Total: ${_subjectList.length}',
       );
     } catch (e) {
       if (!mounted) return;
@@ -246,12 +246,12 @@ class GradePageState extends State<GradePage> {
     }
   }
 
-  void _navigateToClassSelection(Map<String, dynamic> mataPelajaran) {
+  void _navigateToClassSelection(Map<String, dynamic> subject) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) =>
-            ClassSelectionPage(teacher: widget.teacher, subject: mataPelajaran),
+            ClassSelectionPage(teacher: widget.teacher, subject: subject),
       ),
     );
   }
@@ -310,7 +310,7 @@ class GradePageState extends State<GradePage> {
       // For now, let's stick to what we have.
 
       for (var subjectId in _selectedSubjectIds) {
-        final subject = _mataPelajaranList.firstWhere(
+        final subject = _subjectList.firstWhere(
           (s) => s['id'].toString() == subjectId,
           orElse: () => {'name': 'Subject #$subjectId'},
         );
@@ -352,7 +352,7 @@ class GradePageState extends State<GradePage> {
                 'en': 'Subjects',
                 'id': 'Mata Pelajaran',
               }),
-              options: _mataPelajaranList.map((subject) {
+              options: _subjectList.map((subject) {
                 return FilterOption(
                   label: subject['name'] ?? 'Subject',
                   value: subject['id'].toString(),
@@ -558,7 +558,7 @@ class GradePageState extends State<GradePage> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         final filteredSubjects =
-            _mataPelajaranList; // Use direct list from backend
+            _subjectList; // Use direct list from backend
 
         return Scaffold(
           backgroundColor: Color(0xFFF8F9FA),
@@ -827,11 +827,11 @@ class GradePageState extends State<GradePage> {
                                 controller: _scrollController,
                                 padding: EdgeInsets.only(top: 8, bottom: 16),
                                 itemCount:
-                                    _mataPelajaranList.length +
+                                    _subjectList.length +
                                     (_isLoadingMore ? 1 : 0),
                                 itemBuilder: (context, index) {
                                   // Show loading indicator at bottom
-                                  if (index == _mataPelajaranList.length) {
+                                  if (index == _subjectList.length) {
                                     return Container(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 16,
@@ -844,7 +844,7 @@ class GradePageState extends State<GradePage> {
                                   }
 
                                   return _buildSubjectCard(
-                                    _mataPelajaranList[index],
+                                    _subjectList[index],
                                     languageProvider,
                                     index,
                                   );
@@ -879,8 +879,8 @@ class ClassSelectionPage extends StatefulWidget {
 }
 
 class ClassSelectionPageState extends State<ClassSelectionPage> {
-  List<dynamic> _kelasList = [];
-  List<dynamic> _filteredKelasList = [];
+  List<dynamic> _classList = [];
+  List<dynamic> _filteredClassList = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
@@ -891,8 +891,8 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
   @override
   void initState() {
     super.initState();
-    _loadKelas();
-    _searchController.addListener(_filterKelas);
+    _loadClass();
+    _searchController.addListener(_filterClass);
   }
 
   @override
@@ -901,17 +901,17 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
     super.dispose();
   }
 
-  void _filterKelas() {
+  void _filterClass() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        _filteredKelasList = List.from(_kelasList);
+        _filteredClassList = List.from(_classList);
       } else {
-        _filteredKelasList = _kelasList
+        _filteredClassList = _classList
             .where(
-              (kelas) =>
-                  kelas['nama'].toLowerCase().contains(query) ||
-                  (kelas['tingkat']?.toString().toLowerCase().contains(query) ??
+              (className) =>
+                  className['nama'].toLowerCase().contains(query) ||
+                  (className['tingkat']?.toString().toLowerCase().contains(query) ??
                       false),
             )
             .toList();
@@ -919,19 +919,19 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
     });
   }
 
-  Future<void> _loadKelas() async {
+  Future<void> _loadClass() async {
     try {
       setState(() {
         _isLoading = true;
       });
 
-      final kelasData = await ApiService().getKelasByMataPelajaran(
+      final classData = await ApiService().getClassBySubjectId(
         widget.subject['id'],
       );
 
       setState(() {
-        _kelasList = kelasData;
-        _filteredKelasList = List.from(_kelasList);
+        _classList = classData;
+        _filteredClassList = List.from(_classList);
         _isLoading = false;
       });
     } catch (e) {
@@ -963,14 +963,14 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
     }
   }
 
-  void _navigateToGradeBook(Map<String, dynamic> kelas) {
+  void _navigateToGradeBook(Map<String, dynamic> classData) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => GradeBookPage(
           teacher: widget.teacher,
           subject: widget.subject,
-          kelas: kelas,
+          classData: classData,
         ),
       ),
     );
@@ -1044,7 +1044,7 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
                 'en': 'Classes',
                 'id': 'Kelas',
               }),
-              options: _kelasList.map((classItem) {
+              options: _classList.map((classItem) {
                 return FilterOption(
                   label: classItem['nama'] ?? 'Class',
                   value: classItem['id'].toString(),
@@ -1068,25 +1068,25 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
   List<dynamic> _getFilteredClasses() {
     final searchTerm = _searchController.text.toLowerCase();
 
-    return _kelasList.where((kelas) {
+    return _classList.where((classData) {
       // Search filter
       final matchesSearch =
           searchTerm.isEmpty ||
-          kelas['nama'].toLowerCase().contains(searchTerm) ||
-          (kelas['tingkat']?.toString().toLowerCase().contains(searchTerm) ??
+          classData['nama'].toLowerCase().contains(searchTerm) ||
+          (classData['tingkat']?.toString().toLowerCase().contains(searchTerm) ??
               false);
 
       // Class filter
       final matchesClass =
           _selectedClassIds.isEmpty ||
-          _selectedClassIds.contains(kelas['id'].toString());
+          _selectedClassIds.contains(classData['id'].toString());
 
       return matchesSearch && matchesClass;
     }).toList();
   }
 
   Widget _buildClassCard(
-    Map<String, dynamic> kelas,
+    Map<String, dynamic> classData,
     LanguageProvider languageProvider,
     int index,
   ) {
@@ -1095,7 +1095,7 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _navigateToGradeBook(kelas),
+          onTap: () => _navigateToGradeBook(classData),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             decoration: BoxDecoration(
@@ -1156,7 +1156,7 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  kelas['name'] ??
+                                  classData['name'] ??
                                       languageProvider.getTranslatedText({
                                         'en': 'Class',
                                         'id': 'Kelas',
@@ -1171,7 +1171,7 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${kelas['grade_level'] ?? '-'}',
+                                  '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classData['grade_level'] ?? '-'}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -1563,10 +1563,10 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
                           'en': 'Refresh',
                           'id': 'Muat Ulang',
                         }),
-                        onPressed: _loadKelas,
+                        onPressed: _loadClass,
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadKelas,
+                        onRefresh: _loadClass,
                         color: _getPrimaryColor(),
                         backgroundColor: Colors.white,
                         child: Column(
@@ -1618,13 +1618,13 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
 class GradeBookPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
-  final Map<String, dynamic> kelas;
+  final Map<String, dynamic> classData;
 
   const GradeBookPage({
     super.key,
     required this.teacher,
     required this.subject,
-    required this.kelas,
+    required this.classData,
   });
 
   @override
@@ -1713,7 +1713,7 @@ class GradeBookPageState extends State<GradeBookPage> {
     try {
       // Load siswa berdasarkan kelas
       final siswaData = await ApiStudentService.getStudentByClass(
-        widget.kelas['id'],
+        widget.classData['id'],
       );
 
       // Load nilai yang sudah ada
@@ -2961,7 +2961,7 @@ class GradeBookPageState extends State<GradeBookPage> {
           backgroundColor: Colors.grey.shade50,
           appBar: AppBar(
             title: Text(
-              '${languageProvider.getTranslatedText({'en': 'Grades', 'id': 'Nilai'})} - ${widget.subject['name']} - ${widget.kelas['name']}',
+              '${languageProvider.getTranslatedText({'en': 'Grades', 'id': 'Nilai'})} - ${widget.subject['name']} - ${widget.classData['name']}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 18,
@@ -3058,7 +3058,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${widget.subject['name']} - ${widget.kelas['name']}',
+                            '${widget.subject['name']} - ${widget.classData['name']}',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

@@ -156,9 +156,9 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  static Future<List<dynamic>> getBabMateri({String? mataPelajaranId}) async {
+  static Future<List<dynamic>> getBabMateri({String? subjectId}) async {
     String url = '$baseUrl/bab-material?';
-    if (mataPelajaranId != null) url += 'subject_id=$mataPelajaranId&';
+    if (subjectId != null) url += 'subject_id=$subjectId&';
 
     final response = await http.get(
       Uri.parse(url),

@@ -669,15 +669,15 @@ class ApiService {
   // Absensi
   static Future<List<dynamic>> getAbsensi({
     String? teacherId,
-    String? tanggal,
-    String? mataPelajaranId,
+    String? date,
+    String? subjectId,
     String? studentId,
     String? classId,
   }) async {
     String url = '$baseUrl/attendance?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
-    if (tanggal != null) url += 'date=$tanggal&';
-    if (mataPelajaranId != null) url += 'subject_id=$mataPelajaranId&';
+    if (date != null) url += 'date=$date&';
+    if (subjectId != null) url += 'subject_id=$subjectId&';
     if (studentId != null) url += 'student_id=$studentId&';
     if (classId != null) url += 'class_id=$classId&';
 
@@ -720,13 +720,13 @@ class ApiService {
 
   // Delete absences by summary (teacher, subject, class, date)
   static Future<dynamic> deleteAbsensiSummary({
-    required String guruId,
+    required String teacherId,
     required String subjectId,
     required String date,
     String? classId,
   }) async {
     String query =
-        '/attendance?teacher_id=$guruId&subject_id=$subjectId&date=$date';
+        '/attendance?teacher_id=$teacherId&subject_id=$subjectId&date=$date';
     if (classId != null && classId.isNotEmpty) {
       query += '&class_id=$classId';
     }
@@ -739,10 +739,10 @@ class ApiService {
   static Future<Map<String, dynamic>> getAbsensiPaginated({
     int page = 1,
     int limit = 20,
-    String? guruId,
-    String? tanggal,
-    String? mataPelajaranId,
-    String? siswaId,
+    String? teacherId,
+    String? date,
+    String? subjectId,
+    String? studentId,
     String? classId,
   }) async {
     try {
@@ -750,12 +750,12 @@ class ApiService {
         'page': page.toString(),
         'limit': limit.toString(),
       };
-      if (guruId != null && guruId.isNotEmpty) params['teacher_id'] = guruId;
-      if (tanggal != null && tanggal.isNotEmpty) params['date'] = tanggal;
-      if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
-        params['subject_id'] = mataPelajaranId;
+      if (teacherId != null && teacherId.isNotEmpty) params['teacher_id'] = teacherId;
+      if (date != null && date.isNotEmpty) params['date'] = date;
+      if (subjectId != null && subjectId.isNotEmpty) {
+        params['subject_id'] = subjectId;
       }
-      if (siswaId != null && siswaId.isNotEmpty) params['student_id'] = siswaId;
+      if (studentId != null && studentId.isNotEmpty) params['student_id'] = studentId;
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
 
       final uri = Uri.parse(
@@ -891,10 +891,10 @@ class ApiService {
   }
 
   // Get kelas by mata pelajaran
-  Future<List<dynamic>> getKelasByMataPelajaran(String mataPelajaranId) async {
+  Future<List<dynamic>> getClassBySubjectId(String subjectId) async {
     try {
       final result = await get(
-        '/class-by-mata-pelajaran?subject_id=$mataPelajaranId',
+        '/class-by-mata-pelajaran?subject_id=$subjectId',
       );
 
       // Handle Map format (pagination or error response)

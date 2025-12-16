@@ -67,8 +67,8 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         ApiStudentService.getStudent(),
         ApiService.getAbsensi(
           teacherId: widget.teacher['id'],
-          mataPelajaranId: widget.subjectId,
-          tanggal: DateFormat('yyyy-MM-dd').format(widget.date),
+          subjectId: widget.subjectId,
+          date: DateFormat('yyyy-MM-dd').format(widget.date),
         ),
       ]);
 

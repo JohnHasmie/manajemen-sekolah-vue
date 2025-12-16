@@ -26,15 +26,15 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   List<dynamic> _jadwalList = [];
   List<dynamic> _semesterList = [];
   bool _isLoading = true;
-  String _guruId = '';
-  String _guruNama = '';
+  String _teacherId = '';
+  String _teacherNama = '';
   String _selectedSemester = '1'; // Will be set by _setDefaultAcademicPeriod()
   String _selectedAcademicYear =
       '2024/2025'; // Will be set by _setDefaultAcademicPeriod()
   final TextEditingController _searchController = TextEditingController();
 
   // Filter state
-  List<String> _selectedHariIds = [];
+  List<String> _selectedDayIds = [];
   String? _selectedFilterSemester;
   String? _selectedFilterAcademicYear;
   bool _hasActiveFilter = false;
@@ -42,7 +42,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   // DITAMBAHKAN KEMBALI: Toggle antara card dan table view
   bool _isTableView = false;
 
-  final List<String> _hariOptions = [
+  final List<String> _dayOptions = [
     'Semua Hari',
     'Senin',
     'Selasa',
@@ -52,7 +52,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     'Sabtu',
   ];
 
-  final Map<String, String> _hariIdMap = {
+  final Map<String, String> _dayIdMap = {
     'Senin': '1',
     'Selasa': '2',
     'Rabu': '3',
@@ -61,7 +61,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     'Sabtu': '6',
   };
 
-  final Map<String, Color> _hariColorMap = {
+  final Map<String, Color> _dayColorMap = {
     'Senin': Color(0xFF6366F1),
     'Selasa': Color(0xFF10B981),
     'Rabu': Color(0xFFF59E0B),
@@ -127,11 +127,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       final userData = json.decode(prefs.getString('user') ?? '{}');
 
       setState(() {
-        _guruId = userData['id']?.toString() ?? '';
-        _guruNama = userData['nama']?.toString() ?? 'Guru';
+        _teacherId = userData['id']?.toString() ?? '';
+        _teacherNama = userData['nama']?.toString() ?? 'Guru';
       });
 
-      if (_guruId.isEmpty) {
+      if (_teacherId.isEmpty) {
         setState(() => _isLoading = false);
         return;
       }
@@ -158,7 +158,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   Future<void> _loadJadwal() async {
-    if (_guruId.isEmpty) {
+    if (_teacherId.isEmpty) {
       setState(() => _isLoading = false);
       return;
     }
@@ -172,9 +172,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           _selectedFilterAcademicYear ?? _selectedAcademicYear;
 
       final jadwal = await ApiScheduleService.getFilteredSchedule(
-        guruId: _guruId,
+        teacherId: _teacherId,
         semester: semesterToUse,
-        tahunAjaran: academicYearToUse,
+        academicYear: academicYearToUse,
       );
 
       setState(() {
@@ -217,7 +217,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   void _checkActiveFilter() {
     setState(() {
       _hasActiveFilter =
-          _selectedHariIds.isNotEmpty ||
+          _selectedDayIds.isNotEmpty ||
           (_selectedFilterSemester != null &&
               _selectedFilterSemester != _selectedSemester) ||
           (_selectedFilterAcademicYear != null &&
@@ -227,7 +227,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
   void _clearAllFilters() {
     setState(() {
-      _selectedHariIds.clear();
+      _selectedDayIds.clear();
       _selectedFilterSemester = null;
       _selectedFilterAcademicYear = null;
       // Reset to current period
@@ -244,16 +244,16 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     List<Map<String, dynamic>> filterChips = [];
 
     // Hari chips
-    for (var hariId in _selectedHariIds) {
-      final hari = _hariOptions.firstWhere(
-        (h) => _hariIdMap[h] == hariId,
+    for (var dayId in _selectedDayIds) {
+      final day = _dayOptions.firstWhere(
+        (h) => _dayIdMap[h] == dayId,
         orElse: () => 'Hari',
       );
       filterChips.add({
-        'label': hari,
+        'label': day,
         'onRemove': () {
           setState(() {
-            _selectedHariIds.remove(hariId);
+            _selectedDayIds.remove(dayId);
             _checkActiveFilter();
           });
         },
@@ -316,15 +316,15 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         config: FilterConfig(
           sections: [
             FilterSection(
-              key: 'hariIds',
+              key: 'dayIds',
               title: languageProvider.getTranslatedText({
                 'en': 'Day',
                 'id': 'Hari',
               }),
-              options: _hariOptions.where((hari) => hari != 'Semua Hari').map((
-                hari,
+              options: _dayOptions.where((day) => day != 'Semua Hari').map((
+                day,
               ) {
-                return FilterOption(label: hari, value: _hariIdMap[hari] ?? '');
+                return FilterOption(label: day, value: _dayIdMap[day] ?? '');
               }).toList(),
               multiSelect: true,
             ),
@@ -359,7 +359,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           ],
         ),
         initialFilters: {
-          'hariIds': _selectedHariIds,
+          'dayIds': _selectedDayIds,
           'semester': tempSelectedSemester ?? _selectedSemester,
           'tahunAjaran': tempSelectedAcademicYear ?? _selectedAcademicYear,
         },
@@ -379,7 +379,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           }
 
           setState(() {
-            _selectedHariIds = List<String>.from(filters['hariIds'] ?? []);
+            _selectedDayIds = List<String>.from(filters['dayIds'] ?? []);
             _selectedFilterSemester = newSemester;
             _selectedFilterAcademicYear = newAcademicYear;
 
@@ -423,8 +423,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     );
   }
 
-  Color _getHariColor(String hari) {
-    return _hariColorMap[hari] ?? Color(0xFF6B7280);
+  Color _getDayColor(String day) {
+    return _dayColorMap[day] ?? Color(0xFF6B7280);
   }
 
   List<dynamic> _getFilteredSchedules() {
@@ -442,20 +442,20 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           dayName.toLowerCase().contains(searchTerm);
 
       // Filter by hari - match by hari_nama
-      final matchesHari =
-          _selectedHariIds.isEmpty ||
-          _selectedHariIds.any((selectedId) {
+      final matchesDay =
+          _selectedDayIds.isEmpty ||
+          _selectedDayIds.any((selectedId) {
             // Get the hari name from the selected ID
-            final selectedHariName = _hariIdMap.entries
+            final selectedDayName = _dayIdMap.entries
                 .firstWhere(
                   (entry) => entry.value == selectedId,
                   orElse: () => MapEntry('', ''),
                 )
                 .key;
-            return dayName == selectedHariName;
+            return dayName == selectedDayName;
           });
 
-      return matchesSearch && matchesHari;
+      return matchesSearch && matchesDay;
     }).toList();
   }
 
@@ -602,7 +602,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _guruNama,
+                                  _teacherNama,
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -977,7 +977,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: _getHariColor(day),
+                                    color: _getDayColor(day),
                                   ),
                                 ),
                               ),
@@ -1130,14 +1130,14 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                       ? Container(
                                           padding: EdgeInsets.all(6),
                                           decoration: BoxDecoration(
-                                            color: _getHariColor(
+                                            color: _getDayColor(
                                               day,
                                             ).withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(
                                               4,
                                             ),
                                             border: Border.all(
-                                              color: _getHariColor(
+                                              color: _getDayColor(
                                                 day,
                                               ).withOpacity(0.3),
                                             ),
@@ -1152,7 +1152,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.bold,
-                                                  color: _getHariColor(day),
+                                                  color: _getDayColor(day),
                                                 ),
                                                 textAlign: TextAlign.center,
                                                 maxLines: 2,
@@ -1216,7 +1216,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               width: 12,
                               height: 12,
                               decoration: BoxDecoration(
-                                color: _getHariColor(day),
+                                color: _getDayColor(day),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -1299,8 +1299,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     LanguageProvider languageProvider,
     int index,
   ) {
-    final hari = jadwal['hari_nama']?.toString() ?? 'Unknown';
-    final hariColor = _getHariColor(hari);
+    final day = jadwal['hari_nama']?.toString() ?? 'Unknown';
+    final dayColor = _getDayColor(day);
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
@@ -1313,14 +1313,14 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => PresencePage(
-                  guru: {'id': _guruId, 'nama': _guruNama},
+                  teacher: {'id': _teacherId, 'nama': _teacherNama},
                   initialDate: DateTime.now(),
-                  initialMataPelajaranId: jadwal['mata_pelajaran_id']
+                  initialSubjectId: jadwal['mata_pelajaran_id']
                       ?.toString(),
-                  initialMataPelajaranNama: jadwal['mata_pelajaran_nama']
+                  initialSubjectName: jadwal['mata_pelajaran_nama']
                       ?.toString(),
                   initialclassId: jadwal['kelas_id']?.toString(),
-                  initialKelasNama: jadwal['kelas_nama']?.toString(),
+                  initialClassName: jadwal['kelas_nama']?.toString(),
                 ),
               ),
             );
@@ -1348,7 +1348,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                   child: Container(
                     width: 6,
                     decoration: BoxDecoration(
-                      color: hariColor,
+                      color: dayColor,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
@@ -1419,17 +1419,17 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: hariColor.withOpacity(0.1),
+                              color: dayColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: hariColor.withOpacity(0.3),
+                                color: dayColor.withOpacity(0.3),
                                 width: 1,
                               ),
                             ),
                             child: Text(
-                              hari,
+                              day,
                               style: TextStyle(
-                                color: hariColor,
+                                color: dayColor,
                                 fontSize: 14, // DIUBAH: diperbesar dari 12
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1589,7 +1589,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => MateriPage(
-                                      teacher: {'id': _guruId, 'nama': _guruNama},
+                                      teacher: {'id': _teacherId, 'nama': _teacherNama},
                                       initialSubjectId:
                                           jadwal['mata_pelajaran_id']
                                               ?.toString(),
@@ -1628,7 +1628,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               onPressed: () {
                                 // Calculate next occurrence date for this schedule
                                 final now = DateTime.now();
-                                final scheduleDay = _hariIdMap.entries
+                                final scheduleDay = _dayIdMap.entries
                                     .firstWhere(
                                       (entry) =>
                                           entry.value ==
@@ -1636,7 +1636,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                       orElse: () => MapEntry('Senin', '1'),
                                     )
                                     .key;
-                                final scheduleDayIndex = _hariOptions.indexOf(
+                                final scheduleDayIndex = _dayOptions.indexOf(
                                   scheduleDay,
                                 );
                                 final todayIndex = now.weekday;

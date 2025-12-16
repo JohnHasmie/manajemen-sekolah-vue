@@ -2018,7 +2018,7 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
 
       // Load kelas yang sudah ditetapkan untuk mata pelajaran ini
       // getKelasByMataPelajaran already returns List<dynamic>
-      final assignedClasses = await _apiService.getKelasByMataPelajaran(
+      final assignedClasses = await _apiService.getClassBySubjectId(
         widget.subject['id'].toString(),
       );
 

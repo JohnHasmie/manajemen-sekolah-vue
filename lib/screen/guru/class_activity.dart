@@ -156,9 +156,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       if (userId.isNotEmpty) {
         // 1. Resolve Teacher ID first (needed for both Schedule and Activities)
         try {
-          final guruData = await ApiTeacherService.getGuruByUserId(userId);
-          if (guruData != null && guruData['id'] != null) {
-            final teacherId = guruData['id'].toString();
+          final teacherData = await ApiTeacherService.getGuruByUserId(userId);
+          if (teacherData != null && teacherData['id'] != null) {
+            final teacherId = teacherData['id'].toString();
 
             if (kDebugMode) {
               print('Resolved Teacher ID: $teacherId');
@@ -204,23 +204,23 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       final currentMonth = now.month;
 
       // Academic year runs from July to June
-      final tahunAjaran = currentMonth >= 7
+      final academicYear = currentMonth >= 7
           ? '$currentYear/${currentYear + 1}'
           : '${currentYear - 1}/$currentYear';
 
       // Use provided userId or fall back to _teacherId
-      final guruIdToUse = userId ?? _teacherId;
+      final teacherIdToUse = userId ?? _teacherId;
 
       // if (kDebugMode) {
       //   print('===== LOADING SCHEDULE =====');
-      //   print('Teacher ID (for API): $guruIdToUse');
+      //   print('Teacher ID (for API): $teacherIdToUse');
       //   print('Academic Year: $tahunAjaran');
       //   print('calling ApiScheduleService.getScheduleByGuru...');
       // }
 
-      final schedule = await ApiScheduleService.getScheduleByGuru(
-        guruId: guruIdToUse,
-        tahunAjaran: tahunAjaran,
+      final schedule = await ApiScheduleService.getScheduleByTeacher(
+        teacherId: teacherIdToUse,
+        academicYear: academicYear,
       );
 
       // if (kDebugMode) {
@@ -236,8 +236,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         //   );
         // }
         try {
-          finalSchedule = await ApiScheduleService.getScheduleByGuru(
-            guruId: guruIdToUse,
+          finalSchedule = await ApiScheduleService.getScheduleByTeacher(
+            teacherId: teacherIdToUse,
           );
           // if (kDebugMode) {
           //   print(
@@ -1587,8 +1587,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   Future<void> _loadSubChapterMaterials(String chapterId) async {
     try {
-      final subMaterials = await ApiSubjectService.getBabMateri(
-        mataPelajaranId: chapterId,
+      final subMaterials = await ApiSubjectService.getSubBabMateri(
+        babId: chapterId,
       );
       setState(() {
         _subChapterList = subMaterials;
@@ -1898,7 +1898,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       // }
 
       setState(() {
-        _studentList = students ?? [];
+        _studentList = students;
         _isLoadingStudents = false;
       });
     } catch (e, stackTrace) {
@@ -1915,15 +1915,15 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     }
   }
 
-  Future<void> _loadBabMateri(String mataPelajaranId) async {
+  Future<void> _loadBabMateri(String subjectId) async {
     try {
       if (kDebugMode) {
         print('===== LOADING BAB MATERI =====');
-        print('Mata Pelajaran ID: $mataPelajaranId');
+        print('Subject ID: $subjectId');
       }
 
       final babList = await ApiSubjectService.getBabMateri(
-        mataPelajaranId: mataPelajaranId,
+        subjectId: subjectId,
       );
 
       if (kDebugMode) {
@@ -2136,7 +2136,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                 schedule['hari_nama']?.toString() ??
                 schedule['day_name']?.toString() ??
                 '';
-            final jamMulai =
+            final startTime =
                 schedule['jam_mulai']?.toString() ??
                 schedule['start_time']?.toString() ??
                 '';
@@ -2164,10 +2164,10 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
             // }
 
             // Check if schedule is today
-            if (scheduleDay == currentDay && jamMulai.isNotEmpty) {
+            if (scheduleDay == currentDay && startTime.isNotEmpty) {
               try {
                 // Parse jam mulai (format: HH:mm:ss atau HH:mm)
-                final startTimeParts = jamMulai.split(':');
+                final startTimeParts = startTime.split(':');
                 final startHour = int.parse(startTimeParts[0]);
                 final startMinute = int.parse(startTimeParts[1]);
 
@@ -2212,10 +2212,10 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
     // Convert to dropdown items safely
     try {
-      return uniqueClasses.values.map((kelas) {
+      return uniqueClasses.values.map((classItem) {
         return DropdownMenuItem<String>(
-          value: kelas['id'].toString(),
-          child: Text(kelas['nama'] ?? 'Unknown'),
+          value: classItem['id'].toString(),
+          child: Text(classItem['nama'] ?? 'Unknown'),
         );
       }).toList();
     } catch (e) {

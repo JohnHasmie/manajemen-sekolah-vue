@@ -184,18 +184,18 @@ class ApiScheduleService {
 
   // Jadwal Mengajar dengan struktur baru (Legacy - use getSchedulesPaginated instead)
   static Future<List<dynamic>> getSchedule({
-    String? guruId,
+    String? teacherId,
     String? classId,
-    String? hariId,
+    String? dayId,
     String? semesterId,
-    String? tahunAjaran,
+    String? academicYear,
   }) async {
     String url = '$baseUrl/teaching-schedule?';
-    if (guruId != null) url += 'teacher_id=$guruId&';
+    if (teacherId != null) url += 'teacher_id=$teacherId&';
     if (classId != null) url += 'class_id=$classId&';
-    if (hariId != null) url += 'day_id=$hariId&';
+    if (dayId != null) url += 'day_id=$dayId&';
     if (semesterId != null) url += 'semester_id=$semesterId&';
-    if (tahunAjaran != null) url += 'academic_year=$tahunAjaran&';
+    if (academicYear != null) url += 'academic_year=$academicYear&';
 
     final response = await http.get(
       Uri.parse(url),
@@ -328,17 +328,17 @@ class ApiScheduleService {
   // Di class ApiScheduleService, tambahkan method berikut:
 
   // Get Jadwal Mengajar by Guru ID
-  static Future<List<dynamic>> getScheduleByGuru({
-    required String guruId,
-    String? hariId,
+  static Future<List<dynamic>> getScheduleByTeacher({
+    required String teacherId,
+    String? dayId,
     String? semesterId,
-    String? tahunAjaran,
+    String? academicYear,
   }) async {
     try {
-      String url = '$baseUrl/teaching-schedule/teacher/$guruId?';
-      if (hariId != null && hariId.isNotEmpty) url += 'day_id=$hariId&';
+      String url = '$baseUrl/teaching-schedule/teacher/$teacherId?';
+      if (dayId != null && dayId.isNotEmpty) url += 'day_id=$dayId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
-      if (tahunAjaran != null) url += 'academic_year=$tahunAjaran&';
+      if (academicYear != null) url += 'academic_year=$academicYear&';
 
       final response = await http.get(
         Uri.parse(url),
@@ -357,15 +357,15 @@ class ApiScheduleService {
 
   // Get Jadwal Mengajar for Current User
   static Future<List<dynamic>> getCurrentUserSchedule({
-    String? hariId,
+    String? dayId,
     String? semesterId,
-    String? tahunAjaran,
+    String? academicYear,
   }) async {
     try {
       String url = '$baseUrl/teaching-schedule/current?';
-      if (hariId != null && hariId.isNotEmpty) url += 'day_id=$hariId&';
+      if (dayId != null && dayId.isNotEmpty) url += 'day_id=$dayId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
-      if (tahunAjaran != null) url += 'academic_year=$tahunAjaran&';
+      if (academicYear != null) url += 'academic_year=$academicYear&';
 
       final response = await http.get(
         Uri.parse(url),
@@ -384,25 +384,25 @@ class ApiScheduleService {
 
   // Tambahkan method ini di ApiScheduleService
   static Future<List<dynamic>> getFilteredSchedule({
-    required String guruId,
-    String? hari,
+    required String teacherId,
+    String? day,
     String? semester,
-    String? tahunAjaran,
+    String? academicYear,
   }) async {
     try {
       String url = '$baseUrl/teaching-schedule/filtered?';
-      url += 'teacher_id=$guruId&';
+      url += 'teacher_id=$teacherId&';
 
-      if (hari != null && hari != 'Semua Hari') {
-        url += 'day=$hari&';
+      if (day != null && day != 'Semua Hari') {
+        url += 'day=$day&';
       }
 
       if (semester != null && semester != 'Semua Semester') {
         url += 'semester=$semester&';
       }
 
-      if (tahunAjaran != null) {
-        url += 'academic_year=$tahunAjaran&';
+      if (academicYear != null) {
+        url += 'academic_year=$academicYear&';
       }
 
       final response = await http.get(

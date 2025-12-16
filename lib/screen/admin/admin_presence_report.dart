@@ -996,11 +996,11 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       context,
       MaterialPageRoute(
         builder: (context) => AdminAbsensiDetailPage(
-          mataPelajaranId: summary.subjectId,
-          mataPelajaranNama: summary.subjectName,
-          tanggal: summary.date,
+          subjectId: summary.subjectId,
+          subjectName: summary.subjectName,
+          date: summary.date,
           classId: summary.classId, // Kirim classId ke detail page
-          kelasNama: summary.className, // Kirim kelasNama ke detail page
+          className: summary.className, // Kirim kelasNama ke detail page
         ),
       ),
     );
@@ -1338,19 +1338,19 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
 class AdminAbsensiDetailPage extends StatefulWidget {
-  final String mataPelajaranId;
-  final String mataPelajaranNama;
-  final DateTime tanggal;
+  final String subjectId;
+  final String subjectName;
+  final DateTime date;
   final String classId; // Tambahkan
-  final String kelasNama; // Tambahkan
+  final String className; // Tambahkan
 
   const AdminAbsensiDetailPage({
     super.key,
-    required this.mataPelajaranId,
-    required this.mataPelajaranNama,
-    required this.tanggal,
+    required this.subjectId,
+    required this.subjectName,
+    required this.date,
     required this.classId, // Tambahkan
-    required this.kelasNama, // Tambahkan
+    required this.className, // Tambahkan
   });
 
   @override
@@ -1398,8 +1398,8 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
     try {
       // 1. Load attendance data
       final absensiData = await ApiService.getAbsensi(
-        mataPelajaranId: widget.mataPelajaranId,
-        tanggal: DateFormat('yyyy-MM-dd').format(widget.tanggal),
+        subjectId: widget.subjectId,
+        date: DateFormat('yyyy-MM-dd').format(widget.date),
       );
 
       // 2. Load students by class ID (from widget parameter)
@@ -1947,7 +1947,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                             child: Column(
                               children: [
                                 Text(
-                                  widget.mataPelajaranNama,
+                                  widget.subjectName,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -1960,7 +1960,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                                   DateFormat(
                                     'EEEE, dd MMMM yyyy',
                                     'id_ID',
-                                  ).format(widget.tanggal),
+                                  ).format(widget.date),
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.9),
                                     fontSize: 14,
