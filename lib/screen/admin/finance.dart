@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
@@ -22,6 +23,22 @@ class FinanceScreen extends StatefulWidget {
 class FinanceScreenState extends State<FinanceScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
+
+  String _formatCurrency(dynamic amount) {
+    if (amount == null) return 'Rp 0';
+    try {
+      double value = double.parse(amount.toString());
+      final formatter = NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: 'Rp ',
+        decimalDigits: 0,
+      );
+      return formatter.format(value);
+    } catch (e) {
+      return 'Rp 0';
+    }
+  }
+
   List<dynamic> _jenisPembayaranList = [];
   List<dynamic> _tagihanList = [];
   List<dynamic> _pembayaranPendingList = [];
@@ -1400,7 +1417,7 @@ class FinanceScreenState extends State<FinanceScreen>
                         ),
                       ),
                       Text(
-                        'Rp ${tagihan['amount']}',
+                        _formatCurrency(tagihan['amount']),
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -1497,7 +1514,7 @@ class FinanceScreenState extends State<FinanceScreen>
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Jenis: ${tagihan['payment_type_name'] ?? '-'}',
+                        'Jenis: ${_formatCurrency(tagihan['amount'])} - ${tagihan['payment_type_name'] ?? '-'}',
                         style: TextStyle(fontSize: 11),
                       ),
                       Text(
@@ -1913,7 +1930,10 @@ class FinanceScreenState extends State<FinanceScreen>
                       'Jenis',
                       pembayaran['jenis_pembayaran_nama'] ?? '-',
                     ),
-                    _buildInfoItem('Jumlah', 'Rp ${pembayaran['amount_paid']}'),
+                    _buildInfoItem(
+                      'Jumlah',
+                      _formatCurrency(pembayaran['amount_paid']),
+                    ),
                   ],
                 ),
               ),
@@ -2454,7 +2474,7 @@ class FinanceScreenState extends State<FinanceScreen>
                         ),
                         _buildInfoItem(
                           'Jumlah Bayar',
-                          'Rp ${pembayaran['amount_paid']}',
+                          _formatCurrency(pembayaran['amount_paid']),
                         ),
                         _buildInfoItem(
                           'Metode Bayar',
@@ -2774,7 +2794,7 @@ class FinanceScreenState extends State<FinanceScreen>
                                   ),
                                   SizedBox(height: 2),
                                   Text(
-                                    'Rp ${item['amount']}',
+                                    _formatCurrency(item['amount']),
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey[600],
@@ -2981,7 +3001,7 @@ class FinanceScreenState extends State<FinanceScreen>
               children: [
                 _buildStatItem(
                   icon: Icons.attach_money,
-                  value: 'Rp ${_dashboardData['total_payment_month'] ?? '0'}',
+                  value: _formatCurrency(_dashboardData['total_payment_month']),
                   label: 'Pendapatan Bulan Ini',
                   color: Colors.white,
                 ),
