@@ -570,6 +570,33 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
         // Refresh list
         _loadActivities();
+
+        // Auto-uncheck material logic
+        if (activity['chapter_id'] != null) {
+          try {
+            final List<Map<String, dynamic>> progressItems = [
+              {
+                'bab_id': activity['chapter_id'],
+                'sub_bab_id': activity['sub_chapter_id'],
+                'is_checked': false,
+              },
+            ];
+
+            await ApiSubjectService.batchSaveMateriProgress({
+              'guru_id': _teacherId,
+              'mata_pelajaran_id':
+                  activity['subject_id'] ?? activity['mata_pelajaran_id'],
+              'progress_items': progressItems,
+            });
+            if (kDebugMode) {
+              print('Auto-unchecked material: ${activity['chapter_id']}');
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error auto-unchecking material: $e');
+            }
+          }
+        }
       } catch (e) {
         if (!mounted) return;
 
@@ -2292,18 +2319,26 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       // Automatically mark material as generated (checked)
       if (data['chapter_id'] != null) {
         try {
-          // Construct items list for markGenerated
-          final List<Map<String, dynamic>> items = [
+          // Construct items list for batchSaveMateriProgress
+          // Auto-mark as checked (is_checked: true)
+          // Note: batchSaveMateriProgress expects different key structure ('progress_items')
+          // but ApiSubjectService.batchSaveMateriProgress helper handles the mapping from our app structure
+          // We just need to match what the internal helper expects or call the API endpoint params directly?
+          // Let's check ApiSubjectService.batchSaveMateriProgress implementation again.
+          // It takes {guru_id, mata_pelajaran_id, progress_items: [{bab_id, sub_bab_id, is_checked}]}
+
+          final List<Map<String, dynamic>> progressItems = [
             {
               'bab_id': data['chapter_id'],
               'sub_bab_id': data['sub_chapter_id'],
+              'is_checked': true,
             },
           ];
 
-          await ApiSubjectService.markMateriGenerated({
+          await ApiSubjectService.batchSaveMateriProgress({
             'guru_id': widget.teacherId,
             'mata_pelajaran_id': _selectedSubjectId,
-            'items': items,
+            'progress_items': progressItems,
           });
           if (kDebugMode) {
             print('Auto-marked material as generated: ${data['chapter_id']}');
