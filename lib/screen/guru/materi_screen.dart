@@ -65,11 +65,15 @@ class MateriPageState extends State<MateriPage> {
   // Fungsi untuk mendapatkan bab yang dicentang tapi belum di-generate
   List<Map<String, dynamic>> _getCheckedNotGeneratedBab() {
     return _babMateriList
-        .where(
-          (bab) =>
-              _checkedBab[bab['id']] == true &&
-              _generatedBab[bab['id']] != true,
-        )
+        .where((bab) {
+          final hasSubChapters = _subBabMateriList.any(
+            (sb) => sb['bab_id'].toString() == bab['id'].toString(),
+          );
+
+          return _checkedBab[bab['id']] == true &&
+              _generatedBab[bab['id']] != true &&
+              !hasSubChapters; // Only include if it has NO sub-chapters
+        })
         .toList()
         .cast<Map<String, dynamic>>();
   }
@@ -310,10 +314,26 @@ class MateriPageState extends State<MateriPage> {
         subjectId: subjectId,
       );
 
+      // Pre-fetch all sub-chapters for these babs in parallel
+      final List<Future<List<dynamic>>> futures = [];
+      for (var bab in babMateri) {
+        futures.add(
+          ApiSubjectService.getSubBabMateri(babId: bab['id'].toString()),
+        );
+      }
+
+      final List<List<dynamic>> allSubBabsResults = await Future.wait(futures);
+
       setState(() {
         _babMateriList = babMateri;
         // Clear sub bab list when changing subject
         _subBabMateriList.clear();
+
+        // Add all fetched sub-chapters to the list
+        for (var subBabs in allSubBabsResults) {
+          _subBabMateriList.addAll(subBabs);
+        }
+
         // Clear expanded, checked, and generated states
         _expandedBab.clear();
         _checkedBab.clear();
@@ -322,56 +342,33 @@ class MateriPageState extends State<MateriPage> {
         _generatedSubBab.clear();
         _usedBab.clear(); // Clear used state
         _usedSubBab.clear(); // Clear used state
+
         // Inisialisasi state expanded dan checked untuk setiap bab
         for (var bab in babMateri) {
-          _expandedBab[bab['id']] = false;
-          _checkedBab[bab['id']] = false;
-          _generatedBab[bab['id']] = false;
-          _usedBab[bab['id']] = false; // Initialize used state
+          _expandedBab[bab['id'].toString()] = false;
+          _checkedBab[bab['id'].toString()] = false;
+          _generatedBab[bab['id'].toString()] = false;
+          _usedBab[bab['id'].toString()] = false; // Initialize used state
         }
-        _debugInfo = '${babMateri.length} bab materi ditemukan';
+
+        // Inisialisasi state checked untuk setiap sub-bab
+        for (var subBab in _subBabMateriList) {
+          _checkedSubBab[subBab['id'].toString()] = false;
+        }
+
+        _debugInfo =
+            '${babMateri.length} bab materi, ${_subBabMateriList.length} sub-bab ditemukan';
       });
 
       // Load progress dari database
       await _loadMateriProgress(subjectId);
     } catch (e) {
+      if (kDebugMode) {
+        print('Error loading bab and sub-bab: $e');
+      }
       setState(() {
         _debugInfo = 'Error: $e';
       });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    }
-  }
-
-  Future<void> _loadSubBabMateri(String babId) async {
-    try {
-      final subBabMateri = await ApiSubjectService.getSubBabMateri(
-        babId: babId,
-      );
-
-      setState(() {
-        // Filter sub bab yang sesuai dengan babId
-        final newSubBabs = subBabMateri
-            .where((subBab) => subBab['bab_id'] == babId)
-            .toList();
-
-        // Hapus sub bab lama dari bab ini jika ada
-        _subBabMateriList.removeWhere((subBab) => subBab['bab_id'] == babId);
-
-        // Tambahkan sub bab baru dari bab ini
-        _subBabMateriList.addAll(newSubBabs);
-
-        // Inisialisasi state checked untuk setiap sub-bab baru
-        for (var subBab in newSubBabs) {
-          if (!_checkedSubBab.containsKey(subBab['id'])) {
-            _checkedSubBab[subBab['id']] = false;
-          }
-        }
-      });
-    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -392,12 +389,26 @@ class MateriPageState extends State<MateriPage> {
       _checkedSubBab[subBabId] = value ?? false;
 
       // Cek apakah semua sub bab dalam bab ini sudah dicentang
-      final allSubBabsChecked = _subBabMateriList
-          .where((subBab) => subBab['bab_id'] == babId)
-          .every((subBab) => _checkedSubBab[subBab['id']] == true);
+      // Ambil daftar sub bab yang dimiliki oleh babId ini
+      final subBabsForThisBab = _subBabMateriList.where((sb) {
+        return sb['bab_id'].toString() == babId.toString();
+      }).toList();
 
-      // Set status ceklis bab berdasarkan apakah semua sub bab sudah dicentang
-      _checkedBab[babId] = allSubBabsChecked;
+      if (subBabsForThisBab.isNotEmpty) {
+        // Cek apakah setiap sub bab sudah dicentang
+        final allChecked = subBabsForThisBab.every((sb) {
+          final sbId = sb['id'].toString();
+          return _checkedSubBab[sbId] == true;
+        });
+
+        // Update status ceklis bab
+        _checkedBab[babId] = allChecked;
+
+        if (kDebugMode) {
+          print('SubBab check changed: $subBabId -> $value');
+          print('Bab $babId auto-check status: $allChecked');
+        }
+      }
     });
 
     // Save to database
@@ -475,6 +486,24 @@ class MateriPageState extends State<MateriPage> {
             _usedBab[babId.toString()] = isUsed;
           }
         }
+
+        // Final pass: Recalculate Bab status based on Sub-Babs
+        // This ensures visual correctness even if Bab record is absent in DB
+        for (var bab in _babMateriList) {
+          final babId = bab['id'].toString();
+          final subBabsForThisBab = _subBabMateriList
+              .where((sb) => sb['bab_id'].toString() == babId)
+              .toList();
+
+          if (subBabsForThisBab.isNotEmpty) {
+            final allSubBabsChecked =
+                subBabsForThisBab.isNotEmpty &&
+                subBabsForThisBab.every(
+                  (sb) => _checkedSubBab[sb['id'].toString()] == true,
+                );
+            _checkedBab[babId] = allSubBabsChecked;
+          }
+        }
       });
     } catch (e) {
       if (kDebugMode) {
@@ -522,13 +551,6 @@ class MateriPageState extends State<MateriPage> {
       // Prepare batch items
       final List<Map<String, dynamic>> progressItems = [];
 
-      // Add bab itself
-      progressItems.add({
-        'chapter_id': babId,
-        'sub_chapter_id': null,
-        'is_checked': isChecked,
-      });
-
       // Debug sub-bab count
       final subBabsForThisBab = _subBabMateriList
           .where((sb) => sb['bab_id'].toString() == babId.toString())
@@ -536,6 +558,16 @@ class MateriPageState extends State<MateriPage> {
 
       if (kDebugMode) {
         print('Found ${subBabsForThisBab.length} sub-babs for bab $babId');
+      }
+
+      // Add bab itself ONLY if it has NO sub-chapters
+      // If it has sub-chapters, its status is derived and shouldn't be saved explicitly
+      if (subBabsForThisBab.isEmpty) {
+        progressItems.add({
+          'chapter_id': babId,
+          'sub_chapter_id': null,
+          'is_checked': isChecked,
+        });
       }
 
       // Add all sub-babs of this bab
@@ -582,9 +614,13 @@ class MateriPageState extends State<MateriPage> {
         builder: (context) => SubBabDetailPage(
           subBab: subBab,
           bab: bab,
-          checked: _checkedSubBab[subBab['id']] ?? false,
+          checked: _checkedSubBab[subBab['id'].toString()] ?? false,
           onCheckChanged: (value) {
-            _handleSubBabCheck(subBab['id'], bab['id'], value);
+            _handleSubBabCheck(
+              subBab['id'].toString(),
+              bab['id'].toString(),
+              value,
+            );
           },
         ),
       ),
@@ -1009,7 +1045,8 @@ class MateriPageState extends State<MateriPage> {
       itemBuilder: (context, index) {
         final bab = filteredBabMateri[index];
         final cardColor = _getCardColor(index);
-        final isExpanded = _expandedBab[bab['id']] ?? false;
+        final babIdStr = bab['id'].toString();
+        final isExpanded = _expandedBab[babIdStr] ?? false;
 
         return Container(
           margin: EdgeInsets.symmetric(vertical: 6, horizontal: 0),
@@ -1019,10 +1056,7 @@ class MateriPageState extends State<MateriPage> {
               borderRadius: BorderRadius.circular(16),
               onTap: () {
                 setState(() {
-                  _expandedBab[bab['id']] = !isExpanded;
-                  if (!isExpanded) {
-                    _loadSubBabMateri(bab['id']);
-                  }
+                  _expandedBab[babIdStr] = !isExpanded;
                 });
               },
               child: Container(
@@ -1121,13 +1155,16 @@ class MateriPageState extends State<MateriPage> {
                                 ),
                               ),
                               Checkbox(
-                                value: _checkedBab[bab['id']] ?? false,
+                                value:
+                                    _checkedBab[bab['id'].toString()] ?? false,
                                 onChanged: (value) {
-                                  _handleBabCheck(bab['id'], value);
+                                  _handleBabCheck(bab['id'].toString(), value);
                                 },
-                                activeColor: _usedBab[bab['id']] == true
+                                activeColor:
+                                    _usedBab[bab['id'].toString()] == true
                                     ? Colors.blue
-                                    : _generatedBab[bab['id']] == true
+                                    : _generatedBab[bab['id'].toString()] ==
+                                          true
                                     ? Color(0xFF8B5CF6)
                                     : Color(0xFF10B981),
                               ),
@@ -1172,7 +1209,9 @@ class MateriPageState extends State<MateriPage> {
 
     return Column(
       children: _subBabMateriList
-          .where((subBab) => subBab['bab_id'] == bab['id'])
+          .where(
+            (subBab) => subBab['bab_id'].toString() == bab['id'].toString(),
+          )
           .map((subBab) {
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1207,13 +1246,17 @@ class MateriPageState extends State<MateriPage> {
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   trailing: Checkbox(
-                    value: _checkedSubBab[subBab['id']] ?? false,
+                    value: _checkedSubBab[subBab['id'].toString()] ?? false,
                     onChanged: (value) {
-                      _handleSubBabCheck(subBab['id'], bab['id'], value);
+                      _handleSubBabCheck(
+                        subBab['id'].toString(),
+                        bab['id'].toString(),
+                        value,
+                      );
                     },
-                    activeColor: _usedSubBab[subBab['id']] == true
+                    activeColor: _usedSubBab[subBab['id'].toString()] == true
                         ? Colors.blue
-                        : _generatedSubBab[subBab['id']] == true
+                        : _generatedSubBab[subBab['id'].toString()] == true
                         ? Color(0xFF8B5CF6)
                         : Color(0xFF10B981),
                   ),
