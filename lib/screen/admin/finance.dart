@@ -1795,7 +1795,7 @@ class FinanceScreenState extends State<FinanceScreen>
 
   // Dalam KeuanganScreenState, tambahkan method ini:
   void _showBuktiPembayaran(Map<String, dynamic> pembayaran) {
-    if (pembayaran['bukti_bayar'] == null) {
+    if (pembayaran['payment_receipt'] == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Tidak ada bukti pembayaran'),
@@ -1858,7 +1858,7 @@ class FinanceScreenState extends State<FinanceScreen>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      _getImageUrl(pembayaran['bukti_bayar']),
+                      _getImageUrl(pembayaran['payment_receipt']),
                       width: double.infinity,
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
@@ -1888,7 +1888,7 @@ class FinanceScreenState extends State<FinanceScreen>
                             ),
                             SizedBox(height: 8),
                             Text(
-                              'File: ${pembayaran['bukti_bayar']}',
+                              'File: ${pembayaran['payment_receipt']}',
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Colors.grey,
@@ -1932,7 +1932,7 @@ class FinanceScreenState extends State<FinanceScreen>
                     ),
                     _buildInfoItem(
                       'Jumlah',
-                      _formatCurrency(pembayaran['amount_paid']),
+                      _formatCurrency(pembayaran['amount']),
                     ),
                   ],
                 ),
@@ -2474,7 +2474,7 @@ class FinanceScreenState extends State<FinanceScreen>
                         ),
                         _buildInfoItem(
                           'Jumlah Bayar',
-                          _formatCurrency(pembayaran['amount_paid']),
+                          _formatCurrency(pembayaran['amount']),
                         ),
                         _buildInfoItem(
                           'Metode Bayar',
@@ -2485,7 +2485,7 @@ class FinanceScreenState extends State<FinanceScreen>
                         Divider(),
                         SizedBox(height: 16),
 
-                        if (pembayaran['bukti_bayar'] != null) ...[
+                        if (pembayaran['payment_receipt'] != null) ...[
                           SizedBox(height: 12),
                           GestureDetector(
                             onTap: () => _showBuktiPembayaran(pembayaran),
@@ -3509,20 +3509,25 @@ class FinanceScreenState extends State<FinanceScreen>
             style: TextStyle(color: Colors.orange.shade600, fontSize: 12),
           ),
           SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () {
-              DefaultTabController.of(context).animateTo(2);
+          SizedBox(height: 8),
+          Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () {
+                  DefaultTabController.of(context).animateTo(2);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Verifikasi Sekarang',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              'Verifikasi Sekarang',
-              style: TextStyle(color: Colors.white, fontSize: 12),
-            ),
           ),
         ],
       ),
@@ -3683,7 +3688,7 @@ class FinanceScreenState extends State<FinanceScreen>
                             ),
                             SizedBox(width: 4),
                             Text(
-                              'Rp ${pembayaran['amount_paid']}',
+                              _formatCurrency(pembayaran['amount']),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -3703,7 +3708,7 @@ class FinanceScreenState extends State<FinanceScreen>
                             ),
                             SizedBox(width: 4),
                             Text(
-                              pembayaran['tanggal_bayar']?.split('T')[0] ?? '-',
+                              pembayaran['payment_date']?.split('T')[0] ?? '-',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -3713,7 +3718,7 @@ class FinanceScreenState extends State<FinanceScreen>
                         ),
 
                         // TAMPILKAN BUKTI PEMBAYARAN JIKA ADA
-                        if (pembayaran['bukti_bayar'] != null) ...[
+                        if (pembayaran['payment_receipt'] != null) ...[
                           SizedBox(height: 8),
                           GestureDetector(
                             onTap: () => _showBuktiPembayaran(pembayaran),
@@ -3761,7 +3766,7 @@ class FinanceScreenState extends State<FinanceScreen>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // Tombol Lihat Bukti
-                            if (pembayaran['bukti_bayar'] != null)
+                            if (pembayaran['payment_receipt'] != null)
                               OutlinedButton(
                                 onPressed: () =>
                                     _showBuktiPembayaran(pembayaran),

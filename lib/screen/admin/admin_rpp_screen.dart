@@ -5,6 +5,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_rpp_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -23,6 +24,10 @@ class AdminRppScreen extends StatefulWidget {
 class _AdminRppScreenState extends State<AdminRppScreen>
     with SingleTickerProviderStateMixin {
   List<dynamic> _rppList = [];
+  List<dynamic> _teacherList = [];
+  bool _showTeacherList = true;
+  String? _selectedTeacherId;
+  String? _selectedTeacherName;
   bool _isLoading = true;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
@@ -53,20 +58,30 @@ class _AdminRppScreenState extends State<AdminRppScreen>
       duration: Duration(milliseconds: 800),
     );
 
-    // per-card animations use local CurvedAnimation instances
-
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
               _scrollController.position.maxScrollExtent - 200 &&
           !_isLoadingMore &&
           _hasMoreData &&
           !_isLoading) {
-        _loadMoreRpp();
+        if (_showTeacherList && widget.teacherId == null) {
+          _loadTeachersPaginated();
+        } else {
+          _loadRppPaginated();
+        }
       }
     });
 
-    // initial load
-    _loadRppPaginated(reset: true);
+    // Check if we start with a specific teacher (e.g. from deeper navigation)
+    if (widget.teacherId != null) {
+      _showTeacherList = false;
+      _selectedTeacherId = widget.teacherId;
+      _selectedTeacherName = widget.teacherName;
+      _loadRppPaginated(reset: true);
+    } else {
+      _showTeacherList = true;
+      _loadTeachersPaginated(reset: true);
+    }
   }
 
   @override
@@ -370,6 +385,71 @@ class _AdminRppScreenState extends State<AdminRppScreen>
     }
   }
 
+  Future<void> _loadTeachersPaginated({bool reset = false}) async {
+    try {
+      if (reset) {
+        _currentPage = 1;
+        _hasMoreData = true;
+      }
+
+      setState(() {
+        if (reset) {
+          _isLoading = true;
+          _errorMessage = null;
+          _teacherList = [];
+        } else {
+          _isLoadingMore = true;
+        }
+      });
+
+      // Using the method from ApiTeacherService we checked earlier
+      final result = await ApiTeacherService.getTeachersPaginated(
+        page: _currentPage,
+        limit: _perPage,
+        search: _searchController.text.isNotEmpty
+            ? _searchController.text
+            : null,
+      );
+
+      if (result['success'] == true || result['data'] != null) {
+        final List<dynamic> data = result['data'] ?? [];
+        final pagination = result['pagination'] ?? {};
+
+        if (mounted) {
+          setState(() {
+            if (reset) {
+              _teacherList = data;
+            } else {
+              _teacherList.addAll(data);
+            }
+
+            _hasMoreData =
+                pagination['has_next_page'] ?? (data.length == _perPage);
+            _isLoading = false;
+            _isLoadingMore = false;
+          });
+          _animationController.forward();
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isLoadingMore = false;
+            _errorMessage = 'Failed to load teachers';
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLoadingMore = false;
+          _errorMessage = e.toString();
+        });
+      }
+    }
+  }
+
   Future<void> _loadRppPaginated({bool reset = false}) async {
     try {
       if (reset) {
@@ -389,7 +469,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
       final result = await ApiService.getRppPaginated(
         page: _currentPage,
         limit: _perPage,
-        teacherId: widget.teacherId,
+        teacherId: _selectedTeacherId,
         status: _selectedStatusFilter,
         search: _searchController.text.isNotEmpty
             ? _searchController.text
@@ -431,16 +511,40 @@ class _AdminRppScreenState extends State<AdminRppScreen>
     }
   }
 
-  Future<void> _loadMoreRpp() async {
-    if (!_hasMoreData) return;
-    _currentPage += 1;
-    await _loadRppPaginated(reset: false);
+  void _selectTeacher(Map<String, dynamic> teacher) {
+    setState(() {
+      _selectedTeacherId =
+          teacher['user_id']?.toString() ??
+          teacher['id'].toString(); // Try user_id first, fallback to id
+      _selectedTeacherName = teacher['name'];
+      _showTeacherList = false;
+      _rppList = [];
+      _searchController.clear();
+      _currentPage = 1;
+    });
+    _loadRppPaginated(reset: true);
+  }
+
+  void _backToTeacherList() {
+    setState(() {
+      _selectedTeacherId = null;
+      _selectedTeacherName = null;
+      _showTeacherList = true;
+      _rppList = [];
+      _searchController.clear();
+      _currentPage = 1;
+    });
+    _loadTeachersPaginated(reset: true);
   }
 
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(Duration(milliseconds: 500), () {
-      _loadRppPaginated(reset: true);
+      if (_showTeacherList && widget.teacherId == null) {
+        _loadTeachersPaginated(reset: true);
+      } else {
+        _loadRppPaginated(reset: true);
+      }
     });
   }
 
@@ -578,7 +682,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    rpp['title'] ?? 'No Title',
+                                    rpp['judul'] ?? rpp['title'] ?? 'No Title',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -589,7 +693,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                   ),
                                   SizedBox(height: 2),
                                   Text(
-                                    '${rpp['subject_name'] ?? 'No Subject'}',
+                                    '${rpp['mata_pelajaran_nama'] ?? rpp['subject_name'] ?? 'No Subject'}',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey[600],
@@ -665,7 +769,9 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                   ),
                                   SizedBox(height: 1),
                                   Text(
-                                    rpp['class_name'] ?? 'No Class',
+                                    rpp['kelas_nama'] ??
+                                        rpp['class_name'] ??
+                                        'No Class',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -710,7 +816,9 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                   ),
                                   SizedBox(height: 1),
                                   Text(
-                                    rpp['teacher_name'] ?? 'No Teacher',
+                                    rpp['teacher_name'] ??
+                                        rpp['guru_nama'] ??
+                                        'No Teacher',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -793,6 +901,106 @@ class _AdminRppScreenState extends State<AdminRppScreen>
     );
   }
 
+  Widget _buildTeacherCard(Map<String, dynamic> teacher, int index) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          final delay = index * 0.05;
+          final animation = CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(delay, 1.0, curve: Curves.easeOut),
+          );
+
+          return FadeTransition(
+            opacity: animation,
+            child: Transform.translate(
+              offset: Offset(0, 30 * (1 - animation.value)),
+              child: child,
+            ),
+          );
+        },
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _selectTeacher(teacher),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 5,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: _getPrimaryColor().withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        teacher['name'] != null && teacher['name'].isNotEmpty
+                            ? teacher['name'][0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          color: _getPrimaryColor(),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          teacher['name'] ?? 'Unknown',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          teacher['employee_number'] != null
+                              ? 'NIP: ${teacher['employee_number']}'
+                              : 'No NIP',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey[400],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -800,8 +1008,8 @@ class _AdminRppScreenState extends State<AdminRppScreen>
         if (_isLoading) {
           return LoadingScreen(
             message: languageProvider.getTranslatedText({
-              'en': 'Loading RPP data...',
-              'id': 'Memuat data RPP...',
+              'en': 'Loading data...',
+              'id': 'Memuat data...',
             }),
           );
         }
@@ -809,18 +1017,25 @@ class _AdminRppScreenState extends State<AdminRppScreen>
         if (_errorMessage != null) {
           return ErrorScreen(
             errorMessage: _errorMessage!,
-            onRetry: _loadAllRpp,
+            onRetry: _showTeacherList ? _loadTeachersPaginated : _loadAllRpp,
           );
         }
 
+        // Apply filters for RPP list (Teacher list is filtered by backend)
         final filteredRpp = _rppList.where((rpp) {
+          if (_showTeacherList)
+            return true; // Don't filter if showing teachers (not used)
+
           final searchTerm = _searchController.text.toLowerCase();
           final matchesSearch =
               searchTerm.isEmpty ||
               (rpp['judul']?.toLowerCase().contains(searchTerm) ?? false) ||
               (rpp['mata_pelajaran_nama']?.toLowerCase().contains(searchTerm) ??
                   false) ||
-              (rpp['guru_nama']?.toLowerCase().contains(searchTerm) ?? false) ||
+              (rpp['teacher_name']?.toLowerCase().contains(searchTerm) ??
+                  false) || // Updated to teacher_name
+              (rpp['guru_nama']?.toLowerCase().contains(searchTerm) ??
+                  false) || // Keep as fallback
               (rpp['kelas_nama']?.toLowerCase().contains(searchTerm) ?? false);
 
           // Status filter
@@ -835,7 +1050,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
           backgroundColor: Color(0xFFF8F9FA),
           body: Column(
             children: [
-              // Header dengan gradient
+              // Header
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.only(
@@ -860,7 +1075,19 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () {
+                            if (_showTeacherList) {
+                              Navigator.pop(context);
+                            } else {
+                              if (widget.teacherId != null) {
+                                // Came from outside with fixed teacher
+                                Navigator.pop(context);
+                              } else {
+                                // Navigate back to teacher list
+                                _backToTeacherList();
+                              }
+                            }
+                          },
                           child: Container(
                             width: 40,
                             height: 40,
@@ -881,95 +1108,110 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.teacherName != null
-                                    ? 'RPP - ${widget.teacherName}'
-                                    : languageProvider.getTranslatedText({
-                                        'en': 'Manage RPP',
-                                        'id': 'Kelola RPP',
-                                      }),
+                                _showTeacherList
+                                    ? languageProvider.getTranslatedText({
+                                        'en': 'Select Teacher',
+                                        'id': 'Pilih Guru',
+                                      })
+                                    : (_selectedTeacherName != null
+                                          ? 'RPP - $_selectedTeacherName'
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Manage RPP',
+                                              'id': 'Kelola RPP',
+                                            })),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 2),
-                              Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Manage lesson plans',
-                                  'id':
-                                      'Kelola rencana pelaksanaan pembelajaran',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                              if (_showTeacherList ||
+                                  _selectedTeacherName == null)
+                                SizedBox(height: 2),
+                              if (_showTeacherList ||
+                                  _selectedTeacherName == null)
+                                Text(
+                                  _showTeacherList
+                                      ? languageProvider.getTranslatedText({
+                                          'en': 'Select a teacher to view RPP',
+                                          'id': 'Pilih guru untuk melihat RPP',
+                                        })
+                                      : languageProvider.getTranslatedText({
+                                          'en': 'Manage lesson plans',
+                                          'id':
+                                              'Kelola rencana pelaksanaan pembelajaran',
+                                        }),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        if (!_showTeacherList) // Only show options in RPP view
+                          PopupMenuButton<String>(
+                            onSelected: (value) {
+                              switch (value) {
+                                case 'export':
+                                  _exportToExcel();
+                                  break;
+                                case 'refresh':
+                                  _loadRppByTeacher();
+                                  break;
+                              }
+                            },
+                            icon: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.more_vert,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            itemBuilder: (BuildContext context) => [
+                              PopupMenuItem<String>(
+                                value: 'export',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.download, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Export to Excel',
+                                        'id': 'Export ke Excel',
+                                      }),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'refresh',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.refresh, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Refresh',
+                                        'id': 'Refresh',
+                                      }),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            switch (value) {
-                              case 'export':
-                                _exportToExcel();
-                                break;
-                              case 'refresh':
-                                _loadRppByTeacher();
-                                break;
-                            }
-                          },
-                          icon: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.more_vert,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          itemBuilder: (BuildContext context) => [
-                            PopupMenuItem<String>(
-                              value: 'export',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.download, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Export to Excel',
-                                      'id': 'Export ke Excel',
-                                    }),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem<String>(
-                              value: 'refresh',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.refresh, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Refresh',
-                                      'id': 'Refresh',
-                                    }),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                     SizedBox(height: 16),
 
-                    // Search Bar with Filter Button
+                    // Search Bar
                     Row(
                       children: [
                         Expanded(
@@ -983,10 +1225,15 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                               onChanged: (value) => _onSearchChanged(value),
                               style: TextStyle(color: Colors.black87),
                               decoration: InputDecoration(
-                                hintText: languageProvider.getTranslatedText({
-                                  'en': 'Search RPP...',
-                                  'id': 'Cari RPP...',
-                                }),
+                                hintText: _showTeacherList
+                                    ? languageProvider.getTranslatedText({
+                                        'en': 'Search Teacher...',
+                                        'id': 'Cari Guru...',
+                                      })
+                                    : languageProvider.getTranslatedText({
+                                        'en': 'Search RPP...',
+                                        'id': 'Cari RPP...',
+                                      }),
                                 hintStyle: TextStyle(color: Colors.grey),
                                 prefixIcon: Icon(
                                   Icons.search,
@@ -1001,57 +1248,59 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
-                        // Filter Button
-                        Container(
-                          decoration: BoxDecoration(
-                            color: _hasActiveFilter
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              IconButton(
-                                onPressed: _showFilterSheet,
-                                icon: Icon(
-                                  Icons.tune,
-                                  color: _hasActiveFilter
-                                      ? _getPrimaryColor()
-                                      : Colors.white,
-                                ),
-                                tooltip: languageProvider.getTranslatedText({
-                                  'en': 'Filter',
-                                  'id': 'Filter',
-                                }),
+                        if (!_showTeacherList) ...[
+                          SizedBox(width: 8),
+                          // Filter Button (RPP only)
+                          Container(
+                            decoration: BoxDecoration(
+                              color: _hasActiveFilter
+                                  ? Colors.white
+                                  : Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
                               ),
-                              if (_hasActiveFilter)
-                                Positioned(
-                                  right: 8,
-                                  top: 8,
-                                  child: Container(
-                                    padding: EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    constraints: BoxConstraints(
-                                      minWidth: 8,
-                                      minHeight: 8,
+                            ),
+                            child: Stack(
+                              children: [
+                                IconButton(
+                                  onPressed: _showFilterSheet,
+                                  icon: Icon(
+                                    Icons.tune,
+                                    color: _hasActiveFilter
+                                        ? _getPrimaryColor()
+                                        : Colors.white,
+                                  ),
+                                  tooltip: languageProvider.getTranslatedText({
+                                    'en': 'Filter',
+                                    'id': 'Filter',
+                                  }),
+                                ),
+                                if (_hasActiveFilter)
+                                  Positioned(
+                                    right: 8,
+                                    top: 8,
+                                    child: Container(
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: BoxConstraints(
+                                        minWidth: 8,
+                                        minHeight: 8,
+                                      ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
 
-                    // Filter Chips
-                    if (_hasActiveFilter) ...[
+                    // Filter Chips (RPP only)
+                    if (!_showTeacherList && _hasActiveFilter) ...[
                       SizedBox(height: 12),
                       SizedBox(
                         height: 32,
@@ -1106,52 +1355,102 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                 ),
               ),
               Expanded(
-                child: filteredRpp.isEmpty
-                    ? EmptyState(
-                        title: languageProvider.getTranslatedText({
-                          'en': 'No RPP',
-                          'id': 'Tidak ada RPP',
-                        }),
-                        subtitle:
-                            _searchController.text.isEmpty && !_hasActiveFilter
-                            ? languageProvider.getTranslatedText({
-                                'en': 'No RPP data available',
-                                'id': 'Tidak ada data RPP',
-                              })
-                            : languageProvider.getTranslatedText({
-                                'en': 'No search results found',
-                                'id': 'Tidak ditemukan hasil pencarian',
+                child: _showTeacherList
+                    ? (_teacherList.isEmpty
+                          ? EmptyState(
+                              title: languageProvider.getTranslatedText({
+                                'en': 'No Teachers',
+                                'id': 'Tidak ada Guru',
                               }),
-                        icon: Icons.description,
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadRppByTeacher,
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          padding: EdgeInsets.only(
-                            top: 16,
-                            bottom: 16,
-                            left: 5,
-                            right: 5,
-                          ),
-                          itemCount:
-                              filteredRpp.length + (_isLoadingMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index >= filteredRpp.length) {
-                              // loading indicator
-                              return Padding(
-                                padding: EdgeInsets.symmetric(vertical: 12),
-                                child: Center(
-                                  child: CircularProgressIndicator(),
+                              subtitle: _searchController.text.isNotEmpty
+                                  ? languageProvider.getTranslatedText({
+                                      'en': 'No teachers found matching search',
+                                      'id':
+                                          'Tidak ditemukan guru dengan pencarian tersebut',
+                                    })
+                                  : languageProvider.getTranslatedText({
+                                      'en': 'No teacher data available',
+                                      'id': 'Tidak ada data guru',
+                                    }),
+                              icon: Icons.people,
+                            )
+                          : RefreshIndicator(
+                              onRefresh: () =>
+                                  _loadTeachersPaginated(reset: true),
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                padding: EdgeInsets.only(top: 16, bottom: 16),
+                                itemCount:
+                                    _teacherList.length +
+                                    (_isLoadingMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index >= _teacherList.length) {
+                                    return Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  }
+                                  return _buildTeacherCard(
+                                    _teacherList[index],
+                                    index,
+                                  );
+                                },
+                              ),
+                            ))
+                    : (filteredRpp.isEmpty
+                          ? EmptyState(
+                              title: languageProvider.getTranslatedText({
+                                'en': 'No RPP',
+                                'id': 'Tidak ada RPP',
+                              }),
+                              subtitle:
+                                  _searchController.text.isEmpty &&
+                                      !_hasActiveFilter
+                                  ? languageProvider.getTranslatedText({
+                                      'en': 'No RPP data available',
+                                      'id': 'Tidak ada data RPP',
+                                    })
+                                  : languageProvider.getTranslatedText({
+                                      'en': 'No search results found',
+                                      'id': 'Tidak ditemukan hasil pencarian',
+                                    }),
+                              icon: Icons.description,
+                            )
+                          : RefreshIndicator(
+                              onRefresh: _loadRppByTeacher,
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                padding: EdgeInsets.only(
+                                  top: 16,
+                                  bottom: 16,
+                                  left: 5,
+                                  right: 5,
                                 ),
-                              );
-                            }
+                                itemCount:
+                                    filteredRpp.length +
+                                    (_isLoadingMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index >= filteredRpp.length) {
+                                    // loading indicator
+                                    return Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  }
 
-                            final rpp = filteredRpp[index];
-                            return _buildRppCard(rpp, index);
-                          },
-                        ),
-                      ),
+                                  final rpp = filteredRpp[index];
+                                  return _buildRppCard(rpp, index);
+                                },
+                              ),
+                            )),
               ),
             ],
           ),
