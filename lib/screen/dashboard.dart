@@ -1140,7 +1140,7 @@ class _DashboardState extends State<Dashboard>
           return AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
-              final delay = index * 0.1;
+              final delay = (index * 0.1).clamp(0.0, 0.8);
               final animation = CurvedAnimation(
                 parent: _animationController,
                 curve: Interval(delay, 1.0, curve: Curves.easeOut),

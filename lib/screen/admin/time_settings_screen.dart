@@ -176,7 +176,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionHeader(
-                    'Jadwal Harian',
+                    'Jam Aktif Harian',
                     'Pilih hari untuk mengatur jam pelajaran.',
                     Icons.calendar_today_outlined,
                   ),

@@ -74,6 +74,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
   // Data for filters
   List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
+  Map<String, dynamic>? _selectedClassData;
+  bool _isLoadingClasses = true;
 
   // Animations
   late AnimationController _animationController;
@@ -98,7 +100,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     );
 
     _scrollController.addListener(_onScroll);
-    _loadData();
+    // _loadData(); // Start with class list
     _loadFilterData();
   }
 
@@ -112,20 +114,57 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
   }
 
   Future<void> _loadFilterData() async {
+    if (mounted) setState(() => _isLoadingClasses = true);
+
+    // List to store results
+    List<dynamic> subjects = [];
+    List<dynamic> classes = [];
+
     try {
-      final subjects = await ApiSubjectService().getSubject();
-      final classes = await ApiClassService().getClass();
+      // Execute requests in parallel with individual error handling
+      final results = await Future.wait([
+        ApiSubjectService()
+            .getSubject()
+            .then((value) {
+              if (kDebugMode) print('Subjects loaded: ${value.length}');
+              return value;
+            })
+            .catchError((e) {
+              if (kDebugMode) print('Error loading subjects: $e');
+              return [];
+            }),
+        ApiClassService()
+            .getClass()
+            .then((value) {
+              if (kDebugMode) print('Classes loaded: ${value.length}');
+              return value;
+            })
+            .catchError((e) {
+              if (kDebugMode) print('Error loading classes: $e');
+              return [];
+            }),
+      ]);
+
+      subjects = results[0];
+      classes = results[1];
 
       if (mounted) {
         setState(() {
           _subjectList = subjects;
           _classList = classes;
         });
+
+        // Start animation if we have classes
+        if (_classList.isNotEmpty) {
+          _animationController.forward(from: 0.0);
+        }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading filter data: $e');
+        print('Error loading filter data (critical): $e');
       }
+    } finally {
+      if (mounted) setState(() => _isLoadingClasses = false);
     }
   }
 
@@ -641,6 +680,99 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     );
   }
 
+  Widget _buildClassList(LanguageProvider languageProvider) {
+    if (_isLoadingClasses) {
+      return Center(
+        child: CircularProgressIndicator(color: _getPrimaryColor()),
+      );
+    }
+
+    if (_classList.isEmpty) {
+      return Center(
+        child: Text(
+          languageProvider.getTranslatedText({
+            'en': 'No classes found',
+            'id': 'Tidak ada data kelas',
+          }),
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadFilterData,
+      color: _getPrimaryColor(),
+      child: ListView.builder(
+        padding: EdgeInsets.all(16),
+        physics: AlwaysScrollableScrollPhysics(),
+        itemCount: _classList.length,
+        itemBuilder: (context, index) {
+          final kelas = _classList[index];
+          return AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              final delay = (index * 0.1).clamp(0.0, 0.8);
+              final animation = CurvedAnimation(
+                parent: _animationController,
+                curve: Interval(delay, 1.0, curve: Curves.easeOut),
+              );
+
+              return FadeTransition(
+                opacity: animation,
+                child: Transform.translate(
+                  offset: Offset(0, 50 * (1 - animation.value)),
+                  child: child,
+                ),
+              );
+            },
+            child: Card(
+              elevation: 2,
+              margin: EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                leading: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _getPrimaryColor().withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.class_, color: _getPrimaryColor()),
+                ),
+                title: Text(
+                  kelas['name'] ?? 'Unknown Class',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                subtitle: Text(
+                  '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${kelas['grade_level'] ?? '-'}',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                ),
+                onTap: () {
+                  setState(() {
+                    _selectedClassData = kelas;
+                    _selectedClassIds = [kelas['id'].toString()];
+                    _loadData();
+                    _animationController.forward(from: 0.0);
+                  });
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildSummaryCard(
     AttendanceSummary summary,
     LanguageProvider languageProvider,
@@ -1050,7 +1182,18 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () {
+                            if (_selectedClassData != null) {
+                              setState(() {
+                                _selectedClassData = null;
+                                _selectedClassIds.clear();
+                                _absensiSummaryList.clear();
+                                _animationController.forward(from: 0.0);
+                              });
+                            } else {
+                              Navigator.pop(context);
+                            }
+                          },
                           child: Container(
                             width: 40,
                             height: 40,
@@ -1099,7 +1242,11 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                           onSelected: (value) {
                             switch (value) {
                               case 'refresh':
-                                _loadData();
+                                if (_selectedClassData == null) {
+                                  _loadFilterData();
+                                } else {
+                                  _loadData();
+                                }
                                 break;
                             }
                           },
@@ -1297,7 +1444,9 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                 ),
               ),
               Expanded(
-                child: filteredSummaries.isEmpty
+                child: _selectedClassData == null
+                    ? _buildClassList(languageProvider)
+                    : filteredSummaries.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({
                           'en': 'No attendance records',

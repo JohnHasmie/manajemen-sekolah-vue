@@ -19,7 +19,8 @@ class AdminClassManagementScreen extends StatefulWidget {
   const AdminClassManagementScreen({super.key});
 
   @override
-  AdminClassManagementScreenState createState() => AdminClassManagementScreenState();
+  AdminClassManagementScreenState createState() =>
+      AdminClassManagementScreenState();
 }
 
 class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
@@ -926,6 +927,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: DropdownButtonFormField<String>(
+        isExpanded: true, // Fix overflow
         initialValue: validValue,
         decoration: InputDecoration(
           labelText: languageProvider.getTranslatedText({

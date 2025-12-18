@@ -1414,9 +1414,9 @@ class TeachingScheduleManagementScreenState
             margin: EdgeInsets.all(8), // Margin lebih kecil
             elevation: 2,
             child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
+              scrollDirection: Axis.vertical,
               child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
+                scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columnSpacing: 1, // Spacing lebih kecil
                   horizontalMargin: 4,
