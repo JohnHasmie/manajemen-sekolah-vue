@@ -15,14 +15,14 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
-class ClassManagementScreen extends StatefulWidget {
-  const ClassManagementScreen({super.key});
+class AdminClassManagementScreen extends StatefulWidget {
+  const AdminClassManagementScreen({super.key});
 
   @override
-  ClassManagementScreenState createState() => ClassManagementScreenState();
+  AdminClassManagementScreenState createState() => AdminClassManagementScreenState();
 }
 
-class ClassManagementScreenState extends State<ClassManagementScreen>
+class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     with SingleTickerProviderStateMixin {
   final ApiClassService _classService = ApiClassService();
 

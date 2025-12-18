@@ -8,6 +8,7 @@ import 'package:manajemensekolah/screen/admin/admin_class_management.dart';
 import 'package:manajemensekolah/screen/admin/admin_presence_report.dart';
 import 'package:manajemensekolah/screen/admin/admin_rpp_screen.dart';
 import 'package:manajemensekolah/screen/admin/finance.dart';
+import 'package:manajemensekolah/screen/admin/school_settings_screen.dart';
 import 'package:manajemensekolah/screen/admin/student_management.dart';
 import 'package:manajemensekolah/screen/admin/subject_management.dart';
 import 'package:manajemensekolah/screen/admin/teacher_admin.dart';
@@ -684,7 +685,7 @@ class _DashboardState extends State<Dashboard>
         gradient: _getHeaderGradient(),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withValues(alpha: 0.3),
+            color: _getPrimaryColor().withOpacity(0.3),
             blurRadius: 15,
             offset: Offset(0, 4),
           ),
@@ -703,7 +704,7 @@ class _DashboardState extends State<Dashboard>
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 8,
                     offset: Offset(0, 2),
                   ),
@@ -735,7 +736,7 @@ class _DashboardState extends State<Dashboard>
                   _getRoleTitle(),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
@@ -790,7 +791,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "Semua kelas",
             icon: Icons.people_alt_outlined,
             iconColor: Color(0xFF4361EE),
-            backgroundColor: Color(0xFF4361EE).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
@@ -799,7 +800,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "✓ Aktif",
             icon: Icons.class_outlined,
             iconColor: Color(0xFF2EC4B6),
-            backgroundColor: Color(0xFF2EC4B6).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
@@ -808,7 +809,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "Sedang berlangsung",
             icon: Icons.schedule_outlined,
             iconColor: Color(0xFFFF9F1C),
-            backgroundColor: Color(0xFFFF9F1C).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFFFF9F1C).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
@@ -822,7 +823,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "Terkirim",
             icon: Icons.description_outlined,
             iconColor: Color(0xFF7209B7),
-            backgroundColor: Color(0xFF7209B7).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFF7209B7).withOpacity(0.1),
           ),
         ],
       ),
@@ -841,7 +842,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "✓ Terdaftar",
             icon: "👨‍🎓",
             iconColor: Color(0xFF4361EE),
-            backgroundColor: Color(0xFF4361EE).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
@@ -850,7 +851,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "✓ Aktif",
             icon: "👨‍🏫",
             iconColor: Color(0xFF2EC4B6),
-            backgroundColor: Color(0xFF2EC4B6).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
@@ -859,7 +860,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "Tersedia",
             icon: "🏫",
             iconColor: Color(0xFFFF9F1C),
-            backgroundColor: Color(0xFFFF9F1C).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFFFF9F1C).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
@@ -868,7 +869,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "✓ Tersedia",
             icon: "📚",
             iconColor: Color(0xFF7209B7),
-            backgroundColor: Color(0xFF7209B7).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFF7209B7).withOpacity(0.1),
           ),
         ],
       ),
@@ -887,7 +888,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "Info terbaru",
             icon: Icons.announcement_outlined,
             iconColor: Color(0xFF4361EE),
-            backgroundColor: Color(0xFF4361EE).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
@@ -896,7 +897,7 @@ class _DashboardState extends State<Dashboard>
             subtitle: "Anak terdaftar",
             icon: Icons.child_care_outlined,
             iconColor: Color(0xFF2EC4B6),
-            backgroundColor: Color(0xFF2EC4B6).withValues(alpha: 0.1),
+            backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
           ),
         ],
       ),
@@ -920,7 +921,7 @@ class _DashboardState extends State<Dashboard>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -998,7 +999,7 @@ class _DashboardState extends State<Dashboard>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 20),
@@ -1017,7 +1018,7 @@ class _DashboardState extends State<Dashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withValues(alpha: 0.2),
+            color: _getPrimaryColor().withOpacity(0.2),
             blurRadius: 20,
             offset: Offset(0, 8),
           ),
@@ -1034,7 +1035,7 @@ class _DashboardState extends State<Dashboard>
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: _getPrimaryColor().withValues(alpha: 0.3),
+                  color: _getPrimaryColor().withOpacity(0.3),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -1055,7 +1056,7 @@ class _DashboardState extends State<Dashboard>
                   AppLocalizations.welcome.tr,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withOpacity(0.8),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1076,7 +1077,7 @@ class _DashboardState extends State<Dashboard>
                   _userData['nama_sekolah'] ?? AppLocalizations.appTitle.tr,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Colors.white.withOpacity(0.7),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1099,7 +1100,7 @@ class _DashboardState extends State<Dashboard>
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
               offset: Offset(0, 4),
             ),
@@ -1172,7 +1173,7 @@ class _DashboardState extends State<Dashboard>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.3),
+                color: Colors.grey.withOpacity(0.3),
                 blurRadius: 5,
                 offset: Offset(0, 4),
               ),
@@ -1205,7 +1206,7 @@ class _DashboardState extends State<Dashboard>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.1),
+                    color: Colors.grey.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -1224,7 +1225,7 @@ class _DashboardState extends State<Dashboard>
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: _getPrimaryColor().withValues(alpha: 0.1),
+                          color: _getPrimaryColor().withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: _buildIconWidget(icon),
@@ -1337,9 +1338,9 @@ class _DashboardState extends State<Dashboard>
         child: Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
+            border: Border.all(color: color.withOpacity(0.3)),
           ),
           child: Row(
             children: [
@@ -1378,7 +1379,7 @@ class _DashboardState extends State<Dashboard>
                   borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 20,
                       offset: Offset(0, -5),
                     ),
@@ -1485,16 +1486,12 @@ class _DashboardState extends State<Dashboard>
                                 margin: EdgeInsets.only(bottom: 8),
                                 decoration: BoxDecoration(
                                   color: isCurrent
-                                      ? _getPrimaryColor().withValues(
-                                          alpha: 0.1,
-                                        )
+                                      ? _getPrimaryColor().withOpacity(0.1)
                                       : Colors.grey.shade50,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isCurrent
-                                        ? _getPrimaryColor().withValues(
-                                            alpha: 0.3,
-                                          )
+                                        ? _getPrimaryColor().withOpacity(0.3)
                                         : Colors.transparent,
                                   ),
                                 ),
@@ -1544,14 +1541,10 @@ class _DashboardState extends State<Dashboard>
                               width: double.infinity,
                               padding: EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: _getPrimaryColor().withValues(
-                                  alpha: 0.1,
-                                ),
+                                color: _getPrimaryColor().withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
-                                  color: _getPrimaryColor().withValues(
-                                    alpha: 0.3,
-                                  ),
+                                  color: _getPrimaryColor().withOpacity(0.3),
                                 ),
                               ),
                               child: Row(
@@ -1577,6 +1570,43 @@ class _DashboardState extends State<Dashboard>
                         ),
                         SizedBox(height: 16),
                         Divider(),
+                        SizedBox(height: 16),
+                      ],
+
+                      // Settings Button
+                      if (widget.role == 'admin') ...[
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pop(context);
+                              _showSchoolSelectionDialog(context);
+                            },
+                            borderRadius: BorderRadius.circular(15),
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.settings,
+                                    color: Colors.grey.shade800,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    AppLocalizations.settings.tr,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade800,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                         SizedBox(height: 16),
                       ],
 
@@ -1737,7 +1767,7 @@ class _DashboardState extends State<Dashboard>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    school['nama_sekolah'],
+                                    school['school_name'],
                                     style: TextStyle(
                                       fontWeight: isCurrent
                                           ? FontWeight.bold
@@ -1747,7 +1777,7 @@ class _DashboardState extends State<Dashboard>
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    school['alamat'] ?? '',
+                                    school['address'] ?? '',
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
                                       fontSize: 12,
@@ -1807,7 +1837,7 @@ class _DashboardState extends State<Dashboard>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.8)],
     );
   }
 
@@ -1815,7 +1845,7 @@ class _DashboardState extends State<Dashboard>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.7)],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.7)],
     );
   }
 
@@ -1836,364 +1866,335 @@ class _DashboardState extends State<Dashboard>
 
   // Keep existing methods for dashboard cards functionality
   List<Widget> _getDashboardCards(BuildContext context) {
-    List<Map<String, dynamic>> allCards = [
-      {
-        'title': AppLocalizations.manageStudents.tr,
-        'icon': "👨‍🎓",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => StudentManagementScreen()),
-        ),
-        'roles': ['admin'],
-      },
-      {
-        'title': AppLocalizations.manageTeachers.tr,
-        'icon': "👨‍🏫",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => TeacherAdminScreen()),
-        ),
-        'roles': ['admin'],
-      },
-      {
-        'title': AppLocalizations.manageClasses.tr,
-        'icon': "🏫",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ClassManagementScreen()),
-        ),
-        'roles': ['admin'],
-      },
-      {
-        'title': AppLocalizations.manageSubjects.tr,
-        'icon': "📚",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SubjectManagementScreen()),
-        ),
-        'roles': ['admin'],
-      },
-      {
-        'title': AppLocalizations.announcements.tr,
-        'icon': "📢",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AnnouncementManagementScreen(),
+    if (widget.role == 'admin') {
+      return [
+        _buildDashboardCard(
+          AppLocalizations.manageStudents.tr,
+          Icons.people_alt_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => StudentManagementScreen()),
           ),
         ),
-        'roles': ['admin'],
-      },
-      // Dalam file dashboard atau menu configuration
-      {
-        'title': AppLocalizations.announcements.tr,
-        'icon': "📢",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AnnouncementScreen()),
-        ),
-        'roles': ['guru', 'wali'],
-      },
-      {
-        'title': AppLocalizations.studentAttendance.tr,
-        'icon': "📝",
-        'onTap': () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-
-          if (kDebugMode) {
-            print('👤 User data for attendance: $userData');
-          }
-
-          final guruData = {
-            'id': userData['id'] ?? '',
-            'nama': userData['nama'] ?? 'Teacher',
-            'email': userData['email'] ?? '',
-            'role': widget.role,
-          };
-
-          if (guruData['id']!.isEmpty) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
-            }
-            return;
-          }
-
-          if (!context.mounted) return;
-          Navigator.push(
+        _buildDashboardCard(
+          AppLocalizations.manageTeachers.tr,
+          Icons.person_outline,
+          () => Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => PresencePage(teacher: guruData),
-            ),
-          );
-        },
-        'roles': ['guru'],
-      },
-      {
-        'title': AppLocalizations.inputGrades.tr,
-        'icon': "✍️",
-        'onTap': () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-
-          if (kDebugMode) {
-            print('👤 User data for grade input: $userData');
-          }
-
-          final teacherData = {
-            'id': userData['id'] ?? '',
-            'nama': userData['nama'] ?? 'Teacher',
-            'email': userData['email'] ?? '',
-            'role': widget.role,
-          };
-
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
-            }
-            return;
-          }
-
-          if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GradePage(teacher: teacherData),
-            ),
-          );
-        },
-        'roles': ['admin', 'guru'],
-      },
-      {
-        'title': AppLocalizations.teachingSchedule.tr,
-        'icon': "📅",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
-        ),
-        'roles': ['guru'],
-      },
-      {
-        'title': AppLocalizations.classActivities.tr,
-        'icon': "🗓️",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ClassActifityScreen()),
-        ),
-        'roles': ['guru'],
-      },
-      {
-        'title': 'Kegiatan Kelas',
-        'icon': "🗓️",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AdminClassActivityScreen()),
-        ),
-        'roles': ['admin'],
-      },
-      {
-        'title': AppLocalizations.learningMaterials.tr,
-        'icon': Icons.book,
-        'onTap': () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-
-          final teacherData = {
-            'id': userData['id'] ?? '',
-            'name': userData['name'] ?? 'Teacher',
-            'role': widget.role,
-          };
-
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
-            }
-            return;
-          }
-          if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MateriPage(teacher: teacherData),
-            ),
-          );
-        },
-        'roles': ['guru'],
-      },
-      {
-        'title': AppLocalizations.manageTeachingSchedule.tr,
-        'icon': "📆",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TeachingScheduleManagementScreen(),
+            MaterialPageRoute(builder: (context) => TeacherAdminScreen()),
           ),
         ),
-        'roles': ['admin'],
-      },
-      {
-        'title': AppLocalizations.myRpp.tr,
-        'icon': "📄",
-        'onTap': () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-
-          if (kDebugMode) {
-            print('👤 User data for RPP: $userData');
-          }
-
-          final teacherData = {
-            'id': userData['id'] ?? '',
-            'nama': userData['nama'] ?? 'Teacher',
-            'email': userData['email'] ?? '',
-            'role': widget.role,
-          };
-
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
-            }
-            return;
-          }
-
-          if (!context.mounted) return;
-          Navigator.push(
+        _buildDashboardCard(
+          AppLocalizations.manageClasses.tr,
+          Icons.class_outlined,
+          () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => RppScreen(
-                teacherId: teacherData['id']!,
-                teacherName: teacherData['nama']!,
-              ),
+              builder: (context) => AdminClassManagementScreen(),
             ),
-          );
-        },
-        'roles': ['guru'],
-      },
-      {
-        'title': AppLocalizations.manageRpp.tr,
-        'icon': "📄",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AdminRppScreen()),
+          ),
         ),
-        'roles': ['admin'],
-      },
-      {
-        'title': 'Laporan Presensi',
-        'icon': "📊",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AdminPresenceReportScreen()),
+        _buildDashboardCard(
+          AppLocalizations.manageSubjects.tr,
+          Icons.book_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SubjectManagementScreen()),
+          ),
         ),
-        'roles': ['admin'],
-      },
-      {
-        'title': 'Keuangan',
-        'icon': "💰",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => FinanceScreen()),
+        _buildDashboardCard(
+          AppLocalizations.manageTeachingSchedule.tr,
+          Icons.schedule_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TeachingScheduleManagementScreen(),
+            ),
+          ),
         ),
-        'roles': ['admin'],
-      },
-      {
-        'title': 'Absensi Anak',
-        'icon': "📝",
-        'onTap': () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-
-          if (kDebugMode) {
-            print('👤 Parent data: $userData');
-          }
-
-          final studentsData = await _getStudentDataForParent(
-            userData['id'] ?? '',
-          );
-
-          if (studentsData.isEmpty) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Tidak ada data siswa/anak ditemukan untuk akun ini',
-                  ),
-                  duration: Duration(seconds: 3),
-                ),
-              );
-
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Informasi'),
-                  content: Text(
-                    'Tidak ada data siswa yang terhubung dengan akun wali murid ini. Silakan hubungi administrator.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('OK'),
-                    ),
-                  ],
-                ),
-              );
+        _buildDashboardCard(
+          AppLocalizations.inputGrades.tr,
+          Icons.edit_note_outlined,
+          () async {
+            final prefs = await SharedPreferences.getInstance();
+            final userData = json.decode(prefs.getString('user') ?? '{}');
+            final adminData = {
+              'id': userData['id'] ?? '',
+              'nama': userData['nama'] ?? 'Admin',
+              'email': userData['email'] ?? '',
+              'role': widget.role,
+            };
+            if (adminData['id']!.isEmpty) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: Admin ID not found')),
+                );
+              }
+              return;
             }
-            return;
-          }
-
-          if (!context.mounted) return;
-
-          if (studentsData.length == 1) {
+            if (!context.mounted) return;
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => PresenceParentPage(
-                  parent: userData,
-                  studentId: studentsData[0]['id'],
+                builder: (context) => GradePage(teacher: adminData),
+              ),
+            );
+          },
+        ),
+        _buildDashboardCard(
+          AppLocalizations.announcements.tr,
+          Icons.announcement_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AdminAnnouncementScreen()),
+          ),
+        ),
+        _buildDashboardCard(
+          AppLocalizations.classActivities.tr,
+          Icons.local_activity_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AdminClassActivityScreen()),
+          ),
+        ),
+        _buildDashboardCard(
+          'Laporan Presensi',
+          Icons.check_circle_outline,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminPresenceReportScreen(),
+            ),
+          ),
+        ),
+        _buildDashboardCard(
+          AppLocalizations.manageRpp.tr,
+          Icons.description_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AdminRppScreen()),
+          ),
+        ),
+        _buildDashboardCard(
+          'Keuangan',
+          Icons.account_balance_wallet_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FinanceScreen()),
+          ),
+        ),
+        _buildDashboardCard(
+          'Pengaturan Sekolah',
+          Icons.settings_applications,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SchoolSettingsScreen()),
+          ),
+        ),
+      ];
+    } else if (widget.role == 'guru') {
+      return [
+        _buildDashboardCard(
+          AppLocalizations.teachingSchedule.tr,
+          Icons.schedule_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
+          ),
+        ),
+        _buildDashboardCard(
+          AppLocalizations.classActivities.tr,
+          Icons.local_activity_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ClassActifityScreen()),
+          ),
+        ),
+        _buildDashboardCard(
+          AppLocalizations.studentAttendance.tr,
+          Icons.check_circle_outline,
+          () async {
+            final prefs = await SharedPreferences.getInstance();
+            final userData = json.decode(prefs.getString('user') ?? '{}');
+            final guruData = {
+              'id': userData['id'] ?? '',
+              'nama': userData['nama'] ?? 'Teacher',
+              'email': userData['email'] ?? '',
+              'role': widget.role,
+            };
+            if (guruData['id']!.isEmpty) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: Teacher ID not found')),
+                );
+              }
+              return;
+            }
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PresencePage(teacher: guruData),
+              ),
+            );
+          },
+        ),
+        _buildDashboardCard(
+          AppLocalizations.inputGrades.tr,
+          Icons.edit_note_outlined,
+          () async {
+            final prefs = await SharedPreferences.getInstance();
+            final userData = json.decode(prefs.getString('user') ?? '{}');
+            final teacherData = {
+              'id': userData['id'] ?? '',
+              'nama': userData['nama'] ?? 'Teacher',
+              'email': userData['email'] ?? '',
+              'role': widget.role,
+            };
+            if (teacherData['id']!.isEmpty) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: Teacher ID not found')),
+                );
+              }
+              return;
+            }
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GradePage(teacher: teacherData),
+              ),
+            );
+          },
+        ),
+        _buildDashboardCard(
+          AppLocalizations.learningMaterials.tr,
+          Icons.book_outlined,
+          () async {
+            final prefs = await SharedPreferences.getInstance();
+            final userData = json.decode(prefs.getString('user') ?? '{}');
+            final teacherData = {
+              'id': userData['id'] ?? '',
+              'name': userData['name'] ?? 'Teacher',
+              'role': widget.role,
+            };
+            if (teacherData['id']!.isEmpty) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: Teacher ID not found')),
+                );
+              }
+              return;
+            }
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MateriPage(teacher: teacherData),
+              ),
+            );
+          },
+        ),
+        _buildDashboardCard(
+          AppLocalizations.myRpp.tr,
+          Icons.description_outlined,
+          () async {
+            final prefs = await SharedPreferences.getInstance();
+            final userData = json.decode(prefs.getString('user') ?? '{}');
+            final teacherData = {
+              'id': userData['id'] ?? '',
+              'nama': userData['nama'] ?? 'Teacher',
+              'email': userData['email'] ?? '',
+              'role': widget.role,
+            };
+            if (teacherData['id']!.isEmpty) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: Teacher ID not found')),
+                );
+              }
+              return;
+            }
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RppScreen(
+                  teacherId: teacherData['id']!,
+                  teacherName: teacherData['nama']!,
                 ),
               ),
             );
-          } else {
-            _showStudentSelectionDialog(context, userData, studentsData);
-          }
-        },
-        'roles': ['wali'],
-      },
-      {
-        'title': 'Aktivitas Kelas Anak',
-        'icon': "🗓️",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ParentClassActivityScreen()),
+          },
         ),
-        'roles': ['wali'],
-      },
-      {
-        'title': 'Keunganan',
-        'icon': "💰",
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ParentBillingScreen()),
+      ];
+    } else if (widget.role == 'wali') {
+      return [
+        _buildDashboardCard(
+          AppLocalizations.announcements.tr,
+          Icons.announcement_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+          ),
         ),
-        'roles': ['wali'],
-      },
-    ];
+        _buildDashboardCard(
+          AppLocalizations.classActivities.tr,
+          Icons.local_activity_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ParentClassActivityScreen(),
+            ),
+          ),
+        ),
+        _buildDashboardCard(
+          AppLocalizations.presence.tr,
+          Icons.check_circle_outline,
+          () async {
+            final prefs = await SharedPreferences.getInstance();
+            final userData = json.decode(prefs.getString('user') ?? '{}');
+            // Load students
+            final studentsData = await _getStudentDataForParent(
+              userData['id'] ?? '',
+            );
 
-    return allCards
-        .where((card) => card['roles'].contains(widget.role))
-        .map(
-          (card) =>
-              _buildDashboardCard(card['title'], card['icon'], card['onTap']),
-        )
-        .toList();
+            if (studentsData.isEmpty) {
+              if (context.mounted) {
+                _showNoStudentsDialog(context);
+              }
+              return;
+            }
+
+            if (!context.mounted) return;
+
+            if (studentsData.length == 1) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PresenceParentPage(
+                    parent: userData,
+                    studentId: studentsData[0]['id'],
+                  ),
+                ),
+              );
+            } else {
+              _showStudentSelectionDialog(context, userData, studentsData);
+            }
+          },
+        ),
+        _buildDashboardCard(
+          AppLocalizations.billing.tr,
+          Icons.account_balance_wallet_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ParentBillingScreen()),
+          ),
+        ),
+      ];
+    }
+    return [];
   }
 }
 
@@ -2241,9 +2242,7 @@ void _showStudentSelectionDialog(
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: Color(
-                          0xFF4361EE,
-                        ).withValues(alpha: 0.1),
+                        backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
                         child: Text(
                           student['nama'][0],
                           style: TextStyle(color: Color(0xFF4361EE)),
@@ -2282,6 +2281,21 @@ void _showStudentSelectionDialog(
           onPressed: () => Navigator.pop(context),
           child: Text('Batal', style: TextStyle(color: Colors.grey.shade600)),
         ),
+      ],
+    ),
+  );
+}
+
+void _showNoStudentsDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Informasi'),
+      content: Text(
+        'Tidak ada data siswa yang terhubung dengan akun wali murid ini. Silakan hubungi administrator.',
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
       ],
     ),
   );

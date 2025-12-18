@@ -217,15 +217,19 @@ class ApiTeacherService {
 
   Future<List<dynamic>> getSubjectByTeacher(String guruId) async {
     try {
-      final result = await ApiService().get('/teacher/$guruId/subjects');
+      // Correct endpoint matches index.js: /api/guru/:id/mata-pelajaran
+      final result = await ApiService().get('/guru/$guruId/mata-pelajaran');
 
-      // Backend returns {success: true, data: [...], pagination: {...}}
+      if (result is List) {
+        return result;
+      }
+
+      // Handle wrapped response if any
       if (result is Map<String, dynamic> && result['data'] != null) {
         return result['data'] is List ? result['data'] : [];
       }
 
-      // Fallback for direct array response
-      return result is List ? result : [];
+      return [];
     } catch (e) {
       print('Error getting mata pelajaran by guru: $e');
       return [];

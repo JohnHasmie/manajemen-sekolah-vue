@@ -13,16 +13,15 @@ import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
-class AnnouncementManagementScreen extends StatefulWidget {
-  const AnnouncementManagementScreen({super.key});
+class AdminAnnouncementScreen extends StatefulWidget {
+  const AdminAnnouncementScreen({super.key});
 
   @override
-  AnnouncementManagementScreenState createState() =>
-      AnnouncementManagementScreenState();
+  AdminAnnouncementScreenState createState() => AdminAnnouncementScreenState();
 }
 
-class AnnouncementManagementScreenState
-    extends State<AnnouncementManagementScreen>
+class AdminAnnouncementScreenState
+    extends State<AdminAnnouncementScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   List<dynamic> _announcements = [];

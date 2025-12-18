@@ -8,8 +8,19 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiScheduleService {
-  // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
+
+  // Cache storage
+  static final Map<String, dynamic> _cache = {};
+  static const Duration _cacheDuration = Duration(minutes: 30);
+
+  // Clear cache
+  static void invalidateCache() {
+    _cache.clear();
+    if (kDebugMode) {
+      print('DEBUG: Schedule cache invalidated');
+    }
+  }
 
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -142,6 +153,21 @@ class ApiScheduleService {
 
     // Build query string
     String queryString = Uri(queryParameters: queryParams).query;
+    final cacheKey = 'getSchedulesPaginated?$queryString';
+
+    // Check cache
+    if (_cache.containsKey(cacheKey)) {
+      final cachedItem = _cache[cacheKey];
+      final timestamp = cachedItem['timestamp'] as DateTime;
+      if (DateTime.now().difference(timestamp) < _cacheDuration) {
+        if (kDebugMode) {
+          print('DEBUG: Returning cached schedule data for $cacheKey');
+        }
+        return cachedItem['data'];
+      } else {
+        _cache.remove(cacheKey);
+      }
+    }
 
     try {
       final response = await http.get(
@@ -158,11 +184,13 @@ class ApiScheduleService {
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) {
+        // Cache result
+        _cache[cacheKey] = {'data': result, 'timestamp': DateTime.now()};
         return result;
       }
 
       // Fallback untuk backward compatibility
-      return {
+      final fallbackResult = {
         'success': true,
         'data': result is List ? result : [],
         'pagination': {
@@ -174,6 +202,11 @@ class ApiScheduleService {
           'has_prev_page': false,
         },
       };
+
+      // Cache fallback result
+      _cache[cacheKey] = {'data': fallbackResult, 'timestamp': DateTime.now()};
+
+      return fallbackResult;
     } catch (e) {
       if (kDebugMode) {
         print('Error getting paginated schedules: $e');
@@ -213,7 +246,9 @@ class ApiScheduleService {
       body: json.encode(data),
     );
 
-    return _handleResponse(response);
+    final result = _handleResponse(response);
+    invalidateCache(); // Invalidate cache on add
+    return result;
   }
 
   static Future<void> updateSchedule(
@@ -227,6 +262,7 @@ class ApiScheduleService {
     );
 
     _handleResponse(response);
+    invalidateCache(); // Invalidate cache on update
   }
 
   static Future<void> deleteSchedule(String id) async {
@@ -236,6 +272,7 @@ class ApiScheduleService {
     );
 
     _handleResponse(response);
+    invalidateCache(); // Invalidate cache on delete
   }
 
   // Tambahkan method untuk mendapatkan jam pelajaran berdasarkan filter
@@ -291,7 +328,7 @@ class ApiScheduleService {
   }
 
   static Future<List<dynamic>> getConflictingSchedules({
-    required String hariId,
+    required List<String> days_ids,
     required String classId,
     required String semesterId,
     required String tahunAjaran,
@@ -300,7 +337,7 @@ class ApiScheduleService {
   }) async {
     try {
       String url = '$baseUrl/teaching-schedule/conflicts?';
-      url += 'day_id=$hariId&';
+      url += 'days_ids=${days_ids.join(',')}&';
       url += 'class_id=$classId&';
       url += 'semester_id=$semesterId&';
       url += 'academic_year=$tahunAjaran&';

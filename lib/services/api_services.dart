@@ -29,7 +29,7 @@ class ApiService {
       // pakai IP LAN server
       // PENTING: Ganti IP ini jika Mac Anda pindah jaringan
       // Cek IP Mac dengan: ifconfig | grep "inet " | grep -v 127.0.0.1
-      baseUrl = 'http://192.168.1.6:3001/api';
+      baseUrl = 'http://192.168.1.7:3001/api';
       if (kDebugMode) {
         print('📡 API Base URL (Android): $baseUrl');
         print('💡 Pastikan Android dan Mac di jaringan Wi-Fi yang sama!');
@@ -750,12 +750,14 @@ class ApiService {
         'page': page.toString(),
         'limit': limit.toString(),
       };
-      if (teacherId != null && teacherId.isNotEmpty) params['teacher_id'] = teacherId;
+      if (teacherId != null && teacherId.isNotEmpty)
+        params['teacher_id'] = teacherId;
       if (date != null && date.isNotEmpty) params['date'] = date;
       if (subjectId != null && subjectId.isNotEmpty) {
         params['subject_id'] = subjectId;
       }
-      if (studentId != null && studentId.isNotEmpty) params['student_id'] = studentId;
+      if (studentId != null && studentId.isNotEmpty)
+        params['student_id'] = studentId;
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
 
       final uri = Uri.parse(

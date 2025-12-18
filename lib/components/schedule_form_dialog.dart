@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
+import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
@@ -43,11 +44,14 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
   late String _selectedSubject;
   late String _selectedClass;
   late String _selectedHari;
+  List<String> _selectedHariIds = [];
   late String _selectedSemester;
   late String _selectedJamPelajaran;
 
   List<dynamic> _filteredSubjectList = [];
   List<dynamic> _availableJamPelajaranList = [];
+  List<dynamic> _lessonHourSettings = [];
+  List<dynamic> _occupiedSlots = [];
   bool _isLoadingSubjects = false;
   bool _isLoadingJamPelajaran = false;
 
@@ -55,6 +59,25 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
   void initState() {
     super.initState();
     _initializeForm();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final settings = await ApiSettingsService.getLessonHourSettings();
+      if (mounted) {
+        setState(() {
+          _lessonHourSettings = settings;
+        });
+        // Re-filter if we already have potential candidates
+        if (_availableJamPelajaranList.isNotEmpty &&
+            _selectedHariIds.isNotEmpty) {
+          _filterAvailableJamPelajaran();
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading settings: $e');
+    }
   }
 
   Color _getPrimaryColor() {
@@ -65,7 +88,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     _selectedTeacher = '';
     _selectedSubject = '';
     _selectedClass = '';
-    _selectedHari = '';
+    _selectedClass = '';
+    _selectedHariIds = [];
     _selectedSemester = widget.semester;
     _selectedJamPelajaran = '';
 
@@ -78,8 +102,9 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       });
     }
 
-    if (widget.hariList.isNotEmpty && _selectedHari.isEmpty) {
-      _selectedHari = widget.hariList.first['id']?.toString() ?? '';
+    if (widget.hariList.isNotEmpty && _selectedHariIds.isEmpty) {
+      // Default to first day if none selected (optional, or leave empty)
+      // _selectedHariIds = [widget.hariList.first['id']?.toString() ?? ''];
     }
   }
 
@@ -97,10 +122,18 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           widget.schedule['kelas_id']?.toString() ??
           widget.schedule['class_id']?.toString() ??
           '';
-      _selectedHari =
-          widget.schedule['hari_id']?.toString() ??
-          widget.schedule['day_id']?.toString() ??
-          '';
+      _selectedHariIds = [];
+      if (widget.schedule['days_ids'] != null &&
+          widget.schedule['days_ids'] is List) {
+        _selectedHariIds = List<String>.from(
+          (widget.schedule['days_ids'] as List).map((e) => e.toString()),
+        );
+      } else if (widget.schedule['day_id'] != null) {
+        // Fallback or legacy
+        _selectedHariIds = [widget.schedule['day_id'].toString()];
+      } else if (widget.schedule['hari_id'] != null) {
+        _selectedHariIds = [widget.schedule['hari_id'].toString()];
+      }
       _selectedSemester =
           widget.schedule['semester_id']?.toString() ??
           widget.schedule['semester']?.toString() ??
@@ -114,12 +147,54 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         _filterSubjectsByTeacher(_selectedTeacher);
       }
 
-      if (_selectedHari.isNotEmpty &&
-          _selectedClass.isNotEmpty &&
-          _selectedSemester.isNotEmpty) {
+      if (_selectedHariIds.isNotEmpty) {
         _filterAvailableJamPelajaran();
+        _fetchOccupiedSlots();
       }
     });
+  }
+
+  Future<void> _fetchOccupiedSlots() async {
+    if (_selectedClass.isEmpty ||
+        _selectedHariIds.isEmpty ||
+        _selectedSemester.isEmpty) {
+      return;
+    }
+
+    try {
+      final response = await ApiScheduleService.getSchedulesPaginated(
+        classId: _selectedClass,
+        hariId: _selectedHariIds.first,
+        semesterId: _selectedSemester,
+        tahunAjaran: widget.academicYear,
+        limit: 100, // Ensure we get all slots
+      );
+
+      final occupied = response['data'] is List ? response['data'] : [];
+
+      setState(() {
+        _occupiedSlots = occupied;
+
+        // If editing, exclude current schedule from occupied list
+        if (widget.schedule != null && widget.schedule['id'] != null) {
+          _occupiedSlots.removeWhere((s) => s['id'] == widget.schedule['id']);
+        }
+      });
+
+      if (kDebugMode) {
+        print('DEBUG: Occupied slots count: ${_occupiedSlots.length}');
+        if (_occupiedSlots.isNotEmpty) {
+          print(
+            'DEBUG: First occupied slot keys: ${_occupiedSlots.first.keys}',
+          );
+          print(
+            'DEBUG: First occupied slot LHD_ID: ${_occupiedSlots.first['lesson_hour_days_id']}',
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error fetching occupied slots: $e');
+    }
   }
 
   Future<void> _filterSubjectsByTeacher(String teacherId) async {
@@ -147,6 +222,60 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             _selectedSubject = '';
           }
         }
+        if (kDebugMode) {
+          print(
+            'DEBUG: _availableJamPelajaranList from backend: $_availableJamPelajaranList',
+          );
+        }
+
+        // Apply Client-Side Filter based on Settings (Active Days)
+        if (_lessonHourSettings.isNotEmpty && _selectedHariIds.isNotEmpty) {
+          final filteredBySettings = _availableJamPelajaranList.where((jam) {
+            final jamId = jam['id'].toString();
+            final config = _lessonHourSettings.firstWhere(
+              (c) => c['id'].toString() == jamId,
+              orElse: () => null,
+            );
+
+            // If no config found, assume allowed (or maybe disallowed depending on policy)
+            // Let's assume allowed to prevent breaking legacy
+            // Compatibility: support both day_id (new, single UUID) and days_id (old, JSON string)
+            // Backend now returns 'day_id' (single UUID)
+            final configDayId = config['day_id']?.toString();
+            final configDaysIdRaw = config['days_id']?.toString();
+
+            if (configDayId != null) {
+              // Exact match for new schema
+              return _selectedHariIds.contains(configDayId);
+            }
+
+            if (configDaysIdRaw != null) {
+              // Legacy JSON Array support
+              Set<String> allowedDays = {};
+              try {
+                String raw = configDaysIdRaw
+                    .replaceAll('[', '')
+                    .replaceAll(']', '')
+                    .replaceAll('"', '');
+                if (raw.isNotEmpty) {
+                  allowedDays = raw.split(',').map((e) => e.trim()).toSet();
+                }
+              } catch (e) {
+                return true; // Parsing error fallback
+              }
+              return _selectedHariIds.every(
+                (selectedDayId) => allowedDays.contains(selectedDayId),
+              );
+            }
+
+            // Fallback if no day info (shouldn't happen)
+            return true;
+          }).toList();
+
+          setState(() {
+            _availableJamPelajaranList = filteredBySettings;
+          });
+        }
       });
     } catch (e) {
       if (kDebugMode) {
@@ -160,13 +289,12 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     }
   }
 
-  Future<void> _filterAvailableJamPelajaran() async {
-    try {
-      setState(() => _isLoadingJamPelajaran = true);
+  void _filterAvailableJamPelajaran() {
+    setState(() => _isLoadingJamPelajaran = true);
 
-      if (_selectedHari.isEmpty ||
-          _selectedClass.isEmpty ||
-          _selectedSemester.isEmpty) {
+    try {
+      // If no day selected, or settings empty, fall back to "all" (or none, depending on preference)
+      if (_selectedHariIds.isEmpty || _lessonHourSettings.isEmpty) {
         setState(() {
           _availableJamPelajaranList = widget.jamPelajaranList;
           _isLoadingJamPelajaran = false;
@@ -174,42 +302,45 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         return;
       }
 
-      try {
-        final availableJamPelajaran =
-            await ApiScheduleService.getJamPelajaranByFilter(
-              hariId: _selectedHari,
-              semesterId: _selectedSemester,
-              classId: _selectedClass,
-              academicYear: widget.academicYear,
-            );
+      // Filter: Only show lesson hours defined for the selected day(s)
+      // Since we multi-select days, we ideally want slots that are common to all?
+      // Or valid for ANY?
+      // Given the form creates ONE schedule entry which links to ONE lesson_hour_day,
+      // it implies the user is picking a slot for a specific day.
+      // If multiple days are selected, it's ambiguous.
+      // Strategy: Filter for the FIRST selected day ID.
+      final selectedDayId = _selectedHariIds.first;
 
-        setState(() {
-          _availableJamPelajaranList = availableJamPelajaran;
-          _isLoadingJamPelajaran = false;
+      final filtered = _lessonHourSettings.where((setting) {
+        final settingDayId = setting['day_id']?.toString();
+        return settingDayId == selectedDayId;
+      }).toList();
 
-          if (_selectedJamPelajaran.isNotEmpty) {
-            final currentJamExists = availableJamPelajaran.any(
-              (jam) =>
-                  jam['id'] == _selectedJamPelajaran &&
-                      (jam['is_terpakai'] != 1 && jam['is_terpakai'] != true) ||
-                  jam['id'] == widget.schedule['lesson_hour_id'] ||
-                  jam['id'] == widget.schedule['jam_pelajaran_id'],
-            );
-            if (!currentJamExists) {
-              _selectedJamPelajaran = '';
-            }
+      // Sort by hour_number
+      filtered.sort((a, b) {
+        final hA = int.tryParse(a['hour_number'].toString()) ?? 0;
+        final hB = int.tryParse(b['hour_number'].toString()) ?? 0;
+        return hA.compareTo(hB);
+      });
+
+      setState(() {
+        _availableJamPelajaranList = filtered;
+        _isLoadingJamPelajaran = false;
+
+        // Reset selected jam if it's no longer valid
+        if (_selectedJamPelajaran.isNotEmpty) {
+          final exists = filtered.any(
+            (jam) => jam['id'].toString() == _selectedJamPelajaran,
+          );
+          if (!exists) {
+            _selectedJamPelajaran = '';
           }
-        });
-      } catch (e) {
-        setState(() {
-          _availableJamPelajaranList = widget.jamPelajaranList;
-          _isLoadingJamPelajaran = false;
-        });
-      }
+        }
+      });
+      // Trigger fetch occupied slots
+      _fetchOccupiedSlots();
     } catch (e) {
-      if (kDebugMode) {
-        print('Error filtering jam pelajaran: $e');
-      }
+      if (kDebugMode) print('Error filtering jam pelajaran: $e');
       setState(() {
         _availableJamPelajaranList = widget.jamPelajaranList;
         _isLoadingJamPelajaran = false;
@@ -377,7 +508,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                         SizedBox(height: 12),
                         _buildClassDropdown(uniqueClassList, languageProvider),
                         SizedBox(height: 12),
-                        _buildDayDropdown(uniqueHariList, languageProvider),
+                        _buildDayMultiSelect(uniqueHariList, languageProvider),
                         SizedBox(height: 12),
                         _buildSemesterDropdown(
                           uniqueSemesterList,
@@ -464,6 +595,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             border: Border.all(color: Colors.grey.shade200),
           ),
           child: DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _selectedTeacher.isNotEmpty ? _selectedTeacher : null,
             items: [
               DropdownMenuItem(
@@ -474,6 +606,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     'id': 'Pilih Guru',
                   }),
                   style: TextStyle(color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               ...teachers.map<DropdownMenuItem<String>>((teacher) {
@@ -482,6 +615,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   child: Text(
                     teacher['nama'] ?? teacher['name'] ?? 'Unknown',
                     style: TextStyle(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 );
               }),
@@ -549,6 +684,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             border: Border.all(color: Colors.grey.shade200),
           ),
           child: DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _selectedSubject.isNotEmpty ? _selectedSubject : null,
             items: [
               DropdownMenuItem(
@@ -559,6 +695,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     'id': 'Pilih Mata Pelajaran',
                   }),
                   style: TextStyle(color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               ...subjects.map<DropdownMenuItem<String>>((subject) {
@@ -567,6 +704,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   child: Text(
                     subject['name'] ?? subject['nama'] ?? 'Unknown',
                     style: TextStyle(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 );
               }),
@@ -630,6 +769,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             border: Border.all(color: Colors.grey.shade200),
           ),
           child: DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _selectedClass.isNotEmpty ? _selectedClass : null,
             items: [
               DropdownMenuItem(
@@ -640,6 +780,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     'id': 'Pilih Kelas',
                   }),
                   style: TextStyle(color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               ...classes.map((classItem) {
@@ -648,6 +789,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   child: Text(
                     classItem['name'] ?? classItem['nama'] ?? 'Unknown',
                     style: TextStyle(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 );
               }),
@@ -656,10 +799,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
               setState(() {
                 _selectedClass = value ?? '';
               });
-              if (_selectedHari.isNotEmpty &&
-                  _selectedSemester.isNotEmpty &&
-                  _selectedClass.isNotEmpty) {
-                _filterAvailableJamPelajaran();
+              if (_selectedHariIds.isNotEmpty) {
+                _fetchOccupiedSlots();
               }
             },
             decoration: InputDecoration(
@@ -689,7 +830,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     );
   }
 
-  Widget _buildDayDropdown(
+  Widget _buildDayMultiSelect(
     List<dynamic> days,
     LanguageProvider languageProvider,
   ) {
@@ -697,73 +838,79 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'}),
+          languageProvider.getTranslatedText({'en': 'Days', 'id': 'Hari'}),
           style: TextStyle(fontWeight: FontWeight.w500),
         ),
         SizedBox(height: 8),
         Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade200),
           ),
-          child: DropdownButtonFormField<String>(
-            initialValue: _selectedHari.isNotEmpty ? _selectedHari : null,
-            items: [
-              DropdownMenuItem(
-                value: '',
-                child: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Select Day',
-                    'id': 'Pilih Hari',
-                  }),
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-              ...days.map<DropdownMenuItem<String>>((day) {
-                return DropdownMenuItem<String>(
-                  value: day['id']?.toString() ?? '',
-                  child: Text(
-                    _translateDayName(
-                      day['name'] ?? day['nama'] ?? 'Unknown',
-                      languageProvider.currentLanguage,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                children: days.map((day) {
+                  final dayId = day['id'].toString();
+                  final isSelected = _selectedHariIds.contains(dayId);
+                  return FilterChip(
+                    label: Text(
+                      _translateDayName(
+                        day['name'] ?? day['nama'] ?? 'Unknown',
+                        languageProvider.currentLanguage,
+                      ),
                     ),
-                    style: TextStyle(fontSize: 14),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedHariIds.add(dayId);
+                        } else {
+                          _selectedHariIds.remove(dayId);
+                        }
+                      });
+                      if (_selectedHariIds.isNotEmpty) {
+                        _filterAvailableJamPelajaran();
+                      }
+                    },
+                    selectedColor: _getPrimaryColor().withOpacity(0.2),
+                    checkmarkColor: _getPrimaryColor(),
+                    labelStyle: TextStyle(
+                      color: isSelected ? _getPrimaryColor() : Colors.black87,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected
+                            ? _getPrimaryColor()
+                            : Colors.grey.shade300,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              if (_selectedHariIds.isEmpty &&
+                  _filteredSubjectList.isNotEmpty) // Basic check state
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Please select at least one day',
+                      'id': 'Harap pilih minimal satu hari',
+                    }),
+                    style: TextStyle(color: Colors.red[700], fontSize: 12),
                   ),
-                );
-              }),
+                ),
             ],
-            onChanged: (value) {
-              setState(() {
-                _selectedHari = value ?? '';
-              });
-              if (_selectedClass.isNotEmpty &&
-                  _selectedSemester.isNotEmpty &&
-                  _selectedHari.isNotEmpty) {
-                _filterAvailableJamPelajaran();
-              }
-            },
-            decoration: InputDecoration(
-              prefixIcon: Icon(
-                Icons.calendar_today,
-                color: _getPrimaryColor(),
-                size: 20,
-              ),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 14,
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return languageProvider.getTranslatedText({
-                  'en': 'Please select a day',
-                  'id': 'Harap pilih hari',
-                });
-              }
-              return null;
-            },
           ),
         ),
       ],
@@ -792,6 +939,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             border: Border.all(color: Colors.grey.shade200),
           ),
           child: DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _selectedSemester.isNotEmpty
                 ? _selectedSemester
                 : null,
@@ -804,6 +952,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     'id': 'Pilih Semester',
                   }),
                   style: TextStyle(color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               ...semesters.map<DropdownMenuItem<String>>((semester) {
@@ -812,6 +961,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   child: Text(
                     semester['name'] ?? semester['nama'] ?? 'Unknown',
                     style: TextStyle(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 );
               }),
@@ -820,10 +971,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
               setState(() {
                 _selectedSemester = value ?? '';
               });
-              if (_selectedHari.isNotEmpty &&
-                  _selectedClass.isNotEmpty &&
-                  _selectedSemester.isNotEmpty) {
-                _filterAvailableJamPelajaran();
+              if (_selectedHariIds.isNotEmpty) {
+                _fetchOccupiedSlots();
               }
             },
             decoration: InputDecoration(
@@ -875,6 +1024,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             border: Border.all(color: Colors.grey.shade200),
           ),
           child: DropdownButtonFormField<String>(
+            isExpanded: true,
             items: [
               DropdownMenuItem(
                 value: '',
@@ -898,8 +1048,26 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                       return true;
                     })
                     .map<DropdownMenuItem<String>>((jam) {
-                      final isAvailable =
+                      final jamId = jam['id']?.toString() ?? '';
+                      bool isAvailable =
                           jam['is_terpakai'] != 1 && jam['is_terpakai'] != true;
+
+                      // Check overlap with occupied slots
+                      final isOccupied = _occupiedSlots.any((occupied) {
+                        final occId = occupied['lesson_hour_days_id']
+                            ?.toString();
+                        final match = occId == jamId;
+                        if (kDebugMode && match)
+                          print(
+                            'DEBUG: Slot $jamId is occupied by ${occupied['id']} (LHD: $occId)',
+                          );
+                        return match;
+                      });
+
+                      if (isOccupied) {
+                        isAvailable = false;
+                      }
+
                       final jamKe = jam['hour_number'] ?? jam['jam_ke'] ?? '';
                       final jamMulai = _formatTimeForDropdown(
                         jam['start_time']?.toString() ??
@@ -911,17 +1079,20 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                       );
 
                       return DropdownMenuItem<String>(
-                        value: jam['id']?.toString() ?? '',
+                        value: jamId,
+                        enabled: isAvailable, // Disable if occupied
                         child: Opacity(
                           opacity: isAvailable ? 1.0 : 0.5,
                           child: Text(
                             isAvailable
                                 ? '$jamKe ($jamMulai - $jamSelesai)'
-                                : '$jamKe ($jamMulai - $jamSelesai) - Taken',
+                                : '$jamKe ($jamMulai - $jamSelesai) - Terisi',
                             style: TextStyle(
                               fontSize: 14,
                               color: isAvailable ? Colors.black : Colors.grey,
                             ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       );
@@ -987,7 +1158,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         'teacher_id': _selectedTeacher,
         'subject_id': _selectedSubject,
         'class_id': _selectedClass,
-        'day_id': _selectedHari,
+        'class_id': _selectedClass,
+        'days_ids': _selectedHariIds, // Changed key & data structure
         'semester_id': _selectedSemester,
         'academic_year': widget.academicYear,
         'lesson_hour_id': _selectedJamPelajaran,

@@ -154,7 +154,9 @@ class TeachingScheduleManagementScreenState
 
     // Try to find semester by name containing 'Ganjil' or 'Genap'
     for (var semester in _semesterList) {
-      final semesterName = semester['nama']?.toString().toLowerCase() ?? '';
+      final semesterName = (semester['name'] ?? semester['nama'] ?? '')
+          .toString()
+          .toLowerCase();
 
       if (isOdd &&
           (semesterName.contains('ganjil') || semesterName.contains('1'))) {
@@ -352,6 +354,9 @@ class TeachingScheduleManagementScreenState
           }
         }
         _semesterList = semester;
+        if (kDebugMode) {
+          print('DEBUG: _semesterList loaded: $_semesterList');
+        }
         _jamPelajaranList = jamPelajaran;
         _paginationMeta = scheduleResponse['pagination'];
         _hasMoreData =
@@ -554,37 +559,51 @@ class TeachingScheduleManagementScreenState
     // Fill the structure with actual schedules
     print('DEBUG: Total filtered schedules: ${_getFilteredSchedules().length}');
     for (var schedule in _getFilteredSchedules()) {
-      // Use ID to find the correct name (handles language mismatch)
-      final dayId =
-          schedule['hari_id']?.toString() ??
-          schedule['day_id']?.toString() ??
-          '';
-      final classId =
-          schedule['kelas_id']?.toString() ??
-          schedule['class_id']?.toString() ??
-          '';
+      final daysIds = [];
+      if (schedule['days_ids'] != null) {
+        if (schedule['days_ids'] is List) {
+          daysIds.addAll(schedule['days_ids']);
+        } else if (schedule['days_ids'] is String) {
+          try {
+            // Try parse if string JSON
+            final parsed = (schedule['days_ids'] as String)
+                .replaceAll('[', '')
+                .replaceAll(']', '')
+                .split(',');
+            daysIds.addAll(parsed);
+          } catch (e) {}
+        }
+      }
+      // Fallback
+      if (daysIds.isEmpty) {
+        if (schedule['day_id'] != null)
+          daysIds.add(schedule['day_id']);
+        else if (schedule['hari_id'] != null)
+          daysIds.add(schedule['hari_id']);
+      }
 
-      final dayName = dayIdToName[dayId] ?? schedule['hari_nama'] ?? '';
-      final className = classIdToName[classId] ?? schedule['kelas_nama'] ?? '';
+      for (var rawDayId in daysIds) {
+        final dayId = rawDayId.toString();
 
-      final timeSlot =
-          '${schedule['jam_mulai'] ?? schedule['start_time'] ?? ''}-${schedule['jam_selesai'] ?? schedule['end_time'] ?? ''}';
+        final classId =
+            schedule['kelas_id']?.toString() ??
+            schedule['class_id']?.toString() ??
+            '';
 
-      if (dayClassScheduleMap.containsKey(dayName) &&
-          dayClassScheduleMap[dayName]!.containsKey(className) &&
-          dayClassScheduleMap[dayName]![className]!.containsKey(timeSlot)) {
-        dayClassScheduleMap[dayName]![className]![timeSlot] = schedule;
-      } else {
-        print('DEBUG: Failed to map schedule:');
-        print(
-          '  Day: $dayName (ID: $dayId) - Exists: ${dayClassScheduleMap.containsKey(dayName)}',
-        );
-        print(
-          '  Class: $className (ID: $classId) - Exists: ${dayClassScheduleMap[dayName]?.containsKey(className)}',
-        );
-        print(
-          '  Time: $timeSlot - Exists: ${dayClassScheduleMap[dayName]?[className]?.containsKey(timeSlot)}',
-        );
+        final dayName = dayIdToName[dayId] ?? '';
+        final className =
+            classIdToName[classId] ?? schedule['kelas_nama'] ?? '';
+
+        final timeSlot =
+            '${schedule['jam_mulai'] ?? schedule['start_time'] ?? ''}-${schedule['jam_selesai'] ?? schedule['end_time'] ?? ''}';
+
+        if (dayClassScheduleMap.containsKey(dayName) &&
+            dayClassScheduleMap[dayName]!.containsKey(className) &&
+            dayClassScheduleMap[dayName]![className]!.containsKey(timeSlot)) {
+          dayClassScheduleMap[dayName]![className]![timeSlot] = schedule;
+        } else {
+          // Debug log if needed
+        }
       }
     }
 
@@ -621,7 +640,7 @@ class TeachingScheduleManagementScreenState
 
           if (scheduleInfo != null) {
             print(
-              'DEBUG: Found match for key: ${dayName}_${className}_${timeSlot}',
+              'DEBUG: Found match for key: ${dayName}_${className}_$timeSlot',
             );
             print(
               'DEBUG: Subject: ${scheduleInfo['subject_name'] ?? scheduleInfo['mata_pelajaran_nama']}, Teacher: ${scheduleInfo['teacher_name'] ?? scheduleInfo['guru_nama']}',
@@ -790,7 +809,11 @@ class TeachingScheduleManagementScreenState
   }) async {
     try {
       final conflicts = await ApiScheduleService.getConflictingSchedules(
-        hariId: newScheduleData['day_id'],
+        days_ids:
+            (newScheduleData['days_ids'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [], // Use days_ids
         classId: newScheduleData['class_id'],
         semesterId: newScheduleData['semester_id'],
         tahunAjaran: newScheduleData['academic_year'],
@@ -916,6 +939,48 @@ class TeachingScheduleManagementScreenState
           setState(() {
             _selectedFilterConflict = null;
             _checkActiveFilter();
+          });
+        },
+      });
+    }
+
+    // Add Semester Filter Chip
+    if (_selectedFilterSemester != null &&
+        _selectedFilterSemester != _selectedSemester) {
+      final semester = _semesterList.firstWhere(
+        (s) => s['id'].toString() == _selectedFilterSemester,
+        orElse: () => {},
+      );
+      final label = semester.isNotEmpty
+          ? (semester['name'] ??
+                semester['nama'] ??
+                'Semester $_selectedFilterSemester')
+          : 'Semester $_selectedFilterSemester';
+
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Semester', 'id': 'Semester'})}: $label',
+        'onRemove': () {
+          setState(() {
+            _selectedFilterSemester = null;
+            _checkActiveFilter();
+            _loadData(); // Reload to reset to default semester
+          });
+        },
+      });
+    }
+
+    // Add Academic Year Filter Chip
+    if (_selectedFilterAcademicYear != null &&
+        _selectedFilterAcademicYear != _selectedAcademicYear) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Year', 'id': 'Tahun'})}: $_selectedFilterAcademicYear',
+        'onRemove': () {
+          setState(() {
+            _selectedFilterAcademicYear = null;
+            _checkActiveFilter();
+            _loadData(); // Reload to reset to default academic year
           });
         },
       });
@@ -1067,7 +1132,9 @@ class TeachingScheduleManagementScreenState
                         children: _semesterList.map<Widget>((semester) {
                           final semesterId = semester['id'].toString();
                           final semesterName =
-                              semester['nama'] ?? 'Semester $semesterId';
+                              semester['name'] ??
+                              semester['nama'] ??
+                              'Semester $semesterId';
                           final isSelected = tempSelectedSemester == semesterId;
                           return FilterChip(
                             label: Text(semesterName),
@@ -1249,17 +1316,31 @@ class TeachingScheduleManagementScreenState
           schedule['class_name']?.toString().toLowerCase() ??
           schedule['kelas_nama']?.toString().toLowerCase() ??
           '';
-      final dayName =
-          schedule['day_name']?.toString().toLowerCase() ??
-          schedule['hari_nama']?.toString().toLowerCase() ??
-          '';
+      final dayNames = (() {
+        // Construct day names string for search
+        final daysIds = [];
+        if (schedule['days_ids'] is List)
+          daysIds.addAll(schedule['days_ids']);
+        else if (schedule['day_id'] != null)
+          daysIds.add(schedule['day_id']);
+
+        return daysIds
+            .map((id) {
+              final d = _hariList.firstWhere(
+                (element) => element['id'].toString() == id.toString(),
+                orElse: () => {},
+              );
+              return (d['name'] ?? d['nama'] ?? '').toString().toLowerCase();
+            })
+            .join(' ');
+      })();
 
       final matchesSearch =
           searchTerm.isEmpty ||
           subjectName.contains(searchTerm) ||
           teacherName.contains(searchTerm) ||
           className.contains(searchTerm) ||
-          dayName.contains(searchTerm);
+          dayNames.contains(searchTerm);
 
       // Apply conflict filter (client-side only)
       // Note: hasConflict should be calculated based on actual conflict data
@@ -1881,21 +1962,23 @@ class TeachingScheduleManagementScreenState
                                           filter['label'],
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w500,
+                                            color:
+                                                _getPrimaryColor(), // Text primary color
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                         deleteIcon: Icon(
                                           Icons.close,
                                           size: 16,
-                                          color: Colors.white,
+                                          color:
+                                              _getPrimaryColor(), // Icon primary color
                                         ),
                                         onDeleted: filter['onRemove'],
-                                        backgroundColor: Colors.white
-                                            .withOpacity(0.2),
+                                        backgroundColor:
+                                            Colors.white, // Background white
                                         side: BorderSide(
-                                          color: Colors.white.withOpacity(0.3),
-                                          width: 1,
+                                          color: Colors.white,
+                                          width: 0,
                                         ),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
@@ -2024,7 +2107,7 @@ class TeachingScheduleManagementScreenState
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        final delay = index * 0.1;
+        final double delay = (index * 0.05).clamp(0.0, 0.8);
         final animation = CurvedAnimation(
           parent: _animationController,
           curve: Interval(delay, 1.0, curve: Curves.easeOut),
@@ -2128,13 +2211,10 @@ class TeachingScheduleManagementScreenState
                             ),
                           ),
                           Text(
-                            _translateDay(
-                              schedule['hari_nama'] ?? '',
-                              languageProvider.currentLanguage,
-                            ),
+                            _formatScheduleDays(schedule),
                             style: TextStyle(
                               color: _getPrimaryColor(),
-                              fontSize: 16,
+                              fontSize: 14, // Adjusted size
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -2307,8 +2387,18 @@ class TeachingScheduleManagementScreenState
   }
 
   String _formatTime(Map<String, dynamic> schedule) {
-    final startTime = schedule['jam_mulai'] ?? '';
-    final endTime = schedule['jam_selesai'] ?? '';
+    if (kDebugMode) {
+      print('DEBUG: _formatTime keys: ${schedule.keys.toList()}');
+      print(
+        'DEBUG: _formatTime values: ${schedule['jam_mulai']} - ${schedule['jam_selesai']}',
+      );
+    }
+    final startTime = schedule['jam_mulai'] ?? schedule['start_time'] ?? '';
+    final endTime = schedule['jam_selesai'] ?? schedule['end_time'] ?? '';
+
+    if (startTime.toString().isEmpty || endTime.toString().isEmpty) {
+      return '-';
+    }
     return '$startTime - $endTime';
   }
 
@@ -2354,6 +2444,86 @@ class TeachingScheduleManagementScreenState
       if (enToId.containsKey(normalizedDay)) return normalizedDay;
       return idToEn[normalizedDay] ?? normalizedDay;
     }
+  }
+
+  // Helper robust untuk parsing days
+  String _formatScheduleDays(
+    Map<String, dynamic> schedule, [
+    LanguageProvider? provider,
+  ]) {
+    final languageProvider = provider ?? context.read<LanguageProvider>();
+    final daysIds = [];
+    if (schedule['days_ids'] != null) {
+      if (schedule['days_ids'] is List) {
+        daysIds.addAll(schedule['days_ids']);
+      } else if (schedule['days_ids'] is String) {
+        try {
+          final raw = schedule['days_ids'] as String;
+          // Handle both [1,2] and ["1","2"] formats
+          final clean = raw
+              .replaceAll('[', '')
+              .replaceAll(']', '')
+              .replaceAll('"', '')
+              .replaceAll("'", "");
+          if (clean.trim().isNotEmpty) {
+            final parsed = clean.split(',');
+            daysIds.addAll(parsed.map((e) => e.trim()));
+          }
+        } catch (e) {
+          print('Error parsing days_ids: $e');
+        }
+      }
+    }
+
+    // Fallback to legacy
+    if (daysIds.isEmpty) {
+      if (schedule['hari_id'] != null)
+        daysIds.add(schedule['hari_id']);
+      else if (schedule['day_id'] != null)
+        daysIds.add(schedule['day_id']);
+    }
+
+    if (kDebugMode) {
+      print('DEBUG: _formatScheduleDays daysIds extracted: $daysIds');
+      print('DEBUG: _formatScheduleDays schedule keys: ${schedule.keys}');
+    }
+
+    if (daysIds.isNotEmpty) {
+      final dayNames = daysIds
+          .map((id) {
+            final idStr = id.toString();
+            if (kDebugMode) {
+              // print('Searching for day id: $idStr in _hariList IDs: ${_hariList.map((e) => e['id']).toList()}');
+            }
+            final day = _hariList.firstWhere(
+              (d) => d['id'].toString().toLowerCase() == idStr.toLowerCase(),
+              orElse: () => {},
+            );
+            if (day.isNotEmpty) {
+              return _translateDay(
+                day['name'] ?? day['nama'] ?? '',
+                languageProvider.currentLanguage,
+              );
+            }
+            return '';
+          })
+          .where((s) => s.isNotEmpty)
+          .toSet()
+          .toList(); // Dedup
+
+      if (dayNames.isNotEmpty) return dayNames.join(', ');
+    }
+
+    // Legacy name fallback
+    if (schedule['hari_nama'] != null &&
+        schedule['hari_nama'].toString().isNotEmpty) {
+      return _translateDay(
+        schedule['hari_nama'],
+        languageProvider.currentLanguage,
+      );
+    }
+
+    return 'No Day';
   }
 
   void _showScheduleDetail(Map<String, dynamic> schedule) {
@@ -2414,10 +2584,7 @@ class TeachingScheduleManagementScreenState
                 'en': 'Day',
                 'id': 'Hari',
               }),
-              value: _translateDay(
-                schedule['hari_nama'] ?? 'No Day',
-                languageProvider.currentLanguage,
-              ),
+              value: _formatScheduleDays(schedule, languageProvider),
             ),
             _buildDetailItem(
               icon: Icons.access_time,

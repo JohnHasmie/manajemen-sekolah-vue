@@ -433,26 +433,53 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       final subjectName =
           schedule['mata_pelajaran_nama']?.toString().toLowerCase() ?? '';
       final className = schedule['kelas_nama']?.toString().toLowerCase() ?? '';
-      final dayName = schedule['hari_nama']?.toString() ?? '';
+
+      final daysIds = [];
+      if (schedule['days_ids'] != null) {
+        if (schedule['days_ids'] is List)
+          daysIds.addAll(schedule['days_ids']);
+        else if (schedule['days_ids'] is String) {
+          try {
+            final parsed = (schedule['days_ids'] as String)
+                .replaceAll('[', '')
+                .replaceAll(']', '')
+                .split(',');
+            daysIds.addAll(parsed);
+          } catch (e) {}
+        }
+      }
+      // Fallback
+      if (daysIds.isEmpty) {
+        if (schedule['day_id'] != null)
+          daysIds.add(schedule['day_id']);
+        else if (schedule['hari_id'] != null)
+          daysIds.add(schedule['hari_id']);
+      }
+
+      final dayNames = daysIds
+          .map((id) {
+            final entry = _dayIdMap.entries.firstWhere(
+              (e) => e.value.toString() == id.toString(),
+              orElse: () => MapEntry('', ''),
+            );
+            return entry.key;
+          })
+          .join(' ')
+          .toLowerCase();
 
       final matchesSearch =
           searchTerm.isEmpty ||
           subjectName.contains(searchTerm) ||
           className.contains(searchTerm) ||
-          dayName.toLowerCase().contains(searchTerm);
+          dayNames.contains(searchTerm);
 
-      // Filter by hari - match by hari_nama
+      // Filter by hari
       final matchesDay =
           _selectedDayIds.isEmpty ||
           _selectedDayIds.any((selectedId) {
-            // Get the hari name from the selected ID
-            final selectedDayName = _dayIdMap.entries
-                .firstWhere(
-                  (entry) => entry.value == selectedId,
-                  orElse: () => MapEntry('', ''),
-                )
-                .key;
-            return dayName == selectedDayName;
+            return daysIds.any(
+              (dId) => dId.toString() == selectedId.toString(),
+            );
           });
 
       return matchesSearch && matchesDay;
@@ -857,17 +884,46 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     final Map<String, Map<String, List<dynamic>>> scheduleMap = {};
 
     for (var schedule in schedules) {
-      final hari = schedule['hari_nama']?.toString() ?? 'Unknown';
-      final kelas = schedule['kelas_nama']?.toString() ?? 'Unknown';
-
-      if (!scheduleMap.containsKey(hari)) {
-        scheduleMap[hari] = {};
+      final daysIds = [];
+      if (schedule['days_ids'] != null) {
+        if (schedule['days_ids'] is List)
+          daysIds.addAll(schedule['days_ids']);
+        else if (schedule['days_ids'] is String) {
+          try {
+            final parsed = (schedule['days_ids'] as String)
+                .replaceAll('[', '')
+                .replaceAll(']', '')
+                .split(',');
+            daysIds.addAll(parsed);
+          } catch (e) {}
+        }
       }
-      if (!scheduleMap[hari]!.containsKey(kelas)) {
-        scheduleMap[hari]![kelas] = [];
+      if (daysIds.isEmpty) {
+        if (schedule['day_id'] != null)
+          daysIds.add(schedule['day_id']);
+        else if (schedule['hari_id'] != null)
+          daysIds.add(schedule['hari_id']);
       }
 
-      scheduleMap[hari]![kelas]!.add(schedule);
+      for (var rawDayId in daysIds) {
+        final entry = _dayIdMap.entries.firstWhere(
+          (e) => e.value.toString() == rawDayId.toString(),
+          orElse: () => MapEntry('Unknown', ''),
+        );
+        final hari = entry.key;
+        if (hari == 'Unknown') continue;
+
+        final kelas = schedule['kelas_nama']?.toString() ?? 'Unknown';
+
+        if (!scheduleMap.containsKey(hari)) {
+          scheduleMap[hari] = {};
+        }
+        if (!scheduleMap[hari]!.containsKey(kelas)) {
+          scheduleMap[hari]![kelas] = [];
+        }
+
+        scheduleMap[hari]![kelas]!.add(schedule);
+      }
     }
 
     // Get unique classes and days
@@ -1299,8 +1355,49 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     LanguageProvider languageProvider,
     int index,
   ) {
-    final day = jadwal['hari_nama']?.toString() ?? 'Unknown';
-    final dayColor = _getDayColor(day);
+    final daysIds = [];
+    if (jadwal['days_ids'] != null) {
+      if (jadwal['days_ids'] is List)
+        daysIds.addAll(jadwal['days_ids']);
+      else if (jadwal['days_ids'] is String) {
+        try {
+          final parsed = (jadwal['days_ids'] as String)
+              .replaceAll('[', '')
+              .replaceAll(']', '')
+              .split(',');
+          daysIds.addAll(parsed);
+        } catch (e) {}
+      }
+    }
+    if (daysIds.isEmpty) {
+      if (jadwal['day_id'] != null)
+        daysIds.add(jadwal['day_id']);
+      else if (jadwal['hari_id'] != null)
+        daysIds.add(jadwal['hari_id']);
+    }
+
+    final dayNames = daysIds
+        .map((id) {
+          final entry = _dayIdMap.entries.firstWhere(
+            (e) => e.value.toString() == id.toString(),
+            orElse: () => MapEntry('Unknown', ''),
+          );
+          return entry.key;
+        })
+        .where((n) => n != 'Unknown')
+        .join(', ');
+
+    final day = dayNames.isNotEmpty ? dayNames : 'Unknown';
+    // Use first day color for simplicity, or mixing colors? First day is fine.
+    final firstDayName = daysIds.isNotEmpty
+        ? _dayIdMap.entries
+              .firstWhere(
+                (e) => e.value.toString() == daysIds.first.toString(),
+                orElse: () => MapEntry('Senin', ''),
+              )
+              .key
+        : 'Senin';
+    final dayColor = _getDayColor(firstDayName);
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
@@ -1315,10 +1412,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                 builder: (context) => PresencePage(
                   teacher: {'id': _teacherId, 'nama': _teacherNama},
                   initialDate: DateTime.now(),
-                  initialSubjectId: jadwal['mata_pelajaran_id']
-                      ?.toString(),
-                  initialSubjectName: jadwal['mata_pelajaran_nama']
-                      ?.toString(),
+                  initialSubjectId: jadwal['mata_pelajaran_id']?.toString(),
+                  initialSubjectName: jadwal['mata_pelajaran_nama']?.toString(),
                   initialclassId: jadwal['kelas_id']?.toString(),
                   initialClassName: jadwal['kelas_nama']?.toString(),
                 ),
@@ -1589,7 +1684,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => MateriPage(
-                                      teacher: {'id': _teacherId, 'nama': _teacherNama},
+                                      teacher: {
+                                        'id': _teacherId,
+                                        'nama': _teacherNama,
+                                      },
                                       initialSubjectId:
                                           jadwal['mata_pelajaran_id']
                                               ?.toString(),

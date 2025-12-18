@@ -77,10 +77,7 @@ class AppLocalizations {
     'id': 'Tingkat Kelas',
   };
 
-  static Map<String, String> get retry => {
-    'en': 'Retry',
-    'id': 'Ulang',
-  };
+  static Map<String, String> get retry => {'en': 'Retry', 'id': 'Ulang'};
 
   static Map<String, String> get gradeLevelRequired => {
     'en': 'Grade level is required',
@@ -203,6 +200,11 @@ class AppLocalizations {
   };
 
   static Map<String, String> get logout => {'en': 'Logout', 'id': 'Keluar'};
+
+  static Map<String, String> get settings => {
+    'en': 'Settings',
+    'id': 'Pengaturan',
+  };
 
   // Common
   static Map<String, String> get save => {'en': 'Save', 'id': 'Simpan'};
@@ -719,6 +721,16 @@ class AppLocalizations {
     'en': 'Select and organize your teaching materials',
     'id': 'Pilih dan kelola materi pembelajaran Anda',
   };
+
+  // Missing Keys
+  static Map<String, String> get presence => {
+    'en': 'Presence',
+    'id': 'Kehadiran',
+  };
+
+  static Map<String, String> get billing => {'en': 'Billing', 'id': 'Tagihan'};
+
+  static Map<String, String> get materi => {'en': 'Materials', 'id': 'Materi'};
 }
 
 // Extension untuk memudahkan penggunaan terjemahan
