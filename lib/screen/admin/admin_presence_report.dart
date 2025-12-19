@@ -1851,28 +1851,34 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
   }
 
   String _getStatusText(String status, LanguageProvider languageProvider) {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'hadir':
+      case 'present':
         return languageProvider.getTranslatedText({
           'en': 'Present',
           'id': 'Hadir',
         });
       case 'izin':
+      case 'excused':
+      case 'permission':
         return languageProvider.getTranslatedText({
           'en': 'Permission',
           'id': 'Izin',
         });
       case 'sakit':
+      case 'sick':
         return languageProvider.getTranslatedText({
           'en': 'Sick',
           'id': 'Sakit',
         });
       case 'alpha':
+      case 'absent':
         return languageProvider.getTranslatedText({
           'en': 'Absent',
           'id': 'Alpha',
         });
       case 'terlambat':
+      case 'late':
         return languageProvider.getTranslatedText({
           'en': 'Late',
           'id': 'Terlambat',

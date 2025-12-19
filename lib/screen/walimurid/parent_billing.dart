@@ -727,7 +727,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
   void _showUploadPaymentDialog(Map<String, dynamic> billing) {
     final paymentMethodController = TextEditingController();
     final amountController = TextEditingController(
-      text: billing['jumlah']?.toString(),
+      text: billing['jumlah'] != null
+          ? _formatCurrency(billing['jumlah']).replaceAll('Rp ', '')
+          : '',
     );
     final paymentDateController = TextEditingController(
       text: DateTime.now().toString().split(' ')[0],
@@ -798,7 +800,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                         ),
                         _buildInfoItem(
                           'Jumlah Tagihan',
-                          'Rp ${billing['jumlah'] ?? '-'}',
+                          _formatCurrency(billing['jumlah']),
                         ),
                         _buildInfoItem('Siswa', billing['siswa_nama'] ?? '-'),
                         _buildInfoItem('Kelas', billing['kelas_nama'] ?? '-'),
@@ -808,11 +810,59 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                         SizedBox(height: 16),
 
                         // Form Pembayaran
-                        _buildDialogTextField(
-                          controller: paymentMethodController,
-                          label: 'Metode Pembayaran',
-                          icon: Icons.payment,
-                          hint: 'Transfer Bank, Tunai, dll.',
+                        DropdownButtonFormField<String>(
+                          initialValue: paymentMethodController.text.isNotEmpty
+                              ? paymentMethodController.text
+                              : null,
+                          decoration: InputDecoration(
+                            labelText: 'Metode Pembayaran',
+                            prefixIcon: Icon(
+                              Icons.payment,
+                              color: _getPrimaryColor(),
+                              size: 20,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 14,
+                            ),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'Transfer Bank',
+                              child: Text('Transfer Bank'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Tunai',
+                              child: Text('Tunai'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Kartu Kredit/Debit',
+                              child: Text('Kartu Kredit/Debit'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Lainnya',
+                              child: Text('Lainnya'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              paymentMethodController.text = value;
+                            }
+                          },
                         ),
                         SizedBox(height: 12),
                         _buildDialogTextField(
@@ -955,7 +1005,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                                         paymentMethod:
                                             paymentMethodController.text,
                                         amount: double.parse(
-                                          amountController.text,
+                                          amountController.text
+                                              .replaceAll('.', '')
+                                              .replaceAll(',', ''),
                                         ),
                                         paymentDate: paymentDateController.text,
                                         file: selectedFile!,
@@ -1051,7 +1103,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
       // Upload file menggunakan multipart
       await _apiService.uploadFile(
-        '/pembayaran/upload',
+        '/payment/upload',
         file,
         data: {
           'bill_id': billingId,
@@ -1140,7 +1192,13 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
-            onTap: () {},
+            onTap: () {
+              if (billing['status'] == 'unpaid' ||
+                  billing['status'] == 'pending' ||
+                  billing['pembayaran_status'] == 'rejected') {
+                _showUploadPaymentDialog(billing);
+              }
+            },
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
