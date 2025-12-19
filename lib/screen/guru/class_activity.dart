@@ -2191,41 +2191,14 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
             // }
 
             // Check if schedule is today
-            if (scheduleDay == currentDay && startTime.isNotEmpty) {
-              try {
-                // Parse jam mulai (format: HH:mm:ss atau HH:mm)
-                final startTimeParts = startTime.split(':');
-                final startHour = int.parse(startTimeParts[0]);
-                final startMinute = int.parse(startTimeParts[1]);
-
-                // Buat DateTime untuk jam mulai hari ini
-                final scheduleStartTime = DateTime(
-                  now.year,
-                  now.month,
-                  now.day,
-                  startHour,
-                  startMinute,
-                );
-
-                // Batas waktu: jam mulai + 23 jam
-                final scheduleEndLimit = scheduleStartTime.add(
-                  Duration(hours: 23),
-                );
-
-                // Cek apakah waktu sekarang ada di antara jam mulai dan jam mulai + 23 jam
-                if (!now.isBefore(scheduleStartTime) &&
-                    now.isBefore(scheduleEndLimit)) {
-                  if (!uniqueClasses.containsKey(classId)) {
-                    uniqueClasses[classId] = {
-                      'id': classId,
-                      'nama': schedule['kelas_nama'] ?? 'Unknown',
-                    };
-                  }
-                }
-              } catch (e) {
-                if (kDebugMode) {
-                  print('Error parsing time: $e');
-                }
+            if (scheduleDay == currentDay) {
+              // Time validation removed to ensure classes always appear for the day
+              // Original logic checked start_time + 23h, but this was too strict/buggy
+              if (!uniqueClasses.containsKey(classId)) {
+                uniqueClasses[classId] = {
+                  'id': classId,
+                  'nama': schedule['kelas_nama'] ?? 'Unknown',
+                };
               }
             }
           }
