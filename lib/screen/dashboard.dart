@@ -2128,6 +2128,14 @@ class _DashboardState extends State<Dashboard>
             );
           },
         ),
+        _buildDashboardCard(
+          AppLocalizations.announcements.tr,
+          Icons.announcement_outlined,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+          ),
+        ),
       ];
     } else if (widget.role == 'wali') {
       return [

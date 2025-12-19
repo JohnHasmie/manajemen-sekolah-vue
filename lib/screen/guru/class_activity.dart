@@ -2163,10 +2163,6 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                 schedule['hari_nama']?.toString() ??
                 schedule['day_name']?.toString() ??
                 '';
-            final startTime =
-                schedule['jam_mulai']?.toString() ??
-                schedule['start_time']?.toString() ??
-                '';
 
             // Map English days to Indonesian if needed
             final dayMap = {
