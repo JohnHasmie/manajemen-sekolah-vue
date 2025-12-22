@@ -242,6 +242,236 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     );
   }
 
+  void _showActivityDetail(Map<String, dynamic> activity) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header dengan gradient
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: _getCardGradient(),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        activity['jenis'] == 'tugas'
+                            ? Icons.assignment
+                            : Icons.menu_book,
+                        size: 30,
+                        color: _getPrimaryColor(),
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      activity['judul'] ?? 'Judul Kegiatan',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '${activity['mata_pelajaran_nama']} • ${activity['kelas_nama']}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailItem(
+                      icon: Icons.person,
+                      label: 'Guru Pengajar',
+                      value: activity['guru_nama'] ?? 'Tidak Diketahui',
+                    ),
+                    _buildDetailItem(
+                      icon: Icons.calendar_today,
+                      label: 'Hari',
+                      value: activity['hari'] ?? '-',
+                    ),
+                    _buildDetailItem(
+                      icon: Icons.date_range,
+                      label: 'Tanggal',
+                      value: _formatDate(activity['tanggal']),
+                    ),
+                    if (activity['jenis'] == 'tugas')
+                      _buildDetailItem(
+                        icon: Icons.access_time,
+                        label: 'Batas Waktu',
+                        value: _formatDate(activity['batas_waktu']),
+                      ),
+
+                    if (activity['deskripsi'] != null &&
+                        activity['deskripsi'].toString().isNotEmpty &&
+                        activity['deskripsi'] != 'null') ...[
+                      SizedBox(height: 16),
+                      Text(
+                        'Deskripsi',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Text(
+                          activity['deskripsi'],
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    if (activity['judul_bab'] != null ||
+                        activity['judul_sub_bab'] != null) ...[
+                      SizedBox(height: 16),
+                      Text(
+                        'Informasi Bab',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      if (activity['judul_bab'] != null)
+                        _buildDetailItem(
+                          icon: Icons.menu_book,
+                          label: 'Bab',
+                          value: activity['judul_bab'],
+                        ),
+                      if (activity['judul_sub_bab'] != null)
+                        _buildDetailItem(
+                          icon: Icons.bookmark,
+                          label: 'Sub Bab (Utama)',
+                          value: activity['judul_sub_bab'],
+                        ),
+                      if (activity['additional_material'] != null &&
+                          activity['additional_material'] is List &&
+                          (activity['additional_material'] as List)
+                              .isNotEmpty) ...[
+                        SizedBox(height: 8),
+                        ...(activity['additional_material'] as List)
+                            .map<Widget>((item) {
+                              return _buildDetailItem(
+                                icon: Icons.bookmark_add,
+                                label: 'Sub Bab (Tambahan)',
+                                value: item['sub_chapter_title'] ?? 'Unknown',
+                              );
+                            })
+                            .toList(),
+                      ],
+                    ],
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _getPrimaryColor(),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text('Tutup', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _getPrimaryColor().withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: _getPrimaryColor()),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActivityList() {
     if (_selectedStudentId == null) {
       return _buildEmptyState(
@@ -273,6 +503,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
+              onTap: () => _showActivityDetail(activity),
               borderRadius: BorderRadius.circular(16),
               child: Container(
                 decoration: BoxDecoration(
@@ -457,23 +688,64 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                 color: Colors.grey.shade50,
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Row(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
-                                    Icons.menu_book,
-                                    size: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                  SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? ' • ${activity['judul_sub_bab']}' : ''}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade700,
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle,
+                                        size: 14,
+                                        color: Colors.green,
                                       ),
-                                    ),
+                                      SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? ' • ${activity['judul_sub_bab']}' : ''}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  if (activity['additional_material'] != null &&
+                                      activity['additional_material'] is List &&
+                                      (activity['additional_material'] as List)
+                                          .isNotEmpty) ...[
+                                    SizedBox(height: 4),
+                                    ...(activity['additional_material'] as List)
+                                        .map<Widget>((item) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 4.0,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.add_circle_outline,
+                                                  size: 14,
+                                                  color: Colors.blue,
+                                                ),
+                                                SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    item['sub_chapter_title'] ??
+                                                        'Unknown',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color:
+                                                          Colors.grey.shade700,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        })
+                                        .toList(),
+                                  ],
                                 ],
                               ),
                             ),
