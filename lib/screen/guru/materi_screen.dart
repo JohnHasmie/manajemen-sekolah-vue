@@ -129,8 +129,30 @@ class MateriPageState extends State<MateriPage> {
       }
     }
 
-    // Mark as generated sebelum navigate
-    await _markSelectedAsGenerated(checkedBab, checkedSubBab);
+    // Prepare additional materials (all checked sub-chapters)
+    // We pass ALL checked sub-chapters as "additional" materials.
+    // The activity form logic will filter out the primary one if needed.
+    List<Map<String, dynamic>> additionalMaterials = [];
+    if (checkedSubBab.isNotEmpty) {
+      for (var sub in checkedSubBab) {
+        additionalMaterials.add({
+          'chapter_id': sub['bab_id'],
+          'sub_chapter_id': sub['id'],
+        });
+      }
+    }
+
+    // Prepare list to mark as generated upon success
+    final List<Map<String, dynamic>> materialsToMarkAsGenerated = [];
+    for (var bab in checkedBab) {
+      materialsToMarkAsGenerated.add({'bab_id': bab['id'], 'sub_bab_id': null});
+    }
+    for (var subBab in checkedSubBab) {
+      materialsToMarkAsGenerated.add({
+        'bab_id': subBab['bab_id'],
+        'sub_bab_id': subBab['id'],
+      });
+    }
 
     if (!mounted) return;
 
@@ -144,6 +166,8 @@ class MateriPageState extends State<MateriPage> {
           initialClassName: widget.initialClassName,
           initialBabId: selectedBabId,
           initialSubBabId: selectedSubBabId,
+          initialAdditionalMaterials: additionalMaterials,
+          materialsToMarkAsGenerated: materialsToMarkAsGenerated,
           autoShowActivityDialog: true,
         ),
       ),

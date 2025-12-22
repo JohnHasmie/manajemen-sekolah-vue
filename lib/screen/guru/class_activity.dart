@@ -27,6 +27,8 @@ class ClassActifityScreen extends StatefulWidget {
   final String? initialClassName;
   final String? initialBabId;
   final String? initialSubBabId;
+  final List<Map<String, dynamic>>? initialAdditionalMaterials;
+  final List<Map<String, dynamic>>? materialsToMarkAsGenerated;
   final bool autoShowActivityDialog;
 
   const ClassActifityScreen({
@@ -38,6 +40,8 @@ class ClassActifityScreen extends StatefulWidget {
     this.initialClassName,
     this.initialBabId,
     this.initialSubBabId,
+    this.initialAdditionalMaterials,
+    this.materialsToMarkAsGenerated,
     this.autoShowActivityDialog = false,
   });
 
@@ -470,6 +474,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         initialClassId: widget.initialClassId,
         initialBabId: widget.initialBabId,
         initialSubBabId: widget.initialSubBabId,
+        initialAdditionalMaterials: widget.initialAdditionalMaterials,
+        materialsToMarkAsGenerated: widget.materialsToMarkAsGenerated,
       ),
     );
   }
@@ -572,16 +578,140 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _loadActivities();
 
         // Auto-uncheck material logic
+        // 1. Uncheck primary material
+        final List<Map<String, dynamic>> progressItems = [];
+
+        // Helper function to check if a specific material is used by other activities
+        Future<bool> isMaterialUsed(
+          String chapterId,
+          String? subChapterId,
+        ) async {
+          try {
+            final response =
+                await ApiClassActivityService.getClassActivityPaginated(
+                  page: 1,
+                  limit: 1,
+                  guruId: _teacherId,
+                  mataPelajaranId:
+                      activity['subject_id'] ?? activity['mata_pelajaran_id'],
+                  chapterId: chapterId,
+                  subChapterId: subChapterId,
+                );
+            final totalItems = response['pagination']?['total_items'] ?? 0;
+            return totalItems > 0;
+          } catch (e) {
+            if (kDebugMode) print('Error checking material usage: $e');
+            return true;
+          }
+        }
+
         if (activity['chapter_id'] != null) {
           try {
-            final List<Map<String, dynamic>> progressItems = [
-              {
-                'bab_id': activity['chapter_id'],
-                'sub_bab_id': activity['sub_chapter_id'],
-                'is_checked': false,
-              },
-            ];
+            // 1. Check Sub-Chapter ID (Specific)
+            // If the deleted activity had a specific sub-chapter, we check if any others use it.
+            if (activity['sub_chapter_id'] != null) {
+              final inUse = await isMaterialUsed(
+                activity['chapter_id'].toString(),
+                activity['sub_chapter_id'].toString(),
+              );
+              if (!inUse) {
+                progressItems.add({
+                  'bab_id': activity['chapter_id'],
+                  'sub_bab_id': activity['sub_chapter_id'],
+                  'is_checked': false,
+                });
+              }
+            }
+            // 2. Check Whole Chapter (Implicitly all sub-chapters)
+            // If the deleted activity covered the whole chapter (sub_chapter_id == null),
+            // we need to check EACH sub-chapter in that chapter.
+            else {
+              // Get all sub-chapters for this chapter
+              final subChapters = await ApiSubjectService.getSubBabMateri(
+                babId: activity['chapter_id'].toString(),
+              );
 
+              for (var sub in subChapters) {
+                final subId = sub['id'].toString();
+
+                // Check if this specific sub-chapter is used by any activity
+                final isSpecificUsed = await isMaterialUsed(
+                  activity['chapter_id'].toString(),
+                  subId,
+                );
+
+                // Check if there is any activity covering the WHOLE chapter (implicitly covering this sub too)
+                // We pass 'null' string to trigger IS NULL check in backend
+                final isGenericUsed = await isMaterialUsed(
+                  activity['chapter_id'].toString(),
+                  'null',
+                );
+
+                if (!isSpecificUsed && !isGenericUsed) {
+                  progressItems.add({
+                    'bab_id': activity['chapter_id'],
+                    'sub_bab_id': subId,
+                    'is_checked': false,
+                  });
+                }
+              }
+            }
+
+            if (kDebugMode) {
+              print(
+                'Activities check complete. Unchecking ${progressItems.length} items.',
+              );
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error fetching sub-chapters for uncheck: $e');
+            }
+          }
+        }
+
+        // 2. Uncheck additional materials
+        if (activity['additional_material'] != null) {
+          try {
+            List<dynamic> additionalMaterials = [];
+            if (activity['additional_material'] is String) {
+              additionalMaterials = json.decode(
+                activity['additional_material'],
+              );
+            } else if (activity['additional_material'] is List) {
+              additionalMaterials = activity['additional_material'];
+            }
+
+            for (var item in additionalMaterials) {
+              if (item['chapter_id'] != null &&
+                  item['sub_chapter_id'] != null) {
+                final subId = item['sub_chapter_id'].toString();
+                final chapId = item['chapter_id'].toString();
+
+                final isSpecificUsed = await isMaterialUsed(chapId, subId);
+                // We don't necessarily check generic (whole chapter) usage for specific additional items?
+                // Or we should?
+                // If Activity B covers Whole Chapter, then Sub 1 (additional in Activity A) IS covered.
+                // So we must check generic too.
+                final isGenericUsed = await isMaterialUsed(chapId, 'null');
+
+                if (!isSpecificUsed && !isGenericUsed) {
+                  progressItems.add({
+                    'bab_id': chapId,
+                    'sub_bab_id': subId,
+                    'is_checked': false,
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error parsing additional materials: $e');
+            }
+          }
+        }
+
+        if (progressItems.isNotEmpty) {
+          try {
             await ApiSubjectService.batchSaveMateriProgress({
               'guru_id': _teacherId,
               'mata_pelajaran_id':
@@ -589,11 +719,11 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               'progress_items': progressItems,
             });
             if (kDebugMode) {
-              print('Auto-unchecked material: ${activity['chapter_id']}');
+              print('Auto-unchecked ${progressItems.length} materials.');
             }
           } catch (e) {
             if (kDebugMode) {
-              print('Error auto-unchecking material: $e');
+              print('Error auto-unchecking materials: $e');
             }
           }
         }
@@ -1748,9 +1878,14 @@ class AddActivityDialog extends StatefulWidget {
     this.initialClassId,
     this.initialBabId,
     this.initialSubBabId,
+    this.initialAdditionalMaterials,
+    this.materialsToMarkAsGenerated,
     this.isEditMode = false,
     this.activityData,
   });
+
+  final List<Map<String, dynamic>>? initialAdditionalMaterials;
+  final List<Map<String, dynamic>>? materialsToMarkAsGenerated;
 
   @override
   State<AddActivityDialog> createState() => _AddActivityDialogState();
@@ -1777,7 +1912,8 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
   List<dynamic> _babMateriList = [];
   List<dynamic> _subBabMateriList = [];
   String? _selectedBabId;
-  String? _selectedSubBabId;
+  String? _selectedSubBabId; // Primary selection (kept for backward compat)
+  final List<String> _selectedSubBabIds = []; // Multi-selection support
   bool _useMateriTitle = false; // Toggle: use bab/sub bab or manual input
 
   final List<String> _days = [
@@ -1801,6 +1937,19 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     _selectedClassId = widget.initialClassId;
     _selectedBabId = widget.initialBabId;
     _selectedSubBabId = widget.initialSubBabId;
+
+    // Initialize multi-select list
+    if (_selectedSubBabId != null) {
+      _selectedSubBabIds.add(_selectedSubBabId!);
+    }
+    if (widget.initialAdditionalMaterials != null) {
+      for (var item in widget.initialAdditionalMaterials!) {
+        final subId = item['sub_chapter_id']?.toString();
+        if (subId != null && !_selectedSubBabIds.contains(subId)) {
+          _selectedSubBabIds.add(subId);
+        }
+      }
+    }
 
     // If in edit mode, populate form with existing data
     if (widget.isEditMode && widget.activityData != null) {
@@ -2236,7 +2385,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         listen: false,
       );
 
-      final data = {
+      final Map<String, dynamic> data = {
         'teacher_id': widget.teacherId,
         'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
@@ -2261,6 +2410,23 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       } else if (_selectedSubChapterId != null) {
         // Fallback to old sub chapter props if exists
         data['sub_chapter_id'] = _selectedSubChapterId;
+      }
+
+      // Handle Additional Material (if passed from MateriScreen)
+      if (widget.initialAdditionalMaterials != null &&
+          widget.initialAdditionalMaterials!.isNotEmpty) {
+        // We only want to save items that are NOT the primary sub_chapter_id,
+        // to avoid redundancy, although saving all is also fine.
+        // Let's filter out the primary one if it exists.
+        final extraMaterials = widget.initialAdditionalMaterials!.where((m) {
+          final subId = m['sub_chapter_id']?.toString();
+          final primarySubId = data['sub_chapter_id']?.toString();
+          return subId != null && subId != primarySubId;
+        }).toList();
+
+        if (extraMaterials.isNotEmpty) {
+          data['additional_material'] = extraMaterials;
+        }
       }
 
       if (_deadline != null && widget.activityType == 'tugas') {
@@ -2303,6 +2469,36 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
               'is_checked': true,
             },
           ];
+
+          // Add explicitly passed materials to mark as generated
+          if (widget.materialsToMarkAsGenerated != null) {
+            for (var item in widget.materialsToMarkAsGenerated!) {
+              progressItems.add({
+                'bab_id': item['bab_id'],
+                'sub_bab_id': item['sub_bab_id'],
+                'is_checked': true,
+              });
+            }
+          }
+
+          // Also Add manually selected IDs from the multi-select dialog
+          if (_useMateriTitle &&
+              _selectedSubBabIds.isNotEmpty &&
+              _selectedBabId != null) {
+            for (var subId in _selectedSubBabIds) {
+              // Avoid duplicates
+              bool exists = progressItems.any(
+                (p) => p['sub_bab_id'].toString() == subId,
+              );
+              if (!exists) {
+                progressItems.add({
+                  'bab_id': _selectedBabId,
+                  'sub_bab_id': subId,
+                  'is_checked': true,
+                });
+              }
+            }
+          }
 
           await ApiSubjectService.batchSaveMateriProgress({
             'guru_id': widget.teacherId,
@@ -2350,6 +2546,72 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  void _openMultiSelectSubBabDialog(LanguageProvider languageProvider) {
+    if (_subBabMateriList.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        // Local state for the dialog
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Select Sub Chapters',
+                  'id': 'Pilih Sub Bab',
+                }),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: _subBabMateriList.map((subBab) {
+                    final subId = subBab['id'].toString();
+                    final isSelected = _selectedSubBabIds.contains(subId);
+                    return CheckboxListTile(
+                      title: Text(_getSubBabName(subBab)),
+                      value: isSelected,
+                      onChanged: (bool? value) {
+                        setDialogState(() {
+                          if (value == true) {
+                            if (!_selectedSubBabIds.contains(subId)) {
+                              _selectedSubBabIds.add(subId);
+                            }
+                          } else {
+                            _selectedSubBabIds.remove(subId);
+                          }
+                          // Update primary selection for backward compatibility
+                          _selectedSubBabId = _selectedSubBabIds.isNotEmpty
+                              ? _selectedSubBabIds.first
+                              : null;
+                        });
+                        // Trigger main widget rebuild to update UI text
+                        setState(() {});
+                        _updateTitleFromMateri();
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Done',
+                      'id': 'Selesai',
+                    }),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -2683,49 +2945,44 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                 SizedBox(height: 12),
               ],
 
-              // Dropdown Sub Bab Materi (if bab is selected)
+              // Multi-Select Sub Bab (if bab is selected) - Custom UI
               if (_useMateriTitle && _selectedBabId != null) ...[
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: languageProvider.getTranslatedText({
-                      'en': 'Sub Chapter',
-                      'id': 'Sub Bab Materi',
-                    }),
-                    prefixIcon: Icon(Icons.article),
-                    border: OutlineInputBorder(),
-                  ),
-                  initialValue: _subBabMateriList.isEmpty
-                      ? null
-                      : (_subBabMateriList.any(
-                              (subBab) =>
-                                  subBab['id'].toString() == _selectedSubBabId,
+                InkWell(
+                  onTap: () => _openMultiSelectSubBabDialog(languageProvider),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: languageProvider.getTranslatedText({
+                        'en': 'Sub Chapters',
+                        'id': 'Sub Bab Materi',
+                      }),
+                      prefixIcon: Icon(Icons.article),
+                      border: OutlineInputBorder(),
+                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    ),
+                    child: Text(
+                      _selectedSubBabIds.isEmpty
+                          ? languageProvider.getTranslatedText({
+                              'en': 'Select Sub Chapters (optional)',
+                              'id': 'Pilih Sub Bab (opsional)',
+                            })
+                          : _selectedSubBabIds.length == 1
+                          ? _getSubBabName(
+                              _subBabMateriList.firstWhere(
+                                (s) =>
+                                    s['id'].toString() ==
+                                    _selectedSubBabIds.first,
+                                orElse: () => {},
+                              ),
                             )
-                            ? _selectedSubBabId
-                            : null),
-                  isExpanded: true,
-                  items: _subBabMateriList.isEmpty
-                      ? null
-                      : _subBabMateriList.map((subBab) {
-                          return DropdownMenuItem<String>(
-                            value: subBab['id'].toString(),
-                            child: Text(_getSubBabName(subBab)),
-                          );
-                        }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedSubBabId = value;
-                    });
-                    _updateTitleFromMateri();
-                  },
-                  hint: Text(
-                    languageProvider.getTranslatedText({
-                      'en': _subBabMateriList.isEmpty
-                          ? 'Loading sub chapters...'
-                          : 'Select Sub Chapter (optional)',
-                      'id': _subBabMateriList.isEmpty
-                          ? 'Memuat sub bab...'
-                          : 'Pilih Sub Bab (opsional)',
-                    }),
+                          : '${_selectedSubBabIds.length} ${languageProvider.getTranslatedText({'en': 'selected', 'id': 'dipilih'})}',
+                      style: TextStyle(
+                        color: _selectedSubBabIds.isEmpty
+                            ? Colors.grey.shade600
+                            : Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 SizedBox(height: 12),
