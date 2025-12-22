@@ -56,8 +56,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   List<dynamic> _chapterList = [];
   List<dynamic> _subChapterList = [];
   List<dynamic> _activityList = [];
-  final List<dynamic> _studentList = [];
-
   bool _isLoading = true;
   String _teacherId = '';
   String _teacherName = '';
@@ -275,7 +273,12 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         // }
 
         if (subjectId != null && !uniqueSubjects.containsKey(subjectId)) {
-          uniqueSubjects[subjectId] = {'id': subjectId, 'nama': subjectName};
+          uniqueSubjects[subjectId] = {
+            'id': subjectId,
+            'nama': subjectName,
+            'subject_id':
+                scheduleItem['master_subject_id'], // Map Master Subject ID
+          };
         }
 
         if (classId != null && !uniqueClasses.containsKey(classId)) {
@@ -2132,6 +2135,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
   List<dynamic> _studentList = [];
 
   // Bab & Sub Bab Materi
+  bool _isLoadingBab = false;
   List<dynamic> _babMateriList = [];
   List<dynamic> _subBabMateriList = [];
   String? _selectedBabId;
@@ -2321,8 +2325,27 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         print('Subject ID: $subjectId');
       }
 
+      setState(() {
+        _isLoadingBab = true;
+        _babMateriList = []; // Clear previous list while loading
+      });
+
+      // Find Master Subject ID from the selected School Subject ID
+      final subject = widget.subjectList.firstWhere(
+        (s) => s['id'] == subjectId,
+        orElse: () => null,
+      );
+      final masterSubjectId = subject?['subject_id']?.toString();
+
+      if (masterSubjectId == null) {
+        if (kDebugMode) {
+          print('Error: Master Subject ID not found for subject $subjectId');
+        }
+        return;
+      }
+
       final babList = await ApiSubjectService.getBabMateri(
-        subjectId: subjectId,
+        subjectId: masterSubjectId,
       );
 
       if (kDebugMode) {
@@ -2347,6 +2370,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         if (widget.initialSubBabId == null) {
           _subBabMateriList = [];
         }
+        _isLoadingBab = false;
       });
 
       if (kDebugMode) {
@@ -2362,6 +2386,9 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         print('ERROR loading bab materi: $e');
         print('Stack trace: ${StackTrace.current}');
       }
+      setState(() {
+        _isLoadingBab = false;
+      });
     }
   }
 
@@ -3191,12 +3218,16 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                         },
                   hint: Text(
                     languageProvider.getTranslatedText({
-                      'en': _babMateriList.isEmpty
+                      'en': _isLoadingBab
                           ? 'Loading chapters...'
-                          : 'Select Chapter',
-                      'id': _babMateriList.isEmpty
+                          : (_babMateriList.isEmpty
+                                ? 'No chapters found'
+                                : 'Select Chapter'),
+                      'id': _isLoadingBab
                           ? 'Memuat bab...'
-                          : 'Pilih Bab',
+                          : (_babMateriList.isEmpty
+                                ? 'Tidak ada bab'
+                                : 'Pilih Bab'),
                     }),
                   ),
                 ),

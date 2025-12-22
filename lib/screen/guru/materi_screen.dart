@@ -336,8 +336,22 @@ class MateriPageState extends State<MateriPage> {
 
   Future<void> _loadBabMateri(String subjectId) async {
     try {
+      // Find Master Subject ID from the selected School Subject ID
+      final subject = _subjectList.firstWhere(
+        (s) => s['id'] == subjectId,
+        orElse: () => null,
+      );
+      final masterSubjectId = subject?['subject_id']?.toString();
+
+      if (masterSubjectId == null) {
+        if (kDebugMode) {
+          print('Error: Master Subject ID not found for subject $subjectId');
+        }
+        return;
+      }
+
       final babMateri = await ApiSubjectService.getBabMateri(
-        subjectId: subjectId,
+        subjectId: masterSubjectId,
       );
 
       // Pre-fetch all sub-chapters for these babs in parallel
