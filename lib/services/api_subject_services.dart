@@ -468,8 +468,8 @@ class ApiSubjectService {
   static Future<dynamic> markMateriGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
-      'teacher_id': data['guru_id'],
-      'subject_id': data['mata_pelajaran_id'],
+      'teacher_id': data['teacher_id'],
+      'subject_id': data['subject_id'],
       'items': (data['items'] as List).map((item) {
         return {
           'chapter_id': item['bab_id'],
@@ -491,8 +491,8 @@ class ApiSubjectService {
   static Future<dynamic> resetMateriGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
-      'teacher_id': data['guru_id'],
-      'subject_id': data['mata_pelajaran_id'],
+      'teacher_id': data['teacher_id'],
+      'subject_id': data['subject_id'],
       'items': (data['items'] as List).map((item) {
         return {
           'chapter_id': item['bab_id'],

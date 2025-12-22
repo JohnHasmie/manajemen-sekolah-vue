@@ -205,8 +205,8 @@ class MateriPageState extends State<MateriPage> {
       if (items.isEmpty) return;
 
       await ApiSubjectService.markMateriGenerated({
-        'guru_id': teacherId,
-        'mata_pelajaran_id': _selectedSubject,
+        'teacher_id': teacherId,
+        'subject_id': _selectedSubject,
         'items': items,
       });
 
@@ -234,7 +234,7 @@ class MateriPageState extends State<MateriPage> {
   String _debugInfo = '';
 
   // Color scheme matching teaching schedule
-  final Map<String, Color> _hariColorMap = {
+  final Map<String, Color> _dayColorMap = {
     'Senin': Color(0xFF6366F1),
     'Selasa': Color(0xFF10B981),
     'Rabu': Color(0xFFF59E0B),
