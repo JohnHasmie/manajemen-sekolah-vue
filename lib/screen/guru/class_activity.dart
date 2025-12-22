@@ -1491,50 +1491,119 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
                         // Materi/Bab
                         if (activity['bab_judul'] != null)
-                          Row(
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: cardColor.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Icon(
-                                  Icons.menu_book,
-                                  color: cardColor,
-                                  size: 16,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Learning Material',
-                                        'id': 'Materi Pembelajaran',
-                                      }),
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: cardColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
-                                    SizedBox(height: 1),
-                                    Text(
-                                      '${activity['bab_judul']}${activity['sub_bab_judul'] != null ? ' • ${activity['sub_bab_judul']}' : ''}',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
+                                    child: Icon(
+                                      Icons.menu_book,
+                                      color: cardColor,
+                                      size: 16,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Learning Material',
+                                            'id': 'Materi Pembelajaran',
+                                          }),
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.grey.shade600,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        SizedBox(height: 1),
+                                        Text(
+                                          '${activity['bab_judul']}${activity['sub_bab_judul'] != null ? ' • ${activity['sub_bab_judul']}' : ''}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        // Display Additional Materials if any
+                                        if (activity['additional_material'] !=
+                                                null &&
+                                            activity['additional_material']
+                                                is List &&
+                                            (activity['additional_material']
+                                                    as List)
+                                                .isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 4.0,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children:
+                                                  (activity['additional_material']
+                                                          as List)
+                                                      .map<Widget>((item) {
+                                                        final title =
+                                                            item['sub_chapter_title'] ??
+                                                            'Materi Tambahan';
+                                                        return Padding(
+                                                          padding:
+                                                              const EdgeInsets.only(
+                                                                top: 2.0,
+                                                              ),
+                                                          child: Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons
+                                                                    .add_circle_outline,
+                                                                size: 12,
+                                                                color: Colors
+                                                                    .grey
+                                                                    .shade600,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 4,
+                                                              ),
+                                                              Expanded(
+                                                                child: Text(
+                                                                  title,
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        13,
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade700,
+                                                                  ),
+                                                                  maxLines: 1,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        );
+                                                      })
+                                                      .toList(),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -2412,17 +2481,52 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         data['sub_chapter_id'] = _selectedSubChapterId;
       }
 
-      // Handle Additional Material (if passed from MateriScreen)
-      if (widget.initialAdditionalMaterials != null &&
-          widget.initialAdditionalMaterials!.isNotEmpty) {
-        // We only want to save items that are NOT the primary sub_chapter_id,
-        // to avoid redundancy, although saving all is also fine.
-        // Let's filter out the primary one if it exists.
-        final extraMaterials = widget.initialAdditionalMaterials!.where((m) {
-          final subId = m['sub_chapter_id']?.toString();
-          final primarySubId = data['sub_chapter_id']?.toString();
-          return subId != null && subId != primarySubId;
-        }).toList();
+      // Handle Additional Material (from LIVE selection)
+      if (_selectedSubBabIds.isNotEmpty) {
+        final List<Map<String, dynamic>> extraMaterials = [];
+        final primarySubId = data['sub_chapter_id']?.toString();
+
+        for (var subId in _selectedSubBabIds) {
+          // Skip if this is the primary sub chapter
+          if (subId == primarySubId) continue;
+
+          // Try to find full details for this sub chapter
+          // 1. Check in loaded sub bab list
+          var subBabData = _subBabMateriList.firstWhere(
+            (s) => s['id'].toString() == subId,
+            orElse: () => null,
+          );
+
+          String? chapterIdForSub = _selectedBabId;
+
+          // 2. If not found (maybe from initial params but not loaded in current list?), check initialAdditionalMaterials
+          if (subBabData == null && widget.initialAdditionalMaterials != null) {
+            final found = widget.initialAdditionalMaterials!.firstWhere(
+              (m) => m['sub_chapter_id'].toString() == subId,
+              orElse: () => {},
+            );
+            if (found.isNotEmpty) {
+              // Construct a temporary object if found in initial params
+              subBabData = {
+                'id': subId,
+                // We might not have titles here if not standard format, but we do our best
+              };
+              chapterIdForSub =
+                  found['chapter_id']?.toString() ?? _selectedBabId;
+            }
+          }
+
+          if (subBabData != null || chapterIdForSub != null) {
+            extraMaterials.add({
+              'chapter_id':
+                  chapterIdForSub, // Fallback to currently selected bab
+              'sub_chapter_id': subId,
+            });
+          } else {
+            // Fallback minimal
+            extraMaterials.add({'sub_chapter_id': subId});
+          }
+        }
 
         if (extraMaterials.isNotEmpty) {
           data['additional_material'] = extraMaterials;

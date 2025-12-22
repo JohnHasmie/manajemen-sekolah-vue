@@ -72,6 +72,7 @@ class MateriPageState extends State<MateriPage> {
 
           return _checkedBab[bab['id']] == true &&
               _generatedBab[bab['id']] != true &&
+              _usedBab[bab['id']] != true && // Exclude used
               !hasSubChapters; // Only include if it has NO sub-chapters
         })
         .toList()
@@ -84,7 +85,8 @@ class MateriPageState extends State<MateriPage> {
         .where(
           (subBab) =>
               _checkedSubBab[subBab['id']] == true &&
-              _generatedSubBab[subBab['id']] != true,
+              _generatedSubBab[subBab['id']] != true &&
+              _usedSubBab[subBab['id']] != true, // Exclude used
         )
         .toList()
         .cast<Map<String, dynamic>>();
@@ -551,7 +553,7 @@ class MateriPageState extends State<MateriPage> {
         'subject_id': _selectedSubject,
         'chapter_id': babId,
         'sub_chapter_id': subBabId,
-        'is_checked': isChecked,
+        'is_checked': isChecked ? 1 : 0,
       });
 
       if (kDebugMode) {
@@ -588,9 +590,9 @@ class MateriPageState extends State<MateriPage> {
       // If it has sub-chapters, its status is derived and shouldn't be saved explicitly
       if (subBabsForThisBab.isEmpty) {
         progressItems.add({
-          'chapter_id': babId,
-          'sub_chapter_id': null,
-          'is_checked': isChecked,
+          'bab_id': babId,
+          'sub_bab_id': null,
+          'is_checked': isChecked ? 1 : 0,
         });
       }
 
@@ -604,16 +606,16 @@ class MateriPageState extends State<MateriPage> {
         }
 
         progressItems.add({
-          'chapter_id': babId,
-          'sub_chapter_id': subBab['id'],
-          'is_checked': isChecked,
+          'bab_id': babId,
+          'sub_bab_id': subBab['id'],
+          'is_checked': isChecked ? 1 : 0,
         });
       }
 
       // Batch save
       await ApiSubjectService.batchSaveMateriProgress({
-        'teacher_id': teacherId,
-        'subject_id': _selectedSubject,
+        'guru_id': teacherId,
+        'mata_pelajaran_id': _selectedSubject,
         'progress_items': progressItems,
       });
 
