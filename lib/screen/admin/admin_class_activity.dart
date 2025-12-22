@@ -993,9 +993,24 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                       if (activity['judul_sub_bab'] != null)
                         _buildDetailItem(
                           icon: Icons.bookmark,
-                          label: 'Sub Bab',
+                          label: 'Sub Bab (Utama)',
                           value: activity['judul_sub_bab']!,
                         ),
+                      if (activity['additional_material'] != null &&
+                          activity['additional_material'] is List &&
+                          (activity['additional_material'] as List)
+                              .isNotEmpty) ...[
+                        SizedBox(height: 8),
+                        ...(activity['additional_material'] as List)
+                            .map<Widget>((item) {
+                              return _buildDetailItem(
+                                icon: Icons.bookmark_add,
+                                label: 'Sub Bab (Tambahan)',
+                                value: item['sub_chapter_title'] ?? 'Unknown',
+                              );
+                            })
+                            .toList(),
+                      ],
                     ],
 
                     SizedBox(height: 20),

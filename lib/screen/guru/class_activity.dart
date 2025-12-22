@@ -504,6 +504,11 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         initialClassId: activity['class_id']?.toString(),
         initialBabId: activity['chapter_id']?.toString(),
         initialSubBabId: activity['sub_chapter_id']?.toString(),
+        initialAdditionalMaterials: activity['additional_material'] is List
+            ? (activity['additional_material'] as List)
+                  .map((e) => e as Map<String, dynamic>)
+                  .toList()
+            : [],
       ),
     );
   }
@@ -1270,7 +1275,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
     return GestureDetector(
       onTap: () {
-        // TODO: Add detail navigation if needed
+        _showActivityDetail(activity);
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
@@ -1906,9 +1911,158 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       });
     }
   }
+
+  // Form Dialog untuk Tambah Kegiatan (Tugas/Materi)
+
+  void _showActivityDetail(Map<String, dynamic> activity) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final languageProvider = Provider.of<LanguageProvider>(
+          context,
+          listen: false,
+        );
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(activity['title'] ?? 'Detail Activity'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDetailRow(
+                  Icons.book,
+                  'Subject',
+                  activity['subject_name'] ?? '-',
+                ),
+                _buildDetailRow(
+                  Icons.class_,
+                  'Class',
+                  activity['class_name'] ?? '-',
+                ),
+                _buildDetailRow(
+                  Icons.calendar_today,
+                  'Date',
+                  '${activity['day']}, ${activity['date']}',
+                ),
+                if (activity['description'] != null &&
+                    activity['description'].toString().isNotEmpty &&
+                    activity['description'] != 'null')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Description:',
+                            'id': 'Deskripsi:',
+                          }),
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(activity['description']),
+                      ],
+                    ),
+                  ),
+                Divider(),
+                Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Materials:',
+                    'id': 'Materi:',
+                  }),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                SizedBox(height: 8),
+                _buildMaterialItem(
+                  activity['chapter_title'],
+                  activity['sub_chapter_title'],
+                  isPrimary: true,
+                ),
+                if (activity['additional_material'] != null &&
+                    activity['additional_material'] is List &&
+                    (activity['additional_material'] as List).isNotEmpty)
+                  ...((activity['additional_material'] as List).map<Widget>((
+                    item,
+                  ) {
+                    return _buildMaterialItem(
+                      null,
+                      item['sub_chapter_title'],
+                      isPrimary: false,
+                    );
+                  }).toList()),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Close',
+                  'id': 'Tutup',
+                }),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey),
+          SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(color: Colors.black),
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  TextSpan(text: value),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMaterialItem(
+    String? chapter,
+    String? subChapter, {
+    required bool isPrimary,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: Row(
+        children: [
+          Icon(
+            isPrimary ? Icons.check_circle : Icons.add_circle_outline,
+            size: 16,
+            color: isPrimary ? Colors.green : Colors.blue,
+          ),
+          SizedBox(width: 8),
+          Expanded(child: Text(subChapter ?? 'Unknown Sub-chapter')),
+        ],
+      ),
+    );
+  }
 }
 
-// Form Dialog untuk Tambah Kegiatan (Tugas/Materi)
 class AddActivityDialog extends StatefulWidget {
   final String teacherId;
   final String teacherName;
