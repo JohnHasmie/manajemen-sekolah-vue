@@ -144,6 +144,15 @@ class ApiSubjectService {
     await ApiService().delete('/subject/$id');
   }
 
+  static Future<List<dynamic>> getAllMasterSubjects() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/master-subjects'),
+      headers: await _getHeaders(),
+    );
+    final result = _handleResponse(response);
+    return result is List ? result : [];
+  }
+
   static Future<List<dynamic>> getContentMateri({
     required String subBabId,
   }) async {

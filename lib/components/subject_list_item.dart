@@ -26,9 +26,7 @@ class SubjectListItem extends StatelessWidget {
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -72,9 +70,9 @@ class SubjectListItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 4),
-                    if (subject['kode'] != null)
+                    if (subject['code'] != null || subject['kode'] != null)
                       Text(
-                        'Kode: ${subject['kode']}',
+                        'Kode: ${subject['code'] ?? subject['kode']}',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,
@@ -103,7 +101,8 @@ class SubjectListItem extends StatelessWidget {
                             Padding(
                               padding: EdgeInsets.only(top: 2),
                               child: Text(
-                                kelasNames!.take(3).join(', ') + (kelasNames!.length > 3 ? '...' : ''),
+                                kelasNames!.take(3).join(', ') +
+                                    (kelasNames!.length > 3 ? '...' : ''),
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                   fontSize: 11,
@@ -114,13 +113,16 @@ class SubjectListItem extends StatelessWidget {
                             ),
                         ],
                       ),
-                    if (subject['deskripsi'] != null && subject['deskripsi'].isNotEmpty)
+                    if ((subject['description'] != null &&
+                            subject['description'].isNotEmpty) ||
+                        (subject['deskripsi'] != null &&
+                            subject['deskripsi'].isNotEmpty))
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 4),
                           Text(
-                            subject['deskripsi'],
+                            subject['description'] ?? subject['deskripsi'],
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 12,

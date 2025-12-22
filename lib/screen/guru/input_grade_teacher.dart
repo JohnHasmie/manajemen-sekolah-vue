@@ -463,7 +463,7 @@ class GradePageState extends State<GradePage> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${subject['kode'] ?? '-'}',
+                                  '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${subject['code'] ?? subject['kode'] ?? '-'}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -524,7 +524,8 @@ class GradePageState extends State<GradePage> {
                                 ),
                                 SizedBox(height: 1),
                                 Text(
-                                  subject['deskripsi'] ??
+                                  subject['description'] ??
+                                      subject['deskripsi'] ??
                                       languageProvider.getTranslatedText({
                                         'en': 'No description',
                                         'id': 'Tidak ada deskripsi',
@@ -557,8 +558,7 @@ class GradePageState extends State<GradePage> {
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        final filteredSubjects =
-            _subjectList; // Use direct list from backend
+        final filteredSubjects = _subjectList; // Use direct list from backend
 
         return Scaffold(
           backgroundColor: Color(0xFFF8F9FA),
@@ -911,7 +911,9 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
             .where(
               (className) =>
                   className['nama'].toLowerCase().contains(query) ||
-                  (className['tingkat']?.toString().toLowerCase().contains(query) ??
+                  (className['tingkat']?.toString().toLowerCase().contains(
+                        query,
+                      ) ??
                       false),
             )
             .toList();
@@ -1073,7 +1075,9 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
       final matchesSearch =
           searchTerm.isEmpty ||
           classData['nama'].toLowerCase().contains(searchTerm) ||
-          (classData['tingkat']?.toString().toLowerCase().contains(searchTerm) ??
+          (classData['tingkat']?.toString().toLowerCase().contains(
+                searchTerm,
+              ) ??
               false);
 
       // Class filter
@@ -1394,7 +1398,7 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
                                   ),
                                 ),
                                 Text(
-                                  '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${widget.subject['kode'] ?? '-'}',
+                                  '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${widget.subject['code'] ?? widget.subject['kode'] ?? '-'}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.white.withOpacity(0.8),
@@ -4114,11 +4118,12 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                         color: _getPrimaryColor(),
                       ),
                     ),
-                    if (widget.subject['kode'] != null)
+                    if (widget.subject['code'] != null ||
+                        widget.subject['kode'] != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
-                          '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${widget.subject['kode']}',
+                          '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${widget.subject['code'] ?? widget.subject['kode']}',
                           style: TextStyle(fontSize: 12),
                         ),
                       ),

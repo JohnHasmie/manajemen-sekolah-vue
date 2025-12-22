@@ -57,6 +57,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
   // Dynamic list untuk nama kelas yang tersedia
   List<String> _availableClassNames = [];
   List<String> _availableGradeLevels = [];
+  List<dynamic> _availableMasterSubjects = [];
 
   // Filter Options (from backend)
   List<dynamic> _availableStatusOptions = [];
@@ -93,7 +94,21 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     _searchController.addListener(_onSearchChanged);
 
     _loadFilterOptions();
+    _loadMasterSubjects();
     _loadSubjects();
+  }
+
+  Future<void> _loadMasterSubjects() async {
+    try {
+      final data = await ApiSubjectService.getAllMasterSubjects();
+      setState(() {
+        _availableMasterSubjects = data;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading master subjects: $e');
+      }
+    }
   }
 
   @override
@@ -815,11 +830,17 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
   }
 
   void _showAddEditDialog({Map<String, dynamic>? subject}) {
-    final codeController = TextEditingController(text: subject?['kode']);
+    final codeController = TextEditingController(
+      text: subject?['code'] ?? subject?['kode'],
+    );
     final nameController = TextEditingController(text: subject?['name']);
     final descriptionController = TextEditingController(
-      text: subject?['deskripsi'],
+      text: subject?['description'] ?? subject?['deskripsi'],
     );
+    int? selectedMasterSubjectId;
+    if (subject != null && subject['subject_id'] != null) {
+      selectedMasterSubjectId = subject['subject_id'];
+    }
 
     showDialog(
       context: context,
@@ -834,7 +855,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header dengan gradient
+                  // Header
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.all(20),
@@ -897,6 +918,89 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                           icon: Icons.code,
                         ),
                         SizedBox(height: 12),
+                        // Select Master Subject (Autocomplete)
+                        Autocomplete<Map<String, dynamic>>(
+                          initialValue: TextEditingValue(
+                            text: nameController.text,
+                          ),
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text == '') {
+                              return const Iterable<
+                                Map<String, dynamic>
+                              >.empty();
+                            }
+                            return _availableMasterSubjects
+                                .cast<Map<String, dynamic>>()
+                                .where((Map<String, dynamic> option) {
+                                  return option['name']
+                                      .toString()
+                                      .toLowerCase()
+                                      .contains(
+                                        textEditingValue.text.toLowerCase(),
+                                      );
+                                });
+                          },
+                          displayStringForOption:
+                              (Map<String, dynamic> option) => option['name'],
+                          onSelected: (Map<String, dynamic> selection) {
+                            setState(() {
+                              nameController.text = selection['name'];
+                              selectedMasterSubjectId = selection['id'];
+                            });
+                          },
+                          fieldViewBuilder:
+                              (
+                                context,
+                                fieldController,
+                                fieldFocusNode,
+                                onFieldSubmitted,
+                              ) {
+                                return _buildDialogTextField(
+                                  controller: fieldController,
+                                  focusNode: fieldFocusNode,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Select Subject',
+                                    'id': 'Pilih Mata Pelajaran',
+                                  }),
+                                  icon: Icons.search,
+                                );
+                              },
+                          optionsViewBuilder: (context, onSelected, options) {
+                            return Align(
+                              alignment: Alignment.topLeft,
+                              child: Material(
+                                elevation: 4.0,
+                                child: SizedBox(
+                                  height: 200.0,
+                                  width: 300.0,
+                                  child: ListView.builder(
+                                    padding: const EdgeInsets.all(8.0),
+                                    itemCount: options.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                          final Map<String, dynamic> option =
+                                              options.elementAt(index);
+                                          return GestureDetector(
+                                            onTap: () {
+                                              onSelected(option);
+                                            },
+                                            child: ListTile(
+                                              title: Text(option['name']),
+                                              subtitle: Text(
+                                                'Kelas ${option['grade']}',
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        SizedBox(height: 12),
+
+                        // Subject Name (Standard TextField)
                         _buildDialogTextField(
                           controller: nameController,
                           label: languageProvider.getTranslatedText({
@@ -961,10 +1065,27 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                 return;
                               }
 
+                              // Auto-verify subject_id validity based on name match
+                              if (selectedMasterSubjectId != null) {
+                                final master = _availableMasterSubjects
+                                    .firstWhere(
+                                      (m) => m['id'] == selectedMasterSubjectId,
+                                      orElse: () => null,
+                                    );
+                                if (master == null ||
+                                    master['name'] != nameController.text) {
+                                  selectedMasterSubjectId = null;
+                                }
+                              }
+
                               try {
                                 final data = {
-                                  'kode': codeController.text,
+                                  'code': codeController.text,
                                   'name': nameController.text,
+                                  'description': descriptionController.text,
+                                  'subject_id': selectedMasterSubjectId,
+                                  // Keep internal mapping if needed
+                                  'kode': codeController.text,
                                   'deskripsi': descriptionController.text,
                                 };
 
@@ -1002,10 +1123,21 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Failed to save data',
-                                          'id': 'Gagal menyimpan data',
-                                        }),
+                                        error
+                                                .toString()
+                                                .replaceAll('Exception:', '')
+                                                .trim()
+                                                .isNotEmpty
+                                            ? error
+                                                  .toString()
+                                                  .replaceAll('Exception:', '')
+                                                  .trim()
+                                            : languageProvider
+                                                  .getTranslatedText({
+                                                    'en': 'Failed to save data',
+                                                    'id':
+                                                        'Gagal menyimpan data',
+                                                  }),
                                       ),
                                       backgroundColor: Colors.red.shade400,
                                       behavior: SnackBarBehavior.floating,
@@ -1044,6 +1176,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     required String label,
     required IconData icon,
     int maxLines = 1,
+    FocusNode? focusNode,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -1053,6 +1186,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
       ),
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
         maxLines: maxLines,
         decoration: InputDecoration(
           labelText: label,
@@ -1113,10 +1247,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
-                  'en': 'Failed to delete subject',
-                  'id': 'Gagal menghapus mata pelajaran',
-                }),
+                error.toString().replaceAll('Exception:', '').trim().isNotEmpty
+                    ? error.toString().replaceAll('Exception:', '').trim()
+                    : context.read<LanguageProvider>().getTranslatedText({
+                        'en': 'Failed to delete subject',
+                        'id': 'Gagal menghapus mata pelajaran',
+                      }),
               ),
               backgroundColor: Colors.red.shade400,
               behavior: SnackBarBehavior.floating,
@@ -1141,7 +1277,8 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     return _subjectList.where((subject) {
       final searchTerm = _searchController.text.toLowerCase();
       final subjectName = subject['name']?.toString().toLowerCase() ?? '';
-      final subjectCode = subject['kode']?.toString().toLowerCase() ?? '';
+      final subjectCode =
+          (subject['code'] ?? subject['kode'])?.toString().toLowerCase() ?? '';
 
       final matchesSearch =
           searchTerm.isEmpty ||
@@ -1292,12 +1429,27 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                     ),
                                     SizedBox(height: 2),
                                     Text(
-                                      'Kode: ${subject['kode'] ?? 'No Code'}',
+                                      'Kode: ${subject['code'] ?? subject['kode'] ?? 'No Code'}',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
                                       ),
                                     ),
+                                    if (subject['description'] != null &&
+                                        subject['description']
+                                            .toString()
+                                            .isNotEmpty) ...[
+                                      SizedBox(height: 4),
+                                      Text(
+                                        subject['description'],
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
