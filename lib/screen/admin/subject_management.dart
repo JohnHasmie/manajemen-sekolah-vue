@@ -839,7 +839,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     );
     int? selectedMasterSubjectId;
     if (subject != null && subject['subject_id'] != null) {
-      selectedMasterSubjectId = subject['subject_id'];
+      selectedMasterSubjectId = int.tryParse(subject['subject_id'].toString());
     }
 
     showDialog(
@@ -921,7 +921,19 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                         // Select Master Subject (Autocomplete)
                         Autocomplete<Map<String, dynamic>>(
                           initialValue: TextEditingValue(
-                            text: nameController.text,
+                            text: () {
+                              if (selectedMasterSubjectId != null) {
+                                final master = _availableMasterSubjects
+                                    .firstWhere(
+                                      (m) => m['id'] == selectedMasterSubjectId,
+                                      orElse: () => {},
+                                    );
+                                if (master.isNotEmpty) {
+                                  return master['name'];
+                                }
+                              }
+                              return nameController.text;
+                            }(),
                           ),
                           optionsBuilder: (TextEditingValue textEditingValue) {
                             if (textEditingValue.text == '') {
