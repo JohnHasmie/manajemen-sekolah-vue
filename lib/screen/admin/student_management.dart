@@ -937,6 +937,39 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                           }),
                           icon: Icons.cake,
                           hintText: 'YYYY-MM-DD',
+                          readOnly: true,
+                          onTap: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate:
+                                  student != null &&
+                                      student['date_of_birth'] != null
+                                  ? DateTime.parse(
+                                      student['date_of_birth'].toString(),
+                                    )
+                                  : DateTime.now(),
+                              firstDate: DateTime(1900),
+                              lastDate: DateTime.now(),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: ColorScheme.light(
+                                      primary: _getPrimaryColor(),
+                                      onPrimary: Colors.white,
+                                      onSurface: Colors.black,
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                birthDateController.text =
+                                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                              });
+                            }
+                          },
                         ),
                         SizedBox(height: 12),
                         _buildDialogDropdown(
@@ -1205,6 +1238,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     TextInputType? keyboardType,
     int maxLines = 1,
     String? hintText,
+    VoidCallback? onTap,
+    bool readOnly = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -1223,6 +1258,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         ),
         keyboardType: keyboardType,
         maxLines: maxLines,
+        onTap: onTap,
+        readOnly: readOnly,
       ),
     );
   }
@@ -1356,7 +1393,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'NIS: ${student['nis'] ?? 'No NIS'}',
+                      'NIS: ${student['student_number'] ?? 'No NIS'}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -1683,7 +1720,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                     ),
                                     SizedBox(height: 2),
                                     Text(
-                                      'NIS: ${student['nis'] ?? 'No NIS'}',
+                                      'NIS: ${student['student_number'] ?? 'No NIS'}',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,

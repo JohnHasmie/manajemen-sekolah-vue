@@ -44,9 +44,11 @@ class ExcelService {
         final student = students[i];
         final rowIndex = i + 2;
 
-        sheet.getRangeByIndex(rowIndex, 1).setText(student['nis'] ?? '');
+        sheet
+            .getRangeByIndex(rowIndex, 1)
+            .setText(student['student_number'] ?? '');
         sheet.getRangeByIndex(rowIndex, 2).setText(student['name'] ?? '');
-        sheet.getRangeByIndex(rowIndex, 3).setText(student['class_name'] ?? '');
+        sheet.getRangeByIndex(rowIndex, 3).setText(student['kelas_nama'] ?? '');
         sheet
             .getRangeByIndex(rowIndex, 4)
             .setText(_getGenderText(student['gender'], languageProvider));
@@ -56,10 +58,10 @@ class ExcelService {
         sheet.getRangeByIndex(rowIndex, 6).setText(student['address'] ?? '');
         sheet
             .getRangeByIndex(rowIndex, 7)
-            .setText(student['parent_name'] ?? '');
+            .setText(student['guardian_name'] ?? '');
         sheet
             .getRangeByIndex(rowIndex, 8)
-            .setText(student['parent_email'] ?? '');
+            .setText(student['guardian_email'] ?? '');
         sheet
             .getRangeByIndex(rowIndex, 9)
             .setText(student['phone_number'] ?? '');
@@ -263,11 +265,13 @@ class ExcelService {
   ) {
     switch (gender) {
       case 'L':
+      case 'M':
         return languageProvider.getTranslatedText({
           'en': 'Male',
           'id': 'Laki-laki',
         });
       case 'P':
+      case 'F':
         return languageProvider.getTranslatedText({
           'en': 'Female',
           'id': 'Perempuan',
