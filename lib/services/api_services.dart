@@ -371,6 +371,53 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> googleLogin({
+    required String email,
+    String? displayName,
+    String? photoUrl,
+    String? googleToken,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {
+        'email': email,
+        'displayName': displayName,
+        'photoUrl': photoUrl,
+        'googleToken': googleToken,
+      };
+
+      if (kDebugMode) {
+        print('📤 Google Login request: $email');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/google-login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
+      if (kDebugMode) {
+        print('📥 Google Login response status: ${response.statusCode}');
+        print('📥 Google Login response body: ${response.body}');
+      }
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        return responseData;
+      } else {
+        final errorResponse = json.decode(response.body);
+        throw Exception(
+          errorResponse['error'] ??
+              'Google Login failed with status: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ ApiService Google login error: $e');
+      }
+      rethrow;
+    }
+  }
+
   static Future<List<dynamic>> getUserRoles() async {
     final response = await http.get(
       Uri.parse('$baseUrl/user/roles'),

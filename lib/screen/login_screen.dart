@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,9 @@ class LoginScreen extends StatefulWidget {
 class LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+
   bool _isLoading = false;
   bool _serverConnected = true;
   bool _showSchoolSelection = false;
@@ -297,6 +301,134 @@ class LoginScreenState extends State<LoginScreen> {
       if (kDebugMode) {
         print('⚠️ Failed to refresh FCM token (non-critical): $e');
       }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    if (!_serverConnected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Server tidak terhubung. Tidak dapat login.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 1. Sign in with Google
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // User canceled the sign-in
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final String? token = googleAuth.accessToken; // or idToken
+
+      if (kDebugMode) {
+        print('📧 Google User: ${googleUser.email}');
+        print('🔑 Google Token: ${token != null ? "Yes" : "No"}');
+      }
+
+      // 2. Send to Backend
+      final responseData = await ApiService.googleLogin(
+        email: googleUser.email,
+        displayName: googleUser.displayName,
+        photoUrl: googleUser.photoUrl,
+        googleToken: token,
+      );
+
+      // 3. Handle Response (Same logic as login)
+      // Check for school selection
+      if (responseData['pilih_sekolah'] == true) {
+        if (responseData['sekolah_list'] == null ||
+            responseData['sekolah_list'].isEmpty) {
+          throw Exception('Daftar sekolah tidak tersedia');
+        }
+
+        setState(() {
+          _showSchoolSelection = true;
+          _schoolList = responseData['sekolah_list'];
+          _userData = responseData['user'];
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Check for role selection
+      if (responseData['pilih_role'] == true) {
+        if (responseData['role_list'] == null ||
+            responseData['role_list'].isEmpty) {
+          throw Exception('Daftar role tidak tersedia');
+        }
+
+        setState(() {
+          _showRoleSelection = true;
+          _roleList = responseData['role_list'];
+          _userData = responseData['user'];
+          _selectedSchool = responseData['sekolah'] ?? {};
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Direct Login Success
+      if (responseData['token'] == null) {
+        throw Exception('Token tidak ditemukan dalam response server');
+      }
+
+      await _saveLoginData(responseData);
+
+      final String userRole = responseData['user']['role']?.toString() ?? '';
+      if (userRole.isEmpty) {
+        throw Exception('Role user tidak ditemukan');
+      }
+
+      if (!mounted) return;
+
+      Navigator.pushReplacementNamed(context, '/$userRole');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Login Google berhasil! Selamat datang ${responseData['user']['nama']}',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (kDebugMode) {
+        print('❌ Google Sign In Error: $error');
+      }
+
+      // Sign out from Google if app login failed to ensure fresh start next time
+      try {
+        await _googleSignIn.signOut();
+      } catch (e) {
+        // ignore
+      }
+
+      String errorMessage = 'Gagal login dengan Google';
+      if (error.toString().contains('404') ||
+          error.toString().contains('tidak terdaftar')) {
+        errorMessage = 'Email Google tidak terdaftar di sistem sekolah.';
+      } else {
+        errorMessage = error.toString().replaceAll('Exception:', '').trim();
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -666,6 +798,25 @@ class LoginScreenState extends State<LoginScreen> {
                     padding: EdgeInsets.symmetric(vertical: 15),
                   ),
                   child: Text('LOGIN'),
+                ),
+        ),
+        SizedBox(height: 15),
+        SizedBox(
+          width: double.infinity,
+          child: _isLoading
+              ? SizedBox()
+              : OutlinedButton.icon(
+                  onPressed: _serverConnected ? _handleGoogleSignIn : null,
+                  icon: Image.asset(
+                    'assets/icon/app_icon.png',
+                    height: 24,
+                    errorBuilder: (c, o, s) => Icon(Icons.login),
+                  ), // Fallback use simple icon
+                  label: Text('Masuk dengan Google'),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    side: BorderSide(color: Colors.blue),
+                  ),
                 ),
         ),
       ],

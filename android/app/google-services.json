@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "631663251271",
+    "firebase_url": "https://managemen-sekolah-f352d-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "managemen-sekolah-f352d",
     "storage_bucket": "managemen-sekolah-f352d.firebasestorage.app"
   },
@@ -12,7 +13,12 @@
           "package_name": "com.example.manajemensekolah"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "631663251271-q5fmm1j2r4hko6fkicn5mml5vt8r3cnb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDlONxMfvI_n0al8_gHrPrj2S2MMQHpBSc"
@@ -20,7 +26,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "631663251271-q5fmm1j2r4hko6fkicn5mml5vt8r3cnb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "631663251271-00f35bbpsl7dqmph8s5deg06pe01j2ad.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.manajemensekolah"
+              }
+            }
+          ]
         }
       }
     }
