@@ -487,8 +487,23 @@ class TeachingScheduleManagementScreenState
   // Export jadwal ke Excel
   Future<void> _exportToExcel() async {
     try {
+      // Enrich schedule data with day name from _hariList
+      final enrichedSchedules = _scheduleList.map((schedule) {
+        final dayId = schedule['day_id']?.toString() ?? '';
+        final dayData = _hariList.firstWhere(
+          (d) => d['id'].toString() == dayId,
+          orElse: () => <String, dynamic>{},
+        );
+
+        final Map<String, dynamic> newSchedule = Map.from(schedule);
+        if (dayData.isNotEmpty) {
+          newSchedule['day_name'] = dayData['name'] ?? dayData['nama'];
+        }
+        return newSchedule;
+      }).toList();
+
       await ExcelScheduleService.exportSchedulesToExcel(
-        schedules: _scheduleList,
+        schedules: enrichedSchedules,
         context: context,
       );
     } catch (e) {

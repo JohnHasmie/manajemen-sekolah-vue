@@ -189,11 +189,19 @@ class ExcelScheduleService {
         validatedSchedule['class_name'] = schedule['class_name'];
       }
 
-      if (schedule['day_name'] == null ||
-          schedule['day_name'].toString().isEmpty) {
+      final dayName =
+          schedule['day_name'] ??
+          schedule['hari_nama'] ??
+          schedule['day']?['name'] ??
+          schedule['day']?['nama'] ??
+          schedule['hari']?['name'] ??
+          schedule['hari']?['nama'] ??
+          '';
+
+      if (dayName.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Hari tidak boleh kosong');
       } else {
-        validatedSchedule['day_name'] = schedule['day_name'];
+        validatedSchedule['day_name'] = dayName;
       }
 
       final lessonHour = schedule['lesson_hour'] ?? schedule['hour_number'];
