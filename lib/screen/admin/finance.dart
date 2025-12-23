@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
@@ -10,6 +11,7 @@ import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/currency_formatter.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -786,7 +788,10 @@ class FinanceScreenState extends State<FinanceScreen>
                                 ),
                                 padding: EdgeInsets.symmetric(vertical: 12),
                               ),
-                              child: Text('Simpan'),
+                              child: Text(
+                                'Simpan',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ),
                         ],
@@ -1961,7 +1966,15 @@ class FinanceScreenState extends State<FinanceScreen>
       text: jenisPembayaran?['description'],
     );
     final jumlahController = TextEditingController(
-      text: jenisPembayaran?['amount']?.toString(),
+      text: jenisPembayaran?['amount'] != null
+          ? NumberFormat.currency(
+              locale: 'id_ID',
+              symbol: 'Rp ',
+              decimalDigits: 0,
+            ).format(
+              double.tryParse(jenisPembayaran!['amount'].toString()) ?? 0,
+            )
+          : '',
     );
     final periodeController = TextEditingController(
       text: jenisPembayaran?['periode'] ?? 'bulanan',
@@ -2051,6 +2064,7 @@ class FinanceScreenState extends State<FinanceScreen>
                           label: 'Jumlah',
                           icon: Icons.attach_money,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [CurrencyInputFormatter()],
                         ),
                         SizedBox(height: 12),
                         _buildDropdownField(
@@ -2208,7 +2222,10 @@ class FinanceScreenState extends State<FinanceScreen>
                                 final data = {
                                   'name': namaController.text,
                                   'description': deskripsiController.text,
-                                  'amount': double.parse(jumlahController.text),
+                                  'amount':
+                                      CurrencyInputFormatter.parseCurrency(
+                                        jumlahController.text,
+                                      ),
                                   'periode': periodeController.text,
                                   'status': status,
                                   'goal': tujuanData,
@@ -2282,6 +2299,7 @@ class FinanceScreenState extends State<FinanceScreen>
     required IconData icon,
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -2293,6 +2311,7 @@ class FinanceScreenState extends State<FinanceScreen>
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 20),
