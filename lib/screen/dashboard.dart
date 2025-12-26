@@ -9,6 +9,7 @@ import 'package:manajemensekolah/screen/admin/admin_presence_report.dart';
 import 'package:manajemensekolah/screen/admin/admin_rpp_screen.dart';
 import 'package:manajemensekolah/screen/admin/finance.dart';
 import 'package:manajemensekolah/screen/admin/school_settings_screen.dart';
+import 'package:manajemensekolah/screen/admin/settings_screen.dart';
 import 'package:manajemensekolah/screen/admin/student_management.dart';
 import 'package:manajemensekolah/screen/admin/subject_management.dart';
 import 'package:manajemensekolah/screen/admin/teacher_admin.dart';
@@ -1580,7 +1581,12 @@ class _DashboardState extends State<Dashboard>
                           child: InkWell(
                             onTap: () {
                               Navigator.pop(context);
-                              _showSchoolSelectionDialog(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SettingsScreen(),
+                                ),
+                              );
                             },
                             borderRadius: BorderRadius.circular(15),
                             child: Container(

@@ -51,6 +51,44 @@ class ApiSettingsService {
     }
   }
 
+  // Get User Profile
+  static Future<Map<String, dynamic>> getProfile() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/profile'),
+        headers: await _getHeaders(),
+      );
+      final result = _handleResponse(response);
+      return result;
+    } catch (e) {
+      print('Error getting profile: $e');
+      rethrow;
+    }
+  }
+
+  // Update User Profile
+  static Future<void> updateProfile({
+    required String name,
+    required String? phoneNumber,
+    required String? address,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/profile'),
+        headers: await _getHeaders(),
+        body: json.encode({
+          'name': name,
+          'phone_number': phoneNumber,
+          'address': address,
+        }),
+      );
+      _handleResponse(response);
+    } catch (e) {
+      print('Error updating profile: $e');
+      rethrow;
+    }
+  }
+
   // Get Lesson Hour Settings (Now returns daily slots)
   static Future<List<dynamic>> getLessonHourSettings() async {
     try {
