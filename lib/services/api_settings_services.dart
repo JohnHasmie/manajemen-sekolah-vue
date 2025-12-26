@@ -133,13 +133,38 @@ class ApiSettingsService {
     }
   }
 
-  // Update School Jenjang
-  static Future<void> updateSchoolJenjang(String jenjang) async {
+  // Get School Settings
+  static Future<Map<String, dynamic>> getSchoolSettings() async {
     try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/school/settings'),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return result;
+    } catch (e) {
+      print('Error getting school settings: $e');
+      rethrow;
+    }
+  }
+
+  // Update School Settings (General)
+  static Future<void> updateSchoolSettings({
+    String? jenjang,
+    String? schoolName,
+    String? address,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {};
+      if (jenjang != null) body['jenjang'] = jenjang;
+      if (schoolName != null) body['school_name'] = schoolName;
+      if (address != null) body['address'] = address;
+
       final response = await http.put(
         Uri.parse('$baseUrl/school/settings'),
         headers: await _getHeaders(),
-        body: json.encode({'jenjang': jenjang}),
+        body: json.encode(body),
       );
       _handleResponse(response);
     } catch (e) {

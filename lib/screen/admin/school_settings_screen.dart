@@ -51,7 +51,7 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
                 childAspectRatio: 1.1,
                 children: [
                   _buildMenuCard(
-                    'Jenjang Sekolah',
+                    'Pengaturan Umum',
                     Icons.school,
                     () => Navigator.push(
                       context,
