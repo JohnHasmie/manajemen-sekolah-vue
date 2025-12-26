@@ -1369,90 +1369,104 @@ class FinanceScreenState extends State<FinanceScreen>
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Stack(
-        children: [
-          // Status badge di pojok kanan atas
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: statusColor.withOpacity(0.3)),
-              ),
-              child: Text(
-                statusText,
-                style: TextStyle(
-                  color: statusColor,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: () {
+          _showPaymentDetailDialog(tagihan);
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          children: [
+            // Status badge di pojok kanan atas
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: statusColor.withOpacity(0.3)),
                 ),
-              ),
-            ),
-          ),
-          // Content utama
-          Padding(
-            padding: EdgeInsets.only(
-              right: 100,
-              bottom: status == 'unpaid' ? 35 : 0,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: Icon(statusIcon, color: statusColor, size: 16),
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tagihan['payment_type_name'] ?? 'Tagihan',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        _formatCurrency(tagihan['amount']),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      if (tagihan['due_date'] != null)
+              ),
+            ),
+            // Content utama
+            Padding(
+              padding: EdgeInsets.only(
+                top: 12,
+                left: 12,
+                right: 100,
+                bottom: 35, // Always add bottom padding for the button
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(statusIcon, color: statusColor, size: 16),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          'Jatuh tempo: ${tagihan['due_date']?.split('T')[0] ?? '-'}',
+                          tagihan['payment_type_name'] ?? 'Tagihan',
                           style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                    ],
+                        Text(
+                          _formatCurrency(tagihan['amount']),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        if (tagihan['due_date'] != null)
+                          Text(
+                            'Jatuh tempo: ${tagihan['due_date']?.split('T')[0] ?? '-'}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          // Tombol bayar di pojok kanan bawah untuk status unpaid
-          if (status == 'unpaid')
+            // Tombol aksi (Bayar/Edit) di pojok kanan bawah
             Positioned(
-              bottom: 0,
-              right: 0,
+              bottom: 12, // Adjusted padding
+              right: 12, // Adjusted padding
               child: ElevatedButton.icon(
                 onPressed: () => _showManualPaymentDialog(tagihan),
-                icon: Icon(Icons.payment, size: 14),
-                label: Text('Bayar', style: TextStyle(fontSize: 10)),
+                icon: Icon(
+                  status == 'unpaid' ? Icons.payment : Icons.edit,
+                  size: 14,
+                ),
+                label: Text(
+                  status == 'unpaid' ? 'Bayar' : 'Edit',
+                  style: TextStyle(fontSize: 10),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: status == 'unpaid'
+                      ? Colors.blue
+                      : Colors.orange,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   minimumSize: Size(0, 28),
@@ -1462,247 +1476,469 @@ class FinanceScreenState extends State<FinanceScreen>
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // Dialog untuk input pembayaran manual
   void _showManualPaymentDialog(Map<String, dynamic> tagihan) {
+    final bool isEdit =
+        tagihan['status'] == 'verified' ||
+        tagihan['payment_status'] == 'verified';
+    final existingAmount = tagihan['amount']?.toString() ?? '';
+
+    // Determine initial values
+    String metodeBayar = tagihan['payment_method'] ?? 'cash';
+    String status = tagihan['status'] == 'verified' ? 'verified' : 'pending';
+    if (tagihan['status'] == 'unpaid')
+      status = 'verified'; // Default to verified if unpaid
+
     final TextEditingController jumlahController = TextEditingController(
-      text: tagihan['amount']?.toString() ?? '',
+      text: existingAmount,
     );
+
     final TextEditingController tanggalController = TextEditingController(
-      text: DateTime.now().toString().split(' ')[0],
+      text: tagihan['payment_date'] != null
+          ? tagihan['payment_date'].toString().split('T')[0]
+          : DateTime.now().toString().split(' ')[0],
     );
-    String metodeBayar = 'cash';
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.payment, color: Colors.blue),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Input Pembayaran Manual',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ],
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          content: SingleChildScrollView(
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Info Tagihan
+                // Header
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade200),
+                    gradient: _getCardGradient(),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        'Detail Tagihan',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade900,
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          isEdit ? Icons.edit : Icons.payment,
+                          color: Colors.white,
+                          size: 20,
                         ),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Jenis: ${_formatCurrency(tagihan['amount'])} - ${tagihan['payment_type_name'] ?? '-'}',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                      Text(
-                        'Siswa: ${tagihan['student_name'] ?? '-'}',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                      Text(
-                        'Kelas: ${tagihan['class_name'] ?? '-'}',
-                        style: TextStyle(fontSize: 11),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          isEdit
+                              ? 'Edit Data Pembayaran'
+                              : 'Input Pembayaran Manual',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 16),
 
-                // Metode Pembayaran
-                Text(
-                  'Metode Pembayaran',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Info Tagihan
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.shade100),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildInfoRow(
+                              'Siswa',
+                              tagihan['student_name'] ??
+                                  tagihan['siswa_nama'] ??
+                                  '-',
+                            ),
+                            SizedBox(height: 8),
+                            _buildInfoRow(
+                              'Kelas',
+                              tagihan['class_name'] ??
+                                  tagihan['kelas_nama'] ??
+                                  '-',
+                            ),
+                            SizedBox(height: 8),
+                            _buildInfoRow(
+                              'Tagihan',
+                              '${tagihan['payment_type_name'] ?? tagihan['jenis_pembayaran_nama'] ?? '-'}',
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20),
+
+                      // Form Fields
+                      _buildDialogTextField(
+                        controller: jumlahController,
+                        label: 'Jumlah Bayar',
+                        icon: Icons.attach_money,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [CurrencyInputFormatter()],
+                      ),
+                      SizedBox(height: 12),
+
+                      _buildDropdownField(
+                        value: metodeBayar,
+                        label: 'Metode Pembayaran',
+                        icon: Icons.account_balance_wallet,
+                        items: ['cash', 'transfer'],
+                        onChanged: (value) {
+                          setDialogState(() => metodeBayar = value!);
+                        },
+                      ),
+                      SizedBox(height: 12),
+
+                      _buildDialogTextField(
+                        controller: tanggalController,
+                        label: 'Tanggal Bayar',
+                        icon: Icons.calendar_today,
+                        readOnly: true,
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate:
+                                DateTime.tryParse(tanggalController.text) ??
+                                DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime.now(),
+                          );
+                          if (date != null) {
+                            setDialogState(() {
+                              tanggalController.text = date.toString().split(
+                                ' ',
+                              )[0];
+                            });
+                          }
+                        },
+                      ),
+                      SizedBox(height: 12),
+
+                      _buildDropdownField(
+                        value: status,
+                        label: 'Status Pembayaran',
+                        icon: Icons.rule,
+                        items: ['verified', 'pending', 'rejected', 'unpaid'],
+                        onChanged: (value) {
+                          setDialogState(() => status = value!);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 8),
+                // Actions
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border(
+                      top: BorderSide(color: Colors.grey.shade200),
+                    ),
                   ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: metodeBayar,
-                      isExpanded: true,
-                      items: [
-                        DropdownMenuItem(
-                          value: 'cash',
-                          child: Row(
-                            children: [
-                              Icon(Icons.money, size: 16, color: Colors.green),
-                              SizedBox(width: 8),
-                              Text('Tunai'),
-                            ],
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text('Batal'),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (jumlahController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Jumlah bayar harus diisi'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            try {
+                              final amount =
+                                  CurrencyInputFormatter.parseCurrency(
+                                    jumlahController.text,
+                                  );
+
+                              final data = {
+                                'bill_id': tagihan['id'],
+                                'metode_bayar': metodeBayar,
+                                'amount': amount,
+                                'payment_date': tanggalController.text,
+                                'status': status,
+                              };
+
+                              if (tagihan['payment_id'] != null) {
+                                // Update existing payment
+                                await _apiService.put(
+                                  '/payment/manual/${tagihan['payment_id']}',
+                                  data,
+                                );
+                              } else {
+                                // Create new payment
+                                await _apiService.inputPembayaranManual(data);
+                              }
+
+                              if (!mounted) return;
+                              Navigator.pop(context);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Data pembayaran berhasil disimpan',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+
+                              _loadData();
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Gagal menyimpan: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _getPrimaryColor(),
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            'Simpan',
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
-                        DropdownMenuItem(
-                          value: 'transfer',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.account_balance,
-                                size: 16,
-                                color: Colors.blue,
-                              ),
-                              SizedBox(width: 8),
-                              Text('Transfer Bank'),
-                            ],
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setDialogState(() {
-                          metodeBayar = value!;
-                        });
-                      },
-                    ),
+                      ),
+                    ],
                   ),
-                ),
-                SizedBox(height: 16),
-
-                // Jumlah Bayar
-                Text(
-                  'Jumlah Bayar (Rp)',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: jumlahController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: 'Masukkan jumlah bayar',
-                    prefixText: 'Rp ',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-
-                // Tanggal Bayar
-                Text(
-                  'Tanggal Bayar',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: tanggalController,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    hintText: 'Pilih tanggal',
-                    suffixIcon: Icon(Icons.calendar_today),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
-                  ),
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime.now(),
-                    );
-                    if (date != null) {
-                      setDialogState(() {
-                        tanggalController.text = date.toString().split(' ')[0];
-                      });
-                    }
-                  },
                 ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Batal'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () async {
-                if (jumlahController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Jumlah bayar harus diisi')),
-                  );
-                  return;
-                }
-
-                try {
-                  await _apiService.inputPembayaranManual({
-                    'bill_id': tagihan['id'],
-                    'metode_bayar': metodeBayar,
-                    'amount': double.parse(jumlahController.text),
-                    'payment_date': tanggalController.text,
-                  });
-
-                  if (!mounted) return;
-                  Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Pembayaran berhasil dicatat'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-
-                  // Reload data
-                  _loadData();
-                } catch (e) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Gagal mencatat pembayaran: ${e.toString()}',
-                      ),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              icon: Icon(Icons.save),
-              label: Text('Simpan'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
         ),
       ),
+    );
+  }
+
+  void _showPaymentDetailDialog(Map<String, dynamic> tagihan) {
+    print('DEBUG PAYMENT DETAIL: $tagihan');
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: _getCardGradient(),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.receipt_long, color: Colors.white),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Ringkasan Pembayaran',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    _buildInfoRow(
+                      'Siswa',
+                      tagihan['student_name'] ?? tagihan['siswa_nama'] ?? '-',
+                    ),
+                    SizedBox(height: 12),
+                    _buildInfoRow(
+                      'Kelas',
+                      tagihan['class_name'] ?? tagihan['kelas_nama'] ?? '-',
+                    ),
+                    SizedBox(height: 12),
+                    _buildInfoRow(
+                      'Tagihan',
+                      tagihan['payment_type_name'] ??
+                          tagihan['jenis_pembayaran_nama'] ??
+                          '-',
+                    ),
+                    Divider(height: 24),
+                    _buildInfoRow('Jumlah', _formatCurrency(tagihan['amount'])),
+                    SizedBox(height: 12),
+                    _buildInfoRow(
+                      'Tanggal',
+                      tagihan['payment_date'] != null
+                          ? tagihan['payment_date'].toString().split('T')[0]
+                          : '-',
+                    ),
+                    SizedBox(height: 12),
+                    Builder(
+                      builder: (context) {
+                        String method =
+                            (tagihan['payment_method'] ??
+                                    tagihan['metode_bayar'] ??
+                                    '-')
+                                .toString();
+
+                        // Fallback logic if method is missing
+                        if (method == '-' || method == 'null') {
+                          if ((tagihan['payment_proof'] != null &&
+                                  tagihan['payment_proof']
+                                      .toString()
+                                      .isNotEmpty) ||
+                              (tagihan['payment_receipt'] != null &&
+                                  tagihan['payment_receipt']
+                                      .toString()
+                                      .isNotEmpty)) {
+                            method = 'Transfer';
+                          } else if (tagihan['status'] == 'verified' ||
+                              tagihan['payment_status'] == 'verified') {
+                            method = 'Tunai';
+                          }
+                        }
+
+                        return _buildInfoRow('Metode', method.toUpperCase());
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildInfoRow(
+                      'Status',
+                      (tagihan['status'] ?? '-').toUpperCase(),
+                    ),
+
+                    if ((tagihan['payment_proof'] != null &&
+                            tagihan['payment_proof'].toString().isNotEmpty) ||
+                        (tagihan['payment_receipt'] != null &&
+                            tagihan['payment_receipt']
+                                .toString()
+                                .isNotEmpty)) ...[
+                      SizedBox(height: 20),
+                      Text(
+                        'Bukti Pembayaran',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _showBuktiPembayaran(tagihan),
+                        child: Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                _getImageUrl(
+                                  tagihan['payment_proof'] ??
+                                      tagihan['payment_receipt'],
+                                ),
+                              ),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.zoom_in,
+                              color: Colors.white,
+                              size: 40,
+                              shadows: [
+                                Shadow(blurRadius: 10, color: Colors.black54),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+        ),
+        Text(': ', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1800,7 +2036,10 @@ class FinanceScreenState extends State<FinanceScreen>
 
   // Dalam KeuanganScreenState, tambahkan method ini:
   void _showBuktiPembayaran(Map<String, dynamic> pembayaran) {
-    if (pembayaran['payment_receipt'] == null) {
+    final imageFile =
+        pembayaran['payment_proof'] ?? pembayaran['payment_receipt'];
+
+    if (imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Tidak ada bukti pembayaran'),
@@ -1863,7 +2102,7 @@ class FinanceScreenState extends State<FinanceScreen>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      _getImageUrl(pembayaran['payment_receipt']),
+                      _getImageUrl(imageFile),
                       width: double.infinity,
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
@@ -1893,7 +2132,7 @@ class FinanceScreenState extends State<FinanceScreen>
                             ),
                             SizedBox(height: 8),
                             Text(
-                              'File: ${pembayaran['payment_receipt']}',
+                              'File: $imageFile',
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Colors.grey,
@@ -1929,13 +2168,13 @@ class FinanceScreenState extends State<FinanceScreen>
                       ),
                     ),
                     SizedBox(height: 8),
-                    _buildInfoItem('Siswa', pembayaran['siswa_nama'] ?? '-'),
-                    _buildInfoItem('Kelas', pembayaran['kelas_nama'] ?? '-'),
-                    _buildInfoItem(
+                    _buildInfoRow('Siswa', pembayaran['siswa_nama'] ?? '-'),
+                    _buildInfoRow('Kelas', pembayaran['kelas_nama'] ?? '-'),
+                    _buildInfoRow(
                       'Jenis',
                       pembayaran['jenis_pembayaran_nama'] ?? '-',
                     ),
-                    _buildInfoItem(
+                    _buildInfoRow(
                       'Jumlah',
                       _formatCurrency(pembayaran['amount']),
                     ),
@@ -2300,6 +2539,8 @@ class FinanceScreenState extends State<FinanceScreen>
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -2312,6 +2553,8 @@ class FinanceScreenState extends State<FinanceScreen>
         maxLines: maxLines,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
+        readOnly: readOnly,
+        onTap: onTap,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 20),
