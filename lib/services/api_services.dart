@@ -346,6 +346,13 @@ class ApiService {
           return responseData;
         }
 
+        if (responseData['require_otp'] == true) {
+          if (kDebugMode) {
+            print('🔄 Login flow: OTP required');
+          }
+          return responseData;
+        }
+
         // Hanya validasi token untuk login sukses langsung
         if (responseData['token'] == null) {
           throw Exception('Server tidak mengembalikan token');
@@ -366,6 +373,56 @@ class ApiService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ ApiService login error: $e');
+      }
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> verifyOtp(
+    String email,
+    String otp, {
+    String? schoolId,
+    String? role,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {'email': email, 'otp': otp};
+
+      if (schoolId != null) {
+        body['school_id'] = schoolId;
+      }
+
+      if (role != null) {
+        body['role'] = role;
+      }
+
+      if (kDebugMode) {
+        print('📤 Verify OTP request: ${body.keys}');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/verify-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
+      if (kDebugMode) {
+        print('📥 Verify OTP response status: ${response.statusCode}');
+        print('📥 Verify OTP response body: ${response.body}');
+      }
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        return responseData;
+      } else {
+        final errorResponse = json.decode(response.body);
+        throw Exception(
+          errorResponse['error'] ??
+              'OTP verification failed with status: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ ApiService Verify OTP error: $e');
       }
       rethrow;
     }

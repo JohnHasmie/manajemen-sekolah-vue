@@ -31,6 +31,7 @@ class LoginScreenState extends State<LoginScreen> {
   Map<String, dynamic>? _selectedSchool;
   Map<String, dynamic>? _userData;
   String? _selectedSchoolId;
+  String? _otpCode;
 
   @override
   void initState() {
@@ -138,92 +139,8 @@ class LoginScreenState extends State<LoginScreen> {
         print('🎭 Pilih role: ${responseData['pilih_role']}');
       }
 
-      // Handle school selection flow
-      if (responseData['pilih_sekolah'] == true) {
-        if (kDebugMode) {
-          print('🏫 Need to select school');
-          print(
-            '📋 Available schools: ${responseData['sekolah_list']?.length}',
-          );
-        }
-
-        // Validasi data sekolah
-        if (responseData['sekolah_list'] == null ||
-            responseData['sekolah_list'].isEmpty) {
-          throw Exception('Daftar sekolah tidak tersedia');
-        }
-
-        if (responseData['user'] == null) {
-          throw Exception('Data user tidak ditemukan');
-        }
-
-        setState(() {
-          _showSchoolSelection = true;
-          _schoolList = responseData['sekolah_list'];
-          _userData = responseData['user'];
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Handle role selection flow
-      if (responseData['pilih_role'] == true) {
-        if (kDebugMode) {
-          print('🎭 Need to select role');
-          print('📋 Available roles: ${responseData['role_list']}');
-        }
-
-        // Validasi data role
-        if (responseData['role_list'] == null ||
-            responseData['role_list'].isEmpty) {
-          throw Exception('Daftar role tidak tersedia');
-        }
-
-        if (responseData['user'] == null) {
-          throw Exception('Data user tidak ditemukan');
-        }
-
-        setState(() {
-          _showRoleSelection = true;
-          _roleList = responseData['role_list'];
-          _userData = responseData['user'];
-          _selectedSchool = responseData['sekolah'] ?? {};
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Handle successful login (langsung dapat token)
-      // Validasi response structure hanya untuk login sukses
-      if (responseData['token'] == null) {
-        throw Exception('Token tidak ditemukan dalam response server');
-      }
-
-      if (responseData['user'] == null) {
-        throw Exception('Data user tidak ditemukan dalam response server');
-      }
-
-      // Simpan data login
-      await _saveLoginData(responseData);
-
-      // Validasi role sebelum navigasi
-      final String userRole = responseData['user']['role']?.toString() ?? '';
-      if (userRole.isEmpty) {
-        throw Exception('Role user tidak ditemukan');
-      }
-
-      if (!mounted) return;
-
-      // Navigate berdasarkan role
-      Navigator.pushReplacementNamed(context, '/$userRole');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Login berhasil! Selamat datang ${responseData['user']['nama']}',
-          ),
-        ),
-      );
+      // Use refactored handler
+      await _handleLoginResponse(responseData);
     } catch (error) {
       if (kDebugMode) {
         print('❌ Login error: $error');
@@ -345,63 +262,8 @@ class LoginScreenState extends State<LoginScreen> {
         googleToken: token,
       );
 
-      // 3. Handle Response (Same logic as login)
-      // Check for school selection
-      if (responseData['pilih_sekolah'] == true) {
-        if (responseData['sekolah_list'] == null ||
-            responseData['sekolah_list'].isEmpty) {
-          throw Exception('Daftar sekolah tidak tersedia');
-        }
-
-        setState(() {
-          _showSchoolSelection = true;
-          _schoolList = responseData['sekolah_list'];
-          _userData = responseData['user'];
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Check for role selection
-      if (responseData['pilih_role'] == true) {
-        if (responseData['role_list'] == null ||
-            responseData['role_list'].isEmpty) {
-          throw Exception('Daftar role tidak tersedia');
-        }
-
-        setState(() {
-          _showRoleSelection = true;
-          _roleList = responseData['role_list'];
-          _userData = responseData['user'];
-          _selectedSchool = responseData['sekolah'] ?? {};
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Direct Login Success
-      if (responseData['token'] == null) {
-        throw Exception('Token tidak ditemukan dalam response server');
-      }
-
-      await _saveLoginData(responseData);
-
-      final String userRole = responseData['user']['role']?.toString() ?? '';
-      if (userRole.isEmpty) {
-        throw Exception('Role user tidak ditemukan');
-      }
-
-      if (!mounted) return;
-
-      Navigator.pushReplacementNamed(context, '/$userRole');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Login Google berhasil! Selamat datang ${responseData['user']['nama']}',
-          ),
-        ),
-      );
+      // 3. Handle Response
+      await _handleLoginResponse(responseData);
     } catch (error) {
       if (kDebugMode) {
         print('❌ Google Sign In Error: $error');
@@ -443,70 +305,28 @@ class LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final responseData = await ApiService.login(
-        emailController.text.trim(),
-        passwordController.text,
-        schoolId: schoolId,
-      );
+      Map<String, dynamic> responseData;
+      if (_otpCode != null) {
+        // Jika login pakai OTP (Email), gunakan verifyOtp
+        responseData = await ApiService.verifyOtp(
+          emailController.text.trim(),
+          _otpCode!,
+          schoolId: schoolId,
+        );
+      } else {
+        // Fallback (misal Password biasa atau debug)
+        responseData = await ApiService.login(
+          emailController.text.trim(),
+          passwordController.text,
+          schoolId: schoolId,
+        );
+      }
 
       if (kDebugMode) {
         print('🔐 School Selection Response: $responseData');
-        print(
-          '🏫 Pilih sekolah after selection: ${responseData['pilih_sekolah']}',
-        );
-        print('🎭 Pilih role after selection: ${responseData['pilih_role']}');
       }
 
-      // PERBAIKAN: Handle jika setelah pilih sekolah, perlu pilih role
-      if (responseData['pilih_role'] == true) {
-        if (kDebugMode) {
-          print('🎭 Need to select role after school selection');
-        }
-
-        if (responseData['role_list'] == null ||
-            responseData['role_list'].isEmpty) {
-          throw Exception('Daftar role tidak tersedia');
-        }
-
-        setState(() {
-          _showSchoolSelection = false;
-          _showRoleSelection = true;
-          _roleList = responseData['role_list'];
-          _userData = responseData['user'];
-          _selectedSchool = responseData['sekolah'] ?? {};
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Validasi response untuk login sukses
-      if (responseData['token'] == null) {
-        throw Exception('Token tidak ditemukan setelah memilih sekolah');
-      }
-
-      if (responseData['user'] == null) {
-        throw Exception('Data user tidak ditemukan setelah memilih sekolah');
-      }
-
-      await _saveLoginData(responseData);
-
-      // Validasi role
-      final String userRole = responseData['user']['role']?.toString() ?? '';
-      if (userRole.isEmpty) {
-        throw Exception('Role user tidak ditemukan');
-      }
-
-      if (!mounted) return;
-
-      Navigator.pushReplacementNamed(context, '/$userRole');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Login berhasil! Selamat datang di ${responseData['user']['nama_sekolah']}',
-          ),
-        ),
-      );
+      await _handleLoginResponse(responseData);
     } catch (error) {
       if (kDebugMode) {
         print('❌ School selection error: $error');
@@ -533,46 +353,28 @@ class LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final responseData = await ApiService.login(
-        emailController.text.trim(),
-        passwordController.text,
-        schoolId: _selectedSchool?['id'] ?? _selectedSchoolId,
-        role: role,
-      );
+      Map<String, dynamic> responseData;
+      if (_otpCode != null) {
+        responseData = await ApiService.verifyOtp(
+          emailController.text.trim(),
+          _otpCode!,
+          schoolId: _selectedSchool?['id'] ?? _selectedSchoolId,
+          role: role,
+        );
+      } else {
+        responseData = await ApiService.login(
+          emailController.text.trim(),
+          passwordController.text,
+          schoolId: _selectedSchool?['id'] ?? _selectedSchoolId,
+          role: role,
+        );
+      }
 
       if (kDebugMode) {
         print('🔐 Role Selection Response: $responseData');
-        print('🔑 Token present: ${responseData['token'] != null}');
       }
 
-      // Validasi response untuk login sukses
-      if (responseData['token'] == null) {
-        throw Exception('Token tidak ditemukan setelah memilih role');
-      }
-
-      if (responseData['user'] == null) {
-        throw Exception('Data user tidak ditemukan setelah memilih role');
-      }
-
-      await _saveLoginData(responseData);
-
-      // Validasi role
-      final String userRole = responseData['user']['role']?.toString() ?? '';
-      if (userRole.isEmpty) {
-        throw Exception('Role user tidak ditemukan');
-      }
-
-      if (!mounted) return;
-
-      Navigator.pushReplacementNamed(context, '/$userRole');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Login berhasil! Selamat datang sebagai ${_getRoleDisplayName(role)}',
-          ),
-        ),
-      );
+      await _handleLoginResponse(responseData);
     } catch (error) {
       if (kDebugMode) {
         print('❌ Role selection error: $error');
@@ -850,5 +652,184 @@ class LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleLoginResponse(Map<String, dynamic> responseData) async {
+    // 1. Check OTP requirement
+    if (responseData['require_otp'] == true) {
+      if (kDebugMode) print('🔐 Need OTP verification');
+      setState(() {
+        _isLoading = false; // Stop loading to show dialog
+      });
+      _showOtpDialog(responseData['email']);
+      return;
+    }
+
+    // 2. School Selection
+    if (responseData['pilih_sekolah'] == true) {
+      if (responseData['sekolah_list'] == null ||
+          responseData['sekolah_list'].isEmpty) {
+        throw Exception('Daftar sekolah tidak tersedia');
+      }
+
+      if (responseData['user'] == null) {
+        throw Exception('Data user tidak ditemukan');
+      }
+
+      setState(() {
+        _showSchoolSelection = true;
+        _schoolList = responseData['sekolah_list'];
+        _userData = responseData['user'];
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // 3. Role Selection
+    if (responseData['pilih_role'] == true) {
+      if (responseData['role_list'] == null ||
+          responseData['role_list'].isEmpty) {
+        throw Exception('Daftar role tidak tersedia');
+      }
+
+      if (responseData['user'] == null) {
+        throw Exception('Data user tidak ditemukan');
+      }
+
+      setState(() {
+        _showRoleSelection = true;
+        _roleList = responseData['role_list'];
+        _userData = responseData['user'];
+        // Handle variations in key naming from backend (school vs sekolah)
+        _selectedSchool =
+            responseData['school'] ?? responseData['sekolah'] ?? {};
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // 4. Handle successful login (Token received)
+    if (responseData['token'] == null) {
+      throw Exception('Token tidak ditemukan dalam response server');
+    }
+
+    if (responseData['user'] == null) {
+      throw Exception('Data user tidak ditemukan dalam response server');
+    }
+
+    // Simpan data login
+    await _saveLoginData(responseData);
+
+    // Validasi role sebelum navigasi
+    final String userRole = responseData['user']['role']?.toString() ?? '';
+    if (userRole.isEmpty) {
+      throw Exception('Role user tidak ditemukan');
+    }
+
+    if (!mounted) return;
+
+    // Navigate berdasarkan role
+    Navigator.pushReplacementNamed(context, '/$userRole');
+
+    String welcomeName = responseData['user']['nama'] ?? 'User';
+    String schoolName =
+        responseData['school']?['name'] ??
+        responseData['school']?['nama_sekolah'] ??
+        '';
+    if (schoolName.isNotEmpty) welcomeName += ' di $schoolName';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Login berhasil! Selamat datang $welcomeName')),
+    );
+  }
+
+  void _showOtpDialog(String email) {
+    final otpController = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Verifikasi OTP'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Kode OTP telah dikirim ke email:',
+              style: TextStyle(fontSize: 12),
+            ),
+            Text(email, style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            Text('Masukkan 6 digit kode OTP:'),
+            SizedBox(height: 8),
+            TextField(
+              controller: otpController,
+              decoration: InputDecoration(
+                labelText: 'Kode OTP',
+                border: OutlineInputBorder(),
+                counterText: '',
+                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              ),
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 24, letterSpacing: 8),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              setState(() => _isLoading = false);
+            },
+            child: Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final otp = otpController.text.trim();
+              if (otp.length != 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Masukkan 6 digit kode OTP')),
+                );
+                return;
+              }
+              Navigator.pop(context); // Close dialog
+              await _verifyOtp(email, otp);
+            },
+            child: Text('Verifikasi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _verifyOtp(String email, String otp) async {
+    setState(() => _isLoading = true);
+    try {
+      // Call verifyOtp without school/role initially
+      final response = await ApiService.verifyOtp(email, otp);
+
+      // Save OTP only if successful (so we can use it for subsequent school/role selection)
+      if (mounted) {
+        setState(() => _otpCode = otp);
+      }
+
+      await _handleLoginResponse(response);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        String errorMsg = e.toString().replaceAll('Exception:', '').trim();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Verifikasi Gagal: $errorMsg'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // Re-open dialog to interpret retry
+        _showOtpDialog(email);
+      }
+    }
   }
 }
