@@ -172,15 +172,17 @@ class LoginScreenState extends State<LoginScreen> {
         errorMessage = error.toString();
       }
 
-      if (!error.toString().contains('expired')) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
-      }
+      if (mounted) {
+        if (!error.toString().contains('expired')) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        }
 
-      setState(() {
-        _isLoading = false;
-      });
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -239,9 +241,11 @@ class LoginScreenState extends State<LoginScreen> {
 
       if (googleUser == null) {
         // User canceled the sign-in
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -284,13 +288,15 @@ class LoginScreenState extends State<LoginScreen> {
         errorMessage = error.toString().replaceAll('Exception:', '').trim();
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
 
-      setState(() {
-        _isLoading = false;
-      });
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

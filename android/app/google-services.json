@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "631663251271-mafcufes97m1hg1sbg3kbg5scvrn2bmi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.manajemensekolah",
+            "certificate_hash": "131a969626a2d0f3cedeff6f578462c984b50d9e"
+          }
+        },
+        {
           "client_id": "631663251271-q5fmm1j2r4hko6fkicn5mml5vt8r3cnb.apps.googleusercontent.com",
           "client_type": 3
         }
