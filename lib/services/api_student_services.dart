@@ -280,13 +280,16 @@ class ApiStudentService {
 
   static Future<List<dynamic>> getStudentByClass(String classId) async {
     try {
-      final semuaSiswa = await getStudent();
-      return semuaSiswa.where((siswa) {
-        return siswa['class_id'] == classId;
-      }).toList();
+      final response = await http.get(
+        Uri.parse('$baseUrl/student/class/$classId'),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return result is List ? result : [];
     } catch (e) {
       if (kDebugMode) {
-        print('Error filtering siswa by kelas: $e');
+        print('Error getting students by class: $e');
       }
       return [];
     }
