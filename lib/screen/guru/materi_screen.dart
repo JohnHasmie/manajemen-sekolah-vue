@@ -1040,7 +1040,9 @@ class MateriPageState extends State<MateriPage> {
                           color: Colors.grey.shade600,
                         ),
                         SizedBox(width: 8),
-                        Expanded(child: Text(mp['nama'] ?? 'Unknown')),
+                        Expanded(
+                          child: Text(mp['name'] ?? mp['nama'] ?? 'Unknown'),
+                        ),
                       ],
                     ),
                   ),

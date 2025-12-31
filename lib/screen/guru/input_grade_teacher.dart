@@ -1732,8 +1732,17 @@ class GradeBookPageState extends State<GradeBookPage> {
 
         // Process unique dates for each grade type
         _assessmentDates = {};
+        print("DEBUG: _nilaiList loaded: ${_nilaiList.length} items");
+        if (_nilaiList.isNotEmpty) {
+          print("DEBUG: Sample item: ${_nilaiList.first}");
+        }
+
         for (var nilai in _nilaiList) {
-          final jenis = nilai['jenis'];
+          // Normalize jenis to lowercase for consistent grouping
+          final jenis = nilai['jenis']?.toString().toLowerCase();
+
+          if (jenis == null) continue;
+
           // Ensure date is in YYYY-MM-DD format
           String? rawDate = nilai['tanggal'];
           if (rawDate != null) {
@@ -1753,6 +1762,10 @@ class GradeBookPageState extends State<GradeBookPage> {
         for (var key in _assessmentDates.keys) {
           _assessmentDates[key]!.sort();
         }
+
+        print(
+          "DEBUG: _assessmentDates keys: ${_assessmentDates.keys.toList()}",
+        );
 
         // Ensure at least one empty column (or default) if no data exists for a type
         // Actually, we don't force an empty column if there's no data,
@@ -1890,12 +1903,24 @@ class GradeBookPageState extends State<GradeBookPage> {
     String date,
   ) {
     try {
-      return _nilaiList.firstWhere((nilai) {
+      final result = _nilaiList.firstWhere((nilai) {
         final nilaiDate = nilai['tanggal']?.toString().split('T')[0];
+        // Compare jenis using lowercase to handle case mismatch
+        final nilaiJenis = nilai['jenis']?.toString().toLowerCase();
+
         return nilai['siswa_id'].toString() == siswaId &&
-            nilai['jenis'] == jenis &&
+            nilaiJenis == jenis.toLowerCase() &&
             nilaiDate == date;
       }, orElse: () => <String, dynamic>{});
+
+      // DEBUG: Uncomment if still having issues
+      // if (result.isEmpty && jenis == 'harian') {
+      //   print("DEBUG: Looked for $siswaId, $jenis, $date -> Found NOTHING");
+      // } else if (result.isNotEmpty) {
+      //    print("DEBUG: MATCH Found for $siswaId: ${result['nilai']}");
+      // }
+
+      return result;
     } catch (e) {
       return null;
     }
