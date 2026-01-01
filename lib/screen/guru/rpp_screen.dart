@@ -1127,6 +1127,9 @@ class _RppFormDialogState extends State<RppFormDialog> {
       });
       if (kDebugMode) {
         print('Loaded ${_mataPelajaranList.length} mata pelajaran');
+        if (_mataPelajaranList.isNotEmpty) {
+          print('DEBUG SUBJECT ITEM: ${_mataPelajaranList.first}');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -1177,6 +1180,9 @@ class _RppFormDialogState extends State<RppFormDialog> {
         print(
           'Loaded ${_kelasList.length} kelas for mata pelajaran $mataPelajaranId',
         );
+        if (_kelasList.isNotEmpty) {
+          print('DEBUG CLASS ITEM: ${_kelasList.first}');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -1361,7 +1367,12 @@ class _RppFormDialogState extends State<RppFormDialog> {
                 items: _mataPelajaranList.map((mp) {
                   return DropdownMenuItem(
                     value: mp['id'],
-                    child: Text(mp['nama']),
+                    child: Text(
+                      mp['name'] ??
+                          mp['nama'] ??
+                          mp['subject_name'] ??
+                          'Tanpa Nama',
+                    ),
                   );
                 }).toList(),
                 initialValue: _selectedMataPelajaranId,
@@ -1387,7 +1398,12 @@ class _RppFormDialogState extends State<RppFormDialog> {
                 items: _kelasList.map((kelas) {
                   return DropdownMenuItem(
                     value: kelas['id'],
-                    child: Text(kelas['name']),
+                    child: Text(
+                      kelas['name'] ??
+                          kelas['nama'] ??
+                          kelas['class_name'] ??
+                          'Tanpa Nama',
+                    ),
                   );
                 }).toList(),
                 initialValue: _selectedClassId,

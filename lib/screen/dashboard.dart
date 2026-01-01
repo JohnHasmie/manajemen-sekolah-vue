@@ -45,6 +45,11 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard>
     with SingleTickerProviderStateMixin {
+  String get _effectiveRole {
+    if (widget.role == 'teacher') return 'guru';
+    return widget.role;
+  }
+
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -189,7 +194,7 @@ class _DashboardState extends State<Dashboard>
 
   Future<void> _loadStats() async {
     try {
-      if (widget.role == 'guru') {
+      if (_effectiveRole == 'guru') {
         // Load data untuk guru
         final userData = _userData;
         if (userData['id'] == null) {
@@ -241,7 +246,7 @@ class _DashboardState extends State<Dashboard>
             'total_rpp': rpp.length,
           };
         });
-      } else if (widget.role == 'admin') {
+      } else if (_effectiveRole == 'admin') {
         // Load data untuk admin
         if (kDebugMode) {
           print('👤 Loading stats untuk admin');
@@ -276,7 +281,7 @@ class _DashboardState extends State<Dashboard>
             'total_mapel': subjects.length,
           };
         });
-      } else if (widget.role == 'wali') {
+      } else if (_effectiveRole == 'wali') {
         // Load data untuk wali murid
         final userData = _userData;
         if (kDebugMode) {
@@ -314,7 +319,7 @@ class _DashboardState extends State<Dashboard>
       }
       if (!mounted) return;
       setState(() {
-        if (widget.role == 'guru') {
+        if (_effectiveRole == 'guru') {
           _stats = {
             'total_siswa': 24,
             'total_kelas': 1,
@@ -322,14 +327,14 @@ class _DashboardState extends State<Dashboard>
             'total_materi': 5,
             'total_rpp': 3,
           };
-        } else if (widget.role == 'admin') {
+        } else if (_effectiveRole == 'admin') {
           _stats = {
             'total_siswa': 150,
             'total_guru': 25,
             'total_kelas': 12,
             'total_mapel': 15,
           };
-        } else if (widget.role == 'wali') {
+        } else if (_effectiveRole == 'wali') {
           _stats = {'anak_terdaftar': 2, 'pengumuman_terbaru': 3};
         }
       });
@@ -554,7 +559,7 @@ class _DashboardState extends State<Dashboard>
       // Sama seperti di PengumumanScreen - langsung ambil dari API
       // Backend sudah melakukan filtering berdasarkan role user
       if (kDebugMode) {
-        print('🔄 Memuat data pengumuman untuk role: ${widget.role}');
+        print('🔄 Memuat data pengumuman untuk role: $_effectiveRole');
       }
 
       final announcementData = await ApiService().get(
@@ -770,11 +775,11 @@ class _DashboardState extends State<Dashboard>
   }
 
   Widget _buildStatsSection() {
-    if (widget.role == 'guru') {
+    if (_effectiveRole == 'guru') {
       return _buildTeacherStats();
-    } else if (widget.role == 'admin') {
+    } else if (_effectiveRole == 'admin') {
       return _buildAdminStats();
-    } else if (widget.role == 'wali') {
+    } else if (_effectiveRole == 'wali') {
       return _buildParentStats();
     }
     return SizedBox.shrink();
@@ -1575,7 +1580,7 @@ class _DashboardState extends State<Dashboard>
                       ],
 
                       // Settings Button
-                      if (widget.role == 'admin') ...[
+                      if (_effectiveRole == 'admin') ...[
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
@@ -1821,7 +1826,7 @@ class _DashboardState extends State<Dashboard>
 
   // Helper methods untuk colors dan gradients
   Color _getPrimaryColor() {
-    switch (widget.role) {
+    switch (_effectiveRole) {
       case 'admin':
         return Color(0xFF2563EB); // Blue
       case 'guru':
@@ -1856,7 +1861,7 @@ class _DashboardState extends State<Dashboard>
   }
 
   String _getRoleTitle() {
-    switch (widget.role) {
+    switch (_effectiveRole) {
       case 'admin':
         return AppLocalizations.adminRole.tr;
       case 'guru':
@@ -1872,7 +1877,7 @@ class _DashboardState extends State<Dashboard>
 
   // Keep existing methods for dashboard cards functionality
   List<Widget> _getDashboardCards(BuildContext context) {
-    if (widget.role == 'admin') {
+    if (_effectiveRole == 'admin') {
       return [
         _buildDashboardCard(
           AppLocalizations.manageStudents.tr,
@@ -1928,7 +1933,7 @@ class _DashboardState extends State<Dashboard>
               'id': userData['id'] ?? '',
               'nama': userData['nama'] ?? 'Admin',
               'email': userData['email'] ?? '',
-              'role': widget.role,
+              'role': _effectiveRole,
             };
             if (adminData['id']!.isEmpty) {
               if (context.mounted) {
@@ -1998,7 +2003,7 @@ class _DashboardState extends State<Dashboard>
           ),
         ),
       ];
-    } else if (widget.role == 'guru') {
+    } else if (_effectiveRole == 'guru') {
       return [
         _buildDashboardCard(
           AppLocalizations.teachingSchedule.tr,
@@ -2026,7 +2031,7 @@ class _DashboardState extends State<Dashboard>
               'id': userData['id'] ?? '',
               'nama': userData['nama'] ?? 'Teacher',
               'email': userData['email'] ?? '',
-              'role': widget.role,
+              'role': _effectiveRole,
             };
             if (guruData['id']!.isEmpty) {
               if (context.mounted) {
@@ -2055,7 +2060,7 @@ class _DashboardState extends State<Dashboard>
               'id': userData['id'] ?? '',
               'nama': userData['nama'] ?? 'Teacher',
               'email': userData['email'] ?? '',
-              'role': widget.role,
+              'role': _effectiveRole,
             };
             if (teacherData['id']!.isEmpty) {
               if (context.mounted) {
@@ -2083,7 +2088,7 @@ class _DashboardState extends State<Dashboard>
             final teacherData = {
               'id': userData['id'] ?? '',
               'name': userData['name'] ?? 'Teacher',
-              'role': widget.role,
+              'role': _effectiveRole,
             };
             if (teacherData['id']!.isEmpty) {
               if (context.mounted) {
@@ -2112,7 +2117,7 @@ class _DashboardState extends State<Dashboard>
               'id': userData['id'] ?? '',
               'nama': userData['nama'] ?? 'Teacher',
               'email': userData['email'] ?? '',
-              'role': widget.role,
+              'role': _effectiveRole,
             };
             if (teacherData['id']!.isEmpty) {
               if (context.mounted) {
@@ -2143,7 +2148,7 @@ class _DashboardState extends State<Dashboard>
           ),
         ),
       ];
-    } else if (widget.role == 'wali') {
+    } else if (_effectiveRole == 'wali') {
       return [
         _buildDashboardCard(
           AppLocalizations.announcements.tr,
