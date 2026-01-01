@@ -7,13 +7,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/components/error_handler.dart';
 import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
-import 'package:manajemensekolah/services/api_services.dart';
-import 'package:manajemensekolah/services/fcm_service.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:manajemensekolah/screen/dashboard.dart';
 import 'package:manajemensekolah/screen/login_screen.dart';
+import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Global navigator key for navigation without context
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -38,18 +38,20 @@ void main() async {
   } catch (e) {
     if (kDebugMode) {
       print('❌ Firebase initialization error: $e');
-      print('⚠️ Please configure Firebase using FlutterFire CLI or update firebase_options.dart');
+      print(
+        '⚠️ Please configure Firebase using FlutterFire CLI or update firebase_options.dart',
+      );
     }
   }
 
   await initializeDateFormatting('id_ID', null);
-  
+
   // Initialize language provider and load saved language
   await languageProvider.loadSavedLanguage();
-  
+
   // Setup error handling (non-blocking)
   _setupErrorHandling();
-  
+
   runApp(SchoolManagementApp());
 }
 
@@ -84,10 +86,10 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
       // Clear any existing force logout flag on app start
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('force_logout', false);
-      
+
       // Setup error handling
       _setupErrorHandling();
-      
+
       // Initialize FCM Service
       try {
         await FCMService().initialize();
@@ -99,7 +101,7 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
           print('⚠️ FCM Service initialization failed (non-critical): $e');
         }
       }
-      
+
       setState(() {
         _isInitialized = true;
       });
@@ -121,15 +123,15 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
     if (kDebugMode) {
       print('🔴 Global error: $error');
     }
-    
+
     // Hanya handle error yang terkait authentication
     if (_isAuthError(error)) {
       if (kDebugMode) {
         print('🔐 Auth error detected, logging out...');
       }
-      
+
       await _tokenService.logout();
-      
+
       // Navigate to login screen safely
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (navigatorKey.currentState?.mounted ?? false) {
@@ -144,13 +146,13 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
 
   bool _isAuthError(Exception error) {
     final errorString = error.toString().toLowerCase();
-    
+
     // Hanya handle error yang benar-benar terkait auth
     return errorString.contains('token expired') ||
-           errorString.contains('jwt expired') ||
-           errorString.contains('authentication failed') ||
-           errorString.contains('401') ||
-           errorString.contains('invalid token');
+        errorString.contains('jwt expired') ||
+        errorString.contains('authentication failed') ||
+        errorString.contains('401') ||
+        errorString.contains('invalid token');
   }
 
   @override
@@ -203,7 +205,7 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
                   if (kDebugMode) {
                     print('🏠 Home decision: authenticated = $isAuthenticated');
                   }
-                  
+
                   if (isAuthenticated) {
                     return _redirectToDashboard(languageProvider);
                   } else {
@@ -215,6 +217,8 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
             routes: {
               '/admin': (context) => Dashboard(role: 'admin'),
               '/guru': (context) => Dashboard(role: 'guru'),
+              '/teacher': (context) =>
+                  Dashboard(role: 'guru'), // Alias for teacher
               '/staff': (context) => Dashboard(role: 'staff'),
               '/wali': (context) => Dashboard(role: 'wali'),
               '/login': (context) => LoginScreen(),
@@ -251,13 +255,13 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
       if (kDebugMode) {
         print('🔐 Checking auth status...');
       }
-      
+
       final isLoggedIn = await _tokenService.isLoggedIn();
-      
+
       if (kDebugMode) {
         print('🔐 Auth status result: $isLoggedIn');
       }
-      
+
       return isLoggedIn;
     } catch (e) {
       if (kDebugMode) {
@@ -309,11 +313,11 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
     try {
       final userData = await _tokenService.getUserData();
       final role = userData?['role']?.toString() ?? 'guru';
-      
+
       if (kDebugMode) {
         print('👤 User role: $role');
       }
-      
+
       return role;
     } catch (e) {
       if (kDebugMode) {
