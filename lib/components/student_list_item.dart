@@ -38,7 +38,7 @@ class StudentListItem extends StatelessWidget {
           title: Text(student['nama'] ?? 'Nama tidak tersedia'),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [Text('Kelas: ${student['kelas_nama'] ?? 'Tidak ada'}')],
+            children: [Text('Kelas: ${student['class_name'] ?? 'Tidak ada'}')],
           ),
           trailing: PopupMenuButton(
             itemBuilder: (context) => [

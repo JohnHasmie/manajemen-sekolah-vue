@@ -1415,7 +1415,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                         'en': 'Class',
                         'id': 'Kelas',
                       }),
-                      value: student['kelas_nama'] ?? 'No Class',
+                      value: student['class_name'] ?? 'No Class',
                     ),
                     _buildDetailItem(
                       icon: Icons.transgender,
@@ -1794,7 +1794,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                     ),
                                     SizedBox(height: 1),
                                     Text(
-                                      student['kelas_nama'] ??
+                                      student['class_name'] ??
                                           languageProvider.getTranslatedText({
                                             'en': 'No Class',
                                             'id': 'Tidak Ada Kelas',
