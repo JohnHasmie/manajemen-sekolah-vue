@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/screen/admin/teacher_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -56,6 +55,8 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
   // Filter Options (from backend)
   List<dynamic> _availableClass = [];
+
+  String _lastSearchQuery = '';
 
   // Search debounce
   Timer? _searchDebounce;
@@ -112,12 +113,21 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     // Cancel previous timer
     _searchDebounce?.cancel();
 
-    // Set new timer (500ms debounce)
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
+    // Set new timer (800ms debounce)
+    _searchDebounce = Timer(Duration(milliseconds: 800), () {
+      final query = _searchController.text.trim();
+      if (query == _lastSearchQuery) return;
+
+      _lastSearchQuery = query;
       setState(() {
         _currentPage = 1;
+        // Don't set _isLoading = true here to avoid full screen flicker,
+        // just let it load in background or show local indicator if needed
+        // But if we want to clear list? Maybe not.
+        _isLoading =
+            true; // Set true but handle it in build to not block search bar
       });
-      _loadData();
+      _loadData(resetPage: false); // We handled reset above
     });
   }
 
@@ -445,8 +455,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     try {
       if (resetPage) {
         setState(() {
-          _isLoading = true;
-          _errorMessage = null;
           _currentPage = 1;
           _hasMoreData = true;
           _teachers = []; // Reset list
@@ -550,10 +558,53 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
   // Export teachers to Excel
   Future<void> _exportToExcel() async {
-    await ExcelTeacherService.exportTeachersToExcel(
-      teachers: _teachers,
-      context: context,
-    );
+    try {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.read<LanguageProvider>().getTranslatedText({
+              'en': 'Preparing export...',
+              'id': 'Menyiapkan export...',
+            }),
+          ),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      // Fetch all teachers with current filters
+      final response = await ApiTeacherService.getTeachersPaginated(
+        page: 1,
+        limit: 10000, // Fetch all data
+        classId: _selectedClassId,
+        gender: null,
+        search: _searchController.text.trim().isEmpty
+            ? null
+            : _searchController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      final allTeachers = response['data'] ?? [];
+
+      await ExcelTeacherService.exportTeachersToExcel(
+        teachers: allTeachers,
+        context: context,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.read<LanguageProvider>().getTranslatedText({
+              'en': 'Failed to export: $e',
+              'id': 'Gagal mengexport: $e',
+            }),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   // Import teachers from Excel
@@ -1167,6 +1218,15 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                       languageProvider.getTranslatedText({
                                         'en': 'Contract',
                                         'id': 'Kontrak',
+                                      }),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'temporary',
+                                    child: Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Temporary/Honorary',
+                                        'id': 'Honor',
                                       }),
                                     ),
                                   ),
@@ -1797,40 +1857,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        if (_isLoading) {
-          return LoadingScreen(
-            message: languageProvider.getTranslatedText({
-              'en': 'Loading teacher data...',
-              'id': 'Memuat data guru...',
-            }),
-          );
-        }
-
         if (_errorMessage != null) {
           return ErrorScreen(errorMessage: _errorMessage!, onRetry: _loadData);
         }
 
-        final filteredTeachers = _teachers.where((teacher) {
-          final searchTerm = _searchController.text.toLowerCase();
-          final name = teacher['nama']?.toString().toLowerCase() ?? '';
-          final nip = teacher['nip']?.toString().toLowerCase() ?? '';
-
-          final matchesSearch =
-              searchTerm.isEmpty ||
-              name.contains(searchTerm) ||
-              nip.contains(searchTerm);
-
-          // Homeroom filter
-          final isHomeroom =
-              teacher['is_wali_kelas'] == 1 || teacher['is_wali_kelas'] == true;
-          final matchesHomeroomFilter =
-              _selectedHomeroomFilter == null ||
-              (_selectedHomeroomFilter == 'wali_kelas' && isHomeroom) ||
-              (_selectedHomeroomFilter == 'guru_biasa' && !isHomeroom);
-
-          // Only homeroom (status) filter retained
-          return matchesSearch && matchesHomeroomFilter;
-        }).toList();
+        // Local filtering removed - relying on backend search
+        final displayedTeachers = _teachers;
 
         return Scaffold(
           backgroundColor: Color(0xFFF8F9FA),
@@ -2000,7 +2032,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                             ),
                             child: TextField(
                               controller: _searchController,
-                              onChanged: (value) => setState(() {}),
+                              // onChanged: (value) => setState(() {}), // Removed to prevent rebuilds
                               style: TextStyle(color: Colors.black87),
                               decoration: InputDecoration(
                                 hintText: languageProvider.getTranslatedText({
@@ -2165,7 +2197,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
               SizedBox(height: 8),
               Expanded(
-                child: filteredTeachers.isEmpty
+                child: _isLoading && _teachers.isEmpty
+                    ? Center(child: CircularProgressIndicator())
+                    : displayedTeachers.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({
                           'en': 'No teachers',
@@ -2189,11 +2223,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                           controller: _scrollController,
                           padding: EdgeInsets.only(top: 8, bottom: 16),
                           itemCount:
-                              filteredTeachers.length +
+                              displayedTeachers.length +
                               (_isLoadingMore ? 1 : 0),
                           itemBuilder: (context, index) {
                             // Show loading indicator at bottom
-                            if (index == filteredTeachers.length) {
+                            if (index == displayedTeachers.length) {
                               return Container(
                                 padding: EdgeInsets.symmetric(vertical: 16),
                                 alignment: Alignment.center,
@@ -2203,7 +2237,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                               );
                             }
 
-                            final teacher = filteredTeachers[index];
+                            final teacher = displayedTeachers[index];
                             return AnimatedBuilder(
                               animation: _animationController,
                               builder: (context, child) {
