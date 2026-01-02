@@ -158,10 +158,53 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   }
 
   Future<void> _exportToExcel() async {
-    await ExcelService.exportStudentsToExcel(
-      students: _students,
-      context: context,
-    );
+    try {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.read<LanguageProvider>().getTranslatedText({
+              'en': 'Preparing export...',
+              'id': 'Menyiapkan export...',
+            }),
+          ),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      final response = await ApiStudentService.getStudentPaginated(
+        page: 1,
+        limit: 10000, // Fetch all students (up to 10000)
+        classId: _selectedClassIds.isNotEmpty ? _selectedClassIds.first : null,
+        gradeLevel: _selectedGradeLevel,
+        gender: _selectedGenderFilter,
+        search: _searchController.text.trim().isEmpty
+            ? null
+            : _searchController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      final allStudents = response['data'] ?? [];
+
+      await ExcelService.exportStudentsToExcel(
+        students: allStudents,
+        context: context,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.read<LanguageProvider>().getTranslatedText({
+              'en': 'Failed to export: $e',
+              'id': 'Gagal mengexport: $e',
+            }),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _importFromExcel() async {
