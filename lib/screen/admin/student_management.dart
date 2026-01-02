@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
@@ -27,6 +26,7 @@ class StudentManagementScreen extends StatefulWidget {
 class StudentManagementScreenState extends State<StudentManagementScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
+  String _lastSearchQuery = '';
 
   List<dynamic> _students = [];
   List<dynamic> _classList = [];
@@ -142,9 +142,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   }
 
   void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    if (query == _lastSearchQuery) return;
+
+    _lastSearchQuery = query;
     _searchDebounce?.cancel();
 
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
+    _searchDebounce = Timer(Duration(milliseconds: 800), () {
       setState(() {
         _currentPage = 1;
       });
@@ -1979,14 +1983,14 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        if (_isLoading) {
-          return LoadingScreen(
-            message: languageProvider.getTranslatedText({
-              'en': 'Loading student data...',
-              'id': 'Memuat data siswa...',
-            }),
-          );
-        }
+        // if (_isLoading) {
+        //   return LoadingScreen(
+        //     message: languageProvider.getTranslatedText({
+        //       'en': 'Loading student data...',
+        //       'id': 'Memuat data siswa...',
+        //     }),
+        //   );
+        // }
 
         if (_errorMessage != null) {
           return ErrorScreen(errorMessage: _errorMessage!, onRetry: _loadData);
@@ -2161,7 +2165,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             ),
                             child: TextField(
                               controller: _searchController,
-                              onChanged: (value) => setState(() {}),
+                              // onChanged: (value) => setState(() {}), // Disabling this to prevent excessive rebuilds
                               style: TextStyle(color: Colors.black87),
                               decoration: InputDecoration(
                                 hintText: languageProvider.getTranslatedText({
@@ -2325,7 +2329,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
               ),
 
               Expanded(
-                child: filteredStudents.isEmpty
+                child: _isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : filteredStudents.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({
                           'en': 'No students',
