@@ -176,6 +176,20 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         );
 
         await _loadData();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Students imported successfully',
+                  'id': 'Data siswa berhasil diimpor',
+                }),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (!mounted) return;

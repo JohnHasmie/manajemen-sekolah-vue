@@ -808,6 +808,20 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
         // Refresh data setelah import
         await _loadSubjects();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Subjects imported successfully',
+                  'id': 'Mata pelajaran berhasil diimpor',
+                }),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (!mounted) return;
