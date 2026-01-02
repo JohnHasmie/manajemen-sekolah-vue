@@ -31,9 +31,13 @@ class ExcelScheduleService {
       }
 
       // Kirim request ke backend
+      final token = await ApiService.getToken();
       final response = await http.post(
         Uri.parse('$baseUrl/teaching-schedule/export'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'schedules': validatedData}),
       );
 
@@ -86,8 +90,13 @@ class ExcelScheduleService {
 
     try {
       // Kirim request ke backend
+      final token = await ApiService.getToken();
       final response = await http.get(
         Uri.parse('$baseUrl/teaching-schedule/template'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -138,9 +147,14 @@ class ExcelScheduleService {
     List<dynamic> schedules,
   ) async {
     try {
+      final token = await ApiService.getToken();
+
       final response = await http.post(
         Uri.parse('$baseUrl/teaching-schedule/validate'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'schedules': schedules}),
       );
 

@@ -228,54 +228,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           );
         }
 
-        // Apply Client-Side Filter based on Settings (Active Days)
-        if (_lessonHourSettings.isNotEmpty && _selectedHariIds.isNotEmpty) {
-          final filteredBySettings = _availableJamPelajaranList.where((jam) {
-            final jamId = jam['id'].toString();
-            final config = _lessonHourSettings.firstWhere(
-              (c) => c['id'].toString() == jamId,
-              orElse: () => null,
-            );
-
-            // If no config found, assume allowed (or maybe disallowed depending on policy)
-            // Let's assume allowed to prevent breaking legacy
-            // Compatibility: support both day_id (new, single UUID) and days_id (old, JSON string)
-            // Backend now returns 'day_id' (single UUID)
-            final configDayId = config['day_id']?.toString();
-            final configDaysIdRaw = config['days_id']?.toString();
-
-            if (configDayId != null) {
-              // Exact match for new schema
-              return _selectedHariIds.contains(configDayId);
-            }
-
-            if (configDaysIdRaw != null) {
-              // Legacy JSON Array support
-              Set<String> allowedDays = {};
-              try {
-                String raw = configDaysIdRaw
-                    .replaceAll('[', '')
-                    .replaceAll(']', '')
-                    .replaceAll('"', '');
-                if (raw.isNotEmpty) {
-                  allowedDays = raw.split(',').map((e) => e.trim()).toSet();
-                }
-              } catch (e) {
-                return true; // Parsing error fallback
-              }
-              return _selectedHariIds.every(
-                (selectedDayId) => allowedDays.contains(selectedDayId),
-              );
-            }
-
-            // Fallback if no day info (shouldn't happen)
-            return true;
-          }).toList();
-
-          setState(() {
-            _availableJamPelajaranList = filteredBySettings;
-          });
-        }
+        // Removed redundant Client-Side Filter based on Settings here.
+        // It is handled correctly in _filterAvailableJamPelajaran() which is called when needed.
       });
     } catch (e) {
       if (kDebugMode) {
@@ -293,7 +247,6 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     setState(() => _isLoadingJamPelajaran = true);
 
     try {
-      // If no day selected, or settings empty, fall back to "all" (or none, depending on preference)
       if (_selectedHariIds.isEmpty || _lessonHourSettings.isEmpty) {
         setState(() {
           _availableJamPelajaranList = widget.jamPelajaranList;
@@ -302,18 +255,24 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         return;
       }
 
-      // Filter: Only show lesson hours defined for the selected day(s)
-      // Since we multi-select days, we ideally want slots that are common to all?
-      // Or valid for ANY?
-      // Given the form creates ONE schedule entry which links to ONE lesson_hour_day,
-      // it implies the user is picking a slot for a specific day.
-      // If multiple days are selected, it's ambiguous.
-      // Strategy: Filter for the FIRST selected day ID.
       final selectedDayId = _selectedHariIds.first;
 
-      final filtered = _lessonHourSettings.where((setting) {
+      // 1. Get settings for the selected day
+      final daySettings = _lessonHourSettings.where((setting) {
         final settingDayId = setting['day_id']?.toString();
         return settingDayId == selectedDayId;
+      }).toList();
+
+      // 2. Extract allowed hour numbers
+      final allowedHourNumbers = daySettings
+          .map((s) => int.tryParse(s['hour_number'].toString()) ?? -1)
+          .where((h) => h != -1)
+          .toSet();
+
+      // 3. Filter generic lesson items (widget.jamPelajaranList) by hour_number
+      final filtered = widget.jamPelajaranList.where((jam) {
+        final hour = int.tryParse(jam['hour_number'].toString()) ?? -1;
+        return allowedHourNumbers.contains(hour);
       }).toList();
 
       // Sort by hour_number
@@ -333,6 +292,9 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             (jam) => jam['id'].toString() == _selectedJamPelajaran,
           );
           if (!exists) {
+            // Only reset if it truly doesn't exist in the new filtered list
+            // But be careful if logic was flawed before.
+            // If the backend sent a valid ID, it should exist here.
             _selectedJamPelajaran = '';
           }
         }
@@ -1054,13 +1016,19 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
                       // Check overlap with occupied slots
                       final isOccupied = _occupiedSlots.any((occupied) {
-                        final occId = occupied['lesson_hour_days_id']
-                            ?.toString();
+                        // Use lesson_hour_id first (new backend), fallback to lesson_hour_days_id (legacy/backup)
+                        // But since jamId is generic (UUID), we basically MUST match with lesson_hour_id (UUID)
+                        final occId = occupied['lesson_hour_id']?.toString();
+
+                        // If backend doesn't return lesson_hour_id yet, we might fail to detect overlap.
+                        // But we fixed backend to return it.
+
                         final match = occId == jamId;
-                        if (kDebugMode && match)
+                        if (kDebugMode && match) {
                           print(
-                            'DEBUG: Slot $jamId is occupied by ${occupied['id']} (LHD: $occId)',
+                            'DEBUG: Slot $jamId is occupied by ${occupied['id']} (LHD: ${occupied['lesson_hour_days_id']})',
                           );
+                        }
                         return match;
                       });
 
