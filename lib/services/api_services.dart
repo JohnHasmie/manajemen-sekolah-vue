@@ -35,7 +35,7 @@ class ApiService {
         print('💡 Pastikan Android dan Mac di jaringan Wi-Fi yang sama!');
       }
     } else {
-      baseUrl = 'http://localhost:3001/api';
+      baseUrl = 'http://127.0.0.1:8000/api';
       if (kDebugMode) {
         print('📡 API Base URL (iOS/Other): $baseUrl');
       }
@@ -264,7 +264,7 @@ class ApiService {
       }
       // Fallback ke named route
       try {
-        navigatorKey.currentState?.pushReplacementNamed('/login');
+        navigatorKey.currentState?.pushReplacementNamed('/auth/login');
       } catch (_) {
         // If all navigation fails, we're likely in a bad state
         if (kDebugMode) {
@@ -317,8 +317,11 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse('$baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl/auth/login'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode(body),
       );
 
@@ -346,7 +349,9 @@ class ApiService {
           return responseData;
         }
 
-        if (responseData['require_otp'] == true) {
+        if (responseData['require_otp'] == true ||
+            responseData['otp_debug'] != null ||
+            responseData['message'] == 'OTP sent to email') {
           if (kDebugMode) {
             print('🔄 Login flow: OTP required');
           }
@@ -400,7 +405,7 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse('$baseUrl/verify-otp'),
+        Uri.parse('$baseUrl/auth/verify-otp'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
       );
@@ -435,11 +440,12 @@ class ApiService {
     String? googleToken,
   }) async {
     try {
+      // Backend expects 'google_id', so we map 'googleToken' to it
       final Map<String, dynamic> body = {
         'email': email,
-        'displayName': displayName,
-        'photoUrl': photoUrl,
-        'googleToken': googleToken,
+        'name': displayName, // Backend uses 'name', not 'displayName'
+        'avatar': photoUrl, // Backend uses 'avatar', not 'photoUrl'
+        'google_id': googleToken, // Backend uses 'google_id', not 'googleToken'
       };
 
       if (kDebugMode) {
@@ -447,8 +453,12 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse('$baseUrl/google-login'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl/auth/google-login'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept':
+              'application/json', // Force JSON response to avoid 302 Redirect on validation error
+        },
         body: json.encode(body),
       );
 
@@ -464,6 +474,7 @@ class ApiService {
         final errorResponse = json.decode(response.body);
         throw Exception(
           errorResponse['error'] ??
+              errorResponse['message'] ?? // Laravel often returns 'message' for validation errors
               'Google Login failed with status: ${response.statusCode}',
         );
       }
@@ -1178,6 +1189,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $authToken',
+          'Accept': 'application/json',
         },
         body: json.encode({'token': token, 'device_type': deviceType}),
       );
@@ -1211,6 +1223,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $authToken',
+          'Accept': 'application/json',
         },
         body: json.encode({'token': token}),
       );

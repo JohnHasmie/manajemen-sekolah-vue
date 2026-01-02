@@ -299,7 +299,7 @@ class ApiSubjectService {
     String? teacherId,
     String? subjectId,
   }) async {
-    String url = '$baseUrl/material?';
+    String url = '$baseUrl/materials?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
     if (subjectId != null) url += 'subject_id=$subjectId&';
 
@@ -314,7 +314,7 @@ class ApiSubjectService {
 
   static Future<dynamic> addMateri(Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/material'),
+      Uri.parse('$baseUrl/materials'),
       headers: await _getHeaders(),
       body: json.encode(data),
     );

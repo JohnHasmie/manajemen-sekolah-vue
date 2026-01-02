@@ -12,6 +12,7 @@ class ApiSettingsService {
     final token = prefs.getString('token');
     return {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'Authorization': 'Bearer $token',
     };
   }
@@ -199,7 +200,7 @@ class ApiSettingsService {
       if (schoolName != null) body['school_name'] = schoolName;
       if (address != null) body['address'] = address;
 
-      final response = await http.put(
+      final response = await http.post(
         Uri.parse('$baseUrl/school/settings'),
         headers: await _getHeaders(),
         body: json.encode(body),

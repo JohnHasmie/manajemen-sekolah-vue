@@ -662,12 +662,19 @@ class LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleLoginResponse(Map<String, dynamic> responseData) async {
     // 1. Check OTP requirement
-    if (responseData['require_otp'] == true) {
+    if (responseData['require_otp'] == true ||
+        responseData['otp_debug'] != null ||
+        responseData['message'] == 'OTP sent to email') {
       if (kDebugMode) print('🔐 Need OTP verification');
       setState(() {
         _isLoading = false; // Stop loading to show dialog
       });
       _showOtpDialog(responseData['email']);
+      // If we have otp_debug, we might want to pre-fill or show it in debug mode
+      if (responseData['otp_debug'] != null) {
+        _otpCode = responseData['otp_debug']; // Save for verify call
+        print('Debug OTP: $_otpCode');
+      }
       return;
     }
 

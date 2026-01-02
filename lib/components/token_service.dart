@@ -1,9 +1,10 @@
 // services/token_service.dart
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenService {
   static final TokenService _instance = TokenService._internal();
@@ -17,7 +18,7 @@ class TokenService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString(_tokenKey);
-      
+
       if (token == null || token.isEmpty) {
         return false;
       }
@@ -38,6 +39,14 @@ class TokenService {
       }
 
       // Check if token is expired using jwt_decoder
+      // Skip this check for Sanctum tokens (containing '|')
+      if (token.contains('|')) {
+        if (kDebugMode) {
+          print('ℹ️ Sanctum token detected, skipping local expiration check');
+        }
+        return true;
+      }
+
       try {
         bool isExpired = JwtDecoder.isExpired(token);
         if (kDebugMode) {
@@ -47,12 +56,12 @@ class TokenService {
             print('📅 Token expires at: $expirationDate');
           }
         }
-        
+
         if (isExpired) {
           await logout();
           return false;
         }
-        
+
         return true;
       } catch (jwtError) {
         if (kDebugMode) {
@@ -72,6 +81,9 @@ class TokenService {
   }
 
   bool _isValidJWTFormat(String token) {
+    // Allow Sanctum tokens (id|hashed_token) or JWT (3 parts)
+    if (token.contains('|')) return true;
+
     // Basic JWT format validation (3 parts separated by dots)
     final parts = token.split('.');
     return parts.length == 3;
@@ -81,7 +93,7 @@ class TokenService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? userString = prefs.getString(_userKey);
-      
+
       if (userString == null || userString.isEmpty) {
         return null;
       }
@@ -105,7 +117,7 @@ class TokenService {
       if (kDebugMode) {
         print('🚪 Logging out user...');
       }
-      
+
       // Delete FCM token from backend before logout
       try {
         await FCMService().deleteTokenFromBackend();
@@ -118,14 +130,14 @@ class TokenService {
           print('⚠️ FCM token cleanup failed (non-critical): $fcmError');
         }
       }
-      
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
-      
+
       // Set force logout flag untuk mencegah loop
       await prefs.setBool('force_logout', true);
-      
+
       if (kDebugMode) {
         print('✅ Logout completed');
       }
@@ -148,14 +160,14 @@ class TokenService {
         await prefs.setBool('force_logout', false);
         return false;
       }
-      
+
       final token = await getToken();
       final isValid = token != null && token.isNotEmpty && await isTokenValid();
-      
+
       if (kDebugMode) {
         print('🔐 Login status: $isValid');
       }
-      
+
       return isValid;
     } catch (e) {
       if (kDebugMode) {
