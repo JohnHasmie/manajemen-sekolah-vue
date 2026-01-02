@@ -9,6 +9,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
+import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_class_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -54,6 +55,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   // Filter Options (from backend)
   List<String> _availableGradeLevels = [];
+  String? _schoolJenjang; // SD, SMP, or SMA
 
   // Search debounce
   Timer? _searchDebounce;
@@ -81,7 +83,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     // Listen to search changes with debounce
     _searchController.addListener(_onSearchChanged);
 
-    _loadFilterOptions();
+    _searchController.addListener(_onSearchChanged);
+
+    _loadSchoolSettings(); // Load dynamic grade levels
     _fetchTeachers();
     _loadData();
   }
@@ -121,29 +125,47 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     });
   }
 
-  Future<void> _loadFilterOptions() async {
+  Future<void> _loadSchoolSettings() async {
     try {
-      final response = await ApiClassService.getClassFilterOptions();
-
+      final settings = await ApiSettingsService.getSchoolSettings();
       if (!mounted) return;
 
-      if (response['success'] == true && response['data'] != null) {
-        setState(() {
-          _availableGradeLevels = List<String>.from(
-            response['data']['grade_levels'] ?? [],
-          );
-        });
-        if (kDebugMode) {
-          print(
-            '✅ Filter options loaded: ${_availableGradeLevels.length} grades',
-          );
-        }
-      }
+      setState(() {
+        _schoolJenjang = settings['jenjang'];
+        _generateGradeLevels();
+      });
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading filter options: $e');
+        print('Error loading school settings: $e');
       }
-      // Continue with empty options - not critical error
+      // Fallback if failed
+      setState(() {
+        _generateGradeLevels();
+      });
+    }
+  }
+
+  void _generateGradeLevels() {
+    _availableGradeLevels.clear();
+    int start = 1;
+    int end = 12;
+
+    if (_schoolJenjang != null) {
+      final jenjang = _schoolJenjang!.toUpperCase();
+      if (jenjang == 'SD') {
+        start = 1;
+        end = 6;
+      } else if (jenjang == 'SMP') {
+        start = 7;
+        end = 9;
+      } else if (jenjang == 'SMA' || jenjang == 'SMK') {
+        start = 10;
+        end = 12;
+      }
+    }
+
+    for (int i = start; i <= end; i++) {
+      _availableGradeLevels.add(i.toString());
     }
   }
 
@@ -286,8 +308,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: List.generate(12, (index) {
-                          final gradeLevel = (index + 1).toString();
+                        children: _availableGradeLevels.map((gradeLevel) {
                           final isSelected = tempSelectedClass == gradeLevel;
                           return FilterChip(
                             label: Text(gradeLevel),
@@ -879,8 +900,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 12),
         ),
-        items: List.generate(12, (index) {
-          final grade = index + 1;
+        items: _availableGradeLevels.map((gradeStr) {
+          final grade = int.tryParse(gradeStr) ?? 0;
           String gradeText;
           if (grade <= 6) {
             gradeText = 'Kelas $grade SD';
@@ -891,10 +912,10 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           }
 
           return DropdownMenuItem<String>(
-            value: grade.toString(),
+            value: gradeStr,
             child: Text(gradeText),
           );
-        }),
+        }).toList(),
         onChanged: onChanged,
         style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
       ),
