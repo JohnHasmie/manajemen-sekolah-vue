@@ -133,7 +133,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      day['name'] ?? day['nama'],
+                      day['name_id'] ?? day['name_en'] ?? 'Hari',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -427,7 +427,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Jadwal ${widget.day['name'] ?? widget.day['nama']}',
+                'Jadwal ${widget.day['name_id'] ?? widget.day['name_en'] ?? 'Hari'}',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               IconButton(
