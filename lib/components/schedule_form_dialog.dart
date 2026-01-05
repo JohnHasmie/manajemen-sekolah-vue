@@ -247,7 +247,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     setState(() => _isLoadingJamPelajaran = true);
 
     try {
-      if (_selectedHariIds.isEmpty || _lessonHourSettings.isEmpty) {
+      if (_selectedHariIds.isEmpty) {
         setState(() {
           _availableJamPelajaranList = widget.jamPelajaranList;
           _isLoadingJamPelajaran = false;
@@ -257,22 +257,11 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
       final selectedDayId = _selectedHariIds.first;
 
-      // 1. Get settings for the selected day
-      final daySettings = _lessonHourSettings.where((setting) {
-        final settingDayId = setting['day_id']?.toString();
-        return settingDayId == selectedDayId;
-      }).toList();
-
-      // 2. Extract allowed hour numbers
-      final allowedHourNumbers = daySettings
-          .map((s) => int.tryParse(s['hour_number'].toString()) ?? -1)
-          .where((h) => h != -1)
-          .toSet();
-
-      // 3. Filter generic lesson items (widget.jamPelajaranList) by hour_number
+      // Filter by day_id directly since backend now populates it
       final filtered = widget.jamPelajaranList.where((jam) {
-        final hour = int.tryParse(jam['hour_number'].toString()) ?? -1;
-        return allowedHourNumbers.contains(hour);
+        final jamDayId =
+            jam['day_id']?.toString() ?? jam['hari_id']?.toString();
+        return jamDayId == selectedDayId;
       }).toList();
 
       // Sort by hour_number
@@ -292,9 +281,6 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             (jam) => jam['id'].toString() == _selectedJamPelajaran,
           );
           if (!exists) {
-            // Only reset if it truly doesn't exist in the new filtered list
-            // But be careful if logic was flawed before.
-            // If the backend sent a valid ID, it should exist here.
             _selectedJamPelajaran = '';
           }
         }

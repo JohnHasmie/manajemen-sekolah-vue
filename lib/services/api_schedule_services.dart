@@ -39,8 +39,7 @@ class ApiScheduleService {
       return responseBody;
     } else {
       throw Exception(
-        responseBody['error'] ??
-            'Request failed with status: ${response.statusCode}',
+        'Status: ${response.statusCode}, Body: ${json.encode(responseBody)}',
       );
     }
   }

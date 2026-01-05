@@ -1042,7 +1042,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                           icon: Icons.transgender,
                           items: [
                             DropdownMenuItem(
-                              value: 'M',
+                              value: 'L',
                               child: Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Male',
@@ -1051,7 +1051,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               ),
                             ),
                             DropdownMenuItem(
-                              value: 'F',
+                              value: 'P',
                               child: Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Female',
@@ -1476,7 +1476,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                         'en': 'Class',
                         'id': 'Kelas',
                       }),
-                      value: student['class_name'] ?? 'No Class',
+                      value: student['class']?['name'] ?? 'No Class',
                     ),
                     _buildDetailItem(
                       icon: Icons.transgender,
@@ -1663,11 +1663,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   String _getGenderText(String? gender, LanguageProvider languageProvider) {
     switch (gender) {
       case 'M':
+      case 'L':
         return languageProvider.getTranslatedText({
           'en': 'Male',
           'id': 'Laki-laki',
         });
       case 'F':
+      case 'P':
         return languageProvider.getTranslatedText({
           'en': 'Female',
           'id': 'Perempuan',
@@ -1855,7 +1857,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                     ),
                                     SizedBox(height: 1),
                                     Text(
-                                      student['class_name'] ??
+                                      student['class']?['name'] ??
                                           languageProvider.getTranslatedText({
                                             'en': 'No Class',
                                             'id': 'Tidak Ada Kelas',

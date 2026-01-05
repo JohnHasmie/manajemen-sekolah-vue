@@ -299,7 +299,10 @@ class TeachingScheduleManagementScreenState
             ? ApiScheduleService.getAllSchedules(
                 semesterId: semesterToUse,
                 tahunAjaran: academicYearToUse,
-              )
+              ).catchError((e) {
+                print('Error getAllSchedules: $e');
+                throw e;
+              })
             : ApiScheduleService.getSchedulesPaginated(
                 page: _currentPage,
                 limit: _perPage,
@@ -311,13 +314,34 @@ class TeachingScheduleManagementScreenState
                 search: _searchController.text.trim().isEmpty
                     ? null
                     : _searchController.text.trim(),
-              ),
-        apiTeacherService.getTeacher(),
-        _apiSubjectService.getSubject(),
-        apiServiceClass.getClass(),
-        ApiScheduleService.getHari(),
-        ApiScheduleService.getSemester(),
-        ApiScheduleService.getJamPelajaran(),
+              ).catchError((e) {
+                print('Error getSchedulesPaginated: $e');
+                throw e;
+              }),
+        apiTeacherService.getTeacher().catchError((e) {
+          print('Error getTeacher: $e');
+          throw e;
+        }),
+        _apiSubjectService.getSubject().catchError((e) {
+          print('Error getSubject: $e');
+          throw e;
+        }),
+        apiServiceClass.getClass().catchError((e) {
+          print('Error getClass: $e');
+          throw e;
+        }),
+        ApiScheduleService.getHari().catchError((e) {
+          print('Error getHari: $e');
+          throw e;
+        }),
+        ApiScheduleService.getSemester().catchError((e) {
+          print('Error getSemester: $e');
+          throw e;
+        }),
+        ApiScheduleService.getJamPelajaran().catchError((e) {
+          print('Error getJamPelajaran: $e');
+          throw e;
+        }),
       ]);
 
       if (!mounted) return;

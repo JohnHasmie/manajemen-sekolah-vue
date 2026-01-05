@@ -93,6 +93,8 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       builder: (context) => DaySessionManagementSheet(
         day: day,
         sessions: sessions,
+        allSessionsByDay: _sessionsByDay,
+        allDays: _days,
         onSave: () {
           _loadInitialData(); // Refresh all data
         },
@@ -200,12 +202,16 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
 class DaySessionManagementSheet extends StatefulWidget {
   final dynamic day;
   final List<dynamic> sessions;
+  final Map<String, List<dynamic>> allSessionsByDay;
+  final List<dynamic> allDays;
   final VoidCallback onSave;
 
   const DaySessionManagementSheet({
     super.key,
     required this.day,
     required this.sessions,
+    required this.allSessionsByDay,
+    required this.allDays,
     required this.onSave,
   });
 
@@ -376,6 +382,81 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
     );
   }
 
+  Future<void> _copySchedule(dynamic sourceDay) async {
+    final sourceDayId = sourceDay['id'].toString();
+    final sourceSessions = widget.allSessionsByDay[sourceDayId] ?? [];
+
+    if (sourceSessions.isEmpty) return;
+
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      for (var session in sourceSessions) {
+        await ApiSettingsService.createLessonSession(
+          dayId: widget.day['id'].toString(),
+          hourNumber: session['hour_number'],
+          startTime: session['start_time'],
+          endTime: session['end_time'],
+        );
+      }
+
+      Navigator.pop(context); // Close loading
+      await _refreshSessions();
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Berhasil menyalin jadwal')));
+      }
+    } catch (e) {
+      Navigator.pop(context); // Close loading
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menyalin: $e')));
+      }
+    }
+  }
+
+  void _showCopyDialog() {
+    final availableDays = widget.allDays.where((d) {
+      final dId = d['id'].toString();
+      final sessions = widget.allSessionsByDay[dId] ?? [];
+      return dId != widget.day['id'].toString() && sessions.isNotEmpty;
+    }).toList();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Salin Jadwal Dari...'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: availableDays.length,
+            itemBuilder: (context, index) {
+              final d = availableDays[index];
+              return ListTile(
+                title: Text(d['name_id'] ?? d['name_en'] ?? 'Hari'),
+                subtitle: Text(
+                  '${widget.allSessionsByDay[d['id'].toString()]?.length ?? 0} Sesi',
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _copySchedule(d);
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _deleteSession(String id) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -439,7 +520,28 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
           Divider(),
           Expanded(
             child: _sessions.isEmpty
-                ? Center(child: Text('Belum ada jadwal'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Belum ada jadwal'),
+                        if (widget.allDays.any((d) {
+                          final dId = d['id'].toString();
+                          final s = widget.allSessionsByDay[dId] ?? [];
+                          return dId != widget.day['id'].toString() &&
+                              s.isNotEmpty;
+                        }))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16.0),
+                            child: OutlinedButton.icon(
+                              onPressed: _showCopyDialog,
+                              icon: Icon(Icons.copy),
+                              label: Text('Salin dari hari lain'),
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
                     itemCount: _sessions.length,
                     itemBuilder: (context, index) {
