@@ -50,7 +50,7 @@ class ApiStudentService {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/student/import'),
+        Uri.parse('$baseUrl/students/import'),
       );
 
       // Add headers
