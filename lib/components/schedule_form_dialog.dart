@@ -13,6 +13,7 @@ class ScheduleFormDialog extends StatefulWidget {
   final List<dynamic> hariList;
   final List<dynamic> semesterList;
   final List<dynamic> jamPelajaranList;
+  final List<dynamic> academicYearList; // New: List of AC
   final String semester;
   final String academicYear;
   final dynamic schedule;
@@ -29,6 +30,8 @@ class ScheduleFormDialog extends StatefulWidget {
     required this.jamPelajaranList,
     required this.semester,
     required this.academicYear,
+    this.academicYearList =
+        const [], // Default to empty if not passed (migration safety)
     this.schedule,
     required this.apiService,
     required this.apiTeacherService,
@@ -46,6 +49,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
   late String _selectedHari;
   List<String> _selectedHariIds = [];
   late String _selectedSemester;
+  late String _selectedAcademicYear; // New: Local state for AC
   late String _selectedJamPelajaran;
 
   List<dynamic> _filteredSubjectList = [];
@@ -91,6 +95,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     _selectedClass = '';
     _selectedHariIds = [];
     _selectedSemester = widget.semester;
+    _selectedAcademicYear = widget.academicYear;
     _selectedJamPelajaran = '';
 
     _filteredSubjectList = widget.subjectList;
@@ -138,6 +143,10 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           widget.schedule['semester_id']?.toString() ??
           widget.schedule['semester']?.toString() ??
           widget.semester;
+      _selectedAcademicYear =
+          widget.schedule['academic_year_id']?.toString() ??
+          widget.schedule['academic_year']?.toString() ??
+          widget.academicYear;
       _selectedJamPelajaran =
           widget.schedule['lesson_hour_days_id']?.toString() ??
           widget.schedule['lesson_hour_id']?.toString() ??
@@ -167,7 +176,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         classId: _selectedClass,
         hariId: _selectedHariIds.first,
         semesterId: _selectedSemester,
-        tahunAjaran: widget.academicYear,
+        tahunAjaran: _selectedAcademicYear,
         limit: 100, // Ensure we get all slots
       );
 
@@ -458,6 +467,11 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                         _buildClassDropdown(uniqueClassList, languageProvider),
                         SizedBox(height: 12),
                         _buildDayMultiSelect(uniqueHariList, languageProvider),
+                        SizedBox(height: 12),
+                        _buildAcademicYearDropdown(
+                          widget.academicYearList,
+                          languageProvider,
+                        ),
                         SizedBox(height: 12),
                         _buildSemesterDropdown(
                           uniqueSemesterList,
@@ -866,6 +880,88 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     );
   }
 
+  Widget _buildAcademicYearDropdown(
+    List<dynamic> academicYears,
+    LanguageProvider languageProvider,
+  ) {
+    // Determine items. If list is empty, maybe show only current?
+    // Usually list is passed from parent.
+    final items = academicYears.isNotEmpty
+        ? academicYears
+        : [
+            {'id': widget.academicYear, 'year': 'Current'},
+          ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          languageProvider.getTranslatedText({
+            'en': 'Academic Year',
+            'id': 'Tahun Ajaran',
+          }),
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: DropdownButtonFormField<String>(
+            isExpanded: true,
+            initialValue: _selectedAcademicYear.isNotEmpty
+                ? _selectedAcademicYear
+                : null,
+            items: items.map<DropdownMenuItem<String>>((year) {
+              return DropdownMenuItem<String>(
+                value: year['id']?.toString() ?? '',
+                child: Text(
+                  year['year'] ?? year['name'] ?? 'Unknown',
+                  style: TextStyle(fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedAcademicYear = value ?? '';
+              });
+              if (_selectedHariIds.isNotEmpty) {
+                // If AC changes, maybe slots change availability?
+                // Probably yes if slots are tied to schedule which is tied to year.
+                // But generally occupied slots are fetched by year param.
+                _fetchOccupiedSlots();
+              }
+            },
+            decoration: InputDecoration(
+              prefixIcon: Icon(
+                Icons.calendar_today,
+                color: _getPrimaryColor(),
+                size: 20,
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 14,
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return languageProvider.getTranslatedText({
+                  'en': 'Please select an academic year',
+                  'id': 'Harap pilih tahun ajaran',
+                });
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSemesterDropdown(
     List<dynamic> semesters,
     LanguageProvider languageProvider,
@@ -1121,7 +1217,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         'class_id': _selectedClass,
         'days_ids': _selectedHariIds, // Changed key & data structure
         'semester_id': _selectedSemester,
-        'academic_year_id': widget.academicYear,
+        'academic_year_id': _selectedAcademicYear,
         'lesson_hour_id': _selectedJamPelajaran,
       };
 

@@ -120,22 +120,46 @@ class TeachingScheduleManagementScreenState
 
   /// Set default academic period based on current date
   void _setDefaultAcademicPeriod() {
-    if (_availableAcademicYears.isNotEmpty) {
-      // Look for "current" flag first
-      final current = _availableAcademicYears.firstWhere(
-        (y) => y['current'] == true || y['current'] == 1,
-        orElse: () => null,
-      );
-      if (current != null) {
-        _selectedAcademicYear = current['id'].toString();
+    if (_availableAcademicYears.isEmpty) {
+      _selectedAcademicYear = '1'; // Fallback
+      return;
+    }
+
+    // 1. Try to find "current" flag from API
+    final currentFromApi = _availableAcademicYears.firstWhere(
+      (y) => y['current'] == true || y['current'] == 1,
+      orElse: () => <String, dynamic>{},
+    );
+
+    if (currentFromApi.isNotEmpty) {
+      _selectedAcademicYear = currentFromApi['id'].toString();
+    } else {
+      // 2. Fallback to date-based calculation
+      final now = DateTime.now();
+      final currentYear = now.year;
+      final currentMonth = now.month;
+
+      String targetYearString;
+      // If July or later, we are in the start of new academic year (e.g. 2025/2026)
+      // If before July, we are in the second half of academic year (e.g. 2025/2026) starting in 2025
+
+      if (currentMonth >= 7) {
+        targetYearString = '$currentYear/${currentYear + 1}';
       } else {
-        // Fallback to year matching string if possible, or just first
-        // Just take the first one (usually latest due to sort desc)
+        targetYearString = '${currentYear - 1}/$currentYear';
+      }
+
+      final dateBasedYear = _availableAcademicYears.firstWhere(
+        (y) => (y['year'] ?? '').toString() == targetYearString,
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (dateBasedYear.isNotEmpty) {
+        _selectedAcademicYear = dateBasedYear['id'].toString();
+      } else {
+        // 3. Fallback to first available
         _selectedAcademicYear = _availableAcademicYears.first['id'].toString();
       }
-    } else {
-      // Fallback for initial load before API?
-      _selectedAcademicYear = '1';
     }
   }
 
@@ -144,22 +168,42 @@ class TeachingScheduleManagementScreenState
     if (_semesterList.isEmpty) return;
 
     String? semesterId;
-    // Find current semester from list (check boolean or int 1)
-    final current = _semesterList.firstWhere(
+
+    // 1. Try "current" flag
+    final currentFromApi = _semesterList.firstWhere(
       (s) => s['current'] == true || s['current'] == 1,
-      orElse: () => null,
+      orElse: () => <String, dynamic>{},
     );
 
-    if (current != null) {
-      semesterId = current['id'].toString();
+    if (currentFromApi.isNotEmpty) {
+      semesterId = currentFromApi['id'].toString();
     } else {
-      // Fallback to first if none marked current
-      semesterId = _semesterList.first['id'].toString();
+      // 2. Date-based calculation
+      final now = DateTime.now();
+      final currentMonth = now.month;
+
+      // July - December = Ganjil (1)
+      // January - June = Genap (2)
+      final targetSemesterName = (currentMonth >= 7) ? 'Ganjil' : 'Genap';
+
+      // Try to find by name match or ID convention?
+      // Assuming 1 = Ganjil, 2 = Genap based on seeder, but better to match name if possible
+      final dateBasedSemester = _semesterList.firstWhere((s) {
+        final name = (s['name'] ?? s['nama'] ?? '').toString();
+        return name.contains(targetSemesterName);
+      }, orElse: () => <String, dynamic>{});
+
+      if (dateBasedSemester.isNotEmpty) {
+        semesterId = dateBasedSemester['id'].toString();
+      } else {
+        // Fallback to first
+        semesterId = _semesterList.first['id'].toString();
+      }
     }
 
-    if (semesterId != _selectedSemester) {
+    if (semesterId != _selectedSemester && semesterId != null) {
       if (kDebugMode) {
-        print('DEBUG: Auto-switching to current semester: $semesterId');
+        print('DEBUG: Auto-switching to semester: $semesterId');
       }
       setState(() {
         _selectedSemester = semesterId!;
@@ -171,9 +215,11 @@ class TeachingScheduleManagementScreenState
 
   /// Generate list of academic years
   List<Map<String, dynamic>> _getAcademicYearOptions() {
-    // Return the list from API
-    // Mapping to structure if needed? They are already maps.
-    return _availableAcademicYears.cast<Map<String, dynamic>>();
+    // Filter out "Status Kepegawaian" if it exists in the data
+    return _availableAcademicYears
+        .cast<Map<String, dynamic>>()
+        .where((y) => (y['year'] ?? '').toString() != 'Status Kepegawaian')
+        .toList();
   }
 
   @override
@@ -489,6 +535,19 @@ class TeachingScheduleManagementScreenState
         if (dayData.isNotEmpty) {
           newSchedule['day_name'] = dayData['name'] ?? dayData['nama'];
         }
+
+        // Enrich academic year
+        final academicYearId = schedule['academic_year_id']?.toString() ?? '';
+        if (academicYearId.isNotEmpty) {
+          final academicYearData = _availableAcademicYears.firstWhere(
+            (ay) => ay['id'].toString() == academicYearId,
+            orElse: () => <String, dynamic>{},
+          );
+          if (academicYearData.isNotEmpty) {
+            newSchedule['academic_year'] =
+                academicYearData['year'] ?? academicYearData['name'] ?? '';
+          }
+        }
         return newSchedule;
       }).toList();
 
@@ -737,6 +796,7 @@ class TeachingScheduleManagementScreenState
         jamPelajaranList: _jamPelajaranList,
         semester: _selectedSemester,
         academicYear: _selectedAcademicYear,
+        academicYearList: _availableAcademicYears,
         apiService: _apiService,
         apiTeacherService: apiTeacherService,
       ),
@@ -759,6 +819,7 @@ class TeachingScheduleManagementScreenState
         jamPelajaranList: _jamPelajaranList,
         semester: _selectedSemester,
         academicYear: _selectedAcademicYear,
+        academicYearList: _availableAcademicYears,
         schedule: schedule,
         apiService: _apiService,
         apiTeacherService: apiTeacherService,
@@ -821,7 +882,7 @@ class TeachingScheduleManagementScreenState
             [], // Use days_ids
         classId: newScheduleData['class_id'],
         semesterId: newScheduleData['semester_id'],
-        tahunAjaran: newScheduleData['academic_year'],
+        tahunAjaran: newScheduleData['academic_year_id'],
         jamPelajaranId: newScheduleData['lesson_hour_id'],
         excludeScheduleId: editingScheduleId,
       );
