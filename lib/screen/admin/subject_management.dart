@@ -1117,12 +1117,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
                                 if (subject == null) {
                                   await _apiService.post(
-                                    '/mata-pelajaran',
+                                    '/subject',
                                     data,
                                   );
                                 } else {
                                   await _apiService.put(
-                                    '/mata-pelajaran/${subject['id']}',
+                                    '/subject/${subject['id']}',
                                     data,
                                   );
                                 }
@@ -1252,7 +1252,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
     if (confirmed == true) {
       try {
-        await _apiService.delete('/mata-pelajaran/${subject['id']}');
+        await _apiService.delete('/subject/${subject['id']}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -2235,7 +2235,7 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
 
   Future<void> _addClassToSubject(Map<String, dynamic> kelas) async {
     try {
-      await _apiService.post('/mata-pelajaran-class', {
+      await _apiService.post('/subject-class', {
         'subject_id': widget.subject['id'],
         'class_id': kelas['id'],
       });
@@ -2274,7 +2274,7 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
     if (confirmed == true) {
       try {
         await _apiService.delete(
-          '/mata-pelajaran-class?subject_id=${widget.subject['id']}&class_id=${kelas['id']}',
+          '/subject-class?subject_id=${widget.subject['id']}&class_id=${kelas['id']}',
         );
 
         if (mounted) {

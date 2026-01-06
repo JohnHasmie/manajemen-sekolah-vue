@@ -86,8 +86,14 @@ class ExcelSubjectService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
       // Kirim request ke backend
-      final response = await http.get(Uri.parse('$baseUrl/subject/template'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/subject/template'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
       if (response.statusCode == 200) {
         // Get directory untuk menyimpan file
