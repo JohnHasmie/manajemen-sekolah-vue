@@ -182,25 +182,26 @@ class ExcelScheduleService {
       final Map<String, dynamic> validatedSchedule = {};
 
       // Validasi field required
-      if (schedule['teacher_name'] == null ||
-          schedule['teacher_name'].toString().isEmpty) {
+      var teacherName = schedule['teacher_name'] ?? schedule['guru_nama'];
+      if (teacherName == null || teacherName.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama guru tidak boleh kosong');
       } else {
-        validatedSchedule['teacher_name'] = schedule['teacher_name'];
+        validatedSchedule['teacher_name'] = teacherName;
       }
 
-      if (schedule['subject_name'] == null ||
-          schedule['subject_name'].toString().isEmpty) {
+      var subjectName =
+          schedule['subject_name'] ?? schedule['mata_pelajaran_nama'];
+      if (subjectName == null || subjectName.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama mata pelajaran tidak boleh kosong');
       } else {
-        validatedSchedule['subject_name'] = schedule['subject_name'];
+        validatedSchedule['subject_name'] = subjectName;
       }
 
-      if (schedule['class_name'] == null ||
-          schedule['class_name'].toString().isEmpty) {
+      var className = schedule['class_name'] ?? schedule['kelas_nama'];
+      if (className == null || className.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama kelas tidak boleh kosong');
       } else {
-        validatedSchedule['class_name'] = schedule['class_name'];
+        validatedSchedule['class_name'] = className;
       }
 
       final dayName =
@@ -218,18 +219,25 @@ class ExcelScheduleService {
         validatedSchedule['day_name'] = dayName;
       }
 
-      final lessonHour = schedule['lesson_hour'] ?? schedule['hour_number'];
+      final lessonHour =
+          schedule['lesson_hour'] ??
+          schedule['hour_number'] ??
+          schedule['jam_ke'];
       if (lessonHour == null) {
         errors.add('Baris ${i + 1}: Jam ke tidak boleh kosong');
       } else {
         validatedSchedule['lesson_hour'] = lessonHour;
       }
 
-      if (schedule['semester_name'] == null ||
-          schedule['semester_name'].toString().isEmpty) {
+      var semesterName = schedule['semester_name'] ?? schedule['semester'];
+      // Handle nested semester object if exists
+      if (semesterName == null && schedule['semester'] is Map) {
+        semesterName = schedule['semester']['name'];
+      }
+      if (semesterName == null || semesterName.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Semester tidak boleh kosong');
       } else {
-        validatedSchedule['semester_name'] = schedule['semester_name'];
+        validatedSchedule['semester_name'] = semesterName;
       }
 
       if (schedule['academic_year'] == null ||
@@ -240,8 +248,10 @@ class ExcelScheduleService {
       }
 
       // Field optional
-      validatedSchedule['start_time'] = schedule['start_time'];
-      validatedSchedule['end_time'] = schedule['end_time'];
+      validatedSchedule['start_time'] =
+          schedule['start_time'] ?? schedule['jam_mulai'];
+      validatedSchedule['end_time'] =
+          schedule['end_time'] ?? schedule['jam_selesai'];
 
       if (errors.isEmpty) {
         validatedData.add(validatedSchedule);

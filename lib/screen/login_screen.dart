@@ -300,7 +300,14 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _selectSchool(String schoolId) async {
+  Future<void> _selectSchool(String? schoolId) async {
+    if (schoolId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ID Sekolah tidak valid (null)')),
+      );
+      return;
+    }
+
     if (kDebugMode) {
       print('🎯 Selecting school: $schoolId');
     }
@@ -319,6 +326,9 @@ class LoginScreenState extends State<LoginScreen> {
           _otpCode!,
           schoolId: schoolId,
         );
+      } else if (await ApiService.getToken() != null) {
+        // Jika sudah ada token (misal dari Google Login), gunakan switchSchool
+        responseData = await ApiService.switchSchool(schoolId);
       } else {
         // Fallback (misal Password biasa atau debug)
         responseData = await ApiService.login(
@@ -683,6 +693,14 @@ class LoginScreenState extends State<LoginScreen> {
       if (responseData['sekolah_list'] == null ||
           responseData['sekolah_list'].isEmpty) {
         throw Exception('Daftar sekolah tidak tersedia');
+      }
+
+      // Special handling for Google Login: Save token immediately if present
+      // This allows using switchSchool endpoint later
+      if (responseData['token'] != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', responseData['token']);
+        if (kDebugMode) print('🔐 Token saved during school selection phase');
       }
 
       if (responseData['user'] == null) {

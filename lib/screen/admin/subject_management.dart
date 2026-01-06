@@ -970,7 +970,9 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                               (Map<String, dynamic> option) => option['name'],
                           onSelected: (Map<String, dynamic> selection) {
                             setState(() {
-                              nameController.text = selection['name'];
+                              // Auto-format name: "SubjectName Grade"
+                              nameController.text =
+                                  '${selection['name']} ${selection['grade']}';
                               selectedMasterSubjectId = selection['id'];
                             });
                           },
@@ -1091,18 +1093,8 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                 return;
                               }
 
-                              // Auto-verify subject_id validity based on name match
-                              if (selectedMasterSubjectId != null) {
-                                final master = _availableMasterSubjects
-                                    .firstWhere(
-                                      (m) => m['id'] == selectedMasterSubjectId,
-                                      orElse: () => null,
-                                    );
-                                if (master == null ||
-                                    master['name'] != nameController.text) {
-                                  selectedMasterSubjectId = null;
-                                }
-                              }
+                              // Validation logic removed to allow custom names
+                              // while keeping the master subject link.
 
                               try {
                                 final data = {
@@ -1116,10 +1108,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                 };
 
                                 if (subject == null) {
-                                  await _apiService.post(
-                                    '/subject',
-                                    data,
-                                  );
+                                  await _apiService.post('/subject', data);
                                 } else {
                                   await _apiService.put(
                                     '/subject/${subject['id']}',

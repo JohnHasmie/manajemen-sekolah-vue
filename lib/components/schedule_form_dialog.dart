@@ -139,6 +139,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           widget.schedule['semester']?.toString() ??
           widget.semester;
       _selectedJamPelajaran =
+          widget.schedule['lesson_hour_days_id']?.toString() ??
           widget.schedule['lesson_hour_id']?.toString() ??
           widget.schedule['jam_pelajaran_id']?.toString() ??
           '';
@@ -1004,7 +1005,13 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                       final isOccupied = _occupiedSlots.any((occupied) {
                         // Use lesson_hour_id first (new backend), fallback to lesson_hour_days_id (legacy/backup)
                         // But since jamId is generic (UUID), we basically MUST match with lesson_hour_id (UUID)
-                        final occId = occupied['lesson_hour_id']?.toString();
+                        // Use lesson_hour_days_id as primary match since it links to lesson_hours table
+                        final occId =
+                            occupied['lesson_hour_days_id']?.toString() ??
+                            occupied['lesson_hour_id']?.toString() ??
+                            (occupied['lesson_hour'] != null
+                                ? occupied['lesson_hour']['id']?.toString()
+                                : null);
 
                         // If backend doesn't return lesson_hour_id yet, we might fail to detect overlap.
                         // But we fixed backend to return it.
@@ -1112,10 +1119,9 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         'teacher_id': _selectedTeacher,
         'subject_id': _selectedSubject,
         'class_id': _selectedClass,
-        'class_id': _selectedClass,
         'days_ids': _selectedHariIds, // Changed key & data structure
         'semester_id': _selectedSemester,
-        'academic_year': widget.academicYear,
+        'academic_year_id': widget.academicYear,
         'lesson_hour_id': _selectedJamPelajaran,
       };
 

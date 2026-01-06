@@ -145,7 +145,7 @@ class ApiScheduleService {
       queryParams['semester_id'] = semesterId;
     }
     if (tahunAjaran != null && tahunAjaran.isNotEmpty) {
-      queryParams['academic_year'] = tahunAjaran;
+      queryParams['academic_year_id'] = tahunAjaran;
     }
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;
@@ -228,7 +228,7 @@ class ApiScheduleService {
     if (classId != null) url += 'class_id=$classId&';
     if (dayId != null) url += 'day_id=$dayId&';
     if (semesterId != null) url += 'semester_id=$semesterId&';
-    if (academicYear != null) url += 'academic_year=$academicYear&';
+    if (academicYear != null) url += 'academic_year_id=$academicYear&';
 
     final response = await http.get(
       Uri.parse(url),
@@ -286,7 +286,7 @@ class ApiScheduleService {
     if (hariId != null) url += 'day_id=$hariId&';
     if (semesterId != null) url += 'semester_id=$semesterId&';
     if (classId != null) url += 'class_id=$classId&';
-    if (academicYear != null) url += 'academic_year=$academicYear&';
+    if (academicYear != null) url += 'academic_year_id=$academicYear&';
 
     final response = await http.get(
       Uri.parse(url),
@@ -304,7 +304,7 @@ class ApiScheduleService {
   }) async {
     final queryParameters = {
       if (semesterId != null) 'semester_id': semesterId,
-      if (tahunAjaran != null) 'academic_year': tahunAjaran,
+      if (tahunAjaran != null) 'academic_year_id': tahunAjaran,
     };
 
     final uri = Uri.parse(
@@ -340,7 +340,7 @@ class ApiScheduleService {
       url += 'days_ids=${days_ids.join(',')}&';
       url += 'class_id=$classId&';
       url += 'semester_id=$semesterId&';
-      url += 'academic_year=$tahunAjaran&';
+      url += 'academic_year_id=$tahunAjaran&';
       url += 'lesson_hour_id=$jamPelajaranId&';
 
       if (excludeScheduleId != null) {
@@ -375,7 +375,7 @@ class ApiScheduleService {
       String url = '$baseUrl/teaching-schedule/teacher/$teacherId?';
       if (dayId != null && dayId.isNotEmpty) url += 'day_id=$dayId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
-      if (academicYear != null) url += 'academic_year=$academicYear&';
+      if (academicYear != null) url += 'academic_year_id=$academicYear&';
 
       final response = await http.get(
         Uri.parse(url),
@@ -402,7 +402,7 @@ class ApiScheduleService {
       String url = '$baseUrl/teaching-schedule/current?';
       if (dayId != null && dayId.isNotEmpty) url += 'day_id=$dayId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
-      if (academicYear != null) url += 'academic_year=$academicYear&';
+      if (academicYear != null) url += 'academic_year_id=$academicYear&';
 
       final response = await http.get(
         Uri.parse(url),
@@ -439,7 +439,7 @@ class ApiScheduleService {
       }
 
       if (academicYear != null) {
-        url += 'academic_year=$academicYear&';
+        url += 'academic_year_id=$academicYear&';
       }
 
       final response = await http.get(
@@ -578,7 +578,7 @@ class ApiScheduleService {
       if (classId != null) url += 'class_id=$classId&';
       if (hariId != null) url += 'day_id=$hariId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
-      if (tahunAjaran != null) url += 'academic_year=$tahunAjaran&';
+      if (tahunAjaran != null) url += 'academic_year_id=$tahunAjaran&';
 
       final response = await http.get(
         Uri.parse(url),

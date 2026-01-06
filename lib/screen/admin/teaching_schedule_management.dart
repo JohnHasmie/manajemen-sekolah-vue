@@ -78,6 +78,7 @@ class TeachingScheduleManagementScreenState
   List<dynamic> _availableClasses = [];
   List<dynamic> _availableDays = [];
   List<dynamic> _availableSemesters = [];
+  List<dynamic> _availableAcademicYears = [];
 
   // Search debounce
   Timer? _searchDebounce;
@@ -117,98 +118,62 @@ class TeachingScheduleManagementScreenState
     _loadData();
   }
 
-  /// Calculate current academic year based on current date
-  /// Academic year runs from July to June
-  /// Example: Oct 2025 -> 2025/2026
-  String _getCurrentAcademicYear() {
-    final now = DateTime.now();
-    final currentYear = now.year;
-    final currentMonth = now.month;
-
-    // If month is July (7) or later, academic year is currentYear/nextYear
-    // If month is before July, academic year is previousYear/currentYear
-    if (currentMonth >= 7) {
-      return '$currentYear/${currentYear + 1}';
-    } else {
-      return '${currentYear - 1}/$currentYear';
-    }
-  }
-
-  /// Determine if current period is odd semester (Ganjil) or even semester (Genap)
-  /// Semester 1 (Ganjil): July - December
-  /// Semester 2 (Genap): January - June
-  bool _isCurrentSemesterOdd() {
-    final now = DateTime.now();
-    final currentMonth = now.month;
-
-    // Semester 1 (Ganjil) = July to December (months 7-12)
-    // Semester 2 (Genap) = January to June (months 1-6)
-    return currentMonth >= 7 && currentMonth <= 12;
-  }
-
-  /// Find semester ID from semester list based on current period
-  String? _findCurrentSemesterId() {
-    if (_semesterList.isEmpty) return null;
-
-    final isOdd = _isCurrentSemesterOdd();
-
-    // Try to find semester by name containing 'Ganjil' or 'Genap'
-    for (var semester in _semesterList) {
-      final semesterName = (semester['name'] ?? semester['nama'] ?? '')
-          .toString()
-          .toLowerCase();
-
-      if (isOdd &&
-          (semesterName.contains('ganjil') || semesterName.contains('1'))) {
-        return semester['id'].toString();
-      } else if (!isOdd &&
-          (semesterName.contains('genap') || semesterName.contains('2'))) {
-        return semester['id'].toString();
-      }
-    }
-
-    // If not found by name, return first semester as fallback
-    return _semesterList.isNotEmpty ? _semesterList[0]['id'].toString() : '1';
-  }
-
   /// Set default academic period based on current date
   void _setDefaultAcademicPeriod() {
-    _selectedAcademicYear = _getCurrentAcademicYear();
-    // Semester will be set after loading semester list
+    if (_availableAcademicYears.isNotEmpty) {
+      // Look for "current" flag first
+      final current = _availableAcademicYears.firstWhere(
+        (y) => y['current'] == true || y['current'] == 1,
+        orElse: () => null,
+      );
+      if (current != null) {
+        _selectedAcademicYear = current['id'].toString();
+      } else {
+        // Fallback to year matching string if possible, or just first
+        // Just take the first one (usually latest due to sort desc)
+        _selectedAcademicYear = _availableAcademicYears.first['id'].toString();
+      }
+    } else {
+      // Fallback for initial load before API?
+      _selectedAcademicYear = '1';
+    }
   }
 
   /// Update semester selection after semester list is loaded
   void _updateCurrentSemester() {
-    final semesterId = _findCurrentSemesterId();
-    if (semesterId != null && semesterId != _selectedSemester) {
-      // Semester changed, need to reload data
+    if (_semesterList.isEmpty) return;
+
+    String? semesterId;
+    // Find current semester from list (check boolean or int 1)
+    final current = _semesterList.firstWhere(
+      (s) => s['current'] == true || s['current'] == 1,
+      orElse: () => null,
+    );
+
+    if (current != null) {
+      semesterId = current['id'].toString();
+    } else {
+      // Fallback to first if none marked current
+      semesterId = _semesterList.first['id'].toString();
+    }
+
+    if (semesterId != _selectedSemester) {
+      if (kDebugMode) {
+        print('DEBUG: Auto-switching to current semester: $semesterId');
+      }
       setState(() {
-        _selectedSemester = semesterId;
+        _selectedSemester = semesterId!;
       });
-      // Reload data with correct semester
-      _loadData();
+      // Perform reload with new semester
+      _loadData(resetPage: true);
     }
   }
 
-  /// Generate list of academic years (current year ± 2 years)
-  /// Example: If current is 2025/2026, returns [2023/2024, 2024/2025, 2025/2026, 2026/2027, 2027/2028]
-  List<String> _getAcademicYearOptions() {
-    final now = DateTime.now();
-    final currentYear = now.year;
-    final currentMonth = now.month;
-
-    // Determine the starting year of current academic year
-    final academicStartYear = currentMonth >= 7 ? currentYear : currentYear - 1;
-
-    // Generate list: 2 years before to 2 years after current academic year
-    final years = <String>[];
-    for (int i = -2; i <= 2; i++) {
-      final startYear = academicStartYear + i;
-      final endYear = startYear + 1;
-      years.add('$startYear/$endYear');
-    }
-
-    return years;
+  /// Generate list of academic years
+  List<Map<String, dynamic>> _getAcademicYearOptions() {
+    // Return the list from API
+    // Mapping to structure if needed? They are already maps.
+    return _availableAcademicYears.cast<Map<String, dynamic>>();
   }
 
   @override
@@ -257,6 +222,7 @@ class TeachingScheduleManagementScreenState
           _availableClasses = response['data']['classes'] ?? [];
           _availableDays = response['data']['days'] ?? [];
           _availableSemesters = response['data']['semesters'] ?? [];
+          _availableAcademicYears = response['data']['academic_years'] ?? [];
         });
         print('✅ Schedule filter options loaded');
       }
@@ -990,11 +956,18 @@ class TeachingScheduleManagementScreenState
         (s) => s['id'].toString() == _selectedFilterSemester,
         orElse: () => {},
       );
-      final label = semester.isNotEmpty
+      String semesterNameRaw = semester.isNotEmpty
           ? (semester['name'] ??
                 semester['nama'] ??
                 'Semester $_selectedFilterSemester')
           : 'Semester $_selectedFilterSemester';
+
+      if (semester.isNotEmpty &&
+          semester['academic_year'] != null &&
+          semester['academic_year']['year'] != null) {
+        semesterNameRaw += ' (${semester['academic_year']['year']})';
+      }
+      final label = semesterNameRaw;
 
       filterChips.add({
         'label':
@@ -1012,9 +985,16 @@ class TeachingScheduleManagementScreenState
     // Add Academic Year Filter Chip
     if (_selectedFilterAcademicYear != null &&
         _selectedFilterAcademicYear != _selectedAcademicYear) {
+      final yearMap = _availableAcademicYears.firstWhere(
+        (y) => y['id'].toString() == _selectedFilterAcademicYear,
+        orElse: () => {},
+      );
+      final label = yearMap.isNotEmpty
+          ? (yearMap['year'] ?? _selectedFilterAcademicYear)
+          : _selectedFilterAcademicYear;
       filterChips.add({
         'label':
-            '${languageProvider.getTranslatedText({'en': 'Year', 'id': 'Tahun'})}: $_selectedFilterAcademicYear',
+            '${languageProvider.getTranslatedText({'en': 'Year', 'id': 'Tahun'})}: $label',
         'onRemove': () {
           setState(() {
             _selectedFilterAcademicYear = null;
@@ -1170,10 +1150,16 @@ class TeachingScheduleManagementScreenState
                         runSpacing: 8,
                         children: _semesterList.map<Widget>((semester) {
                           final semesterId = semester['id'].toString();
-                          final semesterName =
+                          String semesterNameRaw =
                               semester['name'] ??
                               semester['nama'] ??
                               'Semester $semesterId';
+                          if (semester['academic_year'] != null &&
+                              semester['academic_year']['year'] != null) {
+                            semesterNameRaw +=
+                                ' (${semester['academic_year']['year']})';
+                          }
+                          final semesterName = semesterNameRaw;
                           final isSelected = tempSelectedSemester == semesterId;
                           return FilterChip(
                             label: Text(semesterName),
@@ -1216,15 +1202,17 @@ class TeachingScheduleManagementScreenState
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: _getAcademicYearOptions().map((year) {
-                          final isSelected = tempSelectedAcademicYear == year;
+                        children: _getAcademicYearOptions().map((yearMap) {
+                          final yearId = yearMap['id'].toString();
+                          final yearName = yearMap['year'] ?? yearId;
+                          final isSelected = tempSelectedAcademicYear == yearId;
                           return FilterChip(
-                            label: Text(year),
+                            label: Text(yearName),
                             selected: isSelected,
                             onSelected: (selected) {
                               setModalState(() {
                                 tempSelectedAcademicYear = selected
-                                    ? year
+                                    ? yearId
                                     : null;
                               });
                             },
