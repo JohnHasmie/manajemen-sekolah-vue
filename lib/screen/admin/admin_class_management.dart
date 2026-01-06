@@ -54,7 +54,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   bool _hasActiveFilter = false;
 
   // Filter Options (from backend)
-  List<String> _availableGradeLevels = [];
+  final List<String> _availableGradeLevels = [];
   String? _schoolJenjang; // SD, SMP, or SMA
 
   // Search debounce
@@ -536,6 +536,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   }
 
   Future<void> _showAddEditDialog({Map<String, dynamic>? classData}) async {
+    // Refresh teacher list to avoid stale data (e.g. deleted teachers)
+    await _fetchTeachers();
+
     // Fetch fresh data if editing to ensure we have all fields (especially IDs)
     if (classData != null) {
       try {
@@ -930,8 +933,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     // Deduplicate teachers based on ID
     final uniqueTeachers = <String, Map<String, dynamic>>{};
     for (var teacher in _teachers) {
-      if (teacher['user_id'] != null) {
-        uniqueTeachers[teacher['user_id'].toString()] = teacher;
+      if (teacher['id'] != null) {
+        uniqueTeachers[teacher['id'].toString()] = teacher;
       }
     }
 
@@ -971,7 +974,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           ),
           ...uniqueTeachers.values.map((teacher) {
             return DropdownMenuItem<String>(
-              value: teacher['user_id'].toString(),
+              value: teacher['id'].toString(),
               child: Text(teacher['name'] ?? 'Unknown'),
             );
           }),
@@ -1210,6 +1213,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                     SizedBox(height: 1),
                                     Text(
                                       classData['homeroom_teacher_name'] ??
+                                          classData['homeroom_teacher']?['name'] ??
                                           languageProvider.getTranslatedText({
                                             'en': 'Not Assigned',
                                             'id': 'Belum Ditugaskan',
@@ -1392,6 +1396,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                       }),
                       value:
                           classData['homeroom_teacher_name'] ??
+                          classData['homeroom_teacher']?['name'] ??
                           languageProvider.getTranslatedText({
                             'en': 'Not Assigned',
                             'id': 'Belum Ditugaskan',

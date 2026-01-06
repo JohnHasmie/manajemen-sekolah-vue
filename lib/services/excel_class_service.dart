@@ -257,7 +257,9 @@ class ExcelClassService {
 
       // Field optional
       validatedClass['homeroom_teacher_name'] =
-          classItem['homeroom_teacher_name'] ?? '';
+          classItem['homeroom_teacher_name'] ??
+          classItem['homeroom_teacher']?['name'] ??
+          '';
       validatedClass['student_count'] = classItem['student_count'] ?? 0;
 
       if (errors.isEmpty) {
