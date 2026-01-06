@@ -818,7 +818,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       text: teacher?['name']?.toString() ?? '',
     );
     final emailController = TextEditingController(
-      text: teacher?['email']?.toString() ?? '',
+      text:
+          teacher?['email']?.toString() ??
+          teacher?['user']?['email']?.toString() ??
+          '',
     );
     final nipController = TextEditingController(
       text: teacher?['employee_number']?.toString() ?? '',
@@ -829,29 +832,41 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     String? selectedWaliKelasId = teacher?['homeroom_class_id']?.toString();
     String? selectedStatus = teacher?['employment_status']?.toString();
 
-    // Parse subject IDs from comma-separated string
+    // Parse subject IDs
     List<String> selectedSubjectIds = [];
-    if (teacher != null && teacher['subject_ids'] != null) {
-      final idsString = teacher['subject_ids'].toString();
-      if (idsString.isNotEmpty) {
-        selectedSubjectIds = idsString
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
+    if (teacher != null) {
+      if (teacher['subjects'] != null && teacher['subjects'] is List) {
+        selectedSubjectIds = (teacher['subjects'] as List)
+            .map((e) => e['id'].toString())
             .toList();
+      } else if (teacher['subject_ids'] != null) {
+        final idsString = teacher['subject_ids'].toString();
+        if (idsString.isNotEmpty) {
+          selectedSubjectIds = idsString
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+        }
       }
     }
 
-    // Parse class IDs from comma-separated string
+    // Parse class IDs
     List<String> selectedClassIds = [];
-    if (teacher != null && teacher['class_ids'] != null) {
-      final idsString = teacher['class_ids'].toString();
-      if (idsString.isNotEmpty) {
-        selectedClassIds = idsString
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
+    if (teacher != null) {
+      if (teacher['classes'] != null && teacher['classes'] is List) {
+        selectedClassIds = (teacher['classes'] as List)
+            .map((e) => e['id'].toString())
             .toList();
+      } else if (teacher['class_ids'] != null) {
+        final idsString = teacher['class_ids'].toString();
+        if (idsString.isNotEmpty) {
+          selectedClassIds = idsString
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+        }
       }
     }
 
@@ -977,7 +992,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                 icon: Icons.person_outline,
                                 items: [
                                   DropdownMenuItem(
-                                    value: 'M',
+                                    value: 'L',
                                     child: Text(
                                       languageProvider.getTranslatedText({
                                         'en': 'Male',
@@ -986,7 +1001,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                     ),
                                   ),
                                   DropdownMenuItem(
-                                    value: 'F',
+                                    value: 'P',
                                     child: Text(
                                       languageProvider.getTranslatedText({
                                         'en': 'Female',
@@ -1696,7 +1711,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                   ),
                                   SizedBox(height: 1),
                                   Text(
-                                    teacher['email'] ?? '-',
+                                    teacher['user']?['email'] ??
+                                        teacher['email'] ??
+                                        '-',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,

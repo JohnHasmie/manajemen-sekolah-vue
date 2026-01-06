@@ -179,6 +179,7 @@ class ApiService {
 
       return {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Authorization': 'Bearer $token',
       };
     } catch (e) {
@@ -203,8 +204,23 @@ class ApiService {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return responseBody;
       } else {
+        // Handle Laravel validation errors (422)
+        if (response.statusCode == 422) {
+          if (responseBody['errors'] != null) {
+            final errors = responseBody['errors'] as Map<String, dynamic>;
+            final firstError = errors.values.first;
+            final errorMessage = firstError is List
+                ? firstError.first
+                : firstError.toString();
+            throw Exception(errorMessage);
+          } else if (responseBody['message'] != null) {
+            throw Exception(responseBody['message']);
+          }
+        }
+
         final errorMessage =
             responseBody['error'] ??
+            responseBody['message'] ??
             'Request failed with status: ${response.statusCode}';
 
         // Handle specific authentication errors (should logout)

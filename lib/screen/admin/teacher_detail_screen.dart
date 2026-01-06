@@ -182,8 +182,20 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
   Widget build(BuildContext context) {
     final teacher = _teacherDetail ?? widget.teacher;
 
-    // Helper to get names from IDs
-    List<String> getNamesFromIds(dynamic ids, List<dynamic> sourceList) {
+    // Helper to get names from direct objects or IDs
+    List<String> getNames(
+      dynamic objects,
+      dynamic ids,
+      List<dynamic> sourceList,
+    ) {
+      // 1. Try to use direct objects (e.g. from eager loading)
+      if (objects != null && objects is List && objects.isNotEmpty) {
+        return objects
+            .map((item) => item['name']?.toString() ?? 'Unknown')
+            .toList();
+      }
+
+      // 2. Fallback to IDs
       if (ids == null) return [];
 
       List<String> idList = [];
@@ -205,18 +217,21 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
     // Use widget.teacher as fallback for IDs if _teacherDetail doesn't have them
     final effectiveTeacher = _teacherDetail ?? widget.teacher;
 
-    // Prioritize IDs from widget.teacher if _teacherDetail has null/empty IDs
-    // This is because getTeacherById might return raw row without aggregated IDs
-    final classIds =
-        effectiveTeacher['class_ids'] ?? widget.teacher['class_ids'];
-    final subjectIds =
-        effectiveTeacher['subject_ids'] ?? widget.teacher['subject_ids'];
+    final displayClassNames = getNames(
+      effectiveTeacher['classes'],
+      effectiveTeacher['class_ids'] ?? widget.teacher['class_ids'],
+      _classes,
+    );
+
+    final displaySubjectNames = getNames(
+      effectiveTeacher['subjects'],
+      effectiveTeacher['subject_ids'] ?? widget.teacher['subject_ids'],
+      _subjects,
+    );
+
     final homeroomClassId =
         effectiveTeacher['homeroom_class_id'] ??
         widget.teacher['homeroom_class_id'];
-
-    final displayClassNames = getNamesFromIds(classIds, _classes);
-    final displaySubjectNames = getNamesFromIds(subjectIds, _subjects);
 
     // Determine Homeroom Status
     String homeroomStatus = 'Tidak';
@@ -433,7 +448,10 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
                           'NIP',
                           teacher['employee_number'] ?? 'Tidak ada',
                         ),
-                        _buildInfoRow('Email', teacher['email']),
+                        _buildInfoRow(
+                          'Email',
+                          teacher['user']?['email'] ?? teacher['email'],
+                        ),
                       ],
                     ),
                   ),

@@ -15,6 +15,7 @@ class ApiTeacherService {
     final token = prefs.getString('token');
     return {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'Authorization': 'Bearer $token',
     };
   }
@@ -25,8 +26,19 @@ class ApiTeacherService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return responseBody;
     } else {
+      // Handle Laravel validation errors (422)
+      if (response.statusCode == 422 && responseBody['errors'] != null) {
+        final errors = responseBody['errors'] as Map<String, dynamic>;
+        final firstError = errors.values.first;
+        final errorMessage = firstError is List
+            ? firstError.first
+            : firstError.toString();
+        throw Exception(errorMessage);
+      }
+
       throw Exception(
-        responseBody['error'] ??
+        responseBody['message'] ??
+            responseBody['error'] ??
             'Request failed with status: ${response.statusCode}',
       );
     }
@@ -218,7 +230,7 @@ class ApiTeacherService {
   Future<List<dynamic>> getSubjectByTeacher(String guruId) async {
     try {
       // Correct endpoint matches index.js: /api/guru/:id/mata-pelajaran
-      final result = await ApiService().get('/guru/$guruId/mata-pelajaran');
+      final result = await ApiService().get('/teacher/$guruId/subjects');
 
       if (result is List) {
         return result;
@@ -297,12 +309,12 @@ class ApiTeacherService {
   }
 
   Future<dynamic> addSubjectToTeacher(
-    String guruId,
-    String mataPelajaranId,
+    String teacherId,
+    String subjectId,
   ) async {
     try {
-      final result = await ApiService().post('/teacher/$guruId/subjects', {
-        'subject_id': mataPelajaranId,
+      final result = await ApiService().post('/teacher/$teacherId/subjects', {
+        'subject_id': subjectId,
       });
       return result;
     } catch (e) {
@@ -312,11 +324,11 @@ class ApiTeacherService {
   }
 
   Future<void> removeSubjectFromTeacher(
-    String guruId,
-    String mataPelajaranId,
+    String teacherId,
+    String subjectId,
   ) async {
     try {
-      await ApiService().delete('/teacher/$guruId/subjects/$mataPelajaranId');
+      await ApiService().delete('/teacher/$teacherId/subjects/$subjectId');
     } catch (e) {
       print('Error removing mata pelajaran from guru: $e');
       rethrow;
@@ -339,7 +351,7 @@ class ApiTeacherService {
         await http.MultipartFile.fromPath(
           'file',
           file.path,
-          filename: 'import_guru.xlsx',
+          filename: 'import_teacher.xlsx',
         ),
       );
 
