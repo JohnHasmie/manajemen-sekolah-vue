@@ -517,7 +517,7 @@ class FinanceScreenState extends State<FinanceScreen>
   Future<void> _loadKelasData() async {
     try {
       // Load data kelas
-      final kelasResponse = await _apiService.get('/class?limit=1000');
+      final kelasResponse = await _apiService.get('/classes?limit=1000');
       setState(() {
         if (kelasResponse is Map && kelasResponse.containsKey('data')) {
           _kelasList = kelasResponse['data'] is List
@@ -529,7 +529,7 @@ class FinanceScreenState extends State<FinanceScreen>
       });
 
       // Load data siswa
-      final siswaResponse = await _apiService.get('/student?limit=1000');
+      final siswaResponse = await _apiService.get('/students?limit=1000');
       final List<dynamic> allSiswa;
       if (siswaResponse is Map && siswaResponse.containsKey('data')) {
         allSiswa = siswaResponse['data'] is List ? siswaResponse['data'] : [];
@@ -569,11 +569,19 @@ class FinanceScreenState extends State<FinanceScreen>
         final siswaId = siswa['id']?.toString();
         if (siswaId != null) {
           final tagihanResponse = await _apiService.get(
-            '/bill?student_id=$siswaId',
+            '/bills?student_id=$siswaId',
           );
-          final List<dynamic> tagihanSiswa = tagihanResponse is List
-              ? tagihanResponse
-              : [];
+
+          List<dynamic> tagihanSiswa = [];
+          if (tagihanResponse is Map<String, dynamic> &&
+              tagihanResponse.containsKey('data')) {
+            tagihanSiswa = tagihanResponse['data'] is List
+                ? tagihanResponse['data']
+                : [];
+          } else if (tagihanResponse is List) {
+            tagihanSiswa = tagihanResponse;
+          }
+
           tagihanBySiswa[siswaId] = tagihanSiswa;
         }
       }
@@ -1487,11 +1495,25 @@ class FinanceScreenState extends State<FinanceScreen>
     final bool isEdit =
         tagihan['status'] == 'verified' ||
         tagihan['payment_status'] == 'verified';
-    final existingAmount = tagihan['amount']?.toString() ?? '';
+    String existingAmount = '';
+    if (tagihan['amount'] != null) {
+      double val = double.tryParse(tagihan['amount'].toString()) ?? 0;
+      existingAmount = NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: 'Rp ',
+        decimalDigits: 0,
+      ).format(val);
+    }
 
-    // Determine initial values
-    String metodeBayar = tagihan['payment_method'] ?? 'cash';
-    String status = tagihan['status'] == 'verified' ? 'verified' : 'pending';
+    // Get payment data from latest_payment if it exists (for editing)
+    final latestPayment = tagihan['latest_payment'];
+
+    // Determine initial values - use latest_payment data if editing
+    String metodeBayar =
+        latestPayment?['payment_method'] ?? tagihan['payment_method'] ?? 'cash';
+    String status =
+        latestPayment?['status'] ??
+        (tagihan['status'] == 'verified' ? 'verified' : 'pending');
     if (tagihan['status'] == 'unpaid')
       status = 'verified'; // Default to verified if unpaid
 
@@ -1500,9 +1522,10 @@ class FinanceScreenState extends State<FinanceScreen>
     );
 
     final TextEditingController tanggalController = TextEditingController(
-      text: tagihan['payment_date'] != null
-          ? tagihan['payment_date'].toString().split('T')[0]
-          : DateTime.now().toString().split(' ')[0],
+      text:
+          latestPayment?['payment_date']?.toString().split('T')[0] ??
+          tagihan['payment_date']?.toString().split('T')[0] ??
+          DateTime.now().toString().split(' ')[0],
     );
 
     showDialog(
@@ -1577,6 +1600,7 @@ class FinanceScreenState extends State<FinanceScreen>
                               'Siswa',
                               tagihan['student_name'] ??
                                   tagihan['siswa_nama'] ??
+                                  tagihan['student']?['name'] ??
                                   '-',
                             ),
                             SizedBox(height: 8),
@@ -1584,12 +1608,13 @@ class FinanceScreenState extends State<FinanceScreen>
                               'Kelas',
                               tagihan['class_name'] ??
                                   tagihan['kelas_nama'] ??
+                                  tagihan['student']?['class']?['name'] ??
                                   '-',
                             ),
                             SizedBox(height: 8),
                             _buildInfoRow(
                               'Tagihan',
-                              '${tagihan['payment_type_name'] ?? tagihan['jenis_pembayaran_nama'] ?? '-'}',
+                              '${tagihan['payment_type_name'] ?? tagihan['jenis_pembayaran_nama'] ?? tagihan['payment_type']?['name'] ?? '-'}',
                             ),
                           ],
                         ),
@@ -1697,16 +1722,21 @@ class FinanceScreenState extends State<FinanceScreen>
 
                               final data = {
                                 'bill_id': tagihan['id'],
-                                'metode_bayar': metodeBayar,
+                                'payment_method': metodeBayar,
                                 'amount': amount,
                                 'payment_date': tanggalController.text,
                                 'status': status,
                               };
 
-                              if (tagihan['payment_id'] != null) {
+                              // Check if bill has an existing payment to update
+                              final paymentId =
+                                  tagihan['latest_payment']?['id'] ??
+                                  tagihan['payment_id'];
+
+                              if (paymentId != null) {
                                 // Update existing payment
                                 await _apiService.put(
-                                  '/payment/manual/${tagihan['payment_id']}',
+                                  '/payment/manual/$paymentId',
                                   data,
                                 );
                               } else {
@@ -1944,10 +1974,43 @@ class FinanceScreenState extends State<FinanceScreen>
 
   Future<void> _loadJenisPembayaran() async {
     try {
-      final response = await _apiService.get('/payment-type');
-      setState(() {
-        _jenisPembayaranList = response is List ? response : [];
-      });
+      final response = await _apiService.get('/payment-types');
+      final List<dynamic> rawData = response is List ? response : [];
+
+      if (mounted) {
+        setState(() {
+          _jenisPembayaranList = rawData.map((item) {
+            if (item is Map<String, dynamic>) {
+              final newItem = Map<String, dynamic>.from(item);
+
+              // Map Status
+              if (newItem['status'] == 'active') {
+                newItem['status'] = 'aktif';
+              } else if (newItem['status'] == 'inactive') {
+                newItem['status'] = 'non-aktif';
+              }
+
+              // Map Periode (Normalize to lowercase / Indonesian)
+              final periode = newItem['periode']?.toString().toUpperCase();
+              if (periode == 'MONTHLY') {
+                newItem['periode'] = 'bulanan';
+              } else if (periode == 'YEARLY') {
+                newItem['periode'] = 'tahunan';
+              } else if (periode == 'SEMESTER') {
+                newItem['periode'] = 'semester';
+              } else if (newItem['periode'] != null) {
+                // Ensure lowercase for consistency if it was 'Bulanan' etc
+                newItem['periode'] = newItem['periode']
+                    .toString()
+                    .toLowerCase();
+              }
+
+              return newItem;
+            }
+            return item;
+          }).toList();
+        });
+      }
     } catch (error) {
       print('Error loading jenis pembayaran: $error');
     }
@@ -1975,7 +2038,8 @@ class FinanceScreenState extends State<FinanceScreen>
 
       if (res['success'] == true) {
         final List<dynamic> pageData = res['data'] ?? [];
-        final pagination = res['pagination'] ?? {};
+        final Map<String, dynamic> pagination =
+            (res['pagination'] as Map?)?.cast<String, dynamic>() ?? {};
 
         setState(() {
           _tagihanList.addAll(pageData);
@@ -1985,7 +2049,8 @@ class FinanceScreenState extends State<FinanceScreen>
         });
       } else if (res.containsKey('data')) {
         final List<dynamic> pageData = res['data'] ?? [];
-        final pagination = res['pagination'] ?? {};
+        final Map<String, dynamic> pagination =
+            (res['pagination'] as Map?)?.cast<String, dynamic>() ?? {};
         setState(() {
           _tagihanList.addAll(pageData);
           _paginationMeta = pagination;
@@ -2014,7 +2079,7 @@ class FinanceScreenState extends State<FinanceScreen>
 
   Future<void> _loadPembayaranPending() async {
     try {
-      final response = await _apiService.get('/payment/pending');
+      final response = await _apiService.get('/payments?status=pending');
       setState(() {
         _pembayaranPendingList = response is List ? response : [];
       });
@@ -2025,7 +2090,7 @@ class FinanceScreenState extends State<FinanceScreen>
 
   Future<void> _loadDashboardData() async {
     try {
-      final response = await _apiService.get('/finance-dashboard');
+      final response = await _apiService.get('/finance/dashboard');
       setState(() {
         _dashboardData = (response as Map).cast<String, dynamic>();
       });
@@ -2222,7 +2287,9 @@ class FinanceScreenState extends State<FinanceScreen>
     Map<String, dynamic>? tujuanData = jenisPembayaran != null
         ? _parseTujuan(jenisPembayaran['goal'])
         : null;
-    String? status = jenisPembayaran?['status'] ?? 'aktif';
+    String? status = (jenisPembayaran?['status'] == 'active')
+        ? 'aktif'
+        : (jenisPembayaran?['status'] == 'inactive' ? 'non-aktif' : 'aktif');
 
     showDialog(
       context: context,
@@ -2466,15 +2533,20 @@ class FinanceScreenState extends State<FinanceScreen>
                                         jumlahController.text,
                                       ),
                                   'periode': periodeController.text,
-                                  'status': status,
+                                  'status': status == 'aktif'
+                                      ? 'active'
+                                      : 'inactive',
                                   'goal': tujuanData,
                                 };
 
                                 if (jenisPembayaran == null) {
-                                  await _apiService.post('/payment-type', data);
+                                  await _apiService.post(
+                                    '/payment-types',
+                                    data,
+                                  );
                                 } else {
                                   await _apiService.put(
-                                    '/payment-type/${jenisPembayaran['id']}',
+                                    '/payment-types/${jenisPembayaran['id']}',
                                     data,
                                   );
                                 }

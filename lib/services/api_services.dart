@@ -693,7 +693,7 @@ class ApiService {
     final queryString = Uri(queryParameters: queryParams).query;
 
     final response = await http.get(
-      Uri.parse('$baseUrl/bill?$queryString'),
+      Uri.parse('$baseUrl/bills?$queryString'),
       headers: await _getHeaders(),
     );
 
