@@ -187,7 +187,17 @@ class ApiClassActivityService {
         '$baseUrl/class-activity/class/$classId',
       ).replace(queryParameters: params.isNotEmpty ? params : null);
 
+      if (kDebugMode) {
+        print('📤 Request: GET $uri');
+      }
+
       final response = await http.get(uri, headers: headers);
+
+      if (kDebugMode) {
+        print('📥 Response Status: ${response.statusCode}');
+        print('📥 Response Body: ${response.body}');
+      }
+
       final result = _handleResponse(response);
 
       if (result is List) {

@@ -47,6 +47,7 @@ class _DashboardState extends State<Dashboard>
     with SingleTickerProviderStateMixin {
   String get _effectiveRole {
     if (widget.role == 'teacher') return 'guru';
+    if (widget.role == 'parent') return 'wali';
     return widget.role;
   }
 

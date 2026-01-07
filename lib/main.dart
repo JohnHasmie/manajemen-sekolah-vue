@@ -221,6 +221,8 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
                   Dashboard(role: 'guru'), // Alias for teacher
               '/staff': (context) => Dashboard(role: 'staff'),
               '/wali': (context) => Dashboard(role: 'wali'),
+              '/parent': (context) =>
+                  Dashboard(role: 'wali'), // Alias for parent
               '/login': (context) => LoginScreen(),
             },
             debugShowCheckedModeBanner: false,
