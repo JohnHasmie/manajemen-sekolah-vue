@@ -558,6 +558,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     // Map English/Mixed to standard keys
     if (status == 'present') return 'hadir';
     if (status == 'permission') return 'izin';
+    if (status == 'excused') return 'izin'; // excused = izin
     if (status == 'sick') return 'sakit';
     if (status == 'late') return 'terlambat';
     if (status == 'absent') return 'alpha';
@@ -573,7 +574,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     // Default fallback if it matches one of our keys
     if (_monthlySummary.containsKey(status)) return status;
 
-    return 'hadir'; // Default safe fallback
+    return 'alpha'; // Default to alpha for unknown status (safer than hadir)
   }
 
   // Helper function to parse date string as local date (not UTC)
