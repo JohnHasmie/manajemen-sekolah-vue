@@ -1997,8 +1997,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         final stats = _calculateStatistics();
-        final totalTidakHadir =
-            stats['izin']! + stats['sakit']! + stats['alpha']!;
+        final totalTidakHadir = stats['alpha']!;
 
         return Scaffold(
           backgroundColor: Color(0xFFF8F9FA),

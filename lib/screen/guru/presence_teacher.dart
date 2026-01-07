@@ -39,8 +39,7 @@ class AbsensiSummary {
     this.className,
   });
 
-  String get key =>
-      '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}';
+  String get key => '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}';
 }
 
 class PresencePage extends StatefulWidget {
@@ -330,15 +329,26 @@ class PresencePageState extends State<PresencePage>
 
       for (var absen in absensiData) {
         // Include kelas_id in the grouping key
-        final classId = absen['kelas_id']?.toString() ?? '';
+        final classId =
+            absen['class_id']?.toString() ??
+            absen['class']?['id']?.toString() ??
+            absen['kelas_id']?.toString() ??
+            '';
+
         final key = '${absen['subject_id']}-${absen['date']}-$classId';
 
         // Use name from API if available, otherwise fallback to lookup
         final subjectName =
+            absen['subject']?['name'] ??
             absen['mata_pelajaran_nama'] ??
             _getSubjectName(absen['subject_id']);
 
-        final className = absen['kelas_nama'];
+        final className =
+            absen['class']?['name'] ??
+            absen['kelas_nama'] ??
+            _getClassNameWithCount(
+              classId,
+            ).split(' - ').first; // Basic fallback
 
         if (!summaryMap.containsKey(key)) {
           summaryMap[key] = AbsensiSummary(
@@ -434,7 +444,8 @@ class PresencePageState extends State<PresencePage>
         (k) => k['id'].toString() == classId,
         orElse: () => {'nama': 'Unknown Class'},
       );
-      final className = classList['nama'] ?? classList['name'] ?? 'Unknown Class';
+      final className =
+          classList['nama'] ?? classList['name'] ?? 'Unknown Class';
       final count = _filteredStudentList
           .where((s) => s.classId == classId)
           .length;
@@ -795,11 +806,10 @@ class PresencePageState extends State<PresencePage>
                                 setState(() {
                                   _selectedSubjectId = value;
                                   // Update nama mata pelajaran
-                                  final selected = _subjectTeacher
-                                      .firstWhere(
-                                        (mp) => mp['id'] == value,
-                                        orElse: () => {},
-                                      );
+                                  final selected = _subjectTeacher.firstWhere(
+                                    (mp) => mp['id'] == value,
+                                    orElse: () => {},
+                                  );
                                   _selectedSubjectName =
                                       selected['nama'] ??
                                       selected['mata_pelajaran_nama'];
@@ -1289,15 +1299,11 @@ class PresencePageState extends State<PresencePage>
           matchesDateFilter = _isSameDay(summary.date, now);
         } else if (_selectedDateFilter == 'week') {
           matchesDateFilter =
-              summary.date.isAfter(
-                startOfWeek.subtract(Duration(days: 1)),
-              ) &&
+              summary.date.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
               summary.date.isBefore(endOfWeek.add(Duration(days: 1)));
         } else if (_selectedDateFilter == 'month') {
           matchesDateFilter =
-              summary.date.isAfter(
-                startOfMonth.subtract(Duration(days: 1)),
-              ) &&
+              summary.date.isAfter(startOfMonth.subtract(Duration(days: 1))) &&
               summary.date.isBefore(endOfMonth.add(Duration(days: 1)));
         }
       }
@@ -2972,7 +2978,9 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
 
       setState(() {
         // Filter siswa by class if classId is provided
-        List<Siswa> allStudent = studentData.map((s) => Siswa.fromJson(s)).toList();
+        List<Siswa> allStudent = studentData
+            .map((s) => Siswa.fromJson(s))
+            .toList();
         if (widget.classId != null && widget.classId!.isNotEmpty) {
           _studentList = allStudent
               .where((siswa) => siswa.classId == widget.classId)
