@@ -122,16 +122,19 @@ class ApiService {
   // Dalam ApiService class
   Future<List<dynamic>> getNilaiByMataPelajaran(String mataPelajaranId) async {
     try {
-      final semuaNilai = await get('/nilai');
-      if (semuaNilai is List) {
-        return semuaNilai.where((nilai) {
-          return nilai['mata_pelajaran_id'].toString() ==
-              mataPelajaranId.toString();
-        }).toList();
+      // Use backend filtering
+      final response = await get('/grades?subject_id=$mataPelajaranId');
+
+      // Handle paginated response (Map with 'data' key) or direct List
+      if (response is Map<String, dynamic> && response.containsKey('data')) {
+        return response['data'] as List<dynamic>;
+      } else if (response is List) {
+        return response;
       }
+
       return [];
     } catch (e) {
-      print('Error filtering nilai: $e');
+      print('Error fetching nilai: $e');
       return [];
     }
   }

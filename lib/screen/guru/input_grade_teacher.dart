@@ -1728,7 +1728,23 @@ class GradeBookPageState extends State<GradeBookPage> {
       setState(() {
         _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
         _filteredSiswaList = List.from(_siswaList);
-        _nilaiList = List<Map<String, dynamic>>.from(nilaiData);
+
+        // Map API response to legacy format expected by UI
+        _nilaiList = List<Map<String, dynamic>>.from(
+          nilaiData.map((item) {
+            return {
+              'id': item['id'],
+              'siswa_id': item['student_id'] ?? item['siswa_id'],
+              'guru_id': item['teacher_id'] ?? item['guru_id'],
+              'mata_pelajaran_id':
+                  item['subject_id'] ?? item['mata_pelajaran_id'],
+              'jenis': item['type'] ?? item['jenis'],
+              'nilai': item['score'] ?? item['nilai'],
+              'deskripsi': item['notes'] ?? item['deskripsi'],
+              'tanggal': item['date'] ?? item['tanggal'],
+            };
+          }),
+        );
 
         // Process unique dates for each grade type
         _assessmentDates = {};
@@ -2154,26 +2170,26 @@ class GradeBookPageState extends State<GradeBookPage> {
 
     try {
       final data = {
-        'siswa_id': siswaId,
-        'guru_id': widget.teacher['id'],
-        'mata_pelajaran_id': widget.subject['id'],
-        'jenis': jenis,
-        'tanggal': date,
-        'nilai': field == 'nilai'
+        'student_id': siswaId,
+        'teacher_id': widget.teacher['id'],
+        'subject_id': widget.subject['id'],
+        'type': jenis,
+        'date': date,
+        'score': field == 'nilai'
             ? (value.isEmpty ? 0 : double.tryParse(value) ?? 0)
             : (currentData?['nilai'] ?? 0),
-        'deskripsi': field == 'deskripsi'
+        'notes': field == 'deskripsi'
             ? value
             : (currentData?['deskripsi'] ?? ''),
       };
 
       if (currentData != null && currentData['id'] != null) {
         // Update
-        await ApiService().put('/nilai/${currentData['id']}', data);
+        await ApiService().put('/grades/${currentData['id']}', data);
       } else {
         // Create new only if we have a value
         if (value.isNotEmpty) {
-          await ApiService().post('/nilai', data);
+          await ApiService().post('/grades', data);
         }
       }
 
@@ -2639,7 +2655,7 @@ class GradeBookPageState extends State<GradeBookPage> {
 
       final queryString = Uri(queryParameters: queryParams).query;
 
-      await apiService.delete('/nilai/batch?$queryString');
+      await apiService.delete('/grades/batch?$queryString');
 
       _showSuccessSnackBar('Assessment deleted successfully');
       _loadData(); // Reload to refresh the table
@@ -3285,22 +3301,25 @@ class GradeInputFormState extends State<GradeInputForm> {
     if (_formKey.currentState!.validate()) {
       try {
         final data = {
-          'siswa_id': widget.siswa.id,
-          'guru_id': widget.teacher['id'],
-          'mata_pelajaran_id': widget.subject['id'],
-          'jenis': widget.jenisNilai,
-          'nilai': double.parse(_nilaiController.text),
-          'deskripsi': _deskripsiController.text,
-          'tanggal':
+          'student_id': widget.siswa.id,
+          'teacher_id': widget.teacher['id'],
+          'subject_id': widget.subject['id'],
+          'type': widget.jenisNilai,
+          'score': double.parse(_nilaiController.text),
+          'notes': _deskripsiController.text,
+          'date':
               '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
         };
 
         if (widget.existingNilai != null) {
           // Update nilai yang sudah ada
-          await ApiService().put('/nilai/${widget.existingNilai!['id']}', data);
+          await ApiService().put(
+            '/grades/${widget.existingNilai!['id']}',
+            data,
+          );
         } else {
           // Tambah nilai baru
-          await ApiService().post('/nilai', data);
+          await ApiService().post('/grades', data);
         }
 
         if (!mounted) return;
@@ -3747,18 +3766,18 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
           }
 
           final data = {
-            'siswa_id': siswa.id,
-            'guru_id': widget.teacher['id'],
-            'mata_pelajaran_id': widget.subject['id'],
-            'jenis': _selectedJenisNilai!,
-            'nilai': double.parse(nilai),
-            'deskripsi': nilaiData?['deskripsi']?.toString().trim() ?? '',
-            'tanggal':
+            'student_id': siswa.id,
+            'teacher_id': widget.teacher['id'],
+            'subject_id': widget.subject['id'],
+            'type': _selectedJenisNilai!,
+            'score': double.parse(nilai),
+            'notes': nilaiData?['deskripsi']?.toString().trim() ?? '',
+            'date':
                 '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
           };
 
           // Tambah nilai baru
-          await ApiService().post('/nilai', data);
+          await ApiService().post('/grades', data);
           successCount++;
         }
 
