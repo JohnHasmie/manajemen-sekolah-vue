@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
@@ -9,6 +11,8 @@ import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_rpp_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 class AdminRppScreen extends StatefulWidget {
@@ -561,11 +565,17 @@ class _AdminRppScreenState extends State<AdminRppScreen>
     );
   }
 
-  void _viewRppDetail(Map<String, dynamic> rpp) {
-    Navigator.push(
+  void _viewRppDetail(Map<String, dynamic> rpp) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => RppAdminDetailPage(rpp: rpp)),
     );
+    // Refresh list after returning
+    if (_showTeacherList && _selectedTeacherName != null) {
+      _loadRppByTeacher();
+    } else if (!_showTeacherList) {
+      _loadRppByTeacher(); // Or logic to reload current list
+    }
   }
 
   Color _getStatusColor(String status) {
@@ -579,6 +589,9 @@ class _AdminRppScreenState extends State<AdminRppScreen>
       case 'Rejected':
       case 'Ditolak':
         return Colors.red;
+      case 'Draft':
+      case 'draft':
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -725,6 +738,9 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                     : rpp['status'] == 'Approved' ||
                                           rpp['status'] == 'Disetujui'
                                     ? 'Disetujui'
+                                    : rpp['status'] == 'draft' ||
+                                          rpp['status'] == 'Draft'
+                                    ? 'Draft'
                                     : 'Ditolak',
                                 style: TextStyle(
                                   color: _getStatusColor(rpp['status']),
@@ -1733,6 +1749,8 @@ class RppAdminDetailPage extends StatelessWidget {
                           : rpp['status'] == 'Approved' ||
                                 rpp['status'] == 'Disetujui'
                           ? 'Disetujui'
+                          : rpp['status'] == 'draft' || rpp['status'] == 'Draft'
+                          ? 'Draft'
                           : 'Ditolak',
                       style: TextStyle(
                         color: Colors.white,
@@ -1776,7 +1794,7 @@ class RppAdminDetailPage extends StatelessWidget {
                   SizedBox(height: 12),
                   _buildDetailItem(
                     'Guru Pengajar',
-                    rpp['teacher_name'] ?? rpp['guru_nama'] ?? '-',
+                    rpp['teacher_name'] ?? rpp['teacher']?['name'] ?? '-',
                   ),
                   _buildDetailItem(
                     'Mata Pelajaran',
@@ -1916,13 +1934,8 @@ class RppAdminDetailPage extends StatelessWidget {
                     ),
                     SizedBox(height: 12),
                     ElevatedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Fitur download akan datang...'),
-                          ),
-                        );
-                      },
+                      onPressed: () =>
+                          _downloadAndOpenFile(context, rpp['file_path']),
                       icon: Icon(Icons.download),
                       label: Text('Download RPP'),
                       style: ElevatedButton.styleFrom(
@@ -1948,9 +1961,7 @@ class RppAdminDetailPage extends StatelessWidget {
         currentStatus: rpp['status'],
         currentNote: rpp['catatan'],
         onStatusUpdated: () {
-          Navigator.pop(context); // Tutup dialog detail
           Navigator.pop(context); // Kembali ke list
-          // TODO: Refresh data atau navigasi ulang
         },
       ),
     );
@@ -2015,6 +2026,62 @@ class RppAdminDetailPage extends StatelessWidget {
     );
   }
 
+  Future<void> _downloadAndOpenFile(
+    BuildContext context,
+    String? filePath,
+  ) async {
+    if (filePath == null) return;
+
+    try {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Mengunduh file...')));
+
+      // Create proper URL
+      // ApiService.baseUrl usually ends with /api
+      // We need base URL without /api
+      final baseUrlBase = ApiService.baseUrl.replaceAll('/api', '');
+      String fileUrl;
+      if (filePath.startsWith('http')) {
+        fileUrl = filePath;
+      } else {
+        fileUrl = '$baseUrlBase/storage/$filePath';
+      }
+
+      print('Downloading from: $fileUrl');
+
+      final response = await http.get(Uri.parse(fileUrl));
+
+      if (response.statusCode == 200) {
+        final directory = await getApplicationDocumentsDirectory();
+        final fileName = filePath.split('/').last;
+        final file = File('${directory.path}/$fileName');
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download berhasil! Membuka file...')),
+        );
+
+        final result = await OpenFile.open(file.path);
+
+        if (result.type != ResultType.done) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal membuka file: ${result.message}')),
+          );
+        }
+      } else {
+        throw Exception('Server returned ${response.statusCode}');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal mengunduh file: $e')));
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Approved':
@@ -2026,6 +2093,9 @@ class RppAdminDetailPage extends StatelessWidget {
       case 'Rejected':
       case 'Ditolak':
         return Colors.red;
+      case 'Draft':
+      case 'draft':
+        return Colors.blue;
       default:
         return Colors.grey;
     }

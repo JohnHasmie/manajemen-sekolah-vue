@@ -452,6 +452,8 @@ class RppScreenState extends State<RppScreen>
       case 'Ditolak':
       case 'Rejected':
         return Colors.red;
+      case 'draft':
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -468,6 +470,8 @@ class RppScreenState extends State<RppScreen>
       case 'Ditolak':
       case 'Rejected':
         return Icons.cancel;
+      case 'draft':
+        return Icons.drafts;
       default:
         return Icons.help;
     }
@@ -613,6 +617,8 @@ class RppScreenState extends State<RppScreen>
                                     : rpp['status'] == 'Approved' ||
                                           rpp['status'] == 'Disetujui'
                                     ? 'Disetujui'
+                                    : rpp['status'] == 'draft'
+                                    ? 'Draft'
                                     : 'Ditolak',
                                 style: TextStyle(
                                   color: _getStatusColor(rpp['status']),
@@ -1092,11 +1098,19 @@ class _RppFormDialogState extends State<RppFormDialog> {
 
     // Jika mode edit, isi field dengan data RPP
     if (widget.rppData != null) {
-      _judulController.text = widget.rppData!['judul'] ?? '';
-      _tahunAjaranController.text = widget.rppData!['tahun_ajaran'] ?? '';
-      _selectedMataPelajaranId = widget.rppData!['mata_pelajaran_id']
-          ?.toString();
-      _selectedClassId = widget.rppData!['kelas_id']?.toString();
+      _judulController.text =
+          widget.rppData!['judul'] ?? widget.rppData!['title'] ?? '';
+      _tahunAjaranController.text =
+          widget.rppData!['academic_year'] ??
+          widget.rppData!['tahun_ajaran'] ??
+          '';
+      _selectedMataPelajaranId =
+          (widget.rppData!['subject_id'] ??
+                  widget.rppData!['mata_pelajaran_id'])
+              ?.toString();
+      _selectedClassId =
+          (widget.rppData!['class_id'] ?? widget.rppData!['kelas_id'])
+              ?.toString();
       _selectedSemester = widget.rppData!['semester'] ?? 'Ganjil';
       _selectedFileName = widget.rppData!['file_path'];
 
@@ -1280,11 +1294,11 @@ class _RppFormDialogState extends State<RppFormDialog> {
       print('- File Path: $filePath');
 
       final rppData = {
-        'mata_pelajaran_id': _selectedMataPelajaranId,
-        'kelas_id': _selectedClassId,
-        'judul': _judulController.text,
+        'subject_id': _selectedMataPelajaranId,
+        'class_id': _selectedClassId,
+        'title': _judulController.text,
         'semester': _selectedSemester,
-        'tahun_ajaran': _tahunAjaranController.text,
+        'academic_year': _tahunAjaranController.text,
         'file_path': filePath ?? _selectedFileName,
       };
 
@@ -1295,7 +1309,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
         print('RPP updated successfully');
       } else {
         // Mode tambah baru
-        rppData['guru_id'] = widget.teacherId;
+        rppData['teacher_id'] = widget.teacherId;
         await ApiService.tambahRPP(rppData);
         print('RPP created successfully');
       }
