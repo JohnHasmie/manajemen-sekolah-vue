@@ -149,7 +149,7 @@ class ApiAnnouncementService {
       queryParams['priority'] = prioritas;
     }
     if (roleTarget != null && roleTarget.isNotEmpty) {
-      queryParams['target_role'] = roleTarget;
+      queryParams['role_target'] = roleTarget;
     }
     if (status != null && status.isNotEmpty) {
       queryParams['status'] = status;
@@ -173,6 +173,22 @@ class ApiAnnouncementService {
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) {
+        // Transform Laravel Standard Pagination to Frontend Expected Format
+        if (result.containsKey('data') && result.containsKey('current_page')) {
+          return {
+            'success': true,
+            'data': result['data'],
+            'pagination': {
+              'total_items': result['total'] ?? 0,
+              'total_pages': result['last_page'] ?? 1,
+              'current_page': result['current_page'] ?? 1,
+              'per_page': result['per_page'] ?? limit,
+              'has_next_page':
+                  (result['current_page'] ?? 1) < (result['last_page'] ?? 1),
+              'has_prev_page': (result['current_page'] ?? 1) > 1,
+            },
+          };
+        }
         return result;
       }
 

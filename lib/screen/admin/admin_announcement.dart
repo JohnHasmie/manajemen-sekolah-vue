@@ -20,8 +20,7 @@ class AdminAnnouncementScreen extends StatefulWidget {
   AdminAnnouncementScreenState createState() => AdminAnnouncementScreenState();
 }
 
-class AdminAnnouncementScreenState
-    extends State<AdminAnnouncementScreen>
+class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   List<dynamic> _announcements = [];
@@ -772,7 +771,7 @@ class AdminAnnouncementScreenState
       text: announcementData?['content'] ?? '',
     );
     String? selectedClassId = announcementData?['kelas_id'];
-    String? selectedRole = announcementData?['target_role'] ?? 'all';
+    String? selectedRole = announcementData?['role_target'] ?? 'all';
     String? selectedPrioritas = announcementData?['priority'] ?? 'normal';
     DateTime? tanggalAwal = announcementData?['start_date'] != null
         ? DateTime.parse(announcementData!['start_date'])
@@ -983,7 +982,7 @@ class AdminAnnouncementScreenState
                                       'title': judulController.text,
                                       'content': kontenController.text,
                                       'class_id': selectedClassId,
-                                      'target_role': selectedRole,
+                                      'role_target': selectedRole,
                                       'priority': selectedPrioritas,
                                       'start_date': tanggalAwal
                                           ?.toIso8601String(),
@@ -1416,7 +1415,10 @@ class AdminAnnouncementScreenState
                     ),
 
                     // Priority badge
-                    if (announcementData['priority'] == 'penting')
+                    if ([
+                      'penting',
+                      'important',
+                    ].contains(announcementData['priority']))
                       Positioned(
                         top: 12,
                         right: 12,
@@ -1580,7 +1582,8 @@ class AdminAnnouncementScreenState
                                     ),
                                     SizedBox(height: 1),
                                     Text(
-                                      announcementData['creator_name'] ??
+                                      announcementData['creator']?['name'] ??
+                                          announcementData['creator_name'] ??
                                           'Unknown',
                                       style: TextStyle(
                                         fontSize: 14,
@@ -1646,6 +1649,59 @@ class AdminAnnouncementScreenState
                             ],
                           ),
 
+                          if (announcementData['start_date'] != null ||
+                              announcementData['end_date'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: _getPrimaryColor().withOpacity(
+                                        0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Icon(
+                                      Icons.calendar_month,
+                                      color: _getPrimaryColor(),
+                                      size: 16,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Validity Period',
+                                            'id': 'Masa Berlaku',
+                                          }),
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.grey.shade600,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        SizedBox(height: 1),
+                                        Text(
+                                          '${announcementData['start_date'] != null ? _formatDate(announcementData['start_date']) : '-'} s/d ${announcementData['end_date'] != null ? _formatDate(announcementData['end_date']) : '-'}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           SizedBox(height: 12),
 
                           // Action buttons
@@ -1805,7 +1861,10 @@ class AdminAnnouncementScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Priority badge
-                    if (announcementData['priority'] == 'penting')
+                    if ([
+                      'penting',
+                      'important',
+                    ].contains(announcementData['priority']))
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -1866,8 +1925,8 @@ class AdminAnnouncementScreenState
                               'id': 'Dibuat oleh',
                             }),
                             value:
+                                announcementData['creator']?['name'] ??
                                 announcementData['creator_name'] ??
-                                announcementData['pembuat_nama'] ??
                                 'Unknown',
                           ),
                           SizedBox(height: 8),
@@ -1984,7 +2043,7 @@ class AdminAnnouncementScreenState
     Map<String, dynamic> announcementData,
     LanguageProvider languageProvider,
   ) {
-    final roleTarget = announcementData['target_role'] ?? 'all';
+    final roleTarget = announcementData['role_target'] ?? 'all';
     final classNama = announcementData['class_name'];
 
     if (roleTarget == 'all' && classNama == null) {
