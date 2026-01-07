@@ -201,7 +201,7 @@ class TeachingScheduleManagementScreenState
       }
     }
 
-    if (semesterId != _selectedSemester && semesterId != null) {
+    if (semesterId != _selectedSemester) {
       if (kDebugMode) {
         print('DEBUG: Auto-switching to semester: $semesterId');
       }

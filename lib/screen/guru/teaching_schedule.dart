@@ -10,6 +10,7 @@ import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/materi_screen.dart';
 import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
+import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +29,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   bool _isLoading = true;
   String _teacherId = '';
   String _teacherNama = '';
+  List<dynamic> _academicYearList = [];
   String _selectedSemester = '1'; // Will be set by _setDefaultAcademicPeriod()
   String _selectedAcademicYear =
       '2024/2025'; // Will be set by _setDefaultAcademicPeriod()
@@ -42,7 +44,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   // DITAMBAHKAN KEMBALI: Toggle antara card dan table view
   bool _isTableView = false;
 
-  final List<String> _dayOptions = [
+  List<String> _dayOptions = [
     'Semua Hari',
     'Senin',
     'Selasa',
@@ -52,7 +54,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     'Sabtu',
   ];
 
-  final Map<String, String> _dayIdMap = {
+  Map<String, String> _dayIdMap = {
     'Senin': '1',
     'Selasa': '2',
     'Rabu': '3',
@@ -122,24 +124,97 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   Future<void> _loadUserData() async {
+    if (kDebugMode) {
+      print('===== TeachingScheduleScreen: _loadUserData STARTED =====');
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
-      final userData = json.decode(prefs.getString('user') ?? '{}');
+      final userDataStr = prefs.getString('user');
+      if (kDebugMode) {
+        print('Raw User Data from Prefs: $userDataStr');
+      }
+
+      final userData = json.decode(userDataStr ?? '{}');
+      final userId = userData['id']?.toString() ?? '';
 
       setState(() {
-        _teacherId = userData['id']?.toString() ?? '';
+        _teacherId = userId; // Fallback to userId
         _teacherNama = userData['nama']?.toString() ?? 'Guru';
       });
 
-      if (_teacherId.isEmpty) {
-        setState(() => _isLoading = false);
-        return;
+      if (kDebugMode) {
+        print('User ID: $userId');
       }
 
-      await _loadSemesterData();
-      _loadJadwal();
+      if (userId.isNotEmpty) {
+        // Resolve Teacher ID from User ID
+        try {
+          // Import ApiTeacherService if not already (it's in the same package usually)
+          final teacherData = await ApiTeacherService.getGuruByUserId(userId);
+          if (teacherData != null && teacherData['id'] != null) {
+            final resolvedId = teacherData['id'].toString();
+            if (kDebugMode) {
+              print('✅ Resolved Teacher ID: $resolvedId');
+            }
+            setState(() {
+              _teacherId = resolvedId;
+            });
+          } else {
+            if (kDebugMode) {
+              print(
+                '⚠️ Failed to resolve Teacher ID, using User ID as fallback',
+              );
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ Error resolving teacher ID: $e');
+          }
+        }
+
+        await _loadDayData();
+        await _loadSemesterData();
+        await _loadAcademicYearData();
+        _loadJadwal();
+      } else {
+        setState(() => _isLoading = false);
+      }
     } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error in _loadUserData: $e');
+      }
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadDayData() async {
+    try {
+      final dayData = await ApiScheduleService.getHari();
+      if (dayData.isNotEmpty) {
+        final Map<String, String> newDayIdMap = {};
+        final List<String> newDayOptions = ['Semua Hari'];
+
+        for (var day in dayData) {
+          final name =
+              day['name_id']?.toString() ?? day['name']?.toString() ?? '';
+          final id = day['id']?.toString() ?? '';
+          if (name.isNotEmpty && id.isNotEmpty) {
+            newDayIdMap[name] = id;
+            newDayOptions.add(name);
+          }
+        }
+
+        if (newDayIdMap.isNotEmpty) {
+          setState(() {
+            _dayIdMap = newDayIdMap;
+            _dayOptions = newDayOptions;
+          });
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading day data: $e');
+      }
     }
   }
 
@@ -149,10 +224,96 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
       setState(() {
         _semesterList = semesterData;
+
+        // 1. Try to find by "current" flag
+        final currentSem = semesterData.firstWhere(
+          (s) =>
+              s['current'] == true ||
+              s['current'] == 1 ||
+              s['current'].toString() == '1',
+          orElse: () => null,
+        );
+
+        if (currentSem != null) {
+          _selectedSemester = currentSem['id'].toString();
+        } else if (semesterData.isNotEmpty) {
+          // 2. Date-based fallback
+          final now = DateTime.now();
+          final currentMonth = now.month;
+          final targetSemesterName = (currentMonth >= 7) ? 'Ganjil' : 'Genap';
+
+          final dateBasedSemester = semesterData.firstWhere((s) {
+            final name = (s['name'] ?? s['nama'] ?? '').toString();
+            return name.contains(targetSemesterName);
+          }, orElse: () => null);
+
+          if (dateBasedSemester != null) {
+            _selectedSemester = dateBasedSemester['id'].toString();
+          } else {
+            // 3. Last fallback
+            _selectedSemester = semesterData.first['id'].toString();
+          }
+        }
       });
     } catch (e) {
       if (kDebugMode) {
         print('Error loading semester data: $e');
+      }
+    }
+  }
+
+  Future<void> _loadAcademicYearData() async {
+    try {
+      final academicYears = await ApiScheduleService.getAcademicYear();
+
+      setState(() {
+        // Filter out "Status Kepegawaian" that might come from backend anomaly
+        _academicYearList = academicYears
+            .where(
+              (ay) => (ay['year'] ?? '').toString() != 'Status Kepegawaian',
+            )
+            .toList();
+
+        // 1. Try to find by "current" flag
+        final currentAY = _academicYearList.firstWhere(
+          (ay) =>
+              ay['current'] == true ||
+              ay['current'] == 1 ||
+              ay['current'].toString() == '1',
+          orElse: () => null,
+        );
+
+        if (currentAY != null) {
+          _selectedAcademicYear = currentAY['year'].toString();
+        } else if (academicYears.isNotEmpty) {
+          // 2. Date-based fallback
+          final now = DateTime.now();
+          final currentYear = now.year;
+          final currentMonth = now.month;
+
+          String targetYearString;
+          if (currentMonth >= 7) {
+            targetYearString = '$currentYear/${currentYear + 1}';
+          } else {
+            targetYearString = '${currentYear - 1}/$currentYear';
+          }
+
+          final dateBasedYear = academicYears.firstWhere(
+            (ay) => (ay['year'] ?? '').toString() == targetYearString,
+            orElse: () => null,
+          );
+
+          if (dateBasedYear != null) {
+            _selectedAcademicYear = dateBasedYear['year'].toString();
+          } else {
+            // 3. Last fallback
+            _selectedAcademicYear = academicYears.first['year'].toString();
+          }
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading academic year data: $e');
       }
     }
   }
@@ -171,11 +332,22 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       final academicYearToUse =
           _selectedFilterAcademicYear ?? _selectedAcademicYear;
 
+      if (kDebugMode) {
+        print('FETCHING SCHEDULE WITH:');
+        print('- Teacher ID: $_teacherId');
+        print('- Semester: $semesterToUse');
+        print('- Academic Year: $academicYearToUse');
+      }
+
       final jadwal = await ApiScheduleService.getFilteredSchedule(
         teacherId: _teacherId,
         semester: semesterToUse,
         academicYear: academicYearToUse,
       );
+
+      if (kDebugMode) {
+        print('Total schedule items loaded: ${jadwal.length}');
+      }
 
       setState(() {
         _jadwalList = jadwal;
@@ -336,7 +508,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               }),
               options: _semesterList.map((semester) {
                 return FilterOption(
-                  label: semester['nama'] ?? 'Semester',
+                  label: semester['name'] ?? semester['nama'] ?? 'Semester',
                   value: semester['id'].toString(),
                 );
               }).toList(),
@@ -348,12 +520,14 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                 'en': 'Academic Year',
                 'id': 'Tahun Ajaran',
               }),
-              options: [
-                FilterOption(label: '2023/2024', value: '2023/2024'),
-                FilterOption(label: '2024/2025', value: '2024/2025'),
-                FilterOption(label: '2025/2026', value: '2025/2026'),
-                FilterOption(label: '2026/2027', value: '2026/2027'),
-              ],
+              options: _academicYearList.isEmpty
+                  ? [FilterOption(label: '2024/2025', value: '2024/2025')]
+                  : _academicYearList.map((ay) {
+                      return FilterOption(
+                        label: ay['year'].toString(),
+                        value: ay['year'].toString(),
+                      );
+                    }).toList(),
               multiSelect: false,
             ),
           ],

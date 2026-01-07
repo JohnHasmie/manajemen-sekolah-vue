@@ -1269,7 +1269,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   Widget _buildActivityCard(dynamic activity, BuildContext context) {
     final day = activity['day']?.toString() ?? 'Unknown';
     final cardColor = _getDayColor(day);
-    final isAssignment = activity['jenis'] == 'tugas';
+    final isAssignment =
+        activity['jenis'] == 'tugas' ||
+        activity['jenis'] == 'assignment' ||
+        activity['type'] == 'assignment';
     final isSpecificTarget = activity['target_role'] == 'khusus';
     final languageProvider = Provider.of<LanguageProvider>(
       context,
@@ -2502,15 +2505,18 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
   List<DropdownMenuItem<String>> _getUniqueClassItems() {
     final Map<String, Map<String, dynamic>> uniqueClasses = {};
     final now = DateTime.now();
-    final currentDay = [
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-      'Minggu',
-    ][now.weekday - 1];
+    // Use _selectedDay if available, otherwise fallback to current day
+    final String targetDay =
+        _selectedDay ??
+        [
+          'Senin',
+          'Selasa',
+          'Rabu',
+          'Kamis',
+          'Jumat',
+          'Sabtu',
+          'Minggu',
+        ][now.weekday - 1];
 
     // if (kDebugMode) {
     //   print('Getting unique classes for subject: $_selectedSubjectId');
@@ -2585,8 +2591,8 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
             //   print('Checking against Current Day: $currentDay');
             // }
 
-            // Check if schedule is today
-            if (scheduleDay == currentDay) {
+            // Check if schedule is on the selected day
+            if (scheduleDay == targetDay) {
               // Time validation removed to ensure classes always appear for the day
               // Original logic checked start_time + 23h, but this was too strict/buggy
               if (!uniqueClasses.containsKey(classId)) {

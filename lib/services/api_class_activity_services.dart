@@ -59,6 +59,10 @@ class ApiClassActivityService {
       headers: await _getHeaders(),
     );
 
+    print('GET /class-activity?$queryString - Status: ${response.statusCode}');
+    if (kDebugMode && response.statusCode != 200) {
+      print('Response Body (Error): ${response.body}');
+    }
     final result = _handleResponse(response);
 
     // Return full response with pagination metadata
@@ -94,6 +98,7 @@ class ApiClassActivityService {
 
       return {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Authorization': 'Bearer $token',
       };
     } catch (e) {

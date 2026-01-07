@@ -23,12 +23,15 @@ class AdminClassActivityScreen extends StatefulWidget {
 class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
     with SingleTickerProviderStateMixin {
   List<dynamic> _teacherList = [];
+  List<dynamic> _subjectList = [];
   List<dynamic> _activityList = [];
-  final Map<String, List<dynamic>> _activitiesByTeacher = {};
   bool _isLoading = true;
   String? _selectedTeacherId;
   String? _selectedTeacherName;
+  String? _selectedSubjectId;
+  String? _selectedSubjectName;
   bool _showTeacherList = true;
+  bool _showSubjectList = false;
   String? _errorMessage;
 
   // Search
@@ -132,7 +135,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
     }
   }
 
-  Future<void> _loadActivitiesByTeacher(
+  Future<void> _loadSubjectsByTeacher(
     String teacherId,
     String teacherName,
   ) async {
@@ -143,28 +146,53 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
         _selectedTeacherId = teacherId;
         _selectedTeacherName = teacherName;
         _showTeacherList = false;
+        _showSubjectList = true;
       });
 
-      if (_activitiesByTeacher.containsKey(teacherId)) {
-        setState(() {
-          _activityList = _activitiesByTeacher[teacherId]!;
-          _isLoading = false;
-        });
-        _animationController.forward();
-        return;
-      }
-
-      final activities = await ApiClassActivityService.getActivityByGuru(
-        teacherId,
+      final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
+        teacherId: teacherId,
       );
 
       setState(() {
-        _activityList = activities;
-        _activitiesByTeacher[teacherId] = activities;
+        _subjectList = response['data'] ?? [];
         _isLoading = false;
       });
 
-      _animationController.forward();
+      _animationController.forward(from: 0);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
+      _showErrorSnackBar('Failed to load subject data: $e');
+    }
+  }
+
+  Future<void> _loadActivitiesBySubject(
+    String subjectId,
+    String subjectName,
+  ) async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+        _selectedSubjectId = subjectId;
+        _selectedSubjectName = subjectName;
+        _showSubjectList = false;
+      });
+
+      // We use the paginated service to filter by both teacher and subject
+      final response = await ApiClassActivityService.getClassActivityPaginated(
+        guruId: _selectedTeacherId,
+        mataPelajaranId: subjectId,
+      );
+
+      setState(() {
+        _activityList = response['data'] ?? [];
+        _isLoading = false;
+      });
+
+      _animationController.forward(from: 0);
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -187,11 +215,25 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
   void _backToTeacherList() {
     setState(() {
       _showTeacherList = true;
+      _showSubjectList = false;
       _selectedTeacherId = null;
       _selectedTeacherName = null;
+      _selectedSubjectId = null;
+      _selectedSubjectName = null;
       _searchController.clear();
     });
-    _animationController.forward();
+    _animationController.forward(from: 0);
+  }
+
+  void _backToSubjectList() {
+    setState(() {
+      _showTeacherList = false;
+      _showSubjectList = true;
+      _selectedSubjectId = null;
+      _selectedSubjectName = null;
+      _searchController.clear();
+    });
+    _animationController.forward(from: 0);
   }
 
   List<dynamic> _getFilteredTeachers() {
@@ -206,6 +248,14 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
           teacherName.contains(searchTerm) ||
           teacherEmail.contains(searchTerm) ||
           teacherSubject.contains(searchTerm);
+    }).toList();
+  }
+
+  List<dynamic> _getFilteredSubjects() {
+    final searchTerm = _searchController.text.toLowerCase();
+    return _subjectList.where((subject) {
+      final name = subject['name']?.toString().toLowerCase() ?? '';
+      return searchTerm.isEmpty || name.contains(searchTerm);
     }).toList();
   }
 
@@ -229,8 +279,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
   Widget _buildTeacherCard(Map<String, dynamic> teacher, int index) {
     final teacherName = teacher['name']?.toString() ?? 'Nama tidak tersedia';
     final teacherEmail = teacher['email']?.toString() ?? '';
-    final teacherSubject =
-        teacher['subject_name']?.toString() ?? 'Mata Pelajaran';
+    final teacherNip = teacher['nip']?.toString() ?? '';
 
     return AnimatedBuilder(
       animation: _animationController,
@@ -238,7 +287,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
         final delay = index * 0.1;
         final animation = CurvedAnimation(
           parent: _animationController,
-          curve: Interval(delay, 1.0, curve: Curves.easeOut),
+          curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
         );
 
         return FadeTransition(
@@ -251,7 +300,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
       },
       child: GestureDetector(
         onTap: () =>
-            _loadActivitiesByTeacher(teacher['id'].toString(), teacherName),
+            _loadSubjectsByTeacher(teacher['id'].toString(), teacherName),
         child: Container(
           margin: EdgeInsets.only(
             left: 16,
@@ -262,10 +311,8 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => _loadActivitiesByTeacher(
-                teacher['id'].toString(),
-                teacherName,
-              ),
+              onTap: () =>
+                  _loadSubjectsByTeacher(teacher['id'].toString(), teacherName),
               borderRadius: BorderRadius.circular(16),
               child: Container(
                 decoration: BoxDecoration(
@@ -298,146 +345,194 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                       ),
                     ),
 
-                    // Background pattern effect
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: _getPrimaryColor().withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: _getPrimaryColor(),
+                              size: 30,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  teacherName,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  teacherEmail,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (teacherNip.isNotEmpty) ...[
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'NIP: $teacherNip',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            color: Colors.grey.shade400,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubjectCard(Map<String, dynamic> subject, int index) {
+    final subjectName = subject['name']?.toString() ?? 'Mata Pelajaran';
+
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final delay = index * 0.1;
+        final animation = CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
+        );
+
+        return FadeTransition(
+          opacity: animation,
+          child: Transform.translate(
+            offset: Offset(0, 50 * (1 - animation.value)),
+            child: child,
+          ),
+        );
+      },
+      child: GestureDetector(
+        onTap: () =>
+            _loadActivitiesBySubject(subject['id'].toString(), subjectName),
+        child: Container(
+          margin: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: index == 0 ? 0 : 6,
+            bottom: 6,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _loadActivitiesBySubject(
+                subject['id'].toString(),
+                subjectName,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3),
+                      blurRadius: 5,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
                     Positioned(
-                      right: -8,
-                      top: -8,
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
                       child: Container(
-                        width: 40,
-                        height: 40,
+                        width: 6,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
-                          shape: BoxShape.circle,
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            bottomLeft: Radius.circular(16),
+                          ),
                         ),
                       ),
                     ),
-
                     Padding(
                       padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          // Header dengan nama dan email
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      teacherName,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      teacherEmail,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _getPrimaryColor().withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: _getPrimaryColor().withOpacity(0.3),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Guru',
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.menu_book,
+                              color: Colors.orange,
+                              size: 30,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  subjectName,
                                   style: TextStyle(
-                                    color: _getPrimaryColor(),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Klik untuk melihat kegiatan',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-
-                          SizedBox(height: 12),
-
-                          // Informasi mata pelajaran
-                          Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: _getPrimaryColor().withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Icon(
-                                  Icons.menu_book,
-                                  color: _getPrimaryColor(),
-                                  size: 16,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Mata Pelajaran',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    SizedBox(height: 1),
-                                    Text(
-                                      teacherSubject,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 12),
-
-                          // Action button
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _buildActionButton(
-                                icon: Icons.visibility,
-                                label: 'Lihat Kegiatan',
-                                color: _getPrimaryColor(),
-                                backgroundColor: Colors.white,
-                                borderColor: _getPrimaryColor(),
-                                onPressed: () => _loadActivitiesByTeacher(
-                                  teacher['id'].toString(),
-                                  teacherName,
-                                ),
-                              ),
-                            ],
+                          Icon(
+                            Icons.chevron_right,
+                            color: Colors.grey.shade400,
                           ),
                         ],
                       ),
@@ -1008,8 +1103,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                 label: 'Sub Bab (Tambahan)',
                                 value: item['sub_chapter_title'] ?? 'Unknown',
                               );
-                            })
-                            .toList(),
+                            }),
                       ],
                     ],
 
@@ -1128,10 +1222,15 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                     'en': 'Loading teacher data...',
                     'id': 'Memuat data guru...',
                   })
-                : languageProvider.getTranslatedText({
-                    'en': 'Loading activities...',
-                    'id': 'Memuat kegiatan...',
-                  }),
+                : (_showSubjectList
+                      ? languageProvider.getTranslatedText({
+                          'en': 'Loading subjects...',
+                          'id': 'Memuat mata pelajaran...',
+                        })
+                      : languageProvider.getTranslatedText({
+                          'en': 'Loading activities...',
+                          'id': 'Memuat kegiatan...',
+                        })),
           );
         }
 
@@ -1140,20 +1239,23 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
             errorMessage: _errorMessage!,
             onRetry: _showTeacherList
                 ? _loadTeachers
-                : () {
-                    if (_selectedTeacherId != null) {
-                      _loadActivitiesByTeacher(
-                        _selectedTeacherId!,
-                        _selectedTeacherName!,
-                      );
-                    }
-                  },
+                : (_showSubjectList
+                      ? () => _loadSubjectsByTeacher(
+                          _selectedTeacherId!,
+                          _selectedTeacherName!,
+                        )
+                      : () => _loadActivitiesBySubject(
+                          _selectedSubjectId!,
+                          _selectedSubjectName!,
+                        )),
           );
         }
 
         final filteredItems = _showTeacherList
             ? _getFilteredTeachers()
-            : _getFilteredActivities();
+            : (_showSubjectList
+                  ? _getFilteredSubjects()
+                  : _getFilteredActivities());
 
         return Scaffold(
           backgroundColor: Color(0xFFF8F9FA),
@@ -1186,7 +1288,9 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                         GestureDetector(
                           onTap: _showTeacherList
                               ? () => Navigator.pop(context)
-                              : _backToTeacherList,
+                              : (_showSubjectList
+                                    ? _backToTeacherList
+                                    : _backToSubjectList),
                           child: Container(
                             width: 40,
                             height: 40,
@@ -1212,12 +1316,19 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                         'en': 'Class Activities',
                                         'id': 'Kegiatan Kelas',
                                       })
-                                    : languageProvider.getTranslatedText({
-                                        'en':
-                                            'Activities - $_selectedTeacherName',
-                                        'id':
-                                            'Kegiatan - $_selectedTeacherName',
-                                      }),
+                                    : (_showSubjectList
+                                          ? languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Subjects - $_selectedTeacherName',
+                                              'id':
+                                                  'Mata Pelajaran - $_selectedTeacherName',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Activities - $_selectedSubjectName',
+                                              'id':
+                                                  'Kegiatan - $_selectedSubjectName',
+                                            })),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -1231,10 +1342,19 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                         'en': 'View all teacher activities',
                                         'id': 'Lihat semua kegiatan guru',
                                       })
-                                    : languageProvider.getTranslatedText({
-                                        'en': 'View teacher activities',
-                                        'id': 'Lihat kegiatan guru',
-                                      }),
+                                    : (_showSubjectList
+                                          ? languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Select subject to view activities',
+                                              'id':
+                                                  'Pilih mata pelajaran untuk melihat kegiatan',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Viewing activities for $_selectedSubjectName',
+                                              'id':
+                                                  'Melihat kegiatan untuk $_selectedSubjectName',
+                                            })),
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.white.withOpacity(0.9),
@@ -1279,10 +1399,15 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                         'en': 'Search teachers...',
                                         'id': 'Cari guru...',
                                       })
-                                    : languageProvider.getTranslatedText({
-                                        'en': 'Search activities...',
-                                        'id': 'Cari kegiatan...',
-                                      }),
+                                    : (_showSubjectList
+                                          ? languageProvider.getTranslatedText({
+                                              'en': 'Search subjects...',
+                                              'id': 'Cari mata pelajaran...',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Search activities...',
+                                              'id': 'Cari kegiatan...',
+                                            })),
                                 hintStyle: TextStyle(color: Colors.grey),
                                 prefixIcon: Icon(
                                   Icons.search,
@@ -1312,29 +1437,43 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                 'en': 'No teachers',
                                 'id': 'Tidak ada guru',
                               })
-                            : languageProvider.getTranslatedText({
-                                'en': 'No activities',
-                                'id': 'Tidak ada kegiatan',
-                              }),
+                            : (_showSubjectList
+                                  ? languageProvider.getTranslatedText({
+                                      'en': 'No subjects',
+                                      'id': 'Tidak ada mata pelajaran',
+                                    })
+                                  : languageProvider.getTranslatedText({
+                                      'en': 'No activities',
+                                      'id': 'Tidak ada kegiatan',
+                                    })),
                         subtitle: _searchController.text.isEmpty
                             ? _showTeacherList
                                   ? languageProvider.getTranslatedText({
                                       'en': 'No teacher data available',
                                       'id': 'Data guru tidak tersedia',
                                     })
-                                  : languageProvider.getTranslatedText({
-                                      'en':
-                                          'Teacher $_selectedTeacherName has not created class activities',
-                                      'id':
-                                          'Guru $_selectedTeacherName belum membuat kegiatan kelas',
-                                    })
+                                  : (_showSubjectList
+                                        ? languageProvider.getTranslatedText({
+                                            'en':
+                                                'Teacher $_selectedTeacherName has no subjects',
+                                            'id':
+                                                'Guru $_selectedTeacherName tidak memiliki mata pelajaran',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en':
+                                                'Subject $_selectedSubjectName has no class activities',
+                                            'id':
+                                                'Mata pelajaran $_selectedSubjectName belum memiliki kegiatan kelas',
+                                          }))
                             : languageProvider.getTranslatedText({
                                 'en': 'No search results found',
                                 'id': 'Tidak ditemukan hasil pencarian',
                               }),
                         icon: _showTeacherList
                             ? Icons.people_outline
-                            : Icons.event_note,
+                            : (_showSubjectList
+                                  ? Icons.menu_book
+                                  : Icons.event_note),
                       )
                     : ListView.builder(
                         padding: EdgeInsets.only(top: 8),
@@ -1343,7 +1482,9 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                           final item = filteredItems[index];
                           return _showTeacherList
                               ? _buildTeacherCard(item, index)
-                              : _buildActivityCard(item, index);
+                              : (_showSubjectList
+                                    ? _buildSubjectCard(item, index)
+                                    : _buildActivityCard(item, index));
                         },
                       ),
               ),

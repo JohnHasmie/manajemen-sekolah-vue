@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -282,6 +283,14 @@ class ApiTeacherService {
       print(
         'GET /teacher/$teacherId/subjects?$queryString - Status: ${response.statusCode}',
       );
+      if (kDebugMode && response.statusCode != 200) {
+        print('Response body (Error): ${response.body}');
+      }
+      if (kDebugMode) {
+        print(
+          'Response body: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}',
+        );
+      }
 
       final result = _handleResponse(response);
 

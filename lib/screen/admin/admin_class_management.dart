@@ -973,9 +973,15 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
             ),
           ),
           ...uniqueTeachers.values.map((teacher) {
+            final teacherName = teacher['name'] ?? 'Unknown';
+            final teacherNip = teacher['nip']?.toString() ?? '';
+            final displayText = teacherNip.isNotEmpty
+                ? '$teacherName (NIP: $teacherNip)'
+                : teacherName;
+
             return DropdownMenuItem<String>(
               value: teacher['id'].toString(),
-              child: Text(teacher['name'] ?? 'Unknown'),
+              child: Text(displayText, overflow: TextOverflow.ellipsis),
             );
           }),
         ],

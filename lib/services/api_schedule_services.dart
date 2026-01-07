@@ -66,6 +66,17 @@ class ApiScheduleService {
     return result is List ? result : [];
   }
 
+  // Get Academic Year
+  static Future<List<dynamic>> getAcademicYear() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/academic-year'),
+      headers: await _getHeaders(),
+    );
+
+    final result = _handleResponse(response);
+    return result is List ? result : [];
+  }
+
   // Get Jam Pelajaran
   static Future<List<dynamic>> getJamPelajaran() async {
     final response = await http.get(

@@ -46,8 +46,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
   late String _selectedTeacher;
   late String _selectedSubject;
   late String _selectedClass;
-  late String _selectedHari;
-  List<String> _selectedHariIds = [];
+  late String _selectedDay;
+  List<String> _selectedDayIds = [];
   late String _selectedSemester;
   late String _selectedAcademicYear; // New: Local state for AC
   late String _selectedJamPelajaran;
@@ -75,7 +75,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         });
         // Re-filter if we already have potential candidates
         if (_availableJamPelajaranList.isNotEmpty &&
-            _selectedHariIds.isNotEmpty) {
+            _selectedDayIds.isNotEmpty) {
           _filterAvailableJamPelajaran();
         }
       }
@@ -92,8 +92,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     _selectedTeacher = '';
     _selectedSubject = '';
     _selectedClass = '';
-    _selectedClass = '';
-    _selectedHariIds = [];
+    _selectedDay = '';
+    _selectedDayIds = [];
     _selectedSemester = widget.semester;
     _selectedAcademicYear = widget.academicYear;
     _selectedJamPelajaran = '';
@@ -107,9 +107,9 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       });
     }
 
-    if (widget.hariList.isNotEmpty && _selectedHariIds.isEmpty) {
+    if (widget.hariList.isNotEmpty && _selectedDayIds.isEmpty) {
       // Default to first day if none selected (optional, or leave empty)
-      // _selectedHariIds = [widget.hariList.first['id']?.toString() ?? ''];
+      // _selectedDayIds = [widget.hariList.first['id']?.toString() ?? ''];
     }
   }
 
@@ -127,17 +127,17 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           widget.schedule['kelas_id']?.toString() ??
           widget.schedule['class_id']?.toString() ??
           '';
-      _selectedHariIds = [];
+      _selectedDayIds = [];
       if (widget.schedule['days_ids'] != null &&
           widget.schedule['days_ids'] is List) {
-        _selectedHariIds = List<String>.from(
+        _selectedDayIds = List<String>.from(
           (widget.schedule['days_ids'] as List).map((e) => e.toString()),
         );
       } else if (widget.schedule['day_id'] != null) {
         // Fallback or legacy
-        _selectedHariIds = [widget.schedule['day_id'].toString()];
+        _selectedDayIds = [widget.schedule['day_id'].toString()];
       } else if (widget.schedule['hari_id'] != null) {
-        _selectedHariIds = [widget.schedule['hari_id'].toString()];
+        _selectedDayIds = [widget.schedule['hari_id'].toString()];
       }
       _selectedSemester =
           widget.schedule['semester_id']?.toString() ??
@@ -157,7 +157,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         _filterSubjectsByTeacher(_selectedTeacher);
       }
 
-      if (_selectedHariIds.isNotEmpty) {
+      if (_selectedDayIds.isNotEmpty) {
         _filterAvailableJamPelajaran();
         _fetchOccupiedSlots();
       }
@@ -166,7 +166,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
   Future<void> _fetchOccupiedSlots() async {
     if (_selectedClass.isEmpty ||
-        _selectedHariIds.isEmpty ||
+        _selectedDayIds.isEmpty ||
         _selectedSemester.isEmpty) {
       return;
     }
@@ -174,7 +174,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     try {
       final response = await ApiScheduleService.getSchedulesPaginated(
         classId: _selectedClass,
-        hariId: _selectedHariIds.first,
+        hariId: _selectedDayIds.first,
         semesterId: _selectedSemester,
         tahunAjaran: _selectedAcademicYear,
         limit: 100, // Ensure we get all slots
@@ -257,7 +257,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     setState(() => _isLoadingJamPelajaran = true);
 
     try {
-      if (_selectedHariIds.isEmpty) {
+      if (_selectedDayIds.isEmpty) {
         setState(() {
           _availableJamPelajaranList = widget.jamPelajaranList;
           _isLoadingJamPelajaran = false;
@@ -265,7 +265,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         return;
       }
 
-      final selectedDayId = _selectedHariIds.first;
+      final selectedDayId = _selectedDayIds.first;
 
       // Filter by day_id directly since backend now populates it
       final filtered = widget.jamPelajaranList.where((jam) {
@@ -762,7 +762,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
               setState(() {
                 _selectedClass = value ?? '';
               });
-              if (_selectedHariIds.isNotEmpty) {
+              if (_selectedDayIds.isNotEmpty) {
                 _fetchOccupiedSlots();
               }
             },
@@ -821,7 +821,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                 runSpacing: 8.0,
                 children: days.map((day) {
                   final dayId = day['id'].toString();
-                  final isSelected = _selectedHariIds.contains(dayId);
+                  final isSelected = _selectedDayIds.contains(dayId);
                   return FilterChip(
                     label: Text(
                       _translateDayName(
@@ -833,12 +833,12 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     onSelected: (bool selected) {
                       setState(() {
                         if (selected) {
-                          _selectedHariIds.add(dayId);
+                          _selectedDayIds.add(dayId);
                         } else {
-                          _selectedHariIds.remove(dayId);
+                          _selectedDayIds.remove(dayId);
                         }
                       });
-                      if (_selectedHariIds.isNotEmpty) {
+                      if (_selectedDayIds.isNotEmpty) {
                         _filterAvailableJamPelajaran();
                       }
                     },
@@ -861,7 +861,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   );
                 }).toList(),
               ),
-              if (_selectedHariIds.isEmpty &&
+              if (_selectedDayIds.isEmpty &&
                   _filteredSubjectList.isNotEmpty) // Basic check state
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
@@ -928,7 +928,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
               setState(() {
                 _selectedAcademicYear = value ?? '';
               });
-              if (_selectedHariIds.isNotEmpty) {
+              if (_selectedDayIds.isNotEmpty) {
                 // If AC changes, maybe slots change availability?
                 // Probably yes if slots are tied to schedule which is tied to year.
                 // But generally occupied slots are fetched by year param.
@@ -1016,7 +1016,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
               setState(() {
                 _selectedSemester = value ?? '';
               });
-              if (_selectedHariIds.isNotEmpty) {
+              if (_selectedDayIds.isNotEmpty) {
                 _fetchOccupiedSlots();
               }
             },
@@ -1215,7 +1215,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         'teacher_id': _selectedTeacher,
         'subject_id': _selectedSubject,
         'class_id': _selectedClass,
-        'days_ids': _selectedHariIds, // Changed key & data structure
+        'days_ids': _selectedDayIds, // Changed key & data structure
         'semester_id': _selectedSemester,
         'academic_year_id': _selectedAcademicYear,
         'lesson_hour_id': _selectedJamPelajaran,
