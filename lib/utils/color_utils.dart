@@ -110,11 +110,17 @@ class ColorUtils {
       case 'admin':
         return Color(0xFF2563EB); // Blue
       case 'guru':
-        return Color(0xFF16A34A); // Teal
+      case 'teacher':
+        return Color(0xFF16A34A); // Green
       case 'staff':
         return Color(0xFFFF9F1C); // Orange
       case 'wali':
+      case 'parent':
+      case 'orang_tua':
         return Color(0xFF9333EA); // Purple
+      case 'siswa':
+      case 'student':
+        return Color(0xFF3B82F6); // Blue
       default:
         return Color.fromARGB(255, 17, 19, 29);
     }

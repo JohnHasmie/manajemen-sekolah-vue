@@ -74,7 +74,9 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       });
 
       if (kDebugMode) {
-        print('📊 Data berhasil dimuat: ${_announcementList.length} pengumuman');
+        print(
+          '📊 Data berhasil dimuat: ${_announcementList.length} pengumuman',
+        );
       }
     } catch (e) {
       if (kDebugMode) {
@@ -105,7 +107,11 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
   Color _getPrimaryColor() {
     // Use ColorUtils with dynamic role from user data
-    return ColorUtils.getRoleColor(_userRole);
+    final color = ColorUtils.getRoleColor(_userRole);
+    if (kDebugMode) {
+      print('🎨 User role: $_userRole, Color: $color');
+    }
+    return color;
   }
 
   LinearGradient _getCardGradient() {
@@ -285,7 +291,8 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                               'en': 'Created by',
                               'id': 'Dibuat oleh',
                             }),
-                            value: announcementData['pembuat_nama'] ?? 'Unknown',
+                            value:
+                                announcementData['pembuat_nama'] ?? 'Unknown',
                           ),
                           SizedBox(height: 8),
                           _buildDetailRow(
@@ -308,7 +315,9 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                 'en': 'Start Date',
                                 'id': 'Tanggal Mulai',
                               }),
-                              value: _formatDate(announcementData['start_date']),
+                              value: _formatDate(
+                                announcementData['start_date'],
+                              ),
                             ),
                           if (announcementData['end_date'] != null)
                             SizedBox(height: 8),
@@ -395,7 +404,10 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     );
   }
 
-  Widget _buildAnnouncementCard(Map<String, dynamic> announcementData, int index) {
+  Widget _buildAnnouncementCard(
+    Map<String, dynamic> announcementData,
+    int index,
+  ) {
     final languageProvider = context.read<LanguageProvider>();
 
     return GestureDetector(
@@ -431,7 +443,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                     child: Container(
                       width: 6,
                       decoration: BoxDecoration(
-                        color: _getPrimaryColor(), // Warna sesuai role
+                        color: _getPrimaryColor(), // Warna sesuai role user
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(16),
                           bottomLeft: Radius.circular(16),
@@ -618,7 +630,8 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                   ),
                                   SizedBox(height: 1),
                                   Text(
-                                    announcementData['pembuat_nama'] ?? 'Unknown',
+                                    announcementData['pembuat_nama'] ??
+                                        'Unknown',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
