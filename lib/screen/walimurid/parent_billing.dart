@@ -149,11 +149,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
   void _onSearchChanged() {
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
-      setState(() {
-        // _currentPage = 1;
-      });
-      _loadData();
+    _searchDebounce = Timer(Duration(milliseconds: 300), () {
+      // Just trigger rebuild to filter locally, don't reload from API
+      setState(() {});
     });
   }
 
