@@ -8,6 +8,7 @@ import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/screen/admin/student_management.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
@@ -1410,6 +1411,44 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                     ),
 
                     SizedBox(height: 20),
+
+                    // View Students Button (Full Width)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          // Navigate to student management screen with class filter
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => StudentManagementScreen(
+                                initialClassId: classData['id'].toString(),
+                              ),
+                            ),
+                          );
+                        },
+                        icon: Icon(Icons.list, color: Colors.white),
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'View Students',
+                            'id': 'Lihat Daftar Siswa',
+                          }),
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 12),
+
+                    // Edit and Close buttons
                     Row(
                       children: [
                         Expanded(
@@ -1439,7 +1478,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                               _showAddEditDialog(classData: classData);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _getPrimaryColor(),
+                              backgroundColor: Colors.grey.shade600,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),

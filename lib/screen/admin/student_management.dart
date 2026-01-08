@@ -17,7 +17,9 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
 class StudentManagementScreen extends StatefulWidget {
-  const StudentManagementScreen({super.key});
+  final String? initialClassId;
+
+  const StudentManagementScreen({super.key, this.initialClassId});
 
   @override
   StudentManagementScreenState createState() => StudentManagementScreenState();
@@ -81,6 +83,12 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     _searchController.addListener(_onSearchChanged);
 
     _scrollController.addListener(_onScroll);
+
+    // Apply initial class filter if provided
+    if (widget.initialClassId != null) {
+      _selectedClassIds = [widget.initialClassId!];
+      _hasActiveFilter = true;
+    }
 
     _loadFilterOptions();
     _loadData();
