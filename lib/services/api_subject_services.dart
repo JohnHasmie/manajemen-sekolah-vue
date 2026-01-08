@@ -451,6 +451,7 @@ class ApiSubjectService {
           'chapter_id': item['bab_id'],
           'sub_chapter_id': item['sub_bab_id'],
           'is_checked': item['is_checked'],
+          'is_generated': item['is_generated'] ?? false,
         };
       }).toList(),
     };

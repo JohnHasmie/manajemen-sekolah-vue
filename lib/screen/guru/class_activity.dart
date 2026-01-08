@@ -2758,6 +2758,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
               'bab_id': data['chapter_id'],
               'sub_bab_id': data['sub_chapter_id'],
               'is_checked': true,
+              'is_generated': true,
             },
           ];
 
@@ -2768,6 +2769,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                 'bab_id': item['bab_id'],
                 'sub_bab_id': item['sub_bab_id'],
                 'is_checked': true,
+                'is_generated': true,
               });
             }
           }
@@ -2786,9 +2788,16 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                   'bab_id': _selectedBabId,
                   'sub_bab_id': subId,
                   'is_checked': true,
+                  'is_generated': true,
                 });
               }
             }
+          }
+
+          if (kDebugMode) {
+            print('=== BATCH SAVE PROGRESS ===');
+            print('Progress items: ${progressItems.length}');
+            print('First item: ${progressItems.first}');
           }
 
           await ApiSubjectService.batchSaveMateriProgress({

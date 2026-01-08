@@ -830,7 +830,22 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     // New fields for updated structure
     String? selectedGender = teacher?['gender']?.toString();
     String? selectedWaliKelasId = teacher?['homeroom_class_id']?.toString();
-    String? selectedStatus = teacher?['employment_status']?.toString();
+
+    // Normalize employment_status - convert Indonesian translations to English values
+    String? rawStatus = teacher?['employment_status']?.toString();
+    String? selectedStatus;
+    if (rawStatus != null) {
+      // Map Indonesian values to English values
+      final statusMap = {
+        'Tetap': 'permanent',
+        'Kontrak': 'contract',
+        'Honor': 'temporary',
+        'permanent': 'permanent',
+        'contract': 'contract',
+        'temporary': 'temporary',
+      };
+      selectedStatus = statusMap[rawStatus] ?? rawStatus;
+    }
 
     // Parse subject IDs
     List<String> selectedSubjectIds = [];
