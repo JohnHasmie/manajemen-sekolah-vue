@@ -48,7 +48,9 @@ class ExcelService {
             .getRangeByIndex(rowIndex, 1)
             .setText(student['student_number'] ?? '');
         sheet.getRangeByIndex(rowIndex, 2).setText(student['name'] ?? '');
-        sheet.getRangeByIndex(rowIndex, 3).setText(student['class_name'] ?? '');
+        sheet
+            .getRangeByIndex(rowIndex, 3)
+            .setText(student['class']?['name'] ?? student['class_name'] ?? '');
         sheet
             .getRangeByIndex(rowIndex, 4)
             .setText(_getGenderText(student['gender'], languageProvider));

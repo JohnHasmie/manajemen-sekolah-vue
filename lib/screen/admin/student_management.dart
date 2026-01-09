@@ -875,7 +875,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       text: student?['guardian_email'] ?? student?['parent_email'] ?? '',
     );
 
-    String? selectedClassId = student?['class_id'];
+    String? selectedClassId = student?['class']?['id'] ?? student?['class_id'];
     String? selectedGender = student?['gender'];
 
     final isEdit = student != null;
@@ -1423,192 +1423,235 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header dengan gradient
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: _getPrimaryColor(),
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      student['name'] ?? 'No Name',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'NIS: ${student['student_number'] ?? 'No NIS'}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        child: FutureBuilder(
+          future: ApiStudentService.getStudentById(student['id'].toString()),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-              // Content
-              Padding(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDetailItem(
-                      icon: Icons.school,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Class',
-                        'id': 'Kelas',
-                      }),
-                      value: student['class']?['name'] ?? 'No Class',
-                    ),
-                    _buildDetailItem(
-                      icon: Icons.transgender,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Gender',
-                        'id': 'Jenis Kelamin',
-                      }),
-                      value: _getGenderText(
-                        student['gender'],
-                        languageProvider,
+            final studentDetails = snapshot.hasData
+                ? snapshot.data as Map<String, dynamic>
+                : student;
+            final classes = studentDetails['classes'] as List<dynamic>? ?? [];
+
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header dengan gradient
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: _getCardGradient(),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
                       ),
                     ),
-                    _buildDetailItem(
-                      icon: Icons.cake,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Birth Date',
-                        'id': 'Tanggal Lahir',
-                      }),
-                      value: _formatDate(student['date_of_birth']),
-                    ),
-                    _buildDetailItem(
-                      icon: Icons.location_on,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Address',
-                        'id': 'Alamat',
-                      }),
-                      value: student['address'] ?? 'No Address',
-                      isMultiline: true,
-                    ),
-
-                    SizedBox(height: 16),
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Parent Information',
-                        'id': 'Informasi Wali',
-                      }),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-
-                    _buildDetailItem(
-                      icon: Icons.person,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Parent Name',
-                        'id': 'Nama Wali',
-                      }),
-                      value: student['guardian_name'] ?? 'No Parent Name',
-                    ),
-                    _buildDetailItem(
-                      icon: Icons.phone,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Phone Number',
-                        'id': 'No. Telepon',
-                      }),
-                      value: student['phone_number'] ?? 'No Phone',
-                    ),
-                    _buildDetailItem(
-                      icon: Icons.email,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Parent Email',
-                        'id': 'Email Wali',
-                      }),
-                      value:
-                          student['parent_email'] ??
-                          student['guardian_email'] ??
-                          'No Email',
-                    ),
-
-                    SizedBox(height: 20),
-                    Row(
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              side: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Close',
-                                'id': 'Tutup',
-                              }),
-                              style: TextStyle(color: Colors.grey.shade700),
-                            ),
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.person,
+                            size: 40,
+                            color: _getPrimaryColor(),
                           ),
                         ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _showStudentDialog(student: student);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _getPrimaryColor(),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Edit',
-                                'id': 'Edit',
-                              }),
-                              style: TextStyle(color: Colors.white),
-                            ),
+                        SizedBox(height: 12),
+                        Text(
+                          student['name'] ?? 'No Name',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'NIS: ${student['student_number'] ?? 'No NIS'}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Content
+                  Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildDetailItem(
+                          icon: Icons.school,
+                          label: languageProvider.getTranslatedText({
+                            'en': 'Class',
+                            'id': 'Kelas',
+                          }),
+                          value: student['class']?['name'] ?? 'No Class',
+                        ),
+                        _buildDetailItem(
+                          icon: Icons.transgender,
+                          label: languageProvider.getTranslatedText({
+                            'en': 'Gender',
+                            'id': 'Jenis Kelamin',
+                          }),
+                          value: _getGenderText(
+                            student['gender'],
+                            languageProvider,
+                          ),
+                        ),
+                        _buildDetailItem(
+                          icon: Icons.cake,
+                          label: languageProvider.getTranslatedText({
+                            'en': 'Birth Date',
+                            'id': 'Tanggal Lahir',
+                          }),
+                          value: _formatDate(student['date_of_birth']),
+                        ),
+                        _buildDetailItem(
+                          icon: Icons.location_on,
+                          label: languageProvider.getTranslatedText({
+                            'en': 'Address',
+                            'id': 'Alamat',
+                          }),
+                          value: student['address'] ?? 'No Address',
+                          isMultiline: true,
+                        ),
+
+                        if (classes.isNotEmpty) ...[
+                          SizedBox(height: 16),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Class History',
+                              'id': 'Riwayat Kelas',
+                            }),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          ...classes.map<Widget>((classItem) {
+                            final year =
+                                classItem['academic_year']?['year'] ??
+                                'Unknown Year';
+                            return _buildDetailItem(
+                              icon: Icons.history,
+                              label: year,
+                              value: classItem['name'] ?? 'Unknown Class',
+                            );
+                          }),
+                        ],
+
+                        SizedBox(height: 16),
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Parent Information',
+                            'id': 'Informasi Wali',
+                          }),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+
+                        _buildDetailItem(
+                          icon: Icons.person,
+                          label: languageProvider.getTranslatedText({
+                            'en': 'Parent Name',
+                            'id': 'Nama Wali',
+                          }),
+                          value: student['guardian_name'] ?? 'No Parent Name',
+                        ),
+                        _buildDetailItem(
+                          icon: Icons.phone,
+                          label: languageProvider.getTranslatedText({
+                            'en': 'Phone Number',
+                            'id': 'No. Telepon',
+                          }),
+                          value: student['phone_number'] ?? 'No Phone',
+                        ),
+                        _buildDetailItem(
+                          icon: Icons.email,
+                          label: languageProvider.getTranslatedText({
+                            'en': 'Parent Email',
+                            'id': 'Email Wali',
+                          }),
+                          value:
+                              student['parent_email'] ??
+                              student['guardian_email'] ??
+                              'No Email',
+                        ),
+
+                        SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  side: BorderSide(color: Colors.grey.shade300),
+                                ),
+                                child: Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Close',
+                                    'id': 'Tutup',
+                                  }),
+                                  style: TextStyle(color: Colors.grey.shade700),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _showStudentDialog(student: student);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _getPrimaryColor(),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Edit',
+                                    'id': 'Edit',
+                                  }),
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

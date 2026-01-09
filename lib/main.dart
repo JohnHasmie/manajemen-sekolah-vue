@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/components/error_handler.dart';
 import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/dashboard.dart';
 import 'package:manajemensekolah/screen/login_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -181,8 +182,15 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
       );
     }
 
-    return ChangeNotifierProvider<LanguageProvider>(
-      create: (context) => languageProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<LanguageProvider>(
+          create: (_) => languageProvider,
+        ),
+        ChangeNotifierProvider<AcademicYearProvider>(
+          create: (_) => academicYearProvider,
+        ),
+      ],
       child: Consumer<LanguageProvider>(
         builder: (context, languageProvider, child) {
           return MaterialApp(

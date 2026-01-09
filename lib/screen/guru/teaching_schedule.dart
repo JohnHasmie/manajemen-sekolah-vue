@@ -6,6 +6,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/separated_search_filter.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/materi_screen.dart';
 import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
@@ -225,33 +226,33 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       setState(() {
         _semesterList = semesterData;
 
-        // 1. Try to find by "current" flag
-        final currentSem = semesterData.firstWhere(
-          (s) =>
-              s['current'] == true ||
-              s['current'] == 1 ||
-              s['current'].toString() == '1',
-          orElse: () => null,
-        );
+        // Force logic based on current date as requested ("sekarang bulan januari maka semester genap")
+        final now = DateTime.now();
+        final currentMonth = now.month;
 
-        if (currentSem != null) {
-          _selectedSemester = currentSem['id'].toString();
-        } else if (semesterData.isNotEmpty) {
-          // 2. Date-based fallback
-          final now = DateTime.now();
-          final currentMonth = now.month;
-          final targetSemesterName = (currentMonth >= 7) ? 'Ganjil' : 'Genap';
+        // Month 1-6 = Genap (2), Month 7-12 = Ganjil (1)
+        final isGenap = currentMonth < 7;
+        final targetSemesterName = isGenap ? 'Genap' : 'Ganjil';
 
-          final dateBasedSemester = semesterData.firstWhere((s) {
-            final name = (s['name'] ?? s['nama'] ?? '').toString();
-            return name.contains(targetSemesterName);
-          }, orElse: () => null);
+        final dateBasedSemester = semesterData.firstWhere((s) {
+          final name = (s['name'] ?? s['nama'] ?? '').toString();
+          return name.contains(targetSemesterName);
+        }, orElse: () => null);
 
-          if (dateBasedSemester != null) {
-            _selectedSemester = dateBasedSemester['id'].toString();
-          } else {
-            // 3. Last fallback
-            _selectedSemester = semesterData.first['id'].toString();
+        if (dateBasedSemester != null) {
+          _selectedSemester = dateBasedSemester['id'].toString();
+        } else {
+          // Fallback to backend 'current' flag if name matching fails
+          final currentSem = semesterData.firstWhere(
+            (s) =>
+                s['current'] == true ||
+                s['current'] == 1 ||
+                s['current'].toString() == '1',
+            orElse: () => semesterData.isNotEmpty ? semesterData.first : null,
+          );
+
+          if (currentSem != null) {
+            _selectedSemester = currentSem['id'].toString();
           }
         }
       });
@@ -266,48 +267,37 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     try {
       final academicYears = await ApiScheduleService.getAcademicYear();
 
+      // Get global selected year from provider
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final globalSelectedYear = academicYearProvider.selectedAcademicYear;
+
       setState(() {
-        // Filter out "Status Kepegawaian" that might come from backend anomaly
         _academicYearList = academicYears
             .where(
               (ay) => (ay['year'] ?? '').toString() != 'Status Kepegawaian',
             )
             .toList();
 
-        // 1. Try to find by "current" flag
-        final currentAY = _academicYearList.firstWhere(
-          (ay) =>
-              ay['current'] == true ||
-              ay['current'] == 1 ||
-              ay['current'].toString() == '1',
-          orElse: () => null,
-        );
-
-        if (currentAY != null) {
-          _selectedAcademicYear = currentAY['year'].toString();
-        } else if (academicYears.isNotEmpty) {
-          // 2. Date-based fallback
-          final now = DateTime.now();
-          final currentYear = now.year;
-          final currentMonth = now.month;
-
-          String targetYearString;
-          if (currentMonth >= 7) {
-            targetYearString = '$currentYear/${currentYear + 1}';
-          } else {
-            targetYearString = '${currentYear - 1}/$currentYear';
-          }
-
-          final dateBasedYear = academicYears.firstWhere(
-            (ay) => (ay['year'] ?? '').toString() == targetYearString,
+        // 1. Prioritize Global Provider Selection
+        if (globalSelectedYear != null) {
+          _selectedAcademicYear = globalSelectedYear['year'].toString();
+        } else {
+          // 2. Fallback to existing logic if provider is empty
+          final currentAY = _academicYearList.firstWhere(
+            (ay) =>
+                ay['current'] == true ||
+                ay['current'] == 1 ||
+                ay['current'].toString() == '1',
             orElse: () => null,
           );
 
-          if (dateBasedYear != null) {
-            _selectedAcademicYear = dateBasedYear['year'].toString();
-          } else {
-            // 3. Last fallback
-            _selectedAcademicYear = academicYears.first['year'].toString();
+          if (currentAY != null) {
+            _selectedAcademicYear = currentAY['year'].toString();
+          } else if (academicYears.isNotEmpty) {
+            _selectedAcademicYear = academicYears.last['year'].toString();
           }
         }
       });

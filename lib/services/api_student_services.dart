@@ -161,6 +161,14 @@ class ApiStudentService {
     return result is List ? result : [];
   }
 
+  static Future<dynamic> getStudentById(String id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/student/$id'),
+      headers: await _getHeaders(),
+    );
+    return _handleResponse(response);
+  }
+
   static Future<Map<String, dynamic>> getStudentFilterOptions() async {
     try {
       final response = await http.get(

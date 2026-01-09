@@ -8,6 +8,9 @@ import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart'
+    as providers;
+import 'package:manajemensekolah/screen/admin/class_promotion_wizard.dart';
 import 'package:manajemensekolah/screen/admin/student_management.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
@@ -1240,34 +1243,42 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                           SizedBox(height: 12),
 
                           // Action buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _buildActionButton(
-                                icon: Icons.edit,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Edit',
-                                  'id': 'Edit',
-                                }),
-                                color: _getPrimaryColor(),
-                                backgroundColor: Colors.white,
-                                borderColor: _getPrimaryColor(),
-                                onPressed: () =>
-                                    _showAddEditDialog(classData: classData),
-                              ),
-                              SizedBox(width: 8),
-                              _buildActionButton(
-                                icon: Icons.delete,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Delete',
-                                  'id': 'Hapus',
-                                }),
-                                color: Colors.red,
-                                backgroundColor: Colors.white,
-                                borderColor: Colors.red,
-                                onPressed: () => _deleteClass(classData),
-                              ),
-                            ],
+                          Consumer<providers.AcademicYearProvider>(
+                            builder: (context, academicYearProvider, child) {
+                              if (academicYearProvider.isReadOnly) {
+                                return SizedBox.shrink();
+                              }
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  _buildActionButton(
+                                    icon: Icons.edit,
+                                    label: languageProvider.getTranslatedText({
+                                      'en': 'Edit',
+                                      'id': 'Edit',
+                                    }),
+                                    color: _getPrimaryColor(),
+                                    backgroundColor: Colors.white,
+                                    borderColor: _getPrimaryColor(),
+                                    onPressed: () => _showAddEditDialog(
+                                      classData: classData,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  _buildActionButton(
+                                    icon: Icons.delete,
+                                    label: languageProvider.getTranslatedText({
+                                      'en': 'Delete',
+                                      'id': 'Hapus',
+                                    }),
+                                    color: Colors.red,
+                                    backgroundColor: Colors.white,
+                                    borderColor: Colors.red,
+                                    onPressed: () => _deleteClass(classData),
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -1981,16 +1992,117 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddEditDialog(),
-            backgroundColor: _getPrimaryColor(),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(Icons.add, color: Colors.white, size: 20),
+          floatingActionButton: Consumer<providers.AcademicYearProvider>(
+            builder: (context, academicYearProvider, child) {
+              if (academicYearProvider.isReadOnly) {
+                return SizedBox.shrink();
+              }
+              return FloatingActionButton(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => _buildFabMenu(context),
+                  );
+                },
+                backgroundColor: _getPrimaryColor(),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(Icons.add, color: Colors.white, size: 28),
+              );
+            },
           ),
         );
       },
+    );
+  }
+
+  Widget _buildFabMenu(BuildContext context) {
+    final languageProvider = context.read<LanguageProvider>();
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            languageProvider.getTranslatedText({
+              'en': 'Choose Action',
+              'id': 'Pilih Aksi',
+            }),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 20),
+          ListTile(
+            leading: Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _getPrimaryColor().withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.class_, color: _getPrimaryColor()),
+            ),
+            title: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Create New Class',
+                'id': 'Buat Kelas Baru',
+              }),
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Add a new empty class',
+                'id': 'Tambah kelas kosong baru',
+              }),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _showAddEditDialog();
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.upgrade, color: Colors.orange),
+            ),
+            title: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Promote Class',
+                'id': 'Naik Kelas / Promosi',
+              }),
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Promote students to next grade',
+                'id': 'Promosikan siswa ke tingkat selanjutnya',
+              }),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _showPromotionWizard();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPromotionWizard() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ClassPromotionWizard()),
     );
   }
 }

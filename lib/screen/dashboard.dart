@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
 import 'package:manajemensekolah/screen/admin/admin_class_activity.dart';
 import 'package:manajemensekolah/screen/admin/admin_class_management.dart';
@@ -98,6 +99,13 @@ class _DashboardState extends State<Dashboard>
     await _loadUserData();
     await _loadAccessibleSchools();
     await _loadAvailableRoles();
+    // Fetch academic years
+    if (mounted) {
+      await Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      ).fetchAcademicYears();
+    }
     await _loadStats(); // Pastikan dipanggil setelah user data dimuat
   }
 
@@ -739,12 +747,16 @@ class _DashboardState extends State<Dashboard>
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 2),
-                Text(
-                  _getRoleTitle(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      _getRoleTitle(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1091,6 +1103,57 @@ class _DashboardState extends State<Dashboard>
                 ),
               ],
             ),
+          ),
+          SizedBox(width: 8),
+          Consumer<AcademicYearProvider>(
+            builder: (context, provider, child) {
+              if (provider.isLoading) {
+                return SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                );
+              }
+              return Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: provider.selectedAcademicYear?['id'].toString(),
+                    dropdownColor: _getPrimaryColor(),
+                    icon: Icon(
+                      Icons.arrow_drop_down,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.white),
+                    isDense: true,
+                    items: provider.academicYears.map((year) {
+                      final isCurrent =
+                          year['current'] == true || year['status'] == 'active';
+                      return DropdownMenuItem<String>(
+                        value: year['id'].toString(),
+                        child: Text(
+                          '${year['year']}${isCurrent ? ' (Active)' : ''}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        provider.setSelectedYear(val);
+                      }
+                    },
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
