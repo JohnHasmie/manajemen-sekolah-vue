@@ -188,7 +188,7 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
           create: (_) => languageProvider,
         ),
         ChangeNotifierProvider<AcademicYearProvider>(
-          create: (_) => academicYearProvider,
+          create: (_) => AcademicYearProvider(),
         ),
       ],
       child: Consumer<LanguageProvider>(

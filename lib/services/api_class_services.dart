@@ -145,6 +145,7 @@ class ApiClassService {
     String? gradeLevel,
     String? waliclassId,
     String? search,
+    String? academicYearId,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
@@ -160,6 +161,9 @@ class ApiClassService {
     }
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;
+    }
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
     }
 
     // Build query string
@@ -299,6 +303,17 @@ class ApiClassService {
     } catch (e) {
       print('Error getting students by class: $e');
       return [];
+    }
+  }
+
+  // Promote students
+  Future<dynamic> promoteStudents(Map<String, dynamic> data) async {
+    try {
+      final result = await ApiService().post('/promotion/promote', data);
+      return result;
+    } catch (e) {
+      print('Error promoting students: $e');
+      throw Exception('Gagal melakukan proses kenaikan kelas: $e');
     }
   }
 }

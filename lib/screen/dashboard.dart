@@ -106,7 +106,20 @@ class _DashboardState extends State<Dashboard>
         listen: false,
       ).fetchAcademicYears();
     }
+
+    // Listen for changes
+    if (mounted) {
+      Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      ).addListener(_onYearChanged);
+    }
+
     await _loadStats(); // Pastikan dipanggil setelah user data dimuat
+  }
+
+  void _onYearChanged() {
+    _loadStats();
   }
 
   Future<void> _loadAvailableRoles() async {
@@ -261,32 +274,35 @@ class _DashboardState extends State<Dashboard>
           print('👤 Loading stats untuk admin');
         }
 
+        final academicYearProvider = Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        );
+        final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
+            ?.toString();
+
         final student = await ApiStudentService.getStudent();
-        if (kDebugMode) {
-          print('🎒 Siswa ditemukan: ${student.length}');
-        }
+        // Note: Generic getStudent might need filtering by year if we want "Active Students in Year".
+        // For now, let's keep it simple or check if getStudent supports filtering.
+        // Usually "Total Students" is global, but "Total Classes" IS year-specific.
 
         final teacher = await ApiTeacherService().getTeacher();
-        if (kDebugMode) {
-          print('👨‍🏫 Guru ditemukan: ${teacher.length}');
-        }
 
-        final classes = await ApiClassService().getClass();
-        if (kDebugMode) {
-          print('🏫 Kelas ditemukan: ${classes.length}');
-        }
+        // Filter classes by active year
+        final classes = await ApiClassService.getClassPaginated(
+          limit: 1000,
+          academicYearId: selectedYearId,
+        );
+        final classesList = classes['data'] as List? ?? [];
 
         final subjects = await ApiSubjectService().getSubject();
-        if (kDebugMode) {
-          print('📖 Mata Pelajaran ditemukan: ${subjects.length}');
-        }
 
         if (!mounted) return;
         setState(() {
           _stats = {
             'total_siswa': student.length,
             'total_guru': teacher.length,
-            'total_kelas': classes.length,
+            'total_kelas': classesList.length,
             'total_mapel': subjects.length,
           };
         });

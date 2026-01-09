@@ -45,13 +45,13 @@ class AcademicYearProvider with ChangeNotifier {
         orElse: () => null,
       );
 
-      // Priority 1: Match by Date
-      if (_selectedAcademicYear == null && dateBasedYear != null) {
-        _selectedAcademicYear = dateBasedYear;
-      }
-      // Priority 2: Use Active from Backend
-      else if (_selectedAcademicYear == null && _activeAcademicYear != null) {
+      // Priority 1: Use Active from Backend
+      if (_selectedAcademicYear == null && _activeAcademicYear != null) {
         _selectedAcademicYear = _activeAcademicYear;
+      }
+      // Priority 2: Match by Date (Fallback)
+      else if (_selectedAcademicYear == null && dateBasedYear != null) {
+        _selectedAcademicYear = dateBasedYear;
       }
       // Priority 3: Fallback to first
       else if (_selectedAcademicYear == null && _academicYears.isNotEmpty) {
@@ -102,4 +102,3 @@ class AcademicYearProvider with ChangeNotifier {
 }
 
 // Global instance if needed (but prefer Provider)
-final academicYearProvider = AcademicYearProvider();

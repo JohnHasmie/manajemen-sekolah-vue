@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/teacher_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -466,11 +467,20 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       final classData = await _classService.getClass();
 
       // Load with pagination and backend filtering
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
+      // Load with pagination and backend filtering
       final response = await ApiTeacherService.getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedClassId,
         gender: null,
+        academicYearId: selectedYearId,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -521,11 +531,20 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       _currentPage++;
 
       // Load next page
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
+      // Load next page
       final response = await ApiTeacherService.getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedClassId,
         gender: null,
+        academicYearId: selectedYearId,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),

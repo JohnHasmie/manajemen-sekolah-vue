@@ -9,6 +9,7 @@ import 'package:manajemensekolah/components/conflict_resolution_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/schedule_form_dialog.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -111,8 +112,17 @@ class TeachingScheduleManagementScreenState
     // Listen to search changes with debounce
     _searchController.addListener(_onSearchChanged);
 
-    // Set default academic year and semester based on current date
-    _setDefaultAcademicPeriod();
+    // Set default academic year from provider
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    if (academicYearProvider.selectedAcademicYear != null) {
+      _selectedAcademicYear = academicYearProvider.selectedAcademicYear!['id']
+          .toString();
+    } else {
+      _setDefaultAcademicPeriod();
+    }
 
     _loadFilterOptions();
     _loadData();

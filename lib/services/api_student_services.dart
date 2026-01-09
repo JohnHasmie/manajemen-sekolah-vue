@@ -212,6 +212,7 @@ class ApiStudentService {
     String? gradeLevel,
     String? gender,
     String? search,
+    String? academicYearId,
   }) async {
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -229,6 +230,9 @@ class ApiStudentService {
     }
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;
+    }
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
     }
 
     String queryString = Uri(queryParameters: queryParams).query;

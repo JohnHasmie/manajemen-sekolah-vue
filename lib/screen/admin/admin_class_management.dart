@@ -29,7 +29,7 @@ class AdminClassManagementScreen extends StatefulWidget {
 }
 
 class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final ApiClassService _classService = ApiClassService();
 
   List<dynamic> _classes = [];
@@ -40,6 +40,12 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+
+  // FAB Animation
+  late AnimationController _fabAnimationController;
+  late Animation<double> _fabRotateAnimation;
+  late Animation<double> _fabScaleAnimation;
+  bool _isFabOpen = false;
 
   // Scroll Controller for Infinite Scroll
   final ScrollController _scrollController = ScrollController();
@@ -81,6 +87,18 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
+    // FAB Init
+    _fabAnimationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 200),
+    );
+    _fabRotateAnimation = Tween<double>(begin: 0.0, end: 0.125).animate(
+      CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeInOut),
+    );
+    _fabScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeOut),
+    );
+
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
 
@@ -97,6 +115,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _fabAnimationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.removeListener(_onSearchChanged);
@@ -402,10 +421,18 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         });
       }
 
+      final academicYearProvider = Provider.of<providers.AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
       final response = await ApiClassService.getClassPaginated(
         page: _currentPage,
         limit: _perPage,
         gradeLevel: _selectedGradeFilter,
+        academicYearId: selectedYearId,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -453,10 +480,18 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     try {
       _currentPage++;
 
+      final academicYearProvider = Provider.of<providers.AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
       final response = await ApiClassService.getClassPaginated(
         page: _currentPage,
         limit: _perPage,
         gradeLevel: _selectedGradeFilter,
+        academicYearId: selectedYearId,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -1994,108 +2029,127 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           ),
           floatingActionButton: Consumer<providers.AcademicYearProvider>(
             builder: (context, academicYearProvider, child) {
-              if (academicYearProvider.isReadOnly) {
-                return SizedBox.shrink();
-              }
-              return FloatingActionButton(
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => _buildFabMenu(context),
-                  );
-                },
-                backgroundColor: _getPrimaryColor(),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(Icons.add, color: Colors.white, size: 28),
+              final languageProvider = context.read<LanguageProvider>();
+              // Removed isReadOnly check to ensure FAB is always visible
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (_isFabOpen) ...[
+                    ScaleTransition(
+                      scale: _fabScaleAnimation,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black12, blurRadius: 4),
+                              ],
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Promote Class',
+                                'id': 'Naik Kelas / Promosi',
+                              }),
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          FloatingActionButton(
+                            heroTag: 'fab_promote_class',
+                            mini: true,
+                            backgroundColor: Colors.orange,
+                            onPressed: () {
+                              setState(() {
+                                _isFabOpen = false;
+                                _fabAnimationController.reverse();
+                              });
+                              _showPromotionWizard();
+                            },
+                            child: Icon(Icons.upgrade, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    ScaleTransition(
+                      scale: _fabScaleAnimation,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black12, blurRadius: 4),
+                              ],
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Create New Class',
+                                'id': 'Buat Kelas Baru',
+                              }),
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          FloatingActionButton(
+                            heroTag: 'fab_add_class',
+                            mini: true,
+                            backgroundColor: _getPrimaryColor(),
+                            onPressed: () {
+                              setState(() {
+                                _isFabOpen = false;
+                                _fabAnimationController.reverse();
+                              });
+                              _showAddEditDialog();
+                            },
+                            child: Icon(Icons.add, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                  FloatingActionButton(
+                    heroTag: 'fab_main_class',
+                    onPressed: () {
+                      setState(() {
+                        _isFabOpen = !_isFabOpen;
+                        if (_isFabOpen) {
+                          _fabAnimationController.forward();
+                        } else {
+                          _fabAnimationController.reverse();
+                        }
+                      });
+                    },
+                    backgroundColor: _getPrimaryColor(),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: RotationTransition(
+                      turns: _fabRotateAnimation,
+                      child: Icon(Icons.add, color: Colors.white, size: 24),
+                    ),
+                  ),
+                ],
               );
             },
           ),
         );
       },
-    );
-  }
-
-  Widget _buildFabMenu(BuildContext context) {
-    final languageProvider = context.read<LanguageProvider>();
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            languageProvider.getTranslatedText({
-              'en': 'Choose Action',
-              'id': 'Pilih Aksi',
-            }),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 20),
-          ListTile(
-            leading: Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: _getPrimaryColor().withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.class_, color: _getPrimaryColor()),
-            ),
-            title: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Create New Class',
-                'id': 'Buat Kelas Baru',
-              }),
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Add a new empty class',
-                'id': 'Tambah kelas kosong baru',
-              }),
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _showAddEditDialog();
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.upgrade, color: Colors.orange),
-            ),
-            title: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Promote Class',
-                'id': 'Naik Kelas / Promosi',
-              }),
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Promote students to next grade',
-                'id': 'Promosikan siswa ke tingkat selanjutnya',
-              }),
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _showPromotionWizard();
-            },
-          ),
-        ],
-      ),
     );
   }
 

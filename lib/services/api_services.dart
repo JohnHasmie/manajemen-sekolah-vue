@@ -24,12 +24,12 @@ class ApiService {
   static Future<void> init() async {
     if (kIsWeb) {
       // web pakai localhost
-      baseUrl = 'http://localhost:3001/api';
+      baseUrl = 'http://127.0.0.1:8000/api';
     } else if (Platform.isAndroid) {
       // pakai IP LAN server
       // PENTING: Ganti IP ini jika Mac Anda pindah jaringan
       // Cek IP Mac dengan: ifconfig | grep "inet " | grep -v 127.0.0.1
-      baseUrl = 'http://192.168.1.7:3001/api';
+      baseUrl = 'http://127.0.0.1:8000/api';
       if (kDebugMode) {
         print('📡 API Base URL (Android): $baseUrl');
         print('💡 Pastikan Android dan Mac di jaringan Wi-Fi yang sama!');
