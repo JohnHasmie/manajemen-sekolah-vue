@@ -145,6 +145,8 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     });
   }
 
+  bool _showAllTeachers = false; // Filter to show all teachers
+
   Future<void> _loadFilterOptions() async {
     try {
       final response = await ApiTeacherService.getTeacherFilterOptions();
@@ -212,7 +214,22 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       });
     }
 
-    // Subject/gender filters removed — only homeroom (status) retained
+    if (_showAllTeachers) {
+      filterChips.add({
+        'label': languageProvider.getTranslatedText({
+          'en': 'Showing All Teachers (Ignoring Academic Year)',
+          'id': 'Menampilkan Semua Guru (Semua Tahun)',
+        }),
+        'onRemove': () {
+          setState(() {
+            _showAllTeachers = false;
+          });
+          _loadData();
+        },
+      });
+    }
+
+    // Subject/gender filters removed — only homeroom/teacher retained
 
     return filterChips;
   }
@@ -265,6 +282,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                         onPressed: () {
                           setModalState(() {
                             tempSelectedHomeroom = null;
+                            _showAllTeachers = false;
                           });
                         },
                         child: Text(
@@ -286,6 +304,42 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Show All Teachers Toggle
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Show All Teachers',
+                              'id': 'Tampilkan Semua Guru',
+                            }),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          subtitle: Text(
+                            languageProvider.getTranslatedText({
+                              'en':
+                                  'Include inactive teachers (ignores academic year)',
+                              'id':
+                                  'Termasuk guru tidak aktif (abaikan tahun ajaran)',
+                            }),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          value: _showAllTeachers,
+                          activeThumbColor: _getPrimaryColor(),
+                          onChanged: (bool value) {
+                            setModalState(() {
+                              _showAllTeachers = value;
+                            });
+                          },
+                        ),
+                        SizedBox(height: 24),
+
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Status',
@@ -419,29 +473,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     );
   }
 
-  Widget _buildGenderChip({
-    required String label,
-    required String? value,
-    required String? selectedValue,
-    required VoidCallback onSelected,
-  }) {
-    final isSelected = selectedValue == value;
-
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onSelected(),
-      selectedColor: _getPrimaryColor().withOpacity(0.2),
-      labelStyle: TextStyle(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade700,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      side: BorderSide(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade300,
-      ),
-    );
-  }
-
   Widget _buildStatusChip({
     required String label,
     required String? value,
@@ -487,13 +518,16 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
+      // If showing all teachers, ignore academic year
+      final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
+
       // Load with pagination and backend filtering
       final response = await ApiTeacherService.getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedClassId,
         gender: null,
-        academicYearId: selectedYearId,
+        academicYearId: effectiveAcademicYearId,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -551,13 +585,16 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
+      // If showing all teachers, ignore academic year
+      final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
+
       // Load next page
       final response = await ApiTeacherService.getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedClassId,
         gender: null,
-        academicYearId: selectedYearId,
+        academicYearId: effectiveAcademicYearId,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),

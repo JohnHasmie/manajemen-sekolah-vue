@@ -140,6 +140,7 @@ class ApiTeacherService {
     String? gender,
     String? search,
     String? academicYearId,
+    String? teacherId,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
@@ -158,6 +159,9 @@ class ApiTeacherService {
     }
     if (academicYearId != null && academicYearId.isNotEmpty) {
       queryParams['academic_year_id'] = academicYearId;
+    }
+    if (teacherId != null && teacherId.isNotEmpty) {
+      queryParams['teacher_id'] = teacherId;
     }
 
     // Build query string
