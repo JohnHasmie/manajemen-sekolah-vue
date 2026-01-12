@@ -170,6 +170,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
   void _checkActiveFilter() {
     setState(() {
       _hasActiveFilter =
+          _selectedStatusFilter != null ||
           _selectedKategoriFilter != null ||
           _selectedKelasStatusFilter != null ||
           _selectedGradeLevelFilter != null ||
@@ -195,6 +196,28 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     LanguageProvider languageProvider,
   ) {
     List<Map<String, dynamic>> filterChips = [];
+
+    if (_selectedStatusFilter != null) {
+      final statusText = _selectedStatusFilter == 'active'
+          ? languageProvider.getTranslatedText({'en': 'Active', 'id': 'Aktif'})
+          : _selectedStatusFilter == 'inactive'
+          ? languageProvider.getTranslatedText({
+              'en': 'Inactive',
+              'id': 'Tidak Aktif',
+            })
+          : languageProvider.getTranslatedText({'en': 'All', 'id': 'Semua'});
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Status', 'id': 'Status'})}: $statusText',
+        'onRemove': () {
+          setState(() {
+            _selectedStatusFilter = null;
+          });
+          _checkActiveFilter();
+          _loadSubjects();
+        },
+      });
+    }
 
     if (_selectedKategoriFilter != null) {
       filterChips.add({
@@ -268,6 +291,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     final languageProvider = context.read<LanguageProvider>();
 
     // Temporary state for bottom sheet
+    String? tempSelectedStatus = _selectedStatusFilter;
     String? tempSelectedKategori = _selectedKategoriFilter;
     String? tempSelectedClassStatus = _selectedKelasStatusFilter;
     String? tempSelectedGradeLevel = _selectedGradeLevelFilter;
@@ -310,6 +334,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                     TextButton(
                       onPressed: () {
                         setModalState(() {
+                          tempSelectedStatus = null;
                           tempSelectedKategori = null;
                           tempSelectedClassStatus = null;
                           tempSelectedGradeLevel = null;
@@ -359,13 +384,13 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                               {'value': 'all', 'label': 'All / Semua'},
                             ].map((item) {
                               final isSelected =
-                                  _selectedStatusFilter == item['value'];
+                                  tempSelectedStatus == item['value'];
                               return FilterChip(
                                 label: Text(item['label']!),
                                 selected: isSelected,
                                 onSelected: (selected) {
                                   setModalState(() {
-                                    _selectedStatusFilter = selected
+                                    tempSelectedStatus = selected
                                         ? item['value']
                                         : null;
                                   });
@@ -642,6 +667,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                   child: ElevatedButton(
                     onPressed: () {
                       setState(() {
+                        _selectedStatusFilter = tempSelectedStatus;
                         _selectedKategoriFilter = tempSelectedKategori;
                         _selectedKelasStatusFilter = tempSelectedClassStatus;
                         _selectedGradeLevelFilter = tempSelectedGradeLevel;
