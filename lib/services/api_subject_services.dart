@@ -61,7 +61,7 @@ class ApiSubjectService {
   static Future<Map<String, dynamic>> getSubjectsPaginated({
     int page = 1,
     int limit = 10,
-    String? status,
+    String? status, // 'active', 'inactive', 'all'
     String? search,
     List<String>? subjectIds,
   }) async {
@@ -71,7 +71,7 @@ class ApiSubjectService {
       'limit': limit.toString(),
     };
 
-    if (status != null && status.isNotEmpty) {
+    if (status != null && status.isNotEmpty && status != 'all') {
       queryParams['status'] = status;
     }
     if (search != null && search.isNotEmpty) {
@@ -120,8 +120,12 @@ class ApiSubjectService {
 
   // Legacy method (keep for backward compatibility)
   // Now handles paginated response from backend
-  Future<List<dynamic>> getSubject() async {
-    final result = await ApiService().get('/subject');
+  Future<List<dynamic>> getSubject({String? status}) async {
+    String url = '/subject';
+    if (status != null && status.isNotEmpty && status != 'all') {
+      url += '?status=$status';
+    }
+    final result = await ApiService().get(url);
 
     // Handle new pagination format
     if (result is Map<String, dynamic>) {
