@@ -100,10 +100,17 @@ class ApiScheduleService {
   }
 
   // Get Filter Options for Teaching Schedule Filters
-  static Future<Map<String, dynamic>> getScheduleFilterOptions() async {
+  static Future<Map<String, dynamic>> getScheduleFilterOptions({
+    String? academicYearId,
+  }) async {
     try {
+      String url = '$baseUrl/teaching-schedule/filter-options';
+      if (academicYearId != null) {
+        url += '?academic_year_id=$academicYearId';
+      }
+
       final response = await http.get(
-        Uri.parse('$baseUrl/teaching-schedule/filter-options'),
+        Uri.parse(url),
         headers: await _getHeaders(),
       );
 

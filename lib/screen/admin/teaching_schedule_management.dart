@@ -257,9 +257,9 @@ class TeachingScheduleManagementScreenState
           _selectedAcademicYear = academicYearProvider
               .selectedAcademicYear!['id']
               .toString();
-          // Also update the filter semester if needed?
           // Usually changing year resets semester or keeps it if ID matches.
         });
+        _loadFilterOptions(); // Reload classes based on new academic year
         _loadData(resetPage: true);
       }
     }
@@ -290,7 +290,9 @@ class TeachingScheduleManagementScreenState
 
   Future<void> _loadFilterOptions() async {
     try {
-      final response = await ApiScheduleService.getScheduleFilterOptions();
+      final response = await ApiScheduleService.getScheduleFilterOptions(
+        academicYearId: _selectedAcademicYear,
+      );
 
       if (!mounted) return;
 
@@ -820,11 +822,11 @@ class TeachingScheduleManagementScreenState
     final result = await showDialog(
       context: context,
       builder: (context) => ScheduleFormDialog(
-        teacherList: _teacherList,
+        teacherList: _availableTeachers,
         subjectList: _subjectList,
-        classList: _classList,
-        hariList: _hariList,
-        semesterList: _semesterList,
+        classList: _availableClasses,
+        hariList: _availableDays,
+        semesterList: _availableSemesters,
         jamPelajaranList: _jamPelajaranList,
         semester: _selectedSemester,
         academicYear: _selectedAcademicYear,
@@ -843,11 +845,11 @@ class TeachingScheduleManagementScreenState
     final result = await showDialog(
       context: context,
       builder: (context) => ScheduleFormDialog(
-        teacherList: _teacherList,
+        teacherList: _availableTeachers,
         subjectList: _subjectList,
-        classList: _classList,
-        hariList: _hariList,
-        semesterList: _semesterList,
+        classList: _availableClasses,
+        hariList: _availableDays,
+        semesterList: _availableSemesters,
         jamPelajaranList: _jamPelajaranList,
         semester: _selectedSemester,
         academicYear: _selectedAcademicYear,
@@ -967,14 +969,6 @@ class TeachingScheduleManagementScreenState
   void _onSemesterChanged(String semesterId) {
     setState(() {
       _selectedSemester = semesterId;
-      _isLoading = true;
-    });
-    _loadData();
-  }
-
-  void _onAcademicYearChanged(String academicYear) {
-    setState(() {
-      _selectedAcademicYear = academicYear;
       _isLoading = true;
     });
     _loadData();
