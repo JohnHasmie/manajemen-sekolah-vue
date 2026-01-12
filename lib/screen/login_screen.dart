@@ -289,6 +289,11 @@ class LoginScreenState extends State<LoginScreen> {
       if (error.toString().contains('404') ||
           error.toString().contains('tidak terdaftar')) {
         errorMessage = 'Email Google tidak terdaftar di sistem sekolah.';
+      } else if (error.toString().contains('People API') ||
+          (error.toString().contains('403') &&
+              error.toString().contains('PERMISSION_DENIED'))) {
+        errorMessage =
+            'Google People API belum diaktifkan oleh Admin. Mohon hubungi IT Support.';
       } else {
         errorMessage = error.toString().replaceAll('Exception:', '').trim();
       }
@@ -631,7 +636,7 @@ class LoginScreenState extends State<LoginScreen> {
               : OutlinedButton.icon(
                   onPressed: _serverConnected ? _handleGoogleSignIn : null,
                   icon: Image.asset(
-                    'assets/icon/app_icon.png',
+                    'assets/icon/iconaieasetech.jpg',
                     height: 24,
                     errorBuilder: (c, o, s) => Icon(Icons.login),
                   ), // Fallback use simple icon
