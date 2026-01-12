@@ -85,6 +85,13 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     // Listen to search changes with debounce
     _searchController.addListener(_onSearchChanged);
 
+    // Listen to academic year changes
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    academicYearProvider.addListener(_onAcademicYearChanged);
+
     _loadFilterOptions();
     _loadData();
   }
@@ -98,6 +105,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     _searchController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  void _onAcademicYearChanged() {
+    if (mounted) {
+      _loadData();
+    }
   }
 
   void _onScroll() {

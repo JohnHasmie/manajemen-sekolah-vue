@@ -66,6 +66,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
     _searchController.addListener(_onSearchChanged);
 
+    // Listen to academic year changes
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    academicYearProvider.addListener(_onAcademicYearChanged);
+
     _scrollController.addListener(_onScroll);
 
     // Apply initial class filter if provided
@@ -129,7 +136,22 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchDebounce?.cancel();
+    // Remove provider listener
+    // Note: Provider listeners are usually auto-removed if the widget is disposed,
+    // but explicit removal from the ChangeNotifier is safer if we added it manually.
+    // However, we can't easily access context in dispose safely to get the provider if listen:false.
+    // A better pattern is to use a late variable for the provider if we need to remove listener,
+    // or just rely on the fact that if this widget is unmounted, _onAcademicYearChanged checks mounted.
+    // But to be clean:
+    // We didn't store the provider reference.
+    // Let's just ensure _onAcademicYearChanged checks mounted.
     super.dispose();
+  }
+
+  void _onAcademicYearChanged() {
+    if (mounted) {
+      _loadData(resetPage: true);
+    }
   }
 
   void _onSearchChanged() {

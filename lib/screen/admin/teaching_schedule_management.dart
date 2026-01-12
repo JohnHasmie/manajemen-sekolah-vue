@@ -124,6 +124,9 @@ class TeachingScheduleManagementScreenState
       _setDefaultAcademicPeriod();
     }
 
+    // Listen to academic year changes
+    academicYearProvider.addListener(_onAcademicYearProviderChanged);
+
     _loadFilterOptions();
     _loadData();
   }
@@ -241,6 +244,25 @@ class TeachingScheduleManagementScreenState
     _searchController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  void _onAcademicYearProviderChanged() {
+    if (mounted) {
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      if (academicYearProvider.selectedAcademicYear != null) {
+        setState(() {
+          _selectedAcademicYear = academicYearProvider
+              .selectedAcademicYear!['id']
+              .toString();
+          // Also update the filter semester if needed?
+          // Usually changing year resets semester or keeps it if ID matches.
+        });
+        _loadData(resetPage: true);
+      }
+    }
   }
 
   void _onScroll() {

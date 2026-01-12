@@ -34,7 +34,6 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   String? _selectedTargetYearId;
   String? _selectedTargetClassId;
   Set<String> _selectedStudentIds = {};
-  bool _promoteAll = true;
 
   @override
   void initState() {
@@ -141,6 +140,82 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     } catch (e) {
       print('Error loading teachers: $e');
     }
+  }
+
+  // Predict the next academic year based on source class
+  void _predictTargetYear() {
+    if (_selectedSourceClassId == null || _academicYears.isEmpty) return;
+
+    final sourceClass = _classes.firstWhere(
+      (c) => c['id'].toString() == _selectedSourceClassId,
+      orElse: () => null,
+    );
+
+    if (sourceClass != null) {
+      String? sourceYearId = sourceClass['academic_year_id']?.toString();
+      // Handle nested object if needed
+      if (sourceYearId == null && sourceClass['academic_year'] != null) {
+        sourceYearId = sourceClass['academic_year']['id']?.toString();
+      }
+
+      if (sourceYearId != null) {
+        final currentIndex = _academicYears.indexWhere(
+          (y) => y['id'].toString() == sourceYearId,
+        );
+
+        if (currentIndex != -1 && currentIndex < _academicYears.length - 1) {
+          // Try to find the actual next year based on year string first
+          // This is safer than just index + 1 if the list isn't sorted strictly
+          final currentYearData = _academicYears[currentIndex];
+          final String currentYearName =
+              currentYearData['year'] ?? ''; // e.g., "2024/2025"
+          final startYearStr = currentYearName.split('/').first; // "2024"
+          final startYear = int.tryParse(startYearStr);
+
+          String? nextYearId;
+
+          if (startYear != null) {
+            final nextStartYearPattern = (startYear + 1).toString(); // "2025"
+            final nextYearObj = _academicYears.firstWhere(
+              (y) => (y['year'] as String).startsWith(nextStartYearPattern),
+              orElse: () => null,
+            );
+            if (nextYearObj != null) {
+              nextYearId = nextYearObj['id'].toString();
+            }
+          }
+
+          // Fallback to index + 1 if pattern match fails
+          nextYearId ??= _academicYears[currentIndex + 1]['id'].toString();
+
+          setState(() {
+            _selectedTargetYearId = nextYearId;
+          });
+          _loadTargetClasses(nextYearId);
+        }
+      }
+    }
+  }
+
+  bool _isAlreadyPromoted(dynamic student) {
+    if (_selectedTargetYearId == null) return false;
+
+    // Check 'classes' list to see if student has a class in the target year
+    final List classes = student['classes'] ?? [];
+    for (var cls in classes) {
+      // Check pivot data if available
+      if (cls['pivot'] != null) {
+        final yearId = cls['pivot']['academic_year_id']?.toString();
+        if (yearId == _selectedTargetYearId) {
+          return true;
+        }
+      }
+      // Or check nested academic_year object if backend structure differs
+      if (cls['academic_year_id']?.toString() == _selectedTargetYearId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<void> _loadSchoolSettings() async {
@@ -352,7 +427,12 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             setState(() {
               _selectedSourceClassId = val;
             });
-            if (val != null) _loadStudents(val);
+            if (val != null) {
+              _loadStudents(val);
+              // reset target year on class change to force re-prediction
+              _selectedTargetYearId = null;
+              _predictTargetYear();
+            }
           },
         ),
       ],
@@ -360,55 +440,140 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   }
 
   Widget _buildStudentsStep(LanguageProvider languageProvider) {
+    // Calculate stats
+    final eligibleStudents = _students
+        .where((s) => !_isAlreadyPromoted(s))
+        .length;
+    final alreadyPromotedCount = _students.length - eligibleStudents;
+
     return Column(
       children: [
-        CheckboxListTile(
-          title: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Select All',
-              'id': 'Pilih Semua',
-            }),
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue.shade200),
           ),
-          value: _promoteAll,
-          onChanged: (val) {
-            setState(() {
-              _promoteAll = val ?? true;
-              if (_promoteAll) {
-                _selectedStudentIds = _students
-                    .map((s) => s['id'].toString())
-                    .toSet();
-              } else {
-                _selectedStudentIds.clear();
-              }
-            });
-          },
+          child: Column(
+            children: [
+              _buildStatRow(
+                languageProvider.getTranslatedText({
+                  'en': 'Total Students',
+                  'id': 'Total Siswa',
+                }),
+                _students.length.toString(),
+              ),
+              _buildStatRow(
+                languageProvider.getTranslatedText({
+                  'en': 'Eligible for Promotion',
+                  'id': 'Bisa Naik Kelas',
+                }),
+                eligibleStudents.toString(),
+                color: Colors.green,
+              ),
+              if (alreadyPromotedCount > 0)
+                _buildStatRow(
+                  languageProvider.getTranslatedText({
+                    'en': 'Already Promoted',
+                    'id': 'Sudah Naik Kelas',
+                  }),
+                  alreadyPromotedCount.toString(),
+                  color: Colors.orange,
+                ),
+            ],
+          ),
         ),
-        Divider(),
-        SizedBox(
-          height: 300,
-          child: ListView.builder(
-            itemCount: _students.length,
-            itemBuilder: (context, index) {
-              final student = _students[index];
-              final id = student['id'].toString();
-              return CheckboxListTile(
-                title: Text(student['name'] ?? 'Unknown'),
-                value: _selectedStudentIds.contains(id),
-                onChanged: (val) {
+        SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.select_all),
+                label: Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Select Eligible',
+                    'id': 'Pilih Semua',
+                  }),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: ColorUtils.getRoleColor('admin'),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
                   setState(() {
-                    if (val == true) {
-                      _selectedStudentIds.add(id);
-                    } else {
-                      _selectedStudentIds.remove(id);
-                      _promoteAll = false;
+                    _selectedStudentIds.clear();
+                    for (var s in _students) {
+                      if (!_isAlreadyPromoted(s)) {
+                        _selectedStudentIds.add(s['id'].toString());
+                      }
                     }
                   });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'All eligible students selected',
+                          'id': 'Semua siswa yang memenuhi syarat dipilih',
+                        }),
+                      ),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
                 },
-              );
-            },
-          ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                icon: Icon(Icons.list),
+                label: Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Select Manually',
+                    'id': 'Pilih Siswa',
+                  }),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: () => _showStudentSelectionDialog(languageProvider),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 24),
+        Text(
+          languageProvider.getTranslatedText({
+            'en': 'Selected: ${_selectedStudentIds.length} students',
+            'id': 'Terpilih: ${_selectedStudentIds.length} siswa',
+          }),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatRow(String label, String value, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[700])),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color ?? Colors.black87,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -753,6 +918,121 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showStudentSelectionDialog(LanguageProvider languageProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Select Students',
+                          'id': 'Pilih Siswa',
+                        }),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1),
+                SizedBox(
+                  height: 400,
+                  child: ListView.builder(
+                    itemCount: _students.length,
+                    itemBuilder: (context, index) {
+                      final student = _students[index];
+                      final id = student['id'].toString();
+                      final isPromoted = _isAlreadyPromoted(student);
+                      final isSelected = _selectedStudentIds.contains(id);
+
+                      return CheckboxListTile(
+                        title: Text(
+                          student['name'] ?? 'Unknown',
+                          style: TextStyle(
+                            color: isPromoted ? Colors.grey : Colors.black,
+                            decoration: isPromoted
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                        ),
+                        subtitle: isPromoted
+                            ? Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Already Promoted',
+                                  'id': 'Sudah Naik Kelas',
+                                }),
+                                style: TextStyle(
+                                  color: Colors.orange,
+                                  fontSize: 12,
+                                ),
+                              )
+                            : null,
+                        value: isPromoted ? false : isSelected,
+                        enabled: !isPromoted,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            if (val == true) {
+                              _selectedStudentIds.add(id);
+                            } else {
+                              _selectedStudentIds.remove(id);
+                            }
+                          });
+                          // Also update parent state to reflect changes immediately if needed,
+                          // though usually dialog state is local until closed or we use setState here.
+                          // Since _selectedStudentIds is from parent, modifying it works,
+                          // but parent UI won't update until dialog closes or we call parent setState.
+                          // But we want the CHECKBOX to update, so setDialogState is correct.
+                          setState(() {}); // Update background stats too
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Done',
+                            'id': 'Selesai',
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
