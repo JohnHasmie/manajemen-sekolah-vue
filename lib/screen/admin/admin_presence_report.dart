@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/models/siswa.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
@@ -318,6 +319,11 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         tanggalEnd = DateFormat('yyyy-MM-dd').format(endOfMonth);
       }
 
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
+
       // Call paginated API
       final result = await ApiService.getAbsensiSummaryPaginated(
         page: _currentPage,
@@ -333,6 +339,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         tanggal: tanggal,
         tanggalStart: tanggalStart,
         tanggalEnd: tanggalEnd,
+        academicYearId: academicYearId,
       );
 
       if (!mounted) return;

@@ -649,6 +649,11 @@ class ApiService {
     String? classId,
     String? semester,
     String? tahunAjaran,
+    String? tanggalStart,
+    String? tanggalEnd,
+    String? academicYearId,
+    String? mataPelajaranId, // Added based on queryParams
+    String? tanggal, // Added based on queryParams
   }) async {
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -662,8 +667,23 @@ class ApiService {
     if (subjectId != null && subjectId.isNotEmpty) {
       queryParams['subject_id'] = subjectId;
     }
+    if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
+      queryParams['mataPelajaranId'] = mataPelajaranId;
+    }
     if (classId != null && classId.isNotEmpty) {
-      queryParams['class_id'] = classId;
+      queryParams['classId'] = classId;
+    }
+    if (tanggal != null && tanggal.isNotEmpty) {
+      queryParams['tanggal'] = tanggal;
+    }
+    if (tanggalStart != null && tanggalStart.isNotEmpty) {
+      queryParams['tanggalStart'] = tanggalStart;
+    }
+    if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
+      queryParams['tanggalEnd'] = tanggalEnd;
+    }
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
     }
     if (semester != null && semester.isNotEmpty) {
       queryParams['semester'] = semester;
@@ -981,12 +1001,16 @@ class ApiService {
     String? tanggal,
     String? tanggalStart,
     String? tanggalEnd,
+    String? academicYearId,
   }) async {
     try {
       final params = <String, String>{
         'page': page.toString(),
         'limit': limit.toString(),
       };
+      if (academicYearId != null && academicYearId.isNotEmpty) {
+        params['academic_year_id'] = academicYearId;
+      }
 
       if (guruId != null && guruId.isNotEmpty) params['teacher_id'] = guruId;
       if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
