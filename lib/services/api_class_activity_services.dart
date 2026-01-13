@@ -19,6 +19,7 @@ class ApiClassActivityService {
     String? search,
     String? chapterId,
     String? subChapterId,
+    String? academicYearId,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
@@ -49,6 +50,13 @@ class ApiClassActivityService {
     }
     if (subChapterId != null && subChapterId.isNotEmpty) {
       queryParams['sub_chapter_id'] = subChapterId;
+    }
+
+    if (subChapterId != null && subChapterId.isNotEmpty) {
+      queryParams['sub_chapter_id'] = subChapterId;
+    }
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
     }
 
     // Build URI with query parameters

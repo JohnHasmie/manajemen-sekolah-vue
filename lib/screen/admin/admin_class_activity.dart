@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_class_activity_service.dart';
@@ -181,10 +182,16 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
         _showSubjectList = false;
       });
 
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
+
       // We use the paginated service to filter by both teacher and subject
       final response = await ApiClassActivityService.getClassActivityPaginated(
         guruId: _selectedTeacherId,
         mataPelajaranId: subjectId,
+        academicYearId: academicYearId,
       );
 
       setState(() {
