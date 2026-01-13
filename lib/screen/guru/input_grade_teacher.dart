@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:file_saver/file_saver.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
@@ -7,12 +10,15 @@ import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/separated_search_filter.dart';
 import 'package:manajemensekolah/models/siswa.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 class GradePage extends StatefulWidget {
@@ -44,7 +50,7 @@ class GradePageState extends State<GradePage> {
   Map<String, dynamic>? _paginationMeta;
 
   // Filter States
-  List<String> _selectedSubjectIds = [];
+  final List<String> _selectedSubjectIds = [];
   bool _hasActiveFilter = false;
 
   // Search debounce
@@ -57,7 +63,10 @@ class GradePageState extends State<GradePage> {
     _scrollController.addListener(_onScroll);
     // Listen to search changes with debounce
     _searchController.addListener(_onSearchChanged);
-    _loadData();
+    // Initial load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   @override
@@ -112,6 +121,13 @@ class GradePageState extends State<GradePage> {
 
       List<dynamic> subjects;
 
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
       if (widget.teacher['role'] == 'guru') {
         // For teachers, get subjects by teacher with pagination
         final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
@@ -120,6 +136,7 @@ class GradePageState extends State<GradePage> {
           limit: _perPage,
           search: _searchController.text,
           subjectIds: _selectedSubjectIds,
+          academicYearId: academicYearId,
         );
         subjects = response['data'] ?? [];
         _paginationMeta = response['pagination'];
@@ -137,10 +154,12 @@ class GradePageState extends State<GradePage> {
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
       }
 
-      setState(() {
-        _subjectList = subjects;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _subjectList = subjects;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -162,6 +181,13 @@ class GradePageState extends State<GradePage> {
 
       List<dynamic> newSubjects;
 
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
       if (widget.teacher['role'] == 'guru') {
         // For teachers, get subjects by teacher
         final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
@@ -170,6 +196,7 @@ class GradePageState extends State<GradePage> {
           limit: _perPage,
           search: _searchController.text,
           subjectIds: _selectedSubjectIds,
+          academicYearId: academicYearId,
         );
         newSubjects = response['data'] ?? [];
         _paginationMeta = response['pagination'];
@@ -303,7 +330,6 @@ class GradePageState extends State<GradePage> {
       // Here, we don't have a full list of subjects loaded, only paginated ones.
       // So showing names might be tricky if the selected subject is not in the current page.
       // BUT, the filter sheet shows options from `_mataPelajaranList`.
-      // Wait, `_showFilterSheet` uses `_mataPelajaranList` to populate options.
       // If `_mataPelajaranList` only has partial data, the filter sheet will only show partial options.
       // This is a limitation of filtering based on paginated data.
       // Ideally, we should fetch "all subjects" for the filter options, separate from the display list.
@@ -365,8 +391,9 @@ class GradePageState extends State<GradePage> {
         initialFilters: {'subjectIds': _selectedSubjectIds},
         onApplyFilters: (filters) {
           setState(() {
-            _selectedSubjectIds = List<String>.from(
-              filters['subjectIds'] ?? [],
+            _selectedSubjectIds.clear();
+            _selectedSubjectIds.addAll(
+              List<String>.from(filters['subjectIds'] ?? []),
             );
             _checkActiveFilter();
           });
@@ -1659,18 +1686,17 @@ class GradeBookPageState extends State<GradeBookPage> {
     'uas': true,
   };
 
-  // Map to store unique dates for each grade type
-  // Key: jenis (e.g., 'harian'), Value: List of dates (YYYY-MM-DD)
-  Map<String, List<String>> _assessmentDates = {};
+  // Map to store unique assessments for each grade type
+  // Key: jenis (e.g., 'harian'), Value: List of assessment headers
+  // Each header: { 'id': String?, 'date': String, 'title': String?, 'is_temp': bool }
+  Map<String, List<Map<String, dynamic>>> _assessmentHeaders = {};
 
   // Scroll controller untuk sinkronisasi scroll horizontal
   final ScrollController _horizontalScrollController = ScrollController();
 
   // Edit Mode State
-  // Edit Mode State
   bool _isEditMode = false;
   String? _editJenis;
-  String? _editDate;
   // Map to store controllers: key = "siswaId_field" (e.g. "123_nilai", "123_deskripsi")
   final Map<String, TextEditingController> _editControllers = {};
   final Map<String, FocusNode> _editFocusNodes = {};
@@ -1721,8 +1747,13 @@ class GradeBookPageState extends State<GradeBookPage> {
       );
 
       // Load nilai yang sudah ada
+      final academicYearId = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      ).selectedAcademicYear?['id'];
       final nilaiData = await ApiService().getNilaiByMataPelajaran(
         widget.subject['id'],
+        academicYearId: academicYearId?.toString(),
       );
 
       setState(() {
@@ -1742,45 +1773,62 @@ class GradeBookPageState extends State<GradeBookPage> {
               'nilai': item['score'] ?? item['nilai'],
               'deskripsi': item['notes'] ?? item['deskripsi'],
               'tanggal': item['date'] ?? item['tanggal'],
+              'assessment_id': item['assessment_id'],
+              'title': item['title'],
             };
           }),
         );
 
-        // Process unique dates for each grade type
-        _assessmentDates = {};
-        print("DEBUG: _nilaiList loaded: ${_nilaiList.length} items");
-        if (_nilaiList.isNotEmpty) {
-          print("DEBUG: Sample item: ${_nilaiList.first}");
-        }
+        // Process unique assessments
+        _assessmentHeaders = {};
 
         for (var nilai in _nilaiList) {
-          // Normalize jenis to lowercase for consistent grouping
           final jenis = nilai['jenis']?.toString().toLowerCase();
-
           if (jenis == null) continue;
 
-          // Ensure date is in YYYY-MM-DD format
           String? rawDate = nilai['tanggal'];
           if (rawDate != null) {
-            // Take only the date part if it's a full datetime string
             final datePart = rawDate.split('T')[0];
+            final assessmentId = nilai['assessment_id'];
+            final title = nilai['title'];
 
-            if (!_assessmentDates.containsKey(jenis)) {
-              _assessmentDates[jenis] = [];
+            if (!_assessmentHeaders.containsKey(jenis)) {
+              _assessmentHeaders[jenis] = [];
             }
-            if (!_assessmentDates[jenis]!.contains(datePart)) {
-              _assessmentDates[jenis]!.add(datePart);
+
+            // Check if header already exists
+            final existingIndex = _assessmentHeaders[jenis]!.indexWhere((h) {
+              if (assessmentId != null && h['id'] != null) {
+                return h['id'] == assessmentId;
+              }
+              // Fallback for legacy data or temp data
+              // If title is present in both, compare it. If one is null, it's ambiguous.
+              // Assuming legacy data has no title.
+              return h['date'] == datePart && h['title'] == title;
+            });
+
+            if (existingIndex == -1) {
+              _assessmentHeaders[jenis]!.add({
+                'id': assessmentId,
+                'date': datePart,
+                'title': title,
+                'is_temp': false,
+              });
             }
           }
         }
 
-        // Sort dates for each type
-        for (var key in _assessmentDates.keys) {
-          _assessmentDates[key]!.sort();
+        // Sort headers
+        for (var key in _assessmentHeaders.keys) {
+          _assessmentHeaders[key]!.sort((a, b) {
+            final dateCompare = a['date'].compareTo(b['date']);
+            if (dateCompare != 0) return dateCompare;
+            return (a['title'] ?? '').compareTo(b['title'] ?? '');
+          });
         }
 
         print(
-          "DEBUG: _assessmentDates keys: ${_assessmentDates.keys.toList()}",
+          "DEBUG: _assessmentHeaders keys: ${_assessmentHeaders.keys.toList()}",
         );
 
         // Ensure at least one empty column (or default) if no data exists for a type
@@ -1913,28 +1961,30 @@ class GradeBookPageState extends State<GradeBookPage> {
     );
   }
 
-  Map<String, dynamic>? _getNilaiForSiswaAndJenisAndDate(
+  Map<String, dynamic>? _getNilaiForSiswaAndHeader(
     String siswaId,
     String jenis,
-    String date,
+    Map<String, dynamic> header,
   ) {
     try {
       final result = _nilaiList.firstWhere((nilai) {
+        final matchSiswa = nilai['siswa_id'].toString() == siswaId;
+
+        if (!matchSiswa) return false;
+
+        // Match by ID if available
+        if (header['id'] != null && nilai['assessment_id'] != null) {
+          return nilai['assessment_id'] == header['id'];
+        }
+
+        // Fallback: Match by Date + Title + Type
         final nilaiDate = nilai['tanggal']?.toString().split('T')[0];
-        // Compare jenis using lowercase to handle case mismatch
         final nilaiJenis = nilai['jenis']?.toString().toLowerCase();
 
-        return nilai['siswa_id'].toString() == siswaId &&
-            nilaiJenis == jenis.toLowerCase() &&
-            nilaiDate == date;
+        return nilaiJenis == jenis.toLowerCase() &&
+            nilaiDate == header['date'] &&
+            nilai['title'] == header['title'];
       }, orElse: () => <String, dynamic>{});
-
-      // DEBUG: Uncomment if still having issues
-      // if (result.isEmpty && jenis == 'harian') {
-      //   print("DEBUG: Looked for $siswaId, $jenis, $date -> Found NOTHING");
-      // } else if (result.isNotEmpty) {
-      //    print("DEBUG: MATCH Found for $siswaId: ${result['nilai']}");
-      // }
 
       return result;
     } catch (e) {
@@ -1946,11 +1996,11 @@ class GradeBookPageState extends State<GradeBookPage> {
     Siswa siswa,
     String jenisNilai,
     LanguageProvider languageProvider, {
-    String? date,
+    Map<String, dynamic>? header,
   }) {
-    final existingNilai = date != null
-        ? _getNilaiForSiswaAndJenisAndDate(siswa.id, jenisNilai, date)
-        : null; // Should not happen in new logic, we always pass date
+    final existingNilai = header != null
+        ? _getNilaiForSiswaAndHeader(siswa.id, jenisNilai, header)
+        : null;
 
     Navigator.push(
       context,
@@ -1963,7 +2013,8 @@ class GradeBookPageState extends State<GradeBookPage> {
           existingNilai: existingNilai?.isNotEmpty == true
               ? existingNilai
               : null,
-          initialDate: date != null ? DateTime.parse(date) : null,
+          initialDate: header != null ? DateTime.parse(header['date']) : null,
+          // TODO: Pass title to GradeInputForm if supported
         ),
       ),
     ).then((_) {
@@ -1973,9 +2024,15 @@ class GradeBookPageState extends State<GradeBookPage> {
 
   void _showColumnOptions(
     String jenis,
-    String date,
+    Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
+    String date = header['date'];
+    String? title = header['title'];
+    String displayTitle = title != null && title.isNotEmpty
+        ? "$title (${_formatDateDisplay(date)})"
+        : _formatDateDisplay(date);
+
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -1997,7 +2054,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                 ),
               ),
               Text(
-                "${_getJenisNilaiLabel(jenis, languageProvider)} - ${_formatDateDisplay(date)}",
+                "${_getJenisNilaiLabel(jenis, languageProvider)} - $displayTitle",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 20),
@@ -2019,7 +2076,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  _showAssessmentDetail(jenis, date, languageProvider);
+                  _showAssessmentDetail(jenis, header, languageProvider);
                 },
               ),
               ListTile(
@@ -2040,7 +2097,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  _enterEditMode(jenis, date);
+                  _enterEditMode(jenis, header);
                 },
               ),
               ListTile(
@@ -2064,14 +2121,14 @@ class GradeBookPageState extends State<GradeBookPage> {
                 ),
                 subtitle: Text(
                   languageProvider.getTranslatedText({
-                    'en': 'Delete all grades for this date',
-                    'id': 'Hapus semua nilai pada tanggal ini',
+                    'en': 'Delete all grades for this assessment',
+                    'id': 'Hapus semua nilai penilaian ini',
                   }),
                   style: TextStyle(fontSize: 12, color: Colors.red.shade300),
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  _confirmDeleteAssessment(jenis, date, languageProvider);
+                  _confirmDeleteAssessment(jenis, header, languageProvider);
                 },
               ),
               SizedBox(height: 20),
@@ -2095,23 +2152,20 @@ class GradeBookPageState extends State<GradeBookPage> {
     return numVal.toString();
   }
 
-  void _enterEditMode(String jenis, String date) {
+  Map<String, dynamic>? _editHeader;
+
+  void _enterEditMode(String jenis, Map<String, dynamic> header) {
     setState(() {
       _isEditMode = true;
       _editJenis = jenis;
-      _editDate = date;
+      _editHeader = header;
       _editControllers.clear();
       _editFocusNodes.clear();
 
       // Initialize controllers for all students
       for (var siswa in _filteredSiswaList) {
-        final nilaiData = _getNilaiForSiswaAndJenisAndDate(
-          siswa.id,
-          jenis,
-          date,
-        );
+        final nilaiData = _getNilaiForSiswaAndHeader(siswa.id, jenis, header);
 
-        // Nilai Controller
         final nilaiKey = "${siswa.id}_nilai";
         _editControllers[nilaiKey] = TextEditingController(
           text: _formatGradeValue(nilaiData?['nilai']),
@@ -2122,7 +2176,7 @@ class GradeBookPageState extends State<GradeBookPage> {
             _saveInlineGrade(
               siswa.id,
               jenis,
-              date,
+              header,
               'nilai',
               _editControllers[nilaiKey]!.text,
             );
@@ -2140,7 +2194,7 @@ class GradeBookPageState extends State<GradeBookPage> {
             _saveInlineGrade(
               siswa.id,
               jenis,
-              date,
+              header,
               'deskripsi',
               _editControllers[deskripsiKey]!.text,
             );
@@ -2153,13 +2207,13 @@ class GradeBookPageState extends State<GradeBookPage> {
   Future<void> _saveInlineGrade(
     String siswaId,
     String jenis,
-    String date,
+    Map<String, dynamic> header,
     String field,
     String value, {
     bool reload = true,
   }) async {
     // Check if value changed
-    final currentData = _getNilaiForSiswaAndJenisAndDate(siswaId, jenis, date);
+    final currentData = _getNilaiForSiswaAndHeader(siswaId, jenis, header);
     final currentValue = currentData?[field]?.toString() ?? '';
 
     // If value is empty and was empty, do nothing
@@ -2174,7 +2228,9 @@ class GradeBookPageState extends State<GradeBookPage> {
         'teacher_id': widget.teacher['id'],
         'subject_id': widget.subject['id'],
         'type': jenis,
-        'date': date,
+        'date': header['date'],
+        'title': header['title'],
+        'assessment_id': header['id'], // Include assessment ID if exists
         'score': field == 'nilai'
             ? (value.isEmpty ? 0 : double.tryParse(value) ?? 0)
             : (currentData?['nilai'] ?? 0),
@@ -2204,6 +2260,12 @@ class GradeBookPageState extends State<GradeBookPage> {
   }
 
   Widget _buildEditTable(LanguageProvider languageProvider) {
+    String date = _editHeader?['date'] ?? '';
+    String? title = _editHeader?['title'];
+    String displayTitle = title != null && title.isNotEmpty
+        ? "$title (${_formatDateDisplay(date)})"
+        : _formatDateDisplay(date);
+
     return Column(
       children: [
         // Edit Header
@@ -2213,23 +2275,31 @@ class GradeBookPageState extends State<GradeBookPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Edit Mode',
-                    style: TextStyle(
-                      color: Colors.orange.shade800,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Edit Mode',
+                      style: TextStyle(
+                        color: Colors.orange.shade800,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                  Text(
-                    "${_getJenisNilaiLabel(_editJenis!, languageProvider)} - ${_formatDateDisplay(_editDate!)}",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ],
+                    Text(
+                      "${_getJenisNilaiLabel(_editJenis!, languageProvider)} - $displayTitle",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
               ),
+              SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: () async {
                   // Show loading indicator
@@ -2246,7 +2316,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                         await _saveInlineGrade(
                           siswa.id,
                           _editJenis!,
-                          _editDate!,
+                          _editHeader!,
                           'nilai',
                           _editControllers[nilaiKey]!.text,
                           reload: false,
@@ -2258,7 +2328,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                         await _saveInlineGrade(
                           siswa.id,
                           _editJenis!,
-                          _editDate!,
+                          _editHeader!,
                           'deskripsi',
                           _editControllers[deskripsiKey]!.text,
                           reload: false,
@@ -2272,7 +2342,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                     setState(() {
                       _isEditMode = false;
                       _editJenis = null;
-                      _editDate = null;
+                      _editHeader = null;
                       _isLoading = false;
                     });
                   } catch (e) {
@@ -2413,6 +2483,10 @@ class GradeBookPageState extends State<GradeBookPage> {
                               child: TextFormField(
                                 controller: _editControllers[nilaiKey],
                                 focusNode: _editFocusNodes[nilaiKey],
+                                enabled: !Provider.of<AcademicYearProvider>(
+                                  context,
+                                  listen: false,
+                                ).isReadOnly,
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.center,
                                 decoration: InputDecoration(
@@ -2427,7 +2501,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                   _saveInlineGrade(
                                     siswa.id,
                                     _editJenis!,
-                                    _editDate!,
+                                    _editHeader!,
                                     'nilai',
                                     value,
                                   );
@@ -2444,6 +2518,10 @@ class GradeBookPageState extends State<GradeBookPage> {
                                 child: TextFormField(
                                   controller: _editControllers[deskripsiKey],
                                   focusNode: _editFocusNodes[deskripsiKey],
+                                  enabled: !Provider.of<AcademicYearProvider>(
+                                    context,
+                                    listen: false,
+                                  ).isReadOnly,
                                   decoration: InputDecoration(
                                     isDense: true,
                                     border: InputBorder.none,
@@ -2461,7 +2539,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                     _saveInlineGrade(
                                       siswa.id,
                                       _editJenis!,
-                                      _editDate!,
+                                      _editHeader!,
                                       'deskripsi',
                                       value,
                                     );
@@ -2497,16 +2575,18 @@ class GradeBookPageState extends State<GradeBookPage> {
 
   void _showAssessmentDetail(
     String jenis,
-    String date,
+    Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
+    String date = header['date'];
+    String? title = header['title'];
     // Calculate stats
     int totalSiswa = _siswaList.length;
     int gradedCount = 0;
     double totalNilai = 0;
 
     for (var siswa in _siswaList) {
-      final nilai = _getNilaiForSiswaAndJenisAndDate(siswa.id, jenis, date);
+      final nilai = _getNilaiForSiswaAndHeader(siswa.id, jenis, header);
       if (nilai != null && nilai.isNotEmpty) {
         gradedCount++;
         totalNilai += double.tryParse(nilai['nilai'].toString()) ?? 0.0;
@@ -2539,6 +2619,14 @@ class GradeBookPageState extends State<GradeBookPage> {
               }),
               _formatDateDisplay(date),
             ),
+            if (title != null && title.isNotEmpty)
+              _buildDetailRow(
+                languageProvider.getTranslatedText({
+                  'en': 'Title',
+                  'id': 'Judul',
+                }),
+                title,
+              ),
             Divider(),
             _buildDetailRow(
               languageProvider.getTranslatedText({
@@ -2588,9 +2676,12 @@ class GradeBookPageState extends State<GradeBookPage> {
 
   void _confirmDeleteAssessment(
     String jenis,
-    String date,
+    Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
+    String date = header['date'];
+    String? title = header['title'];
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -2603,9 +2694,9 @@ class GradeBookPageState extends State<GradeBookPage> {
         content: Text(
           languageProvider.getTranslatedText({
             'en':
-                'Are you sure you want to delete all grades for ${_getJenisNilaiLabel(jenis, languageProvider)} on ${_formatDateDisplay(date)}? This action cannot be undone.',
+                'Are you sure you want to delete all grades for ${_getJenisNilaiLabel(jenis, languageProvider)} on ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? This action cannot be undone.',
             'id':
-                'Apakah Anda yakin ingin menghapus semua nilai ${_getJenisNilaiLabel(jenis, languageProvider)} pada tanggal ${_formatDateDisplay(date)}? Tindakan ini tidak dapat dibatalkan.',
+                'Apakah Anda yakin ingin menghapus semua nilai ${_getJenisNilaiLabel(jenis, languageProvider)} pada tanggal ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? Tindakan ini tidak dapat dibatalkan.',
           }),
         ),
         actions: [
@@ -2621,7 +2712,7 @@ class GradeBookPageState extends State<GradeBookPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _deleteAssessment(jenis, date);
+              _deleteAssessment(jenis, header);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: Text(
@@ -2637,21 +2728,34 @@ class GradeBookPageState extends State<GradeBookPage> {
     );
   }
 
-  Future<void> _deleteAssessment(String jenis, String date) async {
+  Future<void> _deleteAssessment(
+    String jenis,
+    Map<String, dynamic> header,
+  ) async {
     setState(() => _isLoading = true);
     try {
       final apiService = ApiService();
-      // Use the new batch delete endpoint
-      // We need to construct the query parameters manually or add a method to ApiService
-      // For now, let's use the generic delete with query params if supported,
-      // or we might need to use a custom request.
-      // Since ApiService.delete takes a path, we can append query params.
+
+      // If we have assessment_id, ideally we should delete by ID.
+      // But keeping legacy implementation for now, using batch delete.
+      // Providing title to query params if available.
 
       final queryParams = {
         'mata_pelajaran_id': widget.subject['id'],
         'jenis': jenis,
-        'tanggal': date,
+        'tanggal': header['date'],
       };
+
+      if (header['title'] != null) {
+        queryParams['title'] = header['title'];
+      }
+
+      // If we have assessment_id, maybe backend supports it?
+      // Current backend only checks type and date in batch delete?
+      // User requested Title addition, so assuming backend handles Title in batch delete.
+      // If not, this might over-delete.
+      // Note: Backend CreateGradeAction uses firstOrCreate.
+      // If we delete, we should be specific.
 
       final queryString = Uri(queryParameters: queryParams).query;
 
@@ -2678,14 +2782,80 @@ class GradeBookPageState extends State<GradeBookPage> {
           "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
 
       setState(() {
-        if (!_assessmentDates.containsKey(jenis)) {
-          _assessmentDates[jenis] = [];
+        if (!_assessmentHeaders.containsKey(jenis)) {
+          _assessmentHeaders[jenis] = [];
         }
-        if (!_assessmentDates[jenis]!.contains(dateStr)) {
-          _assessmentDates[jenis]!.add(dateStr);
-          _assessmentDates[jenis]!.sort();
+
+        // Add a temporary header. Title is initially null.
+        // It will be distinct from existing ones if they have titles.
+        // But if there is an existing one with null title and same date,
+        // we might just be pointing to that one.
+
+        // Check if we already have a header with this date and (null) title
+        bool exists = _assessmentHeaders[jenis]!.any(
+          (h) => h['date'] == dateStr && h['title'] == null,
+        );
+
+        if (!exists) {
+          _assessmentHeaders[jenis]!.add({
+            'id': null,
+            'date': dateStr,
+            'title': null,
+            'is_temp': true,
+          });
+
+          // Sort
+          _assessmentHeaders[jenis]!.sort((a, b) {
+            final dateCompare = a['date'].compareTo(b['date']);
+            if (dateCompare != 0) return dateCompare;
+            return (a['title'] ?? '').compareTo(b['title'] ?? '');
+          });
         }
       });
+    }
+  }
+
+  Future<void> _exportGrades(LanguageProvider languageProvider) async {
+    setState(() => _isLoading = true);
+    try {
+      final academicYearId = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      ).selectedAcademicYear?['id'];
+      final endpoint =
+          '/grades/export?class_id=${widget.classData['id']}&subject_id=${widget.subject['id']}&teacher_id=${widget.teacher['id']}&academic_year_id=$academicYearId';
+
+      final bytes = await ApiService.downloadFile(endpoint);
+
+      if (kIsWeb) {
+        // Handle web download
+        await FileSaver.instance.saveFile(
+          name: 'grades_export_${DateTime.now().millisecond}',
+          bytes: bytes,
+          fileExtension: 'xlsx',
+          mimeType: MimeType.microsoftExcel,
+        );
+      } else {
+        // Handle mobile download
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File(
+          '${directory.path}/grades_export_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+        );
+        await file.writeAsBytes(bytes);
+
+        await OpenFile.open(file.path);
+      }
+
+      _showSuccessSnackBar(
+        languageProvider.getTranslatedText({
+          'en': 'Export successful',
+          'id': 'Ekspor berhasil',
+        }),
+      );
+    } catch (e) {
+      _showErrorSnackBar('Export Error: $e');
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -2709,9 +2879,9 @@ class GradeBookPageState extends State<GradeBookPage> {
     double totalWidth = 120.0; // Name column
 
     for (var jenis in _filteredJenisNilaiList) {
-      final dates = _assessmentDates[jenis] ?? [];
-      // Width for dates columns + 1 for "Add" button column
-      totalWidth += (dates.length * 90.0) + 50.0;
+      final headers = _assessmentHeaders[jenis] ?? [];
+      // Width for assessment columns + 1 for "Add" button column
+      totalWidth += (headers.length * 90.0) + 50.0;
     }
 
     return SingleChildScrollView(
@@ -2747,12 +2917,15 @@ class GradeBookPageState extends State<GradeBookPage> {
                   ),
                   // Kolom jenis nilai (Dynamic)
                   ..._filteredJenisNilaiList.expand((jenis) {
-                    final dates = _assessmentDates[jenis] ?? [];
+                    final headers = _assessmentHeaders[jenis] ?? [];
 
                     List<Widget> columns = [];
 
-                    // Existing date columns
-                    for (var date in dates) {
+                    // Existing assessment columns
+                    for (var header in headers) {
+                      String date = header['date'];
+                      String? title = header['title'];
+
                       // Format date for display (e.g. 10/10)
                       final parts = date.split('-');
                       final displayDate = parts.length == 3
@@ -2761,8 +2934,11 @@ class GradeBookPageState extends State<GradeBookPage> {
 
                       columns.add(
                         InkWell(
-                          onTap: () =>
-                              _showColumnOptions(jenis, date, languageProvider),
+                          onTap: () => _showColumnOptions(
+                            jenis,
+                            header,
+                            languageProvider,
+                          ),
                           child: Container(
                             width: 90,
                             padding: EdgeInsets.all(4),
@@ -2775,13 +2951,20 @@ class GradeBookPageState extends State<GradeBookPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  _getJenisNilaiLabel(jenis, languageProvider),
+                                  // Show Title if available, else Type label
+                                  title != null && title.isNotEmpty
+                                      ? title
+                                      : _getJenisNilaiLabel(
+                                          jenis,
+                                          languageProvider,
+                                        ),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 10,
                                   ),
                                   textAlign: TextAlign.center,
                                   maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
                                   displayDate,
@@ -2867,16 +3050,16 @@ class GradeBookPageState extends State<GradeBookPage> {
                     ),
                     // Kolom Nilai (Dynamic)
                     ..._filteredJenisNilaiList.expand((jenis) {
-                      final dates = _assessmentDates[jenis] ?? [];
+                      final headers = _assessmentHeaders[jenis] ?? [];
 
                       List<Widget> columns = [];
 
-                      // Existing date columns
-                      for (var date in dates) {
-                        final nilai = _getNilaiForSiswaAndJenisAndDate(
+                      // Existing columns
+                      for (var header in headers) {
+                        final nilai = _getNilaiForSiswaAndHeader(
                           siswa.id,
                           jenis,
-                          date,
+                          header,
                         );
                         final nilaiText = nilai?.isNotEmpty == true
                             ? _formatGradeValue(nilai!['nilai'])
@@ -2897,7 +3080,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                 siswa,
                                 jenis,
                                 languageProvider,
-                                date: date,
+                                header: header,
                               ),
                               child: Container(
                                 height: 40,
@@ -3023,6 +3206,14 @@ class GradeBookPageState extends State<GradeBookPage> {
               onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
+              IconButton(
+                icon: Icon(Icons.download, color: Colors.black),
+                onPressed: () => _exportGrades(languageProvider),
+                tooltip: languageProvider.getTranslatedText({
+                  'en': 'Export to Excel',
+                  'id': 'Ekspor ke Excel',
+                }),
+              ),
               // Tombol Filter dengan badge
               Stack(
                 children: [
@@ -3218,12 +3409,14 @@ class GradeBookPageState extends State<GradeBookPage> {
                     ),
                   ],
                 ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _openNewInputForm(languageProvider),
-            backgroundColor: _getPrimaryColor(),
-            foregroundColor: Colors.white,
-            child: Icon(Icons.add),
-          ),
+          floatingActionButton: _isEditMode
+              ? null
+              : FloatingActionButton(
+                  onPressed: () => _openNewInputForm(languageProvider),
+                  backgroundColor: _getPrimaryColor(),
+                  foregroundColor: Colors.white,
+                  child: Icon(Icons.add),
+                ),
         );
       },
     );
@@ -3238,6 +3431,7 @@ class GradeInputForm extends StatefulWidget {
   final String jenisNilai;
   final Map<String, dynamic>? existingNilai;
   final DateTime? initialDate;
+  final String? initialTitle;
 
   const GradeInputForm({
     super.key,
@@ -3247,6 +3441,7 @@ class GradeInputForm extends StatefulWidget {
     required this.jenisNilai,
     this.existingNilai,
     this.initialDate,
+    this.initialTitle,
   });
 
   @override
@@ -3257,6 +3452,7 @@ class GradeInputFormState extends State<GradeInputForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nilaiController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -3267,12 +3463,18 @@ class GradeInputFormState extends State<GradeInputForm> {
       _nilaiController.text = widget.existingNilai!['nilai'].toString();
       _deskripsiController.text =
           widget.existingNilai!['deskripsi']?.toString() ?? '';
+      _titleController.text = widget.existingNilai!['title']?.toString() ?? '';
 
       if (widget.existingNilai!['tanggal'] != null) {
         _selectedDate = DateTime.parse(widget.existingNilai!['tanggal']);
       }
-    } else if (widget.initialDate != null) {
-      _selectedDate = widget.initialDate!;
+    } else {
+      if (widget.initialDate != null) {
+        _selectedDate = widget.initialDate!;
+      }
+      if (widget.initialTitle != null) {
+        _titleController.text = widget.initialTitle!;
+      }
     }
   }
 
@@ -3280,6 +3482,7 @@ class GradeInputFormState extends State<GradeInputForm> {
   void dispose() {
     _nilaiController.dispose();
     _deskripsiController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -3298,6 +3501,31 @@ class GradeInputFormState extends State<GradeInputForm> {
   }
 
   Future<void> _submitNilai() async {
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    if (academicYearProvider.isReadOnly) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).getTranslatedText({
+              'en': 'Cannot submit grades for inactive academic year',
+              'id':
+                  'Tidak dapat menyimpan nilai untuk tahun ajaran yang tidak aktif',
+            }),
+          ),
+          backgroundColor: Colors.red.shade400,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       try {
         final data = {
@@ -3307,6 +3535,9 @@ class GradeInputFormState extends State<GradeInputForm> {
           'type': widget.jenisNilai,
           'score': double.parse(_nilaiController.text),
           'notes': _deskripsiController.text,
+          'title': _titleController.text.isNotEmpty
+              ? _titleController.text
+              : null,
           'date':
               '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
         };
@@ -3493,6 +3724,25 @@ class GradeInputFormState extends State<GradeInputForm> {
 
                   const SizedBox(height: 20),
 
+                  // Input Title
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                      labelText: languageProvider.getTranslatedText({
+                        'en': 'Assessment Title (Optional)',
+                        'id': 'Judul Penilaian (Opsional)',
+                      }),
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.title, color: _getPrimaryColor()),
+                      helperText: languageProvider.getTranslatedText({
+                        'en': 'E.g., Quiz 1, Project A',
+                        'id': 'Contoh: Kuis 1, Proyek A',
+                      }),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
                   // Input Nilai
                   TextFormField(
                     controller: _nilaiController,
@@ -3672,6 +3922,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
   bool _isConfigurationSet = false;
   String? _confirmedJenisNilai;
   DateTime? _confirmedDate;
+  final TextEditingController _titleController = TextEditingController();
 
   @override
   void initState() {
@@ -3684,6 +3935,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
 
   @override
   void dispose() {
+    _titleController.dispose();
     for (var controller in _tableControllers.values) {
       controller.dispose();
     }
@@ -3765,15 +4017,24 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
             continue;
           }
 
+          // Perbaikan: Kirim Student Class ID jika ada, fallback ke ID siswa (untuk kompatibilitas)
+          final studentIdToSend = siswa.studentClassId ?? siswa.id;
+
+          // ... (inside _submitNilai)
           final data = {
-            'student_id': siswa.id,
+            'student_id': siswa.id, // For legacy/history
+            'student_class_id':
+                studentIdToSend, // New field required by backend
             'teacher_id': widget.teacher['id'],
             'subject_id': widget.subject['id'],
-            'type': _selectedJenisNilai!,
-            'score': double.parse(nilai),
-            'notes': nilaiData?['deskripsi']?.toString().trim() ?? '',
+            'type': _selectedJenisNilai,
+            'score': double.parse(nilaiData!['nilai']),
+            'notes': nilaiData['deskripsi'] ?? '',
             'date':
                 '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
+            'title': _titleController.text.isNotEmpty
+                ? _titleController.text
+                : null,
           };
 
           // Tambah nilai baru
@@ -4265,12 +4526,45 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 2,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+            child: TextFormField(
+              controller: _titleController,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                prefixIcon: Icon(Icons.title, color: _getPrimaryColor()),
+                hintText: languageProvider.getTranslatedText({
+                  'en': 'Assessment Title (Optional)',
+                  'id': 'Judul Penilaian (Opsional)',
+                }),
+                helperText: languageProvider.getTranslatedText({
+                  'en': 'E.g., Quiz 1, Chapter 5 Test',
+                  'id': 'Contoh: Kuis 1, Ulangan Bab 5',
+                }),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
           // Tombol Set
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: (_selectedJenisNilai != null)
+              onPressed:
+                  (_selectedJenisNilai != null &&
+                      !Provider.of<AcademicYearProvider>(context).isReadOnly)
                   ? () {
                       setState(() {
                         _isConfigurationSet = true;

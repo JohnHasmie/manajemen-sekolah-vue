@@ -264,6 +264,7 @@ class ApiTeacherService {
     int limit = 10,
     String? search,
     List<String>? subjectIds,
+    String? academicYearId,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
@@ -277,6 +278,10 @@ class ApiTeacherService {
 
     if (subjectIds != null && subjectIds.isNotEmpty) {
       queryParams['subject_ids'] = subjectIds.join(',');
+    }
+
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
     }
 
     // Build query string

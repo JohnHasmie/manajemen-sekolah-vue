@@ -120,10 +120,18 @@ class ApiService {
   }
 
   // Dalam ApiService class
-  Future<List<dynamic>> getNilaiByMataPelajaran(String mataPelajaranId) async {
+  Future<List<dynamic>> getNilaiByMataPelajaran(
+    String mataPelajaranId, {
+    String? academicYearId,
+  }) async {
     try {
       // Use backend filtering
-      final response = await get('/grades?subject_id=$mataPelajaranId');
+      String url = '/grades?subject_id=$mataPelajaranId';
+      if (academicYearId != null) {
+        url += '&academic_year_id=$academicYearId';
+      }
+
+      final response = await get(url);
 
       // Handle paginated response (Map with 'data' key) or direct List
       if (response is Map<String, dynamic> && response.containsKey('data')) {
@@ -159,6 +167,27 @@ class ApiService {
         await _handleAuthenticationErrorWithMessage(
           'Request timeout. Please try again.',
         );
+      }
+      rethrow;
+    }
+  }
+
+  // File Download
+  static Future<Uint8List> downloadFile(String endpoint) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        throw Exception('Failed to download file: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Download Error on $endpoint: $e');
       }
       rethrow;
     }
