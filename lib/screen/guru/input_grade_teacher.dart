@@ -6,11 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
-import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/separated_search_filter.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/services/api_class_services.dart';
+import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
@@ -31,96 +32,83 @@ class GradePage extends StatefulWidget {
 }
 
 class GradePageState extends State<GradePage> {
+  // Services
   final ApiSubjectService apiSubjectService = ApiSubjectService();
   final ApiTeacherService apiTeacherService = ApiTeacherService();
 
+  // State
+  int _currentStep = 0; // 0: Class List, 1: Subject List, 2: Grade Book
+
+  // Data Lists
+  List<dynamic> _classList = [];
   List<dynamic> _subjectList = [];
-  final List<dynamic> _filteredSubjectList = [];
+
+  // Selected Data
+  Map<String, dynamic>? _selectedClass;
+  Map<String, dynamic>? _selectedSubject;
+
+  // Filtering & Pagination
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
-
-  // Scroll Controller for Infinite Scroll
   final ScrollController _scrollController = ScrollController();
 
-  // Pagination States (Infinite Scroll)
+  // Pagination State
   int _currentPage = 1;
-  final int _perPage = 10; // Fixed 10 items per load
+  final int _perPage = 20;
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
-
-  // Filter States
-  final List<String> _selectedSubjectIds = [];
-  bool _hasActiveFilter = false;
-
-  // Search debounce
-  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
-    // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
-    // Listen to search changes with debounce
     _searchController.addListener(_onSearchChanged);
-    // Initial load
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
+      _loadClasses();
     });
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    _searchDebounce?.cancel();
     super.dispose();
   }
 
   void _onScroll() {
-    // Detect when user scrolls near bottom
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoadingMore && _hasMoreData && !_isLoading) {
-        _loadMoreSubjects();
+        if (_currentStep == 0) {
+          _loadMoreClasses();
+        } else if (_currentStep == 1) {
+          _loadMoreSubjects();
+        }
       }
     }
   }
 
   void _onSearchChanged() {
-    // Cancel previous timer
-    _searchDebounce?.cancel();
+    if (_currentStep == 0) {
+      setState(() {});
+    } else if (_currentStep == 1) {
+      setState(() {});
+    }
+  }
 
-    // Set new timer (500ms debounce)
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
+  // ==================== LOAD LOGIC ====================
+
+  Future<void> _loadClasses({bool resetPage = true}) async {
+    if (resetPage) {
       setState(() {
+        _isLoading = true;
         _currentPage = 1;
+        _classList = [];
+        _hasMoreData = true;
       });
-      _loadData();
-    });
-  }
+    }
 
-  void _filterMataPelajaran() {
-    // Trigger reload data with new search query
-    _currentPage = 1;
-    _loadData();
-  }
-
-  Future<void> _loadData({bool resetPage = true}) async {
     try {
-      if (resetPage) {
-        setState(() {
-          _isLoading = true;
-          _currentPage = 1;
-          _hasMoreData = true;
-          _subjectList = []; // Reset list
-        });
-      }
-
-      List<dynamic> subjects;
-
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
@@ -128,30 +116,106 @@ class GradePageState extends State<GradePage> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
+      List<dynamic> loadedClasses = [];
+
       if (widget.teacher['role'] == 'guru') {
-        // For teachers, get subjects by teacher with pagination
-        final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
-          teacherId: widget.teacher['id'],
-          page: _currentPage,
-          limit: _perPage,
-          search: _searchController.text,
-          subjectIds: _selectedSubjectIds,
+        final response = await ApiTeacherService.getTeacherClasses(
+          widget.teacher['id'],
           academicYearId: academicYearId,
         );
-        subjects = response['data'] ?? [];
-        _paginationMeta = response['pagination'];
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
+        loadedClasses = response;
+        _hasMoreData = false;
       } else {
-        // For admins, get all subjects with pagination
-        final response = await ApiSubjectService.getSubjectsPaginated(
+        // Admin: Load ALL classes
+        final response = await ApiClassService.getClassPaginated(
           page: _currentPage,
           limit: _perPage,
+          academicYearId: academicYearId,
           search: _searchController.text,
-          subjectIds: _selectedSubjectIds,
         );
-        subjects = response['data'] ?? [];
-        _paginationMeta = response['pagination'];
+        loadedClasses = response['data'] ?? [];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
+      }
+
+      if (mounted) {
+        setState(() {
+          if (resetPage) {
+            _classList = loadedClasses;
+          } else {
+            _classList.addAll(loadedClasses);
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showErrorSnackBar('Failed to load classes: $e');
+      }
+    }
+  }
+
+  Future<void> _loadMoreClasses() async {
+    if (widget.teacher['role'] == 'guru') return;
+    if (_isLoadingMore || !_hasMoreData) return;
+
+    setState(() => _isLoadingMore = true);
+    _currentPage++;
+    await _loadClasses(resetPage: false);
+    setState(() => _isLoadingMore = false);
+  }
+
+  Future<void> _loadSubjects() async {
+    setState(() {
+      _isLoading = true;
+      _subjectList = [];
+    });
+
+    try {
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
+      List<dynamic> subjects = [];
+
+      if (widget.teacher['role'] == 'guru') {
+        // Use TeachingSchedule to find subjects this teacher teaches in this class
+        final schedules = await ApiScheduleService.getSchedulesPaginated(
+          limit: 100,
+          guruId: widget.teacher['id'],
+          classId: _selectedClass!['id'].toString(),
+          tahunAjaran: academicYearId,
+        );
+
+        final data = schedules['data'] ?? [];
+        final uniqueSubjects = <String, Map<String, dynamic>>{};
+
+        for (var item in data) {
+          final subject = item['subject'] ?? item['mata_pelajaran'];
+          if (subject != null) {
+            uniqueSubjects[subject['id'].toString()] = subject;
+          }
+        }
+        subjects = uniqueSubjects.values.toList();
+      } else {
+        // Admin: Get all subjects for this class
+        final schedules = await ApiScheduleService.getSchedulesPaginated(
+          limit: 100,
+          classId: _selectedClass!['id'].toString(),
+          tahunAjaran: academicYearId,
+        );
+        final data = schedules['data'] ?? [];
+        final uniqueSubjects = <String, Map<String, dynamic>>{};
+        for (var item in data) {
+          final subject = item['subject'] ?? item['mata_pelajaran'];
+          if (subject != null) {
+            uniqueSubjects[subject['id'].toString()] = subject;
+          }
+        }
+        subjects = uniqueSubjects.values.toList();
       }
 
       if (mounted) {
@@ -161,80 +225,16 @@ class GradePageState extends State<GradePage> {
         });
       }
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      _showErrorSnackBar('Failed to load data: $e');
-    }
-  }
-
-  Future<void> _loadMoreSubjects() async {
-    if (_isLoadingMore || !_hasMoreData) return;
-
-    setState(() {
-      _isLoadingMore = true;
-    });
-
-    try {
-      _currentPage++;
-
-      List<dynamic> newSubjects;
-
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
-      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
-
-      if (widget.teacher['role'] == 'guru') {
-        // For teachers, get subjects by teacher
-        final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
-          teacherId: widget.teacher['id'],
-          page: _currentPage,
-          limit: _perPage,
-          search: _searchController.text,
-          subjectIds: _selectedSubjectIds,
-          academicYearId: academicYearId,
-        );
-        newSubjects = response['data'] ?? [];
-        _paginationMeta = response['pagination'];
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
-      } else {
-        // For admins, get all subjects
-        final response = await ApiSubjectService.getSubjectsPaginated(
-          page: _currentPage,
-          limit: _perPage,
-          search: _searchController.text,
-          subjectIds: _selectedSubjectIds,
-        );
-        newSubjects = response['data'] ?? [];
-        _paginationMeta = response['pagination'];
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showErrorSnackBar('Failed to load subjects: $e');
       }
-
-      setState(() {
-        // Append new data to existing list
-        _subjectList.addAll(newSubjects);
-        _isLoadingMore = false;
-      });
-
-      print(
-        '✅ Loaded more subjects: Page $_currentPage, Total: ${_subjectList.length}',
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoadingMore = false;
-        _currentPage--; // Revert page increment on error
-      });
-
-      print('Error loading more subjects: $e');
-      _showErrorSnackBar('Failed to load more subjects: $e');
     }
   }
+
+  Future<void> _loadMoreSubjects() async {}
+
+  // ==================== HELPER METHODS ====================
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
@@ -243,10 +243,7 @@ class GradePageState extends State<GradePage> {
           content: Text(
             context.read<LanguageProvider>().getTranslatedText({
               'en': message,
-              'id': message.replaceAll(
-                'Failed to load data:',
-                'Gagal memuat data:',
-              ),
+              'id': message.replaceAll('Failed to load', 'Gagal memuat'),
             }),
           ),
           backgroundColor: Colors.red.shade400,
@@ -254,33 +251,6 @@ class GradePageState extends State<GradePage> {
         ),
       );
     }
-  }
-
-  void _showSuccessSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
-              'en': message,
-              'id': message.replaceAll('successfully', 'berhasil'),
-            }),
-          ),
-          backgroundColor: Colors.green.shade400,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _navigateToClassSelection(Map<String, dynamic> subject) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            ClassSelectionPage(teacher: widget.teacher, subject: subject),
-      ),
-    );
   }
 
   Color _getPrimaryColor() {
@@ -296,998 +266,371 @@ class GradePageState extends State<GradePage> {
     );
   }
 
-  // Filter Methods
-  void _checkActiveFilter() {
-    setState(() {
-      _hasActiveFilter = _selectedSubjectIds.isNotEmpty;
-    });
-  }
+  // ==================== BUILDERS ====================
 
-  void _clearAllFilters() {
-    setState(() {
-      _selectedSubjectIds.clear();
-      _searchController.clear();
-      _currentPage = 1;
-      _hasActiveFilter = false;
-    });
-    _loadData(); // Reload data setelah clear filters
-  }
+  Widget _buildStep0ClassList(LanguageProvider languageProvider) {
+    // Filter locally if needed
+    final searchTerm = _searchController.text.toLowerCase();
+    final filtered = _classList.where((item) {
+      final name = (item['nama'] ?? item['name'] ?? '')
+          .toString()
+          .toLowerCase();
+      final level = (item['grade_level'] ?? item['tingkat'] ?? '')
+          .toString()
+          .toLowerCase();
+      return name.contains(searchTerm) || level.contains(searchTerm);
+    }).toList();
 
-  List<Map<String, dynamic>> _buildFilterChips(
-    LanguageProvider languageProvider,
-  ) {
-    List<Map<String, dynamic>> filterChips = [];
-
-    if (_selectedSubjectIds.isNotEmpty) {
-      // Group subject IDs into a single chip or multiple chips?
-      // Student management shows multiple chips for classes.
-      // Here we filter by subject. Let's show one chip per subject if possible,
-      // but we only have IDs. We need names.
-      // Since we might not have the names of ALL selected subjects (if they are not in the current list),
-      // we can try to find them in _mataPelajaranList OR just show a count.
-      // However, the user wants it to look like student_management.dart.
-      // In student_management.dart, it iterates _selectedClassIds and finds the name in _classList.
-      // Here, we don't have a full list of subjects loaded, only paginated ones.
-      // So showing names might be tricky if the selected subject is not in the current page.
-      // BUT, the filter sheet shows options from `_mataPelajaranList`.
-      // If `_mataPelajaranList` only has partial data, the filter sheet will only show partial options.
-      // This is a limitation of filtering based on paginated data.
-      // Ideally, we should fetch "all subjects" for the filter options, separate from the display list.
-      // For now, let's stick to what we have.
-
-      for (var subjectId in _selectedSubjectIds) {
-        final subject = _subjectList.firstWhere(
-          (s) => s['id'].toString() == subjectId,
-          orElse: () => {'name': 'Subject #$subjectId'},
-        );
-
-        filterChips.add({
-          'label':
-              '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mapel'})}: ${subject['name']}',
-          'onRemove': () {
-            setState(() {
-              _selectedSubjectIds.remove(subjectId);
-            });
-            _checkActiveFilter();
-            _loadData();
-          },
-        });
-      }
+    if (_isLoading) {
+      return LoadingScreen(
+        message: languageProvider.getTranslatedText({
+          'en': 'Loading classes...',
+          'id': 'Memuat kelas...',
+        }),
+      );
     }
 
-    return filterChips;
-  }
+    if (filtered.isEmpty) {
+      return EmptyState(
+        icon: Icons.class_outlined,
+        title: languageProvider.getTranslatedText({
+          'en': 'No Classes Found',
+          'id': 'Tidak Ada Kelas',
+        }),
+        subtitle: languageProvider.getTranslatedText({
+          'en': 'Try adjusting your search filters',
+          'id': 'Coba sesuaikan filter pencarian anda',
+        }),
+      );
+    }
 
-  void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    return RefreshIndicator(
+      onRefresh: () => _loadClasses(),
+      child: ListView.builder(
+        padding: EdgeInsets.all(16),
+        itemCount: filtered.length + (_isLoadingMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == filtered.length) {
+            return Center(child: CircularProgressIndicator());
+          }
+          final classData = filtered[index];
+          final isHomeroom = classData['is_homeroom'] == true;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FilterSheet(
-        primaryColor: _getPrimaryColor(),
-        config: FilterConfig(
-          sections: [
-            FilterSection(
-              key: 'subjectIds',
-              title: languageProvider.getTranslatedText({
-                'en': 'Subjects',
-                'id': 'Mata Pelajaran',
-              }),
-              options: _subjectList.map((subject) {
-                return FilterOption(
-                  label: subject['name'] ?? 'Subject',
-                  value: subject['id'].toString(),
-                );
-              }).toList(),
-              multiSelect: true,
+          return Card(
+            elevation: 2,
+            shadowColor: ColorUtils.slate200,
+            margin: EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
-        ),
-        initialFilters: {'subjectIds': _selectedSubjectIds},
-        onApplyFilters: (filters) {
-          setState(() {
-            _selectedSubjectIds.clear();
-            _selectedSubjectIds.addAll(
-              List<String>.from(filters['subjectIds'] ?? []),
-            );
-            _checkActiveFilter();
-          });
-          // Navigator.pop(context); // Removed: FilterSheet already pops itself
-          _loadData(); // Reload data setelah apply filter
-        },
-      ),
-    );
-  }
-
-  Widget _buildSubjectCard(
-    Map<String, dynamic> subject,
-    LanguageProvider languageProvider,
-    int index,
-  ) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _navigateToClassSelection(subject),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 5,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Strip berwarna di pinggir kiri
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 6,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor(),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _selectedClass = classData;
+                  _currentStep = 1;
+                  _searchController.clear();
+                });
+                _loadSubjects();
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isHomeroom
+                            ? ColorUtils.primary.withOpacity(0.1)
+                            : _getPrimaryColor().withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: isHomeroom
+                            ? Border.all(
+                                color: ColorUtils.primary.withOpacity(0.5),
+                              )
+                            : null,
+                      ),
+                      child: Icon(
+                        isHomeroom
+                            ? Icons.home_work_outlined
+                            : Icons.class_outlined,
+                        color: isHomeroom
+                            ? ColorUtils.primary
+                            : _getPrimaryColor(),
                       ),
                     ),
-                  ),
-                ),
-
-                // Background pattern effect
-                Positioned(
-                  right: -8,
-                  top: -8,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header dengan judul
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  subject['name'] ??
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Subject',
-                                        'id': 'Mata Pelajaran',
-                                      }),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  classData['nama'] ?? classData['name'] ?? '-',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black,
                                   ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${subject['code'] ?? subject['kode'] ?? '-'}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.arrow_forward,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 12),
-
-                      // Konten preview
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.description,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Description',
-                                    'id': 'Deskripsi',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  subject['description'] ??
-                                      subject['deskripsi'] ??
-                                      languageProvider.getTranslatedText({
-                                        'en': 'No description',
-                                        'id': 'Tidak ada deskripsi',
-                                      }),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
-        final filteredSubjects = _subjectList; // Use direct list from backend
-
-        return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
-          body: Column(
-            children: [
-              // Header dengan gradient
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                ),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _getPrimaryColor().withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Input Grades',
-                                  'id': 'Input Nilai',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 2),
-                              Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Select subject to input grades',
-                                  'id':
-                                      'Pilih mata pelajaran untuk input nilai',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // Search Bar with Filter Button using SeparatedSearchFilter
-              SeparatedSearchFilter(
-                controller: _searchController,
-                onChanged: (value) => setState(() {}),
-                hintText: languageProvider.getTranslatedText({
-                  'en': 'Search subjects...',
-                  'id': 'Cari mata pelajaran...',
-                }),
-                showFilter: true,
-                hasActiveFilter: _hasActiveFilter,
-                onFilterPressed: _showFilterSheet,
-                // Custom search styling - longer with white background
-                searchBackgroundColor: Colors.white.withOpacity(0.95),
-                searchIconColor: Colors.grey.shade600,
-                searchTextColor: Colors.black87,
-                searchHintColor: Colors.grey.shade500,
-                searchBorderRadius: 14,
-                // Custom filter styling - compact with primary color
-                filterActiveColor: _getPrimaryColor(),
-                filterInactiveColor: Colors.white.withOpacity(0.9),
-                filterIconColor: _hasActiveFilter
-                    ? Colors.white
-                    : _getPrimaryColor(),
-                filterBorderRadius: 14,
-                filterWidth: 56,
-                filterHeight: 48, // Match search bar height
-                spacing: 12,
-                margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-              ),
-
-              // Filter Chips
-              if (_hasActiveFilter) ...[
-                SizedBox(height: 12),
-                SizedBox(
-                  height: 32,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            ..._buildFilterChips(languageProvider).map((
-                              filter,
-                            ) {
-                              return Container(
-                                margin: EdgeInsets.only(right: 6),
-                                child: Chip(
-                                  label: Text(
-                                    filter['label'],
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: _getPrimaryColor(),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  deleteIcon: Icon(
-                                    Icons.close,
-                                    size: 16,
-                                    color: _getPrimaryColor(),
-                                  ),
-                                  onDeleted: filter['onRemove'],
-                                  backgroundColor: Colors.white,
-                                  side: BorderSide(
-                                    color: Colors.white.withOpacity(0.5),
-                                    width: 1,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                              if (isHomeroom)
+                                Container(
+                                  margin: EdgeInsets.only(left: 8),
                                   padding: EdgeInsets.symmetric(
                                     horizontal: 8,
                                     vertical: 4,
                                   ),
-                                  labelPadding: EdgeInsets.only(left: 4),
+                                  decoration: BoxDecoration(
+                                    color: ColorUtils.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    'Wali Kelas',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: ColorUtils.primary,
+                                    ),
+                                  ),
                                 ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      InkWell(
-                        onTap: _clearAllFilters,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.clear_all,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Clear',
-                                  'id': 'Hapus',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                             ],
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              Expanded(
-                child: _isLoading
-                    ? LoadingScreen(
-                        message: languageProvider.getTranslatedText({
-                          'en': 'Loading subjects...',
-                          'id': 'Memuat mata pelajaran...',
-                        }),
-                      )
-                    : filteredSubjects.isEmpty
-                    ? EmptyState(
-                        icon: Icons.menu_book,
-                        title: languageProvider.getTranslatedText({
-                          'en': 'No Subjects Available',
-                          'id': 'Tidak Ada Mata Pelajaran',
-                        }),
-                        subtitle: languageProvider.getTranslatedText({
-                          'en':
-                              _searchController.text.isNotEmpty ||
-                                  _hasActiveFilter
-                              ? 'No subjects found for your search'
-                              : widget.teacher['role'] == 'guru'
-                              ? 'No subjects assigned to you'
-                              : 'No subjects available',
-                          'id':
-                              _searchController.text.isNotEmpty ||
-                                  _hasActiveFilter
-                              ? 'Tidak ada mata pelajaran yang sesuai dengan pencarian'
-                              : widget.teacher['role'] == 'guru'
-                              ? 'Tidak ada mata pelajaran yang diajarkan'
-                              : 'Tidak ada mata pelajaran tersedia',
-                        }),
-                        buttonText: languageProvider.getTranslatedText({
-                          'en': 'Refresh',
-                          'id': 'Muat Ulang',
-                        }),
-                        onPressed: _loadData,
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadData,
-                        color: _getPrimaryColor(),
-                        backgroundColor: Colors.white,
-                        child: Column(
-                          children: [
-                            if (filteredSubjects.isNotEmpty)
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      '${filteredSubjects.length} ${languageProvider.getTranslatedText({'en': 'subjects found', 'id': 'mata pelajaran ditemukan'})}',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            Expanded(
-                              child: ListView.builder(
-                                controller: _scrollController,
-                                padding: EdgeInsets.only(top: 8, bottom: 16),
-                                itemCount:
-                                    _subjectList.length +
-                                    (_isLoadingMore ? 1 : 0),
-                                itemBuilder: (context, index) {
-                                  // Show loading indicator at bottom
-                                  if (index == _subjectList.length) {
-                                    return Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    );
-                                  }
-
-                                  return _buildSubjectCard(
-                                    _subjectList[index],
-                                    languageProvider,
-                                    index,
-                                  );
-                                },
-                              ),
+                          SizedBox(height: 4),
+                          Text(
+                            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classData['grade_level'] ?? classData['tingkat'] ?? '-'}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                    ),
+                    Icon(Icons.chevron_right, color: Colors.grey[400]),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStep1SubjectList(LanguageProvider languageProvider) {
+    final searchTerm = _searchController.text.toLowerCase();
+    final filtered = _subjectList.where((item) {
+      final name = (item['nama'] ?? item['name'] ?? '')
+          .toString()
+          .toLowerCase();
+      final code = (item['kode'] ?? item['code'] ?? '')
+          .toString()
+          .toLowerCase();
+      return name.contains(searchTerm) || code.contains(searchTerm);
+    }).toList();
+
+    if (_isLoading) {
+      return LoadingScreen(
+        message: languageProvider.getTranslatedText({
+          'en': 'Loading subjects...',
+          'id': 'Memuat mata pelajaran...',
+        }),
+      );
+    }
+
+    if (filtered.isEmpty) {
+      return EmptyState(
+        icon: Icons.menu_book_outlined,
+        title: languageProvider.getTranslatedText({
+          'en': 'No Subjects Found',
+          'id': 'Tidak Ada Mata Pelajaran',
+        }),
+        subtitle: languageProvider.getTranslatedText({
+          'en': 'No subjects found for this class',
+          'id': 'Tidak ada mata pelajaran untuk kelas ini',
+        }),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _loadSubjects(),
+      child: ListView.builder(
+        padding: EdgeInsets.all(16),
+        itemCount: filtered.length,
+        itemBuilder: (context, index) {
+          final subject = filtered[index];
+          return Card(
+            elevation: 2,
+            shadowColor: ColorUtils.slate200,
+            margin: EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _selectedSubject = subject;
+                  _currentStep = 2;
+                });
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.book_outlined, color: Colors.orange),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            subject['nama'] ?? subject['name'] ?? '-',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            subject['kode'] ?? subject['code'] ?? '-',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: Colors.grey[400]),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<bool> _handleWillPop() async {
+    if (_currentStep > 0) {
+      setState(() {
+        _currentStep--;
+        if (_currentStep == 0) {
+          _selectedClass = null;
+          _selectedSubject = null;
+          _searchController.clear();
+        } else if (_currentStep == 1) {
+          _selectedSubject = null;
+        }
+      });
+      return false;
+    }
+    return true;
+  }
+
+  Widget _buildHeader(BuildContext context, LanguageProvider languageProvider) {
+    String title = '';
+    String subtitle = '';
+
+    if (_currentStep == 0) {
+      title = languageProvider.getTranslatedText({
+        'en': 'Input Grades',
+        'id': 'Input Nilai',
+      });
+      subtitle = languageProvider.getTranslatedText({
+        'en': 'Select Class',
+        'id': 'Pilih Kelas',
+      });
+    } else if (_currentStep == 1) {
+      title = _selectedClass?['nama'] ?? _selectedClass?['name'] ?? 'Class';
+      subtitle = languageProvider.getTranslatedText({
+        'en': 'Select Subject',
+        'id': 'Pilih Mata Pelajaran',
+      });
+    } else {
+      return SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      decoration: BoxDecoration(
+        gradient: _getCardGradient(),
+        boxShadow: [
+          BoxShadow(
+            color: _getPrimaryColor().withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final shouldPop = await _handleWillPop();
+                  if (shouldPop && mounted) Navigator.pop(context);
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-}
-
-// Halaman Pemilihan Kelas - Diperbaiki agar langsung ke tabel nilai
-class ClassSelectionPage extends StatefulWidget {
-  final Map<String, dynamic> teacher;
-  final Map<String, dynamic> subject;
-
-  const ClassSelectionPage({
-    super.key,
-    required this.teacher,
-    required this.subject,
-  });
-
-  @override
-  ClassSelectionPageState createState() => ClassSelectionPageState();
-}
-
-class ClassSelectionPageState extends State<ClassSelectionPage> {
-  List<dynamic> _classList = [];
-  List<dynamic> _filteredClassList = [];
-  bool _isLoading = true;
-  final TextEditingController _searchController = TextEditingController();
-
-  // Filter States
-  List<String> _selectedClassIds = [];
-  bool _hasActiveFilter = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadClass();
-    _searchController.addListener(_filterClass);
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _filterClass() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        _filteredClassList = List.from(_classList);
-      } else {
-        _filteredClassList = _classList
-            .where(
-              (className) =>
-                  className['nama'].toLowerCase().contains(query) ||
-                  (className['tingkat']?.toString().toLowerCase().contains(
-                        query,
-                      ) ??
-                      false),
-            )
-            .toList();
-      }
-    });
-  }
-
-  Future<void> _loadClass() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      final classData = await ApiService().getClassBySubjectId(
-        widget.subject['id'],
-      );
-
-      setState(() {
-        _classList = classData;
-        _filteredClassList = List.from(_classList);
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      _showErrorSnackBar('Failed to load classes: $e');
-    }
-  }
-
-  void _showErrorSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
-              'en': message,
-              'id': message.replaceAll(
-                'Failed to load classes:',
-                'Gagal memuat kelas:',
-              ),
-            }),
-          ),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _navigateToGradeBook(Map<String, dynamic> classData) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GradeBookPage(
-          teacher: widget.teacher,
-          subject: widget.subject,
-          classData: classData,
-        ),
-      ),
-    );
-  }
-
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
-  }
-
-  LinearGradient _getCardGradient() {
-    final primaryColor = _getPrimaryColor();
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withOpacity(0.8)],
-    );
-  }
-
-  // Filter Methods untuk Class Selection
-  void _checkActiveFilter() {
-    setState(() {
-      _hasActiveFilter = _selectedClassIds.isNotEmpty;
-    });
-  }
-
-  void _clearAllFilters() {
-    setState(() {
-      _selectedClassIds.clear();
-      _hasActiveFilter = false;
-    });
-  }
-
-  List<Map<String, dynamic>> _buildFilterChips(
-    LanguageProvider languageProvider,
-  ) {
-    List<Map<String, dynamic>> filterChips = [];
-
-    if (_selectedClassIds.isNotEmpty) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${_selectedClassIds.length}',
-        'onRemove': () {
-          setState(() {
-            _selectedClassIds.clear();
-            _checkActiveFilter();
-          });
-        },
-      });
-    }
-
-    return filterChips;
-  }
-
-  void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FilterSheet(
-        primaryColor: _getPrimaryColor(),
-        config: FilterConfig(
-          sections: [
-            FilterSection(
-              key: 'classIds',
-              title: languageProvider.getTranslatedText({
-                'en': 'Classes',
-                'id': 'Kelas',
-              }),
-              options: _classList.map((classItem) {
-                return FilterOption(
-                  label: classItem['nama'] ?? 'Class',
-                  value: classItem['id'].toString(),
-                );
-              }).toList(),
-              multiSelect: true,
-            ),
-          ],
-        ),
-        initialFilters: {'classIds': _selectedClassIds},
-        onApplyFilters: (filters) {
-          setState(() {
-            _selectedClassIds = List<String>.from(filters['classIds'] ?? []);
-            _checkActiveFilter();
-          });
-        },
-      ),
-    );
-  }
-
-  List<dynamic> _getFilteredClasses() {
-    final searchTerm = _searchController.text.toLowerCase();
-
-    return _classList.where((classData) {
-      // Search filter
-      final matchesSearch =
-          searchTerm.isEmpty ||
-          classData['nama'].toLowerCase().contains(searchTerm) ||
-          (classData['tingkat']?.toString().toLowerCase().contains(
-                searchTerm,
-              ) ??
-              false);
-
-      // Class filter
-      final matchesClass =
-          _selectedClassIds.isEmpty ||
-          _selectedClassIds.contains(classData['id'].toString());
-
-      return matchesSearch && matchesClass;
-    }).toList();
-  }
-
-  Widget _buildClassCard(
-    Map<String, dynamic> classData,
-    LanguageProvider languageProvider,
-    int index,
-  ) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _navigateToGradeBook(classData),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 5,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Strip berwarna di pinggir kiri
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 6,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor(),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Background pattern effect
-                Positioned(
-                  right: -8,
-                  top: -8,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header dengan nama kelas
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  classData['name'] ??
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Class',
-                                        'id': 'Kelas',
-                                      }),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classData['grade_level'] ?? '-'}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.arrow_forward,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 12),
-
-                      // Konten preview
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.people,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Subject',
-                                    'id': 'Mata Pelajaran',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  widget.subject['name'] ??
-                                      languageProvider.getTranslatedText({
-                                        'en': 'No subject',
-                                        'id': 'Tidak ada mata pelajaran',
-                                      }),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -1296,348 +639,58 @@ class ClassSelectionPageState extends State<ClassSelectionPage> {
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        final filteredClasses = _getFilteredClasses();
+        // If Step 2, we show GradeBookPage which handles its own scaffold/body
+        if (_currentStep == 2) {
+          return WillPopScope(
+            onWillPop: _handleWillPop,
+            child: GradeBookPage(
+              teacher: widget.teacher,
+              subject: _selectedSubject!,
+              classData: _selectedClass!,
+              onBack: () {
+                setState(() {
+                  _currentStep = 1;
+                  _selectedSubject = null;
+                });
+              },
+            ),
+          );
+        }
 
-        return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
-          body: Column(
-            children: [
-              // Header dengan gradient
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
+        return WillPopScope(
+          onWillPop: _handleWillPop,
+          child: Scaffold(
+            backgroundColor: Color(0xFFF8F9FA),
+            body: Column(
+              children: [
+                _buildHeader(context, languageProvider),
+
+                if (_currentStep == 0 || _currentStep == 1) ...[
+                  SeparatedSearchFilter(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() {}),
+                    hintText: _currentStep == 0
+                        ? languageProvider.getTranslatedText({
+                            'en': 'Search class...',
+                            'id': 'Cari kelas...',
+                          })
+                        : languageProvider.getTranslatedText({
+                            'en': 'Search subject...',
+                            'id': 'Cari mata pelajaran...',
+                          }),
+                    showFilter: false, // Simple search for now
+                    searchBackgroundColor: Colors.white,
+                    margin: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  ),
+                ],
+
+                Expanded(
+                  child: _currentStep == 0
+                      ? _buildStep0ClassList(languageProvider)
+                      : _buildStep1SubjectList(languageProvider),
                 ),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _getPrimaryColor().withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Select Class',
-                                  'id': 'Pilih Kelas',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Choose class to input grades',
-                                  'id': 'Pilih kelas untuk input nilai',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.class_,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-
-                    // Info Mata Pelajaran
-                    Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.menu_book,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.subject['name'] ?? 'Subject',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${widget.subject['code'] ?? widget.subject['kode'] ?? '-'}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withOpacity(0.8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
-                    // Search Bar with Filter Button using SeparatedSearchFilter
-                    SeparatedSearchFilter(
-                      controller: _searchController,
-                      onChanged: (value) => setState(() {}),
-                      hintText: languageProvider.getTranslatedText({
-                        'en': 'Search classes...',
-                        'id': 'Cari kelas...',
-                      }),
-                      showFilter: true,
-                      hasActiveFilter: _hasActiveFilter,
-                      onFilterPressed: _showFilterSheet,
-                      // Different styling for ClassSelectionPage - more compact
-                      searchBackgroundColor: Colors.white.withOpacity(0.92),
-                      searchIconColor: _getPrimaryColor().withOpacity(0.7),
-                      searchTextColor: Colors.black,
-                      searchHintColor: Colors.grey.shade400,
-                      searchBorderRadius: 12,
-                      // Filter with accent color
-                      filterActiveColor: Colors.orange.shade600,
-                      filterInactiveColor: Colors.white.withOpacity(0.85),
-                      filterIconColor: _hasActiveFilter
-                          ? Colors.white
-                          : Colors.orange.shade600,
-                      filterBorderRadius: 12,
-                      filterWidth: 52,
-                      filterHeight: 48, // Match search bar height
-                      spacing: 10,
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 0,
-                        vertical: 0,
-                      ),
-                    ),
-
-                    // Filter Chips
-                    if (_hasActiveFilter) ...[
-                      SizedBox(height: 12),
-                      SizedBox(
-                        height: 32,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  ..._buildFilterChips(languageProvider).map((
-                                    filter,
-                                  ) {
-                                    return Container(
-                                      margin: EdgeInsets.only(right: 6),
-                                      child: Chip(
-                                        label: Text(
-                                          filter['label'],
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        deleteIcon: Icon(
-                                          Icons.close,
-                                          size: 16,
-                                          color: Colors.white,
-                                        ),
-                                        onDeleted: filter['onRemove'],
-                                        backgroundColor: Colors.white
-                                            .withOpacity(0.2),
-                                        side: BorderSide(
-                                          color: Colors.white.withOpacity(0.3),
-                                          width: 1,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        labelPadding: EdgeInsets.only(left: 4),
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            InkWell(
-                              onTap: _clearAllFilters,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.red.withOpacity(0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Clear All',
-                                    'id': 'Hapus Semua',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Content
-              Expanded(
-                child: _isLoading
-                    ? LoadingScreen(
-                        message: languageProvider.getTranslatedText({
-                          'en': 'Loading classes...',
-                          'id': 'Memuat kelas...',
-                        }),
-                      )
-                    : filteredClasses.isEmpty
-                    ? EmptyState(
-                        icon: Icons.class_,
-                        title: languageProvider.getTranslatedText({
-                          'en': 'No Classes Available',
-                          'id': 'Tidak Ada Kelas',
-                        }),
-                        subtitle: languageProvider.getTranslatedText({
-                          'en':
-                              _searchController.text.isNotEmpty ||
-                                  _hasActiveFilter
-                              ? 'No classes found for your search'
-                              : 'No classes available for this subject',
-                          'id':
-                              _searchController.text.isNotEmpty ||
-                                  _hasActiveFilter
-                              ? 'Tidak ada kelas yang sesuai dengan pencarian'
-                              : 'Tidak ada kelas tersedia untuk mata pelajaran ini',
-                        }),
-                        buttonText: languageProvider.getTranslatedText({
-                          'en': 'Refresh',
-                          'id': 'Muat Ulang',
-                        }),
-                        onPressed: _loadClass,
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadClass,
-                        color: _getPrimaryColor(),
-                        backgroundColor: Colors.white,
-                        child: Column(
-                          children: [
-                            if (filteredClasses.isNotEmpty)
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      '${filteredClasses.length} ${languageProvider.getTranslatedText({'en': 'classes found', 'id': 'kelas ditemukan'})}',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            Expanded(
-                              child: ListView.builder(
-                                padding: EdgeInsets.only(top: 8, bottom: 16),
-                                itemCount: filteredClasses.length,
-                                itemBuilder: (context, index) {
-                                  return _buildClassCard(
-                                    filteredClasses[index],
-                                    languageProvider,
-                                    index,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -1650,12 +703,14 @@ class GradeBookPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
   final Map<String, dynamic> classData;
+  final VoidCallback? onBack;
 
   const GradeBookPage({
     super.key,
     required this.teacher,
     required this.subject,
     required this.classData,
+    this.onBack,
   });
 
   @override
@@ -3203,7 +2258,13 @@ class GradeBookPageState extends State<GradeBookPage> {
             iconTheme: IconThemeData(color: Colors.black),
             leading: IconButton(
               icon: Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                if (widget.onBack != null) {
+                  widget.onBack!();
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
             ),
             actions: [
               IconButton(
