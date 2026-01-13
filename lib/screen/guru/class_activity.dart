@@ -9,12 +9,11 @@ import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/new_enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
-import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
-import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,7 +50,7 @@ class ClassActifityScreen extends StatefulWidget {
 
 class ClassActifityScreenState extends State<ClassActifityScreen>
     with TickerProviderStateMixin {
-  List<dynamic> _scheduleList = [];
+  final List<dynamic> _scheduleList = [];
   List<dynamic> _subjectList = [];
   List<dynamic> _chapterList = [];
   List<dynamic> _subChapterList = [];
@@ -60,10 +59,22 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   String _teacherId = '';
   String _teacherName = '';
 
+  // New Navigation State
+  // 0: Class List, 1: Subject List, 2: Activity List
+  int _currentStep = 0;
+  String? _selectedClassId;
+  String? _selectedClassName;
+  // Map<String, dynamic>? _selectedClassData; // If full object needed
+  String? _selectedSubjectId;
+  String? _selectedSubjectName;
+
+  // Data Lists
+  List<dynamic> _classList = [];
+
   // Search dan Filter
   final TextEditingController _searchController = TextEditingController();
   String? _selectedDateFilter;
-  List<String> _selectedSubjectIds = [];
+
   bool _hasActiveFilter = false;
 
   // Pagination
@@ -136,6 +147,301 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     _loadActivities();
   }
 
+  Future<void> _loadMoreActivities() async {
+    if (_isLoadingMore || !_hasMoreData) return;
+
+    setState(() {
+      _currentPage++;
+      _isLoadingMore = true;
+    });
+
+    await _loadActivities();
+  }
+
+  void _onSearchChanged(String value) {
+    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      _resetAndLoadActivities();
+    });
+  }
+
+  // ========== VIEW BUILDERS ==========
+
+  Widget _buildClassList(LanguageProvider languageProvider) {
+    if (_isLoading) {
+      return LoadingScreen(
+        message: languageProvider.getTranslatedText({
+          'en': 'Loading classes...',
+          'id': 'Memuat kelas...',
+        }),
+      );
+    }
+
+    if (_classList.isEmpty) {
+      return EmptyState(
+        title: languageProvider.getTranslatedText({
+          'en': 'No Classes Found',
+          'id': 'Kelas Tidak Ditemukan',
+        }),
+        subtitle: languageProvider.getTranslatedText({
+          'en': 'You do not have any assigned classes for this academic year.',
+          'id':
+              'Anda tidak memiliki kelas yang ditugaskan untuk tahun ajaran ini.',
+        }),
+        icon: Icons.class_outlined,
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: _classList.length,
+      itemBuilder: (context, index) {
+        final classData = _classList[index];
+        final isHomeroom = classData['is_homeroom'] == true;
+
+        return Card(
+          elevation: 2,
+          shadowColor: ColorUtils.slate200,
+          margin: EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () async {
+              setState(() {
+                _selectedClassId = classData['id'].toString();
+                _selectedClassName = classData['name'] ?? classData['nama'];
+                _currentStep = 1;
+              });
+              await _loadSubjectsForClass();
+            },
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isHomeroom
+                          ? ColorUtils.primary.withOpacity(0.1)
+                          : ColorUtils.slate100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isHomeroom
+                          ? Icons.home_work_rounded
+                          : Icons.class_rounded,
+                      color: isHomeroom
+                          ? ColorUtils.primary
+                          : ColorUtils.slate500,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                classData['name'] ?? classData['nama'] ?? '-',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorUtils.slate900,
+                                ),
+                              ),
+                            ),
+                            if (isHomeroom)
+                              Container(
+                                margin: EdgeInsets.only(left: 8),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: ColorUtils.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Wali Kelas',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          '${classData['tingkat'] ?? ''} • ${classData['jurusan'] ?? ''}',
+                          style: TextStyle(
+                            color: ColorUtils.slate500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: ColorUtils.slate400,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSubjectList(LanguageProvider languageProvider) {
+    if (_isLoading) {
+      return LoadingScreen(
+        message: languageProvider.getTranslatedText({
+          'en': 'Loading subjects...',
+          'id': 'Memuat mata pelajaran...',
+        }),
+      );
+    }
+
+    if (_subjectList.isEmpty) {
+      return EmptyState(
+        title: languageProvider.getTranslatedText({
+          'en': 'No Subjects Found',
+          'id': 'Mata Pelajaran Tidak Ditemukan',
+        }),
+        subtitle: languageProvider.getTranslatedText({
+          'en': 'No subjects suitable for this class found.',
+          'id': 'Tidak ditemukan mata pelajaran yang sesuai untuk kelas ini.',
+        }),
+        icon: Icons.menu_book_outlined,
+      );
+    }
+
+    return Column(
+      children: [
+        // Selection Header
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16),
+          color: ColorUtils.slate50,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Selected Class:',
+                  'id': 'Kelas Terpilih:',
+                }),
+                style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
+              ),
+              SizedBox(height: 4),
+              Text(
+                _selectedClassName ?? '-',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: ColorUtils.slate900,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: EdgeInsets.all(16),
+            itemCount: _subjectList.length,
+            itemBuilder: (context, index) {
+              final subject = _subjectList[index];
+              final subjectName = subject['name'] ?? subject['nama'] ?? '-';
+              // Check backend response for code/description
+              final subjectCode = subject['code'] ?? subject['kode'] ?? '';
+
+              return Card(
+                elevation: 2,
+                shadowColor: ColorUtils.slate200,
+                margin: EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () async {
+                    setState(() {
+                      _selectedSubjectId = subject['id'].toString();
+                      _selectedSubjectName = subjectName;
+                      _currentStep = 2; // Go to Activity List
+                    });
+                    await _loadActivities();
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: ColorUtils.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.menu_book_rounded,
+                            color: ColorUtils.primary,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                subjectName,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorUtils.slate900,
+                                ),
+                              ),
+                              if (subjectCode.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    subjectCode,
+                                    style: TextStyle(
+                                      color: ColorUtils.slate500,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: ColorUtils.slate400,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _loadUserData() async {
     if (kDebugMode) {
       print('===== _loadUserData STARTED =====');
@@ -170,16 +476,30 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               _teacherId = teacherId; // Update to Teacher ID for activities
             });
 
-            // 2. Load Schedule using TEACHER ID
-            // Backend now expects Teacher Table ID
-            await _loadSchedule(teacherId);
+            // 2. Load Classes using TEACHER ID
+            await _loadClasses(teacherId);
 
-            // 3. Load Activities using TEACHER ID
-            await _loadActivities();
+            // If initial params provided, try to navigate deep
+            if (widget.initialClassId != null) {
+              _selectedClassId = widget.initialClassId;
+              _selectedClassName = widget.initialClassName;
+              _currentStep = 1; // Go to Subject List
+
+              if (widget.initialSubjectId != null) {
+                _selectedSubjectId = widget.initialSubjectId;
+                // Need to find subject name? Or rely on initialSubjectName
+                _selectedSubjectName =
+                    widget.initialSubjectName; // Assuming passed
+                _currentStep = 2; // Go to Activity List
+                await _loadActivities();
+              } else {
+                await _loadSubjectsForClass();
+              }
+            }
           } else {
             if (kDebugMode) {
               print('❌ Failed to resolve Teacher ID from User ID');
-              print('Cannot load schedule or activities without Teacher ID');
+              print('Cannot load classes without Teacher ID');
             }
           }
         } catch (e) {
@@ -198,119 +518,111 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     }
   }
 
-  Future<void> _loadSchedule([String? userId]) async {
+  Future<void> _loadClasses(String teacherId) async {
     try {
-      // Get current academic year dynamically
-      final now = DateTime.now();
-      final currentYear = now.year;
-      final currentMonth = now.month;
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
 
-      // Academic year runs from July to June
-      final academicYear = currentMonth >= 7
-          ? '$currentYear/${currentYear + 1}'
-          : '${currentYear - 1}/$currentYear';
-
-      // Use provided userId or fall back to _teacherId
-      final teacherIdToUse = userId ?? _teacherId;
-
-      // if (kDebugMode) {
-      //   print('===== LOADING SCHEDULE =====');
-      //   print('Teacher ID (for API): $teacherIdToUse');
-      //   print('Academic Year: $tahunAjaran');
-      //   print('calling ApiScheduleService.getScheduleByGuru...');
-      // }
-
-      final schedule = await ApiScheduleService.getScheduleByTeacher(
-        teacherId: teacherIdToUse,
-        academicYear: academicYear,
+      final classes = await ApiTeacherService.getTeacherClasses(
+        teacherId,
+        academicYearId: academicYearId,
       );
 
-      // if (kDebugMode) {
-      //   print('Total schedules loaded: ${schedule.length}');
-      // }
-
-      // If no schedule found for current year, try loading all schedules
-      List<dynamic> finalSchedule = schedule;
-      if (schedule.isEmpty) {
-        // if (kDebugMode) {
-        //   print(
-        //     'No schedule found for $tahunAjaran, trying to load all schedules...',
-        //   );
-        // }
-        try {
-          finalSchedule = await ApiScheduleService.getScheduleByTeacher(
-            teacherId: teacherIdToUse,
-          );
-          // if (kDebugMode) {
-          //   print(
-          //     'Total schedules loaded (all years): ${finalSchedule.length}',
-          //   );
-          // }
-        } catch (e) {
-          // if (kDebugMode) {
-          //   print('Failed to load all schedules: $e');
-          // }
-        }
-      }
-
-      final uniqueSubjects = <String, dynamic>{};
-      final uniqueClasses = <String, dynamic>{};
-
-      for (var scheduleItem in finalSchedule) {
-        // Support both old (Indonesian) and new (English) column names
-        final subjectId =
-            (scheduleItem['subject_id'] ?? scheduleItem['mata_pelajaran_id'])
-                ?.toString();
-        final subjectName = scheduleItem['mata_pelajaran_nama']?.toString();
-        final classId = (scheduleItem['class_id'] ?? scheduleItem['kelas_id'])
-            ?.toString();
-        final className = scheduleItem['kelas_nama']?.toString();
-
-        // if (kDebugMode) {
-        //   print(
-        //     'Schedule item: $subjectName (ID: $subjectId), Class: $className (ID: $classId), Day: ${scheduleItem['hari_nama']}, Time: ${scheduleItem['start_time'] ?? scheduleItem['jam_mulai']} - ${scheduleItem['end_time'] ?? scheduleItem['jam_selesai']}',
-        //   );
-        // }
-
-        if (subjectId != null && !uniqueSubjects.containsKey(subjectId)) {
-          uniqueSubjects[subjectId] = {
-            'id': subjectId,
-            'nama': subjectName,
-            'subject_id':
-                scheduleItem['master_subject_id'], // Map Master Subject ID
-          };
-        }
-
-        if (classId != null && !uniqueClasses.containsKey(classId)) {
-          uniqueClasses[classId] = {'id': classId, 'nama': className};
-        }
-      }
-
-      // if (kDebugMode) {
-      //   print('Unique subjects: ${uniqueSubjects.length}');
-      //   print(
-      //     'Subject list: ${uniqueSubjects.values.map((s) => s['nama']).toList()}',
-      //   );
-      //   print('Subject IDs: ${uniqueSubjects.keys.toList()}');
-      //   print('Unique classes: ${uniqueClasses.length}');
-      //   print('===========================');
-      // }
-
       setState(() {
-        _scheduleList = finalSchedule;
-        _subjectList = uniqueSubjects.values.toList();
+        _classList = classes;
+        _isLoading = false;
       });
-
-      // if (kDebugMode) {
-      //   print('✅ _subjectList after setState: ${_subjectList.length} subjects');
-      //   print('Subject list content: $_subjectList');
-      // }
     } catch (e) {
       if (kDebugMode) {
-        print('ERROR loading schedule: $e');
-        print('Stack trace: ${StackTrace.current}');
+        print('Error loading classes: $e');
       }
+      setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadSubjectsForClass() async {
+    if (_selectedClassId == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // 1. Get All Subjects for Teacher
+      final allSubjects = await ApiTeacherService().getSubjectByTeacher(
+        _teacherId,
+      );
+
+      // 2. Get Selected Class Data to check Grade Level
+      final selectedClass = _classList.firstWhere(
+        (c) => c['id'].toString() == _selectedClassId,
+        orElse: () => <String, dynamic>{}, // Return empty map if not found
+      );
+
+      // Normalize grade level (e.g., "10", "X", "1")
+      String? classGrade;
+      if (selectedClass.isNotEmpty) {
+        // Try different fields: 'tingkat', 'grade_level', 'level'
+        classGrade =
+            selectedClass['tingkat']?.toString() ??
+            selectedClass['grade_level']?.toString();
+      }
+
+      // 3. Filter Subjects
+      final filteredSubjects = allSubjects.where((subject) {
+        // If subject has specific grade assigned in master subject
+        final masterSubject = subject['master_subject'];
+        // Note: backend response structure for 'getSubjectByTeacher' needs verification
+        // It returns list of subject_schools (Subject model).
+        // We added eager load 'masterSubject'.
+
+        final subjectGrade = masterSubject?['grade']?.toString();
+
+        // Logic:
+        // - If subject has NO grade, show for all classes? Or show only if explicitly linked?
+        // - If subject HAS grade, show only if matches class grade.
+        // - Also check 'subject_schools' might have 'grade' if copied? No, strictly master.
+
+        if (subjectGrade != null &&
+            subjectGrade.isNotEmpty &&
+            classGrade != null) {
+          // Simple string match for now. Might need "X" vs "10" mapping later.
+          return subjectGrade == classGrade;
+        }
+
+        // If no grade restrictions, allow it.
+        return true;
+      }).toList();
+
+      setState(() {
+        _subjectList = filteredSubjects;
+        // _subjectList = allSubjects; // Fallback if filtering is too strict
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading subjects: $e');
+      }
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // Helper to handle back button
+  Future<bool> _handleWillPop() async {
+    if (_currentStep > 0) {
+      setState(() {
+        _currentStep--;
+        if (_currentStep == 1) {
+          _selectedSubjectId = null;
+          _selectedSubjectName = null;
+        } else if (_currentStep == 0) {
+          _selectedClassId = null;
+          _selectedClassName = null;
+        }
+      });
+      return false; // Don't pop route
+    }
+    return true; // Pop route
   }
 
   void _showActivityTypeDialog() {
@@ -789,135 +1101,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   // Removed _getFilteredActivities - now using backend filtering
 
-  void _checkActiveFilter() {
-    setState(() {
-      _hasActiveFilter =
-          _selectedDateFilter != null || _selectedSubjectIds.isNotEmpty;
-    });
-  }
-
-  void _clearAllFilters() {
-    setState(() {
-      _selectedDateFilter = null;
-      _selectedSubjectIds.clear();
-      _hasActiveFilter = false;
-    });
-    _resetAndLoadActivities();
-  }
-
-  // ========== HEADER SEPERTI PRESENCE TEACHER ==========
-  Widget _buildHeader(LanguageProvider languageProvider) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: _getCardGradient(),
-        boxShadow: [
-          BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Class Activities',
-                        'id': 'Kegiatan Kelas',
-                      }),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Manage class materials and assignments',
-                        'id': 'Kelola materi dan tugas kelas',
-                      }),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  switch (value) {
-                    case 'refresh':
-                      _loadActivities();
-                      break;
-                  }
-                },
-                icon: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.more_vert, color: Colors.white, size: 20),
-                ),
-                itemBuilder: (BuildContext context) => [
-                  PopupMenuItem<String>(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(Icons.refresh, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Refresh',
-                            'id': 'Refresh',
-                          }),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: 16),
-
-          // Tab Switcher menggunakan komponen
-          _buildTabSwitcher(languageProvider),
-        ],
-      ),
-    );
-  }
-
   // ========== TAB SWITCHER MENGGUNAKAN KOMPONEN ==========
   Widget _buildTabSwitcher(LanguageProvider languageProvider) {
     final tabs = [
@@ -937,10 +1120,13 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       ),
     ];
 
-    return TabSwitcher(
-      tabController: _tabController,
-      tabs: tabs,
-      primaryColor: _getPrimaryColor(),
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: TabSwitcher(
+        tabController: _tabController,
+        tabs: tabs,
+        primaryColor: _getPrimaryColor(),
+      ),
     );
   }
 
@@ -948,13 +1134,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   Widget _buildSearchAndFilter(LanguageProvider languageProvider) {
     return NewEnhancedSearchBar(
       controller: _searchController,
-      onChanged: (value) {
-        // Debounce search to avoid excessive API calls
-        if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
-        _searchDebounce = Timer(const Duration(milliseconds: 500), () {
-          _resetAndLoadActivities();
-        });
-      },
+      onChanged: _onSearchChanged,
       hintText: languageProvider.getTranslatedText({
         'en': 'Search activities...',
         'id': 'Cari kegiatan...',
@@ -973,7 +1153,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       listen: false,
     );
 
-    // Siapkan konfigurasi filter
     final filterConfig = FilterConfig(
       sections: [
         FilterSection(
@@ -1006,28 +1185,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             ),
           ],
         ),
-        FilterSection(
-          key: 'subjects',
-          title: languageProvider.getTranslatedText({
-            'en': 'Subject',
-            'id': 'Mata Pelajaran',
-          }),
-          options: _subjectList.map((subject) {
-            return FilterOption(
-              label: subject['nama'] ?? 'Subject',
-              value: subject['id'].toString(),
-            );
-          }).toList(),
-          multiSelect: true,
-        ),
       ],
     );
 
-    // Siapkan filter awal
-    final initialFilters = <String, dynamic>{
-      'date': _selectedDateFilter,
-      'subjects': _selectedSubjectIds,
-    };
+    final initialFilters = <String, dynamic>{'date': _selectedDateFilter};
 
     showModalBottomSheet(
       context: context,
@@ -1039,8 +1200,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         onApplyFilters: (Map<String, dynamic> filters) {
           setState(() {
             _selectedDateFilter = filters['date'];
-            _selectedSubjectIds = List<String>.from(filters['subjects'] ?? []);
-            _checkActiveFilter();
+            _hasActiveFilter = _selectedDateFilter != null;
           });
           _resetAndLoadActivities();
         },
@@ -1048,7 +1208,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     );
   }
 
-  // ========== FILTER CHIPS SEPERTI PRESENCE TEACHER ==========
+  // ========== FILTER CHIPS ==========
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
@@ -1075,21 +1235,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         'onRemove': () {
           setState(() {
             _selectedDateFilter = null;
-            _checkActiveFilter();
-          });
-          _resetAndLoadActivities();
-        },
-      });
-    }
-
-    if (_selectedSubjectIds.isNotEmpty) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})}: ${_selectedSubjectIds.length}',
-        'onRemove': () {
-          setState(() {
-            _selectedSubjectIds.clear();
-            _checkActiveFilter();
+            _hasActiveFilter = false;
           });
           _resetAndLoadActivities();
         },
@@ -1100,11 +1246,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   }
 
   Widget _buildActivityList() {
-    // Now using backend filtering, so _activityList is already filtered
-
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        if (_isLoading) {
+        if (_isLoading && _activityList.isEmpty) {
           return LoadingScreen(
             message: languageProvider.getTranslatedText({
               'en': 'Loading activities...',
@@ -1115,7 +1259,35 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
         return Column(
           children: [
-            // Search dan Filter Bar menggunakan komponen
+            // Header showing Class > Subject
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: ColorUtils.slate50,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_selectedClassName ?? '-'} \u203A ${_selectedSubjectName ?? '-'}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Search dan Filter Bar
             _buildSearchAndFilter(languageProvider),
 
             // Filter Chips
@@ -1123,78 +1295,40 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               SizedBox(height: 8),
               SizedBox(
                 height: 32,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        children: [
-                          ..._buildFilterChips(languageProvider).map((filter) {
-                            return Container(
-                              margin: EdgeInsets.only(right: 6),
-                              child: Chip(
-                                label: Text(
-                                  filter['label'],
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                deleteIcon: Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                                onDeleted: filter['onRemove'],
-                                backgroundColor: _getPrimaryColor().withValues(
-                                  alpha: 0.7,
-                                ),
-                                side: BorderSide.none,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                labelPadding: EdgeInsets.only(left: 4),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Padding(
-                      padding: EdgeInsets.only(right: 16),
-                      child: InkWell(
-                        onTap: _clearAllFilters,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Clear All',
-                              'id': 'Hapus Semua',
-                            }),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  children: _buildFilterChips(languageProvider).map((filter) {
+                    return Container(
+                      margin: EdgeInsets.only(right: 6),
+                      child: Chip(
+                        label: Text(
+                          filter['label'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
+                        deleteIcon: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        onDeleted: filter['onRemove'],
+                        backgroundColor: _getPrimaryColor().withOpacity(0.7),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        labelPadding: EdgeInsets.only(left: 4),
                       ),
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
               ),
               SizedBox(height: 8),
@@ -1224,12 +1358,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                       subtitle:
                           _searchController.text.isEmpty && !_hasActiveFilter
                           ? languageProvider.getTranslatedText({
-                              'en': _currentTarget == 'umum'
-                                  ? 'No activities for all students available'
-                                  : 'No specific student activities available',
-                              'id': _currentTarget == 'umum'
-                                  ? 'Tidak ada kegiatan untuk semua siswa tersedia'
-                                  : 'Tidak ada kegiatan khusus siswa tersedia',
+                              'en': 'No activities found for this subject.',
+                              'id':
+                                  'Tidak ada kegiatan untuk mata pelajaran ini.',
                             })
                           : languageProvider.getTranslatedText({
                               'en': 'No search results found',
@@ -1244,7 +1375,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                           _activityList.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == _activityList.length) {
-                          // Loading indicator at bottom
                           return Center(
                             child: Padding(
                               padding: EdgeInsets.all(16),
@@ -1295,7 +1425,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.3),
+                    color: Colors.grey.withOpacity(0.3),
                     blurRadius: 5,
                     offset: Offset(0, 4),
                   ),
@@ -1360,9 +1490,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                           children: [
                             Expanded(
                               child: Padding(
-                                padding: EdgeInsets.only(
-                                  right: 80,
-                                ), // Add padding to avoid badge overlap
+                                padding: EdgeInsets.only(right: 80),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -1373,13 +1501,12 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black,
                                       ),
-                                      maxLines:
-                                          3, // Increase to 3 lines for long titles
+                                      maxLines: 3,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     SizedBox(height: 2),
                                     Text(
-                                      '${activity['subject_name']} • ${activity['class_name']}',
+                                      '${activity['subject_name'] ?? _selectedSubjectName ?? ''} • ${activity['class_name'] ?? _selectedClassName ?? ''}',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -1401,7 +1528,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: cardColor.withValues(alpha: 0.1),
+                                color: cardColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Icon(
@@ -1455,7 +1582,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                                     width: 32,
                                     height: 32,
                                     decoration: BoxDecoration(
-                                      color: cardColor.withValues(alpha: 0.1),
+                                      color: cardColor.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Icon(
@@ -1511,7 +1638,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                                     width: 32,
                                     height: 32,
                                     decoration: BoxDecoration(
-                                      color: cardColor.withValues(alpha: 0.1),
+                                      color: cardColor.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Icon(
@@ -1717,9 +1844,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                           ],
                         ),
 
-                        SizedBox(height: 12),
-
                         // Action Buttons
+                        SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
@@ -1758,31 +1884,114 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
-        return Scaffold(
-          backgroundColor: Colors.grey[50],
-          body: Column(
+  void _showActivityDetail(dynamic activity) {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        padding: EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header dengan Tab
-              _buildHeader(languageProvider),
-
-              // Content Area
-              Expanded(child: _buildActivityList()),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              Text(
+                activity['title'] ?? '',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              Text(
+                activity['deskripsi'] ??
+                    languageProvider.getTranslatedText({
+                      'en': 'No description',
+                      'id': 'Tidak ada deskripsi',
+                    }),
+              ),
+              SizedBox(height: 16),
+              if (activity['additional_material'] != null) ...[
+                Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Materials:',
+                    'id': 'Materi:',
+                  }),
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                // Rendering additional material list logic could go here
+              ],
             ],
           ),
-
-          // Floating Action Button untuk menambah kegiatan
-          floatingActionButton: FloatingActionButton(
-            onPressed: _showActivityTypeDialog,
-            backgroundColor: _getPrimaryColor(),
-            child: Icon(Icons.add, color: Colors.white),
-          ),
-        );
-      },
+        ),
+      ),
     );
+  }
+
+  @override
+  @override
+  Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
+    return WillPopScope(
+      onWillPop: _handleWillPop,
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        body: Column(
+          children: [
+            _buildHeader(languageProvider),
+            Expanded(child: _buildBodyContent(languageProvider)),
+          ],
+        ),
+        // TAB SWITCHER: Only show in Activity List (Step 2)
+        // CHECK: Previous code had tab switcher inside body of step 2.
+        // We can keep it there.
+
+        // FAB: Only show in Step 2
+        floatingActionButton: _currentStep == 2
+            ? FloatingActionButton(
+                onPressed: _showActivityTypeDialog,
+                backgroundColor: _getPrimaryColor(),
+                child: Icon(Icons.add, color: Colors.white),
+              )
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildBodyContent(LanguageProvider languageProvider) {
+    switch (_currentStep) {
+      case 0:
+        return _buildClassList(languageProvider);
+      case 1:
+        return _buildSubjectList(languageProvider);
+      case 2:
+        // TabSwitcher is now in the Header
+        return _buildActivityList();
+      default:
+        return Container();
+    }
   }
 
   // ========== HELPER METHODS ==========
@@ -1798,16 +2007,146 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.8)],
     );
   }
 
-  String _formatDate(String? dateString) {
-    if (dateString == null) return '-';
-    return AppDateUtils.formatDateString(dateString, format: 'dd/MM/yyyy');
+  // ========== HEADER BARU SEPERTI PRESENCE TEACHER ==========
+  Widget _buildHeader(LanguageProvider languageProvider) {
+    String title = languageProvider.getTranslatedText({
+      'en': 'Class Activity',
+      'id': 'Kegiatan Kelas',
+    });
+
+    String subtitle = '';
+    if (_currentStep == 0) {
+      subtitle = languageProvider.getTranslatedText({
+        'en': 'Select a class to manage activities',
+        'id': 'Pilih kelas untuk mengelola kegiatan',
+      });
+    } else if (_currentStep == 1) {
+      subtitle = _selectedClassName ?? '-';
+    } else if (_currentStep == 2) {
+      subtitle =
+          '${_selectedClassName ?? '-'} • ${_selectedSubjectName ?? '-'}';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      decoration: BoxDecoration(
+        gradient: _getCardGradient(),
+        boxShadow: [
+          BoxShadow(
+            color: _getPrimaryColor().withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final shouldPop = await _handleWillPop();
+                  if (shouldPop && mounted) {
+                    Navigator.pop(context);
+                  }
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  // Implement actions if needed
+                },
+                icon: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.more_vert, color: Colors.white, size: 20),
+                ),
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'help',
+                    child: Row(
+                      children: [
+                        Icon(Icons.help_outline, size: 20),
+                        SizedBox(width: 8),
+                        Text('Help'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (_currentStep == 2) ...[
+            SizedBox(height: 16),
+            _buildTabSwitcher(languageProvider),
+          ],
+        ],
+      ),
+    );
   }
 
-  // ========== API METHODS ==========
+  String _formatDate(dynamic date) {
+    if (date == null) return '-';
+    DateTime? dateTime;
+    if (date is DateTime) {
+      dateTime = date;
+    } else if (date is String) {
+      dateTime = DateTime.tryParse(date);
+    }
+    if (dateTime == null) return '-';
+    return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
+  }
+
+  // Method helpers for API to avoid errors if they were deleted
   Future<void> _loadMaterials(String subjectId) async {
     try {
       final materials = await ApiSubjectService.getMateri();
@@ -1847,18 +2186,23 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         }
       });
 
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
+
       final response = await ApiClassActivityService.getClassActivityPaginated(
         page: _currentPage,
         limit: _perPage,
         guruId: _teacherId,
+        classId: _selectedClassId,
+        mataPelajaranId: _selectedSubjectId,
         target: _currentTarget,
         search: _searchController.text.isNotEmpty
             ? _searchController.text
             : null,
         tanggal: _selectedDateFilter,
-        mataPelajaranId: _selectedSubjectIds.isNotEmpty
-            ? _selectedSubjectIds.first
-            : null,
+        academicYearId: academicYearId,
       );
 
       // if (kDebugMode) {
@@ -1895,177 +2239,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         print('Error load activities: $e');
       }
     }
-  }
-
-  Future<void> _loadMoreActivities() async {
-    if (_isLoadingMore || !_hasMoreData) return;
-
-    setState(() {
-      _isLoadingMore = true;
-    });
-
-    try {
-      _currentPage++;
-      await _loadActivities();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error loading more activities: $e');
-      }
-    } finally {
-      setState(() {
-        _isLoadingMore = false;
-      });
-    }
-  }
-
-  // Form Dialog untuk Tambah Kegiatan (Tugas/Materi)
-
-  void _showActivityDetail(Map<String, dynamic> activity) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final languageProvider = Provider.of<LanguageProvider>(
-          context,
-          listen: false,
-        );
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(activity['title'] ?? 'Detail Activity'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildDetailRow(
-                  Icons.book,
-                  'Subject',
-                  activity['subject_name'] ?? '-',
-                ),
-                _buildDetailRow(
-                  Icons.class_,
-                  'Class',
-                  activity['class_name'] ?? '-',
-                ),
-                _buildDetailRow(
-                  Icons.calendar_today,
-                  'Date',
-                  '${activity['day']}, ${activity['date']}',
-                ),
-                if (activity['description'] != null &&
-                    activity['description'].toString().isNotEmpty &&
-                    activity['description'] != 'null')
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Description:',
-                            'id': 'Deskripsi:',
-                          }),
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(activity['description']),
-                      ],
-                    ),
-                  ),
-                Divider(),
-                Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Materials:',
-                    'id': 'Materi:',
-                  }),
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                SizedBox(height: 8),
-                _buildMaterialItem(
-                  activity['chapter_title'],
-                  activity['sub_chapter_title'],
-                  isPrimary: true,
-                ),
-                if (activity['additional_material'] != null &&
-                    activity['additional_material'] is List &&
-                    (activity['additional_material'] as List).isNotEmpty)
-                  ...((activity['additional_material'] as List).map<Widget>((
-                    item,
-                  ) {
-                    return _buildMaterialItem(
-                      null,
-                      item['sub_chapter_title'],
-                      isPrimary: false,
-                    );
-                  }).toList()),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Close',
-                  'id': 'Tutup',
-                }),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: Colors.grey),
-          SizedBox(width: 8),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(color: Colors.black),
-                children: [
-                  TextSpan(
-                    text: '$label: ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-                  ),
-                  TextSpan(text: value),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMaterialItem(
-    String? chapter,
-    String? subChapter, {
-    required bool isPrimary,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4.0),
-      child: Row(
-        children: [
-          Icon(
-            isPrimary ? Icons.check_circle : Icons.add_circle_outline,
-            size: 16,
-            color: isPrimary ? Colors.green : Colors.blue,
-          ),
-          SizedBox(width: 8),
-          Expanded(child: Text(subChapter ?? 'Unknown Sub-chapter')),
-        ],
-      ),
-    );
   }
 }
 
