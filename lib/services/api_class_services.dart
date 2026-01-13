@@ -203,9 +203,14 @@ class ApiClassService {
   }
 
   // Existing methods...
-  Future<List<dynamic>> getClass() async {
+  Future<List<dynamic>> getClass({String? academicYearId}) async {
     try {
-      final result = await ApiService().get('/class');
+      String url = '/class';
+      if (academicYearId != null) {
+        url += '?academic_year_id=$academicYearId';
+      }
+
+      final result = await ApiService().get(url);
 
       // Handle new pagination format
       if (result is Map<String, dynamic>) {

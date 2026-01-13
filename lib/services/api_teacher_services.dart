@@ -257,6 +257,34 @@ class ApiTeacherService {
     }
   }
 
+  // Get Classes by Teacher (Teaching + Homeroom)
+  static Future<List<dynamic>> getTeacherClasses(
+    String teacherId, {
+    String? academicYearId,
+  }) async {
+    try {
+      String url = '$baseUrl/teacher/$teacherId/classes';
+      if (academicYearId != null) {
+        url += '?academic_year_id=$academicYearId';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+
+      if (result is Map<String, dynamic> && result['data'] is List) {
+        return result['data'];
+      }
+      return [];
+    } catch (e) {
+      print('Error getting classes by teacher: $e');
+      return [];
+    }
+  }
+
   // Get Subjects by Teacher with Pagination & Filters (Recommended)
   static Future<Map<String, dynamic>> getSubjectsByTeacherPaginated({
     required String teacherId,

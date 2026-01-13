@@ -146,9 +146,14 @@ class ApiStudentService {
     }
   }
 
-  static Future<List<dynamic>> getStudent() async {
+  static Future<List<dynamic>> getStudent({String? academicYearId}) async {
+    String url = '$baseUrl/student';
+    if (academicYearId != null) {
+      url += '?academic_year_id=$academicYearId';
+    }
+
     final response = await http.get(
-      Uri.parse('$baseUrl/student'),
+      Uri.parse(url),
       headers: await _getHeaders(),
     );
 

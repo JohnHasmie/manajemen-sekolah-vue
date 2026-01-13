@@ -7,6 +7,7 @@ import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/new_enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/models/siswa.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -80,7 +81,7 @@ class PresencePageState extends State<PresencePage>
   String? _selectedClassId;
   String? _selectedClassName;
   String? _selectedDateFilter;
-  List<dynamic> _subjectList = [];
+  final List<dynamic> _subjectList = [];
   List<dynamic> _subjectTeacher = [];
   List<dynamic> _classList = [];
   List<Siswa> _studentList = [];
@@ -146,12 +147,19 @@ class PresencePageState extends State<PresencePage>
 
   Future<void> _loadInitialData() async {
     try {
-      final apiServiceClass = ApiClassService();
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
+
       final [subjectTeacher, classList, studentList] = await Future.wait([
         // Ambil mata pelajaran yang diampu oleh guru
         _getSubjectByTeacher(widget.teacher['id']),
-        apiServiceClass.getClass(),
-        ApiStudentService.getStudent(),
+        ApiTeacherService.getTeacherClasses(
+          widget.teacher['id'],
+          academicYearId: academicYearId,
+        ),
+        ApiStudentService.getStudent(academicYearId: academicYearId),
       ]);
 
       setState(() {
@@ -321,8 +329,14 @@ class PresencePageState extends State<PresencePage>
     });
 
     try {
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
+
       final absensiData = await ApiService.getAbsensi(
         teacherId: widget.teacher['id'],
+        academicYearId: academicYearId,
       );
 
       final Map<String, AbsensiSummary> summaryMap = {};
@@ -1128,10 +1142,149 @@ class PresencePageState extends State<PresencePage>
     );
   }
 
+  // ========== CLASS LIST VIEW ==========
+  Widget _buildInlineClassList(LanguageProvider languageProvider) {
+    if (_classList.isEmpty) {
+      return EmptyState(
+        title: languageProvider.getTranslatedText({
+          'en': 'No Class Data',
+          'id': 'Data Kelas Kosong',
+        }),
+        subtitle: languageProvider.getTranslatedText({
+          'en': 'You do not have any classes for this academic year',
+          'id': 'Anda tidak mengampu kelas untuk tahun ajaran ini',
+        }),
+        icon: Icons.class_outlined,
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: _classList.length,
+      itemBuilder: (context, index) {
+        final classData = _classList[index];
+        // Check homeroom via explicit flag from backend
+        // Since we are now using ApiTeacherService.getTeacherClasses,
+        // the backend populates 'is_homeroom' correctly.
+        final isHomeroom = classData['is_homeroom'] == true;
+
+        return Card(
+          elevation: 2,
+          shadowColor: ColorUtils.slate200,
+          margin: EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _selectedClassId = classData['id'];
+                _selectedClassName = classData['nama'] ?? classData['name'];
+              });
+
+              // Load data depending on tab
+              if (_tabController.index == 0) {
+                _loadAbsensiSummary();
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isHomeroom
+                          ? ColorUtils.primary.withOpacity(0.1)
+                          : ColorUtils.slate100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        isHomeroom
+                            ? Icons.home_work_rounded
+                            : Icons.class_rounded,
+                        color: isHomeroom
+                            ? ColorUtils.primary
+                            : ColorUtils.slate500,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              classData['nama'] ??
+                                  classData['name'] ??
+                                  'Unknown Class',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate900,
+                              ),
+                            ),
+                            if (isHomeroom)
+                              Container(
+                                margin: EdgeInsets.only(left: 8),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: ColorUtils.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Wali Kelas',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          '${classData['tingkat'] ?? ''} • ${classData['jurusan'] ?? ''}',
+                          style: TextStyle(
+                            color: ColorUtils.slate500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: ColorUtils.slate400,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // ========== MODE 0: VIEW RESULTS ==========
   Widget _buildResultsMode() {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
+        // Show Class List first if not selected
+        if (_selectedClassId == null) {
+          return _buildInlineClassList(languageProvider);
+        }
+
         if (_isLoadingSummary) {
           return LoadingScreen(
             message: languageProvider.getTranslatedText({
@@ -1287,6 +1440,13 @@ class PresencePageState extends State<PresencePage>
     final endOfMonth = DateTime(now.year, now.month + 1, 0);
 
     return _absensiSummaryList.where((summary) {
+      // Class filter (Fix: Ensure results match selected class)
+      if (_selectedClassId != null &&
+          _selectedClassId!.isNotEmpty &&
+          summary.classId != _selectedClassId) {
+        return false;
+      }
+
       // Search filter
       final matchesSearch =
           searchTerm.isEmpty ||
@@ -1349,7 +1509,17 @@ class PresencePageState extends State<PresencePage>
           Row(
             children: [
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  if (_selectedClassId != null) {
+                    setState(() {
+                      _selectedClassId = null;
+                      _selectedClassName = null;
+                      _studentList = [];
+                    });
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
                 child: Container(
                   width: 40,
                   height: 40,

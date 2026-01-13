@@ -235,4 +235,20 @@ class ColorUtils {
   // Get info color variants
   static Color get infoLight => Color(0xFFE0F2FE);
   static Color get infoDark => Color(0xFF0C4A6E);
+
+  // Slate Colors
+  static Color get slate50 => Color(0xFFF8FAFC);
+  static Color get slate100 => Color(0xFFF1F5F9);
+  static Color get slate200 => Color(0xFFE2E8F0);
+  static Color get slate300 => Color(0xFFCBD5E1);
+  static Color get slate400 => Color(0xFF94A3B8);
+  static Color get slate500 => Color(0xFF64748B);
+  static Color get slate600 => Color(0xFF475569);
+  static Color get slate700 => Color(0xFF334155);
+  static Color get slate800 => Color(0xFF1E293B);
+  static Color get slate900 => Color(0xFF0F172A);
+  static Color get slate950 => Color(0xFF020617);
+
+  // Primary Alias
+  static Color get primary => primaryColor;
 }

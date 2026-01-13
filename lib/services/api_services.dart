@@ -860,6 +860,7 @@ class ApiService {
     String? subjectId,
     String? studentId,
     String? classId,
+    String? academicYearId,
   }) async {
     String url = '$baseUrl/attendance?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
@@ -867,6 +868,7 @@ class ApiService {
     if (subjectId != null) url += 'subject_id=$subjectId&';
     if (studentId != null) url += 'student_id=$studentId&';
     if (classId != null) url += 'class_id=$classId&';
+    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
 
     if (kDebugMode) {
       print('📍 Calling getAbsensi: $url');
