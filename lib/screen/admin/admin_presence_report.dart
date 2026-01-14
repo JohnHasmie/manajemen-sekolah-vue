@@ -135,7 +135,12 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
               return [];
             }),
         ApiClassService()
-            .getClass()
+            .getClass(
+              academicYearId: context
+                  .read<AcademicYearProvider>()
+                  .selectedAcademicYear?['id']
+                  ?.toString(),
+            )
             .then((value) {
               if (kDebugMode) print('Classes loaded: ${value.length}');
               return value;

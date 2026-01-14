@@ -69,9 +69,7 @@ class TeachingScheduleManagementScreenState
   String? _selectedGuruId; // Filter by teacher
   String? _selectedClassId; // Filter by class
   String? _selectedHariId; // Filter by day
-  String? _selectedFilterConflict;
   String? _selectedFilterSemester;
-  String? _selectedFilterAcademicYear;
   bool _hasActiveFilter = false;
 
   // Filter Options (from backend)
@@ -227,13 +225,6 @@ class TeachingScheduleManagementScreenState
   }
 
   /// Generate list of academic years
-  List<Map<String, dynamic>> _getAcademicYearOptions() {
-    // Filter out "Status Kepegawaian" if it exists in the data
-    return _availableAcademicYears
-        .cast<Map<String, dynamic>>()
-        .where((y) => (y['year'] ?? '').toString() != 'Status Kepegawaian')
-        .toList();
-  }
 
   @override
   void dispose() {
@@ -336,8 +327,7 @@ class TeachingScheduleManagementScreenState
 
       // Gunakan nilai semester dan tahun ajaran yang sudah diset
       final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
-      final academicYearToUse =
-          _selectedFilterAcademicYear ?? _selectedAcademicYear;
+      final academicYearToUse = _selectedAcademicYear;
 
       // Load with pagination and backend filtering
       final results = await Future.wait([
@@ -468,8 +458,7 @@ class TeachingScheduleManagementScreenState
 
       // Gunakan nilai semester dan tahun ajaran yang sudah diset
       final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
-      final academicYearToUse =
-          _selectedFilterAcademicYear ?? _selectedAcademicYear;
+      final academicYearToUse = _selectedAcademicYear;
 
       // Load next page
       final response = await ApiScheduleService.getSchedulesPaginated(
@@ -989,21 +978,19 @@ class TeachingScheduleManagementScreenState
   void _checkActiveFilter() {
     setState(() {
       _hasActiveFilter =
-          _selectedFilterConflict != null ||
+          _selectedHariId != null ||
+          _selectedClassId != null ||
           (_selectedFilterSemester != null &&
-              _selectedFilterSemester != _selectedSemester) ||
-          (_selectedFilterAcademicYear != null &&
-              _selectedFilterAcademicYear != _selectedAcademicYear);
+              _selectedFilterSemester != _selectedSemester);
     });
   }
 
   void _clearAllFilters() {
     setState(() {
-      _selectedFilterConflict = null;
+      _selectedHariId = null;
+      _selectedClassId = null;
       _selectedFilterSemester =
           _selectedSemester; // Kembali ke semester default
-      _selectedFilterAcademicYear =
-          _selectedAcademicYear; // Kembali ke tahun ajaran default
     });
     _checkActiveFilter();
     _loadData(); // Reload data untuk menampilkan data default
@@ -1014,23 +1001,68 @@ class TeachingScheduleManagementScreenState
   ) {
     List<Map<String, dynamic>> filterChips = [];
 
-    if (_selectedFilterConflict != null) {
-      final label = _selectedFilterConflict == 'With Conflicts'
-          ? languageProvider.getTranslatedText({
-              'en': 'With Conflicts',
-              'id': 'Dengan Konflik',
-            })
-          : languageProvider.getTranslatedText({
-              'en': 'Without Conflicts',
-              'id': 'Tanpa Konflik',
-            });
+    // Add Day Filter Chip
+    if (_selectedHariId != null) {
+      final day = _availableDays.firstWhere(
+        (d) => d['id'].toString() == _selectedHariId,
+        orElse: () => {},
+      );
+      String dayNameRaw = day.isNotEmpty
+          ? (day['name'] ?? day['nama'] ?? '')
+          : 'Day';
+
+      // Localization helper for days
+      final dayMap = {
+        'senin': {'en': 'Monday', 'id': 'Senin'},
+        'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
+        'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
+        'kamis': {'en': 'Thursday', 'id': 'Kamis'},
+        'jumat': {'en': 'Friday', 'id': 'Jumat'},
+        'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
+        'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
+        'minggu': {'en': 'Sunday', 'id': 'Minggu'},
+        'monday': {'en': 'Monday', 'id': 'Senin'},
+        'tuesday': {'en': 'Tuesday', 'id': 'Selasa'},
+        'wednesday': {'en': 'Wednesday', 'id': 'Rabu'},
+        'thursday': {'en': 'Thursday', 'id': 'Kamis'},
+        'friday': {'en': 'Friday', 'id': 'Jumat'},
+        'saturday': {'en': 'Saturday', 'id': 'Sabtu'},
+        'sunday': {'en': 'Sunday', 'id': 'Minggu'},
+      };
+
+      final normalizedKey = dayNameRaw.toLowerCase();
+      final label = dayMap[normalizedKey] != null
+          ? languageProvider.getTranslatedText(dayMap[normalizedKey]!)
+          : dayNameRaw;
+
       filterChips.add({
         'label':
-            '${languageProvider.getTranslatedText({'en': 'Conflict', 'id': 'Konflik'})}: $label',
+            '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: $label',
         'onRemove': () {
           setState(() {
-            _selectedFilterConflict = null;
+            _selectedHariId = null;
             _checkActiveFilter();
+            _loadData();
+          });
+        },
+      });
+    }
+
+    // Add Class Filter Chip
+    if (_selectedClassId != null) {
+      final cls = _availableClasses.firstWhere(
+        (c) => c['id'].toString() == _selectedClassId,
+        orElse: () => {},
+      );
+      final label = cls.isNotEmpty ? (cls['name'] ?? cls['nama']) : 'Class';
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: $label',
+        'onRemove': () {
+          setState(() {
+            _selectedClassId = null;
+            _checkActiveFilter();
+            _loadData();
           });
         },
       });
@@ -1069,29 +1101,6 @@ class TeachingScheduleManagementScreenState
       });
     }
 
-    // Add Academic Year Filter Chip
-    if (_selectedFilterAcademicYear != null &&
-        _selectedFilterAcademicYear != _selectedAcademicYear) {
-      final yearMap = _availableAcademicYears.firstWhere(
-        (y) => y['id'].toString() == _selectedFilterAcademicYear,
-        orElse: () => {},
-      );
-      final label = yearMap.isNotEmpty
-          ? (yearMap['year'] ?? _selectedFilterAcademicYear)
-          : _selectedFilterAcademicYear;
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Year', 'id': 'Tahun'})}: $label',
-        'onRemove': () {
-          setState(() {
-            _selectedFilterAcademicYear = null;
-            _checkActiveFilter();
-            _loadData(); // Reload to reset to default academic year
-          });
-        },
-      });
-    }
-
     return filterChips;
   }
 
@@ -1101,11 +1110,10 @@ class TeachingScheduleManagementScreenState
       listen: false,
     );
 
-    String? tempSelectedConflict = _selectedFilterConflict;
+    String? tempSelectedHariId = _selectedHariId;
+    String? tempSelectedClassId = _selectedClassId;
     // Gunakan nilai default jika filter belum diset
     String? tempSelectedSemester = _selectedFilterSemester ?? _selectedSemester;
-    String? tempSelectedAcademicYear =
-        _selectedFilterAcademicYear ?? _selectedAcademicYear;
 
     showModalBottomSheet(
       context: context,
@@ -1144,10 +1152,10 @@ class TeachingScheduleManagementScreenState
                     TextButton(
                       onPressed: () {
                         setModalState(() {
-                          tempSelectedConflict = null;
+                          tempSelectedHariId = null;
+                          tempSelectedClassId = null;
                           // Reset ke nilai default saat ini
                           tempSelectedSemester = _selectedSemester;
-                          tempSelectedAcademicYear = _selectedAcademicYear;
                         });
                       },
                       child: Text(
@@ -1168,11 +1176,11 @@ class TeachingScheduleManagementScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Conflict Filter
+                      // Day Filter
                       Text(
                         languageProvider.getTranslatedText({
-                          'en': 'Conflict Status',
-                          'id': 'Status Konflik',
+                          'en': 'Day',
+                          'id': 'Hari',
                         }),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -1183,25 +1191,88 @@ class TeachingScheduleManagementScreenState
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: ['With Conflicts', 'Without Conflicts'].map((
-                          status,
-                        ) {
-                          final isSelected = tempSelectedConflict == status;
-                          final label = status == 'With Conflicts'
-                              ? languageProvider.getTranslatedText({
-                                  'en': 'With Conflicts',
-                                  'id': 'Dengan Konflik',
-                                })
-                              : languageProvider.getTranslatedText({
-                                  'en': 'Without Conflicts',
-                                  'id': 'Tanpa Konflik',
-                                });
+                        children: _availableDays.map<Widget>((day) {
+                          final dayId = day['id'].toString();
+                          final dayNameRaw = day['name'] ?? day['nama'] ?? '';
+                          final isSelected = tempSelectedHariId == dayId;
+
+                          // Localization helper for days
+                          final dayMap = {
+                            'senin': {'en': 'Monday', 'id': 'Senin'},
+                            'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
+                            'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
+                            'kamis': {'en': 'Thursday', 'id': 'Kamis'},
+                            'jumat': {'en': 'Friday', 'id': 'Jumat'},
+                            'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
+                            'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
+                            'minggu': {'en': 'Sunday', 'id': 'Minggu'},
+                            'monday': {'en': 'Monday', 'id': 'Senin'},
+                            'tuesday': {'en': 'Tuesday', 'id': 'Selasa'},
+                            'wednesday': {'en': 'Wednesday', 'id': 'Rabu'},
+                            'thursday': {'en': 'Thursday', 'id': 'Kamis'},
+                            'friday': {'en': 'Friday', 'id': 'Jumat'},
+                            'saturday': {'en': 'Saturday', 'id': 'Sabtu'},
+                            'sunday': {'en': 'Sunday', 'id': 'Minggu'},
+                          };
+
+                          final normalizedKey = dayNameRaw
+                              .toString()
+                              .toLowerCase();
+                          final dayName = dayMap[normalizedKey] != null
+                              ? languageProvider.getTranslatedText(
+                                  dayMap[normalizedKey]!,
+                                )
+                              : dayNameRaw;
+
                           return FilterChip(
-                            label: Text(label),
+                            label: Text(dayName),
                             selected: isSelected,
                             onSelected: (selected) {
                               setModalState(() {
-                                tempSelectedConflict = selected ? status : null;
+                                tempSelectedHariId = selected ? dayId : null;
+                              });
+                            },
+                            backgroundColor: Colors.grey.shade100,
+                            selectedColor: _getPrimaryColor().withOpacity(0.2),
+                            checkmarkColor: _getPrimaryColor(),
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? _getPrimaryColor()
+                                  : Colors.grey.shade700,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      SizedBox(height: 24),
+
+                      // Class Filter
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Class',
+                          'id': 'Kelas',
+                        }),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _availableClasses.map<Widget>((cls) {
+                          final classId = cls['id'].toString();
+                          final className = cls['name'] ?? cls['nama'] ?? '';
+                          final isSelected = tempSelectedClassId == classId;
+                          return FilterChip(
+                            label: Text(className),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setModalState(() {
+                                tempSelectedClassId = selected ? classId : null;
                               });
                             },
                             backgroundColor: Colors.grey.shade100,
@@ -1273,57 +1344,16 @@ class TeachingScheduleManagementScreenState
                         }).toList(),
                       ),
                       SizedBox(height: 24),
-
-                      // Academic Year Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Academic Year',
-                          'id': 'Tahun Ajaran',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _getAcademicYearOptions().map((yearMap) {
-                          final yearId = yearMap['id'].toString();
-                          final yearName = yearMap['year'] ?? yearId;
-                          final isSelected = tempSelectedAcademicYear == yearId;
-                          return FilterChip(
-                            label: Text(yearName),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                tempSelectedAcademicYear = selected
-                                    ? yearId
-                                    : null;
-                              });
-                            },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
-                            checkmarkColor: _getPrimaryColor(),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        }).toList(),
-                      ),
                     ],
                   ),
                 ),
               ),
-              // Apply Button
+              // Actions
               Container(
                 padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -1331,77 +1361,51 @@ class TeachingScheduleManagementScreenState
                         onPressed: () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: _getPrimaryColor()),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(color: Colors.grey.shade300),
                         ),
                         child: Text(
                           languageProvider.getTranslatedText({
                             'en': 'Cancel',
                             'id': 'Batal',
                           }),
-                          style: TextStyle(color: _getPrimaryColor()),
+                          style: TextStyle(color: Colors.grey.shade800),
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pop(context);
-
-                          // Check if semester or academic year changed - need to reload data
-                          bool needsReload = false;
-                          if (tempSelectedSemester != null &&
-                              tempSelectedSemester != _selectedSemester) {
-                            needsReload = true;
-                          }
-                          if (tempSelectedAcademicYear != null &&
-                              tempSelectedAcademicYear !=
-                                  _selectedAcademicYear) {
-                            needsReload = true;
-                          }
-
                           setState(() {
-                            _selectedFilterConflict = tempSelectedConflict;
+                            _selectedHariId = tempSelectedHariId;
+                            _selectedClassId = tempSelectedClassId;
                             _selectedFilterSemester = tempSelectedSemester;
-                            _selectedFilterAcademicYear =
-                                tempSelectedAcademicYear;
-                            _hasActiveFilter =
-                                _selectedFilterConflict != null ||
-                                (_selectedFilterSemester != null &&
-                                    _selectedFilterSemester !=
-                                        _selectedSemester) ||
-                                (_selectedFilterAcademicYear != null &&
-                                    _selectedFilterAcademicYear !=
-                                        _selectedAcademicYear);
-
-                            // Update main semester/year if filtered
-                            if (tempSelectedSemester != null) {
-                              _selectedSemester = tempSelectedSemester!;
-                            }
-                            if (tempSelectedAcademicYear != null) {
-                              _selectedAcademicYear = tempSelectedAcademicYear!;
-                            }
-
-                            if (_showTableView) {
-                              _updateGridData();
-                            }
+                            _checkActiveFilter();
                           });
-
-                          // Reload data if semester or academic year changed
-                          if (needsReload) {
-                            _loadData();
-                          }
+                          Navigator.pop(context);
+                          _loadData();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _getPrimaryColor(),
+                          foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: Text(
                           languageProvider.getTranslatedText({
-                            'en': 'Apply',
-                            'id': 'Terapkan',
+                            'en': 'Apply Filter',
+                            'id': 'Terapkan Filter',
                           }),
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -1456,20 +1460,8 @@ class TeachingScheduleManagementScreenState
           className.contains(searchTerm) ||
           dayNames.contains(searchTerm);
 
-      // Apply conflict filter (client-side only)
-      // Note: hasConflict should be calculated based on actual conflict data
-      final hasConflict = false; // TODO: Implement conflict detection
-      bool matchesConflictFilter = true;
-      if (_selectedFilterConflict != null) {
-        if (_selectedFilterConflict == 'With Conflicts') {
-          matchesConflictFilter = hasConflict;
-        } else if (_selectedFilterConflict == 'Without Conflicts') {
-          matchesConflictFilter = !hasConflict;
-        }
-      }
-
       // Note: Semester and academic year filters are handled by reloading data from server
-      return matchesSearch && matchesConflictFilter;
+      return matchesSearch;
     }).toList();
   }
 

@@ -1134,58 +1134,60 @@ class GradeBookPageState extends State<GradeBookPage> {
                   _showAssessmentDetail(jenis, header, languageProvider);
                 },
               ),
-              ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(8),
+              if (widget.teacher['role'] == 'guru') ...[
+                ListTile(
+                  leading: Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.edit, color: Colors.orange),
                   ),
-                  child: Icon(Icons.edit, color: Colors.orange),
-                ),
-                title: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Edit Assessment',
-                    'id': 'Edit Penilaian',
-                  }),
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _enterEditMode(jenis, header);
-                },
-              ),
-              ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(8),
+                  title: Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Edit Assessment',
+                      'id': 'Edit Penilaian',
+                    }),
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  child: Icon(Icons.delete_outline, color: Colors.red),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _enterEditMode(jenis, header);
+                  },
                 ),
-                title: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Delete Assessment',
-                    'id': 'Hapus Penilaian',
-                  }),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.red,
+                ListTile(
+                  leading: Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.delete_outline, color: Colors.red),
                   ),
+                  title: Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Delete Assessment',
+                      'id': 'Hapus Penilaian',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.red,
+                    ),
+                  ),
+                  subtitle: Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Delete all grades for this assessment',
+                      'id': 'Hapus semua nilai penilaian ini',
+                    }),
+                    style: TextStyle(fontSize: 12, color: Colors.red.shade300),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _confirmDeleteAssessment(jenis, header, languageProvider);
+                  },
                 ),
-                subtitle: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Delete all grades for this assessment',
-                    'id': 'Hapus semua nilai penilaian ini',
-                  }),
-                  style: TextStyle(fontSize: 12, color: Colors.red.shade300),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _confirmDeleteAssessment(jenis, header, languageProvider);
-                },
-              ),
+              ],
               SizedBox(height: 20),
             ],
           ),
@@ -2036,30 +2038,31 @@ class GradeBookPageState extends State<GradeBookPage> {
                       );
                     }
 
-                    // Add button column
-                    columns.add(
-                      Container(
-                        width: 50,
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            right: BorderSide(
-                              color: Colors.grey.shade400,
-                              width: 2,
+                    // Add button column (Only for Guru)
+                    if (widget.teacher['role'] == 'guru')
+                      columns.add(
+                        Container(
+                          width: 50,
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              right: BorderSide(
+                                color: Colors.grey.shade400,
+                                width: 2,
+                              ),
                             ),
                           ),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.add_circle_outline,
-                            size: 20,
-                            color: _getPrimaryColor(),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.add_circle_outline,
+                              size: 20,
+                              color: _getPrimaryColor(),
+                            ),
+                            onPressed: () => _addNewAssessment(jenis),
+                            tooltip: "Add $jenis",
                           ),
-                          onPressed: () => _addNewAssessment(jenis),
-                          tooltip: "Add $jenis",
                         ),
-                      ),
-                    );
+                      );
 
                     return columns;
                   }),
@@ -2131,12 +2134,14 @@ class GradeBookPageState extends State<GradeBookPage> {
                               ),
                             ),
                             child: GestureDetector(
-                              onTap: () => _openInputForm(
-                                siswa,
-                                jenis,
-                                languageProvider,
-                                header: header,
-                              ),
+                              onTap: widget.teacher['role'] == 'guru'
+                                  ? () => _openInputForm(
+                                      siswa,
+                                      jenis,
+                                      languageProvider,
+                                      header: header,
+                                    )
+                                  : null,
                               child: Container(
                                 height: 40,
                                 padding: EdgeInsets.all(6),
@@ -2174,18 +2179,19 @@ class GradeBookPageState extends State<GradeBookPage> {
                         );
                       }
 
-                      // Spacer for Add button column
-                      columns.add(
-                        Container(
-                          width: 50,
-                          decoration: BoxDecoration(
-                            border: Border(
-                              right: BorderSide(color: Colors.grey.shade200),
+                      // Spacer for Add button column (Only for Guru)
+                      if (widget.teacher['role'] == 'guru')
+                        columns.add(
+                          Container(
+                            width: 50,
+                            decoration: BoxDecoration(
+                              border: Border(
+                                right: BorderSide(color: Colors.grey.shade200),
+                              ),
+                              color: Colors.grey.shade50.withOpacity(0.5),
                             ),
-                            color: Colors.grey.shade50.withOpacity(0.5),
                           ),
-                        ),
-                      );
+                        );
 
                       return columns;
                     }),
@@ -2470,7 +2476,8 @@ class GradeBookPageState extends State<GradeBookPage> {
                     ),
                   ],
                 ),
-          floatingActionButton: _isEditMode
+          floatingActionButton:
+              (_isEditMode || widget.teacher['role'] != 'guru')
               ? null
               : FloatingActionButton(
                   onPressed: () => _openNewInputForm(languageProvider),
