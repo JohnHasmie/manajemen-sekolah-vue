@@ -618,11 +618,13 @@ class ApiService {
     String? teacherId,
     String? status,
     String? search,
+    String? academicYearId,
   }) async {
     String url = '$baseUrl/rpp?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
     if (status != null) url += 'status=$status&';
     if (search != null) url += 'search=$search&';
+    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
 
     final response = await http.get(
       Uri.parse(url),

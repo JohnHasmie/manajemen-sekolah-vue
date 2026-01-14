@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_rpp_service.dart';
@@ -470,6 +471,13 @@ class _AdminRppScreenState extends State<AdminRppScreen>
         }
       });
 
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
       final result = await ApiService.getRppPaginated(
         page: _currentPage,
         limit: _perPage,
@@ -478,6 +486,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
         search: _searchController.text.isNotEmpty
             ? _searchController.text
             : null,
+        academicYearId: academicYearId,
       );
 
       if (result['success'] == true) {

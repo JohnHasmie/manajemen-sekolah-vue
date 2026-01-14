@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -329,10 +330,18 @@ class RppScreenState extends State<RppScreen>
         _errorMessage = null;
       });
 
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
       final rppData = await ApiService.getRPP(
         teacherId: widget.teacherId,
         search: _searchController.text,
         status: _selectedStatusFilter,
+        academicYearId: academicYearId,
       );
 
       setState(() {
