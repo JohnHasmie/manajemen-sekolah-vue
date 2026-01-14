@@ -60,6 +60,7 @@ class _DashboardState extends State<Dashboard>
   bool _isLoadingSchools = false;
   List<dynamic> _availableRoles = [];
   bool _isLoadingRoles = false;
+  String? _currentSemesterLabel;
 
   // Data statistik
   Map<String, dynamic> _stats = {
@@ -116,10 +117,27 @@ class _DashboardState extends State<Dashboard>
     }
 
     await _loadStats(); // Pastikan dipanggil setelah user data dimuat
+    _loadSemesterLabel();
+  }
+
+  Future<void> _loadSemesterLabel() async {
+    try {
+      final result = await ApiScheduleService.getDateBasedSemester();
+      if (mounted && result.containsKey('label')) {
+        setState(() {
+          _currentSemesterLabel = result['label'];
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading semester label: $e');
+      }
+    }
   }
 
   void _onYearChanged() {
     _loadStats();
+    _loadUserData();
   }
 
   Future<void> _loadAvailableRoles() async {
@@ -184,9 +202,56 @@ class _DashboardState extends State<Dashboard>
     final userString = prefs.getString('user');
     if (userString != null) {
       if (!mounted) return;
+
+      final localUserData = json.decode(userString);
       setState(() {
-        _userData = json.decode(userString);
+        _userData = localUserData;
       });
+
+      // If teacher, fetch fresh data with academic year context
+      if (_effectiveRole == 'guru') {
+        String? academicYearId;
+        // Need to wait for provider if called early, or access it if available
+        // safe to access here if initState called _initializeData
+        if (mounted) {
+          try {
+            final academicYearProvider = Provider.of<AcademicYearProvider>(
+              context,
+              listen: false,
+            );
+            academicYearId = academicYearProvider.selectedAcademicYear?['id']
+                ?.toString();
+          } catch (e) {
+            // Provider might not be ready or found in context if too early?
+            // Normally safe in initState + postFrame or later.
+          }
+        }
+
+        if (academicYearId != null) {
+          final userId = localUserData['id']?.toString();
+
+          if (userId != null) {
+            final teacherData = await ApiTeacherService.getGuruByUserId(
+              userId,
+              academicYearId: academicYearId,
+            );
+
+            if (teacherData != null && mounted) {
+              setState(() {
+                _userData = {..._userData, ...teacherData};
+              });
+              if (kDebugMode) {
+                print('✅ Updated teacher data for year $academicYearId');
+                if (teacherData['homeroom_class'] != null) {
+                  print('✅ Homeroom: ${teacherData['homeroom_class']['name']}');
+                } else {
+                  print('ℹ️ No homeroom class for this year');
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
@@ -1133,41 +1198,58 @@ class _DashboardState extends State<Dashboard>
                   ),
                 );
               }
-              return Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: provider.selectedAcademicYear?['id'].toString(),
-                    dropdownColor: _getPrimaryColor(),
-                    icon: Icon(
-                      Icons.arrow_drop_down,
-                      color: Colors.white,
-                      size: 16,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    style: TextStyle(fontSize: 12, color: Colors.white),
-                    isDense: true,
-                    items: provider.academicYears.map((year) {
-                      final isCurrent =
-                          year['current'] == true || year['status'] == 'active';
-                      return DropdownMenuItem<String>(
-                        value: year['id'].toString(),
-                        child: Text(
-                          '${year['year']}${isCurrent ? ' (Active)' : ''}',
-                          style: TextStyle(color: Colors.white),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: provider.selectedAcademicYear?['id'].toString(),
+                        dropdownColor: _getPrimaryColor(),
+                        icon: Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.white,
+                          size: 16,
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        provider.setSelectedYear(val);
-                      }
-                    },
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                        isDense: true,
+                        items: provider.academicYears.map((year) {
+                          final isCurrent =
+                              year['current'] == true ||
+                              year['status'] == 'active';
+                          return DropdownMenuItem<String>(
+                            value: year['id'].toString(),
+                            child: Text(
+                              '${year['year']}${isCurrent ? ' (Active)' : ''}',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            provider.setSelectedYear(val);
+                          }
+                        },
+                      ),
+                    ),
                   ),
-                ),
+                  if (_currentSemesterLabel != null) ...[
+                    SizedBox(height: 4),
+                    Text(
+                      _currentSemesterLabel!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white.withOpacity(0.9),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ],
               );
             },
           ),

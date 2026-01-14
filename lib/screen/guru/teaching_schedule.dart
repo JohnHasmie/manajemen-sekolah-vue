@@ -39,8 +39,16 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   // Filter state
   List<String> _selectedDayIds = [];
   String? _selectedFilterSemester;
-  String? _selectedFilterAcademicYear;
+  String? _selectedClassId;
   bool _hasActiveFilter = false;
+  List<Map<String, String>> _availableClasses = [];
+
+  // Homeroom State
+  Map<String, dynamic>? _homeroomData; // Legacy/Primary support
+  List<dynamic> _homeroomClassesList = []; // Support multiple classes
+  Map<String, dynamic>?
+  _selectedHomeroomClass; // Current selected homeroom class
+  bool _isHomeroomView = false;
 
   // DITAMBAHKAN KEMBALI: Toggle antara card dan table view
   bool _isTableView = false;
@@ -96,25 +104,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     }
   }
 
-  /// Get current semester (1 or 2) based on current month
-  String _getCurrentSemester() {
-    final now = DateTime.now();
-    final currentMonth = now.month;
-
-    // Semester 1: July - December (months 7-12)
-    // Semester 2: January - June (months 1-6)
-    if (currentMonth >= 7) {
-      return '1'; // Semester 1
-    } else {
-      return '2'; // Semester 2
-    }
-  }
-
   /// Set default academic year and semester based on current date
   void _setDefaultAcademicPeriod() {
     setState(() {
       _selectedAcademicYear = _getCurrentAcademicYear();
-      _selectedSemester = _getCurrentSemester();
+      // Semester will be set by _loadSemesterData called from _loadUserData
     });
   }
 
@@ -151,7 +145,34 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         // Resolve Teacher ID from User ID
         try {
           // Import ApiTeacherService if not already (it's in the same package usually)
-          final teacherData = await ApiTeacherService.getGuruByUserId(userId);
+          // Get Academic Year context
+          String? academicYearId;
+          try {
+            if (mounted) {
+              final academicYearProvider = Provider.of<AcademicYearProvider>(
+                context,
+                listen: false,
+              );
+              academicYearId = academicYearProvider.selectedAcademicYear?['id']
+                  ?.toString();
+            }
+          } catch (e) {
+            // ignore
+          }
+
+          final teacherData = await ApiTeacherService.getGuruByUserId(
+            userId,
+            academicYearId: academicYearId,
+          );
+
+          if (kDebugMode) {
+            print('🔍 TeachingSchedule - Loading User Data');
+            print('🔍 Context Year ID: $academicYearId');
+            print(
+              '🔍 API Response Homeroom: ${teacherData?['homeroom_class']}',
+            );
+          }
+
           if (teacherData != null && teacherData['id'] != null) {
             final resolvedId = teacherData['id'].toString();
             if (kDebugMode) {
@@ -159,6 +180,54 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             }
             setState(() {
               _teacherId = resolvedId;
+
+              _homeroomClassesList = [];
+
+              // 1. Add classes from 'teacher_classes' pivot (User Request: "sesuai dengan table teacher_classes")
+              if (teacherData['classes'] != null &&
+                  teacherData['classes'] is List) {
+                final classesList = List.from(teacherData['classes']);
+                for (var cls in classesList) {
+                  if (!_homeroomClassesList.any(
+                    (c) => c['id'].toString() == cls['id'].toString(),
+                  )) {
+                    _homeroomClassesList.add(cls);
+                  }
+                }
+              }
+
+              // 2. Add classes from 'homeroom_classes' relation (Standard Homeroom definition)
+              if (teacherData['homeroom_classes'] != null &&
+                  teacherData['homeroom_classes'] is List) {
+                final homeroomList = List.from(teacherData['homeroom_classes']);
+                for (var cls in homeroomList) {
+                  if (!_homeroomClassesList.any(
+                    (c) => c['id'].toString() == cls['id'].toString(),
+                  )) {
+                    _homeroomClassesList.add(cls);
+                  }
+                }
+              }
+              // Check singular (legacy or primary) and add if not in list
+              if (teacherData['homeroom_class'] != null) {
+                _homeroomData = teacherData['homeroom_class'];
+                final exists = _homeroomClassesList.any(
+                  (c) => c['id'].toString() == _homeroomData!['id'].toString(),
+                );
+                if (!exists) {
+                  _homeroomClassesList.add(_homeroomData);
+                }
+              }
+
+              // Default selection if available
+              if (_homeroomClassesList.isNotEmpty &&
+                  _selectedHomeroomClass == null) {
+                _selectedHomeroomClass = _homeroomClassesList.first;
+              }
+
+              if (kDebugMode) {
+                print('✅ Homeroom Data List: $_homeroomClassesList');
+              }
             });
           } else {
             if (kDebugMode) {
@@ -225,37 +294,56 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
       setState(() {
         _semesterList = semesterData;
+      });
 
-        // Force logic based on current date as requested ("sekarang bulan januari maka semester genap")
-        final now = DateTime.now();
-        final currentMonth = now.month;
+      String? semesterId;
 
-        // Month 1-6 = Genap (2), Month 7-12 = Ganjil (1)
-        final isGenap = currentMonth < 7;
-        final targetSemesterName = isGenap ? 'Genap' : 'Ganjil';
+      // 1. Fetch from Backend API (Sync with Dashboard)
+      try {
+        final result = await ApiScheduleService.getDateBasedSemester();
+        if (result.isNotEmpty && result.containsKey('semester')) {
+          final targetSemesterName = result['semester'].toString();
 
-        final dateBasedSemester = semesterData.firstWhere((s) {
-          final name = (s['name'] ?? s['nama'] ?? '').toString();
-          return name.contains(targetSemesterName);
-        }, orElse: () => null);
+          final dateBasedSemester = semesterData.firstWhere((s) {
+            final name = (s['name'] ?? s['nama'] ?? '').toString();
+            return name.contains(targetSemesterName);
+          }, orElse: () => null);
 
-        if (dateBasedSemester != null) {
-          _selectedSemester = dateBasedSemester['id'].toString();
-        } else {
-          // Fallback to backend 'current' flag if name matching fails
-          final currentSem = semesterData.firstWhere(
-            (s) =>
-                s['current'] == true ||
-                s['current'] == 1 ||
-                s['current'].toString() == '1',
-            orElse: () => semesterData.isNotEmpty ? semesterData.first : null,
-          );
-
-          if (currentSem != null) {
-            _selectedSemester = currentSem['id'].toString();
+          if (dateBasedSemester != null) {
+            semesterId = dateBasedSemester['id'].toString();
           }
         }
-      });
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error fetching date based semester: $e');
+        }
+      }
+
+      // 2. Fallback to backend 'current' flag
+      if (semesterId == null) {
+        final currentSem = semesterData.firstWhere(
+          (s) =>
+              s['current'] == true ||
+              s['current'] == 1 ||
+              s['current'].toString() == '1',
+          orElse: () => null,
+        );
+
+        if (currentSem != null) {
+          semesterId = currentSem['id'].toString();
+        }
+      }
+
+      // 3. Last fallback
+      if (semesterId == null && semesterData.isNotEmpty) {
+        semesterId = semesterData.first['id'].toString();
+      }
+
+      if (semesterId != null && mounted) {
+        setState(() {
+          _selectedSemester = semesterId!;
+        });
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error loading semester data: $e');
@@ -319,8 +407,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
       // Use filter semester/year if set, otherwise use selected
       final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
-      final academicYearToUse =
-          _selectedFilterAcademicYear ?? _selectedAcademicYear;
+      final academicYearToUse = _selectedAcademicYear;
 
       if (kDebugMode) {
         print('FETCHING SCHEDULE WITH:');
@@ -329,11 +416,28 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         print('- Academic Year: $academicYearToUse');
       }
 
-      final jadwal = await ApiScheduleService.getFilteredSchedule(
-        teacherId: _teacherId,
-        semester: semesterToUse,
-        academicYear: academicYearToUse,
-      );
+      dynamic jadwalData;
+
+      if (_isHomeroomView && _selectedHomeroomClass != null) {
+        // Fetch schedule for the homeroom class
+        final classId = _selectedHomeroomClass!['id'].toString();
+        final result = await ApiScheduleService.getSchedulesPaginated(
+          classId: classId,
+          semesterId: semesterToUse,
+          tahunAjaran: academicYearToUse,
+          limit: 100, // Fetch all for now
+        );
+        jadwalData = result['data'] ?? [];
+      } else {
+        // Fetch teaching schedule for the teacher
+        jadwalData = await ApiScheduleService.getFilteredSchedule(
+          teacherId: _teacherId,
+          semester: semesterToUse,
+          academicYear: academicYearToUse,
+        );
+      }
+
+      final jadwal = jadwalData is List ? jadwalData : [];
 
       if (kDebugMode) {
         print('Total schedule items loaded: ${jadwal.length}');
@@ -342,6 +446,27 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       setState(() {
         _jadwalList = jadwal;
         _isLoading = false;
+
+        // Extract unique classes for filter
+        final uniqueClasses = <String, String>{};
+        for (var item in jadwal) {
+          final id =
+              item['class_id']?.toString() ??
+              item['kelas_id']?.toString() ??
+              '';
+          final name =
+              item['class_name']?.toString() ??
+              item['kelas_nama']?.toString() ??
+              '';
+          if (id.isNotEmpty && name.isNotEmpty) {
+            uniqueClasses[id] = name;
+          }
+        }
+        _availableClasses =
+            uniqueClasses.entries
+                .map((e) => {'id': e.key, 'name': e.value})
+                .toList()
+              ..sort((a, b) => a['name']!.compareTo(b['name']!));
       });
     } catch (e) {
       if (kDebugMode) {
@@ -380,10 +505,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     setState(() {
       _hasActiveFilter =
           _selectedDayIds.isNotEmpty ||
+          _selectedClassId != null ||
           (_selectedFilterSemester != null &&
-              _selectedFilterSemester != _selectedSemester) ||
-          (_selectedFilterAcademicYear != null &&
-              _selectedFilterAcademicYear != _selectedAcademicYear);
+              _selectedFilterSemester != _selectedSemester);
     });
   }
 
@@ -391,13 +515,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     setState(() {
       _selectedDayIds.clear();
       _selectedFilterSemester = null;
-      _selectedFilterAcademicYear = null;
-      // Reset to current period
-      _selectedSemester = _getCurrentSemester();
-      _selectedAcademicYear = _getCurrentAcademicYear();
+      _selectedClassId = null;
       _checkActiveFilter();
     });
-    _loadJadwal();
+    // Reload data to ensure semester and other contexts are correct
+    _loadSemesterData().then((_) => _loadJadwal());
   }
 
   List<Map<String, dynamic>> _buildFilterChips(
@@ -407,15 +529,50 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
     // Hari chips
     for (var dayId in _selectedDayIds) {
-      final day = _dayOptions.firstWhere(
+      final dayNameRaw = _dayOptions.firstWhere(
         (h) => _dayIdMap[h] == dayId,
         orElse: () => 'Hari',
       );
+
+      // Localization helper for days
+      final dayMap = {
+        'senin': {'en': 'Monday', 'id': 'Senin'},
+        'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
+        'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
+        'kamis': {'en': 'Thursday', 'id': 'Kamis'},
+        'jumat': {'en': 'Friday', 'id': 'Jumat'},
+        'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
+        'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
+        'minggu': {'en': 'Sunday', 'id': 'Minggu'},
+      };
+
+      final normalizedKey = dayNameRaw.toLowerCase();
+      final label = dayMap[normalizedKey] != null
+          ? languageProvider.getTranslatedText(dayMap[normalizedKey]!)
+          : dayNameRaw;
+
       filterChips.add({
-        'label': day,
+        'label': label,
         'onRemove': () {
           setState(() {
             _selectedDayIds.remove(dayId);
+            _checkActiveFilter();
+          });
+        },
+      });
+    }
+
+    // Class Chip
+    if (_selectedClassId != null) {
+      final cls = _availableClasses.firstWhere(
+        (c) => c['id'] == _selectedClassId,
+        orElse: () => {'name': 'Class'},
+      );
+      filterChips.add({
+        'label': cls['name'],
+        'onRemove': () {
+          setState(() {
+            _selectedClassId = null;
             _checkActiveFilter();
           });
         },
@@ -441,21 +598,6 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       });
     }
 
-    // Tahun Ajaran chip
-    if (_selectedFilterAcademicYear != null &&
-        _selectedFilterAcademicYear != _selectedAcademicYear) {
-      filterChips.add({
-        'label': _selectedFilterAcademicYear!,
-        'onRemove': () {
-          setState(() {
-            _selectedFilterAcademicYear = null;
-            _checkActiveFilter();
-          });
-          _loadJadwal();
-        },
-      });
-    }
-
     return filterChips;
   }
 
@@ -467,7 +609,25 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
     // Temporary values for filter
     String? tempSelectedSemester = _selectedFilterSemester;
-    String? tempSelectedAcademicYear = _selectedFilterAcademicYear;
+    String? tempSelectedClassId = _selectedClassId;
+
+    // Helper for localized day display
+    String getLocalizedDay(String dayRaw) {
+      final dayMap = {
+        'senin': {'en': 'Monday', 'id': 'Senin'},
+        'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
+        'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
+        'kamis': {'en': 'Thursday', 'id': 'Kamis'},
+        'jumat': {'en': 'Friday', 'id': 'Jumat'},
+        'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
+        'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
+        'minggu': {'en': 'Sunday', 'id': 'Minggu'},
+      };
+      final key = dayRaw.toLowerCase();
+      return dayMap[key] != null
+          ? languageProvider.getTranslatedText(dayMap[key]!)
+          : dayRaw;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -486,9 +646,23 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               options: _dayOptions.where((day) => day != 'Semua Hari').map((
                 day,
               ) {
-                return FilterOption(label: day, value: _dayIdMap[day] ?? '');
+                return FilterOption(
+                  label: getLocalizedDay(day),
+                  value: _dayIdMap[day] ?? '',
+                );
               }).toList(),
               multiSelect: true,
+            ),
+            FilterSection(
+              key: 'classId',
+              title: languageProvider.getTranslatedText({
+                'en': 'Class',
+                'id': 'Kelas',
+              }),
+              options: _availableClasses.map((cls) {
+                return FilterOption(label: cls['name']!, value: cls['id']!);
+              }).toList(),
+              multiSelect: false,
             ),
             FilterSection(
               key: 'semester',
@@ -504,61 +678,37 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               }).toList(),
               multiSelect: false,
             ),
-            FilterSection(
-              key: 'tahunAjaran',
-              title: languageProvider.getTranslatedText({
-                'en': 'Academic Year',
-                'id': 'Tahun Ajaran',
-              }),
-              options: _academicYearList.isEmpty
-                  ? [FilterOption(label: '2024/2025', value: '2024/2025')]
-                  : _academicYearList.map((ay) {
-                      return FilterOption(
-                        label: ay['year'].toString(),
-                        value: ay['year'].toString(),
-                      );
-                    }).toList(),
-              multiSelect: false,
-            ),
           ],
         ),
         initialFilters: {
           'dayIds': _selectedDayIds,
+          'classId': tempSelectedClassId,
           'semester': tempSelectedSemester ?? _selectedSemester,
-          'tahunAjaran': tempSelectedAcademicYear ?? _selectedAcademicYear,
         },
         onApplyFilters: (filters) {
-          // Check if semester or academic year changed - need to reload data
+          // Check if semester changed - need to reload data
           bool needsReload = false;
 
           final newSemester = filters['semester'];
-          final newAcademicYear = filters['tahunAjaran'];
 
           if (newSemester != null && newSemester != _selectedSemester) {
-            needsReload = true;
-          }
-          if (newAcademicYear != null &&
-              newAcademicYear != _selectedAcademicYear) {
             needsReload = true;
           }
 
           setState(() {
             _selectedDayIds = List<String>.from(filters['dayIds'] ?? []);
+            _selectedClassId = filters['classId'];
             _selectedFilterSemester = newSemester;
-            _selectedFilterAcademicYear = newAcademicYear;
 
-            // Update main semester/year if filtered
+            // Update main semester if filtered
             if (newSemester != null) {
               _selectedSemester = newSemester;
-            }
-            if (newAcademicYear != null) {
-              _selectedAcademicYear = newAcademicYear;
             }
 
             _checkActiveFilter();
           });
 
-          // Reload data if semester or academic year changed
+          // Reload data if semester changed
           if (needsReload) {
             _loadJadwal();
           }
@@ -646,7 +796,14 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             );
           });
 
-      return matchesSearch && matchesDay;
+      // Filter by class
+      final matchesClass =
+          _selectedClassId == null ||
+          _selectedClassId!.isEmpty ||
+          (schedule['class_id']?.toString() == _selectedClassId ||
+              schedule['kelas_id']?.toString() == _selectedClassId);
+
+      return matchesSearch && matchesDay && matchesClass;
     }).toList();
   }
 
@@ -719,8 +876,16 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               SizedBox(height: 2),
                               Text(
                                 languageProvider.getTranslatedText({
-                                  'en': 'View your teaching schedule',
-                                  'id': 'Lihat jadwal mengajar Anda',
+                                  'en':
+                                      _isHomeroomView &&
+                                          _selectedHomeroomClass != null
+                                      ? 'Viewing Homeroom Schedule'
+                                      : 'View your teaching schedule',
+                                  'id':
+                                      _isHomeroomView &&
+                                          _selectedHomeroomClass != null
+                                      ? 'Melihat Jadwal Wali Kelas'
+                                      : 'Lihat jadwal mengajar Anda',
                                 }),
                                 style: TextStyle(
                                   fontSize: 14,
@@ -800,16 +965,86 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                     color: Colors.white,
                                   ),
                                 ),
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Teacher',
-                                    'id': 'Guru',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withOpacity(0.8),
+                                if (_homeroomClassesList.isEmpty)
+                                  Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Teacher',
+                                      'id': 'Guru',
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                  )
+                                else
+                                  GestureDetector(
+                                    onTapDown: (TapDownDetails details) {
+                                      showMenu(
+                                        context: context,
+                                        position: RelativeRect.fromLTRB(
+                                          details.globalPosition.dx,
+                                          details.globalPosition.dy,
+                                          details.globalPosition.dx,
+                                          details.globalPosition.dy,
+                                        ),
+                                        items: [
+                                          PopupMenuItem(
+                                            value: 'guru',
+                                            child: Text(
+                                              'Guru (Lihat Jadwal Mengajar)',
+                                            ),
+                                          ),
+                                          ..._homeroomClassesList.map(
+                                            (c) => PopupMenuItem(
+                                              value: c,
+                                              child: Text(
+                                                'Wali Kelas - ${c['name'] ?? c['nama']}',
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ).then((value) {
+                                        if (value != null) {
+                                          setState(() {
+                                            if (value == 'guru') {
+                                              _isHomeroomView = false;
+                                            } else {
+                                              _isHomeroomView = true;
+                                              _selectedHomeroomClass =
+                                                  value as Map<String, dynamic>;
+                                            }
+                                          });
+                                          _loadJadwal();
+                                        }
+                                      });
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          _isHomeroomView &&
+                                                  _selectedHomeroomClass != null
+                                              ? 'Wali Kelas - ${(_selectedHomeroomClass!['name'] ?? _selectedHomeroomClass!['nama'] ?? '').toString()}'
+                                              : 'Guru',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            decoration:
+                                                TextDecoration.underline,
+                                            decorationColor: Colors.white
+                                                .withOpacity(0.5),
+                                          ),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Icon(
+                                          Icons
+                                              .arrow_drop_down, // Changed icon to indicate list
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ),

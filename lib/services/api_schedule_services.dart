@@ -619,4 +619,22 @@ class ApiScheduleService {
       throw Exception('Failed to export schedules: $e');
     }
   }
+
+  // Get current semester based on server date (Ganjil/Genap)
+  static Future<Map<String, dynamic>> getDateBasedSemester() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/semester/current-date-based'),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return result is Map<String, dynamic> ? result : {};
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting date based semester: $e');
+      }
+      return {};
+    }
+  }
 }

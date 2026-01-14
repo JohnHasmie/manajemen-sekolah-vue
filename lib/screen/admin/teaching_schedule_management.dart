@@ -175,7 +175,7 @@ class TeachingScheduleManagementScreenState
   }
 
   /// Update semester selection after semester list is loaded
-  void _updateCurrentSemester() {
+  Future<void> _updateCurrentSemester() async {
     if (_semesterList.isEmpty) return;
 
     String? semesterId;
@@ -189,25 +189,30 @@ class TeachingScheduleManagementScreenState
     if (currentFromApi.isNotEmpty) {
       semesterId = currentFromApi['id'].toString();
     } else {
-      // 2. Date-based calculation
-      final now = DateTime.now();
-      final currentMonth = now.month;
+      // 2. Fetch from Backend API (Sync with Dashboard)
+      try {
+        final result = await ApiScheduleService.getDateBasedSemester();
+        if (result.isNotEmpty && result.containsKey('semester')) {
+          final targetSemesterName = result['semester']
+              .toString(); // 'Ganjil' or 'Genap'
 
-      // July - December = Ganjil (1)
-      // January - June = Genap (2)
-      final targetSemesterName = (currentMonth >= 7) ? 'Ganjil' : 'Genap';
+          final dateBasedSemester = _semesterList.firstWhere((s) {
+            final name = (s['name'] ?? s['nama'] ?? '').toString();
+            return name.contains(targetSemesterName);
+          }, orElse: () => <String, dynamic>{});
 
-      // Try to find by name match or ID convention?
-      // Assuming 1 = Ganjil, 2 = Genap based on seeder, but better to match name if possible
-      final dateBasedSemester = _semesterList.firstWhere((s) {
-        final name = (s['name'] ?? s['nama'] ?? '').toString();
-        return name.contains(targetSemesterName);
-      }, orElse: () => <String, dynamic>{});
+          if (dateBasedSemester.isNotEmpty) {
+            semesterId = dateBasedSemester['id'].toString();
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error fetching date based semester: $e');
+        }
+      }
 
-      if (dateBasedSemester.isNotEmpty) {
-        semesterId = dateBasedSemester['id'].toString();
-      } else {
-        // Fallback to first
+      // Fallback
+      if (semesterId == null) {
         semesterId = _semesterList.first['id'].toString();
       }
     }

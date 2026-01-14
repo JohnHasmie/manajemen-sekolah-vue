@@ -110,10 +110,18 @@ class ApiTeacherService {
   }
 
   // Get Guru by User ID
-  static Future<Map<String, dynamic>?> getGuruByUserId(String userId) async {
+  static Future<Map<String, dynamic>?> getGuruByUserId(
+    String userId, {
+    String? academicYearId,
+  }) async {
     try {
+      String url = '$baseUrl/teacher?user_id=$userId';
+      if (academicYearId != null) {
+        url += '&academic_year_id=$academicYearId';
+      }
+
       final response = await http.get(
-        Uri.parse('$baseUrl/teacher?user_id=$userId'),
+        Uri.parse(url),
         headers: await _getHeaders(),
       );
 
