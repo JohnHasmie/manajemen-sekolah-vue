@@ -135,7 +135,6 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     _searchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _scrollController.dispose();
     // _searchDebounce?.cancel(); // Removed debounce
     // Remove provider listener
     // Note: Provider listeners are usually auto-removed if the widget is disposed,
@@ -1386,15 +1385,50 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                 }
                               } catch (e) {
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Failed to save student: $e',
-                                          'id': 'Gagal menyimpan siswa: $e',
-                                        }),
+                                  // Clean up exception message
+                                  final errorMessage = e.toString().replaceAll(
+                                    'Exception: ',
+                                    '',
+                                  );
+
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
-                                      backgroundColor: Colors.red,
+                                      title: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.error_outline,
+                                            color: Colors.red,
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            languageProvider.getTranslatedText({
+                                              'en': 'Error',
+                                              'id': 'Gagal',
+                                            }),
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ],
+                                      ),
+                                      content: Text(
+                                        // Combine context with error message
+                                        '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}$errorMessage',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: Text(
+                                            'OK',
+                                            style: TextStyle(
+                                              color: _getPrimaryColor(),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   );
                                 }

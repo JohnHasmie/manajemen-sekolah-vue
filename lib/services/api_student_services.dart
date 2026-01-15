@@ -27,9 +27,22 @@ class ApiStudentService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return responseBody;
     } else {
-      final errorMessage =
-          responseBody['error'] ??
-          'Request failed with status: ${response.statusCode}';
+      String? errorMessage = responseBody['error'] ?? responseBody['message'];
+
+      if (errorMessage == null && responseBody['errors'] != null) {
+        final errors = responseBody['errors'];
+        if (errors is Map && errors.isNotEmpty) {
+          final firstKey = errors.keys.first;
+          final firstError = errors[firstKey];
+          if (firstError is List && firstError.isNotEmpty) {
+            errorMessage = firstError.first;
+          } else {
+            errorMessage = firstError.toString();
+          }
+        }
+      }
+
+      errorMessage ??= 'Request failed with status: ${response.statusCode}';
 
       if (response.statusCode == 401) {
         _handleAuthenticationError();
@@ -79,11 +92,47 @@ class ApiStudentService {
       }
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(responseBody);
+        final body = json.decode(responseBody);
+
+        // Check for specific import result structure
+        if (body is Map && body['results'] != null) {
+          final results = body['results'];
+          if (results['failed'] is int && results['failed'] > 0) {
+            // Handle failures
+            List<dynamic> errors = results['errors'] ?? [];
+            String errorMsg = errors.isNotEmpty
+                ? errors.first.toString()
+                : 'Import failed';
+
+            // Optional: Clean up "Row X: " prefix if desired, but user likely just wants the error.
+            // Let's try to strip "Row \d+: " to match user expectation exactly if possible,
+            // but keeping it is safer for context.
+            // User said: "seharusbya keluar Data siswa dengan nama 'Indri' sudah ada"
+            // Backend sends: "Row 2: Data siswa dengan nama 'Indri' sudah ada."
+            // I will try to remove the prefix for cleaner UI.
+            final rowPrefixRegex = RegExp(r'^Row \d+: ');
+            if (errorMsg.startsWith(rowPrefixRegex)) {
+              errorMsg = errorMsg.replaceFirst(rowPrefixRegex, '');
+            }
+
+            throw Exception(errorMsg);
+          }
+        }
+
+        return body;
       } else {
-        throw Exception(
-          'Import failed with status: ${response.statusCode}. Response: $responseBody',
-        );
+        String msg = 'Import failed with status: ${response.statusCode}';
+        try {
+          final body = json.decode(responseBody);
+          if (body is Map) {
+            if (body['message'] != null) {
+              msg = body['message'];
+            } else if (body['error'] != null) {
+              msg = body['error'];
+            }
+          }
+        } catch (_) {}
+        throw Exception(msg);
       }
     } catch (e) {
       if (kDebugMode) {
