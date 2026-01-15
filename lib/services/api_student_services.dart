@@ -218,6 +218,7 @@ class ApiStudentService {
     String? gender,
     String? search,
     String? academicYearId,
+    String? guardianName,
   }) async {
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -238,6 +239,9 @@ class ApiStudentService {
     }
     if (academicYearId != null && academicYearId.isNotEmpty) {
       queryParams['academic_year_id'] = academicYearId;
+    }
+    if (guardianName != null && guardianName.isNotEmpty) {
+      queryParams['guardian_name'] = guardianName;
     }
 
     String queryString = Uri(queryParameters: queryParams).query;
@@ -309,6 +313,21 @@ class ApiStudentService {
       if (kDebugMode) {
         print('Error getting students by class: $e');
       }
+      return [];
+    }
+  }
+
+  static Future<List<String>> getGuardians(String query) async {
+    try {
+      final response = await ApiService().get(
+        '/student/guardians?search=${Uri.encodeComponent(query)}',
+      );
+      if (response['success'] == true && response['data'] != null) {
+        return List<String>.from(response['data']);
+      }
+      return [];
+    } catch (e) {
+      if (kDebugMode) print('Error loading guardians: $e');
       return [];
     }
   }

@@ -29,7 +29,6 @@ class StudentManagementScreen extends StatefulWidget {
 class StudentManagementScreenState extends State<StudentManagementScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
-  String _lastSearchQuery = '';
 
   List<dynamic> _students = [];
   List<dynamic> _classList = [];
@@ -51,6 +50,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   List<String> _selectedClassIds = [];
   String? _selectedGenderFilter;
   String? _selectedGradeLevel;
+  String? _selectedGuardian;
   bool _hasActiveFilter = false;
 
   Map<String, dynamic>? _filterOptions;
@@ -58,13 +58,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   List<dynamic> _availableClass = [];
   List<Map<String, String>> _availableGenderOptions = [];
 
-  Timer? _searchDebounce;
+  // Timer? _searchDebounce; // Removed debounce
 
   @override
   void initState() {
     super.initState();
 
-    _searchController.addListener(_onSearchChanged);
+    // _searchController.addListener(_onSearchChanged); // Removed auto-search listener
 
     // Listen to academic year changes
     final academicYearProvider = Provider.of<AcademicYearProvider>(
@@ -135,7 +135,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     _searchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _searchDebounce?.cancel();
+    _scrollController.dispose();
+    // _searchDebounce?.cancel(); // Removed debounce
     // Remove provider listener
     // Note: Provider listeners are usually auto-removed if the widget is disposed,
     // but explicit removal from the ChangeNotifier is safer if we added it manually.
@@ -155,19 +156,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.trim();
-    if (query == _lastSearchQuery) return;
-
-    _lastSearchQuery = query;
-    _searchDebounce?.cancel();
-
-    _searchDebounce = Timer(Duration(milliseconds: 800), () {
-      setState(() {
-        _currentPage = 1;
-      });
-      _loadData();
-      _checkActiveFilter();
-    });
+    // Removed debounce logic
   }
 
   Future<void> _exportToExcel() async {
@@ -297,6 +286,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         gradeLevel: _selectedGradeLevel,
         gender: _selectedGenderFilter,
         academicYearId: selectedYearId,
+        guardianName: _selectedGuardian,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -359,6 +349,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         gradeLevel: _selectedGradeLevel,
         gender: _selectedGenderFilter,
         academicYearId: selectedYearId,
+        guardianName: _selectedGuardian,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -392,13 +383,19 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     }
   }
 
-  void _applyFilter({String? classId, String? gradeLevel, String? gender}) {
+  void _applyFilter({
+    String? classId,
+    String? gradeLevel,
+    String? gender,
+    String? guardianName,
+  }) {
     setState(() {
       if (classId != null) {
         _selectedClassIds = [classId];
       }
       _selectedGradeLevel = gradeLevel;
       _selectedGenderFilter = gender;
+      _selectedGuardian = guardianName;
       _currentPage = 1;
     });
     _loadData();
@@ -412,6 +409,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           _selectedClassIds.isNotEmpty ||
           _selectedGenderFilter != null ||
           _selectedGradeLevel != null ||
+          _selectedGuardian != null ||
           _searchController.text.trim().isNotEmpty;
     });
   }
@@ -422,6 +420,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       _selectedClassIds.clear();
       _selectedGenderFilter = null;
       _selectedGradeLevel = null;
+      _selectedGuardian = null;
       _searchController.clear();
       _currentPage = 1;
       _hasActiveFilter = false;
@@ -497,6 +496,20 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       });
     }
 
+    if (_selectedGuardian != null) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Guardian', 'id': 'Wali'})}: $_selectedGuardian',
+        'onRemove': () {
+          setState(() {
+            _selectedGuardian = null;
+          });
+          _checkActiveFilter();
+          _loadData();
+        },
+      });
+    }
+
     return filterChips;
   }
 
@@ -506,6 +519,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     String? tempSelectedStatus = _selectedStatusFilter;
     List<String> tempSelectedClass = List.from(_selectedClassIds);
     String? tempSelectedGender = _selectedGenderFilter;
+    String? tempSelectedGuardian = _selectedGuardian;
 
     showModalBottomSheet(
       context: context,
@@ -551,6 +565,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             tempSelectedStatus = null;
                             tempSelectedClass.clear();
                             tempSelectedGender = null;
+                            tempSelectedGuardian = null;
                           });
                         },
                         child: Text(
@@ -572,6 +587,98 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Guardian Filter
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Guardian Name',
+                            'id': 'Nama Wali Murid',
+                          }),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Autocomplete<String>(
+                          optionsBuilder:
+                              (TextEditingValue textEditingValue) async {
+                                if (textEditingValue.text.length < 2) {
+                                  return const Iterable<String>.empty();
+                                }
+                                return await ApiStudentService.getGuardians(
+                                  textEditingValue.text,
+                                );
+                              },
+                          onSelected: (String selection) {
+                            setModalState(() {
+                              tempSelectedGuardian = selection;
+                            });
+                          },
+                          fieldViewBuilder:
+                              (
+                                context,
+                                textEditingController,
+                                focusNode,
+                                onFieldSubmitted,
+                              ) {
+                                if (tempSelectedGuardian != null &&
+                                    textEditingController.text.isEmpty) {
+                                  textEditingController.text =
+                                      tempSelectedGuardian!;
+                                }
+                                return TextField(
+                                  controller: textEditingController,
+                                  focusNode: focusNode,
+                                  decoration: InputDecoration(
+                                    hintText: languageProvider
+                                        .getTranslatedText({
+                                          'en': 'Search Guardian',
+                                          'id': 'Cari Wali Murid',
+                                        }),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: _getPrimaryColor(),
+                                      ),
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person_search,
+                                      color: Colors.grey,
+                                    ),
+                                    suffixIcon: tempSelectedGuardian != null
+                                        ? IconButton(
+                                            icon: Icon(Icons.close),
+                                            onPressed: () {
+                                              textEditingController.clear();
+                                              setModalState(() {
+                                                tempSelectedGuardian = null;
+                                              });
+                                              // Also clear from parent state if needed, but here we just clear temp
+                                            },
+                                          )
+                                        : null,
+                                  ),
+                                );
+                              },
+                        ),
+                        SizedBox(height: 20),
+
                         // Status Filter
                         Text(
                           languageProvider.getTranslatedText({
@@ -792,6 +899,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               _selectedStatusFilter = tempSelectedStatus;
                               _selectedClassIds = tempSelectedClass;
                               _selectedGenderFilter = tempSelectedGender;
+                              _selectedGuardian = tempSelectedGuardian;
                             });
                             _checkActiveFilter();
                             Navigator.pop(context);
@@ -2266,26 +2374,54 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              // onChanged: (value) => setState(() {}), // Disabling this to prevent excessive rebuilds
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: languageProvider.getTranslatedText({
-                                  'en': 'Search students...',
-                                  'id': 'Cari siswa...',
-                                }),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    // onChanged: (value) => setState(() {}), // Disabling this to prevent excessive rebuilds
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search students...',
+                                            'id': 'Cari siswa...',
+                                          }),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) {
+                                      setState(() {
+                                        _currentPage = 1;
+                                      });
+                                      _loadData();
+                                    },
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _currentPage = 1;
+                                      });
+                                      _loadData();
+                                    },
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
