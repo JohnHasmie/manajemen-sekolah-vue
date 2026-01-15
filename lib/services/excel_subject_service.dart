@@ -215,7 +215,7 @@ class ExcelSubjectService {
       return subject['class_names'];
     }
 
-    final kelasList = subject['class_list'] ?? [];
+    final kelasList = subject['class_list'] ?? subject['classes'] ?? [];
     if (kelasList is List) {
       return kelasList.map((kelas) => kelas['name'] ?? '').join(', ');
     }
