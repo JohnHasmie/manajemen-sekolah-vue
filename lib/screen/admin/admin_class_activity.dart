@@ -384,16 +384,18 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                SizedBox(height: 2),
-                                Text(
-                                  teacherEmail,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
+                                if (teacherEmail.isNotEmpty) ...[
+                                  SizedBox(height: 2),
+                                  Text(
+                                    teacherEmail,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                ],
                                 if (teacherNip.isNotEmpty) ...[
                                   SizedBox(height: 2),
                                   Text(
@@ -1396,36 +1398,58 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                               color: Colors.white.withOpacity(0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) => setState(() {}),
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: _showTeacherList
-                                    ? languageProvider.getTranslatedText({
-                                        'en': 'Search teachers...',
-                                        'id': 'Cari guru...',
-                                      })
-                                    : (_showSubjectList
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: _showTeacherList
                                           ? languageProvider.getTranslatedText({
-                                              'en': 'Search subjects...',
-                                              'id': 'Cari mata pelajaran...',
+                                              'en': 'Search teachers...',
+                                              'id': 'Cari guru...',
                                             })
-                                          : languageProvider.getTranslatedText({
-                                              'en': 'Search activities...',
-                                              'id': 'Cari kegiatan...',
-                                            })),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                                          : (_showSubjectList
+                                                ? languageProvider
+                                                      .getTranslatedText({
+                                                        'en':
+                                                            'Search subjects...',
+                                                        'id':
+                                                            'Cari mata pelajaran...',
+                                                      })
+                                                : languageProvider
+                                                      .getTranslatedText({
+                                                        'en':
+                                                            'Search activities...',
+                                                        'id':
+                                                            'Cari kegiatan...',
+                                                      })),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) => setState(() {}),
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: () => setState(() {}),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
