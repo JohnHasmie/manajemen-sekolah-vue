@@ -334,11 +334,24 @@ class ApiScheduleService {
 
     print('DEBUG: getAllSchedules Response Status: ${response.statusCode}');
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final dynamic data = json.decode(response.body);
+
+      if (data is List) {
+        print(
+          'DEBUG: getAllSchedules received List, wrapping in data object. Count: ${data.length}',
+        );
+        return {'data': data};
+      } else if (data is Map<String, dynamic>) {
+        print(
+          'DEBUG: getAllSchedules received Map. Data count: ${(data['data'] as List?)?.length ?? 0}',
+        );
+        return data;
+      }
+
       print(
-        'DEBUG: getAllSchedules Data count: ${(data['data'] as List).length}',
+        'DEBUG: getAllSchedules received unexpected type: ${data.runtimeType}',
       );
-      return data;
+      return {'data': []};
     } else {
       print('DEBUG: getAllSchedules Error: ${response.body}');
       throw Exception('Failed to load all schedules');
