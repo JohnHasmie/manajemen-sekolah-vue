@@ -2323,17 +2323,29 @@ class _DashboardState extends State<Dashboard>
         _buildDashboardCard(
           AppLocalizations.classActivities.tr,
           Icons.local_activity_outlined,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ParentClassActivityScreen(),
-            ),
-          ),
+          () {
+            final academicYearId = Provider.of<AcademicYearProvider>(
+              context,
+              listen: false,
+            ).selectedAcademicYear?['id']?.toString();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    ParentClassActivityScreen(academicYearId: academicYearId),
+              ),
+            );
+          },
         ),
         _buildDashboardCard(
           AppLocalizations.presence.tr,
           Icons.check_circle_outline,
           () async {
+            final academicYearId = Provider.of<AcademicYearProvider>(
+              context,
+              listen: false,
+            ).selectedAcademicYear?['id']?.toString();
+
             final prefs = await SharedPreferences.getInstance();
             final userData = json.decode(prefs.getString('user') ?? '{}');
             // Load students
@@ -2357,11 +2369,17 @@ class _DashboardState extends State<Dashboard>
                   builder: (context) => PresenceParentPage(
                     parent: userData,
                     studentId: studentsData[0]['id'],
+                    academicYearId: academicYearId,
                   ),
                 ),
               );
             } else {
-              _showStudentSelectionDialog(context, userData, studentsData);
+              _showStudentSelectionDialog(
+                context,
+                userData,
+                studentsData,
+                academicYearId: academicYearId,
+              );
             }
           },
         ),
@@ -2382,8 +2400,9 @@ class _DashboardState extends State<Dashboard>
 void _showStudentSelectionDialog(
   BuildContext context,
   Map<String, dynamic> parent,
-  List<dynamic> studentData,
-) {
+  List<dynamic> studentData, {
+  String? academicYearId,
+}) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
@@ -2399,7 +2418,22 @@ void _showStudentSelectionDialog(
             final student = studentData[index];
             return Material(
               color: Colors.transparent,
-              child: InkWell(
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blue.shade50,
+                  child: Text(
+                    student['name'][0].toUpperCase(),
+                    style: TextStyle(
+                      color: Colors.blue.shade700,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  student['name'],
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(student['kelas_nama'] ?? 'Kelas tidak tersedia'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -2408,61 +2442,16 @@ void _showStudentSelectionDialog(
                       builder: (context) => PresenceParentPage(
                         parent: parent,
                         studentId: student['id'],
+                        academicYearId: academicYearId,
                       ),
                     ),
                   );
                 },
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: EdgeInsets.all(12),
-                  margin: EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
-                        child: Text(
-                          student['nama'][0],
-                          style: TextStyle(color: Color(0xFF4361EE)),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              student['nama'],
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Kelas: ${student['kelas_nama'] ?? '-'}',
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             );
           },
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Batal', style: TextStyle(color: Colors.grey.shade600)),
-        ),
-      ],
     ),
   );
 }

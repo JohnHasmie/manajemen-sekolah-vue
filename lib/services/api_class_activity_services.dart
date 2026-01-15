@@ -185,11 +185,15 @@ class ApiClassActivityService {
   static Future<List<dynamic>> getKegiatanByKelas(
     String classId, {
     String? siswaId,
+    String? academicYearId,
   }) async {
     try {
       final headers = await _getHeaders();
 
-      final params = {if (siswaId != null) 'student_id': siswaId};
+      final params = {
+        if (siswaId != null) 'student_id': siswaId,
+        if (academicYearId != null) 'academic_year_id': academicYearId,
+      };
 
       final uri = Uri.parse(
         '$baseUrl/class-activity/class/$classId',

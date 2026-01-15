@@ -9,11 +9,13 @@ import 'package:manajemensekolah/utils/date_utils.dart';
 class PresenceParentPage extends StatefulWidget {
   final Map<String, dynamic> parent;
   final String studentId; // ID siswa yang merupakan anak dari wali murid
+  final String? academicYearId;
 
   const PresenceParentPage({
     super.key,
     required this.parent,
     required this.studentId,
+    this.academicYearId,
   });
 
   @override
@@ -54,6 +56,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
       // Load data absensi
       final absensiData = await ApiService.getAbsensi(
         studentId: widget.studentId,
+        academicYearId: widget.academicYearId,
       );
 
       // Find the most recent month with data

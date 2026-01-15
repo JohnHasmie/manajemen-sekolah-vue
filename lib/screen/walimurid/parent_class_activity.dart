@@ -9,7 +9,9 @@ import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ParentClassActivityScreen extends StatefulWidget {
-  const ParentClassActivityScreen({super.key});
+  final String? academicYearId;
+
+  const ParentClassActivityScreen({super.key, this.academicYearId});
 
   @override
   ParentClassActivityScreenState createState() =>
@@ -63,7 +65,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       final parentId = userData['id']?.toString() ?? '';
 
       // Dapatkan semua siswa dan filter berdasarkan parent
-      final allStudents = await ApiStudentService.getStudent();
+      final allStudents = await ApiStudentService.getStudent(
+        academicYearId: widget.academicYearId,
+      );
 
       // Filter siswa berdasarkan berbagai kemungkinan relasi
       final filteredStudents = allStudents.where((student) {
@@ -118,6 +122,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         final activities = await ApiClassActivityService.getKegiatanByKelas(
           selectedStudent['class_id'],
           siswaId: _selectedStudentId,
+          academicYearId: widget.academicYearId,
         );
 
         setState(() {
@@ -282,7 +287,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                     ),
                     SizedBox(height: 12),
                     Text(
-                      activity['judul'] ?? 'Judul Kegiatan',
+                      activity['title'] ??
+                          activity['judul'] ??
+                          'Judul Kegiatan',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -292,7 +299,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      '${activity['mata_pelajaran_nama']} • ${activity['kelas_nama']}',
+                      '${activity['subject_name'] ?? activity['mata_pelajaran_nama'] ?? '-'} • ${activity['class_name'] ?? activity['kelas_nama'] ?? '-'}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),
@@ -311,23 +318,30 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                     _buildDetailItem(
                       icon: Icons.person,
                       label: 'Guru Pengajar',
-                      value: activity['guru_nama'] ?? 'Tidak Diketahui',
+                      value:
+                          activity['teacher_name'] ??
+                          activity['guru_nama'] ??
+                          'Tidak Diketahui',
                     ),
                     _buildDetailItem(
                       icon: Icons.calendar_today,
                       label: 'Hari',
-                      value: activity['hari'] ?? '-',
+                      value: activity['day'] ?? activity['hari'] ?? '-',
                     ),
                     _buildDetailItem(
                       icon: Icons.date_range,
                       label: 'Tanggal',
-                      value: _formatDate(activity['tanggal']),
+                      value: _formatDate(
+                        activity['date'] ?? activity['tanggal'],
+                      ),
                     ),
                     if (activity['jenis'] == 'tugas')
                       _buildDetailItem(
                         icon: Icons.access_time,
                         label: 'Batas Waktu',
-                        value: _formatDate(activity['batas_waktu']),
+                        value: _formatDate(
+                          activity['deadline'] ?? activity['batas_waktu'],
+                        ),
                       ),
 
                     if (activity['deskripsi'] != null &&
@@ -397,8 +411,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                 label: 'Sub Bab (Tambahan)',
                                 value: item['sub_chapter_title'] ?? 'Unknown',
                               );
-                            })
-                            .toList(),
+                            }),
                       ],
                     ],
                   ],
@@ -492,7 +505,10 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       itemCount: _activityList.length,
       itemBuilder: (context, index) {
         final activity = _activityList[index];
-        final day = activity['hari']?.toString() ?? 'Unknown';
+        final day =
+            activity['day']?.toString() ??
+            activity['hari']?.toString() ??
+            'Unknown';
         final cardColor = _getDayColor(day);
         final isAssignment = activity['jenis'] == 'tugas';
         final isSpecificTarget = activity['target'] == 'khusus';
@@ -743,8 +759,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                               ],
                                             ),
                                           );
-                                        })
-                                        .toList(),
+                                        }),
                                   ],
                                 ],
                               ),

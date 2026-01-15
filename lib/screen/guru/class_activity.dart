@@ -3206,7 +3206,9 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                     : widget.subjectList.map((subject) {
                         return DropdownMenuItem<String>(
                           value: subject['id'].toString(),
-                          child: Text(subject['nama'] ?? 'Unknown'),
+                          child: Text(
+                            subject['name'] ?? subject['nama'] ?? 'Unknown',
+                          ),
                         );
                       }).toList(),
                 onChanged: widget.subjectList.isEmpty
