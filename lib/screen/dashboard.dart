@@ -295,7 +295,19 @@ class _DashboardState extends State<Dashboard>
           print('👤 Loading stats untuk guru: ${userData['id']}');
         }
 
-        final schedule = await ApiScheduleService.getCurrentUserSchedule();
+        String? academicYearId;
+        if (mounted) {
+          final academicYearProvider = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          );
+          academicYearId = academicYearProvider.selectedAcademicYear?['id']
+              ?.toString();
+        }
+
+        final schedule = await ApiScheduleService.getCurrentUserSchedule(
+          academicYear: academicYearId,
+        );
         if (kDebugMode) {
           print('📅 Jadwal ditemukan: ${schedule.length}');
         }
@@ -312,8 +324,10 @@ class _DashboardState extends State<Dashboard>
           print('📋 RPP ditemukan: ${rpp.length}');
         }
 
-        final totalStudentsTaught = await _getTotalStudentsTaught();
-        final totalClassesTaught = await _getTotalClassesTaught();
+        final totalStudentsTaught = await _getTotalStudentsTaught(
+          academicYearId,
+        );
+        final totalClassesTaught = await _getTotalClassesTaught(academicYearId);
         final todaysClasses = _getTodaysClasses(schedule);
 
         if (kDebugMode) {
@@ -431,9 +445,9 @@ class _DashboardState extends State<Dashboard>
     }
   }
 
-  Future<int> _getTotalStudentsTaught() async {
+  Future<int> _getTotalStudentsTaught(String? academicYearId) async {
     try {
-      final classesTaught = await _getClassesTaught();
+      final classesTaught = await _getClassesTaught(academicYearId);
       if (classesTaught.isEmpty) {
         return 0;
       }
@@ -443,6 +457,10 @@ class _DashboardState extends State<Dashboard>
         try {
           final students = await ApiClassService().getStudentsByClassId(
             classes['id']?.toString() ?? '',
+            // Assuming getStudentsByClassId might also support academic year if classStudents table is time-bound?
+            // But usually classId is unique per year if classes are not reused.
+            // If classes are reused, we might need filtering students by year status.
+            // For now, assume class ID is sufficient.
           );
           total += students.length;
           if (kDebugMode) {
@@ -467,9 +485,9 @@ class _DashboardState extends State<Dashboard>
     }
   }
 
-  Future<int> _getTotalClassesTaught() async {
+  Future<int> _getTotalClassesTaught(String? academicYearId) async {
     try {
-      final classesTaught = await _getClassesTaught();
+      final classesTaught = await _getClassesTaught(academicYearId);
       return classesTaught.length;
     } catch (e) {
       if (kDebugMode) {
@@ -479,9 +497,11 @@ class _DashboardState extends State<Dashboard>
     }
   }
 
-  Future<List<dynamic>> _getClassesTaught() async {
+  Future<List<dynamic>> _getClassesTaught(String? academicYearId) async {
     try {
-      final schedule = await ApiScheduleService.getCurrentUserSchedule();
+      final schedule = await ApiScheduleService.getCurrentUserSchedule(
+        academicYear: academicYearId,
+      );
       if (kDebugMode) {
         print('📅 Total jadwal: ${schedule.length}');
       }

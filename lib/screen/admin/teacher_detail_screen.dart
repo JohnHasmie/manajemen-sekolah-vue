@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:provider/provider.dart';
 
 class TeacherDetailScreen extends StatefulWidget {
   final Map<String, dynamic> teacher;
@@ -36,9 +38,24 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
         _errorMessage = null;
       });
 
+      String? academicYearId;
+      if (mounted) {
+        try {
+          final academicYearProvider = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          );
+          academicYearId = academicYearProvider.selectedAcademicYear?['id']
+              ?.toString();
+        } catch (e) {
+          // provider might not be available or other error
+        }
+      }
+
       // Backend already returns everything including subjects and classes
       final teacherDetail = await apiTeacherService.getTeacherById(
         widget.teacher['id'],
+        academicYearId: academicYearId,
       );
 
       // Fetch all classes and subjects for mapping
@@ -229,19 +246,37 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
       _subjects,
     );
 
-    final homeroomClassId =
-        effectiveTeacher['homeroom_class_id'] ??
-        widget.teacher['homeroom_class_id'];
-
     // Determine Homeroom Status
     String homeroomStatus = 'Tidak';
-    if (homeroomClassId != null) {
-      final homeroomClass = _classes.firstWhere(
-        (c) => c['id'].toString() == homeroomClassId.toString(),
-        orElse: () => null,
-      );
-      if (homeroomClass != null) {
-        homeroomStatus = 'Ya, Kelas ${homeroomClass['name']}';
+    dynamic homeroomClassObj;
+
+    // 1. Try to get whole object from relation (shimmed or direct)
+    if (effectiveTeacher['homeroom_class'] != null) {
+      if (effectiveTeacher['homeroom_class'] is Map) {
+        homeroomClassObj = effectiveTeacher['homeroom_class'];
+      } else if (effectiveTeacher['homeroom_class'] is List &&
+          (effectiveTeacher['homeroom_class'] as List).isNotEmpty) {
+        homeroomClassObj = effectiveTeacher['homeroom_class'][0];
+      }
+    }
+
+    // 2. If found object, use it
+    if (homeroomClassObj != null) {
+      homeroomStatus = 'Ya, Kelas ${homeroomClassObj['name']}';
+    }
+    // 3. Fallback to ID lookup if we have ID but no object
+    else {
+      final homeroomClassId =
+          effectiveTeacher['homeroom_class_id'] ??
+          widget.teacher['homeroom_class_id'];
+      if (homeroomClassId != null) {
+        final foundClass = _classes.firstWhere(
+          (c) => c['id'].toString() == homeroomClassId.toString(),
+          orElse: () => null,
+        );
+        if (foundClass != null) {
+          homeroomStatus = 'Ya, Kelas ${foundClass['name']}';
+        }
       }
     }
 

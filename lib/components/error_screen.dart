@@ -52,10 +52,7 @@ class ErrorScreen extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 40),
               child: Text(
                 errorMessage,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -69,10 +66,7 @@ class ErrorScreen extends StatelessWidget {
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: Text(
-                'Coba Lagi',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: Text('Coba Lagi', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),

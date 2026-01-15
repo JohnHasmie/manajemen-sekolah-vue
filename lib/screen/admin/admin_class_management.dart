@@ -591,8 +591,20 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           // Ensure the current homeroom teacher is in the _teachers list
           // This handles cases where the teacher might be missing from the paginated list
           // or soft-deleted but still assigned
-          final homeroomId = classData['homeroom_teacher_id']?.toString();
-          final homeroomName = classData['homeroom_teacher_name']?.toString();
+          String? homeroomId = classData['homeroom_teacher_id']?.toString();
+          String? homeroomName = classData['homeroom_teacher_name']?.toString();
+
+          // Handle Pivot/List structure
+          if (homeroomId == null &&
+              classData['homeroom_teacher'] is List &&
+              (classData['homeroom_teacher'] as List).isNotEmpty) {
+            homeroomId = classData['homeroom_teacher'][0]['id']?.toString();
+            homeroomName = classData['homeroom_teacher'][0]['name']?.toString();
+          } else if (homeroomId == null &&
+              classData['homeroom_teacher'] is Map) {
+            homeroomId = classData['homeroom_teacher']['id']?.toString();
+            homeroomName = classData['homeroom_teacher']['name']?.toString();
+          }
 
           if (homeroomId != null && homeroomName != null) {
             final exists = _teachers.any(
@@ -637,7 +649,11 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
       // Try nested objects if flat key failed
       if (selectedHomeroomTeacherId == null) {
-        if (classData['homeroom_teacher'] is Map) {
+        if (classData['homeroom_teacher'] is List &&
+            (classData['homeroom_teacher'] as List).isNotEmpty) {
+          selectedHomeroomTeacherId = classData['homeroom_teacher'][0]['id']
+              ?.toString();
+        } else if (classData['homeroom_teacher'] is Map) {
           selectedHomeroomTeacherId = classData['homeroom_teacher']['id']
               ?.toString();
         } else if (classData['wali_kelas'] is Map) {
@@ -1257,12 +1273,24 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                     ),
                                     SizedBox(height: 1),
                                     Text(
-                                      classData['homeroom_teacher_name'] ??
-                                          classData['homeroom_teacher']?['name'] ??
-                                          languageProvider.getTranslatedText({
-                                            'en': 'Not Assigned',
-                                            'id': 'Belum Ditugaskan',
-                                          }),
+                                      // Handle Pivot/List structure for display
+                                      (classData['homeroom_teacher'] is List &&
+                                              (classData['homeroom_teacher']
+                                                      as List)
+                                                  .isNotEmpty)
+                                          ? classData['homeroom_teacher'][0]['name']
+                                          : (classData['homeroom_teacher']
+                                                    is Map
+                                                ? classData['homeroom_teacher']['name']
+                                                : classData['homeroom_teacher_name'] ??
+                                                      classData['wali_kelas_nama'] ??
+                                                      languageProvider
+                                                          .getTranslatedText({
+                                                            'en':
+                                                                'Not Assigned',
+                                                            'id':
+                                                                'Belum Ditugaskan',
+                                                          })),
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
@@ -1448,12 +1476,19 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                         'id': 'Wali Kelas',
                       }),
                       value:
-                          classData['homeroom_teacher_name'] ??
-                          classData['homeroom_teacher']?['name'] ??
-                          languageProvider.getTranslatedText({
-                            'en': 'Not Assigned',
-                            'id': 'Belum Ditugaskan',
-                          }),
+                          // Handle Pivot/List structure for display
+                          (classData['homeroom_teacher'] is List &&
+                              (classData['homeroom_teacher'] as List)
+                                  .isNotEmpty)
+                          ? classData['homeroom_teacher'][0]['name']
+                          : (classData['homeroom_teacher'] is Map
+                                ? classData['homeroom_teacher']['name']
+                                : classData['homeroom_teacher_name'] ??
+                                      classData['wali_kelas_nama'] ??
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Not Assigned',
+                                        'id': 'Belum Ditugaskan',
+                                      })),
                     ),
 
                     SizedBox(height: 20),

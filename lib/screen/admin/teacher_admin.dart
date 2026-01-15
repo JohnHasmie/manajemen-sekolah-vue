@@ -109,7 +109,8 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
   void _onAcademicYearChanged() {
     if (mounted) {
-      _loadData();
+      _loadFilterOptions(); // Refresh class options
+      _loadData(); // Refresh teacher list
     }
   }
 
@@ -149,7 +150,23 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
   Future<void> _loadFilterOptions() async {
     try {
-      final response = await ApiTeacherService.getTeacherFilterOptions();
+      String? academicYearId;
+      if (mounted) {
+        try {
+          final academicYearProvider = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          );
+          academicYearId = academicYearProvider.selectedAcademicYear?['id']
+              ?.toString();
+        } catch (e) {
+          // provider might not be available or other error
+        }
+      }
+
+      final response = await ApiTeacherService.getTeacherFilterOptions(
+        academicYearId: academicYearId,
+      );
 
       if (!mounted) return;
 
@@ -506,10 +523,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         });
       }
 
-      // Load subjects and classes (untuk dropdown/reference)
-      final subjectData = await _subjectService.getSubject();
-      final classData = await _classService.getClass();
-
       // Load with pagination and backend filtering
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -517,6 +530,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       );
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
+
+      // Load subjects and classes (untuk dropdown/reference)
+      final subjectData = await _subjectService.getSubject();
+      final classData = await _classService.getClass(
+        academicYearId: selectedYearId,
+      );
 
       // If showing all teachers, ignore academic year
       final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
@@ -641,12 +660,23 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         ),
       );
 
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
+      // If showing all teachers, ignore academic year
+      final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
+
       // Fetch all teachers with current filters
       final response = await ApiTeacherService.getTeachersPaginated(
         page: 1,
         limit: 10000, // Fetch all data
         classId: _selectedClassId,
         gender: null,
+        academicYearId: effectiveAcademicYearId,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -1394,6 +1424,16 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                     }
 
                                     try {
+                                      final academicYearProvider =
+                                          Provider.of<AcademicYearProvider>(
+                                            context,
+                                            listen: false,
+                                          );
+                                      final selectedYearId =
+                                          academicYearProvider
+                                              .selectedAcademicYear?['id']
+                                              ?.toString();
+
                                       // Prepare data with new structure
                                       final data = {
                                         'name': nameController.text,
@@ -1408,6 +1448,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                         'employment_status': selectedStatus,
                                         'subject_ids': selectedSubjectIds,
                                         'class_ids': selectedClassIds,
+                                        'academic_year_id': selectedYearId,
                                       };
 
                                       String teacherId;
@@ -1642,9 +1683,17 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
   Widget _buildTeacherCard(Map<String, dynamic> teacher, int index) {
     final languageProvider = context.read<LanguageProvider>();
     final isHomeroomTeacher =
-        teacher['is_homeroom_teacher'] == 1 ||
-        teacher['is_homeroom_teacher'] == true;
-    final className = teacher['homeroom_class_name'] ?? '-';
+        (teacher['homeroom_class'] != null &&
+            teacher['homeroom_class'] is! List) ||
+        (teacher['homeroom_class'] is List &&
+            (teacher['homeroom_class'] as List).isNotEmpty);
+    // Extract class name safely considering pivot change
+    final className = (teacher['homeroom_class'] is Map)
+        ? teacher['homeroom_class']['name']
+        : (teacher['homeroom_class'] is List &&
+              (teacher['homeroom_class'] as List).isNotEmpty)
+        ? teacher['homeroom_class'][0]['name']
+        : (teacher['homeroom_class_name'] ?? '-');
 
     return GestureDetector(
       onTap: () => _navigateToDetail(teacher),

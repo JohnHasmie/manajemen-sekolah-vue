@@ -85,10 +85,17 @@ class ApiTeacherService {
   }
 
   // Get Filter Options for Teacher Filters
-  static Future<Map<String, dynamic>> getTeacherFilterOptions() async {
+  static Future<Map<String, dynamic>> getTeacherFilterOptions({
+    String? academicYearId,
+  }) async {
     try {
+      String url = '$baseUrl/teacher/filter-options';
+      if (academicYearId != null) {
+        url += '?academic_year_id=$academicYearId';
+      }
+
       final response = await http.get(
-        Uri.parse('$baseUrl/teacher/filter-options'),
+        Uri.parse(url),
         headers: await _getHeaders(),
       );
 
@@ -221,8 +228,12 @@ class ApiTeacherService {
     return result is List ? result : [];
   }
 
-  Future<dynamic> getTeacherById(String id) async {
-    return await ApiService().get('/teacher/$id');
+  Future<dynamic> getTeacherById(String id, {String? academicYearId}) async {
+    String url = '/teacher/$id';
+    if (academicYearId != null) {
+      url += '?academic_year_id=$academicYearId';
+    }
+    return await ApiService().get(url);
   }
 
   // Add teacher with new structure
