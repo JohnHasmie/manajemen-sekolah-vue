@@ -727,6 +727,7 @@ class ApiService {
     String? status,
     String? siswaId,
     String? jenisPembayaranId,
+    String? classId,
   }) async {
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -739,6 +740,9 @@ class ApiService {
     }
     if (jenisPembayaranId != null && jenisPembayaranId.isNotEmpty) {
       queryParams['payment_type_id'] = jenisPembayaranId;
+    }
+    if (classId != null && classId.isNotEmpty) {
+      queryParams['class_id'] = classId;
     }
 
     final queryString = Uri(queryParameters: queryParams).query;

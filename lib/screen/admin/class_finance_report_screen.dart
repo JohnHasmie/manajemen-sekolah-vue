@@ -1,0 +1,1347 @@
+import 'package:flutter/material.dart';
+import 'package:manajemensekolah/components/empty_state.dart';
+import 'package:manajemensekolah/components/error_screen.dart';
+import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/utils/color_utils.dart';
+
+class ClassFinanceReportScreen extends StatefulWidget {
+  final String classId;
+  final String className;
+
+  const ClassFinanceReportScreen({
+    super.key,
+    required this.classId,
+    required this.className,
+  });
+
+  @override
+  State<ClassFinanceReportScreen> createState() =>
+      _ClassFinanceReportScreenState();
+}
+
+class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
+  final ApiService _apiService = ApiService();
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  List<dynamic> _students = [];
+  Map<String, List<dynamic>> _billsByStudent = {};
+  List<MonthGroup> _monthGroups = [];
+
+  // Filters
+  String _searchQuery = '';
+  String? _selectedPaymentTypeId;
+  String? _selectedMonthKey;
+  String _selectedStatus =
+      'Semua'; // 'Semua', 'Lunas', 'Belum Dibayar', 'Belum Diverifikasi'
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+
+      // 1. Fetch Students
+      final studentsResponse = await _apiService.get(
+        '/student/class/${widget.classId}',
+      );
+      List<dynamic> students = [];
+      if (studentsResponse is Map && studentsResponse.containsKey('students')) {
+        students = studentsResponse['students'];
+      } else if (studentsResponse is List) {
+        students = studentsResponse;
+      }
+
+      // 2. Fetch All Payment Types
+      final paymentTypesResponse = await _apiService.get('/payment-types');
+      List<dynamic> allPaymentTypes = [];
+      if (paymentTypesResponse is List) {
+        allPaymentTypes = paymentTypesResponse;
+      } else if (paymentTypesResponse is Map &&
+          paymentTypesResponse.containsKey('data')) {
+        allPaymentTypes = paymentTypesResponse['data'];
+      }
+
+      // 3. Fetch Bills
+      final billsResponse = await ApiService.getTagihanPaginated(
+        limit: 1000,
+        classId: widget.classId,
+      );
+
+      List<dynamic> bills = [];
+      if (billsResponse['data'] != null) {
+        bills = billsResponse['data'];
+      }
+
+      // 4. Group bills by Student ID
+      Map<String, List<dynamic>> billsByStudent = {};
+      for (var bill in bills) {
+        final studentId = bill['student_id']?.toString();
+        if (studentId != null) {
+          if (!billsByStudent.containsKey(studentId)) {
+            billsByStudent[studentId] = [];
+          }
+          billsByStudent[studentId]!.add(bill);
+        }
+      }
+
+      // 5. Build Column Structure (Months -> Payment Types)
+      _monthGroups = _buildMonthGroups(bills, allPaymentTypes);
+
+      if (mounted) {
+        setState(() {
+          _students = students;
+          _billsByStudent = billsByStudent;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // UPDATED LOGIC: Month-Specific Columns based on created_at
+  List<MonthGroup> _buildMonthGroups(
+    List<dynamic> bills,
+    List<dynamic> allPaymentTypes,
+  ) {
+    Map<String, dynamic> paymentTypeMap = {
+      for (var pt in allPaymentTypes) pt['id'].toString(): pt,
+    };
+
+    // 1. Determine Academic Year Start from earliest created_at
+    int startYear = DateTime.now().year;
+    DateTime? earliestDate;
+
+    for (var bill in bills) {
+      if (bill['created_at'] != null) {
+        try {
+          DateTime d = DateTime.parse(bill['created_at']);
+          if (earliestDate == null || d.isBefore(earliestDate)) {
+            earliestDate = d;
+          }
+        } catch (_) {}
+      }
+    }
+
+    if (earliestDate != null) {
+      DateTime d = earliestDate;
+      if (d.month >= 7) {
+        startYear = d.year;
+      } else {
+        startYear = d.year - 1;
+      }
+    }
+
+    // 2. Generate 12 Months
+    List<String> monthKeys = [];
+    for (int i = 0; i < 12; i++) {
+      int monthNum = 7 + i;
+      int year = startYear;
+      if (monthNum > 12) {
+        monthNum -= 12;
+        year += 1;
+      }
+      String key = '$year-${monthNum.toString().padLeft(2, '0')}';
+      monthKeys.add(key);
+    }
+
+    Map<int, String> monthNames = {
+      1: 'Januari',
+      2: 'Februari',
+      3: 'Maret',
+      4: 'April',
+      5: 'Mei',
+      6: 'Juni',
+      7: 'Juli',
+      8: 'Agustus',
+      9: 'September',
+      10: 'Oktober',
+      11: 'November',
+      12: 'Desember',
+    };
+
+    List<MonthGroup> groups = [];
+
+    // 3. Build Groups - DYNAMIC active types per month
+    for (var monthKey in monthKeys) {
+      DateTime date = DateTime.parse('$monthKey-01');
+      String displayMonth = monthNames[date.month]!;
+
+      // Find bills for THIS month (using created_at)
+      List<dynamic> monthlyBills = bills.where((b) {
+        String createdAt = b['created_at'] ?? '';
+        // Approximate month match
+        String bMonth = '';
+        if (createdAt.length >= 7) bMonth = createdAt.substring(0, 7);
+        return bMonth == monthKey;
+      }).toList();
+
+      // Find unique payment types in these bills
+      Set<String> activeTypeIds = {};
+      for (var b in monthlyBills) {
+        if (b['payment_type_id'] != null) {
+          activeTypeIds.add(b['payment_type_id'].toString());
+        }
+      }
+
+      // Sort types
+      List<String> sortedIds = activeTypeIds.toList();
+      sortedIds.sort((a, b) {
+        String nameA = paymentTypeMap[a]?['name'] ?? '';
+        String nameB = paymentTypeMap[b]?['name'] ?? '';
+        return nameA.compareTo(nameB);
+      });
+
+      List<PaymentTypeColumn> columns = [];
+      for (var typeId in sortedIds) {
+        var data = paymentTypeMap[typeId];
+        columns.add(
+          PaymentTypeColumn(id: typeId, name: data?['name'] ?? 'Unknown'),
+        );
+      }
+
+      // Add group (even if empty, as requested "masih ada bulannya")
+      groups.add(
+        MonthGroup(
+          monthKey: monthKey,
+          monthName: displayMonth,
+          paymentTypes: columns,
+        ),
+      );
+    }
+
+    return groups;
+  }
+
+  // Helper to check status match
+  bool _checkStatusMatch(dynamic bill, String filter) {
+    if (filter == 'Semua') return true;
+    String status = bill['status'] ?? 'pending';
+    bool isPaid = status == 'verified';
+
+    if (filter == 'Lunas') return isPaid;
+
+    // For pending, check if it has pending payments or not
+    if (!isPaid) {
+      bool hasPendingPayment = false;
+      if (bill['payments'] != null) {
+        for (var p in bill['payments']) {
+          if (p['status'] == 'pending') hasPendingPayment = true;
+        }
+      }
+
+      if (filter == 'Belum Dibayar') return !hasPendingPayment;
+      if (filter == 'Belum Diverifikasi') return hasPendingPayment;
+    }
+    return false;
+  }
+
+  Widget _buildCustomTable() {
+    // 1. Filter Data
+    // Filter Students
+    List<dynamic> filteredStudents = _students.where((s) {
+      if (_searchQuery.isNotEmpty &&
+          !s['name'].toString().toLowerCase().contains(_searchQuery)) {
+        return false;
+      }
+
+      // Status Filter (Show student if they have AT LEAST one bill matching the status, OR if filter is 'Semua')
+      if (_selectedStatus != 'Semua') {
+        // Determine if student has any matching bill
+        bool match = false;
+        String studentId = s['id'].toString();
+        var bills = _billsByStudent[studentId] ?? [];
+
+        for (var bill in bills) {
+          if (_checkStatusMatch(bill, _selectedStatus)) {
+            match = true;
+            break;
+          }
+        }
+        return match;
+      }
+      return true;
+    }).toList();
+
+    // Filter Columns (Months & Payment Types)
+    List<MonthGroup> filteredGroups = _monthGroups
+        .where((m) {
+          if (_selectedMonthKey != null && m.monthKey != _selectedMonthKey)
+            return false;
+          return true;
+        })
+        .map((m) {
+          // Deep copy needed for filtering inner list
+          if (_selectedPaymentTypeId == null) return m;
+          var filteredTypes = m.paymentTypes
+              .where((p) => p.id == _selectedPaymentTypeId)
+              .toList();
+          return MonthGroup(
+            monthKey: m.monthKey,
+            monthName: m.monthName,
+            paymentTypes: filteredTypes,
+          );
+        })
+        .toList();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double totalWidth = constraints.maxWidth;
+        if (totalWidth.isInfinite) {
+          totalWidth = MediaQuery.of(context).size.width;
+        }
+
+        double scrollableWidth = totalWidth - 150 - 5;
+        if (scrollableWidth < 0) scrollableWidth = 0;
+
+        // Fixed Column (Students)
+        List<Widget> fixedColumnWidgets = [];
+
+        // Header "Nama"
+        fixedColumnWidgets.add(
+          Container(
+            width: 150,
+            height: 60,
+            alignment: Alignment.centerLeft,
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(color: Colors.grey.shade300),
+                bottom: BorderSide(color: Colors.grey.shade300),
+              ),
+              color: Colors.grey.shade100,
+            ),
+            child: Text(
+              'Nama Siswa',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ),
+        );
+
+        // Data Rows "Nama"
+        for (var i = 0; i < filteredStudents.length; i++) {
+          var student = filteredStudents[i];
+          fixedColumnWidgets.add(
+            Container(
+              width: 150,
+              height: 50,
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(color: Colors.grey.shade300),
+                  bottom: BorderSide(color: Colors.grey.shade200),
+                ),
+                color: i % 2 == 0 ? Colors.white : Colors.grey.shade50,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    student['name'] ?? '-',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (student['student_number'] != null)
+                    Text(
+                      student['student_number'],
+                      style: TextStyle(color: Colors.grey, fontSize: 11),
+                    ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Scrollable Columns (Bills)
+        // 1. Build Header Rows
+        List<Widget> monthHeaderWidgets = [];
+        List<Widget> typeHeaderWidgets = [];
+
+        for (var group in filteredGroups) {
+          int colCount = group.paymentTypes.isNotEmpty
+              ? group.paymentTypes.length
+              : 1;
+          double groupWidth = colCount * 100.0;
+
+          // Month Header
+          monthHeaderWidgets.add(
+            Container(
+              width: groupWidth, // Span all child columns
+              height: 30, // Half of 60
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(color: Colors.grey.shade300),
+                  bottom: BorderSide(color: Colors.grey.shade300),
+                ),
+                color: Colors.blue.shade50,
+              ),
+              child: Text(
+                group.monthName,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+            ),
+          );
+
+          // Type Headers
+          if (group.paymentTypes.isEmpty) {
+            // Render empty placeholder column for this month
+            typeHeaderWidgets.add(
+              Container(
+                width: 100,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: BorderSide(color: Colors.grey.shade300),
+                    bottom: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  color: Colors.grey.shade100,
+                ),
+                child: Text(
+                  '-',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ),
+            );
+          } else {
+            for (var type in group.paymentTypes) {
+              typeHeaderWidgets.add(
+                Container(
+                  width: 100,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.grey.shade300),
+                      bottom: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    color: Colors.grey.shade100,
+                  ),
+                  child: Text(
+                    type.name,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              );
+            }
+          }
+        }
+
+        Widget headerRow = Column(
+          children: [
+            Row(children: monthHeaderWidgets),
+            Row(children: typeHeaderWidgets),
+          ],
+        );
+
+        // 2. Build Data Rows
+        List<Widget> dataRows = [];
+        for (var i = 0; i < filteredStudents.length; i++) {
+          var student = filteredStudents[i];
+          String studentId = student['id'].toString();
+          var studentBills = _billsByStudent[studentId] ?? [];
+
+          List<Widget> rowCells = [];
+
+          for (var group in filteredGroups) {
+            if (group.paymentTypes.isEmpty) {
+              // Render empty placeholder cell for this month
+              rowCells.add(
+                Container(
+                  width: 100,
+                  height: 50,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.grey.shade200),
+                      bottom: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    color: i % 2 == 0 ? Colors.white : Colors.grey.shade50,
+                  ),
+                  child: SizedBox(), // Empty content
+                ),
+              );
+            } else {
+              for (var type in group.paymentTypes) {
+                // Find bill for this student, month, and type
+                var bill = studentBills.firstWhere((b) {
+                  // Match type
+                  if (b['payment_type_id'].toString() != type.id) return false;
+                  // Match month (created_at)
+                  if (b['created_at'] == null) return false;
+                  try {
+                    DateTime d = DateTime.parse(b['created_at']);
+                    String k =
+                        "${d.year}-${d.month.toString().padLeft(2, '0')}";
+                    return k == group.monthKey;
+                  } catch (_) {
+                    return false;
+                  }
+                }, orElse: () => null);
+
+                rowCells.add(
+                  Container(
+                    width: 100,
+                    height: 50,
+                    alignment: Alignment.center,
+                    // padding: EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Colors.grey.shade200),
+                        bottom: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      color: i % 2 == 0 ? Colors.white : Colors.grey.shade50,
+                    ),
+                    child: _buildStatusCell(bill),
+                  ),
+                );
+              }
+            }
+          }
+          dataRows.add(Row(children: rowCells));
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Fixed Column
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: Offset(4, 0),
+                    blurRadius: 5,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              width: 150,
+              child: Column(children: fixedColumnWidgets),
+            ),
+
+            // Scrollable Area
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    headerRow,
+                    Column(children: dataRows),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Color _getPrimaryColor() {
+    return ColorUtils.getRoleColor('admin');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const LoadingScreen();
+    if (_errorMessage?.isNotEmpty == true) {
+      return ErrorScreen(errorMessage: _errorMessage!, onRetry: _loadData);
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      body: Column(
+        children: [
+          // Custom Gradient Header
+          Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _getPrimaryColor(),
+                  _getPrimaryColor().withOpacity(0.8),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _getPrimaryColor().withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Row: Back Button & Title
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.className,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Laporan Keuangan',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+
+                // Search Bar & Filter Button
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Cari siswa...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          onChanged: (val) {
+                            setState(() {
+                              _searchQuery = val.toLowerCase();
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _showFilterSheet,
+                      child: Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color:
+                              (_selectedStatus != 'Semua' ||
+                                  _selectedMonthKey != null ||
+                                  _selectedPaymentTypeId != null)
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.filter_list,
+                          color:
+                              (_selectedStatus != 'Semua' ||
+                                  _selectedMonthKey != null ||
+                                  _selectedPaymentTypeId != null)
+                              ? _getPrimaryColor()
+                              : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Filter Chips
+          if (_selectedStatus != 'Semua' ||
+              _selectedMonthKey != null ||
+              _selectedPaymentTypeId != null)
+            Container(
+              width: double.infinity,
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (_selectedStatus != 'Semua')
+                    _buildFilterChip(
+                      label: 'Status: $_selectedStatus',
+                      onDeleted: () =>
+                          setState(() => _selectedStatus = 'Semua'),
+                    ),
+                  if (_selectedMonthKey != null)
+                    _buildFilterChip(
+                      label:
+                          'Bulan: ${_monthGroups.firstWhere(
+                            (m) => m.monthKey == _selectedMonthKey,
+                            orElse: () => MonthGroup(monthKey: '', monthName: _selectedMonthKey!, paymentTypes: []),
+                          ).monthName}',
+                      onDeleted: () => setState(() => _selectedMonthKey = null),
+                    ),
+                  if (_selectedPaymentTypeId != null)
+                    _buildFilterChip(
+                      label:
+                          'Jenis: Pembayaran Terpilih', // Hard to get name without lookup, keeping simple or could lookup
+                      onDeleted: () =>
+                          setState(() => _selectedPaymentTypeId = null),
+                    ),
+                ],
+              ),
+            ),
+
+          // Main Table Content
+          Expanded(
+            child: _students.isEmpty
+                ? const EmptyState(
+                    title: 'Tidak ada siswa',
+                    subtitle: 'Kelas ini belum memiliki siswa',
+                    icon: Icons.people_outline,
+                  )
+                : SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: _buildCustomTable(),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required VoidCallback onDeleted,
+  }) {
+    return Chip(
+      label: Text(
+        label,
+        style: TextStyle(fontSize: 12, color: _getPrimaryColor()),
+      ),
+      backgroundColor: _getPrimaryColor().withOpacity(0.1),
+      deleteIcon: Icon(Icons.close, size: 16, color: _getPrimaryColor()),
+      onDeleted: onDeleted,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: _getPrimaryColor().withOpacity(0.2)),
+      ),
+    );
+  }
+
+  void _showFilterSheet() {
+    // Unique Payment Types for Dropdown
+    final allTypes = _monthGroups
+        .expand((m) => m.paymentTypes.map((p) => {'id': p.id, 'name': p.name}))
+        .toSet()
+        .toList();
+    final uniqueTypes = <String, String>{};
+    for (var t in allTypes) {
+      if (t['id'] != null && t['name'] != null) {
+        uniqueTypes[t['id']!] = t['name']!;
+      }
+    }
+    // Months
+    final months = _monthGroups
+        .map((m) => {'key': m.monthKey, 'name': m.monthName})
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Sheet Header
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filter Laporan',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // Reset local and parent state
+                          setModalState(() {
+                            _selectedStatus = 'Semua';
+                            _selectedMonthKey = null;
+                            _selectedPaymentTypeId = null;
+                          });
+                          setState(() {
+                            _selectedStatus = 'Semua';
+                            _selectedMonthKey = null;
+                            _selectedPaymentTypeId = null;
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Reset',
+                          style: TextStyle(color: _getPrimaryColor()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Status Filter
+                        Text(
+                          'Status Pembayaran',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          children:
+                              [
+                                'Semua',
+                                'Lunas',
+                                'Belum Dibayar',
+                                'Belum Diverifikasi',
+                              ].map((status) {
+                                bool isSelected = _selectedStatus == status;
+                                return ChoiceChip(
+                                  label: Text(status),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    if (selected) {
+                                      setModalState(
+                                        () => _selectedStatus = status,
+                                      );
+                                      setState(() => _selectedStatus = status);
+                                    }
+                                  },
+                                  selectedColor: _getPrimaryColor().withOpacity(
+                                    0.2,
+                                  ),
+                                  labelStyle: TextStyle(
+                                    color: isSelected
+                                        ? _getPrimaryColor()
+                                        : Colors.black,
+                                  ),
+                                  backgroundColor: Colors.grey.shade100,
+                                );
+                              }).toList(),
+                        ),
+                        SizedBox(height: 24),
+
+                        // Month Filter
+                        Text(
+                          'Bulan',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String?>(
+                              isExpanded: true,
+                              hint: Text('Semua Bulan'),
+                              value: _selectedMonthKey,
+                              items: [
+                                DropdownMenuItem(
+                                  value: null,
+                                  child: Text('Semua Bulan'),
+                                ),
+                                ...months.map(
+                                  (m) => DropdownMenuItem(
+                                    value: m['key'],
+                                    child: Text(m['name']!),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                setModalState(() => _selectedMonthKey = val);
+                                setState(() => _selectedMonthKey = val);
+                              },
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 24),
+
+                        // Payment Type Filter
+                        Text(
+                          'Jenis Pembayaran',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String?>(
+                              isExpanded: true,
+                              hint: Text('Semua Jenis'),
+                              value: _selectedPaymentTypeId,
+                              items: [
+                                DropdownMenuItem(
+                                  value: null,
+                                  child: Text('Semua Jenis'),
+                                ),
+                                ...uniqueTypes.entries.map(
+                                  (e) => DropdownMenuItem(
+                                    value: e.key,
+                                    child: Text(e.value),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                setModalState(
+                                  () => _selectedPaymentTypeId = val,
+                                );
+                                setState(() => _selectedPaymentTypeId = val);
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Apply Button
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        offset: Offset(0, -2),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _getPrimaryColor(),
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Terapkan Filter',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // UI Polish: Status Pills with Interaction
+  Widget _buildStatusCell(dynamic bill) {
+    if (bill == null) return SizedBox();
+
+    final status = bill['status'];
+    Color color;
+    Color bgColor;
+    String text;
+
+    if (status == 'verified') {
+      color = Colors.green.shade700;
+      bgColor = Colors.green.shade50;
+      text = 'Lunas';
+    } else if (status == 'pending') {
+      color = Colors.orange.shade800;
+      bgColor = Colors.orange.shade50;
+      text = 'Belum';
+    } else {
+      color = Colors.red.shade700;
+      bgColor = Colors.red.shade50;
+      text = 'Belum';
+    }
+
+    return InkWell(
+      onTap: () => _showPaymentOptions(bill),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPaymentOptions(dynamic bill) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        String currentStatus = bill['status'] ?? 'pending';
+        bool isPaid = currentStatus == 'verified';
+
+        return Container(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Opsi Pembayaran',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Text('Status saat ini: ${isPaid ? "Lunas" : "Belum Lunas"}'),
+              SizedBox(height: 20),
+
+              if (!isPaid)
+                ListTile(
+                  leading: Icon(Icons.payment, color: Colors.green),
+                  title: Text('Bayar Manual (Tandai Lunas)'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _processManualPayment(bill, true);
+                  },
+                ),
+
+              if (isPaid)
+                ListTile(
+                  leading: Icon(Icons.cancel_outlined, color: Colors.red),
+                  title: Text('Batalkan Pembayaran'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _processManualPayment(bill, false);
+                  },
+                ),
+
+              ListTile(
+                leading: Icon(Icons.info_outline, color: Colors.blue),
+                title: Text('Lihat Detail'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showDetailDialog(bill);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _processManualPayment(dynamic bill, bool markAsPaid) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => Center(child: CircularProgressIndicator()),
+      );
+
+      if (markAsPaid) {
+        // "Bayar Manual" (Mark as Paid)
+        // Check if there is an existing PENDING payment to update instead of creating new
+        String? pendingPaymentId;
+        if (bill['payments'] != null && (bill['payments'] as List).isNotEmpty) {
+          var payList = List.from(bill['payments']);
+          // Find latest pending payment
+          var pendingPay = payList.lastWhere(
+            (p) => p['status'] == 'pending',
+            orElse: () => null,
+          );
+          if (pendingPay != null) {
+            pendingPaymentId = pendingPay['id'].toString();
+          }
+        }
+
+        if (pendingPaymentId != null) {
+          // UPDATE existing pending payment to VERIFIED
+          await _apiService.put('/payment/manual/$pendingPaymentId', {
+            'status': 'verified',
+            'amount': bill['amount'] ?? bill['bill_amount'] ?? 0,
+            'payment_method': 'Manual',
+            'payment_date': DateTime.now().toIso8601String(),
+            // update verifier handled by backend if needed
+          });
+        } else {
+          // CREATE new Verified Payment
+          await _apiService.post('/payment/manual', {
+            'bill_id': bill['id'],
+            'amount': bill['amount'] ?? bill['bill_amount'] ?? 0,
+            'payment_method': 'Manual',
+            'payment_date': DateTime.now().toIso8601String(),
+            'status': 'verified',
+          });
+        }
+      } else {
+        // Cancel Payment (Set to Pending)
+        // 1. Try to find existing verified payment to cancel
+        String? paymentIdToCancel;
+        if (bill['payments'] != null && (bill['payments'] as List).isNotEmpty) {
+          // Sort or find the latest verified one
+          var payList = List.from(bill['payments']);
+          // Assuming latest is last or sort by date if possible, but taking 'verified' one is safest
+          var verifiedPay = payList.lastWhere(
+            (p) => p['status'] == 'verified',
+            orElse: () => null,
+          );
+          if (verifiedPay != null) {
+            paymentIdToCancel = verifiedPay['id'].toString();
+          }
+        }
+
+        if (paymentIdToCancel != null) {
+          // Update Payment Status
+          await _apiService.put('/payment/manual/$paymentIdToCancel', {
+            'status': 'pending',
+            'amount': bill['amount'] ?? 0, // Required by validation usually
+            'payment_method': 'Manual',
+            'payment_date': DateTime.now().toIso8601String(),
+          });
+        }
+
+        // 2. Also Force Update Bill Status to Pending (Redundancy)
+        try {
+          await _apiService.put('/bills/${bill['id']}', {'status': 'pending'});
+        } catch (_) {}
+      }
+
+      if (mounted) Navigator.pop(context); // Close loading
+      _loadData(); // Refresh table
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            markAsPaid
+                ? 'Pembayaran berhasil dicatat'
+                : 'Pembayaran dibatalkan',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _showDetailDialog(dynamic bill) {
+    if (bill == null) return;
+
+    // Helper for formatting currency locally in dialog
+    String formatRupiah(dynamic value) {
+      if (value == null) return 'Rp 0';
+      return 'Rp $value';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Detail Tagihan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _detailRow(
+                'Status',
+                bill['status'] == 'verified' ? 'Lunas' : 'Belum Lunas',
+              ),
+              _detailRow(
+                'Jumlah',
+                formatRupiah(
+                  bill['amount'] ?? bill['bill_amount'] ?? bill['total_amount'],
+                ),
+              ),
+              _detailRow(
+                'Tanggal Buat',
+                bill['created_at']?.toString().split('T')[0] ?? '-',
+              ),
+              _detailRow(
+                'Jatuh Tempo',
+                bill['due_date']?.toString().split('T')[0] ?? '-',
+              ),
+              _detailRow('Keterangan', bill['description'] ?? '-'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Tutup'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MonthGroup {
+  final String monthKey;
+  final String monthName;
+  final List<PaymentTypeColumn> paymentTypes;
+
+  MonthGroup({
+    required this.monthKey,
+    required this.monthName,
+    required this.paymentTypes,
+  });
+}
+
+class PaymentTypeColumn {
+  final String id;
+  final String name;
+  PaymentTypeColumn({required this.id, required this.name});
+}

@@ -9,6 +9,8 @@ import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/screen/admin/class_finance_report_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/currency_formatter.dart';
@@ -516,8 +518,20 @@ class FinanceScreenState extends State<FinanceScreen>
   // Tambahkan method baru untuk load data kelas dan siswa
   Future<void> _loadKelasData() async {
     try {
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
       // Load data kelas
-      final kelasResponse = await _apiService.get('/classes?limit=1000');
+      String url = '/classes?limit=1000';
+      if (academicYearId != null) {
+        url += '&academic_year_id=$academicYearId';
+      }
+
+      final kelasResponse = await _apiService.get(url);
       setState(() {
         if (kelasResponse is Map && kelasResponse.containsKey('data')) {
           _kelasList = kelasResponse['data'] is List
@@ -540,7 +554,12 @@ class FinanceScreenState extends State<FinanceScreen>
       // Kelompokkan siswa berdasarkan kelas
       Map<String, List<dynamic>> siswaByKelas = {};
       for (var siswa in allSiswa) {
-        final classId = siswa['class_id']?.toString();
+        String? classId = siswa['class_id']?.toString();
+        // Fallback to nested class object if class_id is null (new schema)
+        if (classId == null && siswa['class'] != null) {
+          classId = siswa['class']['id']?.toString();
+        }
+
         if (classId != null) {
           if (!siswaByKelas.containsKey(classId)) {
             siswaByKelas[classId] = [];
@@ -1163,40 +1182,57 @@ class FinanceScreenState extends State<FinanceScreen>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: ExpansionTile(
-            leading: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _getPrimaryColor().withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.class_, color: _getPrimaryColor()),
-            ),
-            title: Text(
-              kelas['name'] ?? 'Kelas',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            subtitle: Text(
-              '${siswaList.length} siswa',
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-            trailing: _buildKelasSummary(siswaList),
-            children: [
-              if (siswaList.isEmpty)
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Tidak ada siswa di kelas ini',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontStyle: FontStyle.italic,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ClassFinanceReportScreen(
+                    classId: kelas['id'].toString(),
+                    className: kelas['name'] ?? 'Kelas',
+                  ),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _getPrimaryColor().withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.class_, color: _getPrimaryColor()),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          kelas['name'] ?? 'Kelas',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          '${kelas['student_count'] ?? siswaList.length} siswa',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                      ],
                     ),
                   ),
-                )
-              else
-                ...siswaList.map((siswa) => _buildSiswaCard(siswa)),
-            ],
+                  _buildKelasSummary(siswaList),
+                  SizedBox(width: 8),
+                  Icon(Icons.chevron_right, color: Colors.grey),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -1253,722 +1289,6 @@ class FinanceScreenState extends State<FinanceScreen>
           fontWeight: FontWeight.bold,
         ),
       ),
-    );
-  }
-
-  Widget _buildSiswaCard(Map<String, dynamic> siswa) {
-    final siswaId = siswa['id']?.toString();
-    final tagihanList = _tagihanBySiswa[siswaId] ?? [];
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: _getPrimaryColor().withOpacity(0.1),
-          child: Text(
-            siswa['name']?.toString().substring(0, 1).toUpperCase() ?? 'S',
-            style: TextStyle(color: _getPrimaryColor(), fontSize: 12),
-          ),
-        ),
-        title: Text(
-          siswa['name'] ?? 'Siswa',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        subtitle: Text(
-          'NIS: ${siswa['student_number'] ?? '-'}',
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-        ),
-        trailing: _buildSiswaSummary(tagihanList),
-        children: [
-          if (tagihanList.isEmpty)
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Tidak ada tagihan untuk siswa ini',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                  fontSize: 12,
-                ),
-              ),
-            )
-          else
-            ...tagihanList.map((tagihan) => _buildTagihanItem(tagihan)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSiswaSummary(List<dynamic> tagihanList) {
-    int totalLunas = tagihanList.where((t) => t['status'] == 'verified').length;
-    int totalPending = tagihanList
-        .where((t) => t['status'] == 'pending')
-        .length;
-    int totalBelumBayar = tagihanList
-        .where((t) => t['status'] == 'unpaid')
-        .length;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (totalLunas > 0) _buildMiniIndicator(Colors.green, totalLunas),
-        if (totalPending > 0) _buildMiniIndicator(Colors.orange, totalPending),
-        if (totalBelumBayar > 0)
-          _buildMiniIndicator(Colors.red, totalBelumBayar),
-      ],
-    );
-  }
-
-  Widget _buildMiniIndicator(Color color, int count) {
-    return Container(
-      margin: EdgeInsets.only(left: 2),
-      width: 16,
-      height: 16,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Center(
-        child: Text(
-          count.toString(),
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 8,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTagihanItem(Map<String, dynamic> tagihan) {
-    final status = tagihan['status'];
-    Color statusColor;
-    IconData statusIcon;
-    String statusText;
-
-    switch (status) {
-      case 'verified':
-        statusColor = Colors.green;
-        statusIcon = Icons.check_circle;
-        statusText = 'LUNAS';
-        break;
-      case 'pending':
-        statusColor = Colors.orange;
-        statusIcon = Icons.pending;
-        statusText = 'MENUNGGU';
-        break;
-      case 'unpaid':
-      default:
-        statusColor = Colors.red;
-        statusIcon = Icons.pending_actions;
-        statusText = 'BELUM BAYAR';
-    }
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: InkWell(
-        onTap: () {
-          _showPaymentDetailDialog(tagihan);
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          children: [
-            // Status badge di pojok kanan atas
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: statusColor.withOpacity(0.3)),
-                ),
-                child: Text(
-                  statusText,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            // Content utama
-            Padding(
-              padding: EdgeInsets.only(
-                top: 12,
-                left: 12,
-                right: 100,
-                bottom: 35, // Always add bottom padding for the button
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(statusIcon, color: statusColor, size: 16),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          tagihan['payment_type_name'] ?? 'Tagihan',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          _formatCurrency(tagihan['amount']),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        if (tagihan['due_date'] != null)
-                          Text(
-                            'Jatuh tempo: ${tagihan['due_date']?.split('T')[0] ?? '-'}',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Tombol aksi (Bayar/Edit) di pojok kanan bawah
-            Positioned(
-              bottom: 12, // Adjusted padding
-              right: 12, // Adjusted padding
-              child: ElevatedButton.icon(
-                onPressed: () => _showManualPaymentDialog(tagihan),
-                icon: Icon(
-                  status == 'unpaid' ? Icons.payment : Icons.edit,
-                  size: 14,
-                ),
-                label: Text(
-                  status == 'unpaid' ? 'Bayar' : 'Edit',
-                  style: TextStyle(fontSize: 10),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: status == 'unpaid'
-                      ? Colors.blue
-                      : Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size(0, 28),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Dialog untuk input pembayaran manual
-  void _showManualPaymentDialog(Map<String, dynamic> tagihan) {
-    final bool isEdit =
-        tagihan['status'] == 'verified' ||
-        tagihan['payment_status'] == 'verified';
-    String existingAmount = '';
-    if (tagihan['amount'] != null) {
-      double val = double.tryParse(tagihan['amount'].toString()) ?? 0;
-      existingAmount = NumberFormat.currency(
-        locale: 'id_ID',
-        symbol: 'Rp ',
-        decimalDigits: 0,
-      ).format(val);
-    }
-
-    // Get payment data from latest_payment if it exists (for editing)
-    final latestPayment = tagihan['latest_payment'];
-
-    // Determine initial values - use latest_payment data if editing
-    String metodeBayar =
-        latestPayment?['payment_method'] ?? tagihan['payment_method'] ?? 'cash';
-    String status =
-        latestPayment?['status'] ??
-        (tagihan['status'] == 'verified' ? 'verified' : 'pending');
-    if (tagihan['status'] == 'unpaid')
-      status = 'verified'; // Default to verified if unpaid
-
-    final TextEditingController jumlahController = TextEditingController(
-      text: existingAmount,
-    );
-
-    final TextEditingController tanggalController = TextEditingController(
-      text:
-          latestPayment?['payment_date']?.toString().split('T')[0] ??
-          tagihan['payment_date']?.toString().split('T')[0] ??
-          DateTime.now().toString().split(' ')[0],
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: _getCardGradient(),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          isEdit ? Icons.edit : Icons.payment,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          isEdit
-                              ? 'Edit Data Pembayaran'
-                              : 'Input Pembayaran Manual',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Info Tagihan
-                      Container(
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue.shade100),
-                        ),
-                        child: Column(
-                          children: [
-                            _buildInfoRow(
-                              'Siswa',
-                              tagihan['student_name'] ??
-                                  tagihan['siswa_nama'] ??
-                                  tagihan['student']?['name'] ??
-                                  '-',
-                            ),
-                            SizedBox(height: 8),
-                            _buildInfoRow(
-                              'Kelas',
-                              tagihan['class_name'] ??
-                                  tagihan['kelas_nama'] ??
-                                  tagihan['student']?['class']?['name'] ??
-                                  '-',
-                            ),
-                            SizedBox(height: 8),
-                            _buildInfoRow(
-                              'Tagihan',
-                              '${tagihan['payment_type_name'] ?? tagihan['jenis_pembayaran_nama'] ?? tagihan['payment_type']?['name'] ?? '-'}',
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 20),
-
-                      // Form Fields
-                      _buildDialogTextField(
-                        controller: jumlahController,
-                        label: 'Jumlah Bayar',
-                        icon: Icons.attach_money,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [CurrencyInputFormatter()],
-                      ),
-                      SizedBox(height: 12),
-
-                      _buildDropdownField(
-                        value: metodeBayar,
-                        label: 'Metode Pembayaran',
-                        icon: Icons.account_balance_wallet,
-                        items: ['cash', 'transfer'],
-                        onChanged: (value) {
-                          setDialogState(() => metodeBayar = value!);
-                        },
-                      ),
-                      SizedBox(height: 12),
-
-                      _buildDialogTextField(
-                        controller: tanggalController,
-                        label: 'Tanggal Bayar',
-                        icon: Icons.calendar_today,
-                        readOnly: true,
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate:
-                                DateTime.tryParse(tanggalController.text) ??
-                                DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime.now(),
-                          );
-                          if (date != null) {
-                            setDialogState(() {
-                              tanggalController.text = date.toString().split(
-                                ' ',
-                              )[0];
-                            });
-                          }
-                        },
-                      ),
-                      SizedBox(height: 12),
-
-                      _buildDropdownField(
-                        value: status,
-                        label: 'Status Pembayaran',
-                        icon: Icons.rule,
-                        items: ['verified', 'pending', 'rejected', 'unpaid'],
-                        onChanged: (value) {
-                          setDialogState(() => status = value!);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                // Actions
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: Colors.grey.shade200),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: Text('Batal'),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (jumlahController.text.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Jumlah bayar harus diisi'),
-                                ),
-                              );
-                              return;
-                            }
-
-                            try {
-                              final amount =
-                                  CurrencyInputFormatter.parseCurrency(
-                                    jumlahController.text,
-                                  );
-
-                              final data = {
-                                'bill_id': tagihan['id'],
-                                'payment_method': metodeBayar,
-                                'amount': amount,
-                                'payment_date': tanggalController.text,
-                                'status': status,
-                              };
-
-                              // Check if bill has an existing payment to update
-                              final paymentId =
-                                  tagihan['latest_payment']?['id'] ??
-                                  tagihan['payment_id'];
-
-                              if (paymentId != null) {
-                                // Update existing payment
-                                await _apiService.put(
-                                  '/payment/manual/$paymentId',
-                                  data,
-                                );
-                              } else {
-                                // Create new payment
-                                await _apiService.inputPembayaranManual(data);
-                              }
-
-                              if (!mounted) return;
-                              Navigator.pop(context);
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Data pembayaran berhasil disimpan',
-                                  ),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-
-                              _loadData();
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Gagal menyimpan: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _getPrimaryColor(),
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: Text(
-                            'Simpan',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showPaymentDetailDialog(Map<String, dynamic> tagihan) {
-    print('DEBUG PAYMENT DETAIL: $tagihan');
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.receipt_long, color: Colors.white),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Ringkasan Pembayaran',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-
-              Padding(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    _buildInfoRow(
-                      'Siswa',
-                      tagihan['student_name'] ?? tagihan['siswa_nama'] ?? '-',
-                    ),
-                    SizedBox(height: 12),
-                    _buildInfoRow(
-                      'Kelas',
-                      tagihan['class_name'] ?? tagihan['kelas_nama'] ?? '-',
-                    ),
-                    SizedBox(height: 12),
-                    _buildInfoRow(
-                      'Tagihan',
-                      tagihan['payment_type_name'] ??
-                          tagihan['jenis_pembayaran_nama'] ??
-                          '-',
-                    ),
-                    Divider(height: 24),
-                    _buildInfoRow('Jumlah', _formatCurrency(tagihan['amount'])),
-                    SizedBox(height: 12),
-                    _buildInfoRow(
-                      'Tanggal',
-                      tagihan['payment_date'] != null
-                          ? tagihan['payment_date'].toString().split('T')[0]
-                          : '-',
-                    ),
-                    SizedBox(height: 12),
-                    Builder(
-                      builder: (context) {
-                        String method =
-                            (tagihan['payment_method'] ??
-                                    tagihan['metode_bayar'] ??
-                                    '-')
-                                .toString();
-
-                        // Fallback logic if method is missing
-                        if (method == '-' || method == 'null') {
-                          if ((tagihan['payment_proof'] != null &&
-                                  tagihan['payment_proof']
-                                      .toString()
-                                      .isNotEmpty) ||
-                              (tagihan['payment_receipt'] != null &&
-                                  tagihan['payment_receipt']
-                                      .toString()
-                                      .isNotEmpty)) {
-                            method = 'Transfer';
-                          } else if (tagihan['status'] == 'verified' ||
-                              tagihan['payment_status'] == 'verified') {
-                            method = 'Tunai';
-                          }
-                        }
-
-                        return _buildInfoRow('Metode', method.toUpperCase());
-                      },
-                    ),
-                    SizedBox(height: 12),
-                    _buildInfoRow(
-                      'Status',
-                      (tagihan['status'] ?? '-').toUpperCase(),
-                    ),
-
-                    if ((tagihan['payment_proof'] != null &&
-                            tagihan['payment_proof'].toString().isNotEmpty) ||
-                        (tagihan['payment_receipt'] != null &&
-                            tagihan['payment_receipt']
-                                .toString()
-                                .isNotEmpty)) ...[
-                      SizedBox(height: 20),
-                      Text(
-                        'Bukti Pembayaran',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => _showBuktiPembayaran(tagihan),
-                        child: Container(
-                          height: 200,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
-                            image: DecorationImage(
-                              image: NetworkImage(
-                                _getImageUrl(
-                                  tagihan['payment_proof'] ??
-                                      tagihan['payment_receipt'],
-                                ),
-                              ),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.zoom_in,
-                              color: Colors.white,
-                              size: 40,
-                              shadows: [
-                                Shadow(blurRadius: 10, color: Colors.black54),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            label,
-            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-          ),
-        ),
-        Text(': ', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
-          ),
-        ),
-      ],
     );
   }
 
@@ -2097,169 +1417,6 @@ class FinanceScreenState extends State<FinanceScreen>
     } catch (error) {
       print('Error loading dashboard data: $error');
     }
-  }
-
-  // Dalam KeuanganScreenState, tambahkan method ini:
-  void _showBuktiPembayaran(Map<String, dynamic> pembayaran) {
-    final imageFile =
-        pembayaran['payment_proof'] ?? pembayaran['payment_receipt'];
-
-    if (imageFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tidak ada bukti pembayaran'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height * 0.8,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.photo_library, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Bukti Pembayaran',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Spacer(),
-                    IconButton(
-                      icon: Icon(Icons.close, color: Colors.white, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Image
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      _getImageUrl(imageFile),
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Colors.red,
-                              size: 40,
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Gagal memuat gambar',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'File: $imageFile',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-
-              // Info
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Informasi Pembayaran',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    _buildInfoRow('Siswa', pembayaran['siswa_nama'] ?? '-'),
-                    _buildInfoRow('Kelas', pembayaran['kelas_nama'] ?? '-'),
-                    _buildInfoRow(
-                      'Jenis',
-                      pembayaran['jenis_pembayaran_nama'] ?? '-',
-                    ),
-                    _buildInfoRow(
-                      'Jumlah',
-                      _formatCurrency(pembayaran['amount']),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _getImageUrl(String? filename) {
-    if (filename == null) return '';
-
-    // Sesuaikan dengan base URL Anda
-    // Contoh: http://localhost:3000/uploads/nama_file.jpg
-    return '${ApiService.baseUrl.replaceFirst('/api', '')}/uploads/bukti-pembayaran/$filename';
-    // return 'http://localhost:3000/uploads/bukti-pembayaran/$filename';
   }
 
   void _showAddEditJenisPembayaran({Map<String, dynamic>? jenisPembayaran}) {
@@ -4198,5 +3355,186 @@ class FinanceScreenState extends State<FinanceScreen>
         );
       }
     }
+  }
+
+  // Restored methods needed by other dialogs
+  void _showBuktiPembayaran(Map<String, dynamic> pembayaran) {
+    final imageFile =
+        pembayaran['payment_proof'] ?? pembayaran['payment_receipt'];
+
+    if (imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tidak ada bukti pembayaran'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: _getCardGradient(),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.photo_library, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Bukti Pembayaran',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Spacer(),
+                    IconButton(
+                      icon: Icon(Icons.close, color: Colors.white, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Image
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      _getImageUrl(imageFile),
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red,
+                              size: 40,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Gagal memuat gambar',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'File: $imageFile',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              // Info
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Informasi Pembayaran',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildInfoRow('Siswa', pembayaran['siswa_nama'] ?? '-'),
+                    _buildInfoRow('Kelas', pembayaran['kelas_nama'] ?? '-'),
+                    _buildInfoRow(
+                      'Jenis',
+                      pembayaran['jenis_pembayaran_nama'] ?? '-',
+                    ),
+                    _buildInfoRow(
+                      'Jumlah',
+                      _formatCurrency(pembayaran['amount']),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getImageUrl(String? filename) {
+    if (filename == null) return '';
+    return '${ApiService.baseUrl.replaceFirst('/api', '')}/uploads/bukti-pembayaran/$filename';
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+        ),
+        Text(': ', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+          ),
+        ),
+      ],
+    );
   }
 }
