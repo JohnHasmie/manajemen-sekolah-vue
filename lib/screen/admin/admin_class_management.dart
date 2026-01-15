@@ -67,8 +67,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   final List<String> _availableGradeLevels = [];
   String? _schoolJenjang; // SD, SMP, or SMA
 
-  // Search debounce
-  Timer? _searchDebounce;
+  // Search debounce removed
 
   @override
   void initState() {
@@ -102,10 +101,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
 
-    // Listen to search changes with debounce
-    _searchController.addListener(_onSearchChanged);
-
-    _searchController.addListener(_onSearchChanged);
+    // Listen to search changes with debounce - Removed to match StudentManagement
+    // _searchController.addListener(_onSearchChanged);
 
     _loadSchoolSettings(); // Load dynamic grade levels
     _fetchTeachers();
@@ -118,9 +115,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     _fabAnimationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    _searchDebounce?.cancel();
+    // _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -133,19 +129,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         _loadMoreData();
       }
     }
-  }
-
-  void _onSearchChanged() {
-    // Cancel previous timer
-    _searchDebounce?.cancel();
-
-    // Set new timer (500ms debounce)
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
-      setState(() {
-        _currentPage = 1;
-      });
-      _loadData();
-    });
   }
 
   Future<void> _loadSchoolSettings() async {
@@ -1851,26 +1834,54 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) => setState(() {}),
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: languageProvider.getTranslatedText({
-                                  'en': 'Search classes...',
-                                  'id': 'Cari kelas...',
-                                }),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    // onChanged: (value) => setState(() {}), // Disabling this to prevent excessive rebuilds
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search classes...',
+                                            'id': 'Cari kelas...',
+                                          }),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) {
+                                      setState(() {
+                                        _currentPage = 1;
+                                      });
+                                      _loadData();
+                                    },
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _currentPage = 1;
+                                      });
+                                      _loadData();
+                                    },
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
