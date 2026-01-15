@@ -82,8 +82,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
 
-    // Listen to search changes with debounce
-    _searchController.addListener(_onSearchChanged);
+    // _searchController.addListener(_onSearchChanged); // Removed auto-search listener
 
     // Listen to academic year changes
     final academicYearProvider = Provider.of<AcademicYearProvider>(
@@ -101,7 +100,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     _animationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _searchController.removeListener(_onSearchChanged);
+    // _searchController.removeListener(_onSearchChanged); // Removed auto-search listener
     _searchController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
@@ -124,27 +123,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     }
   }
 
-  void _onSearchChanged() {
-    // Cancel previous timer
-    _searchDebounce?.cancel();
-
-    // Set new timer (800ms debounce)
-    _searchDebounce = Timer(Duration(milliseconds: 800), () {
-      final query = _searchController.text.trim();
-      if (query == _lastSearchQuery) return;
-
-      _lastSearchQuery = query;
-      setState(() {
-        _currentPage = 1;
-        // Don't set _isLoading = true here to avoid full screen flicker,
-        // just let it load in background or show local indicator if needed
-        // But if we want to clear list? Maybe not.
-        _isLoading =
-            true; // Set true but handle it in build to not block search bar
-      });
-      _loadData(resetPage: false); // We handled reset above
-    });
-  }
+  // void _onSearchChanged() { ... } // Removed entire method to prevent auto-search
 
   bool _showAllTeachers = false; // Filter to show all teachers
 
@@ -2180,26 +2159,54 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                               color: Colors.white.withOpacity(0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              // onChanged: (value) => setState(() {}), // Removed to prevent rebuilds
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: languageProvider.getTranslatedText({
-                                  'en': 'Search teachers...',
-                                  'id': 'Cari guru...',
-                                }),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    // onChanged: (value) => setState(() {}), // Disabling this to likely match student mgmt performance preference
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search teachers...',
+                                            'id': 'Cari guru...',
+                                          }),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) {
+                                      setState(() {
+                                        _currentPage = 1;
+                                      });
+                                      _loadData();
+                                    },
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _currentPage = 1;
+                                      });
+                                      _loadData();
+                                    },
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
