@@ -256,10 +256,21 @@ class ExcelClassService {
       }
 
       // Field optional
-      validatedClass['homeroom_teacher_name'] =
-          classItem['homeroom_teacher_name'] ??
-          classItem['homeroom_teacher']?['name'] ??
-          '';
+      // Handle homeroom_teacher which can be List (from pivot) or Map (legacy)
+      String homeroomName = '';
+      final homeroomData = classItem['homeroom_teacher'];
+
+      if (homeroomData is List) {
+        if (homeroomData.isNotEmpty) {
+          homeroomName = homeroomData[0]['name'] ?? '';
+        }
+      } else if (homeroomData is Map) {
+        homeroomName = homeroomData['name'] ?? '';
+      } else {
+        homeroomName = classItem['homeroom_teacher_name'] ?? '';
+      }
+
+      validatedClass['homeroom_teacher_name'] = homeroomName;
       validatedClass['student_count'] = classItem['student_count'] ?? 0;
 
       if (errors.isEmpty) {
