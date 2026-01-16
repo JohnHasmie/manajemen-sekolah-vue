@@ -185,10 +185,22 @@ class ApiStudentService {
     }
   }
 
-  static Future<List<dynamic>> getStudent({String? academicYearId}) async {
+  static Future<List<dynamic>> getStudent({
+    String? academicYearId,
+    String? userId,
+  }) async {
     String url = '$baseUrl/student';
+    List<String> queryParams = [];
+
     if (academicYearId != null) {
-      url += '?academic_year_id=$academicYearId';
+      queryParams.add('academic_year_id=$academicYearId');
+    }
+    if (userId != null) {
+      queryParams.add('user_id=$userId');
+    }
+
+    if (queryParams.isNotEmpty) {
+      url += '?${queryParams.join('&')}';
     }
 
     final response = await http.get(

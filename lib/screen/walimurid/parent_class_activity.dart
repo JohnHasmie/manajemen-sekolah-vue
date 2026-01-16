@@ -46,7 +46,8 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       final userData = json.decode(prefs.getString('user') ?? '{}');
 
       setState(() {
-        _parentName = userData['nama']?.toString() ?? 'Wali Murid';
+        _parentName =
+            userData['name']?.toString() ?? 'Wali Murid'; // Fix: Use 'name'
       });
 
       await _loadStudentsForParent();
@@ -64,20 +65,24 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       final userData = json.decode(prefs.getString('user') ?? '{}');
       final parentId = userData['id']?.toString() ?? '';
 
-      // Dapatkan semua siswa dan filter berdasarkan parent
+      // Dapatkan siswa yang difilter server-side berdasarkan userId parent
       final allStudents = await ApiStudentService.getStudent(
         academicYearId: widget.academicYearId,
+        userId: parentId, // Filter server-side
       );
 
       // Filter siswa berdasarkan berbagai kemungkinan relasi
+      // Filter siswa berdasarkan berbagai kemungkinan relasi
       final filteredStudents = allStudents.where((student) {
-        return student['guardian_email'] ==
-                userData['email'] || // Corrected from email_wali
-            student['guardian_name'] == userData['nama'] ||
-            student['parent_id'] == parentId ||
-            student['wali_id'] == parentId || // Keep legacy check just in case
+        return student['guardian_email'] == userData['email'] ||
+            student['guardian_name'] ==
+                userData['name'] || // Fix: userData['name']
+            student['user_id'].toString() ==
+                parentId || // Match user_id (Student.user_id)
+            student['parent_id'].toString() == parentId || // Legacy check
+            student['wali_id'].toString() == parentId || // Legacy check
             (userData['student_id'] != null &&
-                student['id'] == userData['student_id']) || // Check student_id
+                student['id'] == userData['student_id']) ||
             (userData['siswa_id'] != null &&
                 student['id'] == userData['siswa_id']);
       }).toList();
@@ -118,9 +123,12 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         orElse: () => {},
       );
 
-      if (selectedStudent.isNotEmpty && selectedStudent['class_id'] != null) {
+      final classId =
+          selectedStudent['class_id'] ?? selectedStudent['class']?['id'];
+
+      if (selectedStudent.isNotEmpty && classId != null) {
         final activities = await ApiClassActivityService.getKegiatanByKelas(
-          selectedStudent['class_id'],
+          classId,
           siswaId: _selectedStudentId,
           academicYearId: widget.academicYearId,
         );

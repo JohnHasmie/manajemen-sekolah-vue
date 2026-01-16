@@ -605,9 +605,11 @@ class _DashboardState extends State<Dashboard>
         print('👤 Mencari data siswa untuk parent: $parentId');
       }
 
-      final allStudents = await ApiStudentService.getStudent();
+      final allStudents = await ApiStudentService.getStudent(userId: parentId);
       if (kDebugMode) {
-        print('🎒 Total siswa di sistem: ${allStudents.length}');
+        print(
+          '🎒 Total siswa ditemukan untuk user $parentId: ${allStudents.length}',
+        );
       }
 
       final userData = _userData;
@@ -634,18 +636,25 @@ class _DashboardState extends State<Dashboard>
         }
       }
 
-      // Cek berdasarkan email atau nama wali
+      // Cek berdasarkan email atau nama wali atau user_id (Parent User)
       final studentsWithThisParent = allStudents.where((student) {
         final emailMatch = student['guardian_email'] == userData['email'];
-        final nameMatch = student['guardian_name'] == userData['nama'];
+        // Fix: Use 'name' instead of 'nama' (based on debug logs)
+        final nameMatch = student['guardian_name'] == userData['name'];
+        final userIdMatch = student['user_id'].toString() == parentId;
 
-        if (emailMatch || nameMatch) {
-          if (kDebugMode) {
-            print('✅ Siswa cocok: ${student['nama']}');
+        if (kDebugMode) {
+          // Verbose debug only if needed, or just log matches
+          if (emailMatch || nameMatch || userIdMatch) {
+            print(
+              '✅ Siswa cocok: ${student['name']} (By: ${emailMatch ? 'Email' : ''} ${nameMatch ? 'Name' : ''} ${userIdMatch ? 'UserID' : ''})',
+            );
+          } else {
+            // print('❌ Skip: ${student['name']} (GuardEmail: ${student['guardian_email']}, GuardName: ${student['guardian_name']}, UserID: ${student['user_id']})');
           }
         }
 
-        return emailMatch || nameMatch;
+        return emailMatch || nameMatch || userIdMatch;
       }).toList();
 
       if (studentsWithThisParent.isNotEmpty) {
@@ -655,7 +664,7 @@ class _DashboardState extends State<Dashboard>
       if (kDebugMode) {
         print('⚠️ Tidak ada data siswa ditemukan untuk parent ini');
       }
-      return allStudents;
+      return []; // Fix: Return empty list instead of allStudents for security/correctness
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error getting student data for parent: $e');

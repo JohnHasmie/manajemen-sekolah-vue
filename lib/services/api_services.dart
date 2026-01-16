@@ -247,12 +247,6 @@ class ApiService {
     return headers;
   }
 
-  static Future<void> _redirectToLogin() async {
-    await _handleAuthenticationErrorWithMessage(
-      'Authentication required. Please login.',
-    );
-  }
-
   static dynamic _handleResponse(http.Response response) {
     try {
       if (response.statusCode == 204) {

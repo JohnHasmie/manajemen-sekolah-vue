@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClassActivityService {
   // Get Class Activities with Pagination & Filters (Recommended)
@@ -95,27 +94,7 @@ class ApiClassActivityService {
 
   static String get baseUrl => ApiService.baseUrl;
 
-  static Future<Map<String, String>> _getHeaders() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-
-      if (token == null || token.isEmpty) {
-        throw Exception('Token tidak tersedia. Silakan login kembali.');
-      }
-
-      return {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error getting headers: $e');
-      }
-      rethrow;
-    }
-  }
+  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
   static dynamic _handleResponse(http.Response response) {
     try {
