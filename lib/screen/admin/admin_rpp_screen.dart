@@ -550,15 +550,12 @@ class _AdminRppScreenState extends State<AdminRppScreen>
     _loadTeachersPaginated(reset: true);
   }
 
-  void _onSearchChanged(String value) {
-    _searchDebounce?.cancel();
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
-      if (_showTeacherList && widget.teacherId == null) {
-        _loadTeachersPaginated(reset: true);
-      } else {
-        _loadRppPaginated(reset: true);
-      }
-    });
+  void _handleSearch() {
+    if (_showTeacherList && widget.teacherId == null) {
+      _loadTeachersPaginated(reset: true);
+    } else {
+      _loadRppPaginated(reset: true);
+    }
   }
 
   void _updateStatus(String rppId, String status) {
@@ -1245,31 +1242,47 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                               color: Colors.white.withOpacity(0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) => _onSearchChanged(value),
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: _showTeacherList
-                                    ? languageProvider.getTranslatedText({
-                                        'en': 'Search Teacher...',
-                                        'id': 'Cari Guru...',
-                                      })
-                                    : languageProvider.getTranslatedText({
-                                        'en': 'Search RPP...',
-                                        'id': 'Cari RPP...',
-                                      }),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    onSubmitted: (_) => _handleSearch(),
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: _showTeacherList
+                                          ? languageProvider.getTranslatedText({
+                                              'en': 'Search Teacher...',
+                                              'id': 'Cari Guru...',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Search RPP...',
+                                              'id': 'Cari RPP...',
+                                            }),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: _handleSearch,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
@@ -1381,51 +1394,62 @@ class _AdminRppScreenState extends State<AdminRppScreen>
               ),
               Expanded(
                 child: _showTeacherList
-                    ? (_teacherList.isEmpty
-                          ? EmptyState(
-                              title: languageProvider.getTranslatedText({
-                                'en': 'No Teachers',
-                                'id': 'Tidak ada Guru',
-                              }),
-                              subtitle: _searchController.text.isNotEmpty
-                                  ? languageProvider.getTranslatedText({
-                                      'en': 'No teachers found matching search',
-                                      'id':
-                                          'Tidak ditemukan guru dengan pencarian tersebut',
-                                    })
-                                  : languageProvider.getTranslatedText({
-                                      'en': 'No teacher data available',
-                                      'id': 'Tidak ada data guru',
-                                    }),
-                              icon: Icons.people,
-                            )
-                          : RefreshIndicator(
-                              onRefresh: () =>
-                                  _loadTeachersPaginated(reset: true),
-                              child: ListView.builder(
-                                controller: _scrollController,
-                                padding: EdgeInsets.only(top: 16, bottom: 16),
-                                itemCount:
-                                    _teacherList.length +
-                                    (_isLoadingMore ? 1 : 0),
-                                itemBuilder: (context, index) {
-                                  if (index >= _teacherList.length) {
-                                    return Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    );
-                                  }
-                                  return _buildTeacherCard(
-                                    _teacherList[index],
-                                    index,
-                                  );
-                                },
-                              ),
-                            ))
+                    ? (() {
+                        final searchTerm = _searchController.text.toLowerCase();
+                        final filteredTeachers = _teacherList.where((teacher) {
+                          if (searchTerm.isEmpty) return true;
+                          final name =
+                              teacher['name']?.toString().toLowerCase() ?? '';
+                          // Optional: Filter by NIP too if desired
+                          // final nip = teacher['employee_number']?.toString().toLowerCase() ?? '';
+                          return name.contains(searchTerm);
+                        }).toList();
+
+                        if (filteredTeachers.isEmpty) {
+                          return EmptyState(
+                            title: languageProvider.getTranslatedText({
+                              'en': 'No Teachers',
+                              'id': 'Tidak ada Guru',
+                            }),
+                            subtitle: _searchController.text.isNotEmpty
+                                ? languageProvider.getTranslatedText({
+                                    'en': 'No teachers found matching search',
+                                    'id':
+                                        'Tidak ditemukan guru dengan pencarian tersebut',
+                                  })
+                                : languageProvider.getTranslatedText({
+                                    'en': 'No teacher data available',
+                                    'id': 'Tidak ada data guru',
+                                  }),
+                            icon: Icons.people,
+                          );
+                        }
+
+                        return RefreshIndicator(
+                          onRefresh: () => _loadTeachersPaginated(reset: true),
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            padding: EdgeInsets.only(top: 16, bottom: 16),
+                            itemCount:
+                                filteredTeachers.length +
+                                (_isLoadingMore ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index >= filteredTeachers.length) {
+                                return Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              }
+                              return _buildTeacherCard(
+                                filteredTeachers[index],
+                                index,
+                              );
+                            },
+                          ),
+                        );
+                      })()
                     : (filteredRpp.isEmpty
                           ? EmptyState(
                               title: languageProvider.getTranslatedText({

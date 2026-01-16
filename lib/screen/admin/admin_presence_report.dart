@@ -699,7 +699,13 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       );
     }
 
-    if (_classList.isEmpty) {
+    final searchTerm = _searchController.text.toLowerCase();
+    final filteredClasses = _classList.where((kelas) {
+      final className = kelas['name']?.toString().toLowerCase() ?? '';
+      return className.contains(searchTerm);
+    }).toList();
+
+    if (filteredClasses.isEmpty) {
       return Center(
         child: Text(
           languageProvider.getTranslatedText({
@@ -717,9 +723,9 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       child: ListView.builder(
         padding: EdgeInsets.all(16),
         physics: AlwaysScrollableScrollPhysics(),
-        itemCount: _classList.length,
+        itemCount: filteredClasses.length,
         itemBuilder: (context, index) {
-          final kelas = _classList[index];
+          final kelas = filteredClasses[index];
           return AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
@@ -1306,26 +1312,43 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                               color: Colors.white.withOpacity(0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) => setState(() {}),
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: languageProvider.getTranslatedText({
-                                  'en': 'Search attendance...',
-                                  'id': 'Cari absensi...',
-                                }),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    onSubmitted: (_) => setState(() {}),
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search attendance...',
+                                            'id': 'Cari absensi...',
+                                          }),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: () => setState(() {}),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),

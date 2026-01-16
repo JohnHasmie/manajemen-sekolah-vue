@@ -108,16 +108,14 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
   }
 
   void _onSearchChanged() {
-    // Cancel previous timer
-    _searchDebounce?.cancel();
+    // Manual search triggered by button/enter
+  }
 
-    // Set new timer (500ms debounce)
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
-      setState(() {
-        _currentPage = 1;
-      });
-      _loadData();
+  void _handleSearch() {
+    setState(() {
+      _currentPage = 1;
     });
+    _loadData();
   }
 
   Future<void> _loadFilterOptions() async {
@@ -2177,6 +2175,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                     SizedBox(height: 16),
 
                     // Search Bar with Filter Button
+                    // Search Bar with Filter Button
                     Row(
                       children: [
                         Expanded(
@@ -2185,26 +2184,44 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) => setState(() {}),
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: languageProvider.getTranslatedText({
-                                  'en': 'Search announcements...',
-                                  'id': 'Cari pengumuman...',
-                                }),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    // onChanged: (value) => setState(() {}), // Disabling this to prevent excessive rebuilds
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search announcements...',
+                                            'id': 'Cari pengumuman...',
+                                          }),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) => _handleSearch(),
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: _handleSearch,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),

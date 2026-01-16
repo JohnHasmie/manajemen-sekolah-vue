@@ -98,9 +98,6 @@ class FinanceScreenState extends State<FinanceScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
-    // Listen to search changes with debounce
-    _searchController.addListener(_onSearchChanged);
-
     // Listen to scroll for infinite scroll
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
@@ -129,20 +126,6 @@ class FinanceScreenState extends State<FinanceScreen>
     setState(() {
       _hasActiveFilter =
           _selectedStatusFilter != null || _selectedPeriodeFilter != null;
-    });
-  }
-
-  void _onSearchChanged() {
-    // Cancel previous timer
-    _searchDebounce?.cancel();
-
-    // Set new timer (500ms debounce)
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
-      setState(() {
-        _currentPage = 1; // Reset to first page on search
-      });
-      _loadTagihan(resetPage: true);
-      _checkActiveFilter();
     });
   }
 
@@ -2751,25 +2734,41 @@ class FinanceScreenState extends State<FinanceScreen>
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.grey.shade200),
                               ),
-                              child: TextField(
-                                controller: _searchController,
-                                onChanged: (value) => setState(() {}),
-                                decoration: InputDecoration(
-                                  hintText: 'Cari jenis pembayaran...',
-                                  prefixIcon: Icon(
-                                    Icons.search,
-                                    color: Colors.grey,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _searchController,
+                                      onSubmitted: (_) => setState(() {}),
+                                      decoration: InputDecoration(
+                                        hintText: 'Cari jenis pembayaran...',
+                                        prefixIcon: Icon(
+                                          Icons.search,
+                                          color: Colors.grey,
+                                        ),
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
+                                  Container(
+                                    margin: EdgeInsets.only(right: 4),
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.search,
+                                        color: _getPrimaryColor(),
+                                      ),
+                                      onPressed: () => setState(() {}),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
                           ),
