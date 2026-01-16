@@ -572,15 +572,19 @@ class ApiService {
     return result['available_roles'] is List ? result['available_roles'] : [];
   }
 
-  // Switch role
+  // Switch role reuse switchSchool logic
   static Future<Map<String, dynamic>> switchRole(String role) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/switch-role'),
-      headers: await _getHeaders(),
-      body: json.encode({'role': role}),
-    );
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user');
+    if (userJson == null) throw Exception('User data not found');
 
-    return _handleResponse(response);
+    final user = json.decode(userJson);
+    final schoolId =
+        user['school_id'] ?? user['sekolah_id']; // Handle key variations
+
+    if (schoolId == null) throw Exception('School ID not found');
+
+    return switchSchool(schoolId.toString(), role: role);
   }
 
   // Get sekolah yang bisa diakses user
@@ -595,11 +599,19 @@ class ApiService {
   }
 
   // Switch sekolah
-  static Future<Map<String, dynamic>> switchSchool(String schoolId) async {
+  static Future<Map<String, dynamic>> switchSchool(
+    String schoolId, {
+    String? role,
+  }) async {
+    final Map<String, dynamic> body = {'school_id': schoolId};
+    if (role != null) {
+      body['role'] = role;
+    }
+
     final response = await http.post(
       Uri.parse('$baseUrl/auth/switch-school'),
       headers: await _getHeaders(),
-      body: json.encode({'school_id': schoolId}),
+      body: json.encode(body),
     );
 
     return _handleResponse(response);

@@ -704,71 +704,165 @@ class _DashboardState extends State<Dashboard>
   }
 
   Future<void> _switchSchool(Map<String, dynamic> school) async {
+    // Show Loading Indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
     try {
       final response = await ApiService.switchSchool(school['school_id']);
 
-      // Update token
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', response['token']);
+      // Close Loading Indicator
+      if (mounted) Navigator.pop(context);
 
-      // Update user data from backend response
-      Map<String, dynamic> updatedUserData;
-      if (response['user'] != null) {
-        final backendUser = Map<String, dynamic>.from(response['user']);
-        updatedUserData = {..._userData, ...backendUser};
-      } else {
-        // Fallback manual update
-        updatedUserData = Map<String, dynamic>.from(_userData);
-        updatedUserData['school_id'] = school['school_id'];
-        updatedUserData['nama_sekolah'] =
-            school['school_name'] ?? school['nama_sekolah'];
-      }
+      // 1. Check for Multiple Roles (`pilih_role`)
+      if (response['pilih_role'] == true && response['role_list'] is List) {
+        final roleList = List<String>.from(response['role_list']);
 
-      await prefs.setString('user', json.encode(updatedUserData));
+        if (!mounted) return;
 
-      if (!mounted) return;
-
-      var newRole = updatedUserData['role'];
-      // Normalize role values if needed
-      if (newRole == 'teacher') newRole = 'guru';
-      if (newRole == 'parent') newRole = 'wali';
-
-      final currentRole = _effectiveRole;
-
-      // Close the dialog
-      Navigator.pop(context);
-
-      if (newRole != null && newRole != currentRole) {
-        // Role changed, navigate to new dashboard
-        Navigator.pushReplacementNamed(context, '/$newRole');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Berhasil pindah ke ${updatedUserData['nama_sekolah']} sebagai ${_getRoleDisplayName(newRole!)}',
-            ),
+        final selectedRole = await showDialog<String>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => SimpleDialog(
+            title: Text('Pilih Peran Anda'),
+            children: roleList.map((role) {
+              // Normalize for display
+              final normalizedForDisplay = role == 'parent'
+                  ? 'wali'
+                  : (role == 'teacher' ? 'guru' : role);
+              return SimpleDialogOption(
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                onPressed: () => Navigator.pop(
+                  context,
+                  role,
+                ), // Return original string 'parent'/'admin'
+                child: Row(
+                  children: [
+                    _buildRoleIcon(normalizedForDisplay),
+                    SizedBox(width: 12),
+                    Text(
+                      _getRoleDisplayName(normalizedForDisplay),
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
         );
-      } else {
-        // Role same, just reload data
-        await _initializeData();
-        setState(() {
-          _userData = updatedUserData;
-        });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Berhasil pindah ke ${updatedUserData['nama_sekolah']}',
-            ),
-          ),
-        );
+        if (selectedRole == null) return;
+
+        // Proceed with selectedRole
+        await _processSchoolSwitch(response, school, selectedRole);
+        return;
       }
+
+      // 2. Single Role Case (Backend assigned role automatically)
+      await _processSchoolSwitch(response, school, null);
     } catch (e) {
+      // Close Loading Indicator if error occurs
+      if (mounted) Navigator.pop(context);
+
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Gagal pindah sekolah: $e')));
       }
+    }
+  }
+
+  Future<void> _processSchoolSwitch(
+    Map<String, dynamic> response,
+    Map<String, dynamic> schoolInfo,
+    String? selectedRole,
+  ) async {
+    // Update token
+    final prefs = await SharedPreferences.getInstance();
+    if (response['token'] != null) {
+      await prefs.setString('token', response['token']);
+    }
+
+    // Update user data from backend response
+    Map<String, dynamic> updatedUserData;
+
+    if (response['user'] != null) {
+      final backendUser = Map<String, dynamic>.from(response['user']);
+      updatedUserData = {..._userData, ...backendUser};
+
+      // If "pilih_role" case (selectedRole != null), we must construct some fields manually
+      // because backend raw user object in this case might not have 'role' set,
+      // nor 'nama_sekolah' (which comes in 'school' object).
+      if (selectedRole != null) {
+        updatedUserData['role'] = selectedRole;
+
+        // Backend sends 'school' object in pilih_role response
+        if (response['school'] != null) {
+          final schoolObj = response['school'];
+          updatedUserData['school_id'] = schoolObj['id'];
+          updatedUserData['nama_sekolah'] =
+              schoolObj['school_name'] ?? schoolObj['nama_sekolah'];
+          updatedUserData['sekolah_alamat'] =
+              schoolObj['address'] ?? schoolObj['alamat'];
+          // ... other fields if needed
+        }
+      }
+    } else {
+      // Fallback manual update (should not happen with correct backend)
+      updatedUserData = Map<String, dynamic>.from(_userData);
+      updatedUserData['school_id'] = schoolInfo['school_id'];
+      updatedUserData['nama_sekolah'] =
+          schoolInfo['school_name'] ?? schoolInfo['nama_sekolah'];
+    }
+
+    await prefs.setString('user', json.encode(updatedUserData));
+
+    if (!mounted) return;
+
+    var newRole = updatedUserData['role'];
+
+    // Normalize role values
+    if (newRole == 'teacher') newRole = 'guru';
+    if (newRole == 'parent') newRole = 'wali';
+
+    // Update 'role' in userData to normalized value?
+    // Better to strictly use normalized for Frontend routing.
+    updatedUserData['role'] = newRole;
+    await prefs.setString(
+      'user',
+      json.encode(updatedUserData),
+    ); // Save normalized
+
+    final currentRole = _effectiveRole;
+
+    if (newRole != null) {
+      // Always navigate to new dashboard to refresh state completely
+      Navigator.pushNamedAndRemoveUntil(context, '/$newRole', (route) => false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Berhasil pindah ke ${updatedUserData['nama_sekolah']} sebagai ${_getRoleDisplayName(newRole!)}',
+          ),
+        ),
+      );
+    } else {
+      // Role same, just reload data
+      await _initializeData();
+      setState(() {
+        _userData = updatedUserData;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Berhasil pindah ke ${updatedUserData['nama_sekolah']}',
+          ),
+        ),
+      );
     }
   }
 
@@ -1960,7 +2054,7 @@ class _DashboardState extends State<Dashboard>
   void _showSchoolSelectionDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
@@ -1993,19 +2087,26 @@ class _DashboardState extends State<Dashboard>
                   return Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: isCurrent ? null : () => _switchSchool(school),
+                      onTap: isCurrent
+                          ? null
+                          : () {
+                              Navigator.pop(
+                                dialogContext,
+                              ); // Close dialog immediately
+                              _switchSchool(school);
+                            },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: EdgeInsets.all(12),
                         margin: EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
                           color: isCurrent
-                              ? _getPrimaryColor().withValues(alpha: 0.1)
+                              ? _getPrimaryColor().withOpacity(0.1)
                               : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isCurrent
-                                ? _getPrimaryColor().withValues(alpha: 0.3)
+                                ? _getPrimaryColor().withOpacity(0.3)
                                 : Colors.transparent,
                           ),
                         ),
@@ -2061,7 +2162,7 @@ class _DashboardState extends State<Dashboard>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text('Batal', style: TextStyle(color: Colors.grey.shade600)),
           ),
         ],

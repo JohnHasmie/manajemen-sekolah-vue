@@ -380,11 +380,18 @@ class LoginScreenState extends State<LoginScreen> {
 
     try {
       Map<String, dynamic> responseData;
+
       if (_otpCode != null) {
         responseData = await ApiService.verifyOtp(
           emailController.text.trim(),
           _otpCode!,
           schoolId: _selectedSchool?['id'] ?? _selectedSchoolId,
+          role: role,
+        );
+      } else if (await ApiService.getToken() != null) {
+        // Use switchSchool with role
+        responseData = await ApiService.switchSchool(
+          _selectedSchool?['id'] ?? _selectedSchoolId,
           role: role,
         );
       } else {
@@ -738,6 +745,7 @@ class LoginScreenState extends State<LoginScreen> {
       }
 
       setState(() {
+        _showSchoolSelection = false; // Fix: Hide school selection
         _showRoleSelection = true;
         _roleList = responseData['role_list'];
         _userData = responseData['user'];
