@@ -48,7 +48,8 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
     try {
       // Load data siswa
-      final studentData = await ApiStudentService.getStudent();
+      final userId = widget.parent['id']?.toString();
+      final studentData = await ApiStudentService.getStudent(userId: userId);
       final student = studentData
           .map((s) => Siswa.fromJson(s))
           .firstWhere((s) => s.id == widget.studentId);
