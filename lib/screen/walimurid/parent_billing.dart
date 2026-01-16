@@ -1055,6 +1055,112 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     );
   }
 
+  void _showPaymentDetailDialog(Map<String, dynamic> billing) {
+    final payment = billing['latest_payment'];
+    if (payment == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            SizedBox(height: 24),
+            Text(
+              'Detail Pembayaran',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 24),
+            _buildInfoItem('Status', _getStatusText(billing)),
+            _buildInfoItem(
+              'Metode Pembayaran',
+              payment['payment_method'] ?? '-',
+            ),
+            _buildInfoItem('Tanggal Bayar', payment['payment_date'] ?? '-'),
+            _buildInfoItem(
+              'Jumlah Dibayar',
+              _formatCurrency(payment['amount']),
+            ),
+            SizedBox(height: 24),
+            if (payment['payment_receipt'] != null) ...[
+              Text(
+                'Bukti Pembayaran',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  '${ApiService.baseUrl.replaceAll('/api', '')}/storage/${payment['payment_receipt']}',
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200,
+                      color: Colors.grey.shade100,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                              size: 40,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Gagal memuat gambar',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+            SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade200,
+                  foregroundColor: Colors.black87,
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text('Tutup'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _uploadPayment({
     required String billingId,
     required String paymentMethod,
@@ -1086,13 +1192,14 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
       // Upload file menggunakan multipart
       await _apiService.uploadFile(
-        '/payment/upload',
+        '/payments',
         file,
+        fileField: 'payment_receipt',
         data: {
           'bill_id': billingId,
-          'metode_bayar': paymentMethod,
-          'jumlah_bayar': amount.toString(),
-          'tanggal_bayar': paymentDate,
+          'payment_method': paymentMethod,
+          'amount': amount.toString(),
+          'payment_date': paymentDate,
         },
       );
     } catch (error) {
@@ -1176,10 +1283,11 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () {
-              if (billing['status'] == 'unpaid' ||
-                  billing['status'] == 'pending' ||
+              if (_getStatusText(billing) == 'Belum Bayar' ||
                   billing['pembayaran_status'] == 'rejected') {
                 _showUploadPaymentDialog(billing);
+              } else {
+                _showPaymentDetailDialog(billing);
               }
             },
             child: Container(
@@ -1383,7 +1491,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
                         SizedBox(height: 12),
 
-                        if (billing['status'] == 'unpaid' ||
+                        if (_getStatusText(billing) == 'Belum Bayar' ||
                             billing['pembayaran_status'] == 'rejected')
                           Align(
                             alignment: Alignment.centerRight,

@@ -1186,6 +1186,7 @@ class ApiService {
     String endpoint,
     File file, {
     Map<String, dynamic>? data,
+    String fileField = 'bukti_bayar',
   }) async {
     try {
       var request = http.MultipartRequest(
@@ -1226,7 +1227,7 @@ class ApiService {
       // Add file dengan MIME type yang benar
       request.files.add(
         await http.MultipartFile.fromPath(
-          'bukti_bayar',
+          fileField,
           file.path,
           contentType: MediaType.parse(mimeType),
         ),
@@ -1248,7 +1249,7 @@ class ApiService {
       print('Upload Response Status: ${response.statusCode}');
       print('Upload Response Body: $responseData');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(responseData);
       } else {
         throw Exception(
