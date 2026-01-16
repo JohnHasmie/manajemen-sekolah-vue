@@ -903,26 +903,45 @@ class RppScreenState extends State<RppScreen>
                               color: Colors.white.withOpacity(0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) => _loadRpp(),
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: languageProvider.getTranslatedText({
-                                  'en': 'Search RPP...',
-                                  'id': 'Cari RPP...',
-                                }),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search RPP...',
+                                            'id': 'Cari RPP...',
+                                          }),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) {
+                                      _loadRpp();
+                                    },
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: _loadRpp,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),

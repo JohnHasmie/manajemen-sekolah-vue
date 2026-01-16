@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
-import 'package:manajemensekolah/components/enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -805,13 +804,52 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                     SizedBox(height: 16),
 
                     // Search Bar
-                    EnhancedSearchBar(
-                      controller: _searchController,
-                      onChanged: (value) => setState(() {}),
-                      hintText: languageProvider.getTranslatedText({
-                        'en': 'Search announcements...',
-                        'id': 'Cari pengumuman...',
-                      }),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              style: TextStyle(color: Colors.black87),
+                              decoration: InputDecoration(
+                                hintText: languageProvider.getTranslatedText({
+                                  'en': 'Search announcements...',
+                                  'id': 'Cari pengumuman...',
+                                }),
+                                hintStyle: TextStyle(color: Colors.grey),
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: Colors.grey,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                              ),
+                              onSubmitted: (_) {
+                                setState(() {});
+                              },
+                            ),
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(right: 4),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.search,
+                                color: _getPrimaryColor(),
+                              ),
+                              onPressed: () {
+                                setState(() {});
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
