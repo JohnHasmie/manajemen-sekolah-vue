@@ -1132,146 +1132,180 @@ class _DashboardState extends State<Dashboard>
   Widget _buildWelcomeSection() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 20),
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: _getCardGradient(),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.2),
-            blurRadius: 20,
+            color: _getPrimaryColor().withOpacity(0.3),
+            blurRadius: 16,
             offset: Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          // Avatar dengan efek glowing
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.account_circle_rounded,
-              color: _getPrimaryColor(),
-              size: 40,
+          // Background Pattern
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
             ),
           ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.welcome.tr,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  _userData['nama'] ?? _getRoleTitle(),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 6),
-                Text(
-                  _userData['nama_sekolah'] ?? AppLocalizations.appTitle.tr,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 8),
-          Consumer<AcademicYearProvider>(
-            builder: (context, provider, child) {
-              if (provider.isLoading) {
-                return SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
+
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Avatar
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
                     ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: provider.selectedAcademicYear?['id'].toString(),
-                        dropdownColor: _getPrimaryColor(),
-                        icon: Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        style: TextStyle(fontSize: 12, color: Colors.white),
-                        isDense: true,
-                        items: provider.academicYears.map((year) {
-                          final isCurrent =
-                              year['current'] == true ||
-                              year['status'] == 'active';
-                          return DropdownMenuItem<String>(
-                            value: year['id'].toString(),
-                            child: Text(
-                              '${year['year']}${isCurrent ? ' (Active)' : ''}',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            provider.setSelectedYear(val);
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                  if (_currentSemesterLabel != null) ...[
-                    SizedBox(height: 4),
+                  ],
+                ),
+                child: Icon(Icons.person, color: _getPrimaryColor(), size: 28),
+              ),
+              SizedBox(width: 16),
+
+              // Text Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     Text(
-                      _currentSemesterLabel!,
+                      AppLocalizations.welcome.tr,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 12,
                         color: Colors.white.withOpacity(0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                    SizedBox(height: 2),
+                    Text(
+                      _userData['nama'] ?? _getRoleTitle(),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 8),
+
+                    // Academic Info (Moved here, below Name)
+                    Consumer<AcademicYearProvider>(
+                      builder: (context, provider, child) {
+                        if (provider.isLoading) {
+                          return SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        }
+
+                        return Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: provider.selectedAcademicYear?['id']
+                                      .toString(),
+                                  dropdownColor: _getPrimaryColor(),
+                                  icon: Padding(
+                                    padding: EdgeInsets.only(left: 4),
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  isDense: true,
+                                  items: provider.academicYears.map((year) {
+                                    final isCurrent =
+                                        year['current'] == true ||
+                                        year['status'] == 'active';
+                                    return DropdownMenuItem<String>(
+                                      value: year['id'].toString(),
+                                      child: Text(
+                                        '${year['year']}${isCurrent ? ' (Active)' : ''}',
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      provider.setSelectedYear(val);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                            if (_currentSemesterLabel != null)
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  _currentSemesterLabel!,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white.withOpacity(0.95),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
-                ],
-              );
-            },
+                ),
+              ),
+            ],
           ),
         ],
       ),
