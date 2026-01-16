@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
-import 'package:manajemensekolah/components/separated_search_filter.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
@@ -89,10 +88,17 @@ class GradePageState extends State<GradePage> {
   }
 
   void _onSearchChanged() {
+    // Manual search triggered by button/enter
+  }
+
+  void _handleSearch() {
+    setState(() {
+      _currentPage = 1;
+    });
     if (_currentStep == 0) {
-      setState(() {});
+      _loadClasses();
     } else if (_currentStep == 1) {
-      setState(() {});
+      setState(() {}); // Local filtering
     }
   }
 
@@ -570,15 +576,19 @@ class GradePageState extends State<GradePage> {
         top: MediaQuery.of(context).padding.top + 16,
         left: 16,
         right: 16,
-        bottom: 16,
+        bottom: 24,
       ),
       decoration: BoxDecoration(
         gradient: _getCardGradient(),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
         boxShadow: [
           BoxShadow(
             color: _getPrimaryColor().withOpacity(0.3),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -630,6 +640,50 @@ class GradePageState extends State<GradePage> {
               ),
             ],
           ),
+          SizedBox(height: 24),
+          // Search Bar matched to StudentManagement
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    style: TextStyle(color: Colors.black87),
+                    decoration: InputDecoration(
+                      hintText: _currentStep == 0
+                          ? languageProvider.getTranslatedText({
+                              'en': 'Search class...',
+                              'id': 'Cari kelas...',
+                            })
+                          : languageProvider.getTranslatedText({
+                              'en': 'Search subject...',
+                              'id': 'Cari mata pelajaran...',
+                            }),
+                      hintStyle: TextStyle(color: Colors.grey),
+                      prefixIcon: Icon(Icons.search, color: Colors.grey),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    onSubmitted: (_) => _handleSearch(),
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.only(right: 4),
+                  child: IconButton(
+                    icon: Icon(Icons.search, color: _getPrimaryColor()),
+                    onPressed: _handleSearch,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -665,25 +719,7 @@ class GradePageState extends State<GradePage> {
               children: [
                 _buildHeader(context, languageProvider),
 
-                if (_currentStep == 0 || _currentStep == 1) ...[
-                  SeparatedSearchFilter(
-                    controller: _searchController,
-                    onChanged: (value) => setState(() {}),
-                    hintText: _currentStep == 0
-                        ? languageProvider.getTranslatedText({
-                            'en': 'Search class...',
-                            'id': 'Cari kelas...',
-                          })
-                        : languageProvider.getTranslatedText({
-                            'en': 'Search subject...',
-                            'id': 'Cari mata pelajaran...',
-                          }),
-                    showFilter: false, // Simple search for now
-                    searchBackgroundColor: Colors.white,
-                    margin: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  ),
-                ],
-
+                // Search Bar has been moved to Header
                 Expanded(
                   child: _currentStep == 0
                       ? _buildStep0ClassList(languageProvider)
