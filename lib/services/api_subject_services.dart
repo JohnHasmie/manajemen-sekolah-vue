@@ -63,6 +63,7 @@ class ApiSubjectService {
     int limit = 10,
     String? status, // 'active', 'inactive', 'all'
     String? search,
+    String? gradeLevel,
     List<String>? subjectIds,
   }) async {
     // Build query parameters
@@ -76,6 +77,9 @@ class ApiSubjectService {
     }
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;
+    }
+    if (gradeLevel != null && gradeLevel.isNotEmpty) {
+      queryParams['grade_level'] = gradeLevel;
     }
 
     if (subjectIds != null && subjectIds.isNotEmpty) {

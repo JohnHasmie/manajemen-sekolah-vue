@@ -45,8 +45,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
   // Filter States (Backend filtering)
   String? _selectedStatusFilter; // 'active', 'inactive', atau null untuk semua
-  String?
-  _selectedKategoriFilter; // 'Utama', 'Tambahan', 'Ekstrakurikuler', atau null untuk semua
+
   String?
   _selectedKelasStatusFilter; // 'ada', 'tidak_ada', atau null untuk semua
   String? _selectedGradeLevelFilter; // '1' sampai '12', atau null untuk semua
@@ -57,6 +56,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
   // Dynamic list untuk nama kelas yang tersedia
   List<String> _availableClassNames = [];
   List<String> _availableGradeLevels = [];
+
   List<dynamic> _availableMasterSubjects = [];
 
   // Filter Options (from backend)
@@ -90,9 +90,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
 
-    // Listen to search changes with debounce
-    _searchController.addListener(_onSearchChanged);
-
     _loadFilterOptions();
     _loadMasterSubjects();
     _loadSubjects();
@@ -116,7 +113,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     _animationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _searchController.removeListener(_onSearchChanged);
+
     _searchController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
@@ -130,19 +127,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         _loadMoreSubjects();
       }
     }
-  }
-
-  void _onSearchChanged() {
-    // Cancel previous timer
-    _searchDebounce?.cancel();
-
-    // Set new timer (500ms debounce)
-    _searchDebounce = Timer(Duration(milliseconds: 500), () {
-      setState(() {
-        _currentPage = 1;
-      });
-      _loadSubjects();
-    });
   }
 
   Future<void> _loadFilterOptions() async {
@@ -171,7 +155,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     setState(() {
       _hasActiveFilter =
           _selectedStatusFilter != null ||
-          _selectedKategoriFilter != null ||
           _selectedKelasStatusFilter != null ||
           _selectedGradeLevelFilter != null ||
           _selectedClassNameFilter != null;
@@ -181,7 +164,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
   void _clearAllFilters() {
     setState(() {
       _selectedStatusFilter = null;
-      _selectedKategoriFilter = null;
       _selectedKelasStatusFilter = null;
       _selectedGradeLevelFilter = null;
       _selectedClassNameFilter = null;
@@ -212,20 +194,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         'onRemove': () {
           setState(() {
             _selectedStatusFilter = null;
-          });
-          _checkActiveFilter();
-          _loadSubjects();
-        },
-      });
-    }
-
-    if (_selectedKategoriFilter != null) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Category', 'id': 'Kategori'})}: $_selectedKategoriFilter',
-        'onRemove': () {
-          setState(() {
-            _selectedKategoriFilter = null;
           });
           _checkActiveFilter();
           _loadSubjects();
@@ -292,7 +260,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
     // Temporary state for bottom sheet
     String? tempSelectedStatus = _selectedStatusFilter;
-    String? tempSelectedKategori = _selectedKategoriFilter;
     String? tempSelectedClassStatus = _selectedKelasStatusFilter;
     String? tempSelectedGradeLevel = _selectedGradeLevelFilter;
     String? tempSelectedClassName = _selectedClassNameFilter;
@@ -335,7 +302,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                       onPressed: () {
                         setModalState(() {
                           tempSelectedStatus = null;
-                          tempSelectedKategori = null;
                           tempSelectedClassStatus = null;
                           tempSelectedGradeLevel = null;
                           tempSelectedClassName = null;
@@ -376,12 +342,27 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                         runSpacing: 8,
                         children:
                             [
-                              {'value': 'active', 'label': 'Active / Aktif'},
+                              {
+                                'value': 'active',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Active',
+                                  'id': 'Aktif',
+                                }),
+                              },
                               {
                                 'value': 'inactive',
-                                'label': 'Inactive / Tidak Aktif',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Inactive',
+                                  'id': 'Tidak Aktif',
+                                }),
                               },
-                              {'value': 'all', 'label': 'All / Semua'},
+                              {
+                                'value': 'all',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'All',
+                                  'id': 'Semua',
+                                }),
+                              },
                             ].map((item) {
                               final isSelected =
                                   tempSelectedStatus == item['value'];
@@ -396,8 +377,8 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                   });
                                 },
                                 backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withOpacity(
-                                  0.2,
+                                selectedColor: _getPrimaryColor().withValues(
+                                  alpha: 0.2,
                                 ),
                                 checkmarkColor: _getPrimaryColor(),
                                 labelStyle: TextStyle(
@@ -413,49 +394,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                       ),
                       SizedBox(height: 24),
 
-                      // Kategori Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Category',
-                          'id': 'Kategori',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: ['Utama', 'Tambahan', 'Ekstrakurikuler'].map((
-                          kategori,
-                        ) {
-                          final isSelected = tempSelectedKategori == kategori;
-                          return FilterChip(
-                            label: Text(kategori),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                tempSelectedKategori = selected
-                                    ? kategori
-                                    : null;
-                              });
-                            },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
-                            checkmarkColor: _getPrimaryColor(),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        }).toList(),
-                      ),
                       SizedBox(height: 24),
 
                       // Status Kelas Filter
@@ -668,7 +606,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                     onPressed: () {
                       setState(() {
                         _selectedStatusFilter = tempSelectedStatus;
-                        _selectedKategoriFilter = tempSelectedKategori;
                         _selectedKelasStatusFilter = tempSelectedClassStatus;
                         _selectedGradeLevelFilter = tempSelectedGradeLevel;
                         _selectedClassNameFilter = tempSelectedClassName;
@@ -718,6 +655,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         page: _currentPage,
         limit: _perPage,
         status: _selectedStatusFilter,
+        gradeLevel: _selectedGradeLevelFilter,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -793,6 +731,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         page: _currentPage,
         limit: _perPage,
         status: _selectedStatusFilter,
+        gradeLevel: _selectedGradeLevelFilter,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -1428,12 +1367,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
           subjectName.contains(searchTerm) ||
           subjectCode.contains(searchTerm);
 
-      // Kategori filter
-      final kategori = subject['kategori']?.toString() ?? '';
-      final matchesKategoriFilter =
-          _selectedKategoriFilter == null ||
-          kategori == _selectedKategoriFilter;
-
       // Kelas status filter
       final hasClasses = (subject['jumlah_kelas'] ?? 0) > 0;
       final matchesKelasStatusFilter =
@@ -1441,20 +1374,8 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
           (_selectedKelasStatusFilter == 'ada' && hasClasses) ||
           (_selectedKelasStatusFilter == 'tidak_ada' && !hasClasses);
 
-      // Tingkat Kelas filter (1-12)
-      final kelasNames = subject['kelas_names']?.toString() ?? '';
-      final kelasGradeLevelsStr =
-          subject['kelas_grade_levels']?.toString() ?? '';
-
-      final matchesGradeLevelFilter =
-          _selectedGradeLevelFilter == null ||
-          (kelasGradeLevelsStr.isNotEmpty &&
-              kelasGradeLevelsStr
-                  .split(',')
-                  .map((e) => e.trim())
-                  .contains(_selectedGradeLevelFilter));
-
       // Class Name filter
+      final kelasNames = subject['kelas_names']?.toString() ?? '';
       final matchesClassNameFilter =
           _selectedClassNameFilter == null ||
           (kelasNames.isNotEmpty &&
@@ -1464,9 +1385,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                   .contains(_selectedClassNameFilter));
 
       return matchesSearch &&
-          matchesKategoriFilter &&
           matchesKelasStatusFilter &&
-          matchesGradeLevelFilter &&
           matchesClassNameFilter;
     }).toList();
   }
@@ -2077,26 +1996,54 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) => setState(() {}),
-                              style: TextStyle(color: Colors.black87),
-                              decoration: InputDecoration(
-                                hintText: languageProvider.getTranslatedText({
-                                  'en': 'Search subjects...',
-                                  'id': 'Cari mata pelajaran...',
-                                }),
-                                hintStyle: TextStyle(color: Colors.grey),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    // onChanged: (value) => setState(() {}),
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search subjects...',
+                                            'id': 'Cari mata pelajaran...',
+                                          }),
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onSubmitted: (value) {
+                                      setState(() {
+                                        _currentPage = 1;
+                                      });
+                                      _loadSubjects();
+                                    },
+                                  ),
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _currentPage = 1;
+                                      });
+                                      _loadSubjects();
+                                    },
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
@@ -2190,13 +2137,13 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                         deleteIcon: Icon(
                                           Icons.close,
                                           size: 16,
-                                          color: _getPrimaryColor(),
+                                          color: Colors.red,
                                         ),
                                         onDeleted: filter['onRemove'],
-                                        backgroundColor: _getPrimaryColor()
-                                            .withValues(alpha: 0.1),
+                                        backgroundColor: Colors.white
+                                            .withValues(alpha: 0.2),
                                         side: BorderSide(
-                                          color: _getPrimaryColor().withValues(
+                                          color: Colors.white.withValues(
                                             alpha: 0.3,
                                           ),
                                           width: 1,
@@ -2330,8 +2277,6 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
 
   // Animations
   late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -2340,14 +2285,6 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 800),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
     _loadData();
