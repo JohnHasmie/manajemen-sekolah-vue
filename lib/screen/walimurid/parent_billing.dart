@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
-import 'package:manajemensekolah/components/enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -36,7 +35,6 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
   // Map<String, dynamic>? _paginationMeta; // Unused
-  Timer? _searchDebounce;
 
   // Search and Enhanced Filters
   final TextEditingController _searchController = TextEditingController();
@@ -86,9 +84,6 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
 
-    // Listen to search changes with debounce
-    _searchController.addListener(_onSearchChanged);
-
     _loadData();
   }
 
@@ -97,9 +92,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     _animationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -145,14 +138,6 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
         _loadMoreTagihan();
       }
     }
-  }
-
-  void _onSearchChanged() {
-    _searchDebounce?.cancel();
-    _searchDebounce = Timer(Duration(milliseconds: 300), () {
-      // Just trigger rebuild to filter locally, don't reload from API
-      setState(() {});
-    });
   }
 
   Future<void> _loadMoreTagihan() async {
@@ -1518,24 +1503,60 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
           Row(
             children: [
               Expanded(
-                child: EnhancedSearchBar(
-                  controller: _searchController,
-                  hintText: 'Cari tagihan...',
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                  showFilter: false,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          style: TextStyle(color: Colors.black87),
+                          decoration: InputDecoration(
+                            hintText: 'Cari tagihan...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          onSubmitted: (_) {
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(right: 4),
+                        child: IconButton(
+                          icon: Icon(Icons.search, color: _getPrimaryColor()),
+                          onPressed: () {
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               SizedBox(width: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: _hasActiveFilter
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
                 ),
                 child: IconButton(
-                  icon: Icon(Icons.tune, color: Colors.white),
                   onPressed: _showFilterSheet,
+                  icon: Icon(
+                    Icons.tune,
+                    color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
+                  ),
                 ),
               ),
             ],
