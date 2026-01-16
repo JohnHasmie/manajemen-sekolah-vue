@@ -1,8 +1,8 @@
 // components/enhanced_search_bar.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
 
 class NewEnhancedSearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -12,6 +12,7 @@ class NewEnhancedSearchBar extends StatelessWidget {
   final bool hasActiveFilter;
   final VoidCallback onFilterPressed;
   final Color? primaryColor;
+  final EdgeInsetsGeometry? margin;
 
   const NewEnhancedSearchBar({
     super.key,
@@ -22,16 +23,18 @@ class NewEnhancedSearchBar extends StatelessWidget {
     this.hasActiveFilter = false,
     required this.onFilterPressed,
     this.primaryColor,
+    this.margin,
   });
 
   @override
   Widget build(BuildContext context) {
     final color = primaryColor ?? ColorUtils.getRoleColor("guru");
-    
+
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin:
+              margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
@@ -59,10 +62,7 @@ class NewEnhancedSearchBar extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: hintText,
                       hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: color,
-                      ),
+                      prefixIcon: Icon(Icons.search, color: color),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -90,10 +90,7 @@ class NewEnhancedSearchBar extends StatelessWidget {
                     children: [
                       IconButton(
                         onPressed: onFilterPressed,
-                        icon: Icon(
-                          Icons.tune,
-                          color: Colors.white,
-                        ),
+                        icon: Icon(Icons.tune, color: Colors.white),
                         tooltip: languageProvider.getTranslatedText({
                           'en': 'Filter',
                           'id': 'Filter',
@@ -108,7 +105,10 @@ class NewEnhancedSearchBar extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 1.5),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
                             ),
                             constraints: const BoxConstraints(
                               minWidth: 8,

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
-import 'package:manajemensekolah/components/separated_search_filter.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/materi_screen.dart';
@@ -1054,36 +1053,108 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                     SizedBox(height: 16),
 
                     // Search Bar with Filter using SeparatedSearchFilter
-                    SeparatedSearchFilter(
-                      controller: _searchController,
-                      onChanged: (value) => setState(() {}),
-                      hintText: languageProvider.getTranslatedText({
-                        'en': 'Search schedules...',
-                        'id': 'Cari jadwal...',
-                      }),
-                      showFilter: true,
-                      hasActiveFilter: _hasActiveFilter,
-                      onFilterPressed: _showFilterSheet,
-                      // Custom search styling
-                      searchBackgroundColor: Colors.white.withOpacity(0.95),
-                      searchIconColor: Colors.grey.shade600,
-                      searchTextColor: Colors.black87,
-                      searchHintColor: Colors.grey.shade500,
-                      searchBorderRadius: 14,
-                      // Custom filter styling
-                      filterActiveColor: _getPrimaryColor(),
-                      filterInactiveColor: Colors.white.withOpacity(0.9),
-                      filterIconColor: _hasActiveFilter
-                          ? Colors.white
-                          : _getPrimaryColor(),
-                      filterBorderRadius: 14,
-                      filterWidth: 56,
-                      filterHeight: 48,
-                      spacing: 12,
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 0,
-                        vertical: 0,
-                      ),
+                    // Search Bar with Filter Button
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.95),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    style: TextStyle(color: Colors.black87),
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search schedules...',
+                                            'id': 'Cari jadwal...',
+                                          }),
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey.shade500,
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) {
+                                      setState(() {});
+                                    },
+                                  ),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.search,
+                                      color: _getPrimaryColor(),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {});
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        // Filter Button
+                        Container(
+                          decoration: BoxDecoration(
+                            color: _hasActiveFilter
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                              IconButton(
+                                onPressed: _showFilterSheet,
+                                icon: Icon(
+                                  Icons.tune,
+                                  color: _hasActiveFilter
+                                      ? _getPrimaryColor()
+                                      : Colors.white,
+                                ),
+                                tooltip: languageProvider.getTranslatedText({
+                                  'en': 'Filter',
+                                  'id': 'Filter',
+                                }),
+                              ),
+                              if (_hasActiveFilter)
+                                Positioned(
+                                  right: 8,
+                                  top: 8,
+                                  child: Container(
+                                    padding: EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: BoxConstraints(
+                                      minWidth: 8,
+                                      minHeight: 8,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
 
                     // Filter Chips

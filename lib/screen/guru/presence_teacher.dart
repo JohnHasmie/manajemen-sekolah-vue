@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
-import 'package:manajemensekolah/components/new_enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
@@ -1311,7 +1310,7 @@ class PresencePageState extends State<PresencePage>
                     Expanded(
                       child: ListView(
                         scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: 12),
                         children: [
                           ..._buildFilterChips(languageProvider).map((filter) {
                             return Container(
@@ -1383,18 +1382,6 @@ class PresencePageState extends State<PresencePage>
               SizedBox(height: 8),
             ],
 
-            if (filteredSummaries.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      '${filteredSummaries.length} ${languageProvider.getTranslatedText({'en': 'attendance records found', 'id': 'catatan absensi ditemukan'})}',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
             SizedBox(height: 8),
 
             Expanded(
@@ -1417,7 +1404,10 @@ class PresencePageState extends State<PresencePage>
                       icon: Icons.list_alt,
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       itemCount: filteredSummaries.length,
                       itemBuilder: (context, index) {
                         final summary = filteredSummaries[index];
@@ -1620,17 +1610,81 @@ class PresencePageState extends State<PresencePage>
 
   // ========== SEARCH BAR DENGAN FILTER SEPERTI ADMIN ==========
   Widget _buildSearchAndFilter(LanguageProvider languageProvider) {
-    return NewEnhancedSearchBar(
-      controller: _searchController,
-      onChanged: (value) => setState(() {}),
-      hintText: languageProvider.getTranslatedText({
-        'en': 'Search attendance...',
-        'id': 'Cari absensi...',
-      }),
-      showFilter: _tabController.index == 0,
-      hasActiveFilter: _hasActiveFilter,
-      onFilterPressed: _showFilterSheet,
-      primaryColor: _getPrimaryColor(),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      style: TextStyle(color: Colors.black87),
+                      decoration: InputDecoration(
+                        hintText: languageProvider.getTranslatedText({
+                          'en': 'Search attendance...',
+                          'id': 'Cari absensi...',
+                        }),
+                        hintStyle: TextStyle(color: Colors.grey),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      onSubmitted: (_) {
+                        setState(() {});
+                      },
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(right: 4),
+                    child: IconButton(
+                      icon: Icon(Icons.search, color: _getPrimaryColor()),
+                      onPressed: () {
+                        setState(() {});
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_tabController.index == 0) ...[
+            SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _hasActiveFilter
+                      ? _getPrimaryColor()
+                      : Colors.grey.shade300,
+                ),
+              ),
+              child: IconButton(
+                onPressed: _showFilterSheet,
+                icon: Icon(
+                  Icons.tune,
+                  color: _hasActiveFilter ? Colors.white : Colors.grey.shade700,
+                ),
+                tooltip: languageProvider.getTranslatedText({
+                  'en': 'Filter',
+                  'id': 'Filter',
+                }),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -1774,7 +1828,8 @@ class PresencePageState extends State<PresencePage>
         : 0;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.only(bottom: 12),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),

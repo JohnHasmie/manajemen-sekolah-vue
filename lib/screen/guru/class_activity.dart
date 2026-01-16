@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
-import 'package:manajemensekolah/components/new_enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
@@ -88,7 +87,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   final ScrollController _scrollController = ScrollController();
 
   // Search debouncing
-  Timer? _searchDebounce;
 
   late TabController _tabController;
   String _currentTarget = 'umum';
@@ -116,7 +114,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     _tabController.dispose();
     _searchController.dispose();
     _scrollController.dispose();
-    _searchDebounce?.cancel();
+
     super.dispose();
   }
 
@@ -156,13 +154,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     });
 
     await _loadActivities();
-  }
-
-  void _onSearchChanged(String value) {
-    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
-      _resetAndLoadActivities();
-    });
   }
 
   // ========== VIEW BUILDERS ==========
@@ -1132,17 +1123,79 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   // ========== SEARCH AND FILTER MENGGUNAKAN KOMPONEN ==========
   Widget _buildSearchAndFilter(LanguageProvider languageProvider) {
-    return NewEnhancedSearchBar(
-      controller: _searchController,
-      onChanged: _onSearchChanged,
-      hintText: languageProvider.getTranslatedText({
-        'en': 'Search activities...',
-        'id': 'Cari kegiatan...',
-      }),
-      showFilter: true,
-      hasActiveFilter: _hasActiveFilter,
-      onFilterPressed: _showFilterSheet,
-      primaryColor: _getPrimaryColor(),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      style: TextStyle(color: Colors.black87),
+                      decoration: InputDecoration(
+                        hintText: languageProvider.getTranslatedText({
+                          'en': 'Search activities...',
+                          'id': 'Cari kegiatan...',
+                        }),
+                        hintStyle: TextStyle(color: Colors.grey),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      onSubmitted: (_) {
+                        _resetAndLoadActivities();
+                      },
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(right: 4),
+                    child: IconButton(
+                      icon: Icon(Icons.search, color: _getPrimaryColor()),
+                      onPressed: () {
+                        _resetAndLoadActivities();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _hasActiveFilter
+                    ? _getPrimaryColor()
+                    : Colors.grey.shade300,
+              ),
+            ),
+            child: IconButton(
+              onPressed: _showFilterSheet,
+              icon: Icon(
+                Icons.tune,
+                color: _hasActiveFilter ? Colors.white : Colors.grey.shade700,
+              ),
+              tooltip: languageProvider.getTranslatedText({
+                'en': 'Filter',
+                'id': 'Filter',
+              }),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1259,33 +1312,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
         return Column(
           children: [
-            // Header showing Class > Subject
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              color: ColorUtils.slate50,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${_selectedClassName ?? '-'} \u203A ${_selectedSubjectName ?? '-'}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Header removed
 
             // Search dan Filter Bar
             _buildSearchAndFilter(languageProvider),
@@ -1297,7 +1324,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                 height: 32,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 12),
                   children: _buildFilterChips(languageProvider).map((filter) {
                     return Container(
                       margin: EdgeInsets.only(right: 6),
@@ -1334,20 +1361,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               SizedBox(height: 8),
             ],
 
-            if (_activityList.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      '${_activityList.length} ${languageProvider.getTranslatedText({'en': 'activities found', 'id': 'kegiatan ditemukan'})}',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            SizedBox(height: 8),
-
             Expanded(
               child: _activityList.isEmpty
                   ? EmptyState(
@@ -1370,7 +1383,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                     )
                   : ListView.builder(
                       controller: _scrollController,
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       itemCount:
                           _activityList.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
@@ -1414,7 +1430,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _showActivityDetail(activity);
       },
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        margin: EdgeInsets.only(bottom: 12),
+        width: double.infinity,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
