@@ -8,20 +8,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ExcelClassService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
-
-  static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
 
   // Export data kelas ke Excel melalui backend
   static Future<void> exportClassesToExcel({
@@ -35,7 +25,7 @@ class ExcelClassService {
       final validatedData = validateClassData(classes);
 
       // Kirim request ke backend
-      final headers = await _getHeaders();
+      final headers = await ApiService.getHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/class/export'),
         headers: headers,
@@ -91,7 +81,7 @@ class ExcelClassService {
 
     try {
       // Kirim request ke backend
-      final headers = await _getHeaders();
+      final headers = await ApiService.getHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/class/template'),
         headers: headers,

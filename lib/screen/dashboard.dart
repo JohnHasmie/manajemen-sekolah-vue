@@ -707,32 +707,61 @@ class _DashboardState extends State<Dashboard>
     try {
       final response = await ApiService.switchSchool(school['school_id']);
 
-      // Update token dan user data
+      // Update token
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', response['token']);
 
-      // Update user data dengan sekolah baru
-      final updatedUserData = Map<String, dynamic>.from(_userData);
-      updatedUserData['school_id'] = school['school_id'];
-      updatedUserData['nama_sekolah'] = school['nama_sekolah'];
-      updatedUserData['sekolah_alamat'] = school['alamat'];
-      updatedUserData['sekolah_telepon'] = school['telepon'];
-      updatedUserData['sekolah_email'] = school['email'];
+      // Update user data from backend response
+      Map<String, dynamic> updatedUserData;
+      if (response['user'] != null) {
+        final backendUser = Map<String, dynamic>.from(response['user']);
+        updatedUserData = {..._userData, ...backendUser};
+      } else {
+        // Fallback manual update
+        updatedUserData = Map<String, dynamic>.from(_userData);
+        updatedUserData['school_id'] = school['school_id'];
+        updatedUserData['nama_sekolah'] =
+            school['school_name'] ?? school['nama_sekolah'];
+      }
 
       await prefs.setString('user', json.encode(updatedUserData));
 
       if (!mounted) return;
-      setState(() {
-        _userData = updatedUserData;
-      });
 
-      if (mounted) {
+      var newRole = updatedUserData['role'];
+      // Normalize role values if needed
+      if (newRole == 'teacher') newRole = 'guru';
+      if (newRole == 'parent') newRole = 'wali';
+
+      final currentRole = _effectiveRole;
+
+      // Close the dialog
+      Navigator.pop(context);
+
+      if (newRole != null && newRole != currentRole) {
+        // Role changed, navigate to new dashboard
+        Navigator.pushReplacementNamed(context, '/$newRole');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Berhasil pindah ke ${school['nama_sekolah']}'),
+            content: Text(
+              'Berhasil pindah ke ${updatedUserData['nama_sekolah']} sebagai ${_getRoleDisplayName(newRole!)}',
+            ),
           ),
         );
-        Navigator.pop(context); // Close bottom sheet
+      } else {
+        // Role same, just reload data
+        await _initializeData();
+        setState(() {
+          _userData = updatedUserData;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Berhasil pindah ke ${updatedUserData['nama_sekolah']}',
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

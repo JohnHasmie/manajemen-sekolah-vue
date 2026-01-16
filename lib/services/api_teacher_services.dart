@@ -11,16 +11,6 @@ class ApiTeacherService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
-
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
 
@@ -50,7 +40,7 @@ class ApiTeacherService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/teacher/template'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       if (response.statusCode == 200) {
@@ -96,7 +86,7 @@ class ApiTeacherService {
 
       final response = await http.get(
         Uri.parse(url),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       final result = _handleResponse(response);
@@ -129,7 +119,7 @@ class ApiTeacherService {
 
       final response = await http.get(
         Uri.parse(url),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       final result = _handleResponse(response);
@@ -185,7 +175,7 @@ class ApiTeacherService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/teacher?$queryString'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       print('GET /teacher?$queryString - Status: ${response.statusCode}');
@@ -289,7 +279,7 @@ class ApiTeacherService {
 
       final response = await http.get(
         Uri.parse(url),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       final result = _handleResponse(response);
@@ -337,7 +327,7 @@ class ApiTeacherService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/teacher/$teacherId/subjects?$queryString'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       print(

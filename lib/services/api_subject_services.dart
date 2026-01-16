@@ -10,15 +10,6 @@ class ApiSubjectService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
-
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
 
@@ -37,7 +28,7 @@ class ApiSubjectService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/subject/filter-options'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       final result = _handleResponse(response);
@@ -92,7 +83,7 @@ class ApiSubjectService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/subject?$queryString'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       print('GET /subject?$queryString - Status: ${response.statusCode}');
@@ -155,7 +146,7 @@ class ApiSubjectService {
   static Future<List<dynamic>> getAllMasterSubjects() async {
     final response = await http.get(
       Uri.parse('$baseUrl/master-subjects'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
     final result = _handleResponse(response);
     return result is List ? result : [];
@@ -166,7 +157,7 @@ class ApiSubjectService {
   }) async {
     final response = await http.get(
       Uri.parse('$baseUrl/content-material?sub_chapter_id=$subBabId'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     final result = _handleResponse(response);
@@ -179,7 +170,7 @@ class ApiSubjectService {
 
     final response = await http.get(
       Uri.parse(url),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     final result = _handleResponse(response);
@@ -190,7 +181,7 @@ class ApiSubjectService {
   static Future<List<dynamic>> getSubBabMateri({required String babId}) async {
     final response = await http.get(
       Uri.parse('$baseUrl/sub-bab-material?chapter_id=$babId'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     final result = _handleResponse(response);
@@ -201,7 +192,7 @@ class ApiSubjectService {
   static Future<dynamic> addBabMateri(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/bab-material'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -212,7 +203,7 @@ class ApiSubjectService {
   static Future<dynamic> addSubBabMateri(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/sub-bab-material'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -223,7 +214,7 @@ class ApiSubjectService {
   static Future<dynamic> addContentMateri(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/content-material'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -237,7 +228,7 @@ class ApiSubjectService {
   ) async {
     final response = await http.put(
       Uri.parse('$baseUrl/bab-material/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -251,7 +242,7 @@ class ApiSubjectService {
   ) async {
     final response = await http.put(
       Uri.parse('$baseUrl/sub-bab-material/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -265,7 +256,7 @@ class ApiSubjectService {
   ) async {
     final response = await http.put(
       Uri.parse('$baseUrl/content-material/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -276,7 +267,7 @@ class ApiSubjectService {
   static Future<void> deleteBabMateri(String id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/bab-material/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     _handleResponse(response);
@@ -286,7 +277,7 @@ class ApiSubjectService {
   static Future<void> deleteSubBabMateri(String id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/sub-bab-material/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     _handleResponse(response);
@@ -296,7 +287,7 @@ class ApiSubjectService {
   static Future<void> deleteContentMateri(String id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/content-material/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     _handleResponse(response);
@@ -313,7 +304,7 @@ class ApiSubjectService {
 
     final response = await http.get(
       Uri.parse(url),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     final result = _handleResponse(response);
@@ -323,7 +314,7 @@ class ApiSubjectService {
   static Future<dynamic> addMateri(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/materials'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -333,7 +324,7 @@ class ApiSubjectService {
   static Future<dynamic> saveRPP(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/rpp'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -343,7 +334,7 @@ class ApiSubjectService {
   static Future<List<dynamic>> getRPPByTeacher(String guruId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/rpp?teacher_id=$guruId'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     final result = _handleResponse(response);
@@ -395,7 +386,7 @@ class ApiSubjectService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/subject/template'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       if (response.statusCode == 200) {
@@ -428,7 +419,7 @@ class ApiSubjectService {
       Uri.parse(
         '$baseUrl/material-progress?teacher_id=$guruId&subject_id=$mataPelajaranId',
       ),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     final result = _handleResponse(response);
@@ -439,7 +430,7 @@ class ApiSubjectService {
   static Future<dynamic> saveMateriProgress(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/material-progress'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
 
@@ -466,7 +457,7 @@ class ApiSubjectService {
 
     final response = await http.post(
       Uri.parse('$baseUrl/material-progress/batch'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(requestData),
     );
 
@@ -489,7 +480,7 @@ class ApiSubjectService {
 
     final response = await http.post(
       Uri.parse('$baseUrl/material-progress/mark-generated'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(requestData),
     );
 
@@ -512,7 +503,7 @@ class ApiSubjectService {
 
     final response = await http.post(
       Uri.parse('$baseUrl/material-progress/reset-generated'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(requestData),
     );
 

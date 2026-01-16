@@ -10,15 +10,6 @@ class ApiClassService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
-
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
 
@@ -79,7 +70,7 @@ class ApiClassService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/class/template'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       if (response.statusCode == 200) {
@@ -118,7 +109,7 @@ class ApiClassService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/class/filter-options'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       final result = _handleResponse(response);
@@ -172,7 +163,7 @@ class ApiClassService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/class?$queryString'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       print('GET /class?$queryString - Status: ${response.statusCode}');

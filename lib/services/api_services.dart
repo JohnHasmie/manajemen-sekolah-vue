@@ -198,29 +198,53 @@ class ApiService {
     return prefs.getString('token');
   }
 
+  // Expose headers for other services
+  static Future<Map<String, String>> getHeaders() => _getHeaders();
+
   static Future<Map<String, String>> _getHeaders() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final userJson = prefs.getString('user');
 
-      // Validate token exists
-      if (token == null || token.isEmpty) {
-        await _redirectToLogin();
-        return {'Content-Type': 'application/json'};
-      }
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
 
-      return {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error getting headers: $e');
-      }
-      await _redirectToLogin();
-      return {'Content-Type': 'application/json'};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
     }
+
+    // Add school_id header if available
+    if (userJson != null) {
+      try {
+        if (kDebugMode) {
+          print('🔍 Checking headers - UserJson length: ${userJson.length}');
+          print(
+            '🔍 UserJson snippet: ${userJson.substring(0, userJson.length > 100 ? 100 : userJson.length)}',
+          );
+        }
+
+        final user = json.decode(userJson);
+
+        if (user['school_id'] != null) {
+          headers['X-School-ID'] = user['school_id'].toString();
+          if (kDebugMode)
+            print('✅ Injected X-School-ID: ${headers['X-School-ID']}');
+        } else {
+          if (kDebugMode) print('⚠️ school_id missing in user object');
+        }
+      } catch (e) {
+        // Ignore JSON parse errors
+        if (kDebugMode) {
+          print('⚠️ Failed to parse user JSON for school_id: $e');
+        }
+      }
+    } else {
+      if (kDebugMode) print('⚠️ User JSON is null in SharedPreferences');
+    }
+
+    return headers;
   }
 
   static Future<void> _redirectToLogin() async {
@@ -573,7 +597,7 @@ class ApiService {
   // Switch sekolah
   static Future<Map<String, dynamic>> switchSchool(String schoolId) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/switch-school'),
+      Uri.parse('$baseUrl/auth/switch-school'),
       headers: await _getHeaders(),
       body: json.encode({'school_id': schoolId}),
     );

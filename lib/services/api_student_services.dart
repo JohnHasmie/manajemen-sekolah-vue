@@ -11,16 +11,6 @@ class ApiStudentService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
-
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
 
@@ -146,7 +136,7 @@ class ApiStudentService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/student/template'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       if (response.statusCode == 200) {
@@ -203,7 +193,7 @@ class ApiStudentService {
 
     final response = await http.get(
       Uri.parse(url),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     final result = _handleResponse(response);
@@ -218,7 +208,7 @@ class ApiStudentService {
   static Future<dynamic> getStudentById(String id) async {
     final response = await http.get(
       Uri.parse('$baseUrl/student/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
     return _handleResponse(response);
   }
@@ -227,7 +217,7 @@ class ApiStudentService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/student/filter-options'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       final result = _handleResponse(response);
@@ -297,7 +287,7 @@ class ApiStudentService {
 
     final response = await http.get(
       Uri.parse('$baseUrl/student?$queryString'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
 
     final result = _handleResponse(response);
@@ -323,7 +313,7 @@ class ApiStudentService {
   static Future<dynamic> addStudent(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/student'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
     return _handleResponse(response);
@@ -335,7 +325,7 @@ class ApiStudentService {
   ) async {
     final response = await http.put(
       Uri.parse('$baseUrl/student/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
     _handleResponse(response);
@@ -344,7 +334,7 @@ class ApiStudentService {
   static Future<void> deleteStudent(String id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/student/$id'),
-      headers: await _getHeaders(),
+      headers: await ApiService.getHeaders(),
     );
     _handleResponse(response);
   }
@@ -353,7 +343,7 @@ class ApiStudentService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/student/class/$classId'),
-        headers: await _getHeaders(),
+        headers: await ApiService.getHeaders(),
       );
 
       final result = _handleResponse(response);
