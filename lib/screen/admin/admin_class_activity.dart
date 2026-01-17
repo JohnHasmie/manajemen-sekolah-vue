@@ -150,8 +150,14 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
         _showSubjectList = true;
       });
 
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
+
       final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
         teacherId: teacherId,
+        academicYearId: academicYearId,
       );
 
       setState(() {
