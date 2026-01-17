@@ -1379,7 +1379,11 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
 
       setState(() {
         _contentMateriList = kontenMateri
-            .where((konten) => konten['sub_bab_id'] == widget.subBab['id'])
+            .where(
+              (konten) =>
+                  (konten['sub_chapter_id'] ?? konten['sub_bab_id']) ==
+                  widget.subBab['id'],
+            )
             .toList();
         _isLoading = false;
       });
@@ -1663,7 +1667,9 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          content['judul_konten'] ?? 'Judul Konten',
+                          content['judul_konten'] ??
+                              content['title'] ??
+                              'Judul Konten',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -1673,7 +1679,9 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          content['isi_konten'] ?? 'Isi konten tidak tersedia',
+                          content['isi_konten'] ??
+                              content['description'] ??
+                              'Isi konten tidak tersedia',
                           style: TextStyle(
                             color: Colors.grey.shade700,
                             fontSize: 14,

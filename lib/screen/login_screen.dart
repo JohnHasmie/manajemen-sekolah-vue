@@ -434,7 +434,7 @@ class LoginScreenState extends State<LoginScreen> {
         ),
         SizedBox(height: 10),
         Text(
-          'Halo ${_userData?['nama']},',
+          'Halo ${_userData?['name'] ?? _userData?['nama'] ?? 'User'},',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         Text(
@@ -530,7 +530,7 @@ class LoginScreenState extends State<LoginScreen> {
         ),
         SizedBox(height: 10),
         Text(
-          'Halo ${_userData?['nama']}, silakan pilih sekolah:',
+          'Halo ${_userData?['name'] ?? _userData?['nama'] ?? 'User'}, silakan pilih sekolah:',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         SizedBox(height: 20),
@@ -543,7 +543,7 @@ class LoginScreenState extends State<LoginScreen> {
                 margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: ListTile(
                   leading: Icon(Icons.school, color: Colors.blue),
-                  title: Text(sekolah['school_name']),
+                  title: Text(sekolah['school_name'] ?? 'Sekolah Tanpa Nama'),
                   subtitle: Text(sekolah['address'] ?? ''),
                   trailing: Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () => _selectSchool(sekolah['school_id']),
@@ -730,6 +730,12 @@ class LoginScreenState extends State<LoginScreen> {
         _userData = responseData['user'];
         _isLoading = false;
       });
+      if (kDebugMode) {
+        print('🏫 School List Count: ${_schoolList.length}');
+        for (var s in _schoolList) {
+          print(' - ${s['school_name']} (${s['school_id']})');
+        }
+      }
       return;
     }
 
