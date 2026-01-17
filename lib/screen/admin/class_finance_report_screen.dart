@@ -54,8 +54,12 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         '/student/class/${widget.classId}',
       );
       List<dynamic> students = [];
-      if (studentsResponse is Map && studentsResponse.containsKey('students')) {
-        students = studentsResponse['students'];
+      if (studentsResponse is Map) {
+        if (studentsResponse.containsKey('data')) {
+          students = studentsResponse['data'];
+        } else if (studentsResponse.containsKey('students')) {
+          students = studentsResponse['students'];
+        }
       } else if (studentsResponse is List) {
         students = studentsResponse;
       }
@@ -122,14 +126,14 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       for (var pt in allPaymentTypes) pt['id'].toString(): pt,
     };
 
-    // 1. Determine Academic Year Start from earliest created_at
+    // 1. Determine Academic Year Start from earliest due_date
     int startYear = DateTime.now().year;
     DateTime? earliestDate;
 
     for (var bill in bills) {
-      if (bill['created_at'] != null) {
+      if (bill['due_date'] != null) {
         try {
-          DateTime d = DateTime.parse(bill['created_at']);
+          DateTime d = DateTime.parse(bill['due_date']);
           if (earliestDate == null || d.isBefore(earliestDate)) {
             earliestDate = d;
           }
@@ -139,6 +143,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
 
     if (earliestDate != null) {
       DateTime d = earliestDate;
+      // Many schools start academic year in July (7)
       if (d.month >= 7) {
         startYear = d.year;
       } else {
@@ -181,12 +186,12 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       DateTime date = DateTime.parse('$monthKey-01');
       String displayMonth = monthNames[date.month]!;
 
-      // Find bills for THIS month (using created_at)
+      // Find bills for THIS month (using due_date)
       List<dynamic> monthlyBills = bills.where((b) {
-        String createdAt = b['created_at'] ?? '';
+        String dueDate = b['due_date'] ?? '';
         // Approximate month match
         String bMonth = '';
-        if (createdAt.length >= 7) bMonth = createdAt.substring(0, 7);
+        if (dueDate.length >= 7) bMonth = dueDate.substring(0, 7);
         return bMonth == monthKey;
       }).toList();
 
@@ -500,10 +505,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                 var bill = studentBills.firstWhere((b) {
                   // Match type
                   if (b['payment_type_id'].toString() != type.id) return false;
-                  // Match month (created_at)
-                  if (b['created_at'] == null) return false;
+                  // Match month (due_date)
+                  if (b['due_date'] == null) return false;
                   try {
-                    DateTime d = DateTime.parse(b['created_at']);
+                    DateTime d = DateTime.parse(b['due_date']);
                     String k =
                         "${d.year}-${d.month.toString().padLeft(2, '0')}";
                     return k == group.monthKey;
