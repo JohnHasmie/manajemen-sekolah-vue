@@ -51,6 +51,15 @@ class GradePageState extends State<GradePage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  bool get _isReadOnly {
+    return Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
+  }
+
+  bool get _canEdit {
+    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+    return role == 'guru' || role == 'teacher';
+  }
+
   // Pagination State
   int _currentPage = 1;
   final int _perPage = 20;
@@ -124,7 +133,8 @@ class GradePageState extends State<GradePage> {
 
       List<dynamic> loadedClasses = [];
 
-      if (widget.teacher['role'] == 'guru') {
+      final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+      if (_canEdit && role.contains('guru')) {
         final response = await ApiTeacherService.getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
@@ -187,8 +197,11 @@ class GradePageState extends State<GradePage> {
 
       List<dynamic> subjects = [];
 
-      if (widget.teacher['role'] == 'guru') {
-        // Use TeachingSchedule to find subjects this teacher teaches in this class
+      final isHomeroom = _selectedClass?['is_homeroom'] == true;
+      final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+
+      if (role.contains('guru') && !isHomeroom) {
+        // Regular Guru: Use TeachingSchedule to find subjects this teacher teaches in this class
         final schedules = await ApiScheduleService.getSchedulesPaginated(
           limit: 100,
           guruId: widget.teacher['id'],
@@ -207,7 +220,7 @@ class GradePageState extends State<GradePage> {
         }
         subjects = uniqueSubjects.values.toList();
       } else {
-        // Admin: Get all subjects for this class
+        // Admin OR Homeroom Teacher: Get all subjects for this class
         final schedules = await ApiScheduleService.getSchedulesPaginated(
           limit: 100,
           classId: _selectedClass!['id'].toString(),
@@ -792,6 +805,19 @@ class GradeBookPageState extends State<GradeBookPage> {
   final Map<String, TextEditingController> _editControllers = {};
   final Map<String, FocusNode> _editFocusNodes = {};
 
+  bool get _canEdit {
+    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+    return role == 'guru' || role == 'teacher';
+  }
+
+  bool get _isReadOnly {
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    return academicYearProvider.isReadOnly;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -842,10 +868,17 @@ class GradeBookPageState extends State<GradeBookPage> {
         context,
         listen: false,
       ).selectedAcademicYear?['id'];
+
+      print('DEBUG: Loading grades for subject ${widget.subject['id']}');
+      print('DEBUG: Selected Academic Year ID: $academicYearId');
+
       final nilaiData = await ApiService().getNilaiByMataPelajaran(
         widget.subject['id'],
         academicYearId: academicYearId?.toString(),
+        limit: 500, // Fetch more to ensure we get all students
       );
+
+      print('DEBUG: Received ${nilaiData.length} grade items from API');
 
       setState(() {
         _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
@@ -865,7 +898,12 @@ class GradeBookPageState extends State<GradeBookPage> {
               'deskripsi': item['notes'] ?? item['deskripsi'],
               'tanggal': item['date'] ?? item['tanggal'],
               'assessment_id': item['assessment_id'],
-              'title': item['title'],
+              'title':
+                  item['title']?.toString() ??
+                  '', // Normalize title to empty string
+              'student_class_id':
+                  (item['student_class_id'] ?? item['siswa_kelas_id'])
+                      ?.toString(),
             };
           }),
         );
@@ -881,7 +919,7 @@ class GradeBookPageState extends State<GradeBookPage> {
           if (rawDate != null) {
             final datePart = rawDate.split('T')[0];
             final assessmentId = nilai['assessment_id'];
-            final title = nilai['title'];
+            final title = nilai['title'] ?? ''; // Normalize
 
             if (!_assessmentHeaders.containsKey(jenis)) {
               _assessmentHeaders[jenis] = [];
@@ -889,13 +927,22 @@ class GradeBookPageState extends State<GradeBookPage> {
 
             // Check if header already exists
             final existingIndex = _assessmentHeaders[jenis]!.indexWhere((h) {
-              if (assessmentId != null && h['id'] != null) {
-                return h['id'] == assessmentId;
+              final headerId = h['id']?.toString();
+              final currentAssessmentId = assessmentId?.toString();
+
+              // Prioritize assessment_id matching
+              if (currentAssessmentId != null && headerId != null) {
+                return headerId == currentAssessmentId;
               }
-              // Fallback for legacy data or temp data
-              // If title is present in both, compare it. If one is null, it's ambiguous.
-              // Assuming legacy data has no title.
-              return h['date'] == datePart && h['title'] == title;
+
+              // If only one has ID, they are definitely different assessments
+              if (currentAssessmentId != null || headerId != null) {
+                return false;
+              }
+
+              // Both are NULL IDs: Match by Date + Title
+              final hTitle = h['title'] ?? '';
+              return h['date'] == datePart && hTitle == title;
             });
 
             if (existingIndex == -1) {
@@ -1053,31 +1100,62 @@ class GradeBookPageState extends State<GradeBookPage> {
   }
 
   Map<String, dynamic>? _getNilaiForSiswaAndHeader(
-    String siswaId,
+    Siswa siswa,
     String jenis,
     Map<String, dynamic> header,
   ) {
     try {
       final result = _nilaiList.firstWhere((nilai) {
-        final matchSiswa = nilai['siswa_id'].toString() == siswaId;
+        // Match by Student ID OR Student Class ID for better compatibility
+        // Convert all to String for safe comparison
+        final siswaId = siswa.id.toString();
+        final studentClassId = siswa.studentClassId?.toString();
 
-        if (!matchSiswa) return false;
+        final gradeSiswaId = nilai['siswa_id']?.toString();
+        final gradeStudentClassId =
+            (nilai['student_class_id'] ?? nilai['siswa_kelas_id'])?.toString();
 
-        // Match by ID if available
-        if (header['id'] != null && nilai['assessment_id'] != null) {
-          return nilai['assessment_id'] == header['id'];
+        final matchSiswaId = gradeSiswaId == siswaId;
+        final matchStudentClassId =
+            studentClassId != null &&
+            (gradeStudentClassId == studentClassId ||
+                gradeSiswaId == studentClassId);
+
+        /* DEBUG LOGGING - UNCOMMENT IF NEEDED
+        if (siswaId == "TARGET_ID") {
+           print('DEBUG MATCH: Siswa($siswaId, $studentClassId) vs Grade($gradeSiswaId, $gradeStudentClassId) -> ID:$matchSiswaId, SCID:$matchStudentClassId');
+        }
+        */
+
+        if (!matchSiswaId && !matchStudentClassId) return false;
+
+        // Strictly Match by ID if available (Prioritize assessment_id matching as requested)
+        final headerId = header['id']?.toString();
+        final currentAssessmentId = nilai['assessment_id']?.toString();
+
+        if (headerId != null && currentAssessmentId != null) {
+          if (headerId != currentAssessmentId) return false;
+        } else if (headerId != null || currentAssessmentId != null) {
+          // If only one has ID, they are different assessments
+          return false;
         }
 
-        // Fallback: Match by Date + Title + Type
+        // If we reach here, either both IDs are NULL or they matched.
+        // If IDs matched, we are good. If both are NULL, we check fallback.
+
         final nilaiDate = nilai['tanggal']?.toString().split('T')[0];
         final nilaiJenis = nilai['jenis']?.toString().toLowerCase();
 
+        // Normalize titles for comparison
+        final nTitle = nilai['title']?.toString() ?? '';
+        final hTitle = header['title']?.toString() ?? '';
+
         return nilaiJenis == jenis.toLowerCase() &&
             nilaiDate == header['date'] &&
-            nilai['title'] == header['title'];
+            nTitle == hTitle;
       }, orElse: () => <String, dynamic>{});
 
-      return result;
+      return result.isEmpty ? null : result;
     } catch (e) {
       return null;
     }
@@ -1090,7 +1168,7 @@ class GradeBookPageState extends State<GradeBookPage> {
     Map<String, dynamic>? header,
   }) {
     final existingNilai = header != null
-        ? _getNilaiForSiswaAndHeader(siswa.id, jenisNilai, header)
+        ? _getNilaiForSiswaAndHeader(siswa, jenisNilai, header)
         : null;
 
     Navigator.push(
@@ -1101,11 +1179,10 @@ class GradeBookPageState extends State<GradeBookPage> {
           subject: widget.subject,
           siswa: siswa,
           jenisNilai: jenisNilai,
-          existingNilai: existingNilai?.isNotEmpty == true
-              ? existingNilai
-              : null,
+          existingNilai: existingNilai,
+          assessmentId: header?['id'], // Pass assessment ID
           initialDate: header != null ? DateTime.parse(header['date']) : null,
-          // TODO: Pass title to GradeInputForm if supported
+          initialTitle: header?['title'],
         ),
       ),
     ).then((_) {
@@ -1170,7 +1247,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                   _showAssessmentDetail(jenis, header, languageProvider);
                 },
               ),
-              if (widget.teacher['role'] == 'guru') ...[
+              if (_canEdit && !_isReadOnly) ...[
                 ListTile(
                   leading: Container(
                     padding: EdgeInsets.all(8),
@@ -1257,7 +1334,7 @@ class GradeBookPageState extends State<GradeBookPage> {
 
       // Initialize controllers for all students
       for (var siswa in _filteredSiswaList) {
-        final nilaiData = _getNilaiForSiswaAndHeader(siswa.id, jenis, header);
+        final nilaiData = _getNilaiForSiswaAndHeader(siswa, jenis, header);
 
         final nilaiKey = "${siswa.id}_nilai";
         _editControllers[nilaiKey] = TextEditingController(
@@ -1267,7 +1344,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         _editFocusNodes[nilaiKey]!.addListener(() {
           if (!_editFocusNodes[nilaiKey]!.hasFocus) {
             _saveInlineGrade(
-              siswa.id,
+              siswa,
               jenis,
               header,
               'nilai',
@@ -1285,7 +1362,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         _editFocusNodes[deskripsiKey]!.addListener(() {
           if (!_editFocusNodes[deskripsiKey]!.hasFocus) {
             _saveInlineGrade(
-              siswa.id,
+              siswa,
               jenis,
               header,
               'deskripsi',
@@ -1298,7 +1375,7 @@ class GradeBookPageState extends State<GradeBookPage> {
   }
 
   Future<void> _saveInlineGrade(
-    String siswaId,
+    Siswa siswa,
     String jenis,
     Map<String, dynamic> header,
     String field,
@@ -1306,7 +1383,7 @@ class GradeBookPageState extends State<GradeBookPage> {
     bool reload = true,
   }) async {
     // Check if value changed
-    final currentData = _getNilaiForSiswaAndHeader(siswaId, jenis, header);
+    final currentData = _getNilaiForSiswaAndHeader(siswa, jenis, header);
     final currentValue = currentData?[field]?.toString() ?? '';
 
     // If value is empty and was empty, do nothing
@@ -1317,7 +1394,8 @@ class GradeBookPageState extends State<GradeBookPage> {
 
     try {
       final data = {
-        'student_id': siswaId,
+        'student_id': siswa.id,
+        'student_class_id': siswa.studentClassId,
         'teacher_id': widget.teacher['id'],
         'subject_id': widget.subject['id'],
         'type': jenis,
@@ -1407,7 +1485,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                       // Save Nilai
                       if (_editControllers.containsKey(nilaiKey)) {
                         await _saveInlineGrade(
-                          siswa.id,
+                          siswa,
                           _editJenis!,
                           _editHeader!,
                           'nilai',
@@ -1419,7 +1497,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                       // Save Deskripsi
                       if (_editControllers.containsKey(deskripsiKey)) {
                         await _saveInlineGrade(
-                          siswa.id,
+                          siswa,
                           _editJenis!,
                           _editHeader!,
                           'deskripsi',
@@ -1576,10 +1654,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                               child: TextFormField(
                                 controller: _editControllers[nilaiKey],
                                 focusNode: _editFocusNodes[nilaiKey],
-                                enabled: !Provider.of<AcademicYearProvider>(
-                                  context,
-                                  listen: false,
-                                ).isReadOnly,
+                                enabled: !_isReadOnly,
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.center,
                                 decoration: InputDecoration(
@@ -1592,7 +1667,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                 ),
                                 onFieldSubmitted: (value) {
                                   _saveInlineGrade(
-                                    siswa.id,
+                                    siswa,
                                     _editJenis!,
                                     _editHeader!,
                                     'nilai',
@@ -1611,10 +1686,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                 child: TextFormField(
                                   controller: _editControllers[deskripsiKey],
                                   focusNode: _editFocusNodes[deskripsiKey],
-                                  enabled: !Provider.of<AcademicYearProvider>(
-                                    context,
-                                    listen: false,
-                                  ).isReadOnly,
+                                  enabled: !_isReadOnly,
                                   decoration: InputDecoration(
                                     isDense: true,
                                     border: InputBorder.none,
@@ -1630,7 +1702,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                   ),
                                   onFieldSubmitted: (value) {
                                     _saveInlineGrade(
-                                      siswa.id,
+                                      siswa,
                                       _editJenis!,
                                       _editHeader!,
                                       'deskripsi',
@@ -1679,10 +1751,10 @@ class GradeBookPageState extends State<GradeBookPage> {
     double totalNilai = 0;
 
     for (var siswa in _siswaList) {
-      final nilai = _getNilaiForSiswaAndHeader(siswa.id, jenis, header);
-      if (nilai != null && nilai.isNotEmpty) {
+      final existingNilai = _getNilaiForSiswaAndHeader(siswa, jenis, header);
+      if (existingNilai != null && existingNilai.isNotEmpty) {
         gradedCount++;
-        totalNilai += double.tryParse(nilai['nilai'].toString()) ?? 0.0;
+        totalNilai += double.tryParse(existingNilai['nilai'].toString()) ?? 0.0;
       }
     }
 
@@ -1968,144 +2040,194 @@ class GradeBookPageState extends State<GradeBookPage> {
   }
 
   Widget _buildGradeTable(LanguageProvider languageProvider) {
-    // Calculate total width based on columns
-    double totalWidth = 120.0; // Name column
+    // Left side: Fixed names (120px)
+    final leftSide = Container(
+      width: 120,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          right: BorderSide(color: Colors.grey.shade300, width: 2),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header Nama
+          Container(
+            height: 70, // Matches right side header height
+            width: 120,
+            padding: EdgeInsets.all(12),
+            alignment: Alignment.centerLeft,
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Text(
+              languageProvider.getTranslatedText({'en': 'Name', 'id': 'Nama'}),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+          // Student Names
+          ..._filteredSiswaList.map((siswa) {
+            return Container(
+              height: 60,
+              width: 120,
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                color: Colors.white,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    siswa.name,
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  Text(
+                    '${languageProvider.getTranslatedText({'en': 'NIS', 'id': 'NIS'})}: ${siswa.nis}',
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
 
+    // Right side items calculation
+    double rightSideWidth = 0;
     for (var jenis in _filteredJenisNilaiList) {
       final headers = _assessmentHeaders[jenis] ?? [];
-      // Width for assessment columns + 1 for "Add" button column
-      totalWidth += (headers.length * 90.0) + 50.0;
+      rightSideWidth +=
+          (headers.length * 90.0) +
+          (_canEdit && !_isReadOnly ? 65.0 : 0.0); // Increased spacer to 65
     }
 
-    return SingleChildScrollView(
+    final rightSide = SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       controller: _horizontalScrollController,
       child: SizedBox(
-        width: totalWidth,
+        width: rightSideWidth,
         child: Column(
           children: [
-            // Header tabel
+            // Right Header Row
             Container(
-              height: 60,
+              height: 70,
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
                 border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
               ),
               child: Row(
-                children: [
-                  // Kolom Nama Siswa - Lebar tetap
-                  Container(
-                    width: 120,
-                    padding: EdgeInsets.all(12),
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Name',
-                        'id': 'Nama',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  // Kolom jenis nilai (Dynamic)
-                  ..._filteredJenisNilaiList.expand((jenis) {
-                    final headers = _assessmentHeaders[jenis] ?? [];
+                children: _filteredJenisNilaiList.expand((jenis) {
+                  final headers = _assessmentHeaders[jenis] ?? [];
+                  List<Widget> widgets = [];
 
-                    List<Widget> columns = [];
+                  // Existing columns headers
+                  for (var header in headers) {
+                    String date = header['date'];
+                    String? title = header['title'];
+                    final parts = date.split('-');
+                    final displayDate = parts.length == 3
+                        ? "${parts[2]}/${parts[1]}"
+                        : date;
 
-                    // Existing assessment columns
-                    for (var header in headers) {
-                      String date = header['date'];
-                      String? title = header['title'];
-
-                      // Format date for display (e.g. 10/10)
-                      final parts = date.split('-');
-                      final displayDate = parts.length == 3
-                          ? "${parts[2]}/${parts[1]}"
-                          : date;
-
-                      columns.add(
-                        InkWell(
-                          onTap: () => _showColumnOptions(
-                            jenis,
-                            header,
-                            languageProvider,
-                          ),
-                          child: Container(
-                            width: 90,
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Colors.grey.shade300),
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  // Show Title if available, else Type label
-                                  title != null && title.isNotEmpty
-                                      ? title
-                                      : _getJenisNilaiLabel(
-                                          jenis,
-                                          languageProvider,
-                                        ),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  displayDate,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade700,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-
-                    // Add button column (Only for Guru)
-                    if (widget.teacher['role'] == 'guru')
-                      columns.add(
-                        Container(
-                          width: 50,
+                    widgets.add(
+                      InkWell(
+                        onTap: () =>
+                            _showColumnOptions(jenis, header, languageProvider),
+                        child: Container(
+                          width: 90,
                           padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             border: Border(
-                              right: BorderSide(
-                                color: Colors.grey.shade400,
-                                width: 2,
-                              ),
+                              right: BorderSide(color: Colors.grey.shade300),
                             ),
                           ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.add_circle_outline,
-                              size: 20,
-                              color: _getPrimaryColor(),
-                            ),
-                            onPressed: () => _addNewAssessment(jenis),
-                            tooltip: "Add $jenis",
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                title != null && title.isNotEmpty
+                                    ? title
+                                    : _getJenisNilaiLabel(
+                                        jenis,
+                                        languageProvider,
+                                      ),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                displayDate,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey.shade700,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         ),
-                      );
+                      ),
+                    );
+                  }
 
-                    return columns;
-                  }),
-                ],
+                  // Add button header
+                  if (_canEdit && !_isReadOnly) {
+                    widgets.add(
+                      Container(
+                        width: 65,
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            right: BorderSide(
+                              color: Colors.grey.shade400,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _getJenisNilaiLabel(jenis, languageProvider),
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 2),
+                            InkWell(
+                              onTap: () => _addNewAssessment(jenis),
+                              child: Icon(
+                                Icons.add_circle_outline,
+                                size: 20,
+                                color: _getPrimaryColor(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return widgets;
+                }).toList(),
               ),
             ),
-            // Body tabel
+            // Right Side Rows (Values)
             ..._filteredSiswaList.map((siswa) {
               return Container(
                 height: 60,
@@ -2115,128 +2237,103 @@ class GradeBookPageState extends State<GradeBookPage> {
                   ),
                 ),
                 child: Row(
-                  children: [
-                    // Kolom Nama Siswa - Tetap
-                    Container(
-                      width: 120,
-                      padding: EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            siswa.name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                  children: _filteredJenisNilaiList.expand((jenis) {
+                    final headers = _assessmentHeaders[jenis] ?? [];
+                    List<Widget> widgets = [];
+
+                    for (var header in headers) {
+                      final nilai = _getNilaiForSiswaAndHeader(
+                        siswa,
+                        jenis,
+                        header,
+                      );
+                      final nilaiText = nilai?.isNotEmpty == true
+                          ? _formatGradeValue(nilai!['nilai'])
+                          : '-';
+                      final hasValue = nilai?.isNotEmpty == true;
+
+                      widgets.add(
+                        Container(
+                          width: 90,
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              right: BorderSide(color: Colors.grey.shade100),
                             ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
                           ),
-                          Text(
-                            '${languageProvider.getTranslatedText({'en': 'NIS', 'id': 'NIS'})}: ${siswa.nis}',
-                            style: TextStyle(fontSize: 10, color: Colors.grey),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Kolom Nilai (Dynamic)
-                    ..._filteredJenisNilaiList.expand((jenis) {
-                      final headers = _assessmentHeaders[jenis] ?? [];
-
-                      List<Widget> columns = [];
-
-                      // Existing columns
-                      for (var header in headers) {
-                        final nilai = _getNilaiForSiswaAndHeader(
-                          siswa.id,
-                          jenis,
-                          header,
-                        );
-                        final nilaiText = nilai?.isNotEmpty == true
-                            ? _formatGradeValue(nilai!['nilai'])
-                            : '-';
-                        final hasValue = nilai?.isNotEmpty == true;
-
-                        columns.add(
-                          Container(
-                            width: 90,
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Colors.grey.shade100),
-                              ),
-                            ),
-                            child: GestureDetector(
-                              onTap: widget.teacher['role'] == 'guru'
-                                  ? () => _openInputForm(
-                                      siswa,
-                                      jenis,
-                                      languageProvider,
-                                      header: header,
-                                    )
-                                  : null,
-                              child: Container(
-                                height: 40,
-                                padding: EdgeInsets.all(6),
-                                decoration: BoxDecoration(
+                          child: GestureDetector(
+                            onTap: (_canEdit && !_isReadOnly)
+                                ? () => _openInputForm(
+                                    siswa,
+                                    jenis,
+                                    languageProvider,
+                                    header: header,
+                                  )
+                                : null,
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: hasValue
+                                    ? Colors.green.shade50
+                                    : Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
                                   color: hasValue
-                                      ? Colors.green.shade50
-                                      : Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(
+                                      ? Colors.green.shade200
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  nilaiText,
+                                  style: TextStyle(
+                                    fontWeight: hasValue
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                     color: hasValue
-                                        ? Colors.green.shade200
-                                        : Colors.grey.shade300,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    nilaiText,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontWeight: hasValue
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                      color: hasValue
-                                          ? Colors.green.shade800
-                                          : Colors.grey.shade600,
-                                      fontSize: 12,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                        ? Colors.green.shade800
+                                        : Colors.grey.shade600,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        );
-                      }
+                        ),
+                      );
+                    }
 
-                      // Spacer for Add button column (Only for Guru)
-                      if (widget.teacher['role'] == 'guru')
-                        columns.add(
-                          Container(
-                            width: 50,
-                            decoration: BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Colors.grey.shade200),
-                              ),
-                              color: Colors.grey.shade50.withOpacity(0.5),
+                    if (_canEdit && !_isReadOnly) {
+                      widgets.add(
+                        Container(
+                          width: 65,
+                          decoration: BoxDecoration(
+                            border: Border(
+                              right: BorderSide(color: Colors.grey.shade200),
                             ),
+                            color: Colors.grey.shade50.withOpacity(0.3),
                           ),
-                        );
+                        ),
+                      );
+                    }
 
-                      return columns;
-                    }),
-                  ],
+                    return widgets;
+                  }).toList(),
                 ),
               );
             }),
           ],
         ),
+      ),
+    );
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          leftSide,
+          Expanded(child: rightSide),
+        ],
       ),
     );
   }
@@ -2512,8 +2609,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                     ),
                   ],
                 ),
-          floatingActionButton:
-              (_isEditMode || widget.teacher['role'] != 'guru')
+          floatingActionButton: (_isEditMode || !_canEdit || _isReadOnly)
               ? null
               : FloatingActionButton(
                   onPressed: () => _openNewInputForm(languageProvider),
@@ -2534,6 +2630,7 @@ class GradeInputForm extends StatefulWidget {
   final Siswa siswa;
   final String jenisNilai;
   final Map<String, dynamic>? existingNilai;
+  final dynamic assessmentId; // Added assessmentId
   final DateTime? initialDate;
   final String? initialTitle;
 
@@ -2544,6 +2641,7 @@ class GradeInputForm extends StatefulWidget {
     required this.siswa,
     required this.jenisNilai,
     this.existingNilai,
+    this.assessmentId, // Added assessmentId
     this.initialDate,
     this.initialTitle,
   });
@@ -2558,6 +2656,15 @@ class GradeInputFormState extends State<GradeInputForm> {
   final TextEditingController _deskripsiController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+
+  bool get _canEdit {
+    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+    return role == 'guru' || role == 'teacher';
+  }
+
+  bool get _isReadOnly {
+    return Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
+  }
 
   @override
   void initState() {
@@ -2605,11 +2712,7 @@ class GradeInputFormState extends State<GradeInputForm> {
   }
 
   Future<void> _submitNilai() async {
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
-    if (academicYearProvider.isReadOnly) {
+    if (_isReadOnly) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -2634,9 +2737,15 @@ class GradeInputFormState extends State<GradeInputForm> {
       try {
         final data = {
           'student_id': widget.siswa.id,
+          'student_class_id':
+              widget.siswa.studentClassId, // Added for completeness
           'teacher_id': widget.teacher['id'],
           'subject_id': widget.subject['id'],
           'type': widget.jenisNilai,
+          'assessment_id':
+              widget.assessmentId ??
+              widget
+                  .existingNilai?['assessment_id'], // Priority on assessmentId
           'score': double.parse(_nilaiController.text),
           'notes': _deskripsiController.text,
           'title': _titleController.text.isNotEmpty
@@ -3004,6 +3113,15 @@ class GradeInputFormNew extends StatefulWidget {
 class GradeInputFormNewState extends State<GradeInputFormNew> {
   final _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime.now();
+
+  bool get _canEdit {
+    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+    return role == 'guru' || role == 'teacher';
+  }
+
+  bool get _isReadOnly {
+    return Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
+  }
 
   // Variabel untuk state
   String? _selectedJenisNilai;
@@ -3666,9 +3784,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed:
-                  (_selectedJenisNilai != null &&
-                      !Provider.of<AcademicYearProvider>(context).isReadOnly)
+              onPressed: (_selectedJenisNilai != null && !_isReadOnly)
                   ? () {
                       setState(() {
                         _isConfigurationSet = true;

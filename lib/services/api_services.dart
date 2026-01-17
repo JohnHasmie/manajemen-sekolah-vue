@@ -123,10 +123,11 @@ class ApiService {
   Future<List<dynamic>> getNilaiByMataPelajaran(
     String mataPelajaranId, {
     String? academicYearId,
+    int limit = 100, // Added limit
   }) async {
     try {
       // Use backend filtering
-      String url = '/grades?subject_id=$mataPelajaranId';
+      String url = '/grades?subject_id=$mataPelajaranId&limit=$limit';
       if (academicYearId != null) {
         url += '&academic_year_id=$academicYearId';
       }

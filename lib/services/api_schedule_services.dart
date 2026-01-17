@@ -23,13 +23,7 @@ class ApiScheduleService {
   }
 
   static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+    return ApiService.getHeaders();
   }
 
   static dynamic _handleResponse(http.Response response) {
