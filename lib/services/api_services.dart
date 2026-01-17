@@ -351,17 +351,18 @@ class ApiService {
   }
 
   Future<List<dynamic>> getData(String endpoint) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/$endpoint'),
-      headers: {
-        'Content-Type': 'application/json',
-        // Add authorization header if needed
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body) as List<dynamic>;
-    } else {
-      throw Exception('Failed to load data');
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/$endpoint'),
+        headers: await _getHeaders(),
+      );
+      final result = _handleResponse(response);
+      return result is List ? result : [];
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ getData Error on $endpoint: $e');
+      }
+      return [];
     }
   }
 
@@ -1053,15 +1054,15 @@ class ApiService {
 
       if (guruId != null && guruId.isNotEmpty) params['teacher_id'] = guruId;
       if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
-        params['subject_id'] = mataPelajaranId;
+        params['mataPelajaranId'] = mataPelajaranId;
       }
-      if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
-      if (tanggal != null && tanggal.isNotEmpty) params['date'] = tanggal;
+      if (classId != null && classId.isNotEmpty) params['classId'] = classId;
+      if (tanggal != null && tanggal.isNotEmpty) params['tanggal'] = tanggal;
       if (tanggalStart != null && tanggalStart.isNotEmpty) {
-        params['start_date'] = tanggalStart;
+        params['tanggalStart'] = tanggalStart;
       }
       if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
-        params['end_date'] = tanggalEnd;
+        params['tanggalEnd'] = tanggalEnd;
       }
 
       final uri = Uri.parse(

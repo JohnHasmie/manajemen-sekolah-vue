@@ -334,13 +334,9 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         page: _currentPage,
         limit: _perPage,
         mataPelajaranId: _selectedSubjectIds.isNotEmpty
-            ? _selectedSubjectIds
-                  .first // Currently API supports single subject filter, or we can update backend to support array
+            ? _selectedSubjectIds.first
             : null,
-        classId: _selectedClassIds.isNotEmpty
-            ? _selectedClassIds
-                  .first // Currently API supports single class filter
-            : null,
+        classId: _selectedClassIds.isNotEmpty ? _selectedClassIds.first : null,
         tanggal: tanggal,
         tanggalStart: tanggalStart,
         tanggalEnd: tanggalEnd,
