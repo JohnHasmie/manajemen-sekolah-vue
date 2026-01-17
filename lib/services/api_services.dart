@@ -902,10 +902,10 @@ class ApiService {
   }) async {
     String url = '$baseUrl/attendance?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
-    if (date != null) url += 'date=$date&';
-    if (subjectId != null) url += 'subject_id=$subjectId&';
+    if (date != null) url += 'tanggal=$date&';
+    if (subjectId != null) url += 'mataPelajaranId=$subjectId&';
     if (studentId != null) url += 'student_id=$studentId&';
-    if (classId != null) url += 'class_id=$classId&';
+    if (classId != null) url += 'classId=$classId&';
     if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
 
     if (kDebugMode) {

@@ -1580,6 +1580,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
       final absensiData = await ApiService.getAbsensi(
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
+        classId: widget.classId,
       );
 
       // 2. Load students by class ID (from widget parameter)
