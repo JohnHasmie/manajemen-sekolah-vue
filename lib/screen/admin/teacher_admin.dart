@@ -907,7 +907,21 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
     // New fields for updated structure
     String? selectedGender = teacher?['gender']?.toString();
-    String? selectedWaliKelasId = teacher?['homeroom_class_id']?.toString();
+
+    // Fix: Check Object/List first for homeroom ID
+    String? selectedWaliKelasId;
+    if (teacher != null) {
+      if (teacher['homeroom_class'] != null &&
+          teacher['homeroom_class'] is Map) {
+        selectedWaliKelasId = teacher['homeroom_class']['id']?.toString();
+      } else if (teacher['homeroom_classes'] != null &&
+          teacher['homeroom_classes'] is List &&
+          (teacher['homeroom_classes'] as List).isNotEmpty) {
+        selectedWaliKelasId = teacher['homeroom_classes'][0]['id']?.toString();
+      } else {
+        selectedWaliKelasId = teacher?['homeroom_class_id']?.toString();
+      }
+    }
 
     // Normalize employment_status - convert Indonesian translations to English values
     String? rawStatus = teacher?['employment_status']?.toString();
