@@ -98,12 +98,18 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
   Future<void> _loadMasterSubjects() async {
     try {
       final data = await ApiSubjectService.getAllMasterSubjects();
+      if (kDebugMode) {
+        print('✅ Master Subjects Loaded: ${data.length} items');
+        if (data.isNotEmpty) {
+          print('First item: ${data[0]}');
+        }
+      }
       setState(() {
         _availableMasterSubjects = data;
       });
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading master subjects: $e');
+        print('❌ Error loading master subjects: $e');
       }
     }
   }
