@@ -24,6 +24,7 @@ import 'package:manajemensekolah/screen/guru/teaching_schedule.dart';
 import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_billing.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
+import 'package:manajemensekolah/screen/walimurid/parent_grade_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/presence_parent.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
@@ -2536,6 +2537,19 @@ class _DashboardState extends State<Dashboard>
             );
           },
         ),
+        _buildDashboardCard('Nilai', Icons.grade_outlined, () {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ParentGradeScreen(academicYearId: academicYearId),
+            ),
+          );
+        }),
         _buildDashboardCard(
           AppLocalizations.presence.tr,
           Icons.check_circle_outline,

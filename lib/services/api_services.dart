@@ -619,12 +619,14 @@ class ApiService {
     String? guruId,
     String? mataPelajaranId,
     String? jenis,
+    String? academicYearId,
   }) async {
-    String url = '$baseUrl/grade?';
+    String url = '$baseUrl/grades?';
     if (siswaId != null) url += 'student_id=$siswaId&';
     if (guruId != null) url += 'teacher_id=$guruId&';
     if (mataPelajaranId != null) url += 'subject_id=$mataPelajaranId&';
     if (jenis != null) url += 'grade_type=$jenis&';
+    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
 
     final response = await http.get(
       Uri.parse(url),
@@ -632,7 +634,11 @@ class ApiService {
     );
 
     final result = _handleResponse(response);
-    return result is List ? result : [];
+    if (result is List) return result;
+    if (result is Map && result.containsKey('data') && result['data'] is List) {
+      return result['data'];
+    }
+    return [];
   }
 
   static Future<dynamic> tambahNilai(Map<String, dynamic> data) async {
