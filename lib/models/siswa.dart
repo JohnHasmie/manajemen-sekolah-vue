@@ -25,7 +25,7 @@ class Siswa {
     return Siswa(
       id: json['id'].toString(),
       name: json['name'] ?? '',
-      className: json['kelas_nama'] ?? '',
+      className: json['kelas_nama'] ?? json['class']?['name'] ?? '',
       nis: json['student_number'] ?? '',
       alamat: json['address'] ?? '',
       nameParent: json['guardian_name'] ?? '',

@@ -188,6 +188,7 @@ class ApiStudentService {
   static Future<List<dynamic>> getStudent({
     String? academicYearId,
     String? userId,
+    String? guardianEmail,
   }) async {
     String url = '$baseUrl/student';
     List<String> queryParams = [];
@@ -197,6 +198,9 @@ class ApiStudentService {
     }
     if (userId != null) {
       queryParams.add('user_id=$userId');
+    }
+    if (guardianEmail != null) {
+      queryParams.add('guardian_email=$guardianEmail');
     }
 
     if (queryParams.isNotEmpty) {

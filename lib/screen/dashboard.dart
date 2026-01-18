@@ -605,17 +605,23 @@ class _DashboardState extends State<Dashboard>
         print('👤 Mencari data siswa untuk parent: $parentId');
       }
 
-      final allStudents = await ApiStudentService.getStudent(userId: parentId);
+      final userData = _userData;
+      final guardianEmail = userData['email'];
+
+      final allStudents = await ApiStudentService.getStudent(
+        userId: parentId,
+        guardianEmail: guardianEmail,
+      );
+
       if (kDebugMode) {
         print(
-          '🎒 Total siswa ditemukan untuk user $parentId: ${allStudents.length}',
+          '🎒 Total siswa ditemukan untuk user $parentId (Email: $guardianEmail): ${allStudents.length}',
         );
       }
 
-      final userData = _userData;
       if (kDebugMode) {
         print(
-          '📧 Email wali: ${userData['email']}, Nama wali: ${userData['nama']}',
+          '📧 Email wali: ${userData['email']}, Nama wali: ${userData['name']}',
         );
       }
 

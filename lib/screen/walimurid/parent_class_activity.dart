@@ -63,12 +63,14 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userData = json.decode(prefs.getString('user') ?? '{}');
-      final parentId = userData['id']?.toString() ?? '';
+      final userId = userData['id']?.toString() ?? '';
+      final guardianEmail = userData['email']?.toString();
 
       // Dapatkan siswa yang difilter server-side berdasarkan userId parent
       final allStudents = await ApiStudentService.getStudent(
         academicYearId: widget.academicYearId,
-        userId: parentId, // Filter server-side
+        userId: userId, // Filter server-side
+        guardianEmail: guardianEmail,
       );
 
       // Filter siswa berdasarkan berbagai kemungkinan relasi
@@ -78,9 +80,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
             student['guardian_name'] ==
                 userData['name'] || // Fix: userData['name']
             student['user_id'].toString() ==
-                parentId || // Match user_id (Student.user_id)
-            student['parent_id'].toString() == parentId || // Legacy check
-            student['wali_id'].toString() == parentId || // Legacy check
+                userId || // Match user_id (Student.user_id)
+            student['parent_id'].toString() == userId || // Legacy check
+            student['wali_id'].toString() == userId || // Legacy check
             (userData['student_id'] != null &&
                 student['id'] == userData['student_id']) ||
             (userData['siswa_id'] != null &&
@@ -230,7 +232,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                             ),
                           ),
                           Text(
-                            'Kelas: ${student['kelas_nama'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
+                            'Kelas: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade600,
