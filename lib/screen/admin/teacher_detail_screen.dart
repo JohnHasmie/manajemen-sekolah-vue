@@ -20,7 +20,6 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
   final ApiSubjectService apiSubjectService = ApiSubjectService();
 
   Map<String, dynamic>? _teacherDetail;
-  List<dynamic> _classes = [];
   List<dynamic> _subjects = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -59,12 +58,10 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
       );
 
       // Fetch all classes and subjects for mapping
-      final classes = await apiClassService.getClass();
       final subjects = await apiSubjectService.getSubject();
 
       setState(() {
         _teacherDetail = teacherDetail;
-        _classes = classes;
         _subjects = subjects;
         _isLoading = false;
       });
@@ -205,23 +202,18 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
       dynamic ids,
       List<dynamic> sourceList,
     ) {
-      // 1. Try to use direct objects (e.g. from eager loading)
       if (objects != null && objects is List && objects.isNotEmpty) {
         return objects
             .map((item) => item['name']?.toString() ?? 'Unknown')
             .toList();
       }
-
-      // 2. Fallback to IDs
       if (ids == null) return [];
-
       List<String> idList = [];
       if (ids is List) {
         idList = ids.map((e) => e.toString()).toList();
       } else if (ids is String && ids.isNotEmpty) {
         idList = ids.split(',').map((e) => e.trim()).toList();
       }
-
       return idList.map((id) {
         final item = sourceList.firstWhere(
           (element) => element['id'].toString() == id,
@@ -234,49 +226,52 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
     // Use widget.teacher as fallback for IDs if _teacherDetail doesn't have them
     final effectiveTeacher = _teacherDetail ?? widget.teacher;
 
-    final displayClassNames = getNames(
-      effectiveTeacher['classes'],
-      effectiveTeacher['class_ids'] ?? widget.teacher['class_ids'],
-      _classes,
-    );
-
     final displaySubjectNames = getNames(
       effectiveTeacher['subjects'],
       effectiveTeacher['subject_ids'] ?? widget.teacher['subject_ids'],
       _subjects,
     );
 
-    // Determine Homeroom Status
-    String homeroomStatus = 'Tidak';
-    dynamic homeroomClassObj;
+    // 1. Get Teaching Classes from Schedules
+    List<String> teachingClassNames = [];
+    if (effectiveTeacher['teaching_schedules'] != null &&
+        effectiveTeacher['teaching_schedules'] is List) {
+      final schedules = effectiveTeacher['teaching_schedules'] as List;
+      final uniqueClassNames = <String>{};
+      for (var schedule in schedules) {
+        if (schedule['class'] != null && schedule['class']['name'] != null) {
+          uniqueClassNames.add(schedule['class']['name'].toString());
+        }
+      }
+      teachingClassNames = uniqueClassNames.toList()..sort();
+    } else {
+      // Fallback to legacy 'classes' if schedules empty (though user asked for schedules)
+      // actually user explicitly asked "pada kelas itu mengambil list kelasnya dari table teaching_schedules"
+      // so we prioritizing schedules.
+      // If schedules specific logic returns empty, valid result is empty.
+    }
 
-    // 1. Try to get whole object from relation (shimmed or direct)
-    if (effectiveTeacher['homeroom_class'] != null) {
-      if (effectiveTeacher['homeroom_class'] is Map) {
-        homeroomClassObj = effectiveTeacher['homeroom_class'];
-      } else if (effectiveTeacher['homeroom_class'] is List &&
-          (effectiveTeacher['homeroom_class'] as List).isNotEmpty) {
-        homeroomClassObj = effectiveTeacher['homeroom_class'][0];
+    // Determine Homeroom Status
+    String homeroomStatus = '-';
+    // 1. Check homeroomClasses (plural) from new backend
+    if (effectiveTeacher['homeroom_classes'] != null &&
+        effectiveTeacher['homeroom_classes'] is List &&
+        (effectiveTeacher['homeroom_classes'] as List).isNotEmpty) {
+      final classes = effectiveTeacher['homeroom_classes'] as List;
+      final names = classes
+          .where((c) => c['name'] != null)
+          .map((c) => c['name'].toString())
+          .toList();
+
+      if (names.isNotEmpty) {
+        homeroomStatus = 'Ya, Kelas ${names.join(", ")}';
       }
     }
-
-    // 2. If found object, use it
-    if (homeroomClassObj != null) {
-      homeroomStatus = 'Ya, Kelas ${homeroomClassObj['name']}';
-    }
-    // 3. Fallback to ID lookup if we have ID but no object
-    else {
-      final homeroomClassId =
-          effectiveTeacher['homeroom_class_id'] ??
-          widget.teacher['homeroom_class_id'];
-      if (homeroomClassId != null) {
-        final foundClass = _classes.firstWhere(
-          (c) => c['id'].toString() == homeroomClassId.toString(),
-          orElse: () => null,
-        );
-        if (foundClass != null) {
-          homeroomStatus = 'Ya, Kelas ${foundClass['name']}';
-        }
+    // 2. Fallback to legacy single 'homeroom_class' object
+    else if (effectiveTeacher['homeroom_class'] != null) {
+      if (effectiveTeacher['homeroom_class'] is Map) {
+        homeroomStatus =
+            'Ya, Kelas ${effectiveTeacher['homeroom_class']['name']}';
       }
     }
 
@@ -520,9 +515,9 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
                         SizedBox(height: 12),
                         _buildInfoRow(
                           'Kelas',
-                          displayClassNames.isNotEmpty
-                              ? displayClassNames
-                              : 'Belum ditugaskan',
+                          teachingClassNames.isNotEmpty
+                              ? teachingClassNames
+                              : 'Belum dijadwalkan',
                           isMultiline: true,
                         ),
                         _buildInfoRow(
