@@ -541,6 +541,7 @@ class ApiScheduleService {
       print('Import Schedule Response Body: $responseBody');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        invalidateCache(); // Force refresh data after import
         return json.decode(responseBody);
       } else {
         throw Exception(

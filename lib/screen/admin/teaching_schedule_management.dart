@@ -509,6 +509,9 @@ class TeachingScheduleManagementScreenState
           File(result.files.single.path!),
         );
 
+        // Force invalidation of cache to ensure fresh data
+        ApiScheduleService.invalidateCache();
+
         // Reload data
         _loadData();
 
