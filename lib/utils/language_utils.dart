@@ -280,8 +280,8 @@ class AppLocalizations {
   };
 
   static Map<String, String> get inputGrades => {
-    'en': 'Input Grades',
-    'id': 'Input Nilai',
+    'en': 'Grades',
+    'id': 'Nilai',
   };
 
   static Map<String, String> get teachingSchedule => {
