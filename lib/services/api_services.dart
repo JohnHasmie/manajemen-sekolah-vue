@@ -977,6 +977,9 @@ class ApiService {
     String? subjectId,
     String? studentId,
     String? classId,
+    String? tanggalStart,
+    String? tanggalEnd,
+    String? academicYearId,
   }) async {
     try {
       final params = <String, String>{
@@ -992,11 +995,23 @@ class ApiService {
       if (studentId != null && studentId.isNotEmpty)
         params['student_id'] = studentId;
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
+      if (tanggalStart != null && tanggalStart.isNotEmpty) {
+        params['tanggalStart'] = tanggalStart;
+      }
+      if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
+        params['tanggalEnd'] = tanggalEnd;
+      }
+      if (academicYearId != null && academicYearId.isNotEmpty) {
+        params['academic_year_id'] = academicYearId;
+      }
 
       final uri = Uri.parse(
         '$baseUrl/attendance',
       ).replace(queryParameters: params);
-      final response = await http.get(uri, headers: await _getHeaders());
+      final response = await http.get(
+        uri,
+        headers: await _getHeaders(),
+      ); // Fixed headers
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) return result;

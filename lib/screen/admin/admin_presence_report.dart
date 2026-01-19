@@ -14,6 +14,7 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 // Model for Attendance Summary
 class AttendanceSummary {
@@ -61,6 +62,17 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
   final ScrollController _scrollController = ScrollController();
+
+  // Table View State
+  bool _showTableView = false;
+  List<dynamic> _studentList = [];
+  final Map<String, dynamic> _attendanceMap =
+      {}; // Key: studentId-date -> [subjects]
+  AttendanceDataSource? _attendanceDataSource;
+  List<String> _uniqueDates = [];
+  List<String> _uniqueSubjectIds = [];
+  Map<String, String> _dateLabels = {}; // date -> label (1, 2, 3...)
+  bool _isTableLoading = false;
 
   // Search dan Filter
   final TextEditingController _searchController = TextEditingController();
@@ -787,6 +799,357 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     );
   }
 
+  Future<void> _loadTableData() async {
+    if (!mounted) return;
+    if (_selectedClassIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).getTranslatedText({
+              'en': 'Please select a class first',
+              'id': 'Mohon pilih kelas terlebih dahulu',
+            }),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _showTableView = false);
+      return;
+    }
+
+    setState(() {
+      _isTableLoading = true;
+      _attendanceMap.clear();
+      _studentList.clear();
+      _uniqueDates.clear();
+      _uniqueSubjectIds.clear();
+    });
+
+    try {
+      final classId = _selectedClassIds.first;
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
+
+      // Determine Date Range
+      String? startDate;
+      String? endDate;
+      final now = DateTime.now();
+
+      if (_selectedDateFilter == 'today') {
+        startDate = DateFormat('yyyy-MM-dd').format(now);
+        endDate = startDate;
+      } else if (_selectedDateFilter == 'week') {
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final endOfWeek = startOfWeek.add(Duration(days: 6));
+        startDate = DateFormat('yyyy-MM-dd').format(startOfWeek);
+        endDate = DateFormat('yyyy-MM-dd').format(endOfWeek);
+      } else if (_selectedDateFilter == 'month' ||
+          _selectedDateFilter == null) {
+        // Default to current month if no filter or monthly filter
+        final startOfMonth = DateTime(now.year, now.month, 1);
+        final endOfMonth = DateTime(now.year, now.month + 1, 0);
+        startDate = DateFormat('yyyy-MM-dd').format(startOfMonth);
+        endDate = DateFormat('yyyy-MM-dd').format(endOfMonth);
+      }
+
+      // 1. Fetch Students
+      final students = await ApiClassService().getStudentsByClassId(classId);
+
+      // 2. Fetch Attendance
+      // We use a large limit to get all records for the range.
+      final attendanceParams = <String, dynamic>{
+        'classId': classId,
+        'limit': '1000', // Adjust as needed
+        'tanggalStart': startDate,
+        'tanggalEnd': endDate,
+      };
+
+      if (academicYearId != null) {
+        attendanceParams['academicYearId'] = academicYearId;
+      }
+
+      final attendanceResult = await ApiService.getAbsensiPaginated(
+        page: 1,
+        limit: 1000,
+        classId: classId,
+        tanggalStart: startDate,
+        tanggalEnd: endDate,
+        academicYearId: academicYearId,
+      );
+
+      final List<dynamic> attendanceData = attendanceResult['data'] ?? [];
+
+      if (!mounted) return;
+
+      // Process Data
+      Set<String> dateSet = {};
+      Set<String> subjectIdSet = {};
+      Map<String, dynamic> attMap = {};
+
+      for (var record in attendanceData) {
+        final String? date = record['date'];
+        final String? sId = record['student_id']?.toString();
+        final String? subjId = record['subject_id']?.toString();
+        final String? status = record['status'];
+
+        if (date != null && sId != null && subjId != null) {
+          dateSet.add(date);
+          subjectIdSet.add(subjId);
+          attMap['$sId-$date-$subjId'] = status;
+        }
+      }
+
+      // Create Subject Map for labels
+      Map<String, dynamic> subjectMap = {};
+      for (var s in _subjectList) {
+        subjectMap[s['id'].toString()] = s['name'];
+      }
+
+      List<PresenceGridData> gridData = [];
+      for (var student in students) {
+        // Handle student structure if it's nested or direct
+        final sData = student is Map ? student : {};
+        final id = sData['id']?.toString() ?? '';
+        var nis = sData['nis'] ?? sData['student_number'] ?? '-';
+        var name = sData['name'] ?? sData['nama'] ?? 'Unknown';
+
+        // Sometimes student data is nested in 'student' key if fetched via enrollment
+        if (sData.containsKey('student')) {
+          final inner = sData['student'];
+          id.isEmpty
+              ? inner['id']?.toString() ?? ''
+              : id; // Actually id is likely distinct
+          nis = inner['nis'] ?? inner['student_number'] ?? nis;
+          name = inner['name'] ?? inner['nama'] ?? name;
+        }
+
+        gridData.add(
+          PresenceGridData(
+            studentId: id,
+            nis: nis.toString(),
+            name: name.toString(),
+            attendance:
+                attMap, // Pass the whole map, but simpler to pass subset?
+            // Actually PresenceGridData expects 'attendance' map.
+            // But wait, the key for grid data inside DataSource uses specific logic.
+            // Let's pass the global attMap for now, assuming unique keys $sId-$date-$subjId
+          ),
+        );
+      }
+
+      setState(() {
+        _studentList = students;
+        _uniqueDates = dateSet.toList()..sort();
+        _uniqueSubjectIds = subjectIdSet.toList();
+
+        // Build Date Labels (Day of month)
+        _dateLabels = {};
+        for (var d in _uniqueDates) {
+          DateTime? dt = AppDateUtils.parseApiDate(d);
+          _dateLabels[d] = dt != null ? dt.day.toString() : d;
+        }
+
+        _attendanceDataSource = AttendanceDataSource(
+          students: gridData,
+          dates: _uniqueDates,
+          subjectIds: _uniqueSubjectIds,
+          subjectMap: subjectMap,
+        );
+        _isTableLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) print('Error loading table data: $e');
+      if (mounted) {
+        setState(() => _isTableLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load table data: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildTableView() {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
+    if (_isTableLoading) {
+      return Center(
+        child: CircularProgressIndicator(color: _getPrimaryColor()),
+      );
+    }
+
+    if (_selectedClassIds.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.class_outlined, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              languageProvider.getTranslatedText({
+                'en': 'Please select a class to view the table',
+                'id': 'Silakan pilih kelas untuk melihat tabel',
+              }),
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_attendanceDataSource == null || _studentList.isEmpty) {
+      return EmptyState(
+        title: languageProvider.getTranslatedText({
+          'en': 'No data available',
+          'id': 'Tidak ada data',
+        }),
+        subtitle: languageProvider.getTranslatedText({
+          'en': 'Please select a different class or criteria',
+          'id': 'Silakan pilih kelas atau kriteria lain',
+        }),
+      );
+    }
+
+    // Calculate columns
+    // Dynamic columns width?
+
+    // Group dates by month
+    Map<String, List<String>> monthsMap = {};
+    for (var dateStr in _uniqueDates) {
+      try {
+        final date = DateTime.parse(dateStr);
+        final monthKey = DateFormat(
+          'MMMM yyyy',
+          languageProvider.currentLanguage,
+        ).format(date);
+        monthsMap.putIfAbsent(monthKey, () => []).add(dateStr);
+      } catch (e) {
+        monthsMap.putIfAbsent('', () => []).add(dateStr);
+      }
+    }
+
+    return SfDataGrid(
+      source: _attendanceDataSource!,
+      frozenColumnsCount: 1, // Freeze Student Info
+      gridLinesVisibility: GridLinesVisibility.both,
+      headerGridLinesVisibility: GridLinesVisibility.both,
+      stackedHeaderRows: [
+        // Month Header Check
+        if (monthsMap.isNotEmpty)
+          StackedHeaderRow(
+            cells: [
+              StackedHeaderCell(
+                child: Container(color: Colors.grey[200]),
+                columnNames: ['student_info'],
+              ),
+              ...monthsMap.entries.map((entry) {
+                final columns = entry.value
+                    .expand(
+                      (date) => _uniqueSubjectIds.map((sId) => '$date-$sId'),
+                    )
+                    .toList();
+
+                return StackedHeaderCell(
+                  child: Container(
+                    color: Colors.grey[300],
+                    alignment: Alignment.center,
+                    child: Text(
+                      entry.key,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  columnNames: columns,
+                );
+              }),
+            ],
+          ),
+
+        StackedHeaderRow(
+          cells: [
+            StackedHeaderCell(
+              child: Container(
+                color: Colors.grey[200],
+                alignment: Alignment.center,
+                child: Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Student Information',
+                    'id': 'Informasi Siswa',
+                  }),
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              columnNames: ['student_info'],
+            ),
+            ..._uniqueDates.map((dateStr) {
+              String dayLabel = '';
+              try {
+                final date = DateTime.parse(dateStr);
+                dayLabel = DateFormat('d').format(date);
+              } catch (_) {
+                dayLabel = dateStr;
+              }
+
+              return StackedHeaderCell(
+                child: Container(
+                  color: Colors.grey[200],
+                  alignment: Alignment.center,
+                  child: Text(
+                    dayLabel,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                columnNames: _uniqueSubjectIds
+                    .map((sId) => '$dateStr-$sId')
+                    .toList(),
+              );
+            }),
+          ],
+        ),
+      ],
+      columns: [
+        GridColumn(
+          columnName: 'student_info',
+          width: 220,
+          label: Container(
+            padding: EdgeInsets.all(8),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Student',
+                'id': 'Siswa',
+              }),
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+        ..._uniqueDates.expand((date) {
+          return _uniqueSubjectIds.map((sId) {
+            final subjectName = _attendanceDataSource?.subjectMap[sId] ?? sId;
+            return GridColumn(
+              columnName: '$date-$sId',
+              width: 100,
+              label: Container(
+                padding: EdgeInsets.all(4),
+                alignment: Alignment.center,
+                child: Text(
+                  subjectName,
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
+            );
+          });
+        }),
+      ],
+    );
+  }
+
   Widget _buildSummaryCard(
     AttendanceSummary summary,
     LanguageProvider languageProvider,
@@ -1049,6 +1412,268 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     );
   }
 
+  void _showExportDialog() {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    final activeYearName =
+        academicYearProvider.selectedAcademicYear?['name'] ??
+        '${DateTime.now().year}/${DateTime.now().year + 1}';
+    final activeYearString =
+        academicYearProvider.selectedAcademicYear?['year']?.toString() ??
+        '${DateTime.now().year}/${DateTime.now().year + 1}';
+
+    // Parse years
+    int startYear = DateTime.now().year;
+    try {
+      final parts = activeYearString.split('/');
+      if (parts.isNotEmpty) startYear = int.parse(parts[0]);
+    } catch (_) {}
+
+    // Generate 12 months starting from July of startYear
+    List<DateTime> months = [];
+    for (int i = 0; i < 12; i++) {
+      months.add(DateTime(startYear, 7 + i, 1));
+    }
+
+    // Default Selection
+    List<DateTime> selectedMonths = [];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Export Attendance',
+                  'id': 'Export Absensi',
+                }),
+              ),
+              content: Container(
+                width: double.maxFinite,
+                height: 300,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tahun Ajaran $activeYearName',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Select month(s) to export:',
+                        'id': 'Pilih bulan yang akan diexport:',
+                      }),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    SizedBox(height: 8),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: months.length,
+                        itemBuilder: (context, index) {
+                          final date = months[index];
+                          final label = DateFormat(
+                            'MMMM yyyy',
+                            languageProvider.currentLanguage,
+                          ).format(date);
+                          final isSelected = selectedMonths.contains(date);
+                          return CheckboxListTile(
+                            title: Text(label),
+                            value: isSelected,
+                            onChanged: (val) {
+                              setStateDialog(() {
+                                if (val == true) {
+                                  selectedMonths.add(date);
+                                } else {
+                                  selectedMonths.remove(date);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Cancel',
+                      'id': 'Batal',
+                    }),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: selectedMonths.isEmpty
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _processExport(selectedMonths);
+                        },
+                  child: Text('Export'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _processExport(List<DateTime> months) async {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+
+    // Sort months
+    months.sort();
+
+    int successCount = 0;
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      for (var month in months) {
+        await _exportMonth(month);
+        successCount++;
+        // Optional delay to prevent rate limits
+        await Future.delayed(Duration(seconds: 1));
+      }
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Exported $successCount files successfully',
+                'id': 'Berhasil mengexport $successCount file',
+              }),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportMonth(DateTime month) async {
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 0);
+    final startDate = DateFormat('yyyy-MM-dd').format(startOfMonth);
+    final endDate = DateFormat('yyyy-MM-dd').format(endOfMonth);
+
+    final classId = _selectedClassData!['id'];
+    final className = _selectedClassData!['name'];
+
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+        ?.toString();
+    final academicYearName =
+        academicYearProvider.selectedAcademicYear?['year']?.toString() ?? '-';
+
+    // 1. Fetch Data
+    final students = await ApiClassService().getStudentsByClassId(classId);
+
+    final attendanceResult = await ApiService.getAbsensiPaginated(
+      page: 1,
+      limit: 2000, // Ensure enough limit
+      classId: classId,
+      tanggalStart: startDate,
+      tanggalEnd: endDate,
+      academicYearId: academicYearId,
+    );
+
+    final List<dynamic> attendanceData = attendanceResult['data'] ?? [];
+
+    if (attendanceData.isEmpty)
+      return; // Skip empty months? Or export empty file?
+
+    // 2. Map Data
+    // Subject Map
+    Map<String, String> subjectMap = {};
+    for (var s in _subjectList) {
+      subjectMap[s['id'].toString()] = s['name'];
+    }
+
+    List<Map<String, dynamic>> exportList = [];
+
+    for (var record in attendanceData) {
+      final sId = record['student_id'].toString();
+      // Find student
+      var studentMap = students.firstWhere((s) {
+        final id = s['id']?.toString();
+        // Nested check
+        if (id != null && id == sId) return true;
+        if (s['student'] != null && s['student']['id']?.toString() == sId)
+          return true;
+        return false;
+      }, orElse: () => null);
+
+      if (studentMap == null) continue;
+
+      // Normalize student data
+      if (studentMap['student'] != null) studentMap = studentMap['student'];
+
+      final nis = studentMap['nis'] ?? studentMap['student_number'] ?? '';
+      final name = studentMap['name'] ?? studentMap['nama'] ?? 'Unknown';
+
+      final subjId = record['subject_id'].toString();
+      final subjectName =
+          subjectMap[subjId] ?? record['subject_name'] ?? 'Unknown';
+
+      exportList.add({
+        'nis': nis,
+        'student_name': name,
+        'class_name': className,
+        'academic_year': academicYearName,
+        'date': record['date'],
+        'subject_name': subjectName,
+        'status': record['status'],
+      });
+    }
+
+    if (exportList.isEmpty) return;
+
+    // 3. Call Service
+    // We pass context for Localization
+    await ExcelPresenceService.exportPresenceToExcel(
+      presenceData: exportList,
+      context: context,
+      filters: {},
+    );
+  }
+
   Widget _buildActionButton({
     required IconData icon,
     required String label,
@@ -1252,6 +1877,34 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                             ],
                           ),
                         ),
+                        if (_selectedClassData != null) ...[
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _showTableView = !_showTableView;
+                                if (_showTableView) {
+                                  _loadTableData();
+                                }
+                              });
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                _showTableView
+                                    ? Icons.view_list
+                                    : Icons.table_chart,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                        ],
                         PopupMenuButton<String>(
                           onSelected: (value) {
                             switch (value) {
@@ -1260,6 +1913,23 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                   _loadFilterData();
                                 } else {
                                   _loadData();
+                                }
+                                break;
+                              case 'export':
+                                if (_selectedClassData != null) {
+                                  _showExportDialog();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Please select a class first',
+                                          'id':
+                                              'Mohon pilih kelas terlebih dahulu',
+                                        }),
+                                      ),
+                                    ),
+                                  );
                                 }
                                 break;
                             }
@@ -1293,6 +1963,22 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                 ],
                               ),
                             ),
+                            if (_selectedClassData != null)
+                              PopupMenuItem<String>(
+                                value: 'export',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.file_download, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Export Excel',
+                                        'id': 'Export Excel',
+                                      }),
+                                    ),
+                                  ],
+                                ),
+                              ),
                           ],
                         ),
                       ],
@@ -1477,6 +2163,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
               Expanded(
                 child: _selectedClassData == null
                     ? _buildClassList(languageProvider)
+                    : _showTableView
+                    ? _buildTableView()
                     : filteredSummaries.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({
@@ -2274,5 +2962,131 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
         );
       },
     );
+  }
+}
+
+class PresenceGridData {
+  final String studentId;
+  final String nis;
+  final String name;
+  final Map<String, dynamic> attendance; // date -> {subjectId: status}
+
+  PresenceGridData({
+    required this.studentId,
+    required this.nis,
+    required this.name,
+    required this.attendance,
+  });
+}
+
+class AttendanceDataSource extends DataGridSource {
+  final List<PresenceGridData> students;
+  final List<String> dates;
+  final List<String> subjectIds;
+  final Map<String, dynamic> subjectMap; // id -> name
+
+  List<DataGridRow> _dataGridRows = [];
+
+  AttendanceDataSource({
+    required this.students,
+    required this.dates,
+    required this.subjectIds,
+    required this.subjectMap,
+  }) {
+    _dataGridRows = students.map<DataGridRow>((data) {
+      final List<DataGridCell> cells = [
+        DataGridCell<PresenceGridData>(columnName: 'student_info', value: data),
+      ];
+
+      for (var date in dates) {
+        for (var subjectId in subjectIds) {
+          final columnKey = '$date-$subjectId';
+          final lookupKey = '${data.studentId}-$date-$subjectId';
+          final status = data.attendance[lookupKey] ?? '-';
+          cells.add(DataGridCell<String>(columnName: columnKey, value: status));
+        }
+      }
+
+      return DataGridRow(cells: cells);
+    }).toList();
+  }
+
+  @override
+  List<DataGridRow> get rows => _dataGridRows;
+
+  @override
+  DataGridRowAdapter buildRow(DataGridRow row) {
+    return DataGridRowAdapter(
+      cells: row.getCells().map<Widget>((dataGridCell) {
+        if (dataGridCell.columnName == 'student_info') {
+          final data = dataGridCell.value as PresenceGridData;
+          return Container(
+            alignment: Alignment.centerLeft,
+            padding: EdgeInsets.symmetric(horizontal: 8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data.name,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  data.nis,
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        }
+
+        final status = dataGridCell.value.toString();
+        Color color = Colors.transparent;
+        String text = '';
+
+        if (status != '-') {
+          text = _getStatusAbbreviation(status);
+          color = _getStatusColor(status);
+        }
+
+        return Container(
+          alignment: Alignment.center,
+          color: color,
+          child: Text(text, style: TextStyle(fontSize: 12)),
+        );
+      }).toList(),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    final s = status.toLowerCase();
+    if (s == 'hadir' || s == 'present') return Colors.green.withOpacity(0.2);
+    if (s == 'sakit' || s == 'sick') return Colors.orange.withOpacity(0.2);
+    if (s == 'izin' || s == 'permit') return Colors.blue.withOpacity(0.2);
+    if (s == 'alpa' || s == 'absent') return Colors.red.withOpacity(0.2);
+    return Colors.transparent;
+  }
+
+  String _getStatusAbbreviation(String status) {
+    switch (status.toLowerCase()) {
+      case 'hadir':
+      case 'present':
+        return 'H';
+      case 'sakit':
+      case 'sick':
+        return 'S';
+      case 'izin':
+      case 'permit':
+        return 'I';
+      case 'alpa':
+      case 'absent':
+        return 'A';
+      default:
+        return '-';
+    }
   }
 }
