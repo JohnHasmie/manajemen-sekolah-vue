@@ -137,12 +137,17 @@ class ApiClassService {
     String? waliclassId,
     String? search,
     String? academicYearId,
+    String? hasHomeroomTeacher,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
+
+    if (hasHomeroomTeacher != null && hasHomeroomTeacher.isNotEmpty) {
+      queryParams['has_homeroom_teacher'] = hasHomeroomTeacher;
+    }
 
     if (gradeLevel != null && gradeLevel.isNotEmpty) {
       queryParams['grade_level'] = gradeLevel;

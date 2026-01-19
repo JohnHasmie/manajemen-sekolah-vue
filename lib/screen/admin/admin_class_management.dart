@@ -61,6 +61,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   // Filter States (Backend filtering)
   String? _selectedGradeFilter; // '1' to '12', or null for all
+  String? _selectedHomeroomFilter; // 'true', 'false', or null
   bool _hasActiveFilter = false;
 
   // Filter Options (from backend)
@@ -199,13 +200,15 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   void _checkActiveFilter() {
     setState(() {
-      _hasActiveFilter = _selectedGradeFilter != null;
+      _hasActiveFilter =
+          _selectedGradeFilter != null || _selectedHomeroomFilter != null;
     });
   }
 
   void _clearAllFilters() {
     setState(() {
       _selectedGradeFilter = null;
+      _selectedHomeroomFilter = null;
       _searchController.clear();
       _currentPage = 1;
       _hasActiveFilter = false;
@@ -232,6 +235,33 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       });
     }
 
+    if (_selectedHomeroomFilter != null) {
+      String label;
+      if (_selectedHomeroomFilter == 'true') {
+        label = languageProvider.getTranslatedText({
+          'en': 'Has Homeroom Teacher',
+          'id': 'Sudah Ada Wali Kelas',
+        });
+      } else {
+        label = languageProvider.getTranslatedText({
+          'en': 'No Homeroom Teacher',
+          'id': 'Belum Ada Wali Kelas',
+        });
+      }
+
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Status', 'id': 'Status'})}: $label',
+        'onRemove': () {
+          setState(() {
+            _selectedHomeroomFilter = null;
+          });
+          _checkActiveFilter();
+          _loadData();
+        },
+      });
+    }
+
     return filterChips;
   }
 
@@ -240,6 +270,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
     // Temporary state for bottom sheet
     String? tempSelectedClass = _selectedGradeFilter;
+    String? tempSelectedHomeroom = _selectedHomeroomFilter;
 
     showModalBottomSheet(
       context: context,
@@ -253,6 +284,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
               Container(
@@ -279,6 +311,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                       onPressed: () {
                         setModalState(() {
                           tempSelectedClass = null;
+                          tempSelectedHomeroom = null;
                         });
                       },
                       child: Text(
@@ -296,51 +329,132 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
               Expanded(
                 child: SingleChildScrollView(
                   padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Kelas Filter (1-12)
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Grade (1-12)',
-                          'id': 'Kelas (1-12)',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Kelas Filter (1-12)
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Grade (1-12)',
+                            'id': 'Kelas (1-12)',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _availableGradeLevels.map((gradeLevel) {
-                          final isSelected = tempSelectedClass == gradeLevel;
-                          return FilterChip(
-                            label: Text(gradeLevel),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                tempSelectedClass = selected
-                                    ? gradeLevel
-                                    : null;
-                              });
-                            },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
-                            checkmarkColor: _getPrimaryColor(),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _availableGradeLevels.map((gradeLevel) {
+                            final isSelected = tempSelectedClass == gradeLevel;
+                            return FilterChip(
+                              label: Text(gradeLevel),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  tempSelectedClass = selected
+                                      ? gradeLevel
+                                      : null;
+                                });
+                              },
+                              backgroundColor: Colors.grey.shade100,
+                              selectedColor: _getPrimaryColor().withOpacity(
+                                0.2,
+                              ),
+                              checkmarkColor: _getPrimaryColor(),
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? _getPrimaryColor()
+                                    : Colors.grey.shade700,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+
+                        SizedBox(height: 24),
+
+                        // Status Wali Kelas Filter
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Homeroom Teacher Status',
+                            'id': 'Status Wali Kelas',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children:
+                              [
+                                {
+                                  'value': null, // null means 'Semua'
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'All',
+                                    'id': 'Semua',
+                                  }),
+                                },
+                                {
+                                  'value': 'true',
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'Assigned',
+                                    'id': 'Sudah Ada',
+                                  }),
+                                },
+                                {
+                                  'value': 'false',
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'Unassigned',
+                                    'id': 'Belum Ada',
+                                  }),
+                                },
+                              ].map((item) {
+                                final isSelected =
+                                    tempSelectedHomeroom == item['value'];
+                                return FilterChip(
+                                  label: Text(item['label']!),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    setModalState(() {
+                                      if (item['value'] == null) {
+                                        tempSelectedHomeroom = null;
+                                      } else {
+                                        // If already selected and tapped again, maybe deselect?
+                                        // Or act like radio since "All" is an option.
+                                        // Logic: if tapping currently selected, do nothing?
+                                        // Or better: ensure always one is selected logic or just set value.
+                                        tempSelectedHomeroom = item['value'];
+                                      }
+                                    });
+                                  },
+                                  backgroundColor: Colors.grey.shade100,
+                                  selectedColor: _getPrimaryColor().withOpacity(
+                                    0.2,
+                                  ),
+                                  checkmarkColor: _getPrimaryColor(),
+                                  labelStyle: TextStyle(
+                                    color: isSelected
+                                        ? _getPrimaryColor()
+                                        : Colors.grey.shade700,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -363,6 +477,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                     onPressed: () {
                       setState(() {
                         _selectedGradeFilter = tempSelectedClass;
+                        _selectedHomeroomFilter = tempSelectedHomeroom;
                       });
                       _checkActiveFilter();
                       Navigator.pop(context);
@@ -415,6 +530,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         page: _currentPage,
         limit: _perPage,
         gradeLevel: _selectedGradeFilter,
+        hasHomeroomTeacher: _selectedHomeroomFilter,
         academicYearId: selectedYearId,
         search: _searchController.text.trim().isEmpty
             ? null
@@ -474,6 +590,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         page: _currentPage,
         limit: _perPage,
         gradeLevel: _selectedGradeFilter,
+        hasHomeroomTeacher: _selectedHomeroomFilter,
         academicYearId: selectedYearId,
         search: _searchController.text.trim().isEmpty
             ? null
