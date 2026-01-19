@@ -270,13 +270,35 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                           ],
                         ),
                         SizedBox(height: 4),
-                        Text(
-                          '${classData['tingkat'] ?? ''} • ${classData['jurusan'] ?? ''}',
-                          style: TextStyle(
-                            color: ColorUtils.slate500,
-                            fontSize: 12,
+                        // Subtitle: Grade • Major
+                        if ([
+                          classData['tingkat'],
+                          classData['jurusan'],
+                        ].any((e) => e != null && e.toString().isNotEmpty))
+                          Text(
+                            [classData['tingkat'], classData['jurusan']]
+                                .where(
+                                  (e) => e != null && e.toString().isNotEmpty,
+                                )
+                                .join(' • '),
+                            style: TextStyle(
+                              color: ColorUtils.slate500,
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
+                        // Homeroom Teacher Name
+                        if (classData['homeroom_teacher_name'] != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              'Wali Kelas: ${classData['homeroom_teacher_name']}',
+                              style: TextStyle(
+                                color: ColorUtils.slate500,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

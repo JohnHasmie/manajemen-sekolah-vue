@@ -418,13 +418,40 @@ class GradePageState extends State<GradePage> {
                             ],
                           ),
                           SizedBox(height: 4),
-                          Text(
-                            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classData['grade_level'] ?? classData['tingkat'] ?? '-'}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                          // Subtitle: Grade • Major
+                          if ([
+                            classData['grade_level'],
+                            classData['tingkat'],
+                            classData['jurusan'],
+                          ].any((e) => e != null && e.toString().isNotEmpty))
+                            Text(
+                              [
+                                    classData['grade_level'] ??
+                                        classData['tingkat'],
+                                    classData['jurusan'],
+                                  ]
+                                  .where(
+                                    (e) => e != null && e.toString().isNotEmpty,
+                                  )
+                                  .join(' • '),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
                             ),
-                          ),
+                          // Homeroom Teacher Name
+                          if (classData['homeroom_teacher_name'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                'Wali Kelas: ${classData['homeroom_teacher_name']}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
