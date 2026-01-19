@@ -10,6 +10,7 @@ import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
+import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -49,7 +50,7 @@ class ClassActifityScreen extends StatefulWidget {
 
 class ClassActifityScreenState extends State<ClassActifityScreen>
     with TickerProviderStateMixin {
-  final List<dynamic> _scheduleList = [];
+  List<dynamic> _scheduleList = [];
   List<dynamic> _subjectList = [];
   List<dynamic> _chapterList = [];
   List<dynamic> _subChapterList = [];
@@ -468,7 +469,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             });
 
             // 2. Load Classes using TEACHER ID
-            await _loadClasses(teacherId);
+            await Future.wait([
+              _loadClasses(teacherId),
+              _loadSchedule(teacherId), // Load schedule for dialog filtering
+            ]);
 
             // If initial params provided, try to navigate deep
             if (widget.initialClassId != null) {
@@ -530,6 +534,39 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         print('Error loading classes: $e');
       }
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadSchedule(String teacherId) async {
+    try {
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
+
+      final scheduleData = await ApiScheduleService.getScheduleByTeacher(
+        teacherId: teacherId,
+        academicYear: academicYearId,
+      );
+
+      // scheduleData is already guaranteed to be a List<dynamic> by the service
+      List<dynamic> schedules = scheduleData;
+
+      if (mounted) {
+        setState(() {
+          _scheduleList = schedules;
+        });
+        if (kDebugMode) {
+          print(
+            'Loaded ${_scheduleList.length} schedules for teacher $teacherId',
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading schedule: $e');
+      }
+      // Non-critical, just log
     }
   }
 
@@ -2722,6 +2759,12 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       final scheduleSubjectId =
           (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
 
+      if (kDebugMode) {
+        print(
+          'Checking schedule: ${schedule['id']} - Subject: $scheduleSubjectId vs Selected: $_selectedSubjectId',
+        );
+      }
+
       if (scheduleSubjectId == _selectedSubjectId) {
         final classId = (schedule['class_id'] ?? schedule['kelas_id'])
             .toString();
@@ -2774,12 +2817,11 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
               scheduleDay = dayMap[scheduleDay]!;
             }
 
-            // if (kDebugMode) {
-            //   print(
-            //     'Schedule: ${schedule['kelas_nama']}, Day: $scheduleDay, Start: $jamMulai',
-            //   );
-            //   print('Checking against Current Day: $currentDay');
-            // }
+            if (kDebugMode) {
+              print(
+                'Schedule: ${schedule['kelas_nama']}, Day: $scheduleDay vs Target: $targetDay',
+              );
+            }
 
             // Check if schedule is on the selected day
             if (scheduleDay == targetDay) {
@@ -2790,7 +2832,11 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                   'id': classId,
                   'nama': schedule['kelas_nama'] ?? 'Unknown',
                 };
+              } else {
+                if (kDebugMode) print('Class already added: $classId');
               }
+            } else {
+              if (kDebugMode) print('Day mismatch: $scheduleDay != $targetDay');
             }
           }
         }

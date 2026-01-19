@@ -741,6 +741,14 @@ class LoginScreenState extends State<LoginScreen> {
 
     // 3. Role Selection
     if (responseData['pilih_role'] == true) {
+      // Special handling for Google Login: Save token immediately if present
+      // This allows using switchSchool endpoint later
+      if (responseData['token'] != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', responseData['token']);
+        if (kDebugMode) print('🔐 Token saved during role selection phase');
+      }
+
       if (responseData['role_list'] == null ||
           responseData['role_list'].isEmpty) {
         throw Exception('Daftar role tidak tersedia');

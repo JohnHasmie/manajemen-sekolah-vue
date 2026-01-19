@@ -500,7 +500,13 @@ class MateriPageState extends State<MateriPage> {
       );
 
       if (kDebugMode) {
-        print('Loaded progress: ${progress.length} items');
+        print('=== LOADING MATERI PROGRESS ===');
+        print('Teacher ID: $teacherId');
+        print('Subject ID: $mataPelajaranId');
+        print('API Response Items: ${progress.length}');
+        if (progress.isNotEmpty) {
+          print('First item sample: ${progress.first}');
+        }
       }
 
       setState(() {
