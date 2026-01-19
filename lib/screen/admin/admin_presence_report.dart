@@ -1032,121 +1032,160 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       }
     }
 
-    return SfDataGrid(
-      source: _attendanceDataSource!,
-      frozenColumnsCount: 1, // Freeze Student Info
-      gridLinesVisibility: GridLinesVisibility.both,
-      headerGridLinesVisibility: GridLinesVisibility.both,
-      stackedHeaderRows: [
-        // Month Header Check
-        if (monthsMap.isNotEmpty)
-          StackedHeaderRow(
-            cells: [
-              StackedHeaderCell(
-                child: Container(color: Colors.grey[200]),
-                columnNames: ['student_info'],
-              ),
-              ...monthsMap.entries.map((entry) {
-                final columns = entry.value
-                    .expand(
-                      (date) => _uniqueSubjectIds.map((sId) => '$date-$sId'),
-                    )
-                    .toList();
+    return Container(
+      margin: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: SfDataGrid(
+          source: _attendanceDataSource!,
+          frozenColumnsCount: 1,
+          gridLinesVisibility: GridLinesVisibility.horizontal,
+          headerGridLinesVisibility: GridLinesVisibility.horizontal,
+          rowHeight: 60,
+          headerRowHeight: 50,
+          stackedHeaderRows: [
+            if (monthsMap.isNotEmpty)
+              StackedHeaderRow(
+                cells: [
+                  StackedHeaderCell(
+                    child: Container(
+                      color: _getPrimaryColor().withOpacity(0.05),
+                    ),
+                    columnNames: ['student_info'],
+                  ),
+                  ...monthsMap.entries.map((entry) {
+                    final columns = entry.value
+                        .expand(
+                          (date) =>
+                              _uniqueSubjectIds.map((sId) => '$date-$sId'),
+                        )
+                        .toList();
 
-                return StackedHeaderCell(
+                    return StackedHeaderCell(
+                      child: Container(
+                        color: _getPrimaryColor(),
+                        alignment: Alignment.center,
+                        child: Text(
+                          entry.key.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 12,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                      columnNames: columns,
+                    );
+                  }),
+                ],
+              ),
+            StackedHeaderRow(
+              cells: [
+                StackedHeaderCell(
                   child: Container(
-                    color: Colors.grey[300],
-                    alignment: Alignment.center,
+                    color: _getPrimaryColor().withOpacity(0.05),
+                    alignment: Alignment.centerLeft,
+                    padding: EdgeInsets.only(left: 16),
                     child: Text(
-                      entry.key,
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      languageProvider.getTranslatedText({
+                        'en': 'STUDENT INFO',
+                        'id': 'INFORMASI SISWA',
+                      }),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _getPrimaryColor(),
+                        fontSize: 11,
+                      ),
                     ),
                   ),
-                  columnNames: columns,
-                );
-              }),
-            ],
-          ),
-
-        StackedHeaderRow(
-          cells: [
-            StackedHeaderCell(
-              child: Container(
-                color: Colors.grey[200],
-                alignment: Alignment.center,
-                child: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Student Information',
-                    'id': 'Informasi Siswa',
-                  }),
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  columnNames: ['student_info'],
                 ),
-              ),
-              columnNames: ['student_info'],
+                ..._uniqueDates.map((dateStr) {
+                  String dayLabel = '';
+                  try {
+                    final date = DateTime.parse(dateStr);
+                    dayLabel = DateFormat('d').format(date);
+                  } catch (_) {
+                    dayLabel = dateStr;
+                  }
+
+                  return StackedHeaderCell(
+                    child: Container(
+                      color: _getPrimaryColor().withOpacity(0.1),
+                      alignment: Alignment.center,
+                      child: Text(
+                        dayLabel,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _getPrimaryColor(),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    columnNames: _uniqueSubjectIds
+                        .map((sId) => '$dateStr-$sId')
+                        .toList(),
+                  );
+                }),
+              ],
             ),
-            ..._uniqueDates.map((dateStr) {
-              String dayLabel = '';
-              try {
-                final date = DateTime.parse(dateStr);
-                dayLabel = DateFormat('d').format(date);
-              } catch (_) {
-                dayLabel = dateStr;
-              }
-
-              return StackedHeaderCell(
-                child: Container(
-                  color: Colors.grey[200],
-                  alignment: Alignment.center,
-                  child: Text(
-                    dayLabel,
-                    style: TextStyle(fontWeight: FontWeight.bold),
+          ],
+          columns: [
+            GridColumn(
+              columnName: 'student_info',
+              width: 250,
+              label: Container(color: _getPrimaryColor().withOpacity(0.05)),
+            ),
+            ..._uniqueDates.expand((date) {
+              return _uniqueSubjectIds.map((sId) {
+                final subjectName =
+                    _attendanceDataSource?.subjectMap[sId] ?? sId;
+                return GridColumn(
+                  columnName: '$date-$sId',
+                  width: 100,
+                  label: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(
+                          color: Colors.grey.withOpacity(0.2),
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      subjectName,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
                   ),
-                ),
-                columnNames: _uniqueSubjectIds
-                    .map((sId) => '$dateStr-$sId')
-                    .toList(),
-              );
+                );
+              });
             }),
           ],
         ),
-      ],
-      columns: [
-        GridColumn(
-          columnName: 'student_info',
-          width: 220,
-          label: Container(
-            padding: EdgeInsets.all(8),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Student',
-                'id': 'Siswa',
-              }),
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        ..._uniqueDates.expand((date) {
-          return _uniqueSubjectIds.map((sId) {
-            final subjectName = _attendanceDataSource?.subjectMap[sId] ?? sId;
-            return GridColumn(
-              columnName: '$date-$sId',
-              width: 100,
-              label: Container(
-                padding: EdgeInsets.all(4),
-                alignment: Alignment.center,
-                child: Text(
-                  subjectName,
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                ),
-              ),
-            );
-          });
-        }),
-      ],
+      ),
     );
   }
 
@@ -3022,22 +3061,46 @@ class AttendanceDataSource extends DataGridSource {
           final data = dataGridCell.value as PresenceGridData;
           return Container(
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
               children: [
-                Text(
-                  data.name,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  child: Text(
+                    data.name.isNotEmpty ? data.name[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
-                Text(
-                  data.nis,
-                  style: TextStyle(fontSize: 10, color: Colors.grey),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        data.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        data.nis,
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -3045,18 +3108,45 @@ class AttendanceDataSource extends DataGridSource {
         }
 
         final status = dataGridCell.value.toString();
-        Color color = Colors.transparent;
+        Color bgColor = Colors.transparent;
+        Color textColor = Colors.black;
         String text = '';
 
         if (status != '-') {
           text = _getStatusAbbreviation(status);
-          color = _getStatusColor(status);
+          bgColor = _getStatusColor(status);
+          textColor = _getStatusTextColor(status);
         }
 
         return Container(
           alignment: Alignment.center,
-          color: color,
-          child: Text(text, style: TextStyle(fontSize: 12)),
+          decoration: BoxDecoration(
+            border: Border(
+              right: BorderSide(
+                color: Colors.grey.withOpacity(0.1),
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: status == '-'
+              ? Text('-', style: TextStyle(color: Colors.grey[300]))
+              : Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
         );
       }).toList(),
     );
@@ -3064,11 +3154,20 @@ class AttendanceDataSource extends DataGridSource {
 
   Color _getStatusColor(String status) {
     final s = status.toLowerCase();
-    if (s == 'hadir' || s == 'present') return Colors.green.withOpacity(0.2);
-    if (s == 'sakit' || s == 'sick') return Colors.orange.withOpacity(0.2);
-    if (s == 'izin' || s == 'permit') return Colors.blue.withOpacity(0.2);
-    if (s == 'alpa' || s == 'absent') return Colors.red.withOpacity(0.2);
+    if (s == 'hadir' || s == 'present') return Colors.green.withOpacity(0.15);
+    if (s == 'sakit' || s == 'sick') return Colors.orange.withOpacity(0.15);
+    if (s == 'izin' || s == 'permit') return Colors.blue.withOpacity(0.15);
+    if (s == 'alpa' || s == 'absent') return Colors.red.withOpacity(0.15);
     return Colors.transparent;
+  }
+
+  Color _getStatusTextColor(String status) {
+    final s = status.toLowerCase();
+    if (s == 'hadir' || s == 'present') return Colors.green[800]!;
+    if (s == 'sakit' || s == 'sick') return Colors.orange[800]!;
+    if (s == 'izin' || s == 'permit') return Colors.blue[800]!;
+    if (s == 'alpa' || s == 'absent') return Colors.red[800]!;
+    return Colors.black;
   }
 
   String _getStatusAbbreviation(String status) {
