@@ -2621,6 +2621,7 @@ class FinanceScreenState extends State<FinanceScreen>
 
         return DefaultTabController(
           length: 4,
+          initialIndex: _currentTabIndex,
           child: Scaffold(
             backgroundColor: Color(0xFFF8F9FA),
             appBar: AppBar(
