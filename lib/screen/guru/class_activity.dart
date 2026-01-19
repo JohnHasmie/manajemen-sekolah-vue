@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
@@ -11,6 +12,7 @@ import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
+import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -67,6 +69,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   // Map<String, dynamic>? _selectedClassData; // If full object needed
   String? _selectedSubjectId;
   String? _selectedSubjectName;
+  bool _selectedSubjectCanEdit = false;
 
   // Data Lists
   List<dynamic> _classList = [];
@@ -392,6 +395,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                     setState(() {
                       _selectedSubjectId = subject['id'].toString();
                       _selectedSubjectName = subjectName;
+                      _selectedSubjectCanEdit = subject['can_edit'] == true;
                       _currentStep = 2; // Go to Activity List
                     });
                     await _loadActivities();
@@ -433,6 +437,33 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                                     style: TextStyle(
                                       color: ColorUtils.slate500,
                                       fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              if (subject['can_edit'] == false)
+                                Container(
+                                  margin: EdgeInsets.only(top: 4),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.orange.withOpacity(0.5),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Read Only',
+                                      'id': 'Hanya Lihat',
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
@@ -598,62 +629,101 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     setState(() => _isLoading = true);
 
     try {
-      // 1. Get All Subjects for Teacher
-      final allSubjects = await ApiTeacherService().getSubjectByTeacher(
-        _teacherId,
-      );
+      final academicYearId = context
+          .read<AcademicYearProvider>()
+          .selectedAcademicYear?['id']
+          ?.toString();
 
-      // 2. Get Selected Class Data to check Grade Level
       final selectedClass = _classList.firstWhere(
         (c) => c['id'].toString() == _selectedClassId,
-        orElse: () => <String, dynamic>{}, // Return empty map if not found
+        orElse: () => {},
       );
+      final isHomeroom = selectedClass['is_homeroom'] == true;
 
-      // Normalize grade level (e.g., "10", "X", "1")
-      String? classGrade;
-      if (selectedClass.isNotEmpty) {
-        // Try different fields: 'tingkat', 'grade_level', 'level'
-        classGrade =
-            selectedClass['tingkat']?.toString() ??
-            selectedClass['grade_level']?.toString();
+      // Get user role from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('user');
+      String userRole = '';
+      if (userJson != null) {
+        final userData = json.decode(userJson);
+        userRole = userData['role'] ?? '';
+      }
+      final isAdmin = userRole == 'admin';
+
+      // 1. Fetch MY subjects (subjects I teach in this class)
+      final mySchedules = await ApiScheduleService.getSchedulesPaginated(
+        limit: 100,
+        guruId: _teacherId,
+        classId: _selectedClassId,
+        tahunAjaran: academicYearId,
+      );
+      final myData = mySchedules['data'] ?? [];
+      final mySubjectIds = <String>{};
+      for (var item in myData) {
+        final subject = item['subject'] ?? item['mata_pelajaran'];
+        if (subject != null) {
+          mySubjectIds.add(subject['id'].toString());
+        }
       }
 
-      // 3. Filter Subjects
-      final filteredSubjects = allSubjects.where((subject) {
-        // If subject has specific grade assigned in master subject
-        final masterSubject = subject['master_subject'];
-        // Note: backend response structure for 'getSubjectByTeacher' needs verification
-        // It returns list of subject_schools (Subject model).
-        // We added eager load 'masterSubject'.
+      List<dynamic> subjects = [];
 
-        final subjectGrade = masterSubject?['grade']?.toString();
+      if (isHomeroom || isAdmin) {
+        // 2. If Homeroom or Admin, fetch ALL subjects assigned to this class
+        // Use the new endpoint that fetches from subject_classes pivot
+        final response = await http.get(
+          Uri.parse('${ApiService.baseUrl}/class/$_selectedClassId/subjects'),
+          headers: await ApiService.getHeaders(),
+        );
 
-        // Logic:
-        // - If subject has NO grade, show for all classes? Or show only if explicitly linked?
-        // - If subject HAS grade, show only if matches class grade.
-        // - Also check 'subject_schools' might have 'grade' if copied? No, strictly master.
+        if (response.statusCode == 200) {
+          final allSubjects = json.decode(response.body) as List;
+          final uniqueSubjects = <String, Map<String, dynamic>>{};
 
-        if (subjectGrade != null &&
-            subjectGrade.isNotEmpty &&
-            classGrade != null) {
-          // Simple string match for now. Might need "X" vs "10" mapping later.
-          return subjectGrade == classGrade;
+          for (var subject in allSubjects) {
+            final subjectId = subject['id'].toString();
+            var s = Map<String, dynamic>.from(subject);
+            // Editable only if I teach it OR if I'm admin
+            s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
+            uniqueSubjects[subjectId] = s;
+          }
+          subjects = uniqueSubjects.values.toList();
         }
+      } else {
+        // 3. If Not Homeroom, only show MY subjects
+        final uniqueSubjects = <String, Map<String, dynamic>>{};
+        for (var item in myData) {
+          final subject = item['subject'] ?? item['mata_pelajaran'];
+          if (subject != null) {
+            final subjectId = subject['id'].toString();
+            var s = Map<String, dynamic>.from(subject);
+            s['can_edit'] = true;
+            uniqueSubjects[subjectId] = s;
+          }
+        }
+        subjects = uniqueSubjects.values.toList();
+      }
 
-        // If no grade restrictions, allow it.
-        return true;
-      }).toList();
-
-      setState(() {
-        _subjectList = filteredSubjects;
-        // _subjectList = allSubjects; // Fallback if filtering is too strict
-        _isLoading = false;
+      // Sort alphabetically
+      subjects.sort((a, b) {
+        final nameA = (a['name'] ?? a['nama'] ?? '').toString();
+        final nameB = (b['name'] ?? b['nama'] ?? '').toString();
+        return nameA.compareTo(nameB);
       });
+
+      if (mounted) {
+        setState(() {
+          _subjectList = subjects;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error loading subjects: $e');
       }
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -1921,33 +1991,35 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                         ),
 
                         // Action Buttons
-                        SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _buildActionButton(
-                              icon: Icons.edit,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Edit',
-                                'id': 'Edit',
-                              }),
-                              color: cardColor,
-                              onPressed: () =>
-                                  _showEditActivityDialog(activity),
-                            ),
-                            SizedBox(width: 8),
-                            _buildActionButton(
-                              icon: Icons.delete,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Delete',
-                                'id': 'Hapus',
-                              }),
-                              color: Colors.red,
-                              onPressed: () =>
-                                  _deleteActivity(activity, languageProvider),
-                            ),
-                          ],
-                        ),
+                        if (_selectedSubjectCanEdit) ...[
+                          SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _buildActionButton(
+                                icon: Icons.edit,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Edit',
+                                  'id': 'Edit',
+                                }),
+                                color: cardColor,
+                                onPressed: () =>
+                                    _showEditActivityDialog(activity),
+                              ),
+                              SizedBox(width: 8),
+                              _buildActionButton(
+                                icon: Icons.delete,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Delete',
+                                  'id': 'Hapus',
+                                }),
+                                color: Colors.red,
+                                onPressed: () =>
+                                    _deleteActivity(activity, languageProvider),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -2045,7 +2117,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         // We can keep it there.
 
         // FAB: Only show in Step 2
-        floatingActionButton: _currentStep == 2
+        // FAB: Only show in Step 2 AND if editable
+        floatingActionButton: _currentStep == 2 && _selectedSubjectCanEdit
             ? FloatingActionButton(
                 onPressed: _showActivityTypeDialog,
                 backgroundColor: _getPrimaryColor(),

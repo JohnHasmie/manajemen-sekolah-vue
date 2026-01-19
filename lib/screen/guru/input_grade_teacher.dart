@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/models/siswa.dart';
@@ -57,7 +59,16 @@ class GradePageState extends State<GradePage> {
 
   bool get _canEdit {
     final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-    return role == 'guru' || role == 'teacher';
+    bool canEditRole = role == 'guru' || role == 'teacher';
+
+    // If viewing a subject, check if we have edit permission for it
+    if (canEditRole &&
+        _selectedSubject != null &&
+        _selectedSubject!.containsKey('can_edit')) {
+      return _selectedSubject!['can_edit'] == true;
+    }
+
+    return canEditRole;
   }
 
   // Pagination State
@@ -199,39 +210,59 @@ class GradePageState extends State<GradePage> {
 
       final isHomeroom = _selectedClass?['is_homeroom'] == true;
       final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+      final isGuru = role.contains('guru') || role.contains('teacher');
+      final isAdmin =
+          !isGuru; // Assuming non-guru is admin/staff with higher privs
 
-      if (role.contains('guru') && !isHomeroom) {
-        // Regular Guru: Use TeachingSchedule to find subjects this teacher teaches in this class
-        final schedules = await ApiScheduleService.getSchedulesPaginated(
-          limit: 100,
-          guruId: widget.teacher['id'],
-          classId: _selectedClass!['id'].toString(),
-          tahunAjaran: academicYearId,
-        );
-
-        final data = schedules['data'] ?? [];
-        final uniqueSubjects = <String, Map<String, dynamic>>{};
-
-        for (var item in data) {
-          final subject = item['subject'] ?? item['mata_pelajaran'];
-          if (subject != null) {
-            uniqueSubjects[subject['id'].toString()] = subject;
-          }
+      // 1. Fetch subjects taught by THIS teacher in this class
+      final mySchedules = await ApiScheduleService.getSchedulesPaginated(
+        limit: 100,
+        guruId: widget.teacher['id'],
+        classId: _selectedClass!['id'].toString(),
+        tahunAjaran: academicYearId,
+      );
+      final myData = mySchedules['data'] ?? [];
+      final mySubjectIds = <String>{};
+      for (var item in myData) {
+        final subject = item['subject'] ?? item['mata_pelajaran'];
+        if (subject != null) {
+          mySubjectIds.add(subject['id'].toString());
         }
-        subjects = uniqueSubjects.values.toList();
-      } else {
-        // Admin OR Homeroom Teacher: Get all subjects for this class
-        final schedules = await ApiScheduleService.getSchedulesPaginated(
-          limit: 100,
-          classId: _selectedClass!['id'].toString(),
-          tahunAjaran: academicYearId,
+      }
+
+      if (isHomeroom || isAdmin) {
+        // 2. Homeroom or Admin: Get ALL subjects assigned to this class
+        // Use the new endpoint that fetches from subject_classes pivot
+        final response = await http.get(
+          Uri.parse(
+            '${ApiService.baseUrl}/class/${_selectedClass!['id']}/subjects',
+          ),
+          headers: await ApiService.getHeaders(),
         );
-        final data = schedules['data'] ?? [];
+
+        if (response.statusCode == 200) {
+          final allSubjects = json.decode(response.body) as List;
+          final uniqueSubjects = <String, Map<String, dynamic>>{};
+
+          for (var subject in allSubjects) {
+            final subjectId = subject['id'].toString();
+            var s = Map<String, dynamic>.from(subject);
+            // Editable if Admin OR if I teach it
+            s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
+            uniqueSubjects[subjectId] = s;
+          }
+          subjects = uniqueSubjects.values.toList();
+        }
+      } else {
+        // 3. Regular Teacher (Non-Homeroom): Only SHOW what I teach
         final uniqueSubjects = <String, Map<String, dynamic>>{};
-        for (var item in data) {
+        for (var item in myData) {
           final subject = item['subject'] ?? item['mata_pelajaran'];
           if (subject != null) {
-            uniqueSubjects[subject['id'].toString()] = subject;
+            final subjectId = subject['id'].toString();
+            var s = Map<String, dynamic>.from(subject);
+            s['can_edit'] = true;
+            uniqueSubjects[subjectId] = s;
           }
         }
         subjects = uniqueSubjects.values.toList();
@@ -556,6 +587,33 @@ class GradePageState extends State<GradePage> {
                               color: Colors.grey[600],
                             ),
                           ),
+                          if (subject['can_edit'] == false)
+                            Container(
+                              margin: EdgeInsets.only(top: 4),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.orange.withOpacity(0.5),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Read Only',
+                                  'id': 'Hanya Lihat',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
