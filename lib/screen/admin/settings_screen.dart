@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -32,9 +34,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memuat profil: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToLoadProfile)}: $e',
+            ),
+          ),
+        );
       }
     }
   }
@@ -51,23 +57,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit Profil'),
+        title: Text(
+          context.read<LanguageProvider>().getTranslatedText(
+            AppLocalizations.editProfile,
+          ),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: 'Nama Lengkap'),
+                decoration: InputDecoration(
+                  labelText: context.read<LanguageProvider>().getTranslatedText(
+                    AppLocalizations.fullName,
+                  ),
+                ),
               ),
               TextField(
                 controller: phoneController,
-                decoration: InputDecoration(labelText: 'No. Telepon'),
+                decoration: InputDecoration(
+                  labelText: context.read<LanguageProvider>().getTranslatedText(
+                    AppLocalizations.phoneNumber,
+                  ),
+                ),
                 keyboardType: TextInputType.phone,
               ),
               TextField(
                 controller: addressController,
-                decoration: InputDecoration(labelText: 'Alamat'),
+                decoration: InputDecoration(
+                  labelText: context.read<LanguageProvider>().getTranslatedText(
+                    AppLocalizations.address,
+                  ),
+                ),
                 maxLines: 2,
               ),
             ],
@@ -76,7 +98,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Batal'),
+            child: Text(
+              context.read<LanguageProvider>().getTranslatedText(
+                AppLocalizations.cancel,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -91,7 +117,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _loadProfile();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Profil berhasil diperbarui'),
+                      content: Text(
+                        context.read<LanguageProvider>().getTranslatedText(
+                          AppLocalizations.profileUpdatedSuccess,
+                        ),
+                      ),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -100,7 +130,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Gagal memperbarui profil: $e'),
+                      content: Text(
+                        '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToUpdateProfile)}: $e',
+                      ),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -108,7 +140,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-            child: Text('Simpan', style: TextStyle(color: Colors.white)),
+            child: Text(
+              context.read<LanguageProvider>().getTranslatedText(
+                AppLocalizations.save,
+              ),
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -156,7 +193,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         title: Text(
-          'Profil Pengguna',
+          context.watch<LanguageProvider>().getTranslatedText(
+            AppLocalizations.userProfile,
+          ),
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         iconTheme: IconThemeData(color: Colors.black),
@@ -181,7 +220,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Informasi Pribadi',
+                                context
+                                    .watch<LanguageProvider>()
+                                    .getTranslatedText(
+                                      AppLocalizations.personalInformation,
+                                    ),
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -198,7 +241,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Divider(),
                           SizedBox(height: 10),
                           _buildInfoRow(
-                            'Nama Lengkap',
+                            context.read<LanguageProvider>().getTranslatedText(
+                              AppLocalizations.fullName,
+                            ),
                             _profileData['name'] ?? '',
                             Icons.person,
                           ),
@@ -220,7 +265,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Divider(),
                           SizedBox(height: 10),
                           Text(
-                            'Informasi Akun',
+                            context.read<LanguageProvider>().getTranslatedText(
+                              AppLocalizations.accountInformation,
+                            ),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -229,12 +276,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           SizedBox(height: 10),
                           _buildInfoRow(
-                            'Role',
+                            context.read<LanguageProvider>().getTranslatedText(
+                              AppLocalizations.role,
+                            ),
                             _profileData['role'] ?? '',
                             Icons.badge,
                           ),
                           _buildInfoRow(
-                            'Sekolah',
+                            context.read<LanguageProvider>().getTranslatedText(
+                              AppLocalizations.school,
+                            ),
                             _profileData['school_name'] ?? '',
                             Icons.school,
                           ),
@@ -250,7 +301,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onPressed: _showChangePasswordDialog,
                       icon: Icon(Icons.lock_outline, color: Colors.white),
                       label: Text(
-                        'Ubah Kata Sandi',
+                        context.watch<LanguageProvider>().getTranslatedText(
+                          AppLocalizations.changePassword,
+                        ),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -302,7 +355,11 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Kata sandi berhasil diubah'),
+          content: Text(
+            context.read<LanguageProvider>().getTranslatedText(
+              AppLocalizations.passwordChangedSuccess,
+            ),
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -310,7 +367,9 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal mengubah kata sandi: $e'),
+          content: Text(
+            '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToChangePassword)}: $e',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -322,7 +381,11 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Ubah Kata Sandi'),
+      title: Text(
+        context.read<LanguageProvider>().getTranslatedText(
+          AppLocalizations.changePassword,
+        ),
+      ),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -331,27 +394,35 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             children: [
               _buildPasswordField(
                 controller: _oldPasswordController,
-                label: 'Kata Sandi Lama',
+                label: context.read<LanguageProvider>().getTranslatedText(
+                  AppLocalizations.oldPassword,
+                ),
                 obscure: _obscureOld,
                 onToggle: () => setState(() => _obscureOld = !_obscureOld),
               ),
               SizedBox(height: 16),
               _buildPasswordField(
                 controller: _newPasswordController,
-                label: 'Kata Sandi Baru',
+                label: context.read<LanguageProvider>().getTranslatedText(
+                  AppLocalizations.newPassword,
+                ),
                 obscure: _obscureNew,
                 onToggle: () => setState(() => _obscureNew = !_obscureNew),
               ),
               SizedBox(height: 16),
               _buildPasswordField(
                 controller: _confirmPasswordController,
-                label: 'Konfirmasi Kata Sandi',
+                label: context.read<LanguageProvider>().getTranslatedText(
+                  AppLocalizations.confirmPassword,
+                ),
                 obscure: _obscureConfirm,
                 onToggle: () =>
                     setState(() => _obscureConfirm = !_obscureConfirm),
                 validator: (val) {
                   if (val != _newPasswordController.text)
-                    return 'Kata sandi tidak cocok';
+                    return context.read<LanguageProvider>().getTranslatedText(
+                      AppLocalizations.passwordMismatch,
+                    );
                   return null;
                 },
               ),
@@ -362,7 +433,11 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Batal'),
+          child: Text(
+            context.read<LanguageProvider>().getTranslatedText(
+              AppLocalizations.cancel,
+            ),
+          ),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _updatePassword,
@@ -372,7 +447,11 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                   height: 20,
                   child: CircularProgressIndicator(color: Colors.white),
                 )
-              : Text('Simpan'),
+              : Text(
+                  context.read<LanguageProvider>().getTranslatedText(
+                    AppLocalizations.save,
+                  ),
+                ),
         ),
       ],
     );
@@ -390,7 +469,11 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       obscureText: obscure,
       validator:
           validator ??
-          (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+          (val) => val == null || val.isEmpty
+              ? context.read<LanguageProvider>().getTranslatedText(
+                  AppLocalizations.required,
+                )
+              : null,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(),

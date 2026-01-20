@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/screen/admin/school_level_settings_screen.dart';
 import 'package:manajemensekolah/screen/admin/time_settings_screen.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
 
 class SchoolSettingsScreen extends StatefulWidget {
   const SchoolSettingsScreen({super.key});
@@ -22,7 +24,9 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         title: Text(
-          'Pengaturan Sekolah',
+          context.watch<LanguageProvider>().getTranslatedText(
+            AppLocalizations.schoolSettings,
+          ),
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         iconTheme: IconThemeData(color: Colors.black),
@@ -34,7 +38,9 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Menu Pengaturan',
+                context.watch<LanguageProvider>().getTranslatedText(
+                  AppLocalizations.settingsMenu,
+                ),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -51,7 +57,8 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
                 childAspectRatio: 1.1,
                 children: [
                   _buildMenuCard(
-                    'Pengaturan Umum',
+                    context,
+                    AppLocalizations.generalSettings.tr,
                     Icons.school,
                     () => Navigator.push(
                       context,
@@ -61,7 +68,8 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
                     ),
                   ),
                   _buildMenuCard(
-                    'Pengaturan Waktu',
+                    context,
+                    AppLocalizations.timeSettings.tr,
                     Icons.access_time,
                     () => Navigator.push(
                       context,
@@ -80,7 +88,12 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
     );
   }
 
-  Widget _buildMenuCard(String title, IconData icon, VoidCallback onTap) {
+  Widget _buildMenuCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(

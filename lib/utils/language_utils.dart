@@ -279,10 +279,7 @@ class AppLocalizations {
     'id': 'Absensi Siswa',
   };
 
-  static Map<String, String> get inputGrades => {
-    'en': 'Grades',
-    'id': 'Nilai',
-  };
+  static Map<String, String> get inputGrades => {'en': 'Grades', 'id': 'Nilai'};
 
   static Map<String, String> get teachingSchedule => {
     'en': 'Teaching Schedule',
@@ -731,6 +728,259 @@ class AppLocalizations {
   static Map<String, String> get billing => {'en': 'Billing', 'id': 'Tagihan'};
 
   static Map<String, String> get materi => {'en': 'Materials', 'id': 'Materi'};
+
+  // Dashboard Statistics
+  static Map<String, String> get chooseLanguage => {
+    'en': 'Choose Language',
+    'id': 'Pilih Bahasa',
+  };
+
+  static Map<String, String> get totalStudents => {
+    'en': 'Total Students',
+    'id': 'Total Siswa',
+  };
+
+  static Map<String, String> get totalTeachers => {
+    'en': 'Total Teachers',
+    'id': 'Total Guru',
+  };
+
+  static Map<String, String> get totalClasses => {
+    'en': 'Total Classes',
+    'id': 'Total Kelas',
+  };
+
+  static Map<String, String> get switchRole => {
+    'en': 'Switch Role',
+    'id': 'Ganti Role',
+  };
+
+  static Map<String, String> get switchSchool => {
+    'en': 'Switch School',
+    'id': 'Ganti Sekolah',
+  };
+
+  static Map<String, String> get registered => {
+    'en': 'Registered',
+    'id': 'Terdaftar',
+  };
+
+  static Map<String, String> get active => {'en': 'Active', 'id': 'Aktif'};
+
+  static Map<String, String> get available => {
+    'en': 'Available',
+    'id': 'Tersedia',
+  };
+
+  static Map<String, String> get supervised => {
+    'en': 'Supervised',
+    'id': 'Diampu',
+  };
+
+  static Map<String, String> get todaysClasses => {
+    'en': "Today's Classes",
+    'id': 'Kelas Hari Ini',
+  };
+
+  static Map<String, String> get subjects => {
+    'en': 'Subjects',
+    'id': 'Mata Pelajaran',
+  };
+
+  static Map<String, String> get ongoing => {
+    'en': 'Ongoing',
+    'id': 'Sedang berlangsung',
+  };
+
+  static Map<String, String> get submitted => {
+    'en': 'Submitted',
+    'id': 'Terkirim',
+  };
+
+  static Map<String, String> get presenceReport => {
+    'en': 'Presence Report',
+    'id': 'Laporan Presensi',
+  };
+
+  static Map<String, String> get schoolSettings => {
+    'en': 'School Settings',
+    'id': 'Pengaturan Sekolah',
+  };
+
+  // Finance
+  static Map<String, String> get financialManagement => {
+    'en': 'Financial Management',
+    'id': 'Manajemen Keuangan',
+  };
+
+  static Map<String, String> get dashboard => {
+    'en': 'Dashboard',
+    'id': 'Dashboard',
+  };
+
+  static Map<String, String> get paymentTypes => {
+    'en': 'Payment Types',
+    'id': 'Jenis Pembayaran',
+  };
+
+  static Map<String, String> get verification => {
+    'en': 'Verification',
+    'id': 'Verifikasi',
+  };
+
+  static Map<String, String> get monthlyIncome => {
+    'en': 'Monthly Income',
+    'id': 'Pendapatan Bulan Ini',
+  };
+
+  static Map<String, String> get pendingVerification => {
+    'en': 'Pending Verification',
+    'id': 'Menunggu Verifikasi',
+  };
+
+  static Map<String, String> get unpaid => {
+    'en': 'Unpaid',
+    'id': 'Belum Bayar',
+  };
+
+  static Map<String, String> get verified => {
+    'en': 'Verified',
+    'id': 'Terverifikasi',
+  };
+
+  static Map<String, String> get addPaymentType => {
+    'en': 'Add Payment Type',
+    'id': 'Tambah Jenis Pembayaran',
+  };
+
+  static Map<String, String> get editPaymentType => {
+    'en': 'Edit Payment Type',
+    'id': 'Edit Jenis Pembayaran',
+  };
+
+  static Map<String, String> get deletePaymentType => {
+    'en': 'Delete Payment Type',
+    'id': 'Hapus Jenis Pembayaran',
+  };
+
+  static Map<String, String> get paymentsPendingVerification => {
+    'en': 'Payments Pending Verification',
+    'id': 'Pembayaran Menunggu Verifikasi',
+  };
+
+  static Map<String, String> get classReport => {
+    'en': 'Class Report',
+    'id': 'Laporan Kelas',
+  };
+
+  static Map<String, String> get students => {'en': 'students', 'id': 'siswa'};
+
+  // Settings
+  static Map<String, String> get settingsMenu => {
+    'en': 'Settings Menu',
+    'id': 'Menu Pengaturan',
+  };
+
+  static Map<String, String> get generalSettings => {
+    'en': 'General Settings',
+    'id': 'Pengaturan Umum',
+  };
+
+  static Map<String, String> get timeSettings => {
+    'en': 'Time Settings',
+    'id': 'Pengaturan Waktu',
+  };
+
+  static Map<String, String> get userProfile => {
+    'en': 'User Profile',
+    'id': 'Profil Pengguna',
+  };
+
+  static Map<String, String> get personalInformation => {
+    'en': 'Personal Information',
+    'id': 'Informasi Pribadi',
+  };
+
+  static Map<String, String> get accountInformation => {
+    'en': 'Account Information',
+    'id': 'Informasi Akun',
+  };
+
+  static Map<String, String> get fullName => {
+    'en': 'Full Name',
+    'id': 'Nama Lengkap',
+  };
+
+  static Map<String, String> get phoneNumber => {
+    'en': 'Phone Number',
+    'id': 'No. Telepon',
+  };
+
+  static Map<String, String> get address => {'en': 'Address', 'id': 'Alamat'};
+
+  static Map<String, String> get role => {'en': 'Role', 'id': 'Role'};
+
+  static Map<String, String> get school => {'en': 'School', 'id': 'Sekolah'};
+
+  static Map<String, String> get editProfile => {
+    'en': 'Edit Profile',
+    'id': 'Edit Profil',
+  };
+
+  static Map<String, String> get changePassword => {
+    'en': 'Change Password',
+    'id': 'Ubah Kata Sandi',
+  };
+
+  static Map<String, String> get oldPassword => {
+    'en': 'Old Password',
+    'id': 'Kata Sandi Lama',
+  };
+
+  static Map<String, String> get newPassword => {
+    'en': 'New Password',
+    'id': 'Kata Sandi Baru',
+  };
+
+  static Map<String, String> get confirmPassword => {
+    'en': 'Confirm Password',
+    'id': 'Konfirmasi Kata Sandi',
+  };
+
+  static Map<String, String> get passwordMismatch => {
+    'en': 'Passwords do not match',
+    'id': 'Kata sandi tidak cocok',
+  };
+
+  static Map<String, String> get required => {
+    'en': 'Required',
+    'id': 'Wajib diisi',
+  };
+
+  static Map<String, String> get profileUpdatedSuccess => {
+    'en': 'Profile updated successfully',
+    'id': 'Profil berhasil diperbarui',
+  };
+
+  static Map<String, String> get passwordChangedSuccess => {
+    'en': 'Password changed successfully',
+    'id': 'Kata sandi berhasil diubah',
+  };
+
+  static Map<String, String> get failedToLoadProfile => {
+    'en': 'Failed to load profile',
+    'id': 'Gagal memuat profil',
+  };
+
+  static Map<String, String> get failedToUpdateProfile => {
+    'en': 'Failed to update profile',
+    'id': 'Gagal memperbarui profil',
+  };
+
+  static Map<String, String> get failedToChangePassword => {
+    'en': 'Failed to change password',
+    'id': 'Gagal mengubah kata sandi',
+  };
 }
 
 // Extension untuk memudahkan penggunaan terjemahan

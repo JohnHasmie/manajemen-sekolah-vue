@@ -910,7 +910,7 @@ class FinanceScreenState extends State<FinanceScreen>
               ),
             ),
             subtitle: Text(
-              '${siswaList.length} siswa',
+              '${siswaList.length} ${languageProvider.getTranslatedText(AppLocalizations.students)}',
               style: TextStyle(fontSize: 12),
             ),
             trailing: isKelasSelected
@@ -1474,8 +1474,12 @@ class FinanceScreenState extends State<FinanceScreen>
                         Expanded(
                           child: Text(
                             jenisPembayaran == null
-                                ? 'Tambah Jenis Pembayaran'
-                                : 'Edit Jenis Pembayaran',
+                                ? languageProvider.getTranslatedText(
+                                    AppLocalizations.addPaymentType,
+                                  )
+                                : languageProvider.getTranslatedText(
+                                    AppLocalizations.editPaymentType,
+                                  ),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -1817,7 +1821,9 @@ class FinanceScreenState extends State<FinanceScreen>
                     : item == 'tahunan'
                     ? 'Tahunan'
                     : item == 'verified'
-                    ? 'Terverifikasi'
+                    ? languageProvider.getTranslatedText(
+                        AppLocalizations.verified,
+                      )
                     : item == 'rejected'
                     ? 'Ditolak'
                     : item,
@@ -1836,7 +1842,9 @@ class FinanceScreenState extends State<FinanceScreen>
     final confirmed = await showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: 'Hapus Jenis Pembayaran',
+        title: languageProvider.getTranslatedText(
+          AppLocalizations.deletePaymentType,
+        ),
         content:
             'Yakin ingin menghapus jenis pembayaran "${jenisPembayaran['name']}"?',
         confirmText: 'Hapus',
@@ -1943,7 +1951,9 @@ class FinanceScreenState extends State<FinanceScreen>
                           pembayaran['kelas_nama'] ?? '-',
                         ),
                         _buildInfoItem(
-                          'Jenis Pembayaran',
+                          languageProvider.getTranslatedText(
+                            AppLocalizations.paymentTypes,
+                          ),
                           pembayaran['jenis_pembayaran_nama'] ?? '-',
                         ),
                         _buildInfoItem(
@@ -2476,13 +2486,17 @@ class FinanceScreenState extends State<FinanceScreen>
                 _buildStatItem(
                   icon: Icons.attach_money,
                   value: _formatCurrency(_dashboardData['total_payment_month']),
-                  label: 'Pendapatan Bulan Ini',
+                  label: languageProvider.getTranslatedText(
+                    AppLocalizations.monthlyIncome,
+                  ),
                   color: Colors.white,
                 ),
                 _buildStatItem(
                   icon: Icons.pending_actions,
                   value: '${_pembayaranPendingList.length}',
-                  label: 'Menunggu Verifikasi',
+                  label: languageProvider.getTranslatedText(
+                    AppLocalizations.pendingVerification,
+                  ),
                   color: Colors.white,
                 ),
               ],
@@ -2514,7 +2528,9 @@ class FinanceScreenState extends State<FinanceScreen>
                         ),
                       ),
                       Text(
-                        'Belum Bayar',
+                        languageProvider.getTranslatedText(
+                          AppLocalizations.unpaid,
+                        ),
                         style: TextStyle(fontSize: 10, color: Colors.orange),
                       ),
                     ],
@@ -2543,7 +2559,9 @@ class FinanceScreenState extends State<FinanceScreen>
                         ),
                       ),
                       Text(
-                        'Terverifikasi',
+                        languageProvider.getTranslatedText(
+                          AppLocalizations.verified,
+                        ),
                         style: TextStyle(fontSize: 10, color: Colors.green),
                       ),
                     ],
@@ -2626,7 +2644,9 @@ class FinanceScreenState extends State<FinanceScreen>
             backgroundColor: Color(0xFFF8F9FA),
             appBar: AppBar(
               title: Text(
-                'Manajemen Keuangan',
+                languageProvider.getTranslatedText(
+                  AppLocalizations.financialManagement,
+                ),
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 18,
@@ -2659,12 +2679,25 @@ class FinanceScreenState extends State<FinanceScreen>
                       });
                     },
                     tabs: [
-                      Tab(text: 'Dashboard'),
-                      Tab(text: 'Jenis Pembayaran'),
                       Tab(
-                        text: 'Verifikasi (${_pembayaranPendingList.length})',
+                        text: languageProvider.getTranslatedText(
+                          AppLocalizations.dashboard,
+                        ),
                       ),
-                      Tab(text: 'Laporan Kelas'),
+                      Tab(
+                        text: languageProvider.getTranslatedText(
+                          AppLocalizations.paymentTypes,
+                        ),
+                      ),
+                      Tab(
+                        text:
+                            '${languageProvider.getTranslatedText(AppLocalizations.verification)} (${_pembayaranPendingList.length})',
+                      ),
+                      Tab(
+                        text: languageProvider.getTranslatedText(
+                          AppLocalizations.classReport,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -2986,7 +3019,9 @@ class FinanceScreenState extends State<FinanceScreen>
               Icon(Icons.pending_actions, color: Colors.orange, size: 20),
               SizedBox(width: 8),
               Text(
-                'Pembayaran Menunggu Verifikasi',
+                languageProvider.getTranslatedText(
+                  AppLocalizations.paymentsPendingVerification,
+                ),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.orange.shade800,

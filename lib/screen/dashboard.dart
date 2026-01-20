@@ -1045,27 +1045,29 @@ class _DashboardState extends State<Dashboard>
       child: Row(
         children: [
           _buildStatCard(
-            title: "Total Siswa\nDiampu",
+            title:
+                "${AppLocalizations.totalStudents.tr}\n${AppLocalizations.supervised.tr}",
             value: _stats['total_siswa'].toString(),
-            subtitle: "Semua kelas",
+            subtitle:
+                "${AppLocalizations.all.tr} ${AppLocalizations.class_.tr.toLowerCase()}",
             icon: Icons.people_alt_outlined,
             iconColor: Color(0xFF4361EE),
             backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
-            title: "Total Kelas",
+            title: AppLocalizations.totalClasses.tr,
             value: _stats['total_kelas'].toString(),
-            subtitle: "✓ Aktif",
+            subtitle: "✓ ${AppLocalizations.active.tr}",
             icon: Icons.class_outlined,
             iconColor: Color(0xFF2EC4B6),
             backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
-            title: "Kelas Hari Ini",
+            title: AppLocalizations.todaysClasses.tr,
             value: _stats['kelas_hari_ini'].toString(),
-            subtitle: "Sedang berlangsung",
+            subtitle: AppLocalizations.ongoing.tr,
             icon: Icons.schedule_outlined,
             iconColor: Color(0xFFFF9F1C),
             backgroundColor: Color(0xFFFF9F1C).withOpacity(0.1),
@@ -1079,7 +1081,7 @@ class _DashboardState extends State<Dashboard>
             //   fontWeight: FontWeight.w600,
             //   color: Colors.grey.shade700,
             // ),
-            subtitle: "Terkirim",
+            subtitle: AppLocalizations.submitted.tr,
             icon: Icons.description_outlined,
             iconColor: Color(0xFF7209B7),
             backgroundColor: Color(0xFF7209B7).withOpacity(0.1),
@@ -1096,36 +1098,36 @@ class _DashboardState extends State<Dashboard>
       child: Row(
         children: [
           _buildStatCard(
-            title: "Total Siswa",
+            title: AppLocalizations.totalStudents.tr,
             value: _stats['total_siswa'].toString(),
-            subtitle: "✓ Terdaftar",
+            subtitle: "✓ ${AppLocalizations.registered.tr}",
             icon: "👨‍🎓",
             iconColor: Color(0xFF4361EE),
             backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
-            title: "Total Guru",
+            title: AppLocalizations.totalTeachers.tr,
             value: _stats['total_guru'].toString(),
-            subtitle: "✓ Aktif",
+            subtitle: "✓ ${AppLocalizations.active.tr}",
             icon: "👨‍🏫",
             iconColor: Color(0xFF2EC4B6),
             backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
-            title: "Total Kelas",
+            title: AppLocalizations.totalClasses.tr,
             value: _stats['total_kelas'].toString(),
-            subtitle: "Tersedia",
+            subtitle: AppLocalizations.available.tr,
             icon: "🏫",
             iconColor: Color(0xFFFF9F1C),
             backgroundColor: Color(0xFFFF9F1C).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
-            title: "Mata Pelajaran",
+            title: AppLocalizations.subjects.tr,
             value: _stats['total_mapel'].toString(),
-            subtitle: "✓ Tersedia",
+            subtitle: "✓ ${AppLocalizations.available.tr}",
             icon: "📚",
             iconColor: Color(0xFF7209B7),
             backgroundColor: Color(0xFF7209B7).withOpacity(0.1),
@@ -1651,7 +1653,7 @@ class _DashboardState extends State<Dashboard>
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Pilih Bahasa',
+          AppLocalizations.chooseLanguage.tr,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: _getPrimaryColor(),
@@ -1821,7 +1823,7 @@ class _DashboardState extends State<Dashboard>
                       if (_availableRoles.length > 1) ...[
                         SizedBox(height: 16),
                         Text(
-                          'Ganti Role',
+                          AppLocalizations.switchRole.tr,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1918,7 +1920,7 @@ class _DashboardState extends State<Dashboard>
                                   ),
                                   SizedBox(width: 8),
                                   Text(
-                                    'Ganti Sekolah',
+                                    AppLocalizations.switchSchool.tr,
                                     style: TextStyle(
                                       color: _getPrimaryColor(),
                                       fontWeight: FontWeight.w600,
@@ -2331,7 +2333,7 @@ class _DashboardState extends State<Dashboard>
           ),
         ),
         _buildDashboardCard(
-          'Laporan Presensi',
+          AppLocalizations.presenceReport.tr,
           Icons.check_circle_outline,
           () => Navigator.push(
             context,
@@ -2349,7 +2351,7 @@ class _DashboardState extends State<Dashboard>
           ),
         ),
         _buildDashboardCard(
-          'Keuangan',
+          AppLocalizations.finance.tr,
           Icons.account_balance_wallet_outlined,
           () => Navigator.push(
             context,
@@ -2357,7 +2359,7 @@ class _DashboardState extends State<Dashboard>
           ),
         ),
         _buildDashboardCard(
-          'Pengaturan Sekolah',
+          AppLocalizations.schoolSettings.tr,
           Icons.settings_applications,
           () => Navigator.push(
             context,
