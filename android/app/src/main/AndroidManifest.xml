@@ -2,7 +2,7 @@
     <application
         android:label="Kamil Edu"
         android:name="${applicationName}"
-        android:icon="@mipmap/kamilicon">
+        android:icon="@mipmap/KamilEdu">
         <activity
             android:name=".MainActivity"
             android:exported="true"
