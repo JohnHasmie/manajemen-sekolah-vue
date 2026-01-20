@@ -478,7 +478,7 @@ class LoginScreenState extends State<LoginScreen> {
   Widget _getRoleIcon(String role) {
     switch (role) {
       case 'admin':
-        return Icon(Icons.admin_panel_settings, color: Colors.blue);
+        return Icon(Icons.admin_panel_settings, color: Color(0xFF0D47A1));
       case 'guru':
         return Icon(Icons.school, color: Colors.green);
       case 'wali':
@@ -551,7 +551,7 @@ class LoginScreenState extends State<LoginScreen> {
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: ListTile(
-                  leading: Icon(Icons.school, color: Colors.blue),
+                  leading: Icon(Icons.school, color: Color(0xFF0D47A1)),
                   title: Text(sekolah['school_name'] ?? 'Sekolah Tanpa Nama'),
                   subtitle: Text(sekolah['address'] ?? ''),
                   trailing: Icon(Icons.arrow_forward_ios, size: 16),
@@ -579,10 +579,10 @@ class LoginScreenState extends State<LoginScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.school, size: 80, color: Colors.blue),
+        Image.asset('assets/icon/KamilEdu.png', height: 80),
         SizedBox(height: 20),
         Text(
-          'Sistem Manajemen Sekolah',
+          'Kamil Edu',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
 
@@ -640,8 +640,9 @@ class LoginScreenState extends State<LoginScreen> {
                   onPressed: _serverConnected ? login : null,
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 15),
+                    backgroundColor: Color(0xFF0D47A1),
                   ),
-                  child: Text('LOGIN'),
+                  child: Text('LOGIN', style: TextStyle(color: Colors.white)),
                 ),
         ),
         SizedBox(height: 15),
@@ -652,14 +653,14 @@ class LoginScreenState extends State<LoginScreen> {
               : OutlinedButton.icon(
                   onPressed: _serverConnected ? _handleGoogleSignIn : null,
                   icon: Image.asset(
-                    'assets/icon/iconaieasetech.jpg',
+                    'assets/icon/KamilEdu.png',
                     height: 24,
                     errorBuilder: (c, o, s) => Icon(Icons.login),
                   ), // Fallback use simple icon
                   label: Text('Masuk dengan Google'),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 15),
-                    side: BorderSide(color: Colors.blue),
+                    side: BorderSide(color: Color(0xFF0D47A1)),
                   ),
                 ),
         ),
@@ -675,7 +676,7 @@ class LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue[400]!, Colors.blue[800]!],
+            colors: [Color(0xFF0D47A1), Color(0xFF002171)],
           ),
         ),
         child: Center(

@@ -900,7 +900,7 @@ class _DashboardState extends State<Dashboard>
               children: [
                 // Modern Header dengan gradient seperti Duolingo
                 _buildModernHeader(context, languageProvider),
-                SizedBox(height: 16),
+                SizedBox(height: 5),
 
                 // Welcome Section dengan animasi
                 FadeTransition(
@@ -935,7 +935,7 @@ class _DashboardState extends State<Dashboard>
     LanguageProvider languageProvider,
   ) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
         gradient: _getHeaderGradient(),
         boxShadow: [
