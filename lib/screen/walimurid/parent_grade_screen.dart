@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ParentGradeScreen extends StatefulWidget {
@@ -160,7 +161,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
             SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Tidak ada data siswa/anak yang terhubung dengan akun ini',
+                AppLocalizations.noChildrenLinked.tr,
                 style: TextStyle(color: Colors.orange.shade800),
               ),
             ),
@@ -178,7 +179,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
           Padding(
             padding: EdgeInsets.only(left: 8, bottom: 8),
             child: Text(
-              'Pilih Anak:',
+              AppLocalizations.selectChild.tr,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -210,14 +211,15 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            student['name'] ?? 'Nama tidak tersedia',
+                            student['name'] ??
+                                AppLocalizations.nameNotAvailable.tr,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
                           ),
                           Text(
-                            'Kelas: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
+                            '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade600,
@@ -287,7 +289,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                     Text(
                       grade['subject_name'] ??
                           grade['mata_pelajaran'] ??
-                          'Mata Pelajaran',
+                          AppLocalizations.subject.tr,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -312,7 +314,8 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                       ),
                     SizedBox(height: 4),
                     Text(
-                      grade['type']?.toString().toUpperCase() ?? 'NILAI',
+                      grade['type']?.toString().toUpperCase() ??
+                          AppLocalizations.grades.tr.toUpperCase(),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),
@@ -331,12 +334,13 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                   children: [
                     _buildDetailItem(
                       icon: Icons.person,
-                      label: 'Guru Pengajar',
-                      value: grade['teacher_name'] ?? 'Tidak Diketahui',
+                      label: AppLocalizations.teacher.tr,
+                      value:
+                          grade['teacher_name'] ?? AppLocalizations.unknown.tr,
                     ),
                     _buildDetailItem(
                       icon: Icons.calendar_today,
-                      label: 'Tanggal Penilaian',
+                      label: AppLocalizations.assessmentDate.tr,
                       value: _formatDate(grade['date']),
                     ),
                     if (grade['notes'] != null &&
@@ -344,7 +348,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                         grade['notes'] != 'null') ...[
                       SizedBox(height: 16),
                       Text(
-                        'Catatan Guru',
+                        AppLocalizations.teacherNotes.tr,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -385,7 +389,10 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                       ),
                       padding: EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: Text('Tutup', style: TextStyle(color: Colors.white)),
+                    child: Text(
+                      AppLocalizations.close.tr,
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ),
@@ -483,7 +490,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
   Widget _buildGradeList() {
     if (_selectedStudentId == null) {
-      return _buildEmptyState('Pilih anak terlebih dahulu untuk melihat nilai');
+      return _buildEmptyState(AppLocalizations.selectChildToViewGrades.tr);
     }
 
     if (_isLoading) {
@@ -491,7 +498,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     }
 
     if (_gradeList.isEmpty) {
-      return _buildEmptyState('Belum ada data nilai untuk anak ini');
+      return _buildEmptyState(AppLocalizations.noGradesData.tr);
     }
 
     return ListView.builder(
@@ -601,7 +608,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                           Text(
                             grade['subject_name'] ??
                                 grade['mata_pelajaran'] ??
-                                'Unknown Subject',
+                                AppLocalizations.subject.tr,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -696,7 +703,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Nilai Akademik Anak',
+                      AppLocalizations.childAcademicGrades.tr,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -705,7 +712,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Pantau perkembangan nilai anak Anda',
+                      AppLocalizations.monitorChildGrades.tr,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),

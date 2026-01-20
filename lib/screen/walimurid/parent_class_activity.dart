@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ParentClassActivityScreen extends StatefulWidget {
@@ -175,7 +176,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
             SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Tidak ada data siswa/anak yang terhubung dengan akun ini',
+                AppLocalizations.noChildrenLinked.tr,
                 style: TextStyle(color: Colors.orange.shade800),
               ),
             ),
@@ -193,7 +194,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           Padding(
             padding: EdgeInsets.only(left: 8, bottom: 8),
             child: Text(
-              'Pilih Anak:',
+              AppLocalizations.selectChild.tr,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -225,14 +226,15 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            student['name'] ?? 'Nama tidak tersedia',
+                            student['name'] ??
+                                AppLocalizations.nameNotAvailable.tr,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
                           ),
                           Text(
-                            'Kelas: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
+                            '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade600,
@@ -299,7 +301,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                     Text(
                       activity['title'] ??
                           activity['judul'] ??
-                          'Judul Kegiatan',
+                          AppLocalizations.activityTitle.tr,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -331,16 +333,16 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                       value:
                           activity['teacher_name'] ??
                           activity['guru_nama'] ??
-                          'Tidak Diketahui',
+                          AppLocalizations.unknown.tr,
                     ),
                     _buildDetailItem(
                       icon: Icons.calendar_today,
-                      label: 'Hari',
+                      label: AppLocalizations.day.tr,
                       value: activity['day'] ?? activity['hari'] ?? '-',
                     ),
                     _buildDetailItem(
                       icon: Icons.date_range,
-                      label: 'Tanggal',
+                      label: AppLocalizations.date.tr,
                       value: _formatDate(
                         activity['date'] ?? activity['tanggal'],
                       ),
@@ -348,7 +350,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                     if (activity['jenis'] == 'tugas')
                       _buildDetailItem(
                         icon: Icons.access_time,
-                        label: 'Batas Waktu',
+                        label: AppLocalizations.deadline.tr,
                         value: _formatDate(
                           activity['deadline'] ?? activity['batas_waktu'],
                         ),
@@ -359,7 +361,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                         activity['deskripsi'] != 'null') ...[
                       SizedBox(height: 16),
                       Text(
-                        'Deskripsi',
+                        AppLocalizations.description.tr,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -389,7 +391,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                         activity['judul_sub_bab'] != null) ...[
                       SizedBox(height: 16),
                       Text(
-                        'Informasi Bab',
+                        AppLocalizations.chapterInfo.tr,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -400,13 +402,13 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                       if (activity['judul_bab'] != null)
                         _buildDetailItem(
                           icon: Icons.menu_book,
-                          label: 'Bab',
+                          label: AppLocalizations.chapter.tr,
                           value: activity['judul_bab'],
                         ),
                       if (activity['judul_sub_bab'] != null)
                         _buildDetailItem(
                           icon: Icons.bookmark,
-                          label: 'Sub Bab (Utama)',
+                          label: AppLocalizations.mainSubChapter.tr,
                           value: activity['judul_sub_bab'],
                         ),
                       if (activity['additional_material'] != null &&
@@ -418,8 +420,10 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                             .map<Widget>((item) {
                               return _buildDetailItem(
                                 icon: Icons.bookmark_add,
-                                label: 'Sub Bab (Tambahan)',
-                                value: item['sub_chapter_title'] ?? 'Unknown',
+                                label: AppLocalizations.additionalSubChapter.tr,
+                                value:
+                                    item['sub_chapter_title'] ??
+                                    AppLocalizations.unknown.tr,
                               );
                             }),
                       ],
@@ -440,7 +444,10 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                       ),
                       padding: EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: Text('Tutup', style: TextStyle(color: Colors.white)),
+                    child: Text(
+                      AppLocalizations.close.tr,
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ),
@@ -497,9 +504,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
   Widget _buildActivityList() {
     if (_selectedStudentId == null) {
-      return _buildEmptyState(
-        'Pilih anak terlebih dahulu untuk melihat aktivitas',
-      );
+      return _buildEmptyState(AppLocalizations.selectChildToViewActivity.tr);
     }
 
     if (_isLoading) {
@@ -507,7 +512,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     }
 
     if (_activityList.isEmpty) {
-      return _buildEmptyState('Belum ada aktivitas untuk anak ini');
+      return _buildEmptyState(AppLocalizations.noActivityForChild.tr);
     }
 
     return ListView.builder(
@@ -594,7 +599,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              isAssignment ? 'TUGAS' : 'MATERI',
+                              isAssignment
+                                  ? AppLocalizations.assignment.tr
+                                  : AppLocalizations.material.tr,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -655,7 +662,8 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      activity['judul'] ?? 'Judul Kegiatan',
+                                      activity['judul'] ??
+                                          AppLocalizations.activityTitle.tr,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -758,7 +766,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                                 Expanded(
                                                   child: Text(
                                                     item['sub_chapter_title'] ??
-                                                        'Unknown',
+                                                        AppLocalizations
+                                                            .unknown
+                                                            .tr,
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                       color:
@@ -970,7 +980,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Aktivitas Kelas Anak',
+                      AppLocalizations.childClassActivity.tr,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -979,7 +989,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Pantau aktivitas anak Anda',
+                      AppLocalizations.monitorChildActivity.tr,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),

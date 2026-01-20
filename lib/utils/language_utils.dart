@@ -807,6 +807,235 @@ class AppLocalizations {
     'id': 'Pengaturan Sekolah',
   };
 
+  // Parent Dashboard
+  static Map<String, String> get latestInfo => {
+    'en': 'Latest Info',
+    'id': 'Info terbaru',
+  };
+
+  static Map<String, String> get childrenData => {
+    'en': 'Children Data',
+    'id': 'Data Anak',
+  };
+
+  static Map<String, String> get registeredChildren => {
+    'en': 'Registered Children',
+    'id': 'Anak terdaftar',
+  };
+
+  static Map<String, String> get grades => {'en': 'Grades', 'id': 'Nilai'};
+
+  // Parent Grade Screen
+  static Map<String, String> get noChildrenLinked => {
+    'en': 'No student/child linked to this account',
+    'id': 'Tidak ada data siswa/anak yang terhubung dengan akun ini',
+  };
+  static Map<String, String> get selectChild => {
+    'en': 'Select Child:',
+    'id': 'Pilih Anak:',
+  };
+  static Map<String, String> get nameNotAvailable => {
+    'en': 'Name not available',
+    'id': 'Nama tidak tersedia',
+  };
+  static Map<String, String> get classString => {'en': 'Class', 'id': 'Kelas'};
+
+  static Map<String, String> get assessmentDate => {
+    'en': 'Assessment Date',
+    'id': 'Tanggal Penilaian',
+  };
+  static Map<String, String> get teacherNotes => {
+    'en': 'Teacher Notes',
+    'id': 'Catatan Guru',
+  };
+  static Map<String, String> get selectChildToViewGrades => {
+    'en': 'Select child first to view grades',
+    'id': 'Pilih anak terlebih dahulu untuk melihat nilai',
+  };
+  static Map<String, String> get noGradesData => {
+    'en': 'No grades data for this child',
+    'id': 'Belum ada data nilai untuk anak ini',
+  };
+  static Map<String, String> get childAcademicGrades => {
+    'en': 'Child Academic Grades',
+    'id': 'Nilai Akademik Anak',
+  };
+  static Map<String, String> get monitorChildGrades => {
+    'en': 'Monitor your child\'s grade progress',
+    'id': 'Pantau perkembangan nilai anak Anda',
+  };
+
+  static Map<String, String> get unknown => {
+    'en': 'Unknown',
+    'id': 'Tidak Diketahui',
+  };
+
+  // Parent Activity Screen
+  static Map<String, String> get activityTitle => {
+    'en': 'Activity Title',
+    'id': 'Judul Kegiatan',
+  };
+
+  static Map<String, String> get date => {'en': 'Date', 'id': 'Tanggal'};
+  static Map<String, String> get deadline => {
+    'en': 'Deadline',
+    'id': 'Batas Waktu',
+  };
+  static Map<String, String> get description => {
+    'en': 'Description',
+    'id': 'Deskripsi',
+  };
+  static Map<String, String> get chapterInfo => {
+    'en': 'Chapter Info',
+    'id': 'Informasi Bab',
+  };
+  static Map<String, String> get chapter => {'en': 'Chapter', 'id': 'Bab'};
+  static Map<String, String> get mainSubChapter => {
+    'en': 'Main Sub-chapter',
+    'id': 'Sub Bab (Utama)',
+  };
+  static Map<String, String> get additionalSubChapter => {
+    'en': 'Additional Sub-chapter',
+    'id': 'Sub Bab (Tambahan)',
+  };
+  static Map<String, String> get selectChildToViewActivity => {
+    'en': 'Select child first to view activities',
+    'id': 'Pilih anak terlebih dahulu untuk melihat aktivitas',
+  };
+  static Map<String, String> get noActivityForChild => {
+    'en': 'No activity for this child',
+    'id': 'Belum ada aktivitas untuk anak ini',
+  };
+  static Map<String, String> get childClassActivity => {
+    'en': 'Child Class Activity',
+    'id': 'Aktivitas Kelas Anak',
+  };
+  static Map<String, String> get monitorChildActivity => {
+    'en': 'Monitor your child\'s activity',
+    'id': 'Pantau aktivitas anak Anda',
+  };
+  static Map<String, String> get assignment => {
+    'en': 'ASSIGNMENT',
+    'id': 'TUGAS',
+  };
+  static Map<String, String> get material => {'en': 'MATERIAL', 'id': 'MATERI'};
+
+  // Parent Billing Screen
+  static Map<String, String> get myBills => {
+    'en': 'My Bills',
+    'id': 'Tagihan Saya',
+  };
+  static Map<String, String> get manageBillPayments => {
+    'en': 'Manage bill payments',
+    'id': 'Kelola pembayaran tagihan',
+  };
+  static Map<String, String> get searchBills => {
+    'en': 'Search bills...',
+    'id': 'Cari tagihan...',
+  };
+  static Map<String, String> get paymentStatus => {
+    'en': 'Payment Status',
+    'id': 'Status Pembayaran',
+  };
+  static Map<String, String> get paid => {'en': 'Paid', 'id': 'Lunas'};
+
+  static Map<String, String> get waitingForVerification => {
+    'en': 'Waiting for Verification',
+    'id': 'Menunggu Verifikasi',
+  };
+  static Map<String, String> get paymentPeriod => {
+    'en': 'Payment Period',
+    'id': 'Periode Pembayaran',
+  };
+  static Map<String, String> get monthly => {'en': 'Monthly', 'id': 'Bulanan'};
+  static Map<String, String> get yearly => {'en': 'Yearly', 'id': 'Tahunan'};
+  static Map<String, String> get filter => {'en': 'Filter', 'id': 'Filter'};
+  static Map<String, String> get apply => {'en': 'Apply', 'id': 'Terapkan'};
+
+  static Map<String, String> get reset => {'en': 'Reset', 'id': 'Reset'};
+  static Map<String, String> get chooseSource => {
+    'en': 'Choose Source',
+    'id': 'Pilih Sumber',
+  };
+  static Map<String, String> get chooseImageSource => {
+    'en': 'Choose image source',
+    'id': 'Pilih sumber gambar',
+  };
+  static Map<String, String> get gallery => {'en': 'Gallery', 'id': 'Galeri'};
+  static Map<String, String> get camera => {'en': 'Camera', 'id': 'Kamera'};
+  static Map<String, String> get unsupportedFileFormat => {
+    'en': 'Unsupported file format. Only JPG, JPEG, and PNG are allowed.',
+    'id':
+        'Format file tidak didukung. Hanya JPG, JPEG, dan PNG yang diizinkan.',
+  };
+  static Map<String, String> get chooseFileType => {
+    'en': 'Choose File Type',
+    'id': 'Pilih Jenis File',
+  };
+  static Map<String, String> get imageCameraGallery => {
+    'en': 'Image (Camera/Gallery)',
+    'id': 'Gambar (Kamera/Galeri)',
+  };
+
+  static Map<String, String> get uploadPaymentProof => {
+    'en': 'Upload Payment Proof',
+    'id': 'Upload Bukti Pembayaran',
+  };
+  static Map<String, String> get billAmount => {
+    'en': 'Bill Amount',
+    'id': 'Jumlah Tagihan',
+  };
+  static Map<String, String> get student => {'en': 'Student', 'id': 'Siswa'};
+  static Map<String, String> get payNow => {
+    'en': 'Pay Now',
+    'id': 'Bayar Sekarang',
+  };
+
+  // Parent Presence Screen
+  static Map<String, String> get childPresence => {
+    'en': 'Child Presence',
+    'id': 'Absensi Anak',
+  };
+  static Map<String, String> get studentName => {
+    'en': 'Student Name',
+    'id': 'Nama Siswa',
+  };
+  static Map<String, String> get monthlyRecap => {
+    'en': 'Monthly Recap',
+    'id': 'Rekap Bulanan',
+  };
+  static Map<String, String> get attendanceRate => {
+    'en': 'Attendance Rate',
+    'id': 'Tingkat Kehadiran',
+  };
+  static Map<String, String> get present => {'en': 'Present', 'id': 'Hadir'};
+  static Map<String, String> get late => {
+    'en': 'Late',
+    'id': 'Terlambat',
+  }; // late is reserved keyword in dart? No.
+  static Map<String, String> get permission => {
+    'en': 'Permission',
+    'id': 'Izin',
+  };
+  static Map<String, String> get sick => {'en': 'Sick', 'id': 'Sakit'};
+  static Map<String, String> get alpha => {'en': 'Alpha', 'id': 'Alpha'};
+  static Map<String, String> get presenceHistory => {
+    'en': 'Presence History',
+    'id': 'Riwayat Absensi',
+  };
+  static Map<String, String> get noPresenceData => {
+    'en': 'No presence data',
+    'id': 'Tidak ada data absensi',
+  };
+  static Map<String, String> get forMonth => {
+    'en': 'For month',
+    'id': 'Untuk bulan',
+  };
+  static Map<String, String> get loadingPresenceData => {
+    'en': 'Loading presence data...',
+    'id': 'Memuat data absensi...',
+  };
+
   // Finance
   static Map<String, String> get financialManagement => {
     'en': 'Financial Management',

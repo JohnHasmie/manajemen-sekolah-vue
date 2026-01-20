@@ -5,6 +5,8 @@ import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
 
 class PresenceParentPage extends StatefulWidget {
   final Map<String, dynamic> parent;
@@ -196,14 +198,19 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Rekap Bulanan',
+              Text(
+                AppLocalizations.monthlyRecap.tr,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: () => _selectMonth(context),
                 child: Text(
-                  DateFormat('MMMM yyyy', 'id_ID').format(_selectedMonth),
+                  DateFormat(
+                    'MMMM yyyy',
+                    context.watch<LanguageProvider>().currentLanguage == 'id'
+                        ? 'id_ID'
+                        : 'en_US',
+                  ).format(_selectedMonth),
                   style: const TextStyle(
                     fontSize: 13,
                     color: Colors.blue,
@@ -234,9 +241,9 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Tingkat Kehadiran',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.attendanceRate.tr,
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Colors.blue,
                     fontWeight: FontWeight.w500,
@@ -251,23 +258,31 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildSummaryItem(
-                'Hadir',
+              _buildStatItem(
+                AppLocalizations.present.tr,
                 _monthlySummary['hadir']!,
                 Colors.green,
               ),
-              _buildSummaryItem(
-                'Terlambat',
+              _buildStatItem(
+                AppLocalizations.late.tr,
                 _monthlySummary['terlambat']!,
                 Colors.orange,
               ),
-              _buildSummaryItem('Izin', _monthlySummary['izin']!, Colors.blue),
-              _buildSummaryItem(
-                'Sakit',
+              _buildStatItem(
+                AppLocalizations.permission.tr,
+                _monthlySummary['izin']!,
+                Colors.blue,
+              ),
+              _buildStatItem(
+                AppLocalizations.sick.tr,
                 _monthlySummary['sakit']!,
                 Colors.purple,
               ),
-              _buildSummaryItem('Alpha', _monthlySummary['alpha']!, Colors.red),
+              _buildStatItem(
+                AppLocalizations.alpha.tr,
+                _monthlySummary['alpha']!,
+                Colors.red,
+              ),
             ],
           ),
         ],
@@ -275,7 +290,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     );
   }
 
-  Widget _buildSummaryItem(String label, int count, Color color) {
+  Widget _buildStatItem(String label, int count, Color color) {
     return Column(
       children: [
         Container(
@@ -339,12 +354,12 @@ class PresenceParentPageState extends State<PresenceParentPage> {
             Icon(Icons.calendar_today, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
-              'Tidak ada data absensi',
+              AppLocalizations.noPresenceData.tr,
               style: TextStyle(color: Colors.grey[500], fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              'Untuk bulan ${DateFormat('MMMM yyyy', 'id_ID').format(_selectedMonth)}',
+              '${AppLocalizations.forMonth.tr} ${DateFormat('MMMM yyyy', context.watch<LanguageProvider>().currentLanguage == 'id' ? 'id_ID' : 'en_US').format(_selectedMonth)}',
               style: TextStyle(color: Colors.grey[400], fontSize: 14),
             ),
           ],
@@ -365,10 +380,16 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   Widget _buildAbsensiItem(Map<String, dynamic> absen) {
     final status = _normalizeStatus(absen['status']);
     final date = _parseLocalDate(absen['tanggal']);
-    final subjectName = absen['mata_pelajaran_nama'] ?? 'Mata Pelajaran';
+    final subjectName =
+        absen['mata_pelajaran_nama'] ?? AppLocalizations.subject.tr;
     final Color statusColor = _getStatusColor(status);
-    final String statusText = _getStatusText(status);
-    final String day = DateFormat('EEEE', 'id_ID').format(date);
+    final String statusText = _getTranslatedStatus(status);
+    final String day = DateFormat(
+      'EEEE',
+      context.watch<LanguageProvider>().currentLanguage == 'id'
+          ? 'id_ID'
+          : 'en_US',
+    ).format(date);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -472,7 +493,15 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                               ),
                             ),
                             Text(
-                              DateFormat('MMM').format(date),
+                              DateFormat(
+                                'MMM',
+                                context
+                                            .watch<LanguageProvider>()
+                                            .currentLanguage ==
+                                        'id'
+                                    ? 'id_ID'
+                                    : 'en_US',
+                              ).format(date),
                               style: TextStyle(
                                 fontSize: 10,
                                 color: _getPrimaryColor(),
@@ -509,7 +538,12 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                               Text(
                                 DateFormat(
                                   'dd MMMM yyyy',
-                                  'id_ID',
+                                  context
+                                              .watch<LanguageProvider>()
+                                              .currentLanguage ==
+                                          'id'
+                                      ? 'id_ID'
+                                      : 'en_US',
                                 ).format(date),
                                 style: const TextStyle(
                                   fontSize: 12,
@@ -546,19 +580,17 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     }
   }
 
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'izin':
-        return 'Izin';
-      case 'sakit':
-        return 'Sakit';
-      case 'alpha':
-        return 'Alpha';
-      case 'terlambat':
-        return 'Terlambat';
-      default:
-        return 'Hadir';
-    }
+  String _getTranslatedStatus(String? status) {
+    if (status == null) return '-';
+    // Normalize status just in case
+    String s = status.trim();
+    if (s.toLowerCase() == 'hadir') return AppLocalizations.present.tr;
+    if (s.toLowerCase() == 'telat' || s.toLowerCase() == 'terlambat')
+      return AppLocalizations.late.tr;
+    if (s.toLowerCase() == 'izin') return AppLocalizations.permission.tr;
+    if (s.toLowerCase() == 'sakit') return AppLocalizations.sick.tr;
+    if (s.toLowerCase() == 'alpha') return AppLocalizations.alpha.tr;
+    return status;
   }
 
   String _normalizeStatus(dynamic rawStatus) {
@@ -647,7 +679,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Absensi Anak',
+                      AppLocalizations.childPresence.tr,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -655,14 +687,20 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                       ),
                     ),
                     SizedBox(height: 2),
-                    Text(
-                      _student?.name ?? 'Nama Siswa',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Icon(Icons.person, color: Colors.white70, size: 14),
+                        SizedBox(width: 4),
+                        Text(
+                          _student?.name ?? AppLocalizations.studentName.tr,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -733,7 +771,8 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _student?.name ?? 'Nama Siswa',
+                                    _student?.name ??
+                                        AppLocalizations.studentName.tr,
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,

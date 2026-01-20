@@ -234,8 +234,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
               'id': 'Tahunan',
             });
       filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Period', 'id': 'Periode'})}: $periodeText',
+        'label': '${AppLocalizations.paymentPeriod.tr}: $periodeText',
         'onRemove': () {
           setState(() {
             _selectedPeriodeFilter = null;
@@ -281,7 +280,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Filter',
+                      AppLocalizations.filter.tr,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -295,7 +294,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                         });
                       },
                       child: Text(
-                        'Reset',
+                        AppLocalizations.reset.tr,
                         style: TextStyle(color: _getPrimaryColor()),
                       ),
                     ),
@@ -316,7 +315,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Status Pembayaran',
+                              AppLocalizations.paymentStatus.tr,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -329,9 +328,18 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                               runSpacing: 8,
                               children:
                                   [
-                                    {'value': 'unpaid', 'label': 'Belum Bayar'},
-                                    {'value': 'pending', 'label': 'Pending'},
-                                    {'value': 'verified', 'label': 'Lunas'},
+                                    {
+                                      'value': 'unpaid',
+                                      'label': AppLocalizations.unpaid.tr,
+                                    },
+                                    {
+                                      'value': 'pending',
+                                      'label': AppLocalizations.pending.tr,
+                                    },
+                                    {
+                                      'value': 'verified',
+                                      'label': AppLocalizations.paid.tr,
+                                    },
                                   ].map((item) {
                                     final isSelected =
                                         tempSelectedStatus == item['value'];
@@ -379,7 +387,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Periode Pembayaran',
+                              AppLocalizations.paymentPeriod.tr,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -392,8 +400,14 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                               runSpacing: 8,
                               children:
                                   [
-                                    {'value': 'bulanan', 'label': 'Bulanan'},
-                                    {'value': 'tahunan', 'label': 'Tahunan'},
+                                    {
+                                      'value': 'bulanan',
+                                      'label': AppLocalizations.monthly.tr,
+                                    },
+                                    {
+                                      'value': 'tahunan',
+                                      'label': AppLocalizations.yearly.tr,
+                                    },
                                   ].map((item) {
                                     final isSelected =
                                         tempSelectedPeriode == item['value'];
@@ -442,7 +456,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           side: BorderSide(color: _getPrimaryColor()),
                         ),
                         child: Text(
-                          'Batal',
+                          AppLocalizations.cancel.tr,
                           style: TextStyle(color: _getPrimaryColor()),
                         ),
                       ),
@@ -464,7 +478,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           padding: EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: Text(
-                          'Terapkan',
+                          AppLocalizations.apply.tr,
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -488,16 +502,16 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
       final ImageSource? source = await showDialog<ImageSource>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Pilih Sumber'),
-          content: Text('Pilih sumber gambar'),
+          title: Text(AppLocalizations.chooseSource.tr),
+          content: Text(AppLocalizations.chooseImageSource.tr),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, ImageSource.gallery),
-              child: Text('Galeri'),
+              child: Text(AppLocalizations.gallery.tr),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, ImageSource.camera),
-              child: Text('Kamera'),
+              child: Text(AppLocalizations.camera.tr),
             ),
           ],
         ),
@@ -525,9 +539,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    'Format file tidak didukung. Hanya JPG, JPEG, dan PNG yang diizinkan.',
-                  ),
+                  content: Text(AppLocalizations.unsupportedFileFormat.tr),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -600,16 +612,16 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
       final action = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Pilih Jenis File'),
-          content: Text('Pilih jenis bukti pembayaran'),
+          title: Text(AppLocalizations.chooseFileType.tr),
+          content: Text(AppLocalizations.uploadPaymentProof.tr),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, 'image'),
-              child: Text('Gambar (Kamera/Galeri)'),
+              child: Text(AppLocalizations.imageCameraGallery.tr),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, 'pdf'),
-              child: Text('Dokumen PDF'),
+              child: Text(AppLocalizations.pdfDocument.tr),
             ),
           ],
         ),
@@ -682,13 +694,13 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
   String _getStatusText(Map<String, dynamic> billing) {
     if (billing['pembayaran_status'] == 'verified') {
-      return 'Lunas';
+      return AppLocalizations.paid.tr;
     } else if (billing['pembayaran_status'] == 'pending') {
-      return 'Menunggu Verifikasi';
+      return AppLocalizations.waitingForVerification.tr;
     } else if (billing['pembayaran_status'] == 'rejected') {
-      return 'Ditolak';
+      return AppLocalizations.rejected.tr;
     } else {
-      return 'Belum Bayar';
+      return AppLocalizations.unpaid.tr;
     }
   }
 
@@ -759,7 +771,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                         SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Upload Bukti Pembayaran',
+                            AppLocalizations.uploadPaymentProof.tr,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -778,15 +790,21 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                       children: [
                         // Info Tagihan
                         _buildInfoItem(
-                          'Jenis Pembayaran',
+                          AppLocalizations.paymentTypes.tr,
                           billing['jenis_pembayaran_nama'] ?? '-',
                         ),
                         _buildInfoItem(
-                          'Jumlah Tagihan',
+                          AppLocalizations.billAmount.tr,
                           _formatCurrency(billing['jumlah']),
                         ),
-                        _buildInfoItem('Siswa', billing['siswa_nama'] ?? '-'),
-                        _buildInfoItem('Kelas', billing['kelas_nama'] ?? '-'),
+                        _buildInfoItem(
+                          AppLocalizations.student.tr,
+                          billing['siswa_nama'] ?? '-',
+                        ),
+                        _buildInfoItem(
+                          AppLocalizations.classString.tr,
+                          billing['kelas_nama'] ?? '-',
+                        ),
 
                         SizedBox(height: 16),
                         Divider(),
@@ -1491,8 +1509,8 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
                         SizedBox(height: 12),
 
-                        if (_getStatusText(billing) == 'Belum Bayar' ||
-                            billing['pembayaran_status'] == 'rejected')
+                        if (billing['pembayaran_status'] != 'verified' &&
+                            billing['pembayaran_status'] != 'pending')
                           Align(
                             alignment: Alignment.centerRight,
                             child: ElevatedButton(
@@ -1509,7 +1527,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                                 ),
                               ),
                               child: Text(
-                                'Bayar Sekarang',
+                                AppLocalizations.payNow.tr,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
@@ -1583,7 +1601,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tagihan Saya',
+                      AppLocalizations.myBills.tr,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -1592,7 +1610,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Kelola pembayaran tagihan',
+                      AppLocalizations.manageBillPayments.tr,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),
@@ -1623,7 +1641,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           controller: _searchController,
                           style: TextStyle(color: Colors.black87),
                           decoration: InputDecoration(
-                            hintText: 'Cari tagihan...',
+                            hintText: AppLocalizations.searchBills.tr,
                             hintStyle: TextStyle(color: Colors.grey),
                             prefixIcon: Icon(Icons.search, color: Colors.grey),
                             border: InputBorder.none,
@@ -1756,7 +1774,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                                   ),
                                   SizedBox(width: 4),
                                   Text(
-                                    'Reset',
+                                    AppLocalizations.reset.tr,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.red,
@@ -1779,12 +1797,12 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                           children: [
                             SizedBox(height: 100),
                             EmptyState(
-                              title: 'Tidak ada tagihan',
+                              title: 'No Bills',
                               subtitle:
                                   _searchController.text.isEmpty &&
                                       !_hasActiveFilter
-                                  ? 'Semua tagihan telah lunas'
-                                  : 'Tidak ditemukan hasil pencarian',
+                                  ? 'All bills are paid'
+                                  : 'No results found',
                               icon: Icons.receipt,
                             ),
                           ],

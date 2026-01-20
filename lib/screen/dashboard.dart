@@ -1144,18 +1144,18 @@ class _DashboardState extends State<Dashboard>
       child: Row(
         children: [
           _buildStatCard(
-            title: "Pengumuman",
+            title: AppLocalizations.announcements.tr,
             value: _stats['pengumuman_terbaru'].toString(),
-            subtitle: "Info terbaru",
+            subtitle: AppLocalizations.latestInfo.tr,
             icon: Icons.announcement_outlined,
             iconColor: Color(0xFF4361EE),
             backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
           ),
           SizedBox(width: 12),
           _buildStatCard(
-            title: "Data Anak",
+            title: AppLocalizations.childrenData.tr,
             value: _stats['anak_terdaftar'].toString(),
-            subtitle: "Anak terdaftar",
+            subtitle: AppLocalizations.registeredChildren.tr,
             icon: Icons.child_care_outlined,
             iconColor: Color(0xFF2EC4B6),
             backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
@@ -2548,19 +2548,23 @@ class _DashboardState extends State<Dashboard>
             );
           },
         ),
-        _buildDashboardCard('Nilai', Icons.grade_outlined, () {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ParentGradeScreen(academicYearId: academicYearId),
-            ),
-          );
-        }),
+        _buildDashboardCard(
+          AppLocalizations.grades.tr,
+          Icons.grade_outlined,
+          () {
+            final academicYearId = Provider.of<AcademicYearProvider>(
+              context,
+              listen: false,
+            ).selectedAcademicYear?['id']?.toString();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    ParentGradeScreen(academicYearId: academicYearId),
+              ),
+            );
+          },
+        ),
         _buildDashboardCard(
           AppLocalizations.presence.tr,
           Icons.check_circle_outline,
