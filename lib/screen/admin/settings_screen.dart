@@ -279,7 +279,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             context.read<LanguageProvider>().getTranslatedText(
                               AppLocalizations.role,
                             ),
-                            _profileData['role'] ?? '',
+                            (_profileData['role'] != null &&
+                                    _profileData['role'].isNotEmpty)
+                                ? _profileData['role'][0].toUpperCase() +
+                                      _profileData['role'].substring(1)
+                                : '',
                             Icons.badge,
                           ),
                           _buildInfoRow(
