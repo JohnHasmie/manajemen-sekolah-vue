@@ -438,7 +438,7 @@ class LoginScreenState extends State<LoginScreen> {
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         Text(
-          'Sekolah: ${_selectedSchool?['nama_sekolah'] ?? _userData?['nama_sekolah']}',
+          'Sekolah: ${_selectedSchool?['school_name'] ?? _selectedSchool?['name'] ?? _selectedSchool?['nama_sekolah'] ?? _userData?['school_name'] ?? _userData?['nama_sekolah'] ?? '-'}',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         SizedBox(height: 20),
@@ -491,16 +491,25 @@ class LoginScreenState extends State<LoginScreen> {
   }
 
   String _getRoleDisplayName(String role) {
-    switch (role) {
+    switch (role.toLowerCase()) {
       case 'admin':
+      case 'administrator':
         return 'Administrator';
       case 'guru':
-        return 'Guru';
+      case 'teacher':
+        return 'Teacher';
       case 'wali':
-        return 'Wali Murid';
+      case 'parent':
+      case 'walimurid':
+      case 'wali murid':
+        return 'Parent';
       case 'staff':
         return 'Staff';
       default:
+        // Capitalize first letter if no match found
+        if (role.isNotEmpty) {
+          return role[0].toUpperCase() + role.substring(1);
+        }
         return role;
     }
   }
