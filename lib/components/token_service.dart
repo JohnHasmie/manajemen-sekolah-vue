@@ -162,7 +162,20 @@ class TokenService {
       }
 
       final token = await getToken();
-      final isValid = token != null && token.isNotEmpty && await isTokenValid();
+      final userData = await getUserData();
+
+      // Check if both token and user data exist
+      if (token == null || token.isEmpty || userData == null) {
+        if (kDebugMode) {
+          print(
+            '🔐 Incomplete login state: token=${token != null}, user=${userData != null}',
+          );
+        }
+        return false;
+      }
+
+      // Check token validity
+      final isValid = await isTokenValid();
 
       if (kDebugMode) {
         print('🔐 Login status: $isValid');

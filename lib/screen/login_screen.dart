@@ -648,10 +648,10 @@ class LoginScreenState extends State<LoginScreen> {
               : OutlinedButton.icon(
                   onPressed: _serverConnected ? _handleGoogleSignIn : null,
                   icon: Image.asset(
-                    'assets/icon/KamilEdu.png',
+                    'assets/icon/google_logo.png',
                     height: 24,
                     errorBuilder: (c, o, s) => Icon(Icons.login),
-                  ), // Fallback use simple icon
+                  ),
                   label: Text('Masuk dengan Google'),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 15),

@@ -81,6 +81,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     'pengumuman_terbaru': 0,
   };
 
+  // Stats Pagination state
+  late ScrollController _statsScrollController;
+  int _currentStatsPage = 0;
+
   @override
   void initState() {
     super.initState();
@@ -109,17 +113,23 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
 
+    _statsScrollController = ScrollController();
+
     _animationController.forward();
     _initializeData();
   }
 
   Future<void> _initializeData() async {
+    // Load cached data first (fast, synchronous-like)
+    await _loadCachedUserData();
+
     setState(() {
       _isInitializing = true;
     });
 
     try {
-      await _loadUserData();
+      // Fetch fresh data in background
+      _loadFreshTeacherData();
       await _loadAccessibleSchools();
       await _loadAvailableRoles();
       // Fetch academic years
@@ -228,62 +238,53 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> _loadCachedUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final userString = prefs.getString('user');
     if (userString != null) {
       if (!mounted) return;
-
       final localUserData = json.decode(userString);
       setState(() {
         _userData = localUserData;
       });
+    }
+  }
 
-      // If teacher, fetch fresh data with academic year context
-      if (_effectiveRole == 'guru') {
-        String? academicYearId;
-        // Need to wait for provider if called early, or access it if available
-        // safe to access here if initState called _initializeData
-        if (mounted) {
-          try {
-            final academicYearProvider = Provider.of<AcademicYearProvider>(
-              context,
-              listen: false,
-            );
-            academicYearId = academicYearProvider.selectedAcademicYear?['id']
-                ?.toString();
-          } catch (e) {
-            // Provider might not be ready or found in context if too early?
-            // Normally safe in initState + postFrame or later.
-          }
-        }
+  Future<void> _loadFreshTeacherData() async {
+    if (_effectiveRole != 'guru') return;
 
-        if (academicYearId != null) {
-          final userId = localUserData['id']?.toString();
+    try {
+      String? academicYearId;
+      if (mounted) {
+        final academicYearProvider = Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        );
+        academicYearId = academicYearProvider.selectedAcademicYear?['id']
+            ?.toString();
+      }
 
-          if (userId != null) {
-            final teacherData = await ApiTeacherService.getGuruByUserId(
-              userId,
-              academicYearId: academicYearId,
-            );
+      if (academicYearId != null && _userData['id'] != null) {
+        final teacherData = await ApiTeacherService.getGuruByUserId(
+          _userData['id'].toString(),
+          academicYearId: academicYearId,
+        );
 
-            if (teacherData != null && mounted) {
-              setState(() {
-                _userData = {..._userData, ...teacherData};
-              });
-              if (kDebugMode) {
-                print('✅ Updated teacher data for year $academicYearId');
-                if (teacherData['homeroom_class'] != null) {
-                  print('✅ Homeroom: ${teacherData['homeroom_class']['name']}');
-                } else {
-                  print('ℹ️ No homeroom class for this year');
-                }
-              }
-            }
-          }
+        if (teacherData != null && mounted) {
+          setState(() {
+            _userData = {..._userData, ...teacherData};
+          });
         }
       }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error loading fresh teacher data: $e');
     }
+  }
+
+  // Obsolete - removed in favor of split loading
+  Future<void> _loadUserData() async {
+    await _loadCachedUserData();
+    await _loadFreshTeacherData();
   }
 
   Future<void> _loadAccessibleSchools() async {
@@ -914,6 +915,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   void dispose() {
     _animationController.dispose();
     _curtainController.dispose();
+    _statsScrollController.dispose();
     super.dispose();
   }
 
@@ -924,208 +926,62 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         return Scaffold(
           backgroundColor: _getBackgroundColor(),
           body: SafeArea(
-            child: _isInitializing
-                ? _buildSkeletonDashboard(context, languageProvider)
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Modern Header (Fixed)
-                      _buildModernHeader(context, languageProvider),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Modern Header (Fixed)
+                _buildModernHeader(context, languageProvider),
 
-                      // Scrollable Content
-                      Expanded(
-                        child: CustomScrollView(
-                          physics: BouncingScrollPhysics(),
-                          slivers: [
-                            // Curtain Area (Welcome, Stats, Search)
-                            SliverToBoxAdapter(
-                              child: SizeTransition(
-                                sizeFactor: _curtainAnimation,
-                                axisAlignment: -1.0,
-                                child: Column(
-                                  children: [
-                                    SizedBox(height: 5),
+                // Scrollable Content
+                Expanded(
+                  child: CustomScrollView(
+                    physics: BouncingScrollPhysics(),
+                    slivers: [
+                      // Curtain Area (Welcome, Stats, Search)
+                      SliverToBoxAdapter(
+                        child: SizeTransition(
+                          sizeFactor: _curtainAnimation,
+                          axisAlignment: -1.0,
+                          child: Column(
+                            children: [
+                              SizedBox(height: 5),
 
-                                    // Welcome Section
-                                    FadeTransition(
-                                      opacity: _fadeAnimation,
-                                      child: ScaleTransition(
-                                        scale: _scaleAnimation,
-                                        child: _buildWelcomeSection(),
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-
-                                    // Stats Section
-                                    _buildStatsSection(),
-                                    SizedBox(height: 20),
-
-                                    // Search Bar
-                                    _buildModernSearchBar(),
-                                  ],
+                              // Welcome Section
+                              FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: ScaleTransition(
+                                  scale: _scaleAnimation,
+                                  child: _buildWelcomeSection(),
                                 ),
                               ),
-                            ),
+                              SizedBox(height: 20),
 
-                            // Gap between curtain and grid
-                            SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-                            // Grid Menu
-                            _buildSliverGridMenu(context),
-
-                            // Bottom padding
-                            SliverPadding(padding: EdgeInsets.only(bottom: 20)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSkeletonDashboard(
-    BuildContext context,
-    LanguageProvider languageProvider,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header Skeleton
-        _buildSkeletonHeader(),
-
-        Expanded(
-          child: Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
-            child: SingleChildScrollView(
-              physics: NeverScrollableScrollPhysics(),
-              child: Column(
-                children: [
-                  SizedBox(height: 5),
-                  // Welcome Skeleton
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  // Stats Skeleton
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: List.generate(
-                        3,
-                        (index) => Container(
-                          width: 140,
-                          height: 100,
-                          margin: EdgeInsets.only(right: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                              // Stats Section
+                              _buildStatsSection(),
+                              SizedBox(height: 10),
+                              // Search Bar
+                              _buildModernSearchBar(),
+                            ],
                           ),
                         ),
                       ),
-                    ),
+
+                      // Gap between curtain and grid
+                      SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+                      // Grid Menu
+                      _buildSliverGridMenu(context),
+
+                      // Bottom padding
+                      SliverPadding(padding: EdgeInsets.only(bottom: 20)),
+                    ],
                   ),
-                  SizedBox(height: 20),
-                  // Search Bar Skeleton
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  // Grid Menu Skeleton
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 14,
-                        childAspectRatio: 1.1,
-                      ),
-                      itemCount: 6,
-                      itemBuilder: (context, index) => Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSkeletonHeader() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(color: _getPrimaryColor()),
-      child: Shimmer.fromColors(
-        baseColor: Colors.white.withOpacity(0.3),
-        highlightColor: Colors.white.withOpacity(0.1),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 150,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Container(
-                    width: 80,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -1169,7 +1025,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
           SizedBox(width: 12),
 
-          // App Title dan Nama Sekolah
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1227,139 +1082,208 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget _buildStatsSection() {
-    if (_effectiveRole == 'guru') {
-      return _buildTeacherStats();
-    } else if (_effectiveRole == 'admin') {
-      return _buildAdminStats();
+    int dotCount = 0;
+    if (_effectiveRole == 'guru' || _effectiveRole == 'admin') {
+      dotCount = 4;
     } else if (_effectiveRole == 'wali') {
-      return _buildParentStats();
+      dotCount = 2;
     }
-    return SizedBox.shrink();
+
+    return Column(
+      children: [
+        if (_effectiveRole == 'guru')
+          _buildTeacherStats()
+        else if (_effectiveRole == 'admin')
+          _buildAdminStats()
+        else if (_effectiveRole == 'wali')
+          _buildParentStats(),
+        if (dotCount > 1) ...[
+          SizedBox(height: 8),
+          _buildPaginationDots(dotCount),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPaginationDots(int count) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (index) {
+        bool isActive = _currentStatsPage == index;
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          margin: EdgeInsets.symmetric(horizontal: 4),
+          width: isActive ? 16 : 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: isActive ? _getPrimaryColor() : Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        );
+      }),
+    );
   }
 
   Widget _buildTeacherStats() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          _buildStatCard(
-            title:
-                "${AppLocalizations.totalStudents.tr}\n${AppLocalizations.supervised.tr}",
-            value: _stats['total_siswa'].toString(),
-            subtitle:
-                "${AppLocalizations.all.tr} ${AppLocalizations.class_.tr.toLowerCase()}",
-            icon: Icons.people_alt_outlined,
-            iconColor: Color(0xFF4361EE),
-            backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
-          ),
-          SizedBox(width: 12),
-          _buildStatCard(
-            title: AppLocalizations.totalClasses.tr,
-            value: _stats['total_kelas'].toString(),
-            subtitle: "✓ ${AppLocalizations.active.tr}",
-            icon: Icons.class_outlined,
-            iconColor: Color(0xFF2EC4B6),
-            backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
-          ),
-          SizedBox(width: 12),
-          _buildStatCard(
-            title: AppLocalizations.todaysClasses.tr,
-            value: _stats['kelas_hari_ini'].toString(),
-            subtitle: AppLocalizations.ongoing.tr,
-            icon: Icons.schedule_outlined,
-            iconColor: Color(0xFFFF9F1C),
-            backgroundColor: Color(0xFFFF9F1C).withOpacity(0.1),
-          ),
-          SizedBox(width: 12),
-          _buildStatCard(
-            title: "RPP",
-            value: "${_stats['total_rpp']}",
-            // valueStyle: TextStyle(
-            //   fontSize: 12,
-            //   fontWeight: FontWeight.w600,
-            //   color: Colors.grey.shade700,
-            // ),
-            subtitle: AppLocalizations.submitted.tr,
-            icon: Icons.description_outlined,
-            iconColor: Color(0xFF7209B7),
-            backgroundColor: Color(0xFF7209B7).withOpacity(0.1),
-          ),
-        ],
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollUpdateNotification) {
+          final page = (notification.metrics.pixels / 140).round();
+          if (page != _currentStatsPage) {
+            setState(() {
+              _currentStatsPage = page;
+            });
+          }
+        }
+        return true;
+      },
+      child: SingleChildScrollView(
+        controller: _statsScrollController,
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: [
+            _buildStatCard(
+              title:
+                  "${AppLocalizations.totalStudents.tr}\n${AppLocalizations.supervised.tr}",
+              value: _stats['total_siswa'].toString(),
+              subtitle:
+                  "${AppLocalizations.all.tr} ${AppLocalizations.class_.tr.toLowerCase()}",
+              icon: Icons.people_alt_outlined,
+              iconColor: Color(0xFF4361EE),
+              backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
+            ),
+            SizedBox(width: 12),
+            _buildStatCard(
+              title: AppLocalizations.totalClasses.tr,
+              value: _stats['total_kelas'].toString(),
+              subtitle: AppLocalizations.active.tr,
+              icon: Icons.class_outlined,
+              iconColor: Color(0xFF2EC4B6),
+              backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
+            ),
+            SizedBox(width: 12),
+            _buildStatCard(
+              title: AppLocalizations.todaysClasses.tr,
+              value: _stats['kelas_hari_ini'].toString(),
+              subtitle: AppLocalizations.ongoing.tr,
+              icon: Icons.schedule_outlined,
+              iconColor: Color(0xFFFF9F1C),
+              backgroundColor: Color(0xFFFF9F1C).withOpacity(0.1),
+            ),
+            SizedBox(width: 12),
+            _buildStatCard(
+              title: "RPP",
+              value: "${_stats['total_rpp']}",
+              subtitle: AppLocalizations.submitted.tr,
+              icon: Icons.description_outlined,
+              iconColor: Color(0xFF7209B7),
+              backgroundColor: Color(0xFF7209B7).withOpacity(0.1),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildAdminStats() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          _buildStatCard(
-            title: AppLocalizations.totalStudents.tr,
-            value: _stats['total_siswa'].toString(),
-            subtitle: "✓ ${AppLocalizations.registered.tr}",
-            icon: "👨‍🎓",
-            iconColor: Color(0xFF4361EE),
-            backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
-          ),
-          SizedBox(width: 12),
-          _buildStatCard(
-            title: AppLocalizations.totalTeachers.tr,
-            value: _stats['total_guru'].toString(),
-            subtitle: "✓ ${AppLocalizations.active.tr}",
-            icon: "👨‍🏫",
-            iconColor: Color(0xFF2EC4B6),
-            backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
-          ),
-          SizedBox(width: 12),
-          _buildStatCard(
-            title: AppLocalizations.totalClasses.tr,
-            value: _stats['total_kelas'].toString(),
-            subtitle: AppLocalizations.available.tr,
-            icon: "🏫",
-            iconColor: Color(0xFFFF9F1C),
-            backgroundColor: Color(0xFFFF9F1C).withOpacity(0.1),
-          ),
-          SizedBox(width: 12),
-          _buildStatCard(
-            title: AppLocalizations.subjects.tr,
-            value: _stats['total_mapel'].toString(),
-            subtitle: "✓ ${AppLocalizations.available.tr}",
-            icon: "📚",
-            iconColor: Color(0xFF7209B7),
-            backgroundColor: Color(0xFF7209B7).withOpacity(0.1),
-          ),
-        ],
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollUpdateNotification) {
+          final page = (notification.metrics.pixels / 140).round();
+          if (page != _currentStatsPage) {
+            setState(() {
+              _currentStatsPage = page;
+            });
+          }
+        }
+        return true;
+      },
+      child: SingleChildScrollView(
+        controller: _statsScrollController,
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: [
+            _buildStatCard(
+              title: AppLocalizations.totalStudents.tr,
+              value: _stats['total_siswa'].toString(),
+              subtitle: AppLocalizations.registered.tr,
+              icon: "👨‍🎓",
+              iconColor: Color(0xFF4361EE),
+              backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
+            ),
+            SizedBox(width: 12),
+            _buildStatCard(
+              title: AppLocalizations.totalTeachers.tr,
+              value: _stats['total_guru'].toString(),
+              subtitle: AppLocalizations.active.tr,
+              icon: "👨‍🏫",
+              iconColor: Color(0xFF2EC4B6),
+              backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
+            ),
+            SizedBox(width: 12),
+            _buildStatCard(
+              title: AppLocalizations.totalClasses.tr,
+              value: _stats['total_kelas'].toString(),
+              subtitle: AppLocalizations.available.tr,
+              icon: "🏫",
+              iconColor: Color(0xFFFF9F1C),
+              backgroundColor: Color(0xFFFF9F1C).withOpacity(0.1),
+            ),
+            SizedBox(width: 12),
+            _buildStatCard(
+              title: AppLocalizations.subjects.tr,
+              value: _stats['total_mapel'].toString(),
+              subtitle: AppLocalizations.available.tr,
+              icon: "📚",
+              iconColor: Color(0xFF7209B7),
+              backgroundColor: Color(0xFF7209B7).withOpacity(0.1),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildParentStats() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          _buildStatCard(
-            title: AppLocalizations.announcements.tr,
-            value: _stats['pengumuman_terbaru'].toString(),
-            subtitle: AppLocalizations.latestInfo.tr,
-            icon: Icons.announcement_outlined,
-            iconColor: Color(0xFF4361EE),
-            backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
-          ),
-          SizedBox(width: 12),
-          _buildStatCard(
-            title: AppLocalizations.childrenData.tr,
-            value: _stats['anak_terdaftar'].toString(),
-            subtitle: AppLocalizations.registeredChildren.tr,
-            icon: Icons.child_care_outlined,
-            iconColor: Color(0xFF2EC4B6),
-            backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
-          ),
-        ],
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollUpdateNotification) {
+          final page = (notification.metrics.pixels / 140).round();
+          if (page != _currentStatsPage) {
+            setState(() {
+              _currentStatsPage = page;
+            });
+          }
+        }
+        return true;
+      },
+      child: SingleChildScrollView(
+        controller: _statsScrollController,
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: [
+            _buildStatCard(
+              title: AppLocalizations.announcements.tr,
+              value: _stats['pengumuman_terbaru'].toString(),
+              subtitle: AppLocalizations.latestInfo.tr,
+              icon: Icons.announcement_outlined,
+              iconColor: Color(0xFF4361EE),
+              backgroundColor: Color(0xFF4361EE).withOpacity(0.1),
+            ),
+            SizedBox(width: 12),
+            _buildStatCard(
+              title: AppLocalizations.childrenData.tr,
+              value: _stats['anak_terdaftar'].toString(),
+              subtitle: AppLocalizations.registeredChildren.tr,
+              icon: Icons.child_care_outlined,
+              iconColor: Color(0xFF2EC4B6),
+              backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1413,16 +1337,29 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             ],
           ),
           SizedBox(height: 12),
-          Text(
-            value,
-            style:
-                valueStyle ??
-                TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+          _isInitializing
+              ? Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    width: 40,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                )
+              : Text(
+                  value,
+                  style:
+                      valueStyle ??
+                      TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
                 ),
-          ),
           SizedBox(height: 4),
           Text(
             title,
