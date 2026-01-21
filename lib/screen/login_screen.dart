@@ -435,24 +435,24 @@ class LoginScreenState extends State<LoginScreen> {
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         SizedBox(height: 20),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _roleList.length,
-            itemBuilder: (context, index) {
-              final role = _roleList[index];
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-                child: ListTile(
-                  key: ValueKey('role_$role'),
-                  leading: _getRoleIcon(role),
-                  title: Text(_getRoleDisplayName(role)),
-                  subtitle: Text('Akses sebagai ${_getRoleDescription(role)}'),
-                  trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => _selectRole(role),
-                ),
-              );
-            },
-          ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _roleList.length,
+          itemBuilder: (context, index) {
+            final role = _roleList[index];
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+              child: ListTile(
+                key: ValueKey('role_$role'),
+                leading: _getRoleIcon(role),
+                title: Text(_getRoleDisplayName(role)),
+                subtitle: Text('Akses sebagai ${_getRoleDescription(role)}'),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => _selectRole(role),
+              ),
+            );
+          },
         ),
         SizedBox(height: 20),
         TextButton(
@@ -537,24 +537,24 @@ class LoginScreenState extends State<LoginScreen> {
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         SizedBox(height: 20),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _schoolList.length,
-            itemBuilder: (context, index) {
-              final sekolah = _schoolList[index];
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-                child: ListTile(
-                  key: ValueKey('school_${sekolah['school_id'] ?? index}'),
-                  leading: Icon(Icons.school, color: Color(0xFF0D47A1)),
-                  title: Text(sekolah['school_name'] ?? 'Sekolah Tanpa Nama'),
-                  subtitle: Text(sekolah['address'] ?? ''),
-                  trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => _selectSchool(sekolah['school_id']),
-                ),
-              );
-            },
-          ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _schoolList.length,
+          itemBuilder: (context, index) {
+            final sekolah = _schoolList[index];
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+              child: ListTile(
+                key: ValueKey('school_${sekolah['school_id'] ?? index}'),
+                leading: Icon(Icons.school, color: Color(0xFF0D47A1)),
+                title: Text(sekolah['school_name'] ?? 'Sekolah Tanpa Nama'),
+                subtitle: Text(sekolah['address'] ?? ''),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => _selectSchool(sekolah['school_id']),
+              ),
+            );
+          },
         ),
         SizedBox(height: 20),
         TextButton(
@@ -666,6 +666,7 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -674,18 +675,33 @@ class LoginScreenState extends State<LoginScreen> {
             colors: [Color(0xFF0D47A1), Color(0xFF002171)],
           ),
         ),
-        child: Center(
-          child: Card(
-            margin: EdgeInsets.all(20),
-            elevation: 8,
-            child: Padding(
-              padding: EdgeInsets.all(30),
-              child: _showSchoolSelection
-                  ? _buildSchoolSelection()
-                  : _showRoleSelection
-                  ? _buildRoleSelection()
-                  : _buildLoginForm(),
-            ),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight - 40,
+                  ),
+                  child: Center(
+                    child: Card(
+                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      elevation: 8,
+                      child: Padding(
+                        padding: EdgeInsets.all(30),
+                        child: _showSchoolSelection
+                            ? _buildSchoolSelection()
+                            : _showRoleSelection
+                            ? _buildRoleSelection()
+                            : _buildLoginForm(),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

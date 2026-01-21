@@ -52,12 +52,17 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
   String? _selectedClassId;
   String? _selectedHomeroomFilter;
+  String? _selectedGender;
+  String? _selectedEmploymentStatus;
+  String? _selectedTeachingClassId;
   bool _hasActiveFilter = false;
 
   // Filter Options (from backend)
   List<dynamic> _availableClass = [];
+  List<dynamic> _availableGenders = [];
+  List<dynamic> _availableEmploymentStatus = [];
 
-  String _lastSearchQuery = '';
+  final String _lastSearchQuery = '';
 
   // Search debounce
   Timer? _searchDebounce;
@@ -152,9 +157,14 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       if (response['success'] == true && response['data'] != null) {
         setState(() {
           _availableClass = response['data']['kelas'] ?? [];
+          _availableGenders = response['data']['gender_options'] ?? [];
+          _availableEmploymentStatus =
+              response['data']['employment_status_options'] ?? [];
         });
         if (kDebugMode) {
-          print('✅ Filter options loaded: ${_availableClass.length} kelas');
+          print(
+            '✅ Filter options loaded: ${_availableClass.length} kelas, ${_availableGenders.length} gender, ${_availableEmploymentStatus.length} employment status',
+          );
         }
       }
     } catch (e) {
@@ -167,7 +177,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
   void _checkActiveFilter() {
     setState(() {
-      _hasActiveFilter = _selectedHomeroomFilter != null;
+      _hasActiveFilter =
+          _selectedHomeroomFilter != null ||
+          _selectedClassId != null ||
+          _selectedGender != null ||
+          _selectedEmploymentStatus != null ||
+          _selectedTeachingClassId != null;
     });
   }
 
@@ -175,6 +190,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     setState(() {
       _selectedClassId = null;
       _selectedHomeroomFilter = null;
+      _selectedGender = null;
+      _selectedEmploymentStatus = null;
+      _selectedTeachingClassId = null;
       _searchController.clear();
       _currentPage = 1;
       _hasActiveFilter = false;
@@ -210,22 +228,60 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       });
     }
 
-    if (_showAllTeachers) {
+    if (_selectedGender != null) {
+      final genderText = _selectedGender == 'L'
+          ? languageProvider.getTranslatedText({
+              'en': 'Male',
+              'id': 'Laki-laki',
+            })
+          : languageProvider.getTranslatedText({
+              'en': 'Female',
+              'id': 'Perempuan',
+            });
       filterChips.add({
-        'label': languageProvider.getTranslatedText({
-          'en': 'Showing All Teachers (Ignoring Academic Year)',
-          'id': 'Menampilkan Semua Guru (Semua Tahun)',
-        }),
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Gender', 'id': 'Jenis Kelamin'})}: $genderText',
         'onRemove': () {
           setState(() {
-            _showAllTeachers = false;
+            _selectedGender = null;
           });
+          _checkActiveFilter();
           _loadData();
         },
       });
     }
 
-    // Subject/gender filters removed — only homeroom/teacher retained
+    if (_selectedEmploymentStatus != null) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Employment', 'id': 'Status'})}: $_selectedEmploymentStatus',
+        'onRemove': () {
+          setState(() {
+            _selectedEmploymentStatus = null;
+          });
+          _checkActiveFilter();
+          _loadData();
+        },
+      });
+    }
+
+    if (_selectedTeachingClassId != null) {
+      final className = _availableClass.firstWhere(
+        (c) => c['id'].toString() == _selectedTeachingClassId,
+        orElse: () => {'name': _selectedTeachingClassId},
+      )['name'];
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Teaching', 'id': 'Kelas Ajar'})}: $className',
+        'onRemove': () {
+          setState(() {
+            _selectedTeachingClassId = null;
+          });
+          _checkActiveFilter();
+          _loadData();
+        },
+      });
+    }
 
     return filterChips;
   }
@@ -233,8 +289,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
   void _showFilterSheet() {
     final languageProvider = context.read<LanguageProvider>();
 
-    // Temporary state for bottom sheet (only homeroom filter retained)
+    // Temporary state for bottom sheet
     String? tempSelectedHomeroom = _selectedHomeroomFilter;
+    String? tempSelectedGender = _selectedGender;
+    String? tempSelectedEmploymentStatus = _selectedEmploymentStatus;
+    String? tempSelectedTeachingClass = _selectedTeachingClassId;
 
     showModalBottomSheet(
       context: context,
@@ -243,7 +302,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           return Container(
-            height: MediaQuery.of(context).size.height * 0.45,
+            height: MediaQuery.of(context).size.height * 0.75,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
@@ -278,6 +337,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                         onPressed: () {
                           setModalState(() {
                             tempSelectedHomeroom = null;
+                            tempSelectedGender = null;
+                            tempSelectedEmploymentStatus = null;
+                            tempSelectedTeachingClass = null;
                             _showAllTeachers = false;
                           });
                         },
@@ -293,7 +355,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                   ),
                 ),
 
-                // Scrollable Content (only homeroom filter)
+                // Scrollable Content
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.all(20),
@@ -334,12 +396,160 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                             });
                           },
                         ),
-                        SizedBox(height: 24),
+                        Divider(height: 32),
 
+                        // Gender Section
                         Text(
                           languageProvider.getTranslatedText({
-                            'en': 'Status',
-                            'id': 'Status',
+                            'en': 'Gender',
+                            'id': 'Jenis Kelamin',
+                          }),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _buildStatusChip(
+                              label: languageProvider.getTranslatedText({
+                                'en': 'All',
+                                'id': 'Semua',
+                              }),
+                              value: null,
+                              selectedValue: tempSelectedGender,
+                              onSelected: () {
+                                setModalState(() {
+                                  tempSelectedGender = null;
+                                });
+                              },
+                            ),
+                            ..._availableGenders.map((gender) {
+                              return _buildStatusChip(
+                                label: gender['label'],
+                                value: gender['value'].toString(),
+                                selectedValue: tempSelectedGender,
+                                onSelected: () {
+                                  setModalState(() {
+                                    tempSelectedGender = gender['value']
+                                        .toString();
+                                  });
+                                },
+                              );
+                            }),
+                          ],
+                        ),
+                        SizedBox(height: 24),
+
+                        // Employment Status Section
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Employment Status',
+                            'id': 'Status Kepegawaian',
+                          }),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _buildStatusChip(
+                              label: languageProvider.getTranslatedText({
+                                'en': 'All',
+                                'id': 'Semua',
+                              }),
+                              value: null,
+                              selectedValue: tempSelectedEmploymentStatus,
+                              onSelected: () {
+                                setModalState(() {
+                                  tempSelectedEmploymentStatus = null;
+                                });
+                              },
+                            ),
+                            ..._availableEmploymentStatus.map((status) {
+                              return _buildStatusChip(
+                                label: status['label'],
+                                value: status['value'].toString(),
+                                selectedValue: tempSelectedEmploymentStatus,
+                                onSelected: () {
+                                  setModalState(() {
+                                    tempSelectedEmploymentStatus =
+                                        status['value'].toString();
+                                  });
+                                },
+                              );
+                            }),
+                          ],
+                        ),
+                        SizedBox(height: 24),
+
+                        // Teaching Class Section
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Teaching Class',
+                            'id': 'Kelas Ajar',
+                          }),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              value: tempSelectedTeachingClass,
+                              hint: Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Select Class',
+                                  'id': 'Pilih Kelas',
+                                }),
+                              ),
+                              items: [
+                                DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Clear Selection',
+                                      'id': 'Hapus Pilihan',
+                                    }),
+                                  ),
+                                ),
+                                ..._availableClass.map((kelas) {
+                                  return DropdownMenuItem<String>(
+                                    value: kelas['id'].toString(),
+                                    child: Text(kelas['name'].toString()),
+                                  );
+                                }),
+                              ],
+                              onChanged: (value) {
+                                setModalState(() {
+                                  tempSelectedTeachingClass = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 24),
+
+                        // Homeroom Status Section (Optional narrowing)
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Homeroom Teacher Status',
+                            'id': 'Status Wali Kelas',
                           }),
                           style: TextStyle(
                             fontSize: 16,
@@ -380,7 +590,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                             _buildStatusChip(
                               label: languageProvider.getTranslatedText({
                                 'en': 'Regular Teacher',
-                                'id': 'Guru Biasa',
+                                'id': 'Bukan Wali Kelas',
                               }),
                               value: 'guru_biasa',
                               selectedValue: tempSelectedHomeroom,
@@ -437,6 +647,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                           onPressed: () {
                             setState(() {
                               _selectedHomeroomFilter = tempSelectedHomeroom;
+                              _selectedGender = tempSelectedGender;
+                              _selectedEmploymentStatus =
+                                  tempSelectedEmploymentStatus;
+                              _selectedTeachingClassId =
+                                  tempSelectedTeachingClass;
                             });
                             _checkActiveFilter();
                             Navigator.pop(context);
@@ -519,12 +734,15 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       // If showing all teachers, ignore academic year
       final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
 
-      // Load with pagination and backend filtering
       final response = await ApiTeacherService.getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
-        classId: _selectedClassId,
-        gender: null,
+        classId: _selectedHomeroomFilter == 'wali_kelas'
+            ? _selectedClassId
+            : null,
+        gender: _selectedGender,
+        employmentStatus: _selectedEmploymentStatus,
+        teachingClassId: _selectedTeachingClassId,
         academicYearId: effectiveAcademicYearId,
         search: _searchController.text.trim().isEmpty
             ? null
@@ -590,8 +808,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
       final response = await ApiTeacherService.getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
-        classId: _selectedClassId,
-        gender: null,
+        classId: _selectedHomeroomFilter == 'wali_kelas'
+            ? _selectedClassId
+            : null,
+        gender: _selectedGender,
+        employmentStatus: _selectedEmploymentStatus,
+        teachingClassId: _selectedTeachingClassId,
         academicYearId: effectiveAcademicYearId,
         search: _searchController.text.trim().isEmpty
             ? null
@@ -919,7 +1141,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
           (teacher['homeroom_classes'] as List).isNotEmpty) {
         selectedWaliKelasId = teacher['homeroom_classes'][0]['id']?.toString();
       } else {
-        selectedWaliKelasId = teacher?['homeroom_class_id']?.toString();
+        selectedWaliKelasId = teacher['homeroom_class_id']?.toString();
       }
     }
 

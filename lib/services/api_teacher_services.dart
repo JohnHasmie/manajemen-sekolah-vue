@@ -143,6 +143,8 @@ class ApiTeacherService {
     int limit = 10,
     String? classId,
     String? gender,
+    String? employmentStatus,
+    String? teachingClassId,
     String? search,
     String? academicYearId,
     String? teacherId,
@@ -154,10 +156,16 @@ class ApiTeacherService {
     };
 
     if (classId != null && classId.isNotEmpty) {
-      queryParams['class_id'] = classId;
+      queryParams['homeroom_class_id'] = classId;
     }
     if (gender != null && gender.isNotEmpty) {
       queryParams['gender'] = gender;
+    }
+    if (employmentStatus != null && employmentStatus.isNotEmpty) {
+      queryParams['employment_status'] = employmentStatus;
+    }
+    if (teachingClassId != null && teachingClassId.isNotEmpty) {
+      queryParams['teaching_class_id'] = teachingClassId;
     }
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;
