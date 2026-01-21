@@ -35,6 +35,7 @@ import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 
 class Dashboard extends StatefulWidget {
   final String role;
@@ -45,8 +46,7 @@ class Dashboard extends StatefulWidget {
   State<Dashboard> createState() => _DashboardState();
 }
 
-class _DashboardState extends State<Dashboard>
-    with SingleTickerProviderStateMixin {
+class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   String get _effectiveRole {
     if (widget.role == 'teacher') return 'guru';
     if (widget.role == 'parent') return 'wali';
@@ -61,7 +61,12 @@ class _DashboardState extends State<Dashboard>
   bool _isLoadingSchools = false;
   List<dynamic> _availableRoles = [];
   bool _isLoadingRoles = false;
+  bool _isInitializing = true;
   String? _currentSemesterLabel;
+
+  late AnimationController _curtainController;
+  late Animation<double> _curtainAnimation;
+  final bool _isCurtainOpen = true;
 
   // Data statistik
   Map<String, dynamic> _stats = {
@@ -93,32 +98,57 @@ class _DashboardState extends State<Dashboard>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
+    _curtainController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+      value: 1.0, // Start open
+    );
+
+    _curtainAnimation = CurvedAnimation(
+      parent: _curtainController,
+      curve: Curves.easeInOut,
+    );
+
     _animationController.forward();
     _initializeData();
   }
 
   Future<void> _initializeData() async {
-    await _loadUserData();
-    await _loadAccessibleSchools();
-    await _loadAvailableRoles();
-    // Fetch academic years
-    if (mounted) {
-      await Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).fetchAcademicYears();
-    }
+    setState(() {
+      _isInitializing = true;
+    });
 
-    // Listen for changes
-    if (mounted) {
-      Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).addListener(_onYearChanged);
-    }
+    try {
+      await _loadUserData();
+      await _loadAccessibleSchools();
+      await _loadAvailableRoles();
+      // Fetch academic years
+      if (mounted) {
+        await Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        ).fetchAcademicYears();
+      }
 
-    await _loadStats(); // Pastikan dipanggil setelah user data dimuat
-    _loadSemesterLabel();
+      // Listen for changes
+      if (mounted) {
+        Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        ).addListener(_onYearChanged);
+      }
+
+      await _loadStats(); // Pastikan dipanggil setelah user data dimuat
+      await _loadSemesterLabel();
+    } catch (e) {
+      if (kDebugMode) print('❌ Error during initialization: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadSemesterLabel() async {
@@ -852,8 +882,6 @@ class _DashboardState extends State<Dashboard>
       json.encode(updatedUserData),
     ); // Save normalized
 
-    final currentRole = _effectiveRole;
-
     if (newRole != null) {
       // Always navigate to new dashboard to refresh state completely
       Navigator.pushNamedAndRemoveUntil(context, '/$newRole', (route) => false);
@@ -885,6 +913,7 @@ class _DashboardState extends State<Dashboard>
   @override
   void dispose() {
     _animationController.dispose();
+    _curtainController.dispose();
     super.dispose();
   }
 
@@ -895,38 +924,208 @@ class _DashboardState extends State<Dashboard>
         return Scaffold(
           backgroundColor: _getBackgroundColor(),
           body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Modern Header dengan gradient seperti Duolingo
-                _buildModernHeader(context, languageProvider),
-                SizedBox(height: 5),
+            child: _isInitializing
+                ? _buildSkeletonDashboard(context, languageProvider)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Modern Header (Fixed)
+                      _buildModernHeader(context, languageProvider),
 
-                // Welcome Section dengan animasi
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: _buildWelcomeSection(),
+                      // Scrollable Content
+                      Expanded(
+                        child: CustomScrollView(
+                          physics: BouncingScrollPhysics(),
+                          slivers: [
+                            // Curtain Area (Welcome, Stats, Search)
+                            SliverToBoxAdapter(
+                              child: SizeTransition(
+                                sizeFactor: _curtainAnimation,
+                                axisAlignment: -1.0,
+                                child: Column(
+                                  children: [
+                                    SizedBox(height: 5),
+
+                                    // Welcome Section
+                                    FadeTransition(
+                                      opacity: _fadeAnimation,
+                                      child: ScaleTransition(
+                                        scale: _scaleAnimation,
+                                        child: _buildWelcomeSection(),
+                                      ),
+                                    ),
+                                    SizedBox(height: 20),
+
+                                    // Stats Section
+                                    _buildStatsSection(),
+                                    SizedBox(height: 20),
+
+                                    // Search Bar
+                                    _buildModernSearchBar(),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Gap between curtain and grid
+                            SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+                            // Grid Menu
+                            _buildSliverGridMenu(context),
+
+                            // Bottom padding
+                            SliverPadding(padding: EdgeInsets.only(bottom: 20)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                SizedBox(height: 20),
-
-                // Dashboard Stats Cards
-                _buildStatsSection(),
-                SizedBox(height: 20),
-
-                // Search Bar dengan design modern
-                _buildModernSearchBar(),
-                SizedBox(height: 20),
-
-                // Grid Menu dengan animasi bertahap
-                Expanded(child: _buildAnimatedGridMenu(context)),
-              ],
-            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSkeletonDashboard(
+    BuildContext context,
+    LanguageProvider languageProvider,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header Skeleton
+        _buildSkeletonHeader(),
+
+        Expanded(
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: SingleChildScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  SizedBox(height: 5),
+                  // Welcome Skeleton
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  // Stats Skeleton
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: List.generate(
+                        3,
+                        (index) => Container(
+                          width: 140,
+                          height: 100,
+                          margin: EdgeInsets.only(right: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  // Search Bar Skeleton
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  // Grid Menu Skeleton
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 14,
+                        childAspectRatio: 1.1,
+                      ),
+                      itemCount: 6,
+                      itemBuilder: (context, index) => Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkeletonHeader() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(color: _getPrimaryColor()),
+      child: Shimmer.fromColors(
+        baseColor: Colors.white.withOpacity(0.3),
+        highlightColor: Colors.white.withOpacity(0.1),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 150,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  SizedBox(height: 6),
+                  Container(
+                    width: 80,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1486,20 +1685,19 @@ class _DashboardState extends State<Dashboard>
     );
   }
 
-  Widget _buildAnimatedGridMenu(BuildContext context) {
+  Widget _buildSliverGridMenu(BuildContext context) {
     final cards = _getDashboardCards(context);
 
-    return Padding(
+    return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: GridView.builder(
+      sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
           childAspectRatio: 1.1,
         ),
-        itemCount: cards.length,
-        itemBuilder: (context, index) {
+        delegate: SliverChildBuilderDelegate((context, index) {
           return AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
@@ -1519,7 +1717,7 @@ class _DashboardState extends State<Dashboard>
             },
             child: cards[index],
           );
-        },
+        }, childCount: cards.length),
       ),
     );
   }

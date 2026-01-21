@@ -200,32 +200,25 @@ class LoginScreenState extends State<LoginScreen> {
     // Clear force logout flag
     await prefs.setBool('force_logout', false);
 
-    // Force refresh and send FCM token to backend after successful login
-    try {
-      final fcmService = FCMService();
+    // Background FCM refresh - NOT awaited to ensure fast navigation
+    _refreshFcmTokenInBackground();
+  }
 
-      if (kDebugMode) {
-        print('🔄 Force refreshing FCM token after login...');
-      }
-
-      // Force refresh to get new token (in case Firebase project changed)
-      final fcmToken = await fcmService.forceRefreshToken();
-
-      if (fcmToken != null) {
+  void _refreshFcmTokenInBackground() {
+    Future(() async {
+      try {
+        final fcmService = FCMService();
+        if (kDebugMode) print('🔄 Force refreshing FCM token in background...');
+        await fcmService.forceRefreshToken();
+        if (kDebugMode) print('✅ FCM token refreshed in background');
+      } catch (e) {
         if (kDebugMode) {
-          print('✅ FCM token refreshed and sent successfully');
-        }
-      } else {
-        if (kDebugMode) {
-          print('⚠️ No FCM token available after refresh');
+          print(
+            '⚠️ Failed to refresh FCM token in background (non-critical): $e',
+          );
         }
       }
-    } catch (e) {
-      // Don't fail login if FCM token sending fails
-      if (kDebugMode) {
-        print('⚠️ Failed to refresh FCM token (non-critical): $e');
-      }
-    }
+    });
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -450,6 +443,7 @@ class LoginScreenState extends State<LoginScreen> {
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: ListTile(
+                  key: ValueKey('role_$role'),
                   leading: _getRoleIcon(role),
                   title: Text(_getRoleDisplayName(role)),
                   subtitle: Text('Akses sebagai ${_getRoleDescription(role)}'),
@@ -551,6 +545,7 @@ class LoginScreenState extends State<LoginScreen> {
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: ListTile(
+                  key: ValueKey('school_${sekolah['school_id'] ?? index}'),
                   leading: Icon(Icons.school, color: Color(0xFF0D47A1)),
                   title: Text(sekolah['school_name'] ?? 'Sekolah Tanpa Nama'),
                   subtitle: Text(sekolah['address'] ?? ''),

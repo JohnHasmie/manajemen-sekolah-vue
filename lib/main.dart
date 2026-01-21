@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/components/error_handler.dart';
 import 'package:manajemensekolah/components/token_service.dart';
@@ -21,6 +22,18 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+    if (kDebugMode) {
+      print('✅ .env loaded');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('⚠️ Failed to load .env: $e');
+    }
+  }
 
   // Initialize ApiService FIRST (before anything else)
   await ApiService.init();
