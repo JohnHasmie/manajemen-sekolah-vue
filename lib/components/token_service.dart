@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenService {
@@ -135,11 +136,14 @@ class TokenService {
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
 
+      // Clear local API cache
+      await LocalCacheService.clearAll();
+
       // Set force logout flag untuk mencegah loop
       await prefs.setBool('force_logout', true);
 
       if (kDebugMode) {
-        print('✅ Logout completed');
+        print('✅ Logout completed and cache cleared');
       }
     } catch (e) {
       if (kDebugMode) {

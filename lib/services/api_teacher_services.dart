@@ -338,6 +338,7 @@ class ApiTeacherService {
     final result = await ApiService().post('/teacher/$teacherId/subjects', {
       'subject_id': subjectId,
     });
+    await _clearTeacherCache();
     return result;
   }
 
@@ -346,6 +347,7 @@ class ApiTeacherService {
     String subjectId,
   ) async {
     await ApiService().delete('/teacher/$teacherId/subjects/$subjectId');
+    await _clearTeacherCache();
   }
 
   static Future<Map<String, dynamic>> importTeachersFromExcel(File file) async {

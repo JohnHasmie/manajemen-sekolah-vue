@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -115,6 +116,9 @@ class LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
     });
+
+    // Clear local API cache at start of login to ensure session isolation
+    await LocalCacheService.clearAll();
 
     final String email = emailController.text.trim();
     final String password = passwordController.text;
