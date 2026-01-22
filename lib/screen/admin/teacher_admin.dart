@@ -252,9 +252,13 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     }
 
     if (_selectedEmploymentStatus != null) {
+      final statusLabel = _availableEmploymentStatus.firstWhere(
+        (s) => s['value'].toString() == _selectedEmploymentStatus,
+        orElse: () => {'label': _selectedEmploymentStatus},
+      )['label'];
       filterChips.add({
         'label':
-            '${languageProvider.getTranslatedText({'en': 'Employment', 'id': 'Status'})}: $_selectedEmploymentStatus',
+            '${languageProvider.getTranslatedText({'en': 'Employment', 'id': 'Status Kepegawaian'})}: $statusLabel',
         'onRemove': () {
           setState(() {
             _selectedEmploymentStatus = null;
