@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiTeacherService {
-  // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
   static dynamic _handleResponse(http.Response response) {
@@ -17,7 +17,6 @@ class ApiTeacherService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return responseBody;
     } else {
-      // Handle Laravel validation errors (422)
       if (response.statusCode == 422 && responseBody['errors'] != null) {
         final errors = responseBody['errors'] as Map<String, dynamic>;
         final firstError = errors.values.first;
@@ -35,7 +34,6 @@ class ApiTeacherService {
     }
   }
 
-  // Download template Excel untuk guru
   static Future<String> downloadTemplate() async {
     try {
       final response = await http.get(
@@ -44,37 +42,20 @@ class ApiTeacherService {
       );
 
       if (response.statusCode == 200) {
-        // Save file locally
-        final directory = await getExternalStorageDirectory();
-        final filePath = '${directory?.path}/template_import_guru.xlsx';
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/template_import_guru.xlsx';
         final file = File(filePath);
 
         await file.writeAsBytes(response.bodyBytes);
-
-        print('Template downloaded to: $filePath');
         return filePath;
       } else {
         throw Exception('Download failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      print('Download template error: $e');
       throw Exception('Failed to download template: $e');
     }
   }
 
-  // Get external storage directory (helper function)
-  static Future<Directory?> getExternalStorageDirectory() async {
-    try {
-      // For mobile
-      final directory = await getApplicationDocumentsDirectory();
-      return directory;
-    } catch (e) {
-      // For web or other platforms
-      return null;
-    }
-  }
-
-  // Get Filter Options for Teacher Filters
   static Future<Map<String, dynamic>> getTeacherFilterOptions({
     String? academicYearId,
   }) async {
@@ -90,23 +71,17 @@ class ApiTeacherService {
       );
 
       final result = _handleResponse(response);
-
-      if (result is Map<String, dynamic>) {
-        return result;
-      }
-
-      // Fallback
-      return {
-        'success': false,
-        'data': {'kelas': [], 'gender_options': []},
-      };
+      return result is Map<String, dynamic>
+          ? result
+          : {
+              'success': false,
+              'data': {'kelas': [], 'gender_options': []},
+            };
     } catch (e) {
-      print('Error getting filter options: $e');
       rethrow;
     }
   }
 
-  // Get Guru by User ID
   static Future<Map<String, dynamic>?> getGuruByUserId(
     String userId, {
     String? academicYearId,
@@ -132,12 +107,10 @@ class ApiTeacherService {
 
       return null;
     } catch (e) {
-      print('Error getting guru by user id: $e');
       return null;
     }
   }
 
-  // Get Teachers with Pagination & Filters (Recommended)
   static Future<Map<String, dynamic>> getTeachersPaginated({
     int page = 1,
     int limit = 10,
@@ -148,8 +121,8 @@ class ApiTeacherService {
     String? search,
     String? academicYearId,
     String? teacherId,
+    bool useCache = true,
   }) async {
-    // Build query parameters
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
@@ -177,8 +150,16 @@ class ApiTeacherService {
       queryParams['teacher_id'] = teacherId;
     }
 
-    // Build query string
     String queryString = Uri(queryParameters: queryParams).query;
+    final cacheKey = 'teacher_paginated_$queryString';
+
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null) {
+        if (kDebugMode) print('📦 Using cached teachers for $cacheKey');
+        return cached;
+      }
+    }
 
     try {
       final response = await http.get(
@@ -186,16 +167,14 @@ class ApiTeacherService {
         headers: await ApiService.getHeaders(),
       );
 
-      print('GET /teacher?$queryString - Status: ${response.statusCode}');
-
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) {
+        await LocalCacheService.save(cacheKey, result);
         return result;
       }
 
-      // Fallback untuk backward compatibility
-      return {
+      final fallback = {
         'success': true,
         'data': result is List ? result : [],
         'pagination': {
@@ -207,22 +186,30 @@ class ApiTeacherService {
           'has_prev_page': false,
         },
       };
+      await LocalCacheService.save(cacheKey, fallback);
+      return fallback;
     } catch (e) {
-      print('Error getting paginated teachers: $e');
       rethrow;
     }
   }
 
-  // Existing methods tetap dipertahankan...
+  static Future<void> _clearTeacherCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs
+        .getKeys()
+        .where((key) => key.startsWith('api_cache_teacher_'))
+        .toList();
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+    if (kDebugMode) print('🧹 Teacher cache cleared due to changes');
+  }
+
   Future<List<dynamic>> getTeacher() async {
     final result = await ApiService().get('/teacher');
-
-    // Handle new pagination format
     if (result is Map<String, dynamic>) {
       return result['data'] ?? [];
     }
-
-    // Handle old format (List)
     return result is List ? result : [];
   }
 
@@ -234,47 +221,35 @@ class ApiTeacherService {
     return await ApiService().get(url);
   }
 
-  // Add teacher with new structure
-  // Required fields: nama, email, jenis_kelamin ("L" or "P")
-  // Optional fields: nip, subject_ids (List<String>), class_ids (List<String>),
-  //                  wali_kelas_id (String), status_kepegawaian ("tetap" or "tidak_tetap")
   Future<dynamic> addTeacher(Map<String, dynamic> data) async {
-    return await ApiService().post('/teacher', data);
+    final result = await ApiService().post('/teacher', data);
+    await _clearTeacherCache();
+    return result;
   }
 
-  // Update teacher with new structure
-  // All fields same as addTeacher
-  // Note: id parameter is guru.id (not user_id)
   Future<void> updateTeacher(String id, Map<String, dynamic> data) async {
     await ApiService().put('/teacher/$id', data);
+    await _clearTeacherCache();
   }
 
   Future<void> deleteTeacher(String id) async {
     await ApiService().delete('/teacher/$id');
+    await _clearTeacherCache();
   }
 
   Future<List<dynamic>> getSubjectByTeacher(String guruId) async {
     try {
-      // Correct endpoint matches index.js: /api/guru/:id/mata-pelajaran
       final result = await ApiService().get('/teacher/$guruId/subjects');
-
-      if (result is List) {
-        return result;
-      }
-
-      // Handle wrapped response if any
+      if (result is List) return result;
       if (result is Map<String, dynamic> && result['data'] != null) {
         return result['data'] is List ? result['data'] : [];
       }
-
       return [];
     } catch (e) {
-      print('Error getting mata pelajaran by guru: $e');
       return [];
     }
   }
 
-  // Get Classes by Teacher (Teaching + Homeroom)
   static Future<List<dynamic>> getTeacherClasses(
     String teacherId, {
     String? academicYearId,
@@ -291,18 +266,15 @@ class ApiTeacherService {
       );
 
       final result = _handleResponse(response);
-
       if (result is Map<String, dynamic> && result['data'] is List) {
         return result['data'];
       }
       return [];
     } catch (e) {
-      print('Error getting classes by teacher: $e');
       return [];
     }
   }
 
-  // Get Subjects by Teacher with Pagination & Filters (Recommended)
   static Future<Map<String, dynamic>> getSubjectsByTeacherPaginated({
     required String teacherId,
     int page = 1,
@@ -311,7 +283,6 @@ class ApiTeacherService {
     List<String>? subjectIds,
     String? academicYearId,
   }) async {
-    // Build query parameters
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
@@ -329,7 +300,6 @@ class ApiTeacherService {
       queryParams['academic_year_id'] = academicYearId;
     }
 
-    // Build query string
     String queryString = Uri(queryParameters: queryParams).query;
 
     try {
@@ -338,25 +308,12 @@ class ApiTeacherService {
         headers: await ApiService.getHeaders(),
       );
 
-      print(
-        'GET /teacher/$teacherId/subjects?$queryString - Status: ${response.statusCode}',
-      );
-      if (kDebugMode && response.statusCode != 200) {
-        print('Response body (Error): ${response.body}');
-      }
-      if (kDebugMode) {
-        print(
-          'Response body: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}',
-        );
-      }
-
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) {
         return result;
       }
 
-      // Fallback untuk backward compatibility
       return {
         'success': true,
         'data': result is List ? result : [],
@@ -370,7 +327,6 @@ class ApiTeacherService {
         },
       };
     } catch (e) {
-      print('Error getting paginated subjects by teacher: $e');
       rethrow;
     }
   }
@@ -379,27 +335,17 @@ class ApiTeacherService {
     String teacherId,
     String subjectId,
   ) async {
-    try {
-      final result = await ApiService().post('/teacher/$teacherId/subjects', {
-        'subject_id': subjectId,
-      });
-      return result;
-    } catch (e) {
-      print('Error adding mata pelajaran to guru: $e');
-      rethrow;
-    }
+    final result = await ApiService().post('/teacher/$teacherId/subjects', {
+      'subject_id': subjectId,
+    });
+    return result;
   }
 
   Future<void> removeSubjectFromTeacher(
     String teacherId,
     String subjectId,
   ) async {
-    try {
-      await ApiService().delete('/teacher/$teacherId/subjects/$subjectId');
-    } catch (e) {
-      print('Error removing mata pelajaran from guru: $e');
-      rethrow;
-    }
+    await ApiService().delete('/teacher/$teacherId/subjects/$subjectId');
   }
 
   static Future<Map<String, dynamic>> importTeachersFromExcel(File file) async {
@@ -409,11 +355,9 @@ class ApiTeacherService {
         Uri.parse('${ApiService.baseUrl}/teacher/import'),
       );
 
-      // Add authorization header
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       request.headers['Authorization'] = 'Bearer $token';
-      // Add file
       request.files.add(
         await http.MultipartFile.fromPath(
           'file',
@@ -426,6 +370,7 @@ class ApiTeacherService {
       final responseData = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
+        await _clearTeacherCache();
         return json.decode(responseData);
       } else {
         throw Exception('Failed to import teachers: $responseData');
@@ -435,13 +380,9 @@ class ApiTeacherService {
     }
   }
 
-  // Download teacher template
   Future<void> downloadTeacherTemplate() async {
     try {
-      final response = await ApiService().get('/teacher/template');
-
-      // Handle response untuk download file
-      // Implementasi download file sesuai kebutuhan
+      await ApiService().get('/teacher/template');
     } catch (e) {
       throw Exception('Failed to download template: $e');
     }

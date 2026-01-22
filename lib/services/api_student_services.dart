@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -108,6 +109,9 @@ class ApiStudentService {
             throw Exception(errorMsg);
           }
         }
+
+        // Clear cache after successful import
+        await _clearStudentCache();
 
         return body;
       } else {
@@ -274,6 +278,7 @@ class ApiStudentService {
     String? search,
     String? academicYearId,
     String? guardianName,
+    bool useCache = true,
   }) async {
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -300,6 +305,15 @@ class ApiStudentService {
     }
 
     String queryString = Uri(queryParameters: queryParams).query;
+    final cacheKey = 'student_paginated_$queryString';
+
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null) {
+        if (kDebugMode) print('📦 Using cached students for $cacheKey');
+        return cached;
+      }
+    }
 
     final response = await http.get(
       Uri.parse('$baseUrl/student?$queryString'),
@@ -309,10 +323,11 @@ class ApiStudentService {
     final result = _handleResponse(response);
 
     if (result is Map<String, dynamic>) {
+      await LocalCacheService.save(cacheKey, result);
       return result;
     }
 
-    return {
+    final fallback = {
       'success': true,
       'data': result is List ? result : [],
       'pagination': {
@@ -324,6 +339,20 @@ class ApiStudentService {
         'has_prev_page': false,
       },
     };
+    await LocalCacheService.save(cacheKey, fallback);
+    return fallback;
+  }
+
+  static Future<void> _clearStudentCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs
+        .getKeys()
+        .where((key) => key.startsWith('api_cache_student_'))
+        .toList();
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+    if (kDebugMode) print('🧹 Student cache cleared due to changes');
   }
 
   static Future<dynamic> addStudent(Map<String, dynamic> data) async {
@@ -332,7 +361,9 @@ class ApiStudentService {
       headers: await ApiService.getHeaders(),
       body: json.encode(data),
     );
-    return _handleResponse(response);
+    final result = _handleResponse(response);
+    await _clearStudentCache();
+    return result;
   }
 
   static Future<void> updateStudent(
@@ -345,6 +376,7 @@ class ApiStudentService {
       body: json.encode(data),
     );
     _handleResponse(response);
+    await _clearStudentCache();
   }
 
   static Future<void> deleteStudent(String id) async {
@@ -353,6 +385,7 @@ class ApiStudentService {
       headers: await ApiService.getHeaders(),
     );
     _handleResponse(response);
+    await _clearStudentCache();
   }
 
   static Future<List<dynamic>> getStudentByClass(String classId) async {

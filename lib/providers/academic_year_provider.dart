@@ -13,9 +13,15 @@ class AcademicYearProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   bool get isReadOnly {
-    if (_activeAcademicYear == null || _selectedAcademicYear == null)
-      return false;
-    return _activeAcademicYear!['id'] != _selectedAcademicYear!['id'];
+    if (_selectedAcademicYear == null) return false;
+    // status 'inactive' means read-only
+    return _selectedAcademicYear!['status'] == 'inactive';
+  }
+
+  bool get isCurrent {
+    if (_selectedAcademicYear == null) return false;
+    return _selectedAcademicYear!['current'] == true ||
+        _selectedAcademicYear!['current'] == 1;
   }
 
   Future<void> fetchAcademicYears() async {

@@ -1538,14 +1538,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   ),
                                   isDense: true,
                                   items: provider.academicYears.map((year) {
-                                    final isCurrent =
+                                    final bool isCurrent =
                                         year['current'] == true ||
-                                        year['status'] == 'active';
+                                        year['current'] == 1;
+                                    final bool isInactive =
+                                        year['status'] == 'inactive';
+
+                                    String label = year['year'].toString();
+                                    if (isCurrent) label += ' (Aktif)';
+                                    if (isInactive) label += ' (Read Only)';
+
                                     return DropdownMenuItem<String>(
                                       value: year['id'].toString(),
-                                      child: Text(
-                                        '${year['year']}${isCurrent ? ' (Active)' : ''}',
-                                      ),
+                                      child: Text(label),
                                     );
                                   }).toList(),
                                   onChanged: (val) {

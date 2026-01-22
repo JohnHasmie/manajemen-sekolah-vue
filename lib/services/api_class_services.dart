@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClassService {
-  // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
   static dynamic _handleResponse(http.Response response) {
@@ -23,7 +24,6 @@ class ApiClassService {
     }
   }
 
-  // Import kelas dari Excel
   static Future<Map<String, dynamic>> importClassesFromExcel(File file) async {
     try {
       var request = http.MultipartRequest(
@@ -31,12 +31,10 @@ class ApiClassService {
         Uri.parse('$baseUrl/class/import'),
       );
 
-      // Add headers
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       request.headers['Authorization'] = 'Bearer $token';
 
-      // Add file
       request.files.add(
         await http.MultipartFile.fromPath(
           'file',
@@ -45,14 +43,11 @@ class ApiClassService {
         ),
       );
 
-      // Send request
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
-      print('Import Response Status: ${response.statusCode}');
-      print('Import Response Body: $responseBody');
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        await _clearClassCache();
         return json.decode(responseBody);
       } else {
         throw Exception(
@@ -60,12 +55,10 @@ class ApiClassService {
         );
       }
     } catch (e) {
-      print('Import error details: $e');
       throw Exception('Import error: $e');
     }
   }
 
-  // Download template Excel untuk kelas
   static Future<String> downloadTemplate() async {
     try {
       final response = await http.get(
@@ -74,37 +67,20 @@ class ApiClassService {
       );
 
       if (response.statusCode == 200) {
-        // Save file locally
-        final directory = await getExternalStorageDirectory();
-        final filePath = '${directory?.path}/template_import_kelas.xlsx';
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/template_import_kelas.xlsx';
         final file = File(filePath);
 
         await file.writeAsBytes(response.bodyBytes);
-
-        print('Template downloaded to: $filePath');
         return filePath;
       } else {
         throw Exception('Download failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      print('Download template error: $e');
       throw Exception('Failed to download template: $e');
     }
   }
 
-  // Get external storage directory (helper function)
-  static Future<Directory?> getExternalStorageDirectory() async {
-    try {
-      // For mobile
-      final directory = await getApplicationDocumentsDirectory();
-      return directory;
-    } catch (e) {
-      // For web or other platforms
-      return null;
-    }
-  }
-
-  // Get Filter Options for Class Filters
   static Future<Map<String, dynamic>> getClassFilterOptions() async {
     try {
       final response = await http.get(
@@ -118,18 +94,15 @@ class ApiClassService {
         return result;
       }
 
-      // Fallback
       return {
         'success': false,
         'data': {'grade_levels': [], 'wali_kelas': []},
       };
     } catch (e) {
-      print('Error getting filter options: $e');
       rethrow;
     }
   }
 
-  // Get Classes with Pagination & Filters (Recommended)
   static Future<Map<String, dynamic>> getClassPaginated({
     int page = 1,
     int limit = 10,
@@ -138,8 +111,8 @@ class ApiClassService {
     String? search,
     String? academicYearId,
     String? hasHomeroomTeacher,
+    bool useCache = true,
   }) async {
-    // Build query parameters
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
@@ -162,8 +135,16 @@ class ApiClassService {
       queryParams['academic_year_id'] = academicYearId;
     }
 
-    // Build query string
     String queryString = Uri(queryParameters: queryParams).query;
+    final cacheKey = 'class_paginated_$queryString';
+
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null) {
+        if (kDebugMode) print('📦 Using cached classes for $cacheKey');
+        return cached;
+      }
+    }
 
     try {
       final response = await http.get(
@@ -171,16 +152,14 @@ class ApiClassService {
         headers: await ApiService.getHeaders(),
       );
 
-      print('GET /class?$queryString - Status: ${response.statusCode}');
-
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) {
+        await LocalCacheService.save(cacheKey, result);
         return result;
       }
 
-      // Fallback untuk backward compatibility
-      return {
+      final fallback = {
         'success': true,
         'data': result is List ? result : [],
         'pagination': {
@@ -192,13 +171,25 @@ class ApiClassService {
           'has_prev_page': false,
         },
       };
+      await LocalCacheService.save(cacheKey, fallback);
+      return fallback;
     } catch (e) {
-      print('Error getting paginated classes: $e');
       rethrow;
     }
   }
 
-  // Existing methods...
+  static Future<void> _clearClassCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs
+        .getKeys()
+        .where((key) => key.startsWith('api_cache_class_'))
+        .toList();
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+    if (kDebugMode) print('🧹 Class cache cleared due to changes');
+  }
+
   Future<List<dynamic>> getClass({String? academicYearId}) async {
     try {
       String url = '/class';
@@ -208,34 +199,27 @@ class ApiClassService {
 
       final result = await ApiService().get(url);
 
-      // Handle new pagination format
       if (result is Map<String, dynamic>) {
         return result['data'] ?? [];
       }
 
-      // Handle old format (List)
       return result is List ? result : [];
     } catch (e) {
-      print('Error getting classes: $e');
       return [];
     }
   }
 
-  // Get class by ID
   Future<dynamic> getClassById(String id) async {
     try {
       final result = await ApiService().get('/class/$id');
       return result;
     } catch (e) {
-      print('Error getting class by ID: $e');
       throw Exception('Gagal mengambil data kelas: $e');
     }
   }
 
-  // Add new class (POST)
   Future<dynamic> addClass(Map<String, dynamic> data) async {
     try {
-      // Validasi data required
       if (data['name'] == null || data['name'].toString().isEmpty) {
         throw Exception('Nama kelas harus diisi');
       }
@@ -244,20 +228,16 @@ class ApiClassService {
         throw Exception('Grade level harus dipilih');
       }
 
-      print('Adding class with data: $data');
       final result = await ApiService().post('/class', data);
-      print('Add class result: $result');
+      await _clearClassCache();
       return result;
     } catch (e) {
-      print('Error adding class: $e');
       throw Exception('Gagal menambah kelas: $e');
     }
   }
 
-  // Update existing class (PUT)
   Future<dynamic> updateClass(String id, Map<String, dynamic> data) async {
     try {
-      // Validasi data required
       if (data['name'] == null || data['name'].toString().isEmpty) {
         throw Exception('Nama kelas harus diisi');
       }
@@ -266,32 +246,27 @@ class ApiClassService {
         throw Exception('Grade level harus dipilih');
       }
 
-      print('Updating class $id with data: $data');
       final result = await ApiService().put('/class/$id', data);
-      print('Update class result: $result');
+      await _clearClassCache();
       return result;
     } catch (e) {
-      print('Error updating class: $e');
       throw Exception('Gagal mengupdate kelas: $e');
     }
   }
 
-  // Delete class
   Future<void> deleteClass(String id) async {
     try {
       await ApiService().delete('/class/$id');
+      await _clearClassCache();
     } catch (e) {
-      print('Error deleting class: $e');
       throw Exception('Gagal menghapus kelas: $e');
     }
   }
 
-  // Get students by class ID
   Future<List<dynamic>> getStudentsByClassId(String classId) async {
     try {
       final result = await ApiService().get('/student/class/$classId');
 
-      // Handle Map format (pagination or error response)
       if (result is Map<String, dynamic>) {
         if (result.containsKey('data')) {
           return result['data'] ?? [];
@@ -299,21 +274,18 @@ class ApiClassService {
         return [];
       }
 
-      // Handle List format (direct response)
       return result is List ? result : [];
     } catch (e) {
-      print('Error getting students by class: $e');
       return [];
     }
   }
 
-  // Promote students
   Future<dynamic> promoteStudents(Map<String, dynamic> data) async {
     try {
       final result = await ApiService().post('/promotion/promote', data);
+      await _clearClassCache();
       return result;
     } catch (e) {
-      print('Error promoting students: $e');
       throw Exception('Gagal melakukan proses kenaikan kelas: $e');
     }
   }

@@ -259,7 +259,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     await ExcelService.downloadTemplate(context);
   }
 
-  Future<void> _loadData({bool resetPage = true}) async {
+  Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
         setState(() {
@@ -289,6 +289,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
+        useCache: useCache,
       );
 
       final classData = await apiServiceClass.getClass();
@@ -322,6 +323,10 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         ),
       );
     }
+  }
+
+  Future<void> _onRefresh() async {
+    await _loadData(resetPage: true, useCache: false);
   }
 
   Future<void> _loadMoreData() async {
@@ -1514,7 +1519,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 20),
@@ -2132,35 +2137,39 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                         SizedBox(height: 12),
 
                         // Action buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _buildActionButton(
-                              icon: Icons.edit,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Edit',
-                                'id': 'Edit',
-                              }),
-                              color: _getPrimaryColor(),
-                              backgroundColor: Colors.white,
-                              borderColor: _getPrimaryColor(),
-                              onPressed: () =>
-                                  _showStudentDialog(student: student),
-                            ),
-                            SizedBox(width: 8),
-                            _buildActionButton(
-                              icon: Icons.delete,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Delete',
-                                'id': 'Hapus',
-                              }),
-                              color: Colors.red,
-                              backgroundColor: Colors.white,
-                              borderColor: Colors.red,
-                              onPressed: () => _deleteStudent(student),
-                            ),
-                          ],
-                        ),
+                        if (!Provider.of<AcademicYearProvider>(
+                          context,
+                          listen: false,
+                        ).isReadOnly)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _buildActionButton(
+                                icon: Icons.edit,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Edit',
+                                  'id': 'Edit',
+                                }),
+                                color: _getPrimaryColor(),
+                                backgroundColor: Colors.white,
+                                borderColor: _getPrimaryColor(),
+                                onPressed: () =>
+                                    _showStudentDialog(student: student),
+                              ),
+                              SizedBox(width: 8),
+                              _buildActionButton(
+                                icon: Icons.delete,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Delete',
+                                  'id': 'Hapus',
+                                }),
+                                color: Colors.red,
+                                backgroundColor: Colors.white,
+                                borderColor: Colors.red,
+                                onPressed: () => _deleteStudent(student),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -2623,7 +2632,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                         icon: Icons.people_outline,
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadData,
+                        onRefresh: _onRefresh,
                         child: ListView.builder(
                           controller: _scrollController,
                           padding: EdgeInsets.only(top: 8, bottom: 16),
@@ -2650,14 +2659,17 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showStudentDialog(),
-            backgroundColor: _getPrimaryColor(),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(Icons.add, color: Colors.white, size: 20),
-          ),
+          floatingActionButton:
+              Provider.of<AcademicYearProvider>(context).isReadOnly
+              ? null
+              : FloatingActionButton(
+                  onPressed: () => _showStudentDialog(),
+                  backgroundColor: _getPrimaryColor(),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Icons.add, color: Colors.white, size: 20),
+                ),
         );
       },
     );

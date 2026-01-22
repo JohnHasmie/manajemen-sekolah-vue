@@ -9,6 +9,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/excel_subject_service.dart';
@@ -1100,7 +1101,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                 ),
                               ),
                               value: isActive,
-                              activeColor: _getPrimaryColor(),
+                              activeThumbColor: _getPrimaryColor(),
                               onChanged: (bool value) {
                                 setDialogState(() {
                                   isActive = value;
@@ -3080,12 +3081,17 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showQuickAddClassDialog,
-        backgroundColor: _getPrimaryColor(),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Icon(Icons.add, color: Colors.white, size: 20),
-      ),
+      floatingActionButton:
+          Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly
+          ? null
+          : FloatingActionButton(
+              onPressed: _showQuickAddClassDialog,
+              backgroundColor: _getPrimaryColor(),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(Icons.add, color: Colors.white, size: 20),
+            ),
     );
   }
 

@@ -3036,25 +3036,29 @@ class FinanceScreenState extends State<FinanceScreen>
           ),
           SizedBox(height: 8),
           SizedBox(height: 8),
-          Builder(
-            builder: (context) {
-              return ElevatedButton(
-                onPressed: () {
-                  DefaultTabController.of(context).animateTo(2);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+          if (!Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).isReadOnly)
+            Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    DefaultTabController.of(context).animateTo(2);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                ),
-                child: Text(
-                  'Verifikasi Sekarang',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              );
-            },
-          ),
+                  child: Text(
+                    'Verifikasi Sekarang',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -3318,27 +3322,31 @@ class FinanceScreenState extends State<FinanceScreen>
                             Spacer(),
 
                             // Tombol Verifikasi
-                            ElevatedButton(
-                              onPressed: () =>
-                                  _showVerifikasiDialog(pembayaran),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _getPrimaryColor(),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                            if (!Provider.of<AcademicYearProvider>(
+                              context,
+                              listen: false,
+                            ).isReadOnly)
+                              ElevatedButton(
+                                onPressed: () =>
+                                    _showVerifikasiDialog(pembayaran),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _getPrimaryColor(),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                 ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
+                                child: Text(
+                                  'Verifikasi',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
-                              child: Text(
-                                'Verifikasi',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ],
@@ -3354,6 +3362,8 @@ class FinanceScreenState extends State<FinanceScreen>
   }
 
   Widget? _getFloatingActionButton() {
+    if (Provider.of<AcademicYearProvider>(context).isReadOnly) return null;
+
     if (_currentTabIndex == 1) {
       // Tab Jenis Pembayaran
       return FloatingActionButton(

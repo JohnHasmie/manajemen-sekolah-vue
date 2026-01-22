@@ -1798,21 +1798,25 @@ class TeachingScheduleManagementScreenState
                                 ],
                               ),
                             ),
-                            PopupMenuItem<String>(
-                              value: 'import',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.upload, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Import from Excel',
-                                      'id': 'Import dari Excel',
-                                    }),
-                                  ),
-                                ],
+                            if (!Provider.of<AcademicYearProvider>(
+                              context,
+                              listen: false,
+                            ).isReadOnly)
+                              PopupMenuItem<String>(
+                                value: 'import',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.upload, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Import from Excel',
+                                        'id': 'Import dari Excel',
+                                      }),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
                             PopupMenuItem<String>(
                               value: 'template',
                               child: Row(
@@ -2095,14 +2099,20 @@ class TeachingScheduleManagementScreenState
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: _addSchedule,
-            backgroundColor: _getPrimaryColor(),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(Icons.add, color: Colors.white, size: 20),
-          ),
+          floatingActionButton:
+              Provider.of<AcademicYearProvider>(
+                context,
+                listen: false,
+              ).isReadOnly
+              ? null
+              : FloatingActionButton(
+                  onPressed: _addSchedule,
+                  backgroundColor: _getPrimaryColor(),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Icons.add, color: Colors.white, size: 20),
+                ),
         );
       },
     );
@@ -2331,30 +2341,34 @@ class TeachingScheduleManagementScreenState
                       SizedBox(height: 12),
 
                       // Action buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          _buildActionButton(
-                            icon: Icons.edit,
-                            label: languageProvider.getTranslatedText({
-                              'en': 'Edit',
-                              'id': 'Edit',
-                            }),
-                            color: _getPrimaryColor(),
-                            onPressed: () => _editSchedule(schedule),
-                          ),
-                          SizedBox(width: 8),
-                          _buildActionButton(
-                            icon: Icons.delete,
-                            label: languageProvider.getTranslatedText({
-                              'en': 'Delete',
-                              'id': 'Hapus',
-                            }),
-                            color: Colors.red,
-                            onPressed: () => _deleteSchedule(schedule['id']),
-                          ),
-                        ],
-                      ),
+                      if (!Provider.of<AcademicYearProvider>(
+                        context,
+                        listen: false,
+                      ).isReadOnly)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _buildActionButton(
+                              icon: Icons.edit,
+                              label: languageProvider.getTranslatedText({
+                                'en': 'Edit',
+                                'id': 'Edit',
+                              }),
+                              color: _getPrimaryColor(),
+                              onPressed: () => _editSchedule(schedule),
+                            ),
+                            SizedBox(width: 8),
+                            _buildActionButton(
+                              icon: Icons.delete,
+                              label: languageProvider.getTranslatedText({
+                                'en': 'Delete',
+                                'id': 'Hapus',
+                              }),
+                              color: Colors.red,
+                              onPressed: () => _deleteSchedule(schedule['id']),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),

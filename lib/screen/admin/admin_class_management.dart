@@ -7,9 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
-import 'package:manajemensekolah/providers/academic_year_provider.dart'
-    as providers;
+import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/class_promotion_wizard.dart';
 import 'package:manajemensekolah/screen/admin/student_management.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
@@ -507,7 +505,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     );
   }
 
-  Future<void> _loadData({bool resetPage = true}) async {
+  Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
         setState(() {
@@ -519,7 +517,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         });
       }
 
-      final academicYearProvider = Provider.of<providers.AcademicYearProvider>(
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
       );
@@ -535,6 +533,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
+        useCache: useCache,
       );
 
       if (!mounted) return;
@@ -569,6 +568,10 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     }
   }
 
+  Future<void> _onRefresh() async {
+    await _loadData(resetPage: true, useCache: false);
+  }
+
   Future<void> _loadMoreData() async {
     if (_isLoadingMore || !_hasMoreData) return;
 
@@ -579,7 +582,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     try {
       _currentPage++;
 
-      final academicYearProvider = Provider.of<providers.AcademicYearProvider>(
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
       );
@@ -1406,7 +1409,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                           SizedBox(height: 12),
 
                           // Action buttons
-                          Consumer<providers.AcademicYearProvider>(
+                          Consumer<AcademicYearProvider>(
                             builder: (context, academicYearProvider, child) {
                               if (academicYearProvider.isReadOnly) {
                                 return SizedBox.shrink();
@@ -1652,28 +1655,32 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                           ),
                         ),
                         SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _showAddEditDialog(classData: classData);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade600,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        if (!Provider.of<AcademicYearProvider>(
+                          context,
+                          listen: false,
+                        ).isReadOnly)
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _showAddEditDialog(classData: classData);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey.shade600,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Edit',
-                                'id': 'Edit',
-                              }),
-                              style: TextStyle(color: Colors.white),
+                              child: Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Edit',
+                                  'id': 'Edit',
+                                }),
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ],
@@ -1769,15 +1776,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        if (_isLoading) {
-          return LoadingScreen(
-            message: languageProvider.getTranslatedText({
-              'en': 'Loading class data...',
-              'id': 'Memuat data kelas...',
-            }),
-          );
-        }
-
         if (_errorMessage != null) {
           return ErrorScreen(errorMessage: _errorMessage!, onRetry: _loadData);
         }
@@ -2145,7 +2143,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
               ),
 
               Expanded(
-                child: filteredClasses.isEmpty
+                child: _isLoading && _classes.isEmpty
+                    ? Center(child: CircularProgressIndicator())
+                    : filteredClasses.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({
                           'en': 'No classes',
@@ -2164,7 +2164,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                         icon: Icons.school_outlined,
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadData,
+                        onRefresh: _onRefresh,
                         child: ListView.builder(
                           controller: _scrollController,
                           padding: EdgeInsets.only(top: 8, bottom: 16),
@@ -2182,18 +2182,20 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                               );
                             }
 
-                            final classData = filteredClasses[index];
-                            return _buildClassCard(classData, index);
+                            final classItem = filteredClasses[index];
+                            return _buildClassCard(classItem, index);
                           },
                         ),
                       ),
               ),
             ],
           ),
-          floatingActionButton: Consumer<providers.AcademicYearProvider>(
+          floatingActionButton: Consumer<AcademicYearProvider>(
             builder: (context, academicYearProvider, child) {
               final languageProvider = context.read<LanguageProvider>();
-              // Removed isReadOnly check to ensure FAB is always visible
+
+              if (academicYearProvider.isReadOnly) return SizedBox.shrink();
+
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,

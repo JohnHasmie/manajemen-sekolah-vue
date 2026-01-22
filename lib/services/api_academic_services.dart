@@ -91,4 +91,26 @@ class ApiAcademicServices {
     );
     return _handleResponse(response);
   }
+
+  // Update Academic Year Status
+  static Future<dynamic> updateAcademicYearStatus(
+    String id,
+    String status,
+  ) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/academic-years/$id/status'),
+      headers: await _getHeaders(),
+      body: json.encode({'status': status}),
+    );
+    return _handleResponse(response);
+  }
+
+  // Set Current Academic Year
+  static Future<dynamic> setCurrentAcademicYear(String id) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/academic-years/$id/set-current'),
+      headers: await _getHeaders(),
+    );
+    return _handleResponse(response);
+  }
 }

@@ -707,10 +707,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
     );
   }
 
-  Future<void> _loadData({bool resetPage = true}) async {
+  Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
         setState(() {
+          _isLoading = true;
           _currentPage = 1;
           _hasMoreData = true;
           _teachers = []; // Reset list
@@ -747,6 +748,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
+        useCache: useCache,
       );
 
       if (!mounted) return;
@@ -781,6 +783,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         ),
       );
     }
+  }
+
+  Future<void> _onRefresh() async {
+    await _loadData(resetPage: true, useCache: false);
   }
 
   Future<void> _loadMoreData() async {
@@ -2062,35 +2068,39 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                         SizedBox(height: 12),
 
                         // Action buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _buildActionButton(
-                              icon: Icons.edit,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Edit',
-                                'id': 'Edit',
-                              }),
-                              color: _getPrimaryColor(),
-                              backgroundColor: Colors.white,
-                              borderColor: _getPrimaryColor(),
-                              onPressed: () =>
-                                  _showAddEditDialog(teacher: teacher),
-                            ),
-                            SizedBox(width: 8),
-                            _buildActionButton(
-                              icon: Icons.delete,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Delete',
-                                'id': 'Hapus',
-                              }),
-                              color: Colors.red,
-                              backgroundColor: Colors.white,
-                              borderColor: Colors.red,
-                              onPressed: () => _deleteTeacher(teacher),
-                            ),
-                          ],
-                        ),
+                        if (!Provider.of<AcademicYearProvider>(
+                          context,
+                          listen: false,
+                        ).isReadOnly)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _buildActionButton(
+                                icon: Icons.edit,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Edit',
+                                  'id': 'Edit',
+                                }),
+                                color: _getPrimaryColor(),
+                                backgroundColor: Colors.white,
+                                borderColor: _getPrimaryColor(),
+                                onPressed: () =>
+                                    _showAddEditDialog(teacher: teacher),
+                              ),
+                              SizedBox(width: 8),
+                              _buildActionButton(
+                                icon: Icons.delete,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Delete',
+                                  'id': 'Hapus',
+                                }),
+                                color: Colors.red,
+                                backgroundColor: Colors.white,
+                                borderColor: Colors.red,
+                                onPressed: () => _deleteTeacher(teacher),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -2544,7 +2554,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                         icon: Icons.person_outline,
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadData,
+                        onRefresh: _onRefresh,
                         child: ListView.builder(
                           controller: _scrollController,
                           padding: EdgeInsets.only(top: 8, bottom: 16),
@@ -2596,14 +2606,17 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddEditDialog(),
-            backgroundColor: _getPrimaryColor(),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(Icons.add, color: Colors.white, size: 20),
-          ),
+          floatingActionButton:
+              Provider.of<AcademicYearProvider>(context).isReadOnly
+              ? null
+              : FloatingActionButton(
+                  onPressed: () => _showAddEditDialog(),
+                  backgroundColor: _getPrimaryColor(),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Icons.add, color: Colors.white, size: 20),
+                ),
         );
       },
     );
