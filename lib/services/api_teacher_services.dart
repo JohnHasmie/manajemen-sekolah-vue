@@ -99,6 +99,12 @@ class ApiTeacherService {
 
       final result = _handleResponse(response);
 
+      // Handle List response (when not paginated)
+      if (result is List && result.isNotEmpty) {
+        return result[0];
+      }
+
+      // Handle Map response (when wrapped in 'data')
       if (result is Map<String, dynamic> &&
           result['data'] is List &&
           (result['data'] as List).isNotEmpty) {

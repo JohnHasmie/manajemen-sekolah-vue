@@ -11,6 +11,7 @@ import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
+import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
@@ -496,6 +497,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       final userData = json.decode(prefs.getString('user') ?? '{}');
 
       final userId = userData['id']?.toString() ?? '';
+      final role = userData['role']?.toString().toLowerCase() ?? '';
+      final isAdmin = role == 'admin' || role == 'super_admin';
 
       setState(() {
         _teacherId = userId; // Initially set to userId
@@ -504,55 +507,82 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
       if (kDebugMode) {
         print('User ID from prefs: $userId');
+        print('User Role: $role');
       }
 
       if (userId.isNotEmpty) {
-        // 1. Resolve Teacher ID first (needed for both Schedule and Activities)
-        try {
-          final teacherData = await ApiTeacherService.getGuruByUserId(userId);
-          if (teacherData != null && teacherData['id'] != null) {
-            final teacherId = teacherData['id'].toString();
+        if (isAdmin) {
+          // Admin Case: Load ALL classes
+          if (kDebugMode)
+            print('User is Admin/Super Admin. Loading all classes.');
+          await _loadClasses(userId, isAdmin: true);
+        } else {
+          // Teacher Case: Resolve Teacher ID
+          try {
+            final teacherData = await ApiTeacherService.getGuruByUserId(userId);
+            if (teacherData != null && teacherData['id'] != null) {
+              final teacherId = teacherData['id'].toString();
 
-            if (kDebugMode) {
-              print('Resolved Teacher ID: $teacherId');
-            }
+              if (kDebugMode) {
+                print('Resolved Teacher ID: $teacherId');
+              }
 
-            setState(() {
-              _teacherId = teacherId; // Update to Teacher ID for activities
-            });
+              setState(() {
+                _teacherId = teacherId; // Update to Teacher ID for activities
+              });
 
-            // 2. Load Classes using TEACHER ID
-            await Future.wait([
-              _loadClasses(teacherId),
-              _loadSchedule(teacherId), // Load schedule for dialog filtering
-            ]);
+              // 2. Load Classes using TEACHER ID
+              await Future.wait([
+                _loadClasses(teacherId, isAdmin: false),
+                _loadSchedule(teacherId), // Load schedule for dialog filtering
+              ]);
 
-            // If initial params provided, try to navigate deep
-            if (widget.initialClassId != null) {
-              _selectedClassId = widget.initialClassId;
-              _selectedClassName = widget.initialClassName;
-              _currentStep = 1; // Go to Subject List
+              // If initial params provided, try to navigate deep
+              if (widget.initialClassId != null) {
+                _selectedClassId = widget.initialClassId;
+                _selectedClassName = widget.initialClassName;
+                _currentStep = 1; // Go to Subject List
 
-              if (widget.initialSubjectId != null) {
-                _selectedSubjectId = widget.initialSubjectId;
-                // Need to find subject name? Or rely on initialSubjectName
-                _selectedSubjectName =
-                    widget.initialSubjectName; // Assuming passed
-                _currentStep = 2; // Go to Activity List
-                await _loadActivities();
+                if (widget.initialSubjectId != null) {
+                  _selectedSubjectId = widget.initialSubjectId;
+                  // Need to find subject name? Or rely on initialSubjectName
+                  _selectedSubjectName =
+                      widget.initialSubjectName; // Assuming passed
+                  _currentStep = 2; // Go to Activity List
+                  await _loadActivities();
+                } else {
+                  await _loadSubjectsForClass();
+                }
+              }
+            } else {
+              // FALLBACK: Teacher resolution failed.
+              // This might be an Admin whose role wasn't saved in prefs.
+              if (kDebugMode) {
+                print(
+                  '❌ Failed to resolve Teacher ID. Attempting fallback as Admin...',
+                );
+              }
+
+              // Try loading classes as if Admin
+              await _loadClasses(userId, isAdmin: true);
+
+              if (_classList.isNotEmpty) {
+                if (kDebugMode)
+                  print('✅ Fallback successful: Loaded classes as Admin');
               } else {
-                await _loadSubjectsForClass();
+                if (kDebugMode)
+                  print(
+                    '❌ Fallback failed: No classes loaded or not authorized',
+                  );
+                // Only now stop loading
+                setState(() => _isLoading = false);
               }
             }
-          } else {
+          } catch (e) {
             if (kDebugMode) {
-              print('❌ Failed to resolve Teacher ID from User ID');
-              print('Cannot load classes without Teacher ID');
+              print('Error during teacher resolution: $e');
             }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('Error during teacher resolution: $e');
+            setState(() => _isLoading = false);
           }
         }
       } else {
@@ -566,17 +596,29 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     }
   }
 
-  Future<void> _loadClasses(String teacherId) async {
+  Future<void> _loadClasses(String teacherId, {bool isAdmin = false}) async {
     try {
       final academicYearId = context
           .read<AcademicYearProvider>()
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final classes = await ApiTeacherService.getTeacherClasses(
-        teacherId,
-        academicYearId: academicYearId,
-      );
+      List<dynamic> classes = [];
+
+      if (isAdmin) {
+        // Use ApiClassService for Admin
+        final response = await ApiClassService.getClassPaginated(
+          limit: 100, // Load many classes
+          academicYearId: academicYearId,
+        );
+        classes = response['data'] ?? [];
+      } else {
+        // Use ApiTeacherService for Teacher
+        classes = await ApiTeacherService.getTeacherClasses(
+          teacherId,
+          academicYearId: academicYearId,
+        );
+      }
 
       setState(() {
         _classList = classes;
