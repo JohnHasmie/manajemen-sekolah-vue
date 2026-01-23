@@ -4,21 +4,18 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiScheduleService {
   static String get baseUrl => ApiService.baseUrl;
 
-  // Cache storage
-  static final Map<String, dynamic> _cache = {};
-  static const Duration _cacheDuration = Duration(minutes: 30);
-
   // Clear cache
-  static void invalidateCache() {
-    _cache.clear();
+  static Future<void> invalidateCache() async {
+    await LocalCacheService.clearStartingWith('schedule_');
     if (kDebugMode) {
-      print('DEBUG: Schedule cache invalidated');
+      print('DEBUG: Schedule cache invalidated (persistent)');
     }
   }
 
@@ -137,6 +134,7 @@ class ApiScheduleService {
     String? semesterId,
     String? tahunAjaran,
     String? search,
+    String? jamPelajaranId,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
@@ -162,26 +160,28 @@ class ApiScheduleService {
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;
     }
+    if (jamPelajaranId != null && jamPelajaranId.isNotEmpty) {
+      queryParams['lesson_hour_id'] = jamPelajaranId;
+    }
 
     // Build query string
     String queryString = Uri(queryParameters: queryParams).query;
-    final cacheKey = 'getSchedulesPaginated?$queryString';
+    final cacheKey = 'schedule_paginated?$queryString';
 
-    // Check cache
-    if (_cache.containsKey(cacheKey)) {
-      final cachedItem = _cache[cacheKey];
-      final timestamp = cachedItem['timestamp'] as DateTime;
-      if (DateTime.now().difference(timestamp) < _cacheDuration) {
+    try {
+      // 1. Try Load from Cache
+      final cachedData = await LocalCacheService.load(
+        cacheKey,
+        ttl: const Duration(minutes: 30),
+      );
+      if (cachedData != null) {
         if (kDebugMode) {
           print('DEBUG: Returning cached schedule data for $cacheKey');
         }
-        return cachedItem['data'];
-      } else {
-        _cache.remove(cacheKey);
+        return cachedData;
       }
-    }
 
-    try {
+      // 2. Fetch from API
       final response = await http.get(
         Uri.parse('$baseUrl/teaching-schedule?$queryString'),
         headers: await _getHeaders(),
@@ -196,8 +196,8 @@ class ApiScheduleService {
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) {
-        // Cache result
-        _cache[cacheKey] = {'data': result, 'timestamp': DateTime.now()};
+        // 3. Save to Cache
+        await LocalCacheService.save(cacheKey, result);
         return result;
       }
 
@@ -216,7 +216,7 @@ class ApiScheduleService {
       };
 
       // Cache fallback result
-      _cache[cacheKey] = {'data': fallbackResult, 'timestamp': DateTime.now()};
+      await LocalCacheService.save(cacheKey, fallbackResult);
 
       return fallbackResult;
     } catch (e) {
@@ -259,7 +259,7 @@ class ApiScheduleService {
     );
 
     final result = _handleResponse(response);
-    invalidateCache(); // Invalidate cache on add
+    await invalidateCache(); // Invalidate cache on add
     return result;
   }
 
@@ -274,7 +274,7 @@ class ApiScheduleService {
     );
 
     _handleResponse(response);
-    invalidateCache(); // Invalidate cache on update
+    await invalidateCache(); // Invalidate cache on update
   }
 
   static Future<void> deleteSchedule(String id) async {
@@ -284,7 +284,7 @@ class ApiScheduleService {
     );
 
     _handleResponse(response);
-    invalidateCache(); // Invalidate cache on delete
+    await invalidateCache(); // Invalidate cache on delete
   }
 
   // Tambahkan method untuk mendapatkan jam pelajaran berdasarkan filter
@@ -541,7 +541,7 @@ class ApiScheduleService {
       print('Import Schedule Response Body: $responseBody');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        invalidateCache(); // Force refresh data after import
+        await invalidateCache(); // Force refresh data after import
         return json.decode(responseBody);
       } else {
         throw Exception(

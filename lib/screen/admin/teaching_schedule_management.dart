@@ -70,6 +70,7 @@ class TeachingScheduleManagementScreenState
   String? _selectedClassId; // Filter by class
   String? _selectedHariId; // Filter by day
   String? _selectedFilterSemester;
+  String? _selectedJamPelajaran; // Filter by Lesson Hour
   bool _hasActiveFilter = false;
 
   // Filter Options (from backend)
@@ -338,6 +339,7 @@ class TeachingScheduleManagementScreenState
                 search: _searchController.text.trim().isEmpty
                     ? null
                     : _searchController.text.trim(),
+                jamPelajaranId: _selectedJamPelajaran,
               ).catchError((e) {
                 print('Error getSchedulesPaginated: $e');
                 throw e;
@@ -460,6 +462,7 @@ class TeachingScheduleManagementScreenState
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
+        jamPelajaranId: _selectedJamPelajaran,
       );
 
       if (!mounted) return;
@@ -1001,10 +1004,13 @@ class TeachingScheduleManagementScreenState
 
   void _clearAllFilters() {
     setState(() {
-      _selectedHariId = null;
+      _selectedGuruId = null;
       _selectedClassId = null;
-      _selectedFilterSemester =
-          _selectedSemester; // Kembali ke semester default
+      _selectedHariId = null;
+      _selectedFilterSemester = null;
+      _selectedJamPelajaran = null;
+      _searchController.clear();
+      _hasActiveFilter = false;
     });
     _checkActiveFilter();
     _loadData(); // Reload data untuk menampilkan data default
@@ -1124,312 +1130,377 @@ class TeachingScheduleManagementScreenState
       listen: false,
     );
 
-    String? tempSelectedHariId = _selectedHariId;
-    String? tempSelectedClassId = _selectedClassId;
-    // Gunakan nilai default jika filter belum diset
-    String? tempSelectedSemester = _selectedFilterSemester ?? _selectedSemester;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.75,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Filter',
-                        'id': 'Filter',
-                      }),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setModalState(() {
-                          tempSelectedHariId = null;
-                          tempSelectedClassId = null;
-                          // Reset ke nilai default saat ini
-                          tempSelectedSemester = _selectedSemester;
-                        });
-                      },
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Reset',
-                          'id': 'Reset',
-                        }),
-                        style: TextStyle(color: _getPrimaryColor()),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Filter Content
-              Expanded(
-                child: SingleChildScrollView(
+      builder: (context) {
+        String? tempSelectedHariId = _selectedHariId;
+        String? tempSelectedClassId = _selectedClassId;
+        // Gunakan nilai default jika filter belum diset
+        String? tempSelectedSemester =
+            _selectedFilterSemester ?? _selectedSemester;
+        String? tempSelectedJamPelajaran = _selectedJamPelajaran;
+
+        return StatefulBuilder(
+          builder: (context, setModalState) => Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Header
+                Container(
                   padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Day Filter
                       Text(
                         languageProvider.getTranslatedText({
-                          'en': 'Day',
-                          'id': 'Hari',
+                          'en': 'Filter',
+                          'id': 'Filter',
                         }),
                         style: TextStyle(
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
                         ),
                       ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _availableDays.map<Widget>((day) {
-                          final dayId = day['id'].toString();
-                          final dayNameRaw = day['name'] ?? day['nama'] ?? '';
-                          final isSelected = tempSelectedHariId == dayId;
-
-                          // Localization helper for days
-                          final dayMap = {
-                            'senin': {'en': 'Monday', 'id': 'Senin'},
-                            'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
-                            'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
-                            'kamis': {'en': 'Thursday', 'id': 'Kamis'},
-                            'jumat': {'en': 'Friday', 'id': 'Jumat'},
-                            'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
-                            'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
-                            'minggu': {'en': 'Sunday', 'id': 'Minggu'},
-                            'monday': {'en': 'Monday', 'id': 'Senin'},
-                            'tuesday': {'en': 'Tuesday', 'id': 'Selasa'},
-                            'wednesday': {'en': 'Wednesday', 'id': 'Rabu'},
-                            'thursday': {'en': 'Thursday', 'id': 'Kamis'},
-                            'friday': {'en': 'Friday', 'id': 'Jumat'},
-                            'saturday': {'en': 'Saturday', 'id': 'Sabtu'},
-                            'sunday': {'en': 'Sunday', 'id': 'Minggu'},
-                          };
-
-                          final normalizedKey = dayNameRaw
-                              .toString()
-                              .toLowerCase();
-                          final dayName = dayMap[normalizedKey] != null
-                              ? languageProvider.getTranslatedText(
-                                  dayMap[normalizedKey]!,
-                                )
-                              : dayNameRaw;
-
-                          return FilterChip(
-                            label: Text(dayName),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                tempSelectedHariId = selected ? dayId : null;
-                              });
-                            },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
-                            checkmarkColor: _getPrimaryColor(),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      SizedBox(height: 24),
-
-                      // Class Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Class',
-                          'id': 'Kelas',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      TextButton(
+                        onPressed: () {
+                          setModalState(() {
+                            tempSelectedHariId = null;
+                            tempSelectedClassId = null;
+                            tempSelectedJamPelajaran = null;
+                            // Reset ke nilai default saat ini
+                            tempSelectedSemester = _selectedSemester;
+                          });
+                        },
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Reset',
+                            'id': 'Reset',
+                          }),
+                          style: TextStyle(color: _getPrimaryColor()),
                         ),
                       ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _availableClasses.map<Widget>((cls) {
-                          final classId = cls['id'].toString();
-                          final className = cls['name'] ?? cls['nama'] ?? '';
-                          final isSelected = tempSelectedClassId == classId;
-                          return FilterChip(
-                            label: Text(className),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                tempSelectedClassId = selected ? classId : null;
-                              });
-                            },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
-                            checkmarkColor: _getPrimaryColor(),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      SizedBox(height: 24),
-
-                      // Semester Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Semester',
-                          'id': 'Semester',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _semesterList.map<Widget>((semester) {
-                          final semesterId = semester['id'].toString();
-                          String semesterNameRaw =
-                              semester['name'] ??
-                              semester['nama'] ??
-                              'Semester $semesterId';
-                          if (semester['academic_year'] != null &&
-                              semester['academic_year']['year'] != null) {
-                            semesterNameRaw +=
-                                ' (${semester['academic_year']['year']})';
-                          }
-                          final semesterName = semesterNameRaw;
-                          final isSelected = tempSelectedSemester == semesterId;
-                          return FilterChip(
-                            label: Text(semesterName),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                tempSelectedSemester = selected
-                                    ? semesterId
-                                    : null;
-                              });
-                            },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
-                            checkmarkColor: _getPrimaryColor(),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      SizedBox(height: 24),
                     ],
                   ),
                 ),
-              ),
-              // Actions
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        child: Text(
+                // Filter Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Day Filter
+                        Text(
                           languageProvider.getTranslatedText({
-                            'en': 'Cancel',
-                            'id': 'Batal',
-                          }),
-                          style: TextStyle(color: Colors.grey.shade800),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedHariId = tempSelectedHariId;
-                            _selectedClassId = tempSelectedClassId;
-                            _selectedFilterSemester = tempSelectedSemester;
-                            _checkActiveFilter();
-                          });
-                          Navigator.pop(context);
-                          _loadData();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _getPrimaryColor(),
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Apply Filter',
-                            'id': 'Terapkan Filter',
+                            'en': 'Day',
+                            'id': 'Hari',
                           }),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
-                      ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _availableDays.map<Widget>((day) {
+                            final dayId = day['id'].toString();
+                            final dayNameRaw = day['name'] ?? day['nama'] ?? '';
+                            final isSelected = tempSelectedHariId == dayId;
+
+                            // Localization helper for days
+                            final dayMap = {
+                              'senin': {'en': 'Monday', 'id': 'Senin'},
+                              'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
+                              'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
+                              'kamis': {'en': 'Thursday', 'id': 'Kamis'},
+                              'jumat': {'en': 'Friday', 'id': 'Jumat'},
+                              'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
+                              'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
+                              'minggu': {'en': 'Sunday', 'id': 'Minggu'},
+                              'monday': {'en': 'Monday', 'id': 'Senin'},
+                              'tuesday': {'en': 'Tuesday', 'id': 'Selasa'},
+                              'wednesday': {'en': 'Wednesday', 'id': 'Rabu'},
+                              'thursday': {'en': 'Thursday', 'id': 'Kamis'},
+                              'friday': {'en': 'Friday', 'id': 'Jumat'},
+                              'saturday': {'en': 'Saturday', 'id': 'Sabtu'},
+                              'sunday': {'en': 'Sunday', 'id': 'Minggu'},
+                            };
+
+                            final normalizedKey = dayNameRaw
+                                .toString()
+                                .toLowerCase();
+                            final dayName = dayMap[normalizedKey] != null
+                                ? languageProvider.getTranslatedText(
+                                    dayMap[normalizedKey]!,
+                                  )
+                                : dayNameRaw;
+
+                            return FilterChip(
+                              label: Text(dayName),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  tempSelectedHariId = selected ? dayId : null;
+                                });
+                              },
+                              backgroundColor: Colors.grey.shade100,
+                              selectedColor: _getPrimaryColor().withOpacity(
+                                0.2,
+                              ),
+                              checkmarkColor: _getPrimaryColor(),
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? _getPrimaryColor()
+                                    : Colors.grey.shade700,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        SizedBox(height: 24),
+
+                        // Class Filter
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Class',
+                            'id': 'Kelas',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _availableClasses.map<Widget>((cls) {
+                            final classId = cls['id'].toString();
+                            final className = cls['name'] ?? cls['nama'] ?? '';
+                            final isSelected = tempSelectedClassId == classId;
+                            return FilterChip(
+                              label: Text(className),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  tempSelectedClassId = selected
+                                      ? classId
+                                      : null;
+                                });
+                              },
+                              backgroundColor: Colors.grey.shade100,
+                              selectedColor: _getPrimaryColor().withOpacity(
+                                0.2,
+                              ),
+                              checkmarkColor: _getPrimaryColor(),
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? _getPrimaryColor()
+                                    : Colors.grey.shade700,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        SizedBox(height: 24),
+
+                        // Semester Filter
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Semester',
+                            'id': 'Semester',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _semesterList.map<Widget>((semester) {
+                            final semesterId = semester['id'].toString();
+                            String semesterNameRaw =
+                                semester['name'] ??
+                                semester['nama'] ??
+                                'Semester $semesterId';
+                            if (semester['academic_year'] != null &&
+                                semester['academic_year']['year'] != null) {
+                              semesterNameRaw +=
+                                  ' (${semester['academic_year']['year']})';
+                            }
+                            final semesterName = semesterNameRaw;
+                            final isSelected =
+                                tempSelectedSemester == semesterId;
+                            return FilterChip(
+                              label: Text(semesterName),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  tempSelectedSemester = selected
+                                      ? semesterId
+                                      : null;
+                                });
+                              },
+                              backgroundColor: Colors.grey.shade100,
+                              selectedColor: _getPrimaryColor().withOpacity(
+                                0.2,
+                              ),
+                              checkmarkColor: _getPrimaryColor(),
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? _getPrimaryColor()
+                                    : Colors.grey.shade700,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        SizedBox(height: 24),
+
+                        // Jam Pelajaran Filter
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Lesson Hour',
+                            'id': 'Jam Pelajaran',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _jamPelajaranList.map<Widget>((jp) {
+                            final jpId = jp['id'].toString();
+                            final jpName =
+                                '${jp['jam_ke']} (${jp['jam_mulai']} - ${jp['jam_selesai']})';
+                            final isSelected = tempSelectedJamPelajaran == jpId;
+                            return FilterChip(
+                              label: Text(jpName),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  tempSelectedJamPelajaran = selected
+                                      ? jpId
+                                      : null;
+                                });
+                              },
+                              backgroundColor: Colors.grey.shade100,
+                              selectedColor: _getPrimaryColor().withOpacity(
+                                0.2,
+                              ),
+                              checkmarkColor: _getPrimaryColor(),
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? _getPrimaryColor()
+                                    : Colors.grey.shade700,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        SizedBox(height: 24),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                // Actions
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            side: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Cancel',
+                              'id': 'Batal',
+                            }),
+                            style: TextStyle(color: Colors.grey.shade800),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedHariId = tempSelectedHariId;
+                              _selectedClassId = tempSelectedClassId;
+                              _selectedFilterSemester = tempSelectedSemester;
+                              _selectedJamPelajaran = tempSelectedJamPelajaran;
+                              _checkActiveFilter();
+                            });
+                            Navigator.pop(context);
+                            _loadData();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _getPrimaryColor(),
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Apply Filter',
+                              'id': 'Terapkan Filter',
+                            }),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -1474,8 +1545,17 @@ class TeachingScheduleManagementScreenState
           className.contains(searchTerm) ||
           dayNames.contains(searchTerm);
 
+      bool matchesJamPelajaran = true;
+      if (_selectedJamPelajaran != null) {
+        final scheduleJpId =
+            schedule['lesson_hour_id']?.toString() ??
+            schedule['jam_pelajaran_id']?.toString();
+        matchesJamPelajaran = scheduleJpId == _selectedJamPelajaran;
+      }
+
       // Note: Semester and academic year filters are handled by reloading data from server
-      return matchesSearch;
+      // For ListView, backend handles filtering. For TableView/local data, we filter here.
+      return matchesSearch && matchesJamPelajaran;
     }).toList();
   }
 
@@ -2051,42 +2131,46 @@ class TeachingScheduleManagementScreenState
                     : filteredSchedules.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({
-                          'en': 'No teaching schedules',
-                          'id': 'Belum ada jadwal mengajar',
+                          'en': 'No Schedules Found',
+                          'id': 'Jadwal Tidak Ditemukan',
                         }),
-                        subtitle:
-                            _searchController.text.isEmpty && !_hasActiveFilter
-                            ? languageProvider.getTranslatedText({
-                                'en': 'Tap + to add new schedule',
-                                'id': 'Tap + untuk menambah jadwal baru',
-                              })
-                            : languageProvider.getTranslatedText({
-                                'en': 'No search results found',
-                                'id': 'Tidak ditemukan hasil pencarian',
-                              }),
-                        icon: Icons.schedule_outlined,
+                        subtitle: languageProvider.getTranslatedText({
+                          'en': 'Try adjusting your filters',
+                          'id': 'Coba sesuaikan filter Anda',
+                        }),
+                        icon: Icons.event_busy,
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadData,
+                        onRefresh: () async {
+                          await _loadData(resetPage: true);
+                        },
                         child: ListView.builder(
                           controller: _scrollController,
                           padding: EdgeInsets.only(
+                            bottom: 80,
                             top: 16,
                             left: 16,
                             right: 16,
-                            bottom: 16,
                           ),
                           itemCount:
-                              filteredSchedules.length +
-                              (_isLoadingMore ? 1 : 0),
+                              filteredSchedules.length + (_hasMoreData ? 1 : 0),
                           itemBuilder: (context, index) {
-                            // Show loading indicator at bottom
                             if (index == filteredSchedules.length) {
-                              return Container(
-                                padding: EdgeInsets.symmetric(vertical: 16),
-                                alignment: Alignment.center,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16.0,
+                                ),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        _getPrimaryColor(),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               );
                             }
@@ -2410,12 +2494,12 @@ class TeachingScheduleManagementScreenState
   }
 
   String _formatTime(Map<String, dynamic> schedule) {
-    if (kDebugMode) {
-      print('DEBUG: _formatTime keys: ${schedule.keys.toList()}');
-      print(
-        'DEBUG: _formatTime values: ${schedule['jam_mulai']} - ${schedule['jam_selesai']}',
-      );
-    }
+    // if (kDebugMode) {
+    //   print('DEBUG: _formatTime keys: ${schedule.keys.toList()}');
+    //   print(
+    //     'DEBUG: _formatTime values: ${schedule['jam_mulai']} - ${schedule['jam_selesai']}',
+    //   );
+    // }
     final startTime = schedule['jam_mulai'] ?? schedule['start_time'] ?? '';
     final endTime = schedule['jam_selesai'] ?? schedule['end_time'] ?? '';
 
@@ -2506,10 +2590,10 @@ class TeachingScheduleManagementScreenState
         daysIds.add(schedule['day_id']);
     }
 
-    if (kDebugMode) {
-      print('DEBUG: _formatScheduleDays daysIds extracted: $daysIds');
-      print('DEBUG: _formatScheduleDays schedule keys: ${schedule.keys}');
-    }
+    // if (kDebugMode) {
+    //   print('DEBUG: _formatScheduleDays daysIds extracted: $daysIds');
+    //   print('DEBUG: _formatScheduleDays schedule keys: ${schedule.keys}');
+    // }
 
     if (daysIds.isNotEmpty) {
       final dayNames = daysIds

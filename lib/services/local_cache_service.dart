@@ -19,6 +19,20 @@ class LocalCacheService {
     }
   }
 
+  /// Menghapus semua cache yang diawali dengan sub-prefix tertentu (setelah prefix utama)
+  /// Contoh: clearStartingWith('subject_') akan menghapus api_cache_subject_...
+  static Future<void> clearStartingWith(String subPrefix) async {
+    final prefs = await SharedPreferences.getInstance();
+    final fullPrefix = '$_prefix$subPrefix';
+    final keys = prefs
+        .getKeys()
+        .where((key) => key.startsWith(fullPrefix))
+        .toList();
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+  }
+
   /// Menghapus cache spesifik berdasarkan key (misal saat ada perubahan data)
   static Future<void> invalidate(String key) async {
     final prefs = await SharedPreferences.getInstance();

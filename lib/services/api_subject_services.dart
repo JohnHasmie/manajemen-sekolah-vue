@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -79,8 +81,22 @@ class ApiSubjectService {
 
     // Build query string
     String queryString = Uri(queryParameters: queryParams).query;
+    String cacheKey = 'subject_$queryString';
 
     try {
+      // 1. Coba ambil dari cache
+      final cachedData = await LocalCacheService.load(
+        cacheKey,
+        ttl: Duration(minutes: 30),
+      );
+      if (cachedData != null) {
+        if (kDebugMode) {
+          print('✅ Loading subjects from CACHE: $cacheKey');
+        }
+        return cachedData;
+      }
+
+      // 2. Jika tidak ada di cache, ambil dari API
       final response = await http.get(
         Uri.parse('$baseUrl/subject?$queryString'),
         headers: await ApiService.getHeaders(),
@@ -91,11 +107,12 @@ class ApiSubjectService {
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) {
+        await LocalCacheService.save(cacheKey, result); // Save to cache
         return result;
       }
 
       // Fallback untuk backward compatibility
-      return {
+      final fallbackResult = {
         'success': true,
         'data': result is List ? result : [],
         'pagination': {
@@ -107,6 +124,12 @@ class ApiSubjectService {
           'has_prev_page': false,
         },
       };
+
+      await LocalCacheService.save(
+        cacheKey,
+        fallbackResult,
+      ); // Save fallback to cache
+      return fallbackResult;
     } catch (e) {
       print('Error getting paginated subjects: $e');
       rethrow;
@@ -132,15 +155,19 @@ class ApiSubjectService {
   }
 
   Future<dynamic> addSubject(Map<String, dynamic> data) async {
-    return await ApiService().post('/subject', data);
+    final response = await ApiService().post('/subject', data);
+    await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
+    return response;
   }
 
   Future<void> updateSubject(String id, Map<String, dynamic> data) async {
     await ApiService().put('/subject/$id', data);
+    await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 
   Future<void> deleteSubject(String id) async {
     await ApiService().delete('/subject/$id');
+    await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 
   static Future<List<dynamic>> getAllMasterSubjects() async {
@@ -370,6 +397,9 @@ class ApiSubjectService {
       print('Import Response Body: $responseBody');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        await LocalCacheService.clearStartingWith(
+          'subject_',
+        ); // Invalidate cache
         return json.decode(responseBody);
       } else {
         throw Exception(
