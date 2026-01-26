@@ -11,6 +11,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -111,9 +112,10 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
       _animationController.forward();
     } catch (error) {
+      if (kDebugMode) print('Load billing data error: $error');
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to load tagihan data';
+        _errorMessage = ErrorUtils.getFriendlyMessage(error);
       });
     }
   }
@@ -162,6 +164,11 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
       setState(() {
         _isLoadingMore = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
+      }
     }
   }
 
@@ -564,7 +571,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memilih gambar: $e'),
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -599,7 +606,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memilih PDF: $e'),
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -639,7 +646,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memilih file: $e'),
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -1038,7 +1045,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                                         ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                              'Gagal upload: $error',
+                                              ErrorUtils.getFriendlyMessage(
+                                                error,
+                                              ),
                                             ),
                                             backgroundColor:
                                                 Colors.red.shade400,

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -53,9 +54,14 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
       await _loadStudentsForParent();
     } catch (e) {
-      setState(() => _isLoading = false);
       if (kDebugMode) {
         print('Error load user data: $e');
+      }
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }
@@ -108,9 +114,14 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      setState(() => _isLoading = false);
       if (kDebugMode) {
         print('Error load students for parent: $e');
+      }
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }
@@ -147,16 +158,18 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         });
       }
     } catch (e) {
-      setState(() => _isLoading = false);
       if (kDebugMode) {
         print('Error load activities: $e');
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal memuat aktivitas: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

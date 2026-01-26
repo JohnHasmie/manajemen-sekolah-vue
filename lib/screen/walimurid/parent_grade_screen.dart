@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -48,9 +49,14 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
       await _loadStudentsForParent();
     } catch (e) {
-      setState(() => _isLoading = false);
       if (kDebugMode) {
         print('Error load user data: $e');
+      }
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }
@@ -96,9 +102,14 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      setState(() => _isLoading = false);
       if (kDebugMode) {
         print('Error load students for parent grade: $e');
+      }
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }
@@ -119,16 +130,18 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
       if (kDebugMode) {
         print('Error load grades: $e');
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal memuat nilai: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
