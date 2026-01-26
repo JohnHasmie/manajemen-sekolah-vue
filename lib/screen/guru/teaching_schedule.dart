@@ -745,43 +745,116 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     return _dayColorMap[day] ?? Color(0xFF6B7280);
   }
 
+  String _normalizeDayName(String name) {
+    name = name.trim().toLowerCase();
+    if (name.contains('senin') || name.contains('monday')) return 'Senin';
+    if (name.contains('selasa') || name.contains('tuesday')) return 'Selasa';
+    if (name.contains('rabu') || name.contains('wednesday')) return 'Rabu';
+    if (name.contains('kamis') || name.contains('thursday')) return 'Kamis';
+    if (name.contains('jumat') || name.contains('friday')) return 'Jumat';
+    if (name.contains('sabtu') || name.contains('saturday')) return 'Sabtu';
+    if (name.contains('minggu') || name.contains('sunday')) return 'Minggu';
+    return name;
+  }
+
+  List<String> _extractDayIds(dynamic schedule) {
+    final List<String> ids = [];
+    final rawDaysIds = schedule['days_ids'];
+
+    if (rawDaysIds != null) {
+      if (rawDaysIds is List) {
+        ids.addAll(rawDaysIds.map((id) => id.toString()));
+      } else if (rawDaysIds is String) {
+        try {
+          final clean = rawDaysIds
+              .replaceAll('[', '')
+              .replaceAll(']', '')
+              .trim();
+          if (clean.isNotEmpty) {
+            ids.addAll(
+              clean
+                  .split(',')
+                  .map((id) => id.trim())
+                  .where((id) => id.isNotEmpty),
+            );
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Fallback
+    if (ids.isEmpty) {
+      final fallbackId = schedule['day_id'] ?? schedule['hari_id'];
+      if (fallbackId != null) {
+        ids.add(fallbackId.toString());
+      }
+    }
+    return ids;
+  }
+
   List<dynamic> _getFilteredSchedules() {
     final searchTerm = _searchController.text.toLowerCase();
-    return _jadwalList.where((schedule) {
+    final now = DateTime.now();
+
+    // Standard mappings for maximum stability
+    final dayNamesISO = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    final dayOrder = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
+    ];
+    final weekdayToIndo = {
+      1: 'Senin',
+      2: 'Selasa',
+      3: 'Rabu',
+      4: 'Kamis',
+      5: 'Jumat',
+      6: 'Sabtu',
+      7: 'Minggu',
+    };
+
+    final currentDayISO =
+        dayNamesISO[now.weekday - 1]; // 1-based (Mon=1, ..., Sun=7)
+    final currentDayIndo = _normalizeDayName(currentDayISO);
+
+    // Find the current day ID from the dynamic map with robust normalized matching
+    String? currentDayId;
+    _dayIdMap.forEach((key, value) {
+      if (_normalizeDayName(key) == currentDayIndo) {
+        currentDayId = value.toString();
+      }
+    });
+
+    final filtered = _jadwalList.where((schedule) {
       final subjectName =
           schedule['mata_pelajaran_nama']?.toString().toLowerCase() ?? '';
       final className = schedule['kelas_nama']?.toString().toLowerCase() ?? '';
 
-      final daysIds = [];
-      if (schedule['days_ids'] != null) {
-        if (schedule['days_ids'] is List)
-          daysIds.addAll(schedule['days_ids']);
-        else if (schedule['days_ids'] is String) {
-          try {
-            final parsed = (schedule['days_ids'] as String)
-                .replaceAll('[', '')
-                .replaceAll(']', '')
-                .split(',');
-            daysIds.addAll(parsed);
-          } catch (e) {}
-        }
-      }
-      // Fallback
-      if (daysIds.isEmpty) {
-        if (schedule['day_id'] != null)
-          daysIds.add(schedule['day_id']);
-        else if (schedule['hari_id'] != null)
-          daysIds.add(schedule['hari_id']);
-      }
+      final daysIds = _extractDayIds(schedule);
 
-      final dayNames = daysIds
+      final dayNamesStr = daysIds
           .map((id) {
             final entry = _dayIdMap.entries.firstWhere(
-              (e) => e.value.toString() == id.toString(),
+              (e) => e.value.toString() == id,
               orElse: () => MapEntry('', ''),
             );
-            return entry.key;
+            return entry.key.isNotEmpty
+                ? entry.key
+                : (weekdayToIndo[int.tryParse(id) ?? 0] ?? '');
           })
+          .where((k) => k.isNotEmpty)
           .join(' ')
           .toLowerCase();
 
@@ -789,7 +862,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           searchTerm.isEmpty ||
           subjectName.contains(searchTerm) ||
           className.contains(searchTerm) ||
-          dayNames.contains(searchTerm);
+          dayNamesStr.contains(searchTerm);
 
       // Filter by hari
       final matchesDay =
@@ -809,6 +882,89 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
       return matchesSearch && matchesDay && matchesClass;
     }).toList();
+
+    // Sort with multiple fallback layers for "Today" prioritization
+    filtered.sort((a, b) {
+      final dayIdA = _extractDayIds(a);
+      final dayIdB = _extractDayIds(b);
+
+      // Robust "Today" detection
+      bool belongsToToday(Map<String, dynamic> item, List<String> ids) {
+        // Tier 1: Direct name field check (hari_nama)
+        final hariNama = (item['hari_nama'] ?? item['day_name'] ?? '')
+            .toString();
+        if (hariNama.isNotEmpty &&
+            _normalizeDayName(hariNama) == currentDayIndo) {
+          return true;
+        }
+
+        // Tier 2: ID match using dynamically loaded map
+        if (currentDayId != null && ids.any((id) => id == currentDayId)) {
+          return true;
+        }
+
+        // Tier 3: Direct ISO weekday number match (the ultimate fallback)
+        if (ids.any((id) => id == now.weekday.toString())) {
+          return true;
+        }
+
+        // Tier 4: Map key normalized match
+        return ids.any((id) {
+          final entry = _dayIdMap.entries.firstWhere(
+            (e) => e.value.toString() == id,
+            orElse: () => MapEntry('', ''),
+          );
+          return entry.key.isNotEmpty &&
+              _normalizeDayName(entry.key) == currentDayIndo;
+        });
+      }
+
+      final isTodayA = belongsToToday(a, dayIdA);
+      final isTodayB = belongsToToday(b, dayIdB);
+
+      // 1. Priority: Today First
+      if (isTodayA && !isTodayB) return -1;
+      if (!isTodayA && isTodayB) return 1;
+
+      // 2. Secondary: Sequential Day-of-Week (Mon -> Sun)
+      int getMinDayRank(List<String> ids) {
+        if (ids.isEmpty) return 99;
+        int minIdx = 99;
+        for (var id in ids) {
+          String name = '';
+          final entry = _dayIdMap.entries.firstWhere(
+            (e) => e.value.toString() == id,
+            orElse: () => MapEntry('', ''),
+          );
+          if (entry.key.isNotEmpty) {
+            name = _normalizeDayName(entry.key);
+          } else {
+            // Mapping failed, try standard ISO assumption
+            name = weekdayToIndo[int.tryParse(id) ?? 0] ?? '';
+          }
+
+          int idx = dayOrder.indexOf(name);
+          if (idx != -1 && idx < minIdx) minIdx = idx;
+        }
+        return minIdx;
+      }
+
+      final rankA = getMinDayRank(dayIdA);
+      final rankB = getMinDayRank(dayIdB);
+      if (rankA != rankB) return rankA.compareTo(rankB);
+
+      // 3. Tertiary: Item Density (Fewer days first)
+      if (dayIdA.length != dayIdB.length) {
+        return dayIdA.length.compareTo(dayIdB.length);
+      }
+
+      // 4. Quaternary: Chronological (Start Time)
+      final timeA = (a['jam_mulai'] ?? a['start_time'] ?? '00:00').toString();
+      final timeB = (b['jam_mulai'] ?? b['start_time'] ?? '00:00').toString();
+      return timeA.compareTo(timeB);
+    });
+
+    return filtered;
   }
 
   @override
@@ -1830,37 +1986,27 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     LanguageProvider languageProvider,
     int index,
   ) {
-    final daysIds = [];
-    if (jadwal['days_ids'] != null) {
-      if (jadwal['days_ids'] is List)
-        daysIds.addAll(jadwal['days_ids']);
-      else if (jadwal['days_ids'] is String) {
-        try {
-          final parsed = (jadwal['days_ids'] as String)
-              .replaceAll('[', '')
-              .replaceAll(']', '')
-              .split(',');
-          daysIds.addAll(parsed);
-        } catch (e) {}
-      }
-    }
-    if (daysIds.isEmpty) {
-      if (jadwal['day_id'] != null)
-        daysIds.add(jadwal['day_id']);
-      else if (jadwal['hari_id'] != null)
-        daysIds.add(jadwal['hari_id']);
-    }
+    final daysIds = _extractDayIds(jadwal);
 
-    final dayNames = daysIds
+    String dayNames = daysIds
         .map((id) {
           final entry = _dayIdMap.entries.firstWhere(
-            (e) => e.value.toString() == id.toString(),
+            (e) => e.value.toString() == id,
             orElse: () => MapEntry('Unknown', ''),
           );
           return entry.key;
         })
-        .where((n) => n != 'Unknown')
+        .where((n) => n != 'Unknown' && n.isNotEmpty)
         .join(', ');
+
+    // Fallback display if ID mapping failed
+    if (dayNames.isEmpty) {
+      final rawDayName = (jadwal['hari_nama'] ?? jadwal['day_name'] ?? '')
+          .toString();
+      if (rawDayName.isNotEmpty) {
+        dayNames = _normalizeDayName(rawDayName);
+      }
+    }
 
     final day = dayNames.isNotEmpty ? dayNames : 'Unknown';
     // Use first day color for simplicity, or mixing colors? First day is fine.
