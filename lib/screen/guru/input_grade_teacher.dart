@@ -44,6 +44,9 @@ class GradePageState extends State<GradePage> {
   // Data Lists
   List<dynamic> _classList = [];
   List<dynamic> _subjectList = [];
+  List<dynamic> _todaySchedules = [];
+  Map<String, String> _dayIdMap = {};
+  String _currentDayIndo = '';
 
   // Selected Data
   Map<String, dynamic>? _selectedClass;
@@ -83,7 +86,8 @@ class GradePageState extends State<GradePage> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadTodaySchedules();
       _loadClasses();
     });
   }
@@ -163,6 +167,25 @@ class GradePageState extends State<GradePage> {
         );
         loadedClasses = response['data'] ?? [];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
+      }
+
+      // Sort loadedClasses: Today's classes for teachers first
+      if (role.contains('guru') && _todaySchedules.isNotEmpty) {
+        final todayClassIds = _todaySchedules
+            .map((s) => (s['class_id'] ?? s['kelas_id'] ?? '').toString())
+            .where((id) => id.isNotEmpty)
+            .toSet();
+
+        loadedClasses.sort((a, b) {
+          final idA = a['id'].toString();
+          final idB = b['id'].toString();
+          final isTodayA = todayClassIds.contains(idA);
+          final isTodayB = todayClassIds.contains(idB);
+
+          if (isTodayA && !isTodayB) return -1;
+          if (!isTodayA && isTodayB) return 1;
+          return 0;
+        });
       }
 
       if (mounted) {
@@ -270,6 +293,34 @@ class GradePageState extends State<GradePage> {
         subjects = uniqueSubjects.values.toList();
       }
 
+      // Sort subjects: Today's subjects for THIS teacher and THIS class first
+      if (_todaySchedules.isNotEmpty && _selectedClass != null) {
+        final selectedClassId = _selectedClass!['id'].toString();
+        final todaySubjectIds = _todaySchedules
+            .where(
+              (s) =>
+                  (s['class_id'] ?? s['kelas_id'] ?? '').toString() ==
+                  selectedClassId,
+            )
+            .map(
+              (s) =>
+                  (s['subject_id'] ?? s['mata_pelajaran_id'] ?? '').toString(),
+            )
+            .where((id) => id.isNotEmpty)
+            .toSet();
+
+        subjects.sort((a, b) {
+          final idA = a['id'].toString();
+          final idB = b['id'].toString();
+          final isTodayA = todaySubjectIds.contains(idA);
+          final isTodayB = todaySubjectIds.contains(idB);
+
+          if (isTodayA && !isTodayB) return -1;
+          if (!isTodayA && isTodayB) return 1;
+          return 0;
+        });
+      }
+
       if (mounted) {
         setState(() {
           _subjectList = subjects;
@@ -286,6 +337,115 @@ class GradePageState extends State<GradePage> {
   }
 
   Future<void> _loadMoreSubjects() async {}
+
+  // ==================== PRIORITY LOGIC ====================
+
+  Future<void> _loadTodaySchedules() async {
+    try {
+      // 1. Load Days for ID mapping
+      final days = await ApiScheduleService.getHari();
+      final Map<String, String> dayIdMap = {};
+      for (var day in days) {
+        dayIdMap[day['nama'] ?? day['name'] ?? ''] = day['id'].toString();
+      }
+
+      // 2. Determine Today
+      final now = DateTime.now();
+      final dayNamesISO = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
+      final currentDayISO = dayNamesISO[now.weekday - 1];
+      final currentDayIndo = _normalizeDayName(currentDayISO);
+
+      String? currentDayId;
+      dayIdMap.forEach((key, value) {
+        if (_normalizeDayName(key) == currentDayIndo) {
+          currentDayId = value;
+        }
+      });
+
+      // 3. Load Teacher Schedules
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
+      final schedules = await ApiScheduleService.getSchedulesPaginated(
+        limit: 100,
+        guruId: widget.teacher['id'],
+        tahunAjaran: academicYearId,
+      );
+
+      final List<dynamic> allSchedules = schedules['data'] ?? [];
+
+      if (mounted) {
+        setState(() {
+          _dayIdMap = dayIdMap;
+          _currentDayIndo = currentDayIndo;
+          _todaySchedules = allSchedules.where((s) {
+            final ids = _extractDayIds(s);
+            // Tier 1: Match by ID
+            if (currentDayId != null && ids.contains(currentDayId)) return true;
+            // Tier 2: Match by Name mapping
+            return ids.any((id) {
+              final entry = _dayIdMap.entries.firstWhere(
+                (e) => e.value == id,
+                orElse: () => const MapEntry('', ''),
+              );
+              return entry.key.isNotEmpty &&
+                  _normalizeDayName(entry.key) == currentDayIndo;
+            });
+          }).toList();
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading today schedules: $e');
+    }
+  }
+
+  String _normalizeDayName(String name) {
+    name = name.trim().toLowerCase();
+    if (name.contains('senin') || name.contains('monday')) return 'Senin';
+    if (name.contains('selasa') || name.contains('tuesday')) return 'Selasa';
+    if (name.contains('rabu') || name.contains('wednesday')) return 'Rabu';
+    if (name.contains('kamis') || name.contains('thursday')) return 'Kamis';
+    if (name.contains('jumat') || name.contains('friday')) return 'Jumat';
+    if (name.contains('sabtu') || name.contains('saturday')) return 'Sabtu';
+    if (name.contains('minggu') || name.contains('sunday')) return 'Minggu';
+    return name;
+  }
+
+  List<String> _extractDayIds(dynamic schedule) {
+    if (schedule == null) return [];
+    final rawIds = schedule['days_ids'] ?? schedule['day_id'];
+    if (rawIds == null) return [];
+
+    if (rawIds is List) {
+      return rawIds.map((e) => e.toString()).toList();
+    }
+    if (rawIds is String) {
+      if (rawIds.contains('[')) {
+        try {
+          final parsed = json.decode(rawIds);
+          if (parsed is List) return parsed.map((e) => e.toString()).toList();
+        } catch (_) {}
+      }
+      return rawIds
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    return [rawIds.toString()];
+  }
 
   // ==================== HELPER METHODS ====================
 
@@ -444,6 +604,31 @@ class GradePageState extends State<GradePage> {
                                     ),
                                   ),
                                 ),
+                              if (_todaySchedules.any(
+                                (s) =>
+                                    (s['class_id'] ?? s['kelas_id'] ?? '')
+                                        .toString() ==
+                                    classData['id'].toString(),
+                              ))
+                                Container(
+                                  margin: EdgeInsets.only(left: 8),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    'Sesuai Jadwal',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                           SizedBox(height: 4),
@@ -577,6 +762,28 @@ class GradePageState extends State<GradePage> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          if (_todaySchedules.any(
+                            (s) =>
+                                (s['class_id'] ?? s['kelas_id'] ?? '')
+                                        .toString() ==
+                                    _selectedClass!['id'].toString() &&
+                                (s['subject_id'] ??
+                                            s['mata_pelajaran_id'] ??
+                                            '')
+                                        .toString() ==
+                                    subject['id'].toString(),
+                          ))
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                'Jadwal Hari Ini',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ),
                           SizedBox(height: 4),
                           Text(
                             subject['kode'] ?? subject['code'] ?? '-',
@@ -731,6 +938,18 @@ class GradePageState extends State<GradePage> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (_currentDayIndo.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Jadwal Hari Ini: $_currentDayIndo',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
