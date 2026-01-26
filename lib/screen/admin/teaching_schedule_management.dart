@@ -17,6 +17,7 @@ import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_schedule_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
@@ -287,7 +288,9 @@ class TeachingScheduleManagementScreenState
         print('✅ Schedule filter options loaded');
       }
     } catch (e) {
-      print('Error loading filter options: $e');
+      if (kDebugMode) {
+        print('Error loading filter options: $e');
+      }
       // Continue with empty options - not critical error
     }
   }
@@ -431,7 +434,7 @@ class TeachingScheduleManagementScreenState
 
       if (!mounted) return;
 
-      _showErrorSnackBar('Failed to load data: $e');
+      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       setState(() => _isLoading = false);
     }
   }
@@ -482,16 +485,16 @@ class TeachingScheduleManagementScreenState
         '✅ Loaded more schedules: Page $_currentPage, Total items: ${_scheduleList.length}',
       );
     } catch (e) {
+      if (kDebugMode) {
+        print('Error loading more data: $e');
+      }
+
       if (!mounted) return;
 
       setState(() {
         _isLoadingMore = false;
         _currentPage--; // Revert page increment on error
       });
-
-      if (kDebugMode) {
-        print('Error loading more data: $e');
-      }
     }
   }
 
@@ -527,12 +530,10 @@ class TeachingScheduleManagementScreenState
         );
       }
     } catch (e) {
+      if (kDebugMode) print('Import schedules error: $e');
       if (!mounted) return;
       _showErrorSnackBar(
-        languageProvider.getTranslatedText({
-          'en': 'Failed to import file: $e',
-          'id': 'Gagal mengimpor file: $e',
-        }),
+        '${languageProvider.getTranslatedText({'en': 'Failed to import file: ', 'id': 'Gagal mengimpor file: '})}${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -573,7 +574,10 @@ class TeachingScheduleManagementScreenState
         context: context,
       );
     } catch (e) {
-      _showErrorSnackBar('Export failed: $e');
+      if (kDebugMode) print('Export schedules error: $e');
+      _showErrorSnackBar(
+        '${context.read<LanguageProvider>().getTranslatedText({'en': 'Export failed: ', 'id': 'Export gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
+      );
     }
   }
 
@@ -582,7 +586,10 @@ class TeachingScheduleManagementScreenState
     try {
       await ExcelScheduleService.downloadTemplate(context);
     } catch (e) {
-      _showErrorSnackBar('Download template failed: $e');
+      if (kDebugMode) print('Download template error: $e');
+      _showErrorSnackBar(
+        '${context.read<LanguageProvider>().getTranslatedText({'en': 'Download template failed: ', 'id': 'Gagal download template: '})}${ErrorUtils.getFriendlyMessage(e)}',
+      );
     }
   }
 
@@ -792,18 +799,7 @@ class TeachingScheduleManagementScreenState
   void _showErrorSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
-              'en': message,
-              'id': message.replaceAll(
-                'Failed to load data:',
-                'Gagal memuat data:',
-              ),
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     }
   }

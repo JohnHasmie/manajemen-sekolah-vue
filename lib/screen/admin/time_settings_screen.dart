@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 
 class TimeSettingsScreen extends StatefulWidget {
   const TimeSettingsScreen({super.key});
@@ -47,9 +49,17 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
         _isLoadingTime = false;
       });
     } catch (e) {
-      print('Error loading settings data: $e');
+      if (kDebugMode) print('Error loading settings data: $e');
       if (mounted) {
         setState(() => _isLoadingTime = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -249,7 +259,17 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       }
       widget.onSave(); // Sync parent
     } catch (e) {
-      print('Error refreshing sessions: $e');
+      if (kDebugMode) print('Error refreshing sessions: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat ulang sesi: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -367,9 +387,16 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       Navigator.pop(context); // Close dialog
                       await _refreshSessions(); // Refresh list without closing sheet
                     } catch (e) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+                      if (kDebugMode)
+                        print('Save/Update lesson session error: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                     }
                   },
                   child: Text('Simpan'),
@@ -413,11 +440,17 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
         ).showSnackBar(SnackBar(content: Text('Berhasil menyalin jadwal')));
       }
     } catch (e) {
+      if (kDebugMode) print('Copy schedule error: $e');
       Navigator.pop(context); // Close loading
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menyalin: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal menyalin: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -485,10 +518,17 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       await ApiSettingsService.deleteLessonSession(id);
       await _refreshSessions();
     } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menghapus: $e')));
+      if (kDebugMode) print('Delete session error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal menghapus: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

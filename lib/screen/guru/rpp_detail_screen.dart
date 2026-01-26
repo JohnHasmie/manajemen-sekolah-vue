@@ -1,10 +1,13 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart'; // Required for kDebugMode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:manajemensekolah/utils/error_utils.dart'; // Import ErrorUtils
 import 'package:open_file/open_file.dart';
-import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class RPPDetailPage extends StatefulWidget {
   final Map<String, dynamic> rppData;
@@ -248,8 +251,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         context,
       ).showSnackBar(SnackBar(content: Text('RPP berhasil disimpan')));
     } catch (e) {
+      if (kDebugMode) print('Save RPP error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan RPP: ${e.toString()}')),
+        SnackBar(
+          content: Text(ErrorUtils.getFriendlyMessage(e)),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       setState(() {
@@ -332,10 +339,13 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ).showSnackBar(SnackBar(content: Text('RPP berhasil diexport ke PDF')));
       }
     } catch (e) {
-      print('Export error: $e');
+      if (kDebugMode) print('Export PDF error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal export: ${e.toString()}')),
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -359,10 +369,13 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         );
       }
     } catch (e) {
-      print('Text export error: $e');
+      if (kDebugMode) print('Text export error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal export: ${e.toString()}')),
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -379,7 +392,6 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       _editedContent = newContent;
     });
   }
-  
 
   @override
   Widget build(BuildContext context) {

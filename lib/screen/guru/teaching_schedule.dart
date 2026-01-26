@@ -12,6 +12,7 @@ import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -253,6 +254,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         print('❌ Error in _loadUserData: $e');
       }
       setState(() => _isLoading = false);
+      if (mounted) {
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+      }
     }
   }
 
@@ -475,8 +479,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         _isLoading = false;
       });
 
-      if (!mounted) return;
-      _showErrorSnackBar('Failed to load schedule data: $e');
+      if (mounted) {
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+      }
     }
   }
 

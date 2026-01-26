@@ -17,6 +17,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -582,6 +583,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             if (kDebugMode) {
               print('Error during teacher resolution: $e');
             }
+            if (mounted) {
+              _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+            }
             setState(() => _isLoading = false);
           }
         }
@@ -591,6 +595,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     } catch (e) {
       if (kDebugMode) {
         print('Error in _loadUserData: $e');
+      }
+      if (mounted) {
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
       setState(() => _isLoading = false);
     }
@@ -628,7 +635,14 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       if (kDebugMode) {
         print('Error loading classes: $e');
       }
-      setState(() => _isLoading = false);
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     }
   }
 
@@ -661,7 +675,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       if (kDebugMode) {
         print('Error loading schedule: $e');
       }
-      // Non-critical, just log
     }
   }
 
@@ -764,6 +777,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         print('Error loading subjects: $e');
       }
       if (mounted) {
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
         setState(() => _isLoading = false);
       }
     }
@@ -1212,20 +1226,21 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           }
         }
       } catch (e) {
+        if (kDebugMode) print('Delete activity error: $e');
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Failed to delete activity: $e',
-                'id': 'Gagal menghapus kegiatan: $e',
-              }),
-            ),
-            backgroundColor: Colors.red,
-          ),
+        _showErrorSnackBar(
+          '${languageProvider.getTranslatedText({'en': 'Failed to delete activity: ', 'id': 'Gagal menghapus kegiatan: '})}${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -2424,12 +2439,15 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         });
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _hasMoreData = false;
-      });
       if (kDebugMode) {
         print('Error load activities: $e');
+      }
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasMoreData = false;
+        });
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -2683,6 +2701,10 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           _studentList = [];
           _isLoadingStudents = false;
         });
+        // Non-critical in a dialog, but better to show something
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }
@@ -2755,9 +2777,14 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         print('ERROR loading bab materi: $e');
         print('Stack trace: ${StackTrace.current}');
       }
-      setState(() {
-        _isLoadingBab = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingBab = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
+      }
     }
   }
 
@@ -2798,6 +2825,11 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       if (kDebugMode) {
         print('ERROR loading sub bab materi: $e');
         print('Stack trace: ${StackTrace.current}');
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }

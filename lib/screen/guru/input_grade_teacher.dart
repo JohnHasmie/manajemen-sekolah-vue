@@ -18,6 +18,7 @@ import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -175,9 +176,10 @@ class GradePageState extends State<GradePage> {
         });
       }
     } catch (e) {
+      if (kDebugMode) print('Error loading classes: $e');
       if (mounted) {
         setState(() => _isLoading = false);
-        _showErrorSnackBar('Failed to load classes: $e');
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -275,9 +277,10 @@ class GradePageState extends State<GradePage> {
         });
       }
     } catch (e) {
+      if (kDebugMode) print('Error loading subjects: $e');
       if (mounted) {
         setState(() => _isLoading = false);
-        _showErrorSnackBar('Failed to load subjects: $e');
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -290,12 +293,7 @@ class GradePageState extends State<GradePage> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
-              'en': message,
-              'id': message.replaceAll('Failed to load', 'Gagal memuat'),
-            }),
-          ),
+          content: Text(message),
           backgroundColor: Colors.red.shade400,
           behavior: SnackBarBehavior.floating,
         ),
@@ -1062,11 +1060,12 @@ class GradeBookPageState extends State<GradeBookPage> {
         _isLoading = false;
       });
     } catch (e) {
+      if (kDebugMode) print('Error loading grade data: $e');
       if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
-      _showErrorSnackBar('Failed to load grade data: $e');
+      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     }
   }
 
@@ -1074,15 +1073,7 @@ class GradeBookPageState extends State<GradeBookPage> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
-              'en': message,
-              'id': message.replaceAll(
-                'Failed to load grade data:',
-                'Gagal memuat data nilai:',
-              ),
-            }),
-          ),
+          content: Text(message),
           backgroundColor: Colors.red.shade400,
           behavior: SnackBarBehavior.floating,
         ),
@@ -1515,8 +1506,8 @@ class GradeBookPageState extends State<GradeBookPage> {
         _loadData();
       }
     } catch (e) {
-      print('Error saving inline grade: $e');
-      _showErrorSnackBar('Failed to save: $e');
+      if (kDebugMode) print('Error saving inline grade: $e');
+      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     }
   }
 
@@ -1607,8 +1598,9 @@ class GradeBookPageState extends State<GradeBookPage> {
                       _isLoading = false;
                     });
                   } catch (e) {
+                    if (kDebugMode) print('Finish edit error: $e');
                     setState(() => _isLoading = false);
-                    _showErrorSnackBar('Failed to save changes: $e');
+                    _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
                   }
                 },
                 icon: Icon(Icons.check, size: 16),
@@ -2019,8 +2011,9 @@ class GradeBookPageState extends State<GradeBookPage> {
       _showSuccessSnackBar('Assessment deleted successfully');
       _loadData(); // Reload to refresh the table
     } catch (e) {
+      if (kDebugMode) print('Delete assessment error: $e');
       setState(() => _isLoading = false);
-      _showErrorSnackBar('Failed to delete assessment: $e');
+      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     }
   }
 
@@ -2108,7 +2101,8 @@ class GradeBookPageState extends State<GradeBookPage> {
         }),
       );
     } catch (e) {
-      _showErrorSnackBar('Export Error: $e');
+      if (kDebugMode) print('Export error: $e');
+      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -2876,11 +2870,10 @@ class GradeInputFormState extends State<GradeInputForm> {
 
         Navigator.pop(context);
       } catch (e) {
+        if (kDebugMode) print('Submit grade error: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${context.read<LanguageProvider>().getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e',
-            ),
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
             backgroundColor: Colors.red.shade400,
             behavior: SnackBarBehavior.floating,
           ),
@@ -3370,11 +3363,10 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
 
         Navigator.pop(context);
       } catch (e) {
+        if (kDebugMode) print('Submit grades batch error: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e',
-            ),
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
             backgroundColor: Colors.red.shade400,
             behavior: SnackBarBehavior.floating,
           ),

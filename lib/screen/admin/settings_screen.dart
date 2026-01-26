@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -32,13 +34,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
       }
     } catch (e) {
+      if (kDebugMode) print('Load profile error: $e');
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToLoadProfile)}: $e',
+              '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToLoadProfile)}: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -127,11 +131,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 }
               } catch (e) {
+                if (kDebugMode) print('Update profile error: $e');
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToUpdateProfile)}: $e',
+                        '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToUpdateProfile)}: ${ErrorUtils.getFriendlyMessage(e)}',
                       ),
                       backgroundColor: Colors.red,
                     ),
@@ -368,11 +373,12 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         ),
       );
     } catch (e) {
+      if (kDebugMode) print('Update password error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToChangePassword)}: $e',
+            '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToChangePassword)}: ${ErrorUtils.getFriendlyMessage(e)}',
           ),
           backgroundColor: Colors.red,
         ),

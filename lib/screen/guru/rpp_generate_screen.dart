@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/screen/guru/rpp_detail_screen.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/rpp_service.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 
 class RPPGeneratePage extends StatefulWidget {
   final Map<String, dynamic> guru;
@@ -60,7 +62,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
         }
       }
     }
-    
+
     // Jika tidak ada sub bab, ambil dari bab yang dicentang
     if (titleParts.isEmpty && widget.checkedBab.isNotEmpty) {
       for (var bab in widget.checkedBab) {
@@ -75,7 +77,8 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
     String formattedTitle = titleParts.join(', ');
 
     // Tambahkan prefix RPP jika belum ada dan title tidak kosong
-    if (formattedTitle.isNotEmpty && !formattedTitle.toLowerCase().contains('rpp')) {
+    if (formattedTitle.isNotEmpty &&
+        !formattedTitle.toLowerCase().contains('rpp')) {
       formattedTitle = 'RPP $formattedTitle';
     }
 
@@ -98,9 +101,9 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
   Future<void> _generateRPP() async {
     if (_judulController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Judul RPP harus diisi')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Judul RPP harus diisi')));
       return;
     }
 
@@ -132,7 +135,8 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             'isi': item['isi_konten'],
           });
         }
-        _progress += 0.2 / (widget.checkedSubBab.length + widget.checkedBab.length);
+        _progress +=
+            0.2 / (widget.checkedSubBab.length + widget.checkedBab.length);
       }
 
       // Ambil konten dari bab yang dicentang (semua sub bab dalam bab)
@@ -141,8 +145,10 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           _statusMessage = 'Mengambil konten bab...';
         });
 
-        final subBabs = await ApiSubjectService.getSubBabMateri(babId: bab['id']);
-        
+        final subBabs = await ApiSubjectService.getSubBabMateri(
+          babId: bab['id'],
+        );
+
         for (var subBab in subBabs) {
           final konten = await ApiSubjectService.getContentMateri(
             subBabId: subBab['id'],
@@ -158,7 +164,8 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             });
           }
         }
-        _progress += 0.3 / (widget.checkedSubBab.length + widget.checkedBab.length);
+        _progress +=
+            0.3 / (widget.checkedSubBab.length + widget.checkedBab.length);
       }
 
       setState(() {
@@ -187,23 +194,24 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => RPPDetailPage(
-              rppData: generatedRPP,
-              isNew: true,
-            ),
+            builder: (context) =>
+                RPPDetailPage(rppData: generatedRPP, isNew: true),
           ),
         );
       }
-
     } catch (e) {
-      setState(() {
-        _isGenerating = false;
-        _statusMessage = 'Error: ${e.toString()}';
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal generate RPP: ${e.toString()}')),
-      );
+      if (kDebugMode) print('Generate RPP error: $e');
+      if (mounted) {
+        setState(
+          () => _isGenerating = false,
+        ); // Changed _isLoading to _isGenerating
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -232,15 +240,15 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             // Selected Topics Section
             _buildSelectedTopics(),
             SizedBox(height: 32),
-            
+
             // Lesson Details Section
             _buildLessonDetails(),
             SizedBox(height: 32),
-            
+
             // Generate Button
             _buildGenerateButton(),
             SizedBox(height: 20),
-            
+
             // Progress Indicator
             if (_isGenerating) _buildProgressIndicator(),
           ],
@@ -250,7 +258,8 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
   }
 
   Widget _buildSelectedTopics() {
-    final totalSelected = widget.checkedBab.length + widget.checkedSubBab.length;
+    final totalSelected =
+        widget.checkedBab.length + widget.checkedSubBab.length;
 
     return Container(
       width: double.infinity,
@@ -292,81 +301,91 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             ],
           ),
           SizedBox(height: 12),
-          
+
           // Display selected sub topics
           if (widget.checkedSubBab.isNotEmpty) ...[
-            ...widget.checkedSubBab.map((subBab) => Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Icon(Icons.circle, size: 8, color: Color(0xFF4F46E5)),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Sub ${subBab['urutan']}: ${subBab['judul_sub_bab'] ?? 'Judul Sub Bab'}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
-          ],
-          
-          // Display selected chapters dengan sub bab-nya
-          if (widget.checkedBab.isNotEmpty) ...[
-            ...widget.checkedBab.map((bab) => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: widget.checkedSubBab.isNotEmpty ? 16 : 0),
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.bookmark, size: 12, color: Color(0xFF10B981)),
-                      SizedBox(width: 8),
-                      Text(
-                        'Chapter ${bab['urutan']}: ${bab['judul_bab']}',
+            ...widget.checkedSubBab.map(
+              (subBab) => Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.circle, size: 8, color: Color(0xFF4F46E5)),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Sub ${subBab['urutan']}: ${subBab['judul_sub_bab'] ?? 'Judul Sub Bab'}',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Tampilkan semua sub bab dalam chapter ini
-                ..._getAllSubBabForBab(bab['id']).map((subBab) => Padding(
-                  padding: EdgeInsets.only(left: 20, bottom: 6),
-                  child: Row(
-                    children: [
-                      Text(
-                        '${subBab['urutan']}.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
                           color: Colors.grey.shade700,
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          // Display selected chapters dengan sub bab-nya
+          if (widget.checkedBab.isNotEmpty) ...[
+            ...widget.checkedBab.map(
+              (bab) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: widget.checkedSubBab.isNotEmpty ? 16 : 0),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.bookmark,
+                          size: 12,
+                          color: Color(0xFF10B981),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Chapter ${bab['urutan']}: ${bab['judul_bab']}',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                )),
-                SizedBox(height: 12),
-              ],
-            )),
+                  // Tampilkan semua sub bab dalam chapter ini
+                  ..._getAllSubBabForBab(bab['id']).map(
+                    (subBab) => Padding(
+                      padding: EdgeInsets.only(left: 20, bottom: 6),
+                      child: Row(
+                        children: [
+                          Text(
+                            '${subBab['urutan']}.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                ],
+              ),
+            ),
           ],
         ],
       ),
@@ -400,7 +419,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             ),
           ),
           SizedBox(height: 20),
-          
+
           // Subject and Date Row
           Row(
             children: [
@@ -422,7 +441,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             ],
           ),
           SizedBox(height: 16),
-          
+
           // Lesson Title - Editable dengan auto-suggestion
           _buildEditableFieldWithCheckbox(
             controller: _judulController,
@@ -441,12 +460,13 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             maxLines: 2,
           ),
           SizedBox(height: 16),
-          
+
           // Lesson Objectives - Editable
           _buildEditableFieldWithCheckbox(
             controller: _tujuanController,
             label: 'Lesson Objectives',
-            hintText: 'Students will identify types of forces, understand Newton\'s laws of motion, and analyze real-world applications',
+            hintText:
+                'Students will identify types of forces, understand Newton\'s laws of motion, and analyze real-world applications',
             icon: Icons.flag,
             isChecked: _objectivesChecked,
             onCheckedChanged: (value) {
@@ -457,12 +477,13 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             maxLines: 3,
           ),
           SizedBox(height: 16),
-          
+
           // Media/Tools - Editable
           _buildEditableFieldWithCheckbox(
             controller: _alatMediaController,
             label: 'Media/Tools',
-            hintText: 'Projector, white board, experiment kit (springs, weights, carts)',
+            hintText:
+                'Projector, white board, experiment kit (springs, weights, carts)',
             icon: Icons.computer,
             isChecked: _mediaChecked,
             onCheckedChanged: (value) {
@@ -571,10 +592,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 8),
             ),
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade800,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
             onChanged: (value) {
               // User dapat mengedit manual
             },
@@ -635,10 +653,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             children: [
               Text(
                 _statusMessage,
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
               ),
               Text(
                 '${(_progress * 100).toStringAsFixed(0)}%',

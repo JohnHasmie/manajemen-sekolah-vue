@@ -1,9 +1,11 @@
 // screen/guru/absensi_detail_page.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 
 class AbsensiDetailPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
@@ -52,9 +54,11 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         _filteredStudentList = List.from(_studentList);
       } else {
         _filteredStudentList = _studentList
-            .where((siswa) =>
-                siswa.name.toLowerCase().contains(query) ||
-                siswa.nis.toLowerCase().contains(query))
+            .where(
+              (siswa) =>
+                  siswa.name.toLowerCase().contains(query) ||
+                  siswa.nis.toLowerCase().contains(query),
+            )
             .toList();
       }
     });
@@ -90,10 +94,19 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading absensi detail: $e');
+      if (kDebugMode) print('Error loading absensi detail: $e');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -162,7 +175,11 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 value: 'sakit',
                 child: Row(
                   children: [
-                    Icon(Icons.medical_services, color: Colors.orange, size: 16),
+                    Icon(
+                      Icons.medical_services,
+                      color: Colors.orange,
+                      size: 16,
+                    ),
                     SizedBox(width: 4),
                     Text('Sakit'),
                   ],
@@ -200,7 +217,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
 
       for (var student in _studentList) {
         final status = _absensiStatus[student.id]!;
-        
+
         await ApiService.tambahAbsensi({
           'siswa_id': student.id,
           'guru_id': widget.teacher['id'],
@@ -223,10 +240,13 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         Navigator.pop(context);
       }
     } catch (e) {
+      if (kDebugMode) print('Error updating absensi: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(
+              'Gagal update absensi: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -243,26 +263,43 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   // Helper functions
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'izin': return Colors.blue;
-      case 'sakit': return Colors.orange;
-      case 'alpha': return Colors.red;
-      case 'terlambat': return Colors.purple;
-      default: return Colors.green;
+      case 'izin':
+        return Colors.blue;
+      case 'sakit':
+        return Colors.orange;
+      case 'alpha':
+        return Colors.red;
+      case 'terlambat':
+        return Colors.purple;
+      default:
+        return Colors.green;
     }
   }
 
   String _getStatusText(String status) {
     switch (status) {
-      case 'izin': return 'Izin';
-      case 'sakit': return 'Sakit';
-      case 'alpha': return 'Alpha';
-      case 'terlambat': return 'Terlambat';
-      default: return 'Hadir';
+      case 'izin':
+        return 'Izin';
+      case 'sakit':
+        return 'Sakit';
+      case 'alpha':
+        return 'Alpha';
+      case 'terlambat':
+        return 'Terlambat';
+      default:
+        return 'Hadir';
     }
   }
 
   Color _getAvatarColor(String nama) {
-    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.purple, Colors.teal, Colors.indigo];
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.teal,
+      Colors.indigo,
+    ];
     final index = nama.isNotEmpty ? nama.codeUnitAt(0) % colors.length : 0;
     return colors[index];
   }
@@ -302,7 +339,10 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(widget.date),
+                        DateFormat(
+                          'EEEE, dd MMMM yyyy',
+                          'id_ID',
+                        ).format(widget.date),
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.blueGrey,
@@ -329,7 +369,10 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                             hintText: 'Cari siswa...',
                             prefixIcon: Icon(Icons.search),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                           ),
                         ),
                       ),
@@ -387,7 +430,8 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                         )
                       : ListView.builder(
                           itemCount: _filteredStudentList.length,
-                          itemBuilder: (context, index) => _buildStudentItem(_filteredStudentList[index]),
+                          itemBuilder: (context, index) =>
+                              _buildStudentItem(_filteredStudentList[index]),
                         ),
                 ),
                 // Update Button
@@ -411,11 +455,15 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Icon(Icons.update),
-                    label: Text(_isSubmitting ? 'Mengupdate...' : 'Update Absensi'),
+                    label: Text(
+                      _isSubmitting ? 'Mengupdate...' : 'Update Absensi',
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,

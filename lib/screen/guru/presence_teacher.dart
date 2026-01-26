@@ -14,6 +14,7 @@ import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -183,12 +184,11 @@ class PresencePageState extends State<PresencePage>
       // Load summary data untuk mode view
       _loadAbsensiSummary();
     } catch (e) {
+      if (kDebugMode) print('PresencePage initial data error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${languageProvider.getTranslatedText({'en': 'Error loading initial data: $e', 'id': 'Error loading initial data: $e'})} $e',
-          ),
+          content: Text(ErrorUtils.getFriendlyMessage(e)),
           backgroundColor: Colors.red.shade400,
           behavior: SnackBarBehavior.floating,
         ),
@@ -3124,16 +3124,16 @@ class PresencePageState extends State<PresencePage>
       // Reload summary data
       _loadAbsensiSummary();
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e',
+      if (kDebugMode) print('Delete attendance error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
           ),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+        );
+      }
     }
   }
 

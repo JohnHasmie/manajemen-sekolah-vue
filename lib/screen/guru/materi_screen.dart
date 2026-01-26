@@ -7,6 +7,7 @@ import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -322,14 +323,17 @@ class MateriPageState extends State<MateriPage> {
         }
       });
     } catch (e) {
+      if (kDebugMode) {
+        print('Error loading MateriPage data: $e');
+      }
       setState(() {
         _isLoading = false;
         _debugInfo = 'Error: ${e.toString()}';
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }
@@ -410,9 +414,9 @@ class MateriPageState extends State<MateriPage> {
         _debugInfo = 'Error: $e';
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }
@@ -1394,13 +1398,16 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
         _isLoading = false;
       });
     } catch (e) {
+      if (kDebugMode) {
+        print('Error loading content materi: $e');
+      }
       setState(() {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
       }
     }
   }

@@ -14,6 +14,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/excel_subject_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -715,11 +716,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
       _animationController.forward();
     } catch (error) {
+      if (kDebugMode) print('Load subjects error: $error');
       if (!mounted) return;
 
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to load subject data: $error';
+        _errorMessage = ErrorUtils.getFriendlyMessage(error);
       });
     }
   }
@@ -794,16 +796,15 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        print('Error loading more data: $e');
+      }
       if (!mounted) return;
 
       setState(() {
         _isLoadingMore = false;
         _currentPage--; // Revert page increment on error
       });
-
-      if (kDebugMode) {
-        print('Error loading more data: $e');
-      }
     }
   }
 
@@ -847,13 +848,15 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         }
       }
     } catch (e) {
+      if (kDebugMode) print('Import subjects error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             languageProvider.getTranslatedText({
-              'en': 'Failed to import file: $e',
-              'id': 'Gagal mengimpor file: $e',
+              'en':
+                  'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
+              'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
           backgroundColor: Colors.red,
@@ -1203,29 +1206,13 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                     );
                                   }
                                 } catch (error) {
+                                  if (kDebugMode)
+                                    print('Save/Update subject error: $error');
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          error
-                                                  .toString()
-                                                  .replaceAll('Exception:', '')
-                                                  .trim()
-                                                  .isNotEmpty
-                                              ? error
-                                                    .toString()
-                                                    .replaceAll(
-                                                      'Exception:',
-                                                      '',
-                                                    )
-                                                    .trim()
-                                              : languageProvider
-                                                    .getTranslatedText({
-                                                      'en':
-                                                          'Failed to save data',
-                                                      'id':
-                                                          'Gagal menyimpan data',
-                                                    }),
+                                          '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
                                         ),
                                         backgroundColor: Colors.red.shade400,
                                         behavior: SnackBarBehavior.floating,
@@ -1332,16 +1319,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         }
         _loadSubjects();
       } catch (error) {
+        if (kDebugMode) print('Delete subject error: $error');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                error.toString().replaceAll('Exception:', '').trim().isNotEmpty
-                    ? error.toString().replaceAll('Exception:', '').trim()
-                    : context.read<LanguageProvider>().getTranslatedText({
-                        'en': 'Failed to delete subject',
-                        'id': 'Gagal menghapus mata pelajaran',
-                      }),
+                '${context.read<LanguageProvider>().getTranslatedText({'en': 'Failed to delete: ', 'id': 'Gagal menghapus: '})}${ErrorUtils.getFriendlyMessage(error)}',
               ),
               backgroundColor: Colors.red.shade400,
               behavior: SnackBarBehavior.floating,

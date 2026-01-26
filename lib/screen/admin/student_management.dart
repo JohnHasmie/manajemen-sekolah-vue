@@ -14,6 +14,7 @@ import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/excel_student_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -193,13 +194,14 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         context: context,
       );
     } catch (e) {
+      if (kDebugMode) print('Export to Excel error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             context.read<LanguageProvider>().getTranslatedText({
-              'en': 'Failed to export: $e',
-              'id': 'Gagal mengexport: $e',
+              'en': 'Failed to export: ${ErrorUtils.getFriendlyMessage(e)}',
+              'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
           backgroundColor: Colors.red,
@@ -240,13 +242,15 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         }
       }
     } catch (e) {
+      if (kDebugMode) print('Import from Excel error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             languageProvider.getTranslatedText({
-              'en': 'Failed to import file: $e',
-              'id': 'Gagal mengimpor file: $e',
+              'en':
+                  'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
+              'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
           backgroundColor: Colors.red,
@@ -304,19 +308,22 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         _isLoading = false;
       });
     } catch (e) {
+      if (kDebugMode) print('Load students/class error: $e');
       if (!mounted) return;
 
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString();
+        _errorMessage = ErrorUtils.getFriendlyMessage(e);
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             context.read<LanguageProvider>().getTranslatedText({
-              'en': 'Failed to load student/class data: $e',
-              'id': 'Gagal memuat data siswa/kelas: $e',
+              'en':
+                  'Failed to load student/class data: ${ErrorUtils.getFriendlyMessage(e)}',
+              'id':
+                  'Gagal memuat data siswa/kelas: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
           backgroundColor: Colors.red,
@@ -374,16 +381,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         );
       }
     } catch (e) {
+      if (kDebugMode) print('Load more students error: $e');
       if (!mounted) return;
 
       setState(() {
         _isLoadingMore = false;
         _currentPage--;
       });
-
-      if (kDebugMode) {
-        print('Error loading more data: $e');
-      }
     }
   }
 
@@ -1391,13 +1395,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                   }
                                 }
                               } catch (e) {
+                                if (kDebugMode)
+                                  print('Save/Update student error: $e');
                                 if (context.mounted) {
-                                  // Clean up exception message
-                                  final errorMessage = e.toString().replaceAll(
-                                    'Exception: ',
-                                    '',
-                                  );
-
                                   showDialog(
                                     context: context,
                                     builder: (ctx) => AlertDialog(
@@ -1421,8 +1421,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                         ],
                                       ),
                                       content: Text(
-                                        // Combine context with error message
-                                        '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}$errorMessage',
+                                        '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(e)}',
                                         style: TextStyle(fontSize: 16),
                                       ),
                                       actions: [
@@ -1573,13 +1572,16 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           );
         }
       } catch (e) {
+        if (kDebugMode) print('Delete student error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 context.read<LanguageProvider>().getTranslatedText({
-                  'en': 'Failed to delete student: $e',
-                  'id': 'Gagal menghapus siswa: $e',
+                  'en':
+                      'Failed to delete student: ${ErrorUtils.getFriendlyMessage(e)}',
+                  'id':
+                      'Gagal menghapus siswa: ${ErrorUtils.getFriendlyMessage(e)}',
                 }),
               ),
               backgroundColor: Colors.red,

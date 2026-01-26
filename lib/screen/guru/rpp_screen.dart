@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -351,10 +352,11 @@ class RppScreenState extends State<RppScreen>
 
       _animationController.forward();
     } catch (e) {
+      if (kDebugMode) print('Load RPP error: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = e.toString();
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
         });
       }
     }
@@ -426,14 +428,12 @@ class RppScreenState extends State<RppScreen>
           );
         }
       } catch (e) {
+        if (kDebugMode) print('Delete RPP error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Failed to delete RPP: $e',
-                  'id': 'Gagal menghapus RPP: $e',
-                }),
+                '${languageProvider.getTranslatedText({'en': 'Failed to delete RPP: ', 'id': 'Gagal menghapus RPP: '})}${ErrorUtils.getFriendlyMessage(e)}',
               ),
               backgroundColor: Colors.red,
             ),

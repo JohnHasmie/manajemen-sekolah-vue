@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:provider/provider.dart';
 
 class TeacherDetailScreen extends StatefulWidget {
@@ -66,14 +68,17 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (kDebugMode) print('Load teacher detail error: $e');
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString();
+        _errorMessage = ErrorUtils.getFriendlyMessage(e);
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal memuat detail guru: $e'),
+          content: Text(
+            'Gagal memuat detail guru: ${ErrorUtils.getFriendlyMessage(e)}',
+          ),
           backgroundColor: Colors.red,
         ),
       );

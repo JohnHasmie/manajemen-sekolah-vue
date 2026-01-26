@@ -15,6 +15,7 @@ import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_teacher_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -770,19 +771,20 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
       _animationController.forward();
     } catch (e) {
+      if (kDebugMode) print('Load teachers error: $e');
       if (!mounted) return;
 
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString();
+        _errorMessage = ErrorUtils.getFriendlyMessage(e);
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             context.read<LanguageProvider>().getTranslatedText({
-              'en': 'Failed to load data: $e',
-              'id': 'Gagal memuat data: $e',
+              'en': 'Failed to load data: ${ErrorUtils.getFriendlyMessage(e)}',
+              'id': 'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
           backgroundColor: Colors.red,
@@ -846,14 +848,15 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         '✅ Loaded more data: Page $_currentPage, Total items: ${_teachers.length}',
       );
     } catch (e) {
+      if (kDebugMode) {
+        print('Error loading more data: $e');
+      }
       if (!mounted) return;
 
       setState(() {
         _isLoadingMore = false;
         _currentPage--; // Revert page increment on error
       });
-
-      print('Error loading more data: $e');
     }
   }
 
@@ -904,13 +907,14 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         context: context,
       );
     } catch (e) {
+      if (kDebugMode) print('Export teachers error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             context.read<LanguageProvider>().getTranslatedText({
-              'en': 'Failed to export: $e',
-              'id': 'Gagal mengexport: $e',
+              'en': 'Failed to export: ${ErrorUtils.getFriendlyMessage(e)}',
+              'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
           backgroundColor: Colors.red,
@@ -989,8 +993,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
             SnackBar(
               content: Text(
                 languageProvider.getTranslatedText({
-                  'en': 'Failed to import file: $apiError',
-                  'id': 'Gagal mengimpor file: $apiError',
+                  'en':
+                      'Failed to import file: ${ErrorUtils.getFriendlyMessage(apiError)}',
+                  'id':
+                      'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(apiError)}',
                 }),
               ),
               backgroundColor: Colors.red,
@@ -999,13 +1005,15 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         }
       }
     } catch (e) {
+      if (kDebugMode) print('Import from Excel picker/process error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             languageProvider.getTranslatedText({
-              'en': 'Failed to import file: $e',
-              'id': 'Gagal mengimpor file: $e',
+              'en':
+                  'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
+              'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
           backgroundColor: Colors.red,
@@ -1109,14 +1117,16 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         }
       }
     } catch (error) {
-      debugPrint('Error handling teacher subjects: $error');
+      if (kDebugMode) print('Update teacher subjects error: $error');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             context.read<LanguageProvider>().getTranslatedText({
-              'en': 'Failed to update teacher subjects: $error',
-              'id': 'Gagal mengupdate mata pelajaran guru: $error',
+              'en':
+                  'Failed to update teacher subjects: ${ErrorUtils.getFriendlyMessage(error)}',
+              'id':
+                  'Gagal mengupdate mata pelajaran guru: ${ErrorUtils.getFriendlyMessage(error)}',
             }),
           ),
           backgroundColor: Colors.red,
@@ -1669,18 +1679,17 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                       }
                                       _loadData();
                                     } catch (error) {
+                                      if (kDebugMode)
+                                        print(
+                                          'Save/Update teacher error: $error',
+                                        );
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                              languageProvider.getTranslatedText({
-                                                'en':
-                                                    'Failed to save data: $error',
-                                                'id':
-                                                    'Gagal menyimpan data: $error',
-                                              }),
+                                              '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
                                             ),
                                             backgroundColor: Colors.red,
                                           ),
@@ -1814,14 +1823,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
           _loadData();
         }
       } catch (error) {
+        if (kDebugMode) print('Delete teacher error: $error');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
-                  'en': 'Failed to delete teacher: $error',
-                  'id': 'Gagal menghapus guru: $error',
-                }),
+                '${context.read<LanguageProvider>().getTranslatedText({'en': 'Failed to delete teacher: ', 'id': 'Gagal menghapus guru: '})}${ErrorUtils.getFriendlyMessage(error)}',
               ),
               backgroundColor: Colors.red,
             ),
