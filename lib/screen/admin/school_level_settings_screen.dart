@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 
 class SchoolLevelSettingsScreen extends StatefulWidget {
   const SchoolLevelSettingsScreen({super.key});
@@ -34,11 +36,17 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (kDebugMode) print('Load settings error: $e');
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memuat pengaturan: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat pengaturan: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -136,10 +144,13 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                             );
                           }
                         } catch (e) {
+                          if (kDebugMode) print('Update settings error: $e');
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Gagal menyimpan: $e'),
+                                content: Text(
+                                  'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',
+                                ),
                                 backgroundColor: Colors.red,
                               ),
                             );

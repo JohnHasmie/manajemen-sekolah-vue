@@ -4,6 +4,7 @@ import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 
 class ClassFinanceReportScreen extends StatefulWidget {
   final String classId;
@@ -110,7 +111,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString();
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
           _isLoading = false;
         });
       }

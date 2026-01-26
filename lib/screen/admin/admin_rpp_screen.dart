@@ -11,6 +11,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_rpp_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -449,7 +450,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
         setState(() {
           _isLoading = false;
           _isLoadingMore = false;
-          _errorMessage = e.toString();
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
         });
       }
     }
@@ -519,7 +520,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
       setState(() {
         _isLoading = false;
         _isLoadingMore = false;
-        _errorMessage = e.toString();
+        _errorMessage = ErrorUtils.getFriendlyMessage(e);
       });
     }
   }

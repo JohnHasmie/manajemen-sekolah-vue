@@ -159,7 +159,7 @@ class LoginScreenState extends State<LoginScreen> {
         print('❌ Login error: $error');
       }
 
-      String errorMessage = _getFriendlyErrorMessage(error);
+      String errorMessage = ErrorUtils.getFriendlyMessage(error);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -270,7 +270,7 @@ class LoginScreenState extends State<LoginScreen> {
         // ignore
       }
 
-      String errorMessage = _getFriendlyErrorMessage(error);
+      String errorMessage = ErrorUtils.getFriendlyMessage(error);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -337,7 +337,7 @@ class LoginScreenState extends State<LoginScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_getFriendlyErrorMessage(error)),
+          content: Text(ErrorUtils.getFriendlyMessage(error)),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -395,7 +395,7 @@ class LoginScreenState extends State<LoginScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_getFriendlyErrorMessage(error)),
+          content: Text(ErrorUtils.getFriendlyMessage(error)),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -516,57 +516,6 @@ class LoginScreenState extends State<LoginScreen> {
       default:
         return 'Pengguna sistem';
     }
-  }
-
-  String _getFriendlyErrorMessage(dynamic error) {
-    if (kDebugMode) {
-      print('🔍 Processing error for friendly message: $error');
-    }
-
-    final errorStr = error.toString().toLowerCase();
-
-    // Specific user-requested scenarios
-    if (errorStr.contains('tidak terdaftar pada sekolah') ||
-        errorStr.contains('no schools assigned') ||
-        errorStr.contains('no accessible schools')) {
-      return 'Akun Anda belum terdaftar pada sekolah manapun, hubungi admin sekolah anda';
-    }
-
-    if (errorStr.contains('credential') ||
-        errorStr.contains('wrong password') ||
-        errorStr.contains('email atau password salah') ||
-        errorStr.contains('401')) {
-      return 'Email atau password salah';
-    }
-
-    if (errorStr.contains('expired') || errorStr.contains('token')) {
-      return 'Sesi telah berakhir. Silakan login kembali.';
-    }
-
-    if (errorStr.contains('socketexception') ||
-        errorStr.contains('failed host lookup') ||
-        errorStr.contains('connection failed')) {
-      return 'Gagal terhubung ke server, silakan cek koneksi internet Anda.';
-    }
-
-    if (errorStr.contains('peoples api') ||
-        errorStr.contains('permission_denied') ||
-        errorStr.contains('403')) {
-      return 'Akses ditolak. Mohon hubungi admin sekolah anda.';
-    }
-
-    // Default for backend code errors or unknown issues
-    if (errorStr.contains('exception') ||
-        errorStr.contains('internal server error') ||
-        errorStr.contains('500') ||
-        errorStr.contains(
-          'type \'_internallinkedhashmap<string, dynamic>\' is not a subtype of type \'iterable<dynamic>\'',
-        )) {
-      return 'Login error, hubungi admin';
-    }
-
-    // General fallback
-    return 'Login error, hubungi admin';
   }
 
   Widget _buildSchoolSelection() {

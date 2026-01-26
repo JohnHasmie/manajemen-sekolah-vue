@@ -12,6 +12,7 @@ import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/excel_presence_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
@@ -180,6 +181,16 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     } catch (e) {
       if (kDebugMode) {
         print('Error loading filter data (critical): $e');
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat data filter: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoadingClasses = false);
@@ -402,6 +413,14 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
           _isLoadingSummary = false;
           _isLoadingMore = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat data laporan: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

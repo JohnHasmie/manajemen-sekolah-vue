@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ import 'package:manajemensekolah/screen/admin/class_finance_report_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/currency_formatter.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -493,10 +495,11 @@ class FinanceScreenState extends State<FinanceScreen>
 
       _animationController.forward();
     } catch (error) {
+      if (kDebugMode) print('Error loading data: $error');
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Failed to load financial data';
+          _errorMessage = ErrorUtils.getFriendlyMessage(error);
         });
       }
     }
@@ -567,7 +570,17 @@ class FinanceScreenState extends State<FinanceScreen>
       // Load tagihan untuk setiap siswa
       await _loadTagihanForSiswa(allSiswa);
     } catch (error) {
-      print('Error loading kelas data: $error');
+      if (kDebugMode) print('Error loading kelas data: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat data kelas: ${ErrorUtils.getFriendlyMessage(error)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -602,7 +615,7 @@ class FinanceScreenState extends State<FinanceScreen>
         });
       }
     } catch (error) {
-      print('Error loading tagihan for siswa: $error');
+      if (kDebugMode) print('Error loading tagihan for siswa: $error');
     }
   }
 
@@ -1325,7 +1338,17 @@ class FinanceScreenState extends State<FinanceScreen>
         });
       }
     } catch (error) {
-      print('Error loading jenis pembayaran: $error');
+      if (kDebugMode) print('Error loading jenis pembayaran: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -1376,7 +1399,17 @@ class FinanceScreenState extends State<FinanceScreen>
         }
       }
     } catch (error) {
-      print('Error loading tagihan (paginated): $error');
+      if (kDebugMode) print('Error loading tagihan (paginated): $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat daftar tagihan: ${ErrorUtils.getFriendlyMessage(error)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -1403,7 +1436,7 @@ class FinanceScreenState extends State<FinanceScreen>
         });
       }
     } catch (error) {
-      print('Error loading pembayaran pending: $error');
+      if (kDebugMode) print('Error loading pembayaran pending: $error');
     }
   }
 
@@ -1431,7 +1464,7 @@ class FinanceScreenState extends State<FinanceScreen>
         });
       }
     } catch (error) {
-      print('Error loading dashboard data: $error');
+      if (kDebugMode) print('Error loading dashboard data: $error');
     }
   }
 
@@ -1777,11 +1810,13 @@ class FinanceScreenState extends State<FinanceScreen>
                                   );
                                 }
                               } catch (error) {
+                                if (kDebugMode)
+                                  print('Error saving payment type: $error');
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        'Gagal menyimpan data: $error',
+                                        'Gagal menyimpan jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
                                       ),
                                       backgroundColor: Colors.red.shade400,
                                       behavior: SnackBarBehavior.floating,
@@ -1933,10 +1968,13 @@ class FinanceScreenState extends State<FinanceScreen>
         }
         _loadData();
       } catch (error) {
+        if (kDebugMode) print('Error deleting payment type: $error');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Gagal menghapus jenis pembayaran: $error'),
+              content: Text(
+                'Gagal menghapus jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
+              ),
               backgroundColor: Colors.red.shade400,
               behavior: SnackBarBehavior.floating,
             ),
@@ -1986,15 +2024,22 @@ class FinanceScreenState extends State<FinanceScreen>
           _loadData();
         }
       } catch (error) {
+        if (kDebugMode) print('Error generating bills: $error');
         if (mounted) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Gagal membuat tagihan: $error'),
+              content: Text(
+                'Gagal mengenerate tagihan: ${ErrorUtils.getFriendlyMessage(error)}',
+              ),
               backgroundColor: Colors.red.shade400,
               behavior: SnackBarBehavior.floating,
             ),
           );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
         }
       }
     }
@@ -2221,11 +2266,13 @@ class FinanceScreenState extends State<FinanceScreen>
                                   );
                                 }
                               } catch (error) {
+                                if (kDebugMode)
+                                  print('Error verifying payment: $error');
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        'Gagal memverifikasi: $error',
+                                        'Gagal memverifikasi: ${ErrorUtils.getFriendlyMessage(error)}',
                                       ),
                                       backgroundColor: Colors.red.shade400,
                                       behavior: SnackBarBehavior.floating,
