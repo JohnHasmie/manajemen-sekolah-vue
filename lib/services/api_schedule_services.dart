@@ -135,6 +135,7 @@ class ApiScheduleService {
     String? tahunAjaran,
     String? search,
     String? jamPelajaranId,
+    String? hourNumber,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
@@ -162,6 +163,9 @@ class ApiScheduleService {
     }
     if (jamPelajaranId != null && jamPelajaranId.isNotEmpty) {
       queryParams['lesson_hour_id'] = jamPelajaranId;
+    }
+    if (hourNumber != null && hourNumber.isNotEmpty) {
+      queryParams['hour_number'] = hourNumber;
     }
 
     // Build query string

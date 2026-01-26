@@ -342,7 +342,8 @@ class TeachingScheduleManagementScreenState
                 search: _searchController.text.trim().isEmpty
                     ? null
                     : _searchController.text.trim(),
-                jamPelajaranId: _selectedJamPelajaran,
+                jamPelajaranId: null, // No longer used for cross-day filter
+                hourNumber: _selectedJamPelajaran,
               ).catchError((e) {
                 print('Error getSchedulesPaginated: $e');
                 throw e;
@@ -465,7 +466,8 @@ class TeachingScheduleManagementScreenState
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
-        jamPelajaranId: _selectedJamPelajaran,
+        jamPelajaranId: null,
+        hourNumber: _selectedJamPelajaran,
       );
 
       if (!mounted) return;
@@ -993,6 +995,7 @@ class TeachingScheduleManagementScreenState
       _hasActiveFilter =
           _selectedHariId != null ||
           _selectedClassId != null ||
+          _selectedJamPelajaran != null ||
           (_selectedFilterSemester != null &&
               _selectedFilterSemester != _selectedSemester);
     });
@@ -1391,40 +1394,55 @@ class TeachingScheduleManagementScreenState
                             ),
                           ),
                           SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _jamPelajaranList.map<Widget>((jp) {
-                              final jpId = jp['id'].toString();
-                              final jpName =
-                                  '${jp['jam_ke']} (${jp['jam_mulai']} - ${jp['jam_selesai']})';
-                              final isSelected =
-                                  tempSelectedJamPelajaran == jpId;
-                              return FilterChip(
-                                label: Text(jpName),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedJamPelajaran = selected
-                                        ? jpId
-                                        : null;
-                                  });
-                                },
-                                backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withOpacity(
-                                  0.2,
-                                ),
-                                checkmarkColor: _getPrimaryColor(),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : Colors.grey.shade700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
+                          Builder(
+                            builder: (context) {
+                              // Extract unique hour numbers
+                              final Set<String> uniqueHours = {};
+                              for (var jp in _jamPelajaranList) {
+                                final h = (jp['hour_number'] ?? jp['jam_ke'])
+                                    ?.toString();
+                                if (h != null) uniqueHours.add(h);
+                              }
+
+                              final sortedHours = uniqueHours.toList()
+                                ..sort((a, b) {
+                                  final intA = int.tryParse(a) ?? 0;
+                                  final intB = int.tryParse(b) ?? 0;
+                                  return intA.compareTo(intB);
+                                });
+
+                              return Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: sortedHours.map<Widget>((hourNum) {
+                                  final isSelected =
+                                      tempSelectedJamPelajaran == hourNum;
+                                  return FilterChip(
+                                    label: Text(hourNum),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      setModalState(() {
+                                        tempSelectedJamPelajaran = selected
+                                            ? hourNum
+                                            : null;
+                                      });
+                                    },
+                                    backgroundColor: Colors.grey.shade100,
+                                    selectedColor: _getPrimaryColor()
+                                        .withOpacity(0.2),
+                                    checkmarkColor: _getPrimaryColor(),
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? _getPrimaryColor()
+                                          : Colors.grey.shade700,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  );
+                                }).toList(),
                               );
-                            }).toList(),
+                            },
                           ),
                           SizedBox(height: 24),
                         ],
@@ -1551,10 +1569,11 @@ class TeachingScheduleManagementScreenState
 
       bool matchesJamPelajaran = true;
       if (_selectedJamPelajaran != null) {
-        final scheduleJpId =
-            schedule['lesson_hour_id']?.toString() ??
-            schedule['jam_pelajaran_id']?.toString();
-        matchesJamPelajaran = scheduleJpId == _selectedJamPelajaran;
+        final lessonHour = schedule['lesson_hour'] as Map<String, dynamic>?;
+        final hourNumber =
+            lessonHour?['hour_number']?.toString() ??
+            lessonHour?['jam_ke']?.toString();
+        matchesJamPelajaran = hourNumber == _selectedJamPelajaran;
       }
 
       // Note: Semester and academic year filters are handled by reloading data from server
