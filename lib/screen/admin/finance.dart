@@ -2524,7 +2524,7 @@ class FinanceScreenState extends State<FinanceScreen>
                               children: [
                                 _buildActionButton(
                                   icon: Icons.autorenew,
-                                  label: 'Generate',
+                                  label: 'Generate Tagihan',
                                   color: Colors.blue,
                                   onPressed: () => _confirmGenerateBills(item),
                                 ),
@@ -2679,7 +2679,7 @@ class FinanceScreenState extends State<FinanceScreen>
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
-            'Tagihan Digenerate',
+            'Tagihan yang sedang berjalan',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -2951,22 +2951,9 @@ class FinanceScreenState extends State<FinanceScreen>
                       case 'refresh':
                         _loadData();
                         break;
-                      case 'generate_tagihan':
-                        _generateTagihan();
-                        break;
                     }
                   },
                   itemBuilder: (BuildContext context) => [
-                    PopupMenuItem<String>(
-                      value: 'generate_tagihan',
-                      child: Row(
-                        children: [
-                          Icon(Icons.autorenew, color: _getPrimaryColor()),
-                          SizedBox(width: 8),
-                          Text('Generate Tagihan'),
-                        ],
-                      ),
-                    ),
                     PopupMenuItem<String>(
                       value: 'refresh',
                       child: Row(
@@ -3616,32 +3603,6 @@ class FinanceScreenState extends State<FinanceScreen>
     }
 
     return null;
-  }
-
-  Future<void> _generateTagihan() async {
-    try {
-      await _apiService.post('/generate-bill', {});
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Generate tagihan berhasil'),
-            backgroundColor: Colors.green.shade400,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      _loadData();
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal generate tagihan: $error'),
-            backgroundColor: Colors.red.shade400,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
   }
 
   // Restored methods needed by other dialogs
