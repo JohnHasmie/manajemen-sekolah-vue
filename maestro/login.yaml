@@ -1,0 +1,28 @@
+appId: com.example.manajemensekolah
+---
+- launchApp:
+    clearState: true
+- tapOn: "Email"
+- inputText: "reviewer@school-demo.com"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "LOGIN"
+
+# Handling "Pilih Sekolah"
+- runFlow:
+    when:
+      visible: "Pilih Sekolah"
+    commands:
+      - tapOn: "SMP 8 Solo"
+
+# Handling "Role Selection"
+- runFlow:
+    when:
+      visible: "Akses sebagai"
+    commands:
+      - tapOn: "Admin"
+
+# Verify dashboard
+- extendedWaitUntil:
+    visible: "Selamat Datang"
+    timeout: 15000

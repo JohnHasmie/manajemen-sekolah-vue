@@ -282,245 +282,105 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Filter',
+                          'id': 'Filter',
+                        }),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setModalState(() {
+                            tempSelectedStatus = null;
+                            tempSelectedClassStatus = null;
+                            tempSelectedGradeLevel = null;
+                            tempSelectedClassName = null;
+                          });
+                        },
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Reset',
+                            'id': 'Reset',
+                          }),
+                          style: TextStyle(color: _getPrimaryColor()),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Filter',
-                        'id': 'Filter',
-                      }),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setModalState(() {
-                          tempSelectedStatus = null;
-                          tempSelectedClassStatus = null;
-                          tempSelectedGradeLevel = null;
-                          tempSelectedClassName = null;
-                        });
-                      },
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Reset',
-                          'id': 'Reset',
-                        }),
-                        style: TextStyle(color: _getPrimaryColor()),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Filter Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Status Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Status',
-                          'id': 'Status',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                // Filter Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Status Filter
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Status',
+                            'id': 'Status',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children:
-                            [
-                              {
-                                'value': 'active',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Active',
-                                  'id': 'Aktif',
-                                }),
-                              },
-                              {
-                                'value': 'inactive',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Inactive',
-                                  'id': 'Tidak Aktif',
-                                }),
-                              },
-                              {
-                                'value': 'all',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'All',
-                                  'id': 'Semua',
-                                }),
-                              },
-                            ].map((item) {
-                              final isSelected =
-                                  tempSelectedStatus == item['value'];
-                              return FilterChip(
-                                label: Text(item['label']!),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedStatus = selected
-                                        ? item['value']
-                                        : null;
-                                  });
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children:
+                              [
+                                {
+                                  'value': 'active',
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'Active',
+                                    'id': 'Aktif',
+                                  }),
                                 },
-                                backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withValues(
-                                  alpha: 0.2,
-                                ),
-                                checkmarkColor: _getPrimaryColor(),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : Colors.grey.shade700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                      SizedBox(height: 24),
-
-                      SizedBox(height: 24),
-
-                      // Status Kelas Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Classes Status',
-                          'id': 'Status Kelas',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children:
-                            [
-                              {
-                                'value': 'ada',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Has Classes',
-                                  'id': 'Ada Kelas',
-                                }),
-                              },
-                              {
-                                'value': 'tidak_ada',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'No Classes',
-                                  'id': 'Tidak Ada Kelas',
-                                }),
-                              },
-                            ].map((item) {
-                              final isSelected =
-                                  tempSelectedClassStatus == item['value'];
-                              return FilterChip(
-                                label: Text(item['label']!),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedClassStatus = selected
-                                        ? item['value']
-                                        : null;
-                                  });
+                                {
+                                  'value': 'inactive',
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'Inactive',
+                                    'id': 'Tidak Aktif',
+                                  }),
                                 },
-                                backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withValues(
-                                  alpha: 0.2,
-                                ),
-                                checkmarkColor: _getPrimaryColor(),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : Colors.grey.shade700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              );
-                            }).toList(),
-                      ),
-
-                      SizedBox(height: 24),
-
-                      // Tingkat Kelas Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Grade Level',
-                          'id': 'Tingkat Kelas',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _availableGradeLevels.isEmpty
-                            ? List.generate(12, (index) {
-                                final gradeLevel = (index + 1).toString();
+                                {
+                                  'value': 'all',
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'All',
+                                    'id': 'Semua',
+                                  }),
+                                },
+                              ].map((item) {
                                 final isSelected =
-                                    tempSelectedGradeLevel == gradeLevel;
+                                    tempSelectedStatus == item['value'];
                                 return FilterChip(
-                                  label: Text('Kelas $gradeLevel'),
+                                  label: Text(item['label']!),
                                   selected: isSelected,
                                   onSelected: (selected) {
                                     setModalState(() {
-                                      tempSelectedGradeLevel = selected
-                                          ? gradeLevel
-                                          : null;
-                                    });
-                                  },
-                                  backgroundColor: Colors.grey.shade100,
-                                  selectedColor: _getPrimaryColor().withValues(
-                                    alpha: 0.2,
-                                  ),
-                                  checkmarkColor: _getPrimaryColor(),
-                                  labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? _getPrimaryColor()
-                                        : Colors.grey.shade700,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                );
-                              }).toList()
-                            : _availableGradeLevels.map((gradeLevel) {
-                                final isSelected =
-                                    tempSelectedGradeLevel == gradeLevel;
-                                return FilterChip(
-                                  label: Text('Kelas $gradeLevel'),
-                                  selected: isSelected,
-                                  onSelected: (selected) {
-                                    setModalState(() {
-                                      tempSelectedGradeLevel = selected
-                                          ? gradeLevel
+                                      tempSelectedStatus = selected
+                                          ? item['value']
                                           : null;
                                     });
                                   },
@@ -539,16 +399,16 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                   ),
                                 );
                               }).toList(),
-                      ),
+                        ),
+                        SizedBox(height: 24),
 
-                      SizedBox(height: 24),
+                        SizedBox(height: 24),
 
-                      // Class Name Filter (Dynamic)
-                      if (_availableClassNames.isNotEmpty) ...[
+                        // Status Kelas Filter
                         Text(
                           languageProvider.getTranslatedText({
-                            'en': 'Class Name',
-                            'id': 'Nama Kelas',
+                            'en': 'Classes Status',
+                            'id': 'Status Kelas',
                           }),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -559,86 +419,226 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: _availableClassNames.map((className) {
-                            final isSelected =
-                                tempSelectedClassName == className;
-                            return FilterChip(
-                              label: Text(className),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                setModalState(() {
-                                  tempSelectedClassName = selected
-                                      ? className
-                                      : null;
-                                });
-                              },
-                              backgroundColor: Colors.grey.shade100,
-                              selectedColor: _getPrimaryColor().withValues(
-                                alpha: 0.2,
-                              ),
-                              checkmarkColor: _getPrimaryColor(),
-                              labelStyle: TextStyle(
-                                color: isSelected
-                                    ? _getPrimaryColor()
-                                    : Colors.grey.shade700,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            );
-                          }).toList(),
+                          children:
+                              [
+                                {
+                                  'value': 'ada',
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'Has Classes',
+                                    'id': 'Ada Kelas',
+                                  }),
+                                },
+                                {
+                                  'value': 'tidak_ada',
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'No Classes',
+                                    'id': 'Tidak Ada Kelas',
+                                  }),
+                                },
+                              ].map((item) {
+                                final isSelected =
+                                    tempSelectedClassStatus == item['value'];
+                                return FilterChip(
+                                  label: Text(item['label']!),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    setModalState(() {
+                                      tempSelectedClassStatus = selected
+                                          ? item['value']
+                                          : null;
+                                    });
+                                  },
+                                  backgroundColor: Colors.grey.shade100,
+                                  selectedColor: _getPrimaryColor().withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  checkmarkColor: _getPrimaryColor(),
+                                  labelStyle: TextStyle(
+                                    color: isSelected
+                                        ? _getPrimaryColor()
+                                        : Colors.grey.shade700,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                );
+                              }).toList(),
                         ),
+
                         SizedBox(height: 24),
+
+                        // Tingkat Kelas Filter
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Grade Level',
+                            'id': 'Tingkat Kelas',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _availableGradeLevels.isEmpty
+                              ? List.generate(12, (index) {
+                                  final gradeLevel = (index + 1).toString();
+                                  final isSelected =
+                                      tempSelectedGradeLevel == gradeLevel;
+                                  return FilterChip(
+                                    label: Text('Kelas $gradeLevel'),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      setModalState(() {
+                                        tempSelectedGradeLevel = selected
+                                            ? gradeLevel
+                                            : null;
+                                      });
+                                    },
+                                    backgroundColor: Colors.grey.shade100,
+                                    selectedColor: _getPrimaryColor()
+                                        .withValues(alpha: 0.2),
+                                    checkmarkColor: _getPrimaryColor(),
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? _getPrimaryColor()
+                                          : Colors.grey.shade700,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  );
+                                }).toList()
+                              : _availableGradeLevels.map((gradeLevel) {
+                                  final isSelected =
+                                      tempSelectedGradeLevel == gradeLevel;
+                                  return FilterChip(
+                                    label: Text('Kelas $gradeLevel'),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      setModalState(() {
+                                        tempSelectedGradeLevel = selected
+                                            ? gradeLevel
+                                            : null;
+                                      });
+                                    },
+                                    backgroundColor: Colors.grey.shade100,
+                                    selectedColor: _getPrimaryColor()
+                                        .withValues(alpha: 0.2),
+                                    checkmarkColor: _getPrimaryColor(),
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? _getPrimaryColor()
+                                          : Colors.grey.shade700,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  );
+                                }).toList(),
+                        ),
+
+                        SizedBox(height: 24),
+
+                        // Class Name Filter (Dynamic)
+                        if (_availableClassNames.isNotEmpty) ...[
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Class Name',
+                              'id': 'Nama Kelas',
+                            }),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _availableClassNames.map((className) {
+                              final isSelected =
+                                  tempSelectedClassName == className;
+                              return FilterChip(
+                                label: Text(className),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setModalState(() {
+                                    tempSelectedClassName = selected
+                                        ? className
+                                        : null;
+                                  });
+                                },
+                                backgroundColor: Colors.grey.shade100,
+                                selectedColor: _getPrimaryColor().withValues(
+                                  alpha: 0.2,
+                                ),
+                                checkmarkColor: _getPrimaryColor(),
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : Colors.grey.shade700,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          SizedBox(height: 24),
+                        ],
                       ],
+                    ),
+                  ),
+                ),
+                // Apply Button
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withValues(alpha: 0.2),
+                        blurRadius: 4,
+                        offset: Offset(0, -2),
+                      ),
                     ],
                   ),
-                ),
-              ),
-              // Apply Button
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.2),
-                      blurRadius: 4,
-                      offset: Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedStatusFilter = tempSelectedStatus;
-                        _selectedKelasStatusFilter = tempSelectedClassStatus;
-                        _selectedGradeLevelFilter = tempSelectedGradeLevel;
-                        _selectedClassNameFilter = tempSelectedClassName;
-                      });
-                      _checkActiveFilter();
-                      Navigator.pop(context);
-                      _loadSubjects(); // Reload data setelah apply filter
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getPrimaryColor(),
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedStatusFilter = tempSelectedStatus;
+                          _selectedKelasStatusFilter = tempSelectedClassStatus;
+                          _selectedGradeLevelFilter = tempSelectedGradeLevel;
+                          _selectedClassNameFilter = tempSelectedClassName;
+                        });
+                        _checkActiveFilter();
+                        Navigator.pop(context);
+                        _loadSubjects(); // Reload data setelah apply filter
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _getPrimaryColor(),
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Apply Filter',
-                        'id': 'Terapkan Filter',
-                      }),
-                      style: TextStyle(color: Colors.white),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Apply Filter',
+                          'id': 'Terapkan Filter',
+                        }),
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

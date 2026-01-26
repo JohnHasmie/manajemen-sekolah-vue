@@ -1,8 +1,8 @@
 // components/filter_sheet.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
 
 class FilterSheet extends StatefulWidget {
   final FilterConfig config;
@@ -33,7 +33,10 @@ class _FilterSheetState extends State<FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
     final primaryColor = widget.primaryColor ?? ColorUtils.getRoleColor("guru");
 
     return Container(
@@ -48,9 +51,7 @@ class _FilterSheetState extends State<FilterSheet> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade200),
-              ),
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -95,45 +96,47 @@ class _FilterSheetState extends State<FilterSheet> {
           // Apply Button
           Container(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: primaryColor),
-                    ),
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Cancel',
-                        'id': 'Batal',
-                      }),
-                      style: TextStyle(color: primaryColor),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      widget.onApplyFilters(_currentFilters);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: primaryColor,
-                    ),
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Apply',
-                        'id': 'Terapkan',
-                      }),
-                      style: const TextStyle(color: Colors.white),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: primaryColor),
+                      ),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Cancel',
+                          'id': 'Batal',
+                        }),
+                        style: TextStyle(color: primaryColor),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        widget.onApplyFilters(_currentFilters);
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: primaryColor,
+                      ),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Apply',
+                          'id': 'Terapkan',
+                        }),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -142,7 +145,10 @@ class _FilterSheetState extends State<FilterSheet> {
   }
 
   Widget _buildFilterSection(FilterSection section, Color primaryColor) {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
 
     return Padding(
       padding: const EdgeInsets.only(left: 4, right: 4),
@@ -153,10 +159,7 @@ class _FilterSheetState extends State<FilterSheet> {
             padding: const EdgeInsets.only(left: 4),
             child: Text(
               section.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
           const SizedBox(height: 12),
@@ -181,9 +184,14 @@ class _FilterSheetState extends State<FilterSheet> {
                   checkmarkColor: primaryColor,
                   labelStyle: TextStyle(
                     color: isSelected ? primaryColor : Colors.grey.shade700,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                 );
               }).toList(),
@@ -209,7 +217,7 @@ class _FilterSheetState extends State<FilterSheet> {
   void _toggleOption(String sectionKey, dynamic optionValue, bool selected) {
     setState(() {
       final currentValue = _currentFilters[sectionKey];
-      
+
       if (currentValue is List) {
         final List<dynamic> list = List.from(currentValue);
         if (selected) {

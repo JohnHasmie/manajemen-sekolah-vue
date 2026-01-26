@@ -1,0 +1,31 @@
+appId: com.example.manajemensekolah
+---
+- runFlow: login.yaml
+- tapOn: "Kelola Siswa"
+- tapOn: "Cari siswa..."
+- inputText: "Budi"
+- pressKey: Enter
+- tapOn: "Filter" # Using the icon tooltip if available, otherwise "Filter" text
+- tapOn: "Status"
+- tapOn: "Aktif"
+- tapOn: "Terapkan Filter"
+- tapOn:
+    id: "add_student_button" # Or just the plus icon if id is not available
+- tapOn:
+    point: "90%,90%" # Fallback if no text/id
+- tapOn: "Nama Siswa"
+- inputText: "John Doe"
+- tapOn: "NIS"
+- inputText: "12345"
+- tapOn: "SIMPAN"
+- tapOn: "Edit" # Found in student card
+- tapOn: "Nama Siswa"
+- inputText: "John Updated"
+- tapOn: "SIMPAN"
+- tapOn: "Hapus"
+- tapOn: "Ya, Hapus"
+- tapOn:
+    id: "more_options_button" # PopupMenuButton
+- tapOn: "Export ke Excel"
+- tapOn: "Import dari Excel"
+- tapOn: "Download Template"

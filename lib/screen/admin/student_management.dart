@@ -540,395 +540,397 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                 topRight: Radius.circular(24),
               ),
             ),
-            child: Column(
-              children: [
-                // Header
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Filter',
-                          'id': 'Filter',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setModalState(() {
-                            tempSelectedStatus = null;
-                            tempSelectedClass.clear();
-                            tempSelectedGender = null;
-                            tempSelectedGuardian = null;
-                          });
-                        },
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Reset',
-                            'id': 'Reset',
-                          }),
-                          style: TextStyle(color: _getPrimaryColor()),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Scrollable Content
-                Expanded(
-                  child: SingleChildScrollView(
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Header
+                  Container(
                     padding: EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey.shade200),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Guardian Filter
                         Text(
                           languageProvider.getTranslatedText({
-                            'en': 'Guardian Name',
-                            'id': 'Nama Wali Murid',
+                            'en': 'Filter',
+                            'id': 'Filter',
                           }),
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 12),
-                        Autocomplete<String>(
-                          optionsBuilder:
-                              (TextEditingValue textEditingValue) async {
-                                if (textEditingValue.text.length < 2) {
-                                  return const Iterable<String>.empty();
-                                }
-                                return await ApiStudentService.getGuardians(
-                                  textEditingValue.text,
-                                );
-                              },
-                          onSelected: (String selection) {
+                        TextButton(
+                          onPressed: () {
                             setModalState(() {
-                              tempSelectedGuardian = selection;
+                              tempSelectedStatus = null;
+                              tempSelectedClass.clear();
+                              tempSelectedGender = null;
+                              tempSelectedGuardian = null;
                             });
                           },
-                          fieldViewBuilder:
-                              (
-                                context,
-                                textEditingController,
-                                focusNode,
-                                onFieldSubmitted,
-                              ) {
-                                if (tempSelectedGuardian != null &&
-                                    textEditingController.text.isEmpty) {
-                                  textEditingController.text =
-                                      tempSelectedGuardian!;
-                                }
-                                return TextField(
-                                  controller: textEditingController,
-                                  focusNode: focusNode,
-                                  decoration: InputDecoration(
-                                    hintText: languageProvider
-                                        .getTranslatedText({
-                                          'en': 'Search Guardian',
-                                          'id': 'Cari Wali Murid',
-                                        }),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: _getPrimaryColor(),
-                                      ),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.person_search,
-                                      color: Colors.grey,
-                                    ),
-                                    suffixIcon: tempSelectedGuardian != null
-                                        ? IconButton(
-                                            icon: Icon(Icons.close),
-                                            onPressed: () {
-                                              textEditingController.clear();
-                                              setModalState(() {
-                                                tempSelectedGuardian = null;
-                                              });
-                                              // Also clear from parent state if needed, but here we just clear temp
-                                            },
-                                          )
-                                        : null,
-                                  ),
-                                );
-                              },
-                        ),
-                        SizedBox(height: 20),
-
-                        // Status Filter
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Status',
-                            'id': 'Status',
-                          }),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _buildStatusChip(
-                              label: languageProvider.getTranslatedText({
-                                'en': 'All',
-                                'id': 'Semua',
-                              }),
-                              value: null,
-                              selectedValue: tempSelectedStatus,
-                              onSelected: () {
-                                setModalState(() {
-                                  tempSelectedStatus = null;
-                                });
-                              },
-                            ),
-                            _buildStatusChip(
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Active',
-                                'id': 'Aktif',
-                              }),
-                              value: 'active',
-                              selectedValue: tempSelectedStatus,
-                              onSelected: () {
-                                setModalState(() {
-                                  tempSelectedStatus = 'active';
-                                });
-                              },
-                            ),
-                            _buildStatusChip(
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Inactive',
-                                'id': 'Tidak Aktif',
-                              }),
-                              value: 'inactive',
-                              selectedValue: tempSelectedStatus,
-                              onSelected: () {
-                                setModalState(() {
-                                  tempSelectedStatus = 'inactive';
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 24),
-
-                        // Kelas Filter
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Class',
-                            'id': 'Kelas',
-                          }),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _classList.map((kelas) {
-                            final classId = kelas['id'].toString();
-                            final isSelected = tempSelectedClass.contains(
-                              classId,
-                            );
-
-                            return FilterChip(
-                              label: Text(
-                                kelas['name'] ?? kelas['nama'] ?? 'Unknown',
-                              ),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                setModalState(() {
-                                  if (selected) {
-                                    tempSelectedClass.add(classId);
-                                  } else {
-                                    tempSelectedClass.remove(classId);
-                                  }
-                                });
-                              },
-                              selectedColor: _getPrimaryColor().withValues(
-                                alpha: 0.2,
-                              ),
-                              checkmarkColor: _getPrimaryColor(),
-                              labelStyle: TextStyle(
-                                color: isSelected
-                                    ? _getPrimaryColor()
-                                    : Colors.grey.shade700,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? _getPrimaryColor()
-                                    : Colors.grey.shade300,
-                              ),
-                            );
-                          }).toList(),
-                        ),
-
-                        SizedBox(height: 24),
-
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Gender',
-                            'id': 'Jenis Kelamin',
-                          }),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _buildGenderChip(
-                              label: languageProvider.getTranslatedText({
-                                'en': 'All',
-                                'id': 'Semua',
-                              }),
-                              value: null,
-                              selectedValue: tempSelectedGender,
-                              onSelected: () {
-                                setModalState(() {
-                                  tempSelectedGender = null;
-                                });
-                              },
-                            ),
-                            _buildGenderChip(
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Male',
-                                'id': 'Laki-laki',
-                              }),
-                              value: 'M',
-                              selectedValue: tempSelectedGender,
-                              onSelected: () {
-                                setModalState(() {
-                                  tempSelectedGender = 'M';
-                                });
-                              },
-                            ),
-                            _buildGenderChip(
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Female',
-                                'id': 'Perempuan',
-                              }),
-                              value: 'F',
-                              selectedValue: tempSelectedGender,
-                              onSelected: () {
-                                setModalState(() {
-                                  tempSelectedGender = 'F';
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.shade300,
-                        offset: Offset(0, -2),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: _getPrimaryColor()),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
                           child: Text(
                             languageProvider.getTranslatedText({
-                              'en': 'Cancel',
-                              'id': 'Batal',
+                              'en': 'Reset',
+                              'id': 'Reset',
                             }),
                             style: TextStyle(color: _getPrimaryColor()),
                           ),
                         ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedStatusFilter = tempSelectedStatus;
-                              _selectedClassIds = tempSelectedClass;
-                              _selectedGenderFilter = tempSelectedGender;
-                              _selectedGuardian = tempSelectedGuardian;
-                            });
-                            _checkActiveFilter();
-                            Navigator.pop(context);
-                            _loadData();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _getPrimaryColor(),
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      ],
+                    ),
+                  ),
+
+                  // Scrollable Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Guardian Filter
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Guardian Name',
+                              'id': 'Nama Wali Murid',
+                            }),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          child: Text(
+                          SizedBox(height: 12),
+                          Autocomplete<String>(
+                            optionsBuilder:
+                                (TextEditingValue textEditingValue) async {
+                                  if (textEditingValue.text.length < 2) {
+                                    return const Iterable<String>.empty();
+                                  }
+                                  return await ApiStudentService.getGuardians(
+                                    textEditingValue.text,
+                                  );
+                                },
+                            onSelected: (String selection) {
+                              setModalState(() {
+                                tempSelectedGuardian = selection;
+                              });
+                            },
+                            fieldViewBuilder:
+                                (
+                                  context,
+                                  textEditingController,
+                                  focusNode,
+                                  onFieldSubmitted,
+                                ) {
+                                  if (tempSelectedGuardian != null &&
+                                      textEditingController.text.isEmpty) {
+                                    textEditingController.text =
+                                        tempSelectedGuardian!;
+                                  }
+                                  return TextField(
+                                    controller: textEditingController,
+                                    focusNode: focusNode,
+                                    decoration: InputDecoration(
+                                      hintText: languageProvider
+                                          .getTranslatedText({
+                                            'en': 'Search Guardian',
+                                            'id': 'Cari Wali Murid',
+                                          }),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: _getPrimaryColor(),
+                                        ),
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.person_search,
+                                        color: Colors.grey,
+                                      ),
+                                      suffixIcon: tempSelectedGuardian != null
+                                          ? IconButton(
+                                              icon: Icon(Icons.close),
+                                              onPressed: () {
+                                                textEditingController.clear();
+                                                setModalState(() {
+                                                  tempSelectedGuardian = null;
+                                                });
+                                                // Also clear from parent state if needed, but here we just clear temp
+                                              },
+                                            )
+                                          : null,
+                                    ),
+                                  );
+                                },
+                          ),
+                          SizedBox(height: 20),
+
+                          // Status Filter
+                          Text(
                             languageProvider.getTranslatedText({
-                              'en': 'Apply Filter',
-                              'id': 'Terapkan Filter',
+                              'en': 'Status',
+                              'id': 'Status',
                             }),
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildStatusChip(
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'All',
+                                  'id': 'Semua',
+                                }),
+                                value: null,
+                                selectedValue: tempSelectedStatus,
+                                onSelected: () {
+                                  setModalState(() {
+                                    tempSelectedStatus = null;
+                                  });
+                                },
+                              ),
+                              _buildStatusChip(
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Active',
+                                  'id': 'Aktif',
+                                }),
+                                value: 'active',
+                                selectedValue: tempSelectedStatus,
+                                onSelected: () {
+                                  setModalState(() {
+                                    tempSelectedStatus = 'active';
+                                  });
+                                },
+                              ),
+                              _buildStatusChip(
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Inactive',
+                                  'id': 'Tidak Aktif',
+                                }),
+                                value: 'inactive',
+                                selectedValue: tempSelectedStatus,
+                                onSelected: () {
+                                  setModalState(() {
+                                    tempSelectedStatus = 'inactive';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 24),
+
+                          // Kelas Filter
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Class',
+                              'id': 'Kelas',
+                            }),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _classList.map((kelas) {
+                              final classId = kelas['id'].toString();
+                              final isSelected = tempSelectedClass.contains(
+                                classId,
+                              );
+
+                              return FilterChip(
+                                label: Text(
+                                  kelas['name'] ?? kelas['nama'] ?? 'Unknown',
+                                ),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setModalState(() {
+                                    if (selected) {
+                                      tempSelectedClass.add(classId);
+                                    } else {
+                                      tempSelectedClass.remove(classId);
+                                    }
+                                  });
+                                },
+                                selectedColor: _getPrimaryColor().withValues(
+                                  alpha: 0.2,
+                                ),
+                                checkmarkColor: _getPrimaryColor(),
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : Colors.grey.shade700,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : Colors.grey.shade300,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+
+                          SizedBox(height: 24),
+
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Gender',
+                              'id': 'Jenis Kelamin',
+                            }),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildGenderChip(
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'All',
+                                  'id': 'Semua',
+                                }),
+                                value: null,
+                                selectedValue: tempSelectedGender,
+                                onSelected: () {
+                                  setModalState(() {
+                                    tempSelectedGender = null;
+                                  });
+                                },
+                              ),
+                              _buildGenderChip(
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Male',
+                                  'id': 'Laki-laki',
+                                }),
+                                value: 'M',
+                                selectedValue: tempSelectedGender,
+                                onSelected: () {
+                                  setModalState(() {
+                                    tempSelectedGender = 'M';
+                                  });
+                                },
+                              ),
+                              _buildGenderChip(
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Female',
+                                  'id': 'Perempuan',
+                                }),
+                                value: 'F',
+                                selectedValue: tempSelectedGender,
+                                onSelected: () {
+                                  setModalState(() {
+                                    tempSelectedGender = 'F';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade300,
+                          offset: Offset(0, -2),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              side: BorderSide(color: _getPrimaryColor()),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Cancel',
+                                'id': 'Batal',
+                              }),
+                              style: TextStyle(color: _getPrimaryColor()),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedStatusFilter = tempSelectedStatus;
+                                _selectedClassIds = tempSelectedClass;
+                                _selectedGenderFilter = tempSelectedGender;
+                                _selectedGuardian = tempSelectedGuardian;
+                              });
+                              _checkActiveFilter();
+                              Navigator.pop(context);
+                              _loadData();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getPrimaryColor(),
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Apply Filter',
+                                'id': 'Terapkan Filter',
+                              }),
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },

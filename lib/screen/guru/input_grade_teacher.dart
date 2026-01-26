@@ -1294,100 +1294,105 @@ class GradeBookPageState extends State<GradeBookPage> {
       builder: (context) {
         return Container(
           padding: EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Text(
-                "${_getJenisNilaiLabel(jenis, languageProvider)} - $displayTitle",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(8),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: Icon(Icons.visibility, color: Colors.blue),
                 ),
-                title: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'View Details',
-                    'id': 'Lihat Detail',
-                  }),
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                Text(
+                  "${_getJenisNilaiLabel(jenis, languageProvider)} - $displayTitle",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showAssessmentDetail(jenis, header, languageProvider);
-                },
-              ),
-              if (_canEdit && !_isReadOnly) ...[
+                SizedBox(height: 20),
                 ListTile(
                   leading: Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
+                      color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.edit, color: Colors.orange),
+                    child: Icon(Icons.visibility, color: Colors.blue),
                   ),
                   title: Text(
                     languageProvider.getTranslatedText({
-                      'en': 'Edit Assessment',
-                      'id': 'Edit Penilaian',
+                      'en': 'View Details',
+                      'id': 'Lihat Detail',
                     }),
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    _enterEditMode(jenis, header);
+                    _showAssessmentDetail(jenis, header, languageProvider);
                   },
                 ),
-                ListTile(
-                  leading: Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
+                if (_canEdit && !_isReadOnly) ...[
+                  ListTile(
+                    leading: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.edit, color: Colors.orange),
                     ),
-                    child: Icon(Icons.delete_outline, color: Colors.red),
-                  ),
-                  title: Text(
-                    languageProvider.getTranslatedText({
-                      'en': 'Delete Assessment',
-                      'id': 'Hapus Penilaian',
-                    }),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red,
+                    title: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Edit Assessment',
+                        'id': 'Edit Penilaian',
+                      }),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _enterEditMode(jenis, header);
+                    },
                   ),
-                  subtitle: Text(
-                    languageProvider.getTranslatedText({
-                      'en': 'Delete all grades for this assessment',
-                      'id': 'Hapus semua nilai penilaian ini',
-                    }),
-                    style: TextStyle(fontSize: 12, color: Colors.red.shade300),
+                  ListTile(
+                    leading: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.delete_outline, color: Colors.red),
+                    ),
+                    title: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Delete Assessment',
+                        'id': 'Hapus Penilaian',
+                      }),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
+                    ),
+                    subtitle: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Delete all grades for this assessment',
+                        'id': 'Hapus semua nilai penilaian ini',
+                      }),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.red.shade300,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _confirmDeleteAssessment(jenis, header, languageProvider);
+                    },
                   ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _confirmDeleteAssessment(jenis, header, languageProvider);
-                  },
-                ),
+                ],
+                SizedBox(height: 20),
               ],
-              SizedBox(height: 20),
-            ],
+            ),
           ),
         );
       },
@@ -4037,25 +4042,27 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                         top: BorderSide(color: Colors.grey.shade300),
                       ),
                     ),
-                    child: ElevatedButton(
-                      onPressed: _submitNilai,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _getPrimaryColor(),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: SafeArea(
+                      child: ElevatedButton(
+                        onPressed: _submitNilai,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Finish',
-                          'id': 'Selesai',
-                        }),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Finish',
+                            'id': 'Selesai',
+                          }),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),

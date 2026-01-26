@@ -805,76 +805,78 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           ),
         ),
         padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            SizedBox(height: 20),
+              SizedBox(height: 20),
 
-            // Title
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'Select Activity Type',
-                'id': 'Pilih Jenis Kegiatan',
-              }),
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'Choose what you want to create',
-                'id': 'Pilih apa yang ingin Anda buat',
-              }),
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            SizedBox(height: 24),
+              // Title
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Select Activity Type',
+                  'id': 'Pilih Jenis Kegiatan',
+                }),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Choose what you want to create',
+                  'id': 'Pilih apa yang ingin Anda buat',
+                }),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              SizedBox(height: 24),
 
-            // Tugas Option
-            _buildActivityTypeOption(
-              icon: Icons.assignment,
-              title: languageProvider.getTranslatedText({
-                'en': 'Assignment',
-                'id': 'Tugas',
-              }),
-              description: languageProvider.getTranslatedText({
-                'en': 'Create an assignment for students',
-                'id': 'Buat tugas untuk siswa',
-              }),
-              color: Colors.orange,
-              onTap: () {
-                Navigator.pop(context);
-                _showAddActivityDialog('tugas');
-              },
-            ),
-            SizedBox(height: 12),
+              // Tugas Option
+              _buildActivityTypeOption(
+                icon: Icons.assignment,
+                title: languageProvider.getTranslatedText({
+                  'en': 'Assignment',
+                  'id': 'Tugas',
+                }),
+                description: languageProvider.getTranslatedText({
+                  'en': 'Create an assignment for students',
+                  'id': 'Buat tugas untuk siswa',
+                }),
+                color: Colors.orange,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAddActivityDialog('tugas');
+                },
+              ),
+              SizedBox(height: 12),
 
-            // Materi Option
-            _buildActivityTypeOption(
-              icon: Icons.book,
-              title: languageProvider.getTranslatedText({
-                'en': 'Material',
-                'id': 'Materi',
-              }),
-              description: languageProvider.getTranslatedText({
-                'en': 'Share learning materials',
-                'id': 'Bagikan materi pembelajaran',
-              }),
-              color: Colors.blue,
-              onTap: () {
-                Navigator.pop(context);
-                _showAddActivityDialog('materi');
-              },
-            ),
-            SizedBox(height: 20),
-          ],
+              // Materi Option
+              _buildActivityTypeOption(
+                icon: Icons.book,
+                title: languageProvider.getTranslatedText({
+                  'en': 'Material',
+                  'id': 'Materi',
+                }),
+                description: languageProvider.getTranslatedText({
+                  'en': 'Share learning materials',
+                  'id': 'Bagikan materi pembelajaran',
+                }),
+                color: Colors.blue,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAddActivityDialog('materi');
+                },
+              ),
+              SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
