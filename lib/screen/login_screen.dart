@@ -155,39 +155,23 @@ class LoginScreenState extends State<LoginScreen> {
         print('❌ Login error: $error');
       }
 
-      String errorMessage = 'Terjadi kesalahan saat login';
-      if (error.toString().contains('Token tidak ditemukan')) {
-        errorMessage = 'Token tidak valid dari server';
-      } else if (error.toString().contains('Data user tidak ditemukan')) {
-        errorMessage = 'Data user tidak valid dari server';
-      } else {
-        errorMessage = error.toString();
+      String errorMessage = _getFriendlyErrorMessage(error);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage)));
-
-      if (error.toString().contains('expired') ||
-          error.toString().contains('token') ||
-          error.toString().contains('Token')) {
-        errorMessage = 'Sesi telah berakhir. Silakan login kembali.';
+      if (error.toString().toLowerCase().contains('expired') ||
+          error.toString().toLowerCase().contains('token')) {
         _handleTokenExpired();
-      } else if (error.toString().contains('Token tidak ditemukan')) {
-        errorMessage = 'Token tidak valid dari server';
-      } else if (error.toString().contains('Data user tidak ditemukan')) {
-        errorMessage = 'Data user tidak valid dari server';
-      } else {
-        errorMessage = error.toString();
       }
 
       if (mounted) {
-        if (!error.toString().contains('expired')) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(errorMessage)));
-        }
-
         setState(() {
           _isLoading = false;
         });
@@ -282,22 +266,14 @@ class LoginScreenState extends State<LoginScreen> {
         // ignore
       }
 
-      String errorMessage = 'Gagal login dengan Google';
-      if (error.toString().contains('404') ||
-          error.toString().contains('tidak terdaftar')) {
-        errorMessage = 'Email Google tidak terdaftar di sistem sekolah.';
-      } else if (error.toString().contains('People API') ||
-          (error.toString().contains('403') &&
-              error.toString().contains('PERMISSION_DENIED'))) {
-        errorMessage =
-            'Google People API belum diaktifkan oleh Admin. Mohon hubungi IT Support.';
-      } else {
-        errorMessage = error.toString().replaceAll('Exception:', '').trim();
-      }
+      String errorMessage = _getFriendlyErrorMessage(error);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red.shade700,
+          ),
         );
 
         setState(() {
@@ -355,9 +331,12 @@ class LoginScreenState extends State<LoginScreen> {
         print('❌ School selection error: $error');
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_getFriendlyErrorMessage(error)),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
 
       setState(() {
         _isLoading = false;
@@ -410,9 +389,12 @@ class LoginScreenState extends State<LoginScreen> {
         print('❌ Role selection error: $error');
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_getFriendlyErrorMessage(error)),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
 
       setState(() {
         _isLoading = false;
@@ -424,7 +406,12 @@ class LoginScreenState extends State<LoginScreen> {
   Widget _buildRoleSelection() {
     return Column(
       children: [
-        SizedBox(height: 20),
+        if (_isLoading)
+          const LinearProgressIndicator(
+            backgroundColor: Colors.transparent,
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D47A1)),
+          ),
+        const SizedBox(height: 20),
         Text(
           'Pilih Role',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -453,7 +440,7 @@ class LoginScreenState extends State<LoginScreen> {
                 title: Text(_getRoleDisplayName(role)),
                 subtitle: Text('Akses sebagai ${_getRoleDescription(role)}'),
                 trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () => _selectRole(role),
+                onTap: _isLoading ? null : () => _selectRole(role),
               ),
             );
           },
@@ -527,10 +514,66 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  String _getFriendlyErrorMessage(dynamic error) {
+    if (kDebugMode) {
+      print('🔍 Processing error for friendly message: $error');
+    }
+
+    final errorStr = error.toString().toLowerCase();
+
+    // Specific user-requested scenarios
+    if (errorStr.contains('tidak terdaftar pada sekolah') ||
+        errorStr.contains('no schools assigned') ||
+        errorStr.contains('no accessible schools')) {
+      return 'Akun Anda belum terdaftar pada sekolah manapun, hubungi admin sekolah anda';
+    }
+
+    if (errorStr.contains('credential') ||
+        errorStr.contains('wrong password') ||
+        errorStr.contains('email atau password salah') ||
+        errorStr.contains('401')) {
+      return 'Email atau password salah';
+    }
+
+    if (errorStr.contains('expired') || errorStr.contains('token')) {
+      return 'Sesi telah berakhir. Silakan login kembali.';
+    }
+
+    if (errorStr.contains('socketexception') ||
+        errorStr.contains('failed host lookup') ||
+        errorStr.contains('connection failed')) {
+      return 'Gagal terhubung ke server, silakan cek koneksi internet Anda.';
+    }
+
+    if (errorStr.contains('peoples api') ||
+        errorStr.contains('permission_denied') ||
+        errorStr.contains('403')) {
+      return 'Akses ditolak. Mohon hubungi admin sekolah anda.';
+    }
+
+    // Default for backend code errors or unknown issues
+    if (errorStr.contains('exception') ||
+        errorStr.contains('internal server error') ||
+        errorStr.contains('500') ||
+        errorStr.contains(
+          'type \'_internallinkedhashmap<string, dynamic>\' is not a subtype of type \'iterable<dynamic>\'',
+        )) {
+      return 'Login error, hubungi admin';
+    }
+
+    // General fallback
+    return 'Login error, hubungi admin';
+  }
+
   Widget _buildSchoolSelection() {
     return Column(
       children: [
-        SizedBox(height: 20),
+        if (_isLoading)
+          const LinearProgressIndicator(
+            backgroundColor: Colors.transparent,
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D47A1)),
+          ),
+        const SizedBox(height: 20),
         Text(
           'Pilih Sekolah',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -555,7 +598,9 @@ class LoginScreenState extends State<LoginScreen> {
                 title: Text(sekolah['school_name'] ?? 'Sekolah Tanpa Nama'),
                 subtitle: Text(sekolah['address'] ?? ''),
                 trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () => _selectSchool(sekolah['school_id']),
+                onTap: _isLoading
+                    ? null
+                    : () => _selectSchool(sekolah['school_id']),
               ),
             );
           },
@@ -633,35 +678,50 @@ class LoginScreenState extends State<LoginScreen> {
         SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
-          child: _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : ElevatedButton(
-                  onPressed: _serverConnected ? login : null,
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 15),
-                    backgroundColor: Color(0xFF0D47A1),
-                  ),
-                  child: Text('LOGIN', style: TextStyle(color: Colors.white)),
-                ),
+          child: ElevatedButton(
+            onPressed: (_serverConnected && !_isLoading) ? login : null,
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 15),
+              backgroundColor: const Color(0xFF0D47A1),
+              disabledBackgroundColor: const Color(0xFF0D47A1).withOpacity(0.6),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text('LOGIN', style: TextStyle(color: Colors.white)),
+          ),
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         SizedBox(
           width: double.infinity,
-          child: _isLoading
-              ? SizedBox()
-              : OutlinedButton.icon(
-                  onPressed: _serverConnected ? _handleGoogleSignIn : null,
-                  icon: Image.asset(
-                    'assets/icon/google_logo.png',
-                    height: 24,
-                    errorBuilder: (c, o, s) => Icon(Icons.login),
-                  ),
-                  label: Text('Masuk dengan Google'),
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 15),
-                    side: BorderSide(color: Color(0xFF0D47A1)),
-                  ),
-                ),
+          child: OutlinedButton.icon(
+            onPressed: (_serverConnected && !_isLoading)
+                ? _handleGoogleSignIn
+                : null,
+            icon: Image.asset(
+              'assets/icon/google_logo.png',
+              height: 24,
+              errorBuilder: (c, o, s) => const Icon(Icons.login),
+            ),
+            label: Text(
+              _isLoading ? 'Mohon Tunggu...' : 'Masuk dengan Google',
+              style: TextStyle(
+                color: _isLoading ? Colors.grey : const Color(0xFF0D47A1),
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              side: BorderSide(
+                color: _isLoading ? Colors.grey : const Color(0xFF0D47A1),
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -733,8 +793,8 @@ class LoginScreenState extends State<LoginScreen> {
     // 2. School Selection
     if (responseData['pilih_sekolah'] == true) {
       if (responseData['sekolah_list'] == null ||
-          responseData['sekolah_list'].isEmpty) {
-        throw Exception('Daftar sekolah tidak tersedia');
+          (responseData['sekolah_list'] as List).isEmpty) {
+        throw Exception('Akun Anda belum terdaftar pada sekolah manapun');
       }
 
       // Special handling for Google Login: Save token immediately if present
@@ -775,8 +835,8 @@ class LoginScreenState extends State<LoginScreen> {
       }
 
       if (responseData['role_list'] == null ||
-          responseData['role_list'].isEmpty) {
-        throw Exception('Daftar role tidak tersedia');
+          (responseData['role_list'] as List).isEmpty) {
+        throw Exception('Daftar role tidak tersedia untuk akun Anda');
       }
 
       if (responseData['user'] == null) {
