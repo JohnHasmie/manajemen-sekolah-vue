@@ -23,35 +23,35 @@ class ApiService {
   static late final String baseUrl;
 
   static Future<void> init() async {
-    final envBaseUrl = dotenv.env['API_BASE_URL'];
+    // final envBaseUrl = dotenv.env['API_BASE_URL'];
 
-    if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
-      baseUrl = envBaseUrl;
-      if (kDebugMode) {
-        print('📡 API Base URL from .env: $baseUrl');
-      }
-      return;
-    }
+    // if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
+    //   baseUrl = envBaseUrl;
+    //   if (kDebugMode) {
+    //     print('📡 API Base URL from .env: $baseUrl');
+    //   }
+    //   return;
+    // }
 
     // Fallback if .env is missing or API_BASE_URL is empty
-    // if (kIsWeb) {
-    //   // web pakai localhost
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // } else if (Platform.isAndroid) {
-    //   // pakai IP LAN server
-    //   // PENTING: Ganti IP ini jika Mac Anda pindah jaringan
-    //   // Cek IP Mac dengan: ifconfig | grep "inet " | grep -v 127.0.0.1
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    //   if (kDebugMode) {
-    //     print('📡 API Base URL (Android): $baseUrl');
-    //     print('💡 Pastikan Android dan Mac di jaringan Wi-Fi yang sama!');
-    //   }
-    // } else {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    //   if (kDebugMode) {
-    //     print('📡 API Base URL (iOS/Other): $baseUrl');
-    //   }
-    // }
+    if (kIsWeb) {
+      // web pakai localhost
+      baseUrl = 'http://127.0.0.1:8000/api';
+    } else if (Platform.isAndroid) {
+      // pakai IP LAN server
+      // PENTING: Ganti IP ini jika Mac Anda pindah jaringan
+      // Cek IP Mac dengan: ifconfig | grep "inet " | grep -v 127.0.0.1
+      baseUrl = 'http://127.0.0.1:8000/api';
+      if (kDebugMode) {
+        print('📡 API Base URL (Android): $baseUrl');
+        print('💡 Pastikan Android dan Mac di jaringan Wi-Fi yang sama!');
+      }
+    } else {
+      baseUrl = 'http://127.0.0.1:8000/api';
+      if (kDebugMode) {
+        print('📡 API Base URL (iOS/Other): $baseUrl');
+      }
+    }
   }
 
   Future<dynamic> get(String endpoint) async {
@@ -1310,6 +1310,43 @@ class ApiService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error input pembayaran manual: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // Generate Bills for a specific Payment Type
+  static Future<dynamic> generateBills({String? paymentTypeId}) async {
+    try {
+      final Map<String, dynamic> body = {};
+      if (paymentTypeId != null) {
+        body['payment_type_id'] = paymentTypeId;
+      }
+      final apiService = ApiService();
+      return await apiService.post('/generate-bill', body);
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error generating bills: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // Delete Bills for a specific Payment Type
+  static Future<dynamic> deleteBillsByType(
+    String paymentTypeId, {
+    String? month,
+  }) async {
+    try {
+      final apiService = ApiService();
+      String url = '/bills/type/$paymentTypeId';
+      if (month != null) {
+        url += '?month=$month';
+      }
+      return await apiService.delete(url);
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error deleting bills by type: $e');
       }
       rethrow;
     }

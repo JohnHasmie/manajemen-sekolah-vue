@@ -485,16 +485,20 @@ class FinanceScreenState extends State<FinanceScreen>
         _loadKelasData(),
       ]);
 
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
 
       _animationController.forward();
     } catch (error) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Failed to load financial data';
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed to load financial data';
+        });
+      }
     }
   }
 
@@ -515,15 +519,17 @@ class FinanceScreenState extends State<FinanceScreen>
       }
 
       final kelasResponse = await _apiService.get(url);
-      setState(() {
-        if (kelasResponse is Map && kelasResponse.containsKey('data')) {
-          _kelasList = kelasResponse['data'] is List
-              ? kelasResponse['data']
-              : [];
-        } else {
-          _kelasList = kelasResponse is List ? kelasResponse : [];
-        }
-      });
+      if (mounted) {
+        setState(() {
+          if (kelasResponse is Map && kelasResponse.containsKey('data')) {
+            _kelasList = kelasResponse['data'] is List
+                ? kelasResponse['data']
+                : [];
+          } else {
+            _kelasList = kelasResponse is List ? kelasResponse : [];
+          }
+        });
+      }
 
       // Load data siswa
       final siswaResponse = await _apiService.get('/students?limit=1000');
@@ -551,10 +557,12 @@ class FinanceScreenState extends State<FinanceScreen>
         }
       }
 
-      setState(() {
-        _siswaByKelas = siswaByKelas;
-        _siswaList = allSiswa;
-      });
+      if (mounted) {
+        setState(() {
+          _siswaByKelas = siswaByKelas;
+          _siswaList = allSiswa;
+        });
+      }
 
       // Load tagihan untuk setiap siswa
       await _loadTagihanForSiswa(allSiswa);
@@ -588,9 +596,11 @@ class FinanceScreenState extends State<FinanceScreen>
         }
       }
 
-      setState(() {
-        _tagihanBySiswa = tagihanBySiswa;
-      });
+      if (mounted) {
+        setState(() {
+          _tagihanBySiswa = tagihanBySiswa;
+        });
+      }
     } catch (error) {
       print('Error loading tagihan for siswa: $error');
     }
@@ -1344,22 +1354,26 @@ class FinanceScreenState extends State<FinanceScreen>
         final Map<String, dynamic> pagination =
             (res['pagination'] as Map?)?.cast<String, dynamic>() ?? {};
 
-        setState(() {
-          _tagihanList.addAll(pageData);
-          _paginationMeta = pagination;
-          _hasMoreData =
-              pagination['has_next_page'] ?? (pageData.length == _perPage);
-        });
+        if (mounted) {
+          setState(() {
+            _tagihanList.addAll(pageData);
+            _paginationMeta = pagination;
+            _hasMoreData =
+                pagination['has_next_page'] ?? (pageData.length == _perPage);
+          });
+        }
       } else if (res.containsKey('data')) {
         final List<dynamic> pageData = res['data'] ?? [];
         final Map<String, dynamic> pagination =
             (res['pagination'] as Map?)?.cast<String, dynamic>() ?? {};
-        setState(() {
-          _tagihanList.addAll(pageData);
-          _paginationMeta = pagination;
-          _hasMoreData =
-              pagination['has_next_page'] ?? (pageData.length == _perPage);
-        });
+        if (mounted) {
+          setState(() {
+            _tagihanList.addAll(pageData);
+            _paginationMeta = pagination;
+            _hasMoreData =
+                pagination['has_next_page'] ?? (pageData.length == _perPage);
+          });
+        }
       }
     } catch (error) {
       print('Error loading tagihan (paginated): $error');
@@ -1383,9 +1397,11 @@ class FinanceScreenState extends State<FinanceScreen>
   Future<void> _loadPembayaranPending() async {
     try {
       final response = await _apiService.get('/payments?status=pending');
-      setState(() {
-        _pembayaranPendingList = response is List ? response : [];
-      });
+      if (mounted) {
+        setState(() {
+          _pembayaranPendingList = response is List ? response : [];
+        });
+      }
     } catch (error) {
       print('Error loading pembayaran pending: $error');
     }
@@ -1394,12 +1410,63 @@ class FinanceScreenState extends State<FinanceScreen>
   Future<void> _loadDashboardData() async {
     try {
       final response = await _apiService.get('/finance/dashboard');
-      setState(() {
-        _dashboardData = (response as Map).cast<String, dynamic>();
-      });
+      if (mounted) {
+        final data = Map<String, dynamic>.from(response is Map ? response : {});
+
+        // Fallback: If generated_batches is empty, fetch more bills to calculate summary
+        final List<dynamic> batches = data['generated_batches'] ?? [];
+        if (batches.isEmpty) {
+          final res = await ApiService.getTagihanPaginated(limit: 500);
+          final List<dynamic>? billsData = res['data'] is List
+              ? res['data']
+              : (res is List ? res : null);
+
+          if (billsData != null) {
+            data['generated_batches'] = _calculateBatchesFromBills(billsData);
+          }
+        }
+
+        setState(() {
+          _dashboardData = data;
+        });
+      }
     } catch (error) {
       print('Error loading dashboard data: $error');
     }
+  }
+
+  List<dynamic> _calculateBatchesFromBills(List<dynamic> bills) {
+    final Map<String, Map<String, dynamic>> batches = {};
+
+    for (var t in bills) {
+      final type = t['payment_type'] ?? {};
+      final typeId = (t['payment_type_id'] ?? type['id'])?.toString();
+      final dueDateStr = t['due_date']?.toString() ?? '';
+
+      if (typeId == null || dueDateStr.isEmpty) continue;
+
+      // Extract YYYY-MM
+      final month = dueDateStr.length >= 7
+          ? dueDateStr.substring(0, 7)
+          : 'Unknown';
+      final key = '${typeId}_$month';
+
+      if (!batches.containsKey(key)) {
+        batches[key] = {
+          'payment_type_id': typeId,
+          'name': type['name'] ?? 'No Name',
+          'amount': type['amount'] ?? t['amount'] ?? 0,
+          'month': month,
+          'count': 0,
+        };
+      }
+      batches[key]!['count']++;
+    }
+
+    final result = batches.values.toList();
+    // Sort by month desc
+    result.sort((a, b) => (b['month'] ?? '').compareTo(a['month'] ?? ''));
+    return result;
   }
 
   void _showAddEditJenisPembayaran({Map<String, dynamic>? jenisPembayaran}) {
@@ -1879,6 +1946,60 @@ class FinanceScreenState extends State<FinanceScreen>
     }
   }
 
+  Future<void> _confirmGenerateBills(
+    Map<String, dynamic> jenisPembayaran,
+  ) async {
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        title: 'Generate Tagihan',
+        content:
+            'Apakah Anda yakin ingin membuat tagihan untuk "${jenisPembayaran['name']}"? Tagihan akan dibuat untuk semua siswa yang sesuai tujuan pembayaran.',
+        confirmText: 'Generate',
+        confirmColor: Colors.blue,
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        if (mounted) {
+          setState(() => _isLoading = true);
+        }
+
+        final response = await ApiService.generateBills(
+          paymentTypeId: jenisPembayaran['id'].toString(),
+        );
+
+        if (mounted) {
+          String message = 'Tagihan berhasil dibuat';
+          if (response != null && response['message'] != null) {
+            message = response['message'];
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.green.shade400,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          _loadData();
+        }
+      } catch (error) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal membuat tagihan: $error'),
+              backgroundColor: Colors.red.shade400,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   void _showVerifikasiDialog(Map<String, dynamic> pembayaran) {
     showDialog(
       context: context,
@@ -2301,7 +2422,7 @@ class FinanceScreenState extends State<FinanceScreen>
                                 ),
                               ),
                               child: Text(
-                                item['periode'] ?? '-',
+                                _getTranslatedPeriode(item['periode']),
                                 style: TextStyle(
                                   color: _getPrimaryColor(),
                                   fontSize: 10,
@@ -2402,6 +2523,13 @@ class FinanceScreenState extends State<FinanceScreen>
                             Row(
                               children: [
                                 _buildActionButton(
+                                  icon: Icons.autorenew,
+                                  label: 'Generate',
+                                  color: Colors.blue,
+                                  onPressed: () => _confirmGenerateBills(item),
+                                ),
+                                SizedBox(width: 8),
+                                _buildActionButton(
                                   icon: Icons.edit,
                                   label: 'Edit',
                                   color: _getPrimaryColor(),
@@ -2466,45 +2594,7 @@ class FinanceScreenState extends State<FinanceScreen>
       margin: EdgeInsets.all(16),
       child: Column(
         children: [
-          // Statistik Utama
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: _getCardGradient(),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem(
-                  icon: Icons.attach_money,
-                  value: _formatCurrency(_dashboardData['total_payment_month']),
-                  label: languageProvider.getTranslatedText(
-                    AppLocalizations.monthlyIncome,
-                  ),
-                  color: Colors.white,
-                ),
-                _buildStatItem(
-                  icon: Icons.pending_actions,
-                  value: '${_pembayaranPendingList.length}',
-                  label: languageProvider.getTranslatedText(
-                    AppLocalizations.pendingVerification,
-                  ),
-                  color: Colors.white,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 12),
-
-          // Statistik Secondary
+          // Statistik Secondary (Keeping these as they weren't in the "drawn part")
           Row(
             children: [
               Expanded(
@@ -2520,7 +2610,7 @@ class FinanceScreenState extends State<FinanceScreen>
                       Icon(Icons.receipt, color: Colors.orange, size: 20),
                       SizedBox(height: 4),
                       Text(
-                        '${_tagihanList.where((t) => t['status'] == 'unpaid').length}',
+                        '${_dashboardData['tagihan_belum_dibayar'] ?? 0}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -2551,7 +2641,7 @@ class FinanceScreenState extends State<FinanceScreen>
                       Icon(Icons.verified, color: Colors.green, size: 20),
                       SizedBox(height: 4),
                       Text(
-                        '${_tagihanList.where((t) => t['status'] == 'verified').length}',
+                        '${_dashboardData['tagihan_terverifikasi'] ?? 0}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -2575,40 +2665,191 @@ class FinanceScreenState extends State<FinanceScreen>
     );
   }
 
-  Widget _buildStatItem({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
+  Widget _buildGeneratedPaymentTypesSection() {
+    List<dynamic> generatedBatches = _dashboardData['generated_batches'] ?? [];
+
+    // Additional Fallback: If still empty but we have some tagihan, use them
+    if (generatedBatches.isEmpty && _tagihanList.isNotEmpty) {
+      generatedBatches = _calculateBatchesFromBills(_tagihanList);
+    }
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'Tagihan Digenerate',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
-          child: Icon(icon, color: color, size: 20),
         ),
-        SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: color,
+        if (generatedBatches.isEmpty)
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(
+              child: Text(
+                'Belum ada tagihan yang digenerate',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: generatedBatches.length,
+            itemBuilder: (context, index) {
+              return _buildGeneratedPaymentBatchItem(generatedBatches[index]);
+            },
           ),
-          textAlign: TextAlign.center,
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
-          textAlign: TextAlign.center,
-        ),
       ],
     );
+  }
+
+  Widget _buildGeneratedPaymentBatchItem(Map<String, dynamic> item) {
+    final name = item['name'] ?? 'No Name';
+    final monthStr = item['month'] ?? '';
+    final formattedMonth = _formatMonth(monthStr);
+    final amount = _formatCurrency(item['amount']);
+    final count = item['count'] ?? 0;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.all(16),
+        leading: Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: _getPrimaryColor().withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.receipt_long, color: _getPrimaryColor()),
+        ),
+        title: Text(
+          '$name - $formattedMonth',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 4),
+            Text(amount, style: TextStyle(color: Colors.grey.shade700)),
+            SizedBox(height: 2),
+            Text(
+              '$count Tagihan Dibuat',
+              style: TextStyle(
+                color: Colors.blue,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        trailing: IconButton(
+          icon: Icon(Icons.delete_outline, color: Colors.red),
+          onPressed: () => _deleteGeneratedBills(item),
+        ),
+        onTap: () {
+          // Switch to Tagihan tab and show bills for this type and month?
+          // Future improvement.
+        },
+      ),
+    );
+  }
+
+  String _formatMonth(String? monthStr) {
+    if (monthStr == null || monthStr.isEmpty) return '';
+    try {
+      final parts = monthStr.split('-');
+      if (parts.length != 2) return monthStr;
+
+      final year = parts[0];
+      final month = int.tryParse(parts[1]) ?? 1;
+
+      const monthNames = [
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+
+      return '${monthNames[month - 1]} $year';
+    } catch (e) {
+      return monthStr;
+    }
+  }
+
+  Future<void> _deleteGeneratedBills(Map<String, dynamic> item) async {
+    final name = item['name'] ?? 'Tagihan';
+    final monthStr = item['month'] ?? '';
+    final formattedMonth = _formatMonth(monthStr);
+
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        title: 'Hapus Tagihan',
+        content:
+            'Apakah Anda yakin ingin menghapus SEMUA tagihan untuk "$name" periode $formattedMonth? Ini tidak akan menghapus Jenis Pembayarannya.',
+        confirmText: 'Hapus Tagihan',
+        confirmColor: Colors.red,
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        setState(() => _isLoading = true);
+        await ApiService.deleteBillsByType(
+          item['payment_type_id'].toString(),
+          month: monthStr,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Tagihan "$name" periode $formattedMonth berhasil dihapus',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadData();
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal menghapus tagihan: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Color _getPrimaryColor() {
@@ -2751,6 +2992,7 @@ class FinanceScreenState extends State<FinanceScreen>
                         children: [
                           if (_pembayaranPendingList.isNotEmpty)
                             _buildPendingSection(),
+                          _buildGeneratedPaymentTypesSection(),
                         ],
                       ),
                     ),
@@ -3554,6 +3796,37 @@ class FinanceScreenState extends State<FinanceScreen>
         ),
       ),
     );
+  }
+
+  String _getTranslatedPeriode(String? periode) {
+    if (periode == null) return '-';
+
+    final languageProvider = context.read<LanguageProvider>();
+    final lower = periode.toLowerCase();
+
+    if (lower == 'once' || lower == 'sekali') {
+      return languageProvider.getTranslatedText({
+        'en': 'One Time',
+        'id': 'Sekali',
+      });
+    } else if (lower == 'bulanan' || lower == 'monthly') {
+      return languageProvider.getTranslatedText({
+        'en': 'Monthly',
+        'id': 'Bulanan',
+      });
+    } else if (lower == 'tahunan' || lower == 'yearly') {
+      return languageProvider.getTranslatedText({
+        'en': 'Yearly',
+        'id': 'Tahunan',
+      });
+    } else if (lower == 'semester') {
+      return languageProvider.getTranslatedText({
+        'en': 'Semester',
+        'id': 'Semester',
+      });
+    }
+
+    return periode;
   }
 
   String _getImageUrl(String? filename) {
