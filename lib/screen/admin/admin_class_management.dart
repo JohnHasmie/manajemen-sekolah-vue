@@ -15,6 +15,7 @@ import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_class_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -550,16 +551,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString();
+        _errorMessage = ErrorUtils.getFriendlyMessage(e);
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
-              'en': 'Failed to load class data: $e',
-              'id': 'Gagal memuat data kelas: $e',
-            }),
+            '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: $_errorMessage',
           ),
           backgroundColor: Colors.red,
         ),
@@ -660,10 +658,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Failed to import file: $e',
-              'id': 'Gagal mengimpor file: $e',
-            }),
+            '${languageProvider.getTranslatedText({'en': 'Gagal mengimpor file', 'id': 'Gagal mengimpor file'})}: ${ErrorUtils.getFriendlyMessage(e)}',
           ),
           backgroundColor: Colors.red,
         ),
@@ -1189,10 +1184,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
-                  'en': 'Failed to delete class: $e',
-                  'id': 'Gagal menghapus kelas: $e',
-                }),
+                '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal menghapus kelas', 'id': 'Gagal menghapus kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
               ),
               backgroundColor: Colors.red,
             ),

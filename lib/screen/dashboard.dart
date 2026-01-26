@@ -32,6 +32,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -152,6 +153,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       await _loadSemesterLabel();
     } catch (e) {
       if (kDebugMode) print('❌ Error during initialization: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat data dashboard: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.orange.shade800,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -231,9 +242,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal pindah role: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal pindah role: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
       }
     }
   }
@@ -815,9 +831,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal pindah sekolah: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal pindah sekolah: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
       }
     }
   }

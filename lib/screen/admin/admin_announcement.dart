@@ -10,6 +10,7 @@ import 'package:manajemensekolah/services/api_announcement_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -635,17 +636,14 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
 
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString();
+        _errorMessage = ErrorUtils.getFriendlyMessage(e);
       });
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
-              'en': 'Failed to load announcement data: $e',
-              'id': 'Gagal memuat data pengumuman: $e',
-            }),
+            '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal memuat data pengumuman', 'id': 'Gagal memuat data pengumuman'})}: $_errorMessage',
           ),
           backgroundColor: Colors.red,
         ),

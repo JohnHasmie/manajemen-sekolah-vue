@@ -10,6 +10,7 @@ import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_class_activity_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -96,11 +97,13 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
 
       _animationController.forward();
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString();
-      });
-      _showErrorSnackBar('Failed to load teacher data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+        });
+        _showErrorSnackBar('Gagal memuat data guru: $_errorMessage');
+      }
     }
   }
 
@@ -167,11 +170,13 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
 
       _animationController.forward(from: 0);
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString();
-      });
-      _showErrorSnackBar('Failed to load subject data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+        });
+        _showErrorSnackBar('Gagal memuat data mata pelajaran: $_errorMessage');
+      }
     }
   }
 
@@ -207,11 +212,13 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
 
       _animationController.forward(from: 0);
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString();
-      });
-      _showErrorSnackBar('Failed to load activity data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+        });
+        _showErrorSnackBar('Gagal memuat data kegiatan: $_errorMessage');
+      }
     }
   }
 

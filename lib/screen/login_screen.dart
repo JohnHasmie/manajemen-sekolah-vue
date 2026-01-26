@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -65,15 +66,18 @@ class LoginScreenState extends State<LoginScreen> {
         _serverConnected = true;
       });
     } catch (e) {
-      setState(() {
-        _serverConnected = false;
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Server tidak terhubung. Pastikan backend berjalan.'),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _serverConnected = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal terhubung ke server: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+          ),
+        );
+      }
     }
   }
 
