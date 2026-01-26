@@ -20,6 +20,7 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 class TeachingScheduleManagementScreen extends StatefulWidget {
@@ -602,7 +603,15 @@ class TeachingScheduleManagementScreenState
       context,
       listen: false,
     );
-    final days = _hariList
+    // Filter days based on selection
+    var filteredHariList = _hariList;
+    if (_selectedHariId != null) {
+      filteredHariList = _hariList
+          .where((d) => d['id'].toString() == _selectedHariId)
+          .toList();
+    }
+
+    final days = filteredHariList
         .map(
           (d) => _translateDay(
             d['name'] ?? d['nama'] ?? '',
@@ -611,58 +620,61 @@ class TeachingScheduleManagementScreenState
         )
         .where((d) => d.isNotEmpty)
         .toSet()
-        .toList(); // Dedup and clean
+        .toList();
+
+    // Filter classes based on selection
+    var filteredClassList = _classList;
+    if (_selectedClassId != null) {
+      filteredClassList = _classList
+          .where((c) => c['id'].toString() == _selectedClassId)
+          .toList();
+    }
 
     // Ensure we have time slots. If empty, generate them.
     List<String> timeSlots = _generateTimeSlots();
+    if (_selectedJamPelajaran != null) {
+      timeSlots = _jamPelajaranList
+          .where((jp) {
+            final h = (jp['hour_number'] ?? jp['jam_ke'])?.toString();
+            return h == _selectedJamPelajaran;
+          })
+          .map(
+            (jam) =>
+                '${jam['start_time'] ?? jam['jam_mulai'] ?? ''}-${jam['end_time'] ?? jam['jam_selesai'] ?? ''}',
+          )
+          .toList();
+    }
+
     if (timeSlots.isEmpty) {
-      // Fallback or handle empty
       timeSlots = [];
     }
 
     _timetableDataSource = TimetableDataSource(
       timeSlots: timeSlots,
       days: days,
-      classList: _classList,
+      classList: filteredClassList,
       gridData: _gridData,
       primaryColor: _getPrimaryColor(),
+      onScheduleTap: _showScheduleDetail,
     );
   }
 
   List<String> _generateTimeSlots() {
-    return _jamPelajaranList
-        .map(
-          (jam) =>
-              '${jam['start_time'] ?? jam['jam_mulai'] ?? ''}-${jam['end_time'] ?? jam['jam_selesai'] ?? ''}',
-        )
-        .toList();
+    return _jamPelajaranList.map((jam) {
+      String start = (jam['start_time'] ?? jam['jam_mulai'] ?? '').toString();
+      String end = (jam['end_time'] ?? jam['jam_selesai'] ?? '').toString();
+
+      // Format to HH:mm if it contains seconds
+      if (start.length > 5) start = start.substring(0, 5);
+      if (end.length > 5) end = end.substring(0, 5);
+
+      return '$start-$end';
+    }).toList();
   }
 
   // Method baru untuk menghasilkan data timetable dalam format yang diinginkan
   List<ScheduleGridData> _generateTimetableData() {
     final List<ScheduleGridData> timetableData = [];
-
-    // Group schedules by day and class
-    final Map<String, Map<String, Map<String, dynamic>>> dayClassScheduleMap =
-        {};
-
-    // Initialize the structure
-    for (var day in _hariList) {
-      final dayName = day['name'] ?? day['nama'] ?? '';
-      dayClassScheduleMap[dayName] = {};
-
-      for (var classItem in _classList) {
-        final className = classItem['name'] ?? classItem['nama'] ?? '';
-        dayClassScheduleMap[dayName]![className] = {};
-
-        // Initialize all time slots as empty
-        for (var jam in _jamPelajaranList) {
-          final timeSlot =
-              '${jam['start_time'] ?? jam['jam_mulai'] ?? ''}-${jam['end_time'] ?? jam['jam_selesai'] ?? ''}';
-          dayClassScheduleMap[dayName]![className]![timeSlot] = null;
-        }
-      }
-    }
 
     // Create lookup maps for IDs
     final Map<String, String> dayIdToName = {};
@@ -679,13 +691,13 @@ class TeachingScheduleManagementScreenState
       if (id.isNotEmpty) classIdToName[id] = name;
     }
 
-    print(
-      'DEBUG: _generateTimetableData _hariList length: ${_hariList.length}',
+    // Convert to grid data format
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
     );
-    print('DEBUG: _generateTimetableData dayIdToName: $dayIdToName');
 
-    // Fill the structure with actual schedules
-    print('DEBUG: Total filtered schedules: ${_getFilteredSchedules().length}');
+    // Instead of exhaustive looping with placeholders, only add found schedules
     for (var schedule in _getFilteredSchedules()) {
       final daysIds = [];
       if (schedule['days_ids'] != null) {
@@ -693,7 +705,6 @@ class TeachingScheduleManagementScreenState
           daysIds.addAll(schedule['days_ids']);
         } else if (schedule['days_ids'] is String) {
           try {
-            // Try parse if string JSON
             final parsed = (schedule['days_ids'] as String)
                 .replaceAll('[', '')
                 .replaceAll(']', '')
@@ -702,7 +713,6 @@ class TeachingScheduleManagementScreenState
           } catch (e) {}
         }
       }
-      // Fallback
       if (daysIds.isEmpty) {
         if (schedule['day_id'] != null)
           daysIds.add(schedule['day_id']);
@@ -712,74 +722,44 @@ class TeachingScheduleManagementScreenState
 
       for (var rawDayId in daysIds) {
         final dayId = rawDayId.toString();
-
         final classId =
             schedule['kelas_id']?.toString() ??
             schedule['class_id']?.toString() ??
             '';
 
         final dayName = dayIdToName[dayId] ?? '';
+        final translatedDayName = _translateDay(
+          dayName,
+          languageProvider.currentLanguage,
+        );
         final className =
             classIdToName[classId] ?? schedule['kelas_nama'] ?? '';
 
         final timeSlot =
             '${schedule['jam_mulai'] ?? schedule['start_time'] ?? ''}-${schedule['jam_selesai'] ?? schedule['end_time'] ?? ''}';
 
-        if (dayClassScheduleMap.containsKey(dayName) &&
-            dayClassScheduleMap[dayName]!.containsKey(className) &&
-            dayClassScheduleMap[dayName]![className]!.containsKey(timeSlot)) {
-          dayClassScheduleMap[dayName]![className]![timeSlot] = schedule;
-        } else {
-          // Debug log if needed
-        }
-      }
-    }
+        // Format to HH:mm for lookup consistency
+        List<String> parts = timeSlot.split('-');
+        String start = parts[0];
+        String end = parts.length > 1 ? parts[1] : '';
+        if (start.length > 5) start = start.substring(0, 5);
+        if (end.length > 5) end = end.substring(0, 5);
+        final formattedTimeSlot = '$start-$end';
 
-    // Convert to grid data format
-    // Debug: Print first 5 keys in map
-    print(
-      'DEBUG: dayClassScheduleMap keys (first 5): ${dayClassScheduleMap.keys.take(5).toList()}',
-    );
-
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
-
-    for (var jam in _jamPelajaranList) {
-      final timeSlot =
-          '${jam['start_time'] ?? jam['jam_mulai'] ?? ''}-${jam['end_time'] ?? jam['jam_selesai'] ?? ''}';
-
-      for (var day in _hariList) {
-        final dayName = day['name'] ?? day['nama'] ?? '';
-        final translatedDayName = _translateDay(
-          dayName,
-          languageProvider.currentLanguage,
-        ); // Translate here
-
-        for (var classItem in _classList) {
-          final className = classItem['name'] ?? classItem['nama'] ?? '';
-
-          final scheduleInfo =
-              dayClassScheduleMap[dayName]?[className]?[timeSlot];
-
-          timetableData.add(
-            ScheduleGridData(
-              id: '${timeSlot}_${translatedDayName}_$className',
-              waktu: timeSlot,
-              hari: translatedDayName, // Use translated name
-              kelas: className,
-              mataPelajaran:
-                  scheduleInfo?['subject_name'] ??
-                  scheduleInfo?['mata_pelajaran_nama'] ??
-                  '-',
-              guru:
-                  scheduleInfo?['teacher_name'] ??
-                  scheduleInfo?['guru_nama'] ??
-                  '',
-            ),
-          );
-        }
+        timetableData.add(
+          ScheduleGridData(
+            id: schedule['id']?.toString() ?? '',
+            waktu: formattedTimeSlot,
+            hari: translatedDayName,
+            kelas: className,
+            mataPelajaran:
+                schedule['subject_name'] ??
+                schedule['mata_pelajaran_nama'] ??
+                '-',
+            guru: schedule['teacher_name'] ?? schedule['guru_nama'] ?? '',
+            originalData: schedule,
+          ),
+        );
       }
     }
 
@@ -1567,6 +1547,39 @@ class TeachingScheduleManagementScreenState
           className.contains(searchTerm) ||
           dayNames.contains(searchTerm);
 
+      // Teacher filter
+      bool matchesGuru = true;
+      if (_selectedGuruId != null) {
+        final guruId =
+            schedule['teacher_id']?.toString() ??
+            schedule['guru_id']?.toString();
+        matchesGuru = guruId == _selectedGuruId;
+      }
+
+      // Class filter
+      bool matchesKelas = true;
+      if (_selectedClassId != null) {
+        final kelasId =
+            schedule['class_id']?.toString() ??
+            schedule['kelas_id']?.toString();
+        matchesKelas = kelasId == _selectedClassId;
+      }
+
+      // Day filter
+      bool matchesHari = true;
+      if (_selectedHariId != null) {
+        final daysIds = [];
+        if (schedule['days_ids'] is List) {
+          daysIds.addAll(schedule['days_ids']);
+        } else if (schedule['day_id'] != null) {
+          daysIds.add(schedule['day_id']);
+        }
+
+        matchesHari = daysIds.any(
+          (id) => id.toString() == _selectedHariId.toString(),
+        );
+      }
+
       bool matchesJamPelajaran = true;
       if (_selectedJamPelajaran != null) {
         final lessonHour = schedule['lesson_hour'] as Map<String, dynamic>?;
@@ -1578,7 +1591,11 @@ class TeachingScheduleManagementScreenState
 
       // Note: Semester and academic year filters are handled by reloading data from server
       // For ListView, backend handles filtering. For TableView/local data, we filter here.
-      return matchesSearch && matchesJamPelajaran;
+      return matchesSearch &&
+          matchesGuru &&
+          matchesKelas &&
+          matchesHari &&
+          matchesJamPelajaran;
     }).toList();
   }
 
@@ -1602,6 +1619,11 @@ class TeachingScheduleManagementScreenState
         .toList();
 
     final classNames = _classList
+        .where(
+          (cls) =>
+              _selectedClassId == null ||
+              cls['id'].toString() == _selectedClassId,
+        )
         .map((cls) => cls['name'] ?? cls['nama'] ?? '')
         .toList();
 
@@ -1644,93 +1666,117 @@ class TeachingScheduleManagementScreenState
           child: Card(
             margin: EdgeInsets.all(8),
             elevation: 2,
-            child: SfDataGrid(
-              source: _timetableDataSource!,
-              frozenColumnsCount: 1,
-              headerRowHeight: 80,
-              // Calculate dynamic row height:
-              // Base padding (4 top + 4 bottom) +
-              // (Item count * (Item height ~35 + Margin 2))
-              rowHeight: (classNames.length * 40.0).clamp(
-                65.0,
-                double.infinity,
+            child: SfDataGridTheme(
+              data: SfDataGridThemeData(
+                gridLineColor: Colors.black,
+                gridLineStrokeWidth: 1.0,
               ),
-              columns: [
-                GridColumn(
-                  columnName: 'waktu',
-                  width: 80,
-                  label: Container(
-                    color: _getPrimaryColor(),
-                    padding: EdgeInsets.all(4),
-                    alignment: Alignment.center,
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Time',
-                        'id': 'Waktu',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
-                ...days.map((day) {
-                  return GridColumn(
-                    columnName: day,
-                    width: 150,
+              child: SfDataGrid(
+                source: _timetableDataSource!,
+                frozenColumnsCount: 1,
+                columnWidthMode: ColumnWidthMode.none,
+                gridLinesVisibility: GridLinesVisibility.both,
+                headerGridLinesVisibility: GridLinesVisibility.both,
+                headerRowHeight: 80,
+                onQueryRowHeight: (RowHeightDetails details) {
+                  if (details.rowIndex == 0) return 80.0; // Header row height
+
+                  final String timeSlot =
+                      _timetableDataSource!.timeSlots[details.rowIndex - 1];
+                  final days = _timetableDataSource!.days;
+
+                  int maxSchedules = 0;
+                  for (var day in days) {
+                    final count = _gridData
+                        .where((d) => d.waktu == timeSlot && d.hari == day)
+                        .length;
+                    if (count > maxSchedules) maxSchedules = count;
+                  }
+
+                  // If empty in all days for this time slot, use a small min height
+                  if (maxSchedules == 0) return 40.0;
+
+                  // Adjust height based on number of schedules:
+                  // Base 10px + (number of schedules * ~32px each)
+                  return (maxSchedules * 32.0 + 10.0).clamp(40.0, 500.0);
+                },
+                columns: [
+                  GridColumn(
+                    columnName: 'waktu',
+                    width: 100,
                     label: Container(
                       color: _getPrimaryColor(),
                       padding: EdgeInsets.all(4),
                       alignment: Alignment.center,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            day,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Flexible(
-                            child: Wrap(
-                              spacing: 2,
-                              runSpacing: 1,
-                              alignment: WrapAlignment.center,
-                              children: classNames.map((className) {
-                                return Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 3,
-                                    vertical: 1,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                  child: Text(
-                                    className.toString().length > 3
-                                        ? className.toString().substring(0, 3)
-                                        : className.toString(),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Time',
+                          'id': 'Waktu',
+                        }),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                  );
-                }),
-              ],
+                  ),
+                  ...days.map((day) {
+                    return GridColumn(
+                      columnName: day,
+                      width: 150,
+                      label: Container(
+                        color: _getPrimaryColor(),
+                        padding: EdgeInsets.all(4),
+                        alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              day,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Flexible(
+                              child: Wrap(
+                                spacing: 2,
+                                runSpacing: 1,
+                                alignment: WrapAlignment.center,
+                                children: classNames.map((className) {
+                                  return Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 3,
+                                      vertical: 1,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                    child: Text(
+                                      className.toString().length > 3
+                                          ? className.toString().substring(0, 3)
+                                          : className.toString(),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
         ),
@@ -2813,6 +2859,7 @@ class ScheduleGridData {
   final String kelas;
   final String mataPelajaran;
   final String guru;
+  final Map<String, dynamic>? originalData;
 
   ScheduleGridData({
     required this.id,
@@ -2821,6 +2868,7 @@ class ScheduleGridData {
     required this.kelas,
     required this.mataPelajaran,
     required this.guru,
+    this.originalData,
   });
 }
 
@@ -2831,6 +2879,7 @@ class TimetableDataSource extends DataGridSource {
   final List<dynamic> classList;
   final List<ScheduleGridData> gridData;
   final Color primaryColor;
+  final Function(Map<String, dynamic>)? onScheduleTap;
 
   TimetableDataSource({
     required this.timeSlots,
@@ -2838,6 +2887,7 @@ class TimetableDataSource extends DataGridSource {
     required this.classList,
     required this.gridData,
     required this.primaryColor,
+    this.onScheduleTap,
   }) {
     _dataGridRows = timeSlots.map<DataGridRow>((timeSlot) {
       return DataGridRow(
@@ -2868,9 +2918,7 @@ class TimetableDataSource extends DataGridSource {
             alignment: Alignment.center,
             padding: EdgeInsets.all(4),
             child: Text(
-              timeSlot.length > 11
-                  ? '${timeSlot.substring(0, 11)}\n${timeSlot.substring(11)}'
-                  : timeSlot,
+              timeSlot,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
               textAlign: TextAlign.center,
             ),
@@ -2884,117 +2932,92 @@ class TimetableDataSource extends DataGridSource {
   }
 
   Widget _buildDayScheduleCell(String timeSlot, String day) {
-    final classes = classList
-        .map((cls) => cls['name'] ?? cls['nama'] ?? '')
+    final cellSchedules = gridData
+        .where((data) => data.waktu == timeSlot && data.hari == day)
         .toList();
+
+    if (cellSchedules.isEmpty) {
+      return Container();
+    }
 
     return Container(
       padding: EdgeInsets.all(2),
-      constraints: BoxConstraints(minHeight: 60),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: classes.map((className) {
-          final schedule = gridData.firstWhere(
-            (data) =>
-                data.waktu == timeSlot &&
-                data.hari == day &&
-                data.kelas == className.toString(),
-            orElse: () => ScheduleGridData(
-              id: '',
-              waktu: '',
-              hari: '',
-              kelas: '',
-              mataPelajaran: '-',
-              guru: '',
-            ),
-          );
-
-          return Container(
-            margin: EdgeInsets.only(bottom: 2),
-            padding: EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: schedule.mataPelajaran != '-'
-                  ? primaryColor.withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: schedule.mataPelajaran != '-'
-                    ? primaryColor.withOpacity(0.3)
-                    : Colors.grey.withOpacity(0.2),
-                width: 0.5,
+        children: cellSchedules.map((schedule) {
+          return GestureDetector(
+            onTap: () {
+              if (onScheduleTap != null && schedule.originalData != null) {
+                onScheduleTap!(schedule.originalData!);
+              }
+            },
+            child: Container(
+              margin: EdgeInsets.only(bottom: 2),
+              padding: EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: primaryColor.withOpacity(0.3),
+                  width: 0.5,
+                ),
               ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Nama kelas
-                Container(
-                  width: 30,
-                  padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: schedule.mataPelajaran != '-'
-                        ? primaryColor.withOpacity(0.2)
-                        : Colors.grey.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Text(
-                    className.toString(),
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      color: schedule.mataPelajaran != '-'
-                          ? primaryColor
-                          : Colors.grey,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nama kelas
+                  Container(
+                    width: 24,
+                    padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(3),
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    child: Text(
+                      schedule.kelas,
+                      style: TextStyle(
+                        fontSize: 7,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                SizedBox(width: 4),
-                // Info mapel dan guru
-                Expanded(
-                  child: schedule.mataPelajaran != '-'
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              schedule.mataPelajaran,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 9,
-                                color: Colors.grey[800],
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (schedule.guru.isNotEmpty) ...[
-                              SizedBox(height: 1),
-                              Text(
-                                schedule.guru,
-                                style: TextStyle(
-                                  fontSize: 7,
-                                  color: Colors.grey[600],
-                                  fontStyle: FontStyle.italic,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ],
-                        )
-                      : Center(
-                          child: Text(
-                            '-',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontStyle: FontStyle.italic,
-                              fontSize: 9,
-                            ),
+                  SizedBox(width: 3),
+                  // Info mapel dan guru
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          schedule.mataPelajaran,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 8,
+                            color: Colors.grey[800],
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                ),
-              ],
+                        if (schedule.guru.isNotEmpty) ...[
+                          Text(
+                            schedule.guru,
+                            style: TextStyle(
+                              fontSize: 7,
+                              color: Colors.grey[600],
+                              fontStyle: FontStyle.italic,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }).toList(),
