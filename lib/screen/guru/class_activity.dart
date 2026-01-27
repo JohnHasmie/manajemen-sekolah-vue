@@ -520,22 +520,46 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         } else {
           // Teacher Case: Resolve Teacher ID
           try {
-            final teacherData = await ApiTeacherService.getGuruByUserId(userId);
-            if (teacherData != null && teacherData['id'] != null) {
-              final teacherId = teacherData['id'].toString();
+            String? resolvedTeacherId;
+            Map<String, dynamic>? teacherData;
 
+            // 1. Check if userData itself is already a teacher record
+            // Teacher records usually have employee_number/nip and a user_id pointing to the user table
+            final looksLikeTeacher =
+                userData.containsKey('employee_number') ||
+                userData.containsKey('nip') ||
+                userData.containsKey('user_id');
+
+            if (looksLikeTeacher) {
               if (kDebugMode) {
-                print('Resolved Teacher ID: $teacherId');
+                print(
+                  'userData appears to be a teacher record. Using ID: $userId',
+                );
               }
+              resolvedTeacherId = userId;
+            } else {
+              // 2. Try to resolve via API if it looks like a generic user record
+              teacherData = await ApiTeacherService.getGuruByUserId(userId);
+              if (teacherData != null && teacherData['id'] != null) {
+                resolvedTeacherId = teacherData['id'].toString();
+                if (kDebugMode) {
+                  print('Resolved Teacher ID from API: $resolvedTeacherId');
+                }
+              }
+            }
 
+            if (resolvedTeacherId != null) {
               setState(() {
-                _teacherId = teacherId; // Update to Teacher ID for activities
+                _teacherId =
+                    resolvedTeacherId!; // Update to Teacher ID for activities
               });
 
               // 2. Load Classes using TEACHER ID
               await Future.wait([
-                _loadClasses(teacherId, isAdmin: false),
-                _loadSchedule(teacherId), // Load schedule for dialog filtering
+                _loadClasses(resolvedTeacherId, isAdmin: false),
+                _loadSchedule(
+                  resolvedTeacherId,
+                ), // Load schedule for dialog filtering
               ]);
 
               // If initial params provided, try to navigate deep
