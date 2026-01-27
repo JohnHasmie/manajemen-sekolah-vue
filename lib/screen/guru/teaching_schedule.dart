@@ -2033,10 +2033,26 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                 builder: (context) => PresencePage(
                   teacher: {'id': _teacherId, 'nama': _teacherNama},
                   initialDate: DateTime.now(),
-                  initialSubjectId: jadwal['mata_pelajaran_id']?.toString(),
-                  initialSubjectName: jadwal['mata_pelajaran_nama']?.toString(),
-                  initialclassId: jadwal['kelas_id']?.toString(),
-                  initialClassName: jadwal['kelas_nama']?.toString(),
+                  initialSubjectId:
+                      (jadwal['subject_id'] ??
+                              jadwal['mata_pelajaran_id'] ??
+                              jadwal['mata_pelajaran']?['id'])
+                          ?.toString(),
+                  initialSubjectName:
+                      (jadwal['subject_name'] ??
+                              jadwal['mata_pelajaran_nama'] ??
+                              jadwal['mata_pelajaran']?['name'])
+                          ?.toString(),
+                  initialclassId:
+                      (jadwal['class_id'] ??
+                              jadwal['kelas_id'] ??
+                              jadwal['class']?['id'])
+                          ?.toString(),
+                  initialClassName:
+                      (jadwal['class_name'] ??
+                              jadwal['kelas_nama'] ??
+                              jadwal['class']?['name'])
+                          ?.toString(),
                 ),
               ),
             );
@@ -2310,15 +2326,21 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                         'nama': _teacherNama,
                                       },
                                       initialSubjectId:
-                                          jadwal['mata_pelajaran_id']
+                                          (jadwal['subject_id'] ??
+                                                  jadwal['mata_pelajaran_id'])
                                               ?.toString(),
                                       initialSubjectName:
-                                          jadwal['mata_pelajaran_nama']
+                                          (jadwal['subject_name'] ??
+                                                  jadwal['mata_pelajaran_nama'])
                                               ?.toString(),
-                                      initialClassId: jadwal['kelas_id']
-                                          ?.toString(),
-                                      initialClassName: jadwal['kelas_nama']
-                                          ?.toString(),
+                                      initialClassId:
+                                          (jadwal['class_id'] ??
+                                                  jadwal['kelas_id'])
+                                              ?.toString(),
+                                      initialClassName:
+                                          (jadwal['class_name'] ??
+                                                  jadwal['kelas_nama'])
+                                              ?.toString(),
                                     ),
                                   ),
                                 );
@@ -2350,8 +2372,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                 final scheduleDay = _dayIdMap.entries
                                     .firstWhere(
                                       (entry) =>
-                                          entry.value ==
-                                          jadwal['hari_id']?.toString(),
+                                          entry.value.toString() ==
+                                          (jadwal['day_id'] ??
+                                                  jadwal['hari_id'])
+                                              ?.toString(),
                                       orElse: () => MapEntry('Senin', '1'),
                                     )
                                     .key;
@@ -2374,15 +2398,21 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                     builder: (context) => ClassActifityScreen(
                                       initialDate: scheduleDate,
                                       initialSubjectId:
-                                          jadwal['mata_pelajaran_id']
+                                          (jadwal['subject_id'] ??
+                                                  jadwal['mata_pelajaran_id'])
                                               ?.toString(),
                                       initialSubjectName:
-                                          jadwal['mata_pelajaran_nama']
+                                          (jadwal['subject_name'] ??
+                                                  jadwal['mata_pelajaran_nama'])
                                               ?.toString(),
-                                      initialClassId: jadwal['kelas_id']
-                                          ?.toString(),
-                                      initialClassName: jadwal['kelas_nama']
-                                          ?.toString(),
+                                      initialClassId:
+                                          (jadwal['class_id'] ??
+                                                  jadwal['kelas_id'])
+                                              ?.toString(),
+                                      initialClassName:
+                                          (jadwal['class_name'] ??
+                                                  jadwal['kelas_nama'])
+                                              ?.toString(),
                                       autoShowActivityDialog: true,
                                     ),
                                   ),

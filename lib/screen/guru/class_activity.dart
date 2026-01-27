@@ -566,7 +566,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               if (widget.initialClassId != null) {
                 _selectedClassId = widget.initialClassId;
                 _selectedClassName = widget.initialClassName;
-                _currentStep = 1; // Go to Subject List
+                _currentStep = 1; // Basic step
+
+                // Always load subjects for the class so the list is ready if we go back
+                await _loadSubjectsForClass();
 
                 if (widget.initialSubjectId != null) {
                   _selectedSubjectId = widget.initialSubjectId;
@@ -575,8 +578,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                       widget.initialSubjectName; // Assuming passed
                   _currentStep = 2; // Go to Activity List
                   await _loadActivities();
-                } else {
-                  await _loadSubjectsForClass();
                 }
               }
             } else {
