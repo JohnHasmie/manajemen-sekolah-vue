@@ -43,7 +43,7 @@ class ApiService {
       baseUrl = 'http://127.0.0.1:8000/api';
       if (kDebugMode) {
         print('📡 API Base URL (Android): $baseUrl');
-        print('💡 Pastikan Android dan Mac di jaringan Wi-Fi yang sama!');
+        print('💡 Pastikan Android dan Mac di  Wi-Fi yang sama!');
       }
     } else {
       baseUrl = 'http://127.0.0.1:8000/api';

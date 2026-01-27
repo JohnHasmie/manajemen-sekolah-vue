@@ -2748,10 +2748,12 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
       // Find Master Subject ID from the selected School Subject ID
       final subject = widget.subjectList.firstWhere(
-        (s) => s['id'] == subjectId,
-        orElse: () => null,
+        (s) => s['id']?.toString() == subjectId,
+        orElse: () => <String, dynamic>{},
       );
-      final masterSubjectId = subject?['subject_id']?.toString();
+      final masterSubjectId = subject.isEmpty
+          ? null
+          : subject['subject_id']?.toString();
 
       if (masterSubjectId == null) {
         if (kDebugMode) {
@@ -2888,10 +2890,11 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     // Get bab name if selected
     if (_selectedBabId != null && _babMateriList.isNotEmpty) {
       final bab = _babMateriList.firstWhere(
-        (item) => item['id'].toString() == _selectedBabId,
-        orElse: () => null,
+        (b) => b['id']?.toString() == _selectedBabId,
+        orElse: () => <String, dynamic>{},
       );
-      if (bab != null) {
+      if (bab.isNotEmpty) {
+        // Check if the map is not empty
         babName = _getBabName(bab);
       }
     }
@@ -2899,10 +2902,10 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     // Get sub bab name if selected
     if (_selectedSubBabId != null && _subBabMateriList.isNotEmpty) {
       final subBab = _subBabMateriList.firstWhere(
-        (item) => item['id'].toString() == _selectedSubBabId,
-        orElse: () => null,
+        (item) => item['id']?.toString() == _selectedSubBabId,
+        orElse: () => <String, dynamic>{},
       );
-      if (subBab != null) {
+      if (subBab.isNotEmpty) {
         subBabName = _getSubBabName(subBab);
       }
     }
@@ -3112,8 +3115,8 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           // Try to find full details for this sub chapter
           // 1. Check in loaded sub bab list
           var subBabData = _subBabMateriList.firstWhere(
-            (s) => s['id'].toString() == subId,
-            orElse: () => null,
+            (s) => s['id']?.toString() == subId,
+            orElse: () => <String, dynamic>{},
           );
 
           String? chapterIdForSub = _selectedBabId;
@@ -3135,7 +3138,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
             }
           }
 
-          if (subBabData != null || chapterIdForSub != null) {
+          if (subBabData.isNotEmpty || chapterIdForSub != null) {
             extraMaterials.add({
               'chapter_id':
                   chapterIdForSub, // Fallback to currently selected bab
@@ -3451,56 +3454,73 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
               ),
 
               // Mata Pelajaran
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText:
-                      '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})} *',
-                  prefixIcon: Icon(Icons.book),
-                  border: OutlineInputBorder(),
-                ),
-                initialValue: _selectedSubjectId,
-                isExpanded: true,
-                items: widget.subjectList.isEmpty
-                    ? null
-                    : widget.subjectList.map((subject) {
-                        return DropdownMenuItem<String>(
-                          value: subject['id'].toString(),
-                          child: Text(
-                            subject['name'] ?? subject['nama'] ?? 'Unknown',
-                          ),
-                        );
-                      }).toList(),
-                onChanged: widget.subjectList.isEmpty
-                    ? null
-                    : (value) {
-                        setState(() {
-                          _selectedSubjectId = value;
-                          _selectedClassId = null;
-                        });
-                        if (value != null) {
-                          widget.onSubjectSelected(value);
-                          _loadBabMateri(
-                            value,
-                          ); // Load bab materi for selected subject
-                        }
-                      },
-                validator: (value) => value == null
-                    ? languageProvider.getTranslatedText({
-                        'en': 'Required',
-                        'id': 'Wajib diisi',
-                      })
-                    : null,
-                hint: Text(
-                  widget.subjectList.isEmpty
-                      ? languageProvider.getTranslatedText({
-                          'en': 'No subjects available',
-                          'id': 'Tidak ada mata pelajaran',
-                        })
-                      : languageProvider.getTranslatedText({
-                          'en': 'Select Subject',
-                          'id': 'Pilih Mata Pelajaran',
-                        }),
-                ),
+              Builder(
+                builder: (context) {
+                  final Map<String, DropdownMenuItem<String>>
+                  uniqueSubjectItems = {};
+                  for (var subject in widget.subjectList) {
+                    final id = subject['id']?.toString();
+                    if (id != null && !uniqueSubjectItems.containsKey(id)) {
+                      uniqueSubjectItems[id] = DropdownMenuItem<String>(
+                        value: id,
+                        child: Text(
+                          subject['name'] ?? subject['nama'] ?? 'Unknown',
+                        ),
+                      );
+                    }
+                  }
+                  final List<DropdownMenuItem<String>> subjectItems =
+                      uniqueSubjectItems.values.toList();
+
+                  return DropdownButtonFormField<String>(
+                    key: ValueKey(
+                      'subject_${_selectedSubjectId}_${subjectItems.length}',
+                    ),
+                    decoration: InputDecoration(
+                      labelText:
+                          '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})} *',
+                      prefixIcon: Icon(Icons.book),
+                      border: OutlineInputBorder(),
+                    ),
+                    initialValue:
+                        (subjectItems.any(
+                          (item) => item.value == _selectedSubjectId,
+                        ))
+                        ? _selectedSubjectId
+                        : null,
+                    isExpanded: true,
+                    items: subjectItems.isEmpty ? null : subjectItems,
+                    onChanged: subjectItems.isEmpty
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _selectedSubjectId = value;
+                              _selectedClassId = null;
+                            });
+                            if (value != null) {
+                              widget.onSubjectSelected(value);
+                              _loadBabMateri(value);
+                            }
+                          },
+                    validator: (value) => value == null
+                        ? languageProvider.getTranslatedText({
+                            'en': 'Required',
+                            'id': 'Wajib diisi',
+                          })
+                        : null,
+                    hint: Text(
+                      subjectItems.isEmpty
+                          ? languageProvider.getTranslatedText({
+                              'en': 'No subjects available',
+                              'id': 'Tidak ada mata pelajaran',
+                            })
+                          : languageProvider.getTranslatedText({
+                              'en': 'Select Subject',
+                              'id': 'Pilih Mata Pelajaran',
+                            }),
+                    ),
+                  );
+                },
               ),
               if (widget.subjectList.isEmpty)
                 Padding(
@@ -3518,60 +3538,63 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
               SizedBox(height: 12),
 
               // Kelas
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText:
-                      '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})} *',
-                  prefixIcon: Icon(Icons.class_),
-                  border: OutlineInputBorder(),
-                ),
-                initialValue:
-                    (_selectedClassId != null &&
-                        _getUniqueClassItems().any(
-                          (item) => item.value == _selectedClassId,
-                        ))
-                    ? _selectedClassId
-                    : null,
-                isExpanded: true,
-                items: _selectedSubjectId == null
-                    ? null
-                    : _getUniqueClassItems(),
-                onChanged: _selectedSubjectId == null
-                    ? null
-                    : (value) {
-                        // if (kDebugMode) {
-                        //   print(
-                        //     'Class Dropdown onChanged: $value, target: ${widget.initialTarget}',
-                        //   );
-                        // }
-                        setState(() {
-                          _selectedClassId = value;
-                        });
+              Builder(
+                builder: (context) {
+                  final List<DropdownMenuItem<String>> classItems =
+                      _selectedSubjectId == null ? [] : _getUniqueClassItems();
 
-                        // Defer loading students to let the dropdown update complete
-                        if (widget.initialTarget == 'khusus') {
-                          Future.delayed(Duration(milliseconds: 100), () {
-                            if (mounted) _loadStudents();
-                          });
-                        }
-                      },
-                validator: (value) => value == null
-                    ? languageProvider.getTranslatedText({
-                        'en': 'Required',
-                        'id': 'Wajib diisi',
-                      })
-                    : null,
-                hint: Text(
-                  _selectedSubjectId == null
-                      ? languageProvider.getTranslatedText({
-                          'en': 'Select subject first',
-                          'id': 'Pilih mata pelajaran dulu',
-                        })
-                      : languageProvider.getTranslatedText({
-                          'en': 'Select Class',
-                          'id': 'Pilih Kelas',
-                        }),
-                ),
+                  return DropdownButtonFormField<String>(
+                    key: ValueKey(
+                      'class_${_selectedClassId}_${classItems.length}',
+                    ),
+                    decoration: InputDecoration(
+                      labelText:
+                          '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})} *',
+                      prefixIcon: Icon(Icons.class_),
+                      border: OutlineInputBorder(),
+                    ),
+                    initialValue:
+                        (_selectedClassId != null &&
+                            classItems.any(
+                              (item) => item.value == _selectedClassId,
+                            ))
+                        ? _selectedClassId
+                        : null,
+                    isExpanded: true,
+                    items: classItems.isEmpty ? null : classItems,
+                    onChanged: _selectedSubjectId == null
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _selectedClassId = value;
+                            });
+
+                            // Defer loading students to let the dropdown update complete
+                            if (widget.initialTarget == 'khusus') {
+                              Future.delayed(Duration(milliseconds: 100), () {
+                                if (mounted) _loadStudents();
+                              });
+                            }
+                          },
+                    validator: (value) => value == null
+                        ? languageProvider.getTranslatedText({
+                            'en': 'Required',
+                            'id': 'Wajib diisi',
+                          })
+                        : null,
+                    hint: Text(
+                      _selectedSubjectId == null
+                          ? languageProvider.getTranslatedText({
+                              'en': 'Select subject first',
+                              'id': 'Pilih mata pelajaran dulu',
+                            })
+                          : languageProvider.getTranslatedText({
+                              'en': 'Select Class',
+                              'id': 'Pilih Kelas',
+                            }),
+                    ),
+                  );
+                },
               ),
               if (_selectedSubjectId != null && _getUniqueClassItems().isEmpty)
                 Padding(
@@ -3628,57 +3651,66 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
               // Dropdown Bab Materi (if useMateriTitle = true)
               if (_useMateriTitle) ...[
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: languageProvider.getTranslatedText({
-                      'en': 'Chapter',
-                      'id': 'Bab Materi',
-                    }),
-                    prefixIcon: Icon(Icons.menu_book),
-                    border: OutlineInputBorder(),
-                  ),
-                  initialValue: _babMateriList.isEmpty
-                      ? null
-                      : (_babMateriList.any(
-                              (bab) => bab['id'].toString() == _selectedBabId,
-                            )
-                            ? _selectedBabId
-                            : null),
-                  isExpanded: true,
-                  items: _babMateriList.isEmpty
-                      ? null
-                      : _babMateriList.map((bab) {
-                          return DropdownMenuItem<String>(
-                            value: bab['id'].toString(),
-                            child: Text(_getBabName(bab)),
-                          );
-                        }).toList(),
-                  onChanged: _babMateriList.isEmpty
-                      ? null
-                      : (value) {
-                          setState(() {
-                            _selectedBabId = value;
-                            _selectedSubBabId = null;
-                          });
-                          if (value != null) {
-                            _loadSubBabMateri(value);
-                            _updateTitleFromMateri();
-                          }
-                        },
-                  hint: Text(
-                    languageProvider.getTranslatedText({
-                      'en': _isLoadingBab
-                          ? 'Loading chapters...'
-                          : (_babMateriList.isEmpty
-                                ? 'No chapters found'
-                                : 'Select Chapter'),
-                      'id': _isLoadingBab
-                          ? 'Memuat bab...'
-                          : (_babMateriList.isEmpty
-                                ? 'Tidak ada bab'
-                                : 'Pilih Bab'),
-                    }),
-                  ),
+                Builder(
+                  builder: (context) {
+                    final Map<String, DropdownMenuItem<String>> uniqueBabItems =
+                        {};
+                    for (var bab in _babMateriList) {
+                      final id = bab['id']?.toString();
+                      if (id != null && !uniqueBabItems.containsKey(id)) {
+                        uniqueBabItems[id] = DropdownMenuItem<String>(
+                          value: id,
+                          child: Text(_getBabName(bab)),
+                        );
+                      }
+                    }
+                    final List<DropdownMenuItem<String>> babItems =
+                        uniqueBabItems.values.toList();
+
+                    return DropdownButtonFormField<String>(
+                      key: ValueKey('bab_${_selectedBabId}_${babItems.length}'),
+                      decoration: InputDecoration(
+                        labelText: languageProvider.getTranslatedText({
+                          'en': 'Chapter',
+                          'id': 'Bab Materi',
+                        }),
+                        prefixIcon: Icon(Icons.menu_book),
+                        border: OutlineInputBorder(),
+                      ),
+                      initialValue:
+                          (babItems.any((item) => item.value == _selectedBabId))
+                          ? _selectedBabId
+                          : null,
+                      isExpanded: true,
+                      items: babItems.isEmpty ? null : babItems,
+                      onChanged: babItems.isEmpty
+                          ? null
+                          : (value) {
+                              setState(() {
+                                _selectedBabId = value;
+                                _selectedSubBabId = null;
+                              });
+                              if (value != null) {
+                                _loadSubBabMateri(value);
+                                _updateTitleFromMateri();
+                              }
+                            },
+                      hint: Text(
+                        languageProvider.getTranslatedText({
+                          'en': _isLoadingBab
+                              ? 'Loading chapters...'
+                              : (babItems.isEmpty
+                                    ? 'No chapters found'
+                                    : 'Select Chapter'),
+                          'id': _isLoadingBab
+                              ? 'Memuat bab...'
+                              : (babItems.isEmpty
+                                    ? 'Tidak ada bab'
+                                    : 'Pilih Bab'),
+                        }),
+                      ),
+                    );
+                  },
                 ),
                 SizedBox(height: 12),
               ],

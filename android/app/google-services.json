@@ -49,6 +49,50 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631663251271:android:13d6726e949b29a7970662",
+        "android_client_info": {
+          "package_name": "com.kamillabs.kamiledu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "631663251271-8d82t1ponhrp9d1adrtlbc3c28a2niaj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kamillabs.kamiledu",
+            "certificate_hash": "f95a3f360d5709c26ae28c99513ff1d3f0d78a3a"
+          }
+        },
+        {
+          "client_id": "631663251271-q5fmm1j2r4hko6fkicn5mml5vt8r3cnb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlONxMfvI_n0al8_gHrPrj2S2MMQHpBSc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "631663251271-q5fmm1j2r4hko6fkicn5mml5vt8r3cnb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "631663251271-00f35bbpsl7dqmph8s5deg06pe01j2ad.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.manajemensekolah"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
