@@ -1160,68 +1160,110 @@ class GradeBookPageState extends State<GradeBookPage> {
 
   Future<void> _loadData() async {
     try {
-      // Load siswa berdasarkan kelas
+      if (!mounted) return;
+      setState(() => _isLoading = true);
+
+      // 1. Load siswa berdasarkan kelas
       final siswaData = await ApiStudentService.getStudentByClass(
         widget.classData['id'],
       );
 
-      // Load nilai yang sudah ada
+      _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
+      _filteredSiswaList = List.from(_siswaList);
+
+      final currentStudentIds = _siswaList.map((s) => s.id.toString()).toSet();
+      final currentStudentClassIds = _siswaList
+          .map((s) => s.studentClassId?.toString())
+          .where((id) => id != null)
+          .cast<String>()
+          .toSet();
+
+      // 2. Load nilai yang sudah ada
       final academicYearId = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
       ).selectedAcademicYear?['id'];
 
-      print('DEBUG: Loading grades for subject ${widget.subject['id']}');
-      print('DEBUG: Selected Academic Year ID: $academicYearId');
+      // Construct URL with query parameters
+      final subjectId = widget.subject['id'];
+      final url =
+          '/grades?subject_id=$subjectId&limit=500${academicYearId != null ? "&academic_year_id=$academicYearId" : ""}';
 
-      final nilaiData = await ApiService().getNilaiByMataPelajaran(
-        widget.subject['id'],
-        academicYearId: academicYearId?.toString(),
-        limit: 500, // Fetch more to ensure we get all students
-      );
+      if (kDebugMode) print('DEBUG: Loading grades from $url');
 
-      print('DEBUG: Received ${nilaiData.length} grade items from API');
+      final response = await ApiService().get(url);
+
+      // Handle paginated response (Map with 'data' key) or direct List
+      List<dynamic> rawNilaiItems = [];
+      if (response is Map<String, dynamic> && response.containsKey('data')) {
+        rawNilaiItems = response['data'] as List<dynamic>;
+      } else if (response is List) {
+        rawNilaiItems = response;
+      }
+
+      if (kDebugMode)
+        print('DEBUG: Received ${rawNilaiItems.length} grade items');
+
+      if (!mounted) return;
 
       setState(() {
-        _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
-        _filteredSiswaList = List.from(_siswaList);
-
-        // Map API response to legacy format expected by UI
-        _nilaiList = List<Map<String, dynamic>>.from(
-          nilaiData.map((item) {
-            return {
-              'id': item['id'],
-              'siswa_id': item['student_id'] ?? item['siswa_id'],
-              'guru_id': item['teacher_id'] ?? item['guru_id'],
-              'mata_pelajaran_id':
-                  item['subject_id'] ?? item['mata_pelajaran_id'],
-              'jenis': item['type'] ?? item['jenis'],
-              'nilai': item['score'] ?? item['nilai'],
-              'deskripsi': item['notes'] ?? item['deskripsi'],
-              'tanggal': item['date'] ?? item['tanggal'],
-              'assessment_id': item['assessment_id'],
-              'title':
-                  item['title']?.toString() ??
-                  '', // Normalize title to empty string
-              'student_class_id':
+        // Filter and map grades to internal legacy format
+        _nilaiList = rawNilaiItems
+            .where((item) {
+              final studentId =
+                  (item['student_id'] ??
+                          item['siswa_id'] ??
+                          item['siswa']?['id'])
+                      ?.toString();
+              final studentClassId =
                   (item['student_class_id'] ?? item['siswa_kelas_id'])
-                      ?.toString(),
-            };
-          }),
-        );
+                      ?.toString();
 
-        // Process unique assessments
+              return currentStudentIds.contains(studentId) ||
+                  (studentClassId != null &&
+                      currentStudentClassIds.contains(studentClassId));
+            })
+            .map<Map<String, dynamic>>((item) {
+              return {
+                'id': item['id'],
+                'siswa_id':
+                    (item['student_id'] ??
+                            item['siswa_id'] ??
+                            item['siswa']?['id'])
+                        ?.toString(),
+                'student_class_id':
+                    (item['student_class_id'] ?? item['siswa_kelas_id'])
+                        ?.toString(),
+                'nilai': item['score'] ?? item['nilai'],
+                'deskripsi': item['notes'] ?? item['deskripsi'],
+                'tanggal':
+                    item['assessment']?['date'] ??
+                    item['date'] ??
+                    item['tanggal'],
+                'jenis':
+                    (item['assessment']?['type'] ??
+                            item['type'] ??
+                            item['jenis'])
+                        ?.toString()
+                        .toLowerCase(),
+                'title': item['assessment']?['title'] ?? item['title'] ?? '',
+                'assessment_id': item['assessment_id'],
+              };
+            })
+            .toList();
+
+        // 3. Process unique assessments for headers
         _assessmentHeaders = {};
 
         for (var nilai in _nilaiList) {
           final jenis = nilai['jenis']?.toString().toLowerCase();
-          if (jenis == null) continue;
+          if (jenis == null || !_allJenisNilaiList.contains(jenis)) continue;
 
           String? rawDate = nilai['tanggal'];
           if (rawDate != null) {
             final datePart = rawDate.split('T')[0];
             final assessmentId = nilai['assessment_id'];
-            final title = nilai['title'] ?? ''; // Normalize
+            final title = (nilai['title'] ?? '').toString().trim();
 
             if (!_assessmentHeaders.containsKey(jenis)) {
               _assessmentHeaders[jenis] = [];
@@ -1232,18 +1274,13 @@ class GradeBookPageState extends State<GradeBookPage> {
               final headerId = h['id']?.toString();
               final currentAssessmentId = assessmentId?.toString();
 
-              // Prioritize assessment_id matching
               if (currentAssessmentId != null && headerId != null) {
                 return headerId == currentAssessmentId;
               }
-
-              // If only one has ID, they are definitely different assessments
               if (currentAssessmentId != null || headerId != null) {
                 return false;
               }
-
-              // Both are NULL IDs: Match by Date + Title
-              final hTitle = h['title'] ?? '';
+              final hTitle = (h['title'] ?? '').toString().trim();
               return h['date'] == datePart && hTitle == title;
             });
 
@@ -1258,7 +1295,7 @@ class GradeBookPageState extends State<GradeBookPage> {
           }
         }
 
-        // Sort headers
+        // Sort headers by date and title
         for (var key in _assessmentHeaders.keys) {
           _assessmentHeaders[key]!.sort((a, b) {
             final dateCompare = a['date'].compareTo(b['date']);
@@ -1267,23 +1304,12 @@ class GradeBookPageState extends State<GradeBookPage> {
           });
         }
 
-        print(
-          "DEBUG: _assessmentHeaders keys: ${_assessmentHeaders.keys.toList()}",
-        );
-
-        // Ensure at least one empty column (or default) if no data exists for a type
-        // Actually, we don't force an empty column if there's no data,
-        // but we need a way to add the first one.
-        // We'll handle this in the UI by showing a "+" button even if list is empty.
-
         _isLoading = false;
       });
     } catch (e) {
       if (kDebugMode) print('Error loading grade data: $e');
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     }
   }
@@ -1350,42 +1376,26 @@ class GradeBookPageState extends State<GradeBookPage> {
                 return CheckboxListTile(
                   title: Text(_getJenisNilaiLabel(jenis, languageProvider)),
                   value: _jenisNilaiFilter[jenis],
+                  activeColor: _getPrimaryColor(),
                   onChanged: (bool? value) {
                     setState(() {
                       _jenisNilaiFilter[jenis] = value ?? false;
+                      _updateFilteredJenisNilai();
                     });
                   },
-                  controlAffinity: ListTileControlAffinity.leading,
                 );
               }).toList(),
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 languageProvider.getTranslatedText({
-                  'en': 'Cancel',
-                  'id': 'Batal',
+                  'en': 'Close',
+                  'id': 'Tutup',
                 }),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _updateFilteredJenisNilai();
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _getPrimaryColor(),
-                foregroundColor: Colors.white,
-              ),
-              child: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Apply',
-                  'id': 'Terapkan',
-                }),
+                style: TextStyle(color: _getPrimaryColor()),
               ),
             ),
           ],
@@ -1400,54 +1410,46 @@ class GradeBookPageState extends State<GradeBookPage> {
     Map<String, dynamic> header,
   ) {
     try {
+      final siswaId = siswa.id.toString();
+      final studentClassId = siswa.studentClassId?.toString();
+
       final result = _nilaiList.firstWhere((nilai) {
-        // Match by Student ID OR Student Class ID for better compatibility
-        // Convert all to String for safe comparison
-        final siswaId = siswa.id.toString();
-        final studentClassId = siswa.studentClassId?.toString();
-
         final gradeSiswaId = nilai['siswa_id']?.toString();
-        final gradeStudentClassId =
-            (nilai['student_class_id'] ?? nilai['siswa_kelas_id'])?.toString();
+        final gradeStudentClassId = nilai['student_class_id']?.toString();
 
-        final matchSiswaId = gradeSiswaId == siswaId;
-        final matchStudentClassId =
-            studentClassId != null &&
-            (gradeStudentClassId == studentClassId ||
-                gradeSiswaId == studentClassId);
+        // 1. Match Student: Try direct ID match or student_class_id match
+        bool studentMatch = (gradeSiswaId == siswaId);
 
-        /* DEBUG LOGGING - UNCOMMENT IF NEEDED
-        if (siswaId == "TARGET_ID") {
-           print('DEBUG MATCH: Siswa($siswaId, $studentClassId) vs Grade($gradeSiswaId, $gradeStudentClassId) -> ID:$matchSiswaId, SCID:$matchStudentClassId');
+        if (!studentMatch &&
+            (studentClassId != null || gradeStudentClassId != null)) {
+          studentMatch =
+              (gradeStudentClassId == studentClassId) ||
+              (gradeSiswaId == studentClassId);
         }
-        */
 
-        if (!matchSiswaId && !matchStudentClassId) return false;
+        if (!studentMatch) return false;
 
-        // Strictly Match by ID if available (Prioritize assessment_id matching as requested)
+        // 2. Match Header (Assessment)
         final headerId = header['id']?.toString();
         final currentAssessmentId = nilai['assessment_id']?.toString();
 
         if (headerId != null && currentAssessmentId != null) {
           if (headerId != currentAssessmentId) return false;
         } else if (headerId != null || currentAssessmentId != null) {
-          // If only one has ID, they are different assessments
+          // One has ID, other doesn't. If they have same date and title, maybe they ARE the same?
+          // For now, be strict if ID exists.
           return false;
         }
-
-        // If we reach here, either both IDs are NULL or they matched.
-        // If IDs matched, we are good. If both are NULL, we check fallback.
 
         final nilaiDate = nilai['tanggal']?.toString().split('T')[0];
         final nilaiJenis = nilai['jenis']?.toString().toLowerCase();
 
-        // Normalize titles for comparison
-        final nTitle = nilai['title']?.toString() ?? '';
-        final hTitle = header['title']?.toString() ?? '';
+        final nTitle = (nilai['title'] ?? '').toString().trim();
+        final hTitle = (header['title'] ?? '').toString().trim();
 
-        return nilaiJenis == jenis.toLowerCase() &&
+        return (nilaiJenis == jenis.toLowerCase() &&
             nilaiDate == header['date'] &&
-            nTitle == hTitle;
+            nTitle == hTitle);
       }, orElse: () => <String, dynamic>{});
 
       return result.isEmpty ? null : result;
