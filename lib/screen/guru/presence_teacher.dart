@@ -151,9 +151,8 @@ class PresencePageState extends State<PresencePage>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final [subjectTeacher, classList, studentList] = await Future.wait([
-        // Ambil mata pelajaran yang diampu oleh guru
-        _getSubjectByTeacher(widget.teacher['id']),
+      final [classList, studentList] = await Future.wait([
+        // Ambil kelas dan siswa terlebih dahulu
         ApiTeacherService.getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
@@ -161,8 +160,14 @@ class PresencePageState extends State<PresencePage>
         ApiStudentService.getStudent(academicYearId: academicYearId),
       ]);
 
+      // Ambil mata pelajaran berdasarkan kelas yang terdeteksi atau default
+      final subjects = await _getSubjectByTeacher(
+        widget.teacher['id'],
+        classId: _selectedClassId,
+      );
+
       setState(() {
-        _subjectTeacher = subjectTeacher;
+        _subjectTeacher = subjects;
         _classList = classList;
         _studentList = studentList.map((s) => Siswa.fromJson(s)).toList();
         _filteredStudentList = _studentList;
@@ -202,14 +207,71 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
-  Future<List<dynamic>> _getSubjectByTeacher(String teacherId) async {
+  Future<List<dynamic>> _getSubjectByTeacher(
+    String teacherId, {
+    String? classId,
+  }) async {
     try {
       final apiTeacherService = ApiTeacherService();
-      final result = await apiTeacherService.getSubjectByTeacher(teacherId);
+      final result = await apiTeacherService.getSubjectByTeacher(
+        teacherId,
+        classId: classId,
+      );
       return result;
     } catch (e) {
       print('Error getting mata pelajaran by guru: $e');
       return [];
+    }
+  }
+
+  Future<void> _loadSubjectsByClass(
+    String? classId, {
+    StateSetter? setModalState,
+  }) async {
+    if (setModalState != null) {
+      setModalState(() {
+        _isLoadingInput = true;
+      });
+    } else {
+      setState(() {
+        _isLoadingInput = true;
+      });
+    }
+
+    try {
+      final result = await _getSubjectByTeacher(
+        widget.teacher['id'],
+        classId: classId,
+      );
+
+      void updateState() {
+        _subjectTeacher = result;
+        _isLoadingInput = false;
+
+        // Reset subject selection if it's no longer in the list
+        if (_selectedSubjectId != null &&
+            !_subjectTeacher.any((s) => s['id'] == _selectedSubjectId)) {
+          _selectedSubjectId = null;
+          _selectedSubjectName = null;
+        }
+      }
+
+      if (setModalState != null) {
+        setModalState(updateState);
+      } else {
+        setState(updateState);
+      }
+    } catch (e) {
+      print('Error loading subjects by class: $e');
+      void updateErrorState() {
+        _isLoadingInput = false;
+      }
+
+      if (setModalState != null) {
+        setModalState(updateErrorState);
+      } else {
+        setState(updateErrorState);
+      }
     }
   }
 
@@ -582,6 +644,9 @@ class PresencePageState extends State<PresencePage>
 
   // ========== SHOW EDIT BOTTOM SHEET ==========
   void _showEditBottomSheet(LanguageProvider languageProvider) {
+    // Refresh subjects for the selected class before opening
+    _loadSubjectsByClass(_selectedClassId);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -757,7 +822,11 @@ class PresencePageState extends State<PresencePage>
                                   _selectedClassId = value;
                                   _filterStudentsByClass(value);
                                 });
-                                setModalState(() {});
+                                // Reload subjects whenever class changes
+                                _loadSubjectsByClass(
+                                  value,
+                                  setModalState: setModalState,
+                                );
                               },
                             ),
                           ),
@@ -1186,6 +1255,9 @@ class PresencePageState extends State<PresencePage>
                 _selectedClassId = classData['id'];
                 _selectedClassName = classData['nama'] ?? classData['name'];
               });
+
+              // Pre-load subjects for the selected class
+              _loadSubjectsByClass(classData['id']);
 
               // Load data depending on tab
               if (_tabController.index == 0) {

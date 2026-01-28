@@ -243,9 +243,16 @@ class ApiTeacherService {
     await _clearTeacherCache();
   }
 
-  Future<List<dynamic>> getSubjectByTeacher(String guruId) async {
+  Future<List<dynamic>> getSubjectByTeacher(
+    String guruId, {
+    String? classId,
+  }) async {
     try {
-      final result = await ApiService().get('/teacher/$guruId/subjects');
+      String url = '/teacher/$guruId/subjects';
+      if (classId != null && classId.isNotEmpty) {
+        url += '?class_id=$classId';
+      }
+      final result = await ApiService().get(url);
       if (result is List) return result;
       if (result is Map<String, dynamic> && result['data'] != null) {
         return result['data'] is List ? result['data'] : [];
