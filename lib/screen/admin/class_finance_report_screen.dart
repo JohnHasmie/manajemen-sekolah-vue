@@ -1,10 +1,16 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
 
 class ClassFinanceReportScreen extends StatefulWidget {
   final String classId;
@@ -29,6 +35,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   List<dynamic> _students = [];
   Map<String, List<dynamic>> _billsByStudent = {};
   List<MonthGroup> _monthGroups = [];
+  File? selectedFile;
 
   // Filters
   String _searchQuery = '';
@@ -577,6 +584,529 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         );
       },
     );
+  }
+
+  String _formatCurrency(dynamic amount) {
+    if (amount == null) return 'Rp 0';
+    try {
+      double value = double.parse(amount.toString());
+      final formatter = NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: 'Rp ',
+        decimalDigits: 0,
+      );
+      return formatter.format(value);
+    } catch (e) {
+      return 'Rp $amount';
+    }
+  }
+
+  LinearGradient _getCardGradient() {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.7)],
+    );
+  }
+
+  Widget _buildDialogTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    TextInputType keyboardType = TextInputType.text,
+    VoidCallback? onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        onTap: onTap,
+        readOnly: onTap != null,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 20),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+          Expanded(child: Text(value, style: TextStyle(fontSize: 12))),
+        ],
+      ),
+    );
+  }
+
+  String _getFileTypeText(String filePath) {
+    final extension = filePath.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'Gambar JPEG';
+      case 'png':
+        return 'Gambar PNG';
+      case 'pdf':
+        return 'Dokumen PDF';
+      default:
+        return 'File $extension';
+    }
+  }
+
+  Future<void> _pickImage(StateSetter setDialogState) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final ImageSource? source = await showDialog<ImageSource>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(AppLocalizations.chooseSource.tr),
+          content: Text(AppLocalizations.chooseImageSource.tr),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, ImageSource.gallery),
+              child: Text(AppLocalizations.gallery.tr),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, ImageSource.camera),
+              child: Text(AppLocalizations.camera.tr),
+            ),
+          ],
+        ),
+      );
+
+      if (source != null) {
+        final XFile? file = await picker.pickImage(
+          source: source,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 80,
+        );
+
+        if (file != null && context.mounted) {
+          setDialogState(() {
+            selectedFile = File(file.path);
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+  }
+
+  Future<void> _pickPDF(StateSetter setDialogState) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        setDialogState(() {
+          selectedFile = File(result.files.single.path!);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking PDF: $e');
+    }
+  }
+
+  Future<void> _pickFile(StateSetter setDialogState) async {
+    final action = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.chooseFileType.tr),
+        content: Text(AppLocalizations.uploadPaymentProof.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'image'),
+            child: Text(AppLocalizations.imageCameraGallery.tr),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'pdf'),
+            child: Text(AppLocalizations.pdfDocument.tr),
+          ),
+        ],
+      ),
+    );
+
+    if (action == 'image') {
+      await _pickImage(setDialogState);
+    } else if (action == 'pdf') {
+      await _pickPDF(setDialogState);
+    }
+  }
+
+  void _showManualPaymentForm(dynamic bill) {
+    final paymentMethodController = TextEditingController(text: 'Tunai');
+    final amountController = TextEditingController(
+      text: (bill['amount'] ?? 0).toString(),
+    );
+    final paymentDateController = TextEditingController(
+      text: DateTime.now().toString().split(' ')[0],
+    );
+    selectedFile = null;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: _getCardGradient(),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.upload,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.uploadPaymentProof.tr,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildInfoItem(
+                          AppLocalizations.paymentTypes.tr,
+                          bill['payment_type']?['name'] ??
+                              bill['jenis_pembayaran_nama'] ??
+                              '-',
+                        ),
+                        _buildInfoItem(
+                          AppLocalizations.billAmount.tr,
+                          _formatCurrency(
+                            bill['amount'] ?? bill['bill_amount'],
+                          ),
+                        ),
+
+                        SizedBox(height: 16),
+                        Divider(),
+                        SizedBox(height: 16),
+
+                        DropdownButtonFormField<String>(
+                          initialValue: 'Tunai',
+                          decoration: InputDecoration(
+                            labelText: 'Metode Pembayaran',
+                            prefixIcon: Icon(
+                              Icons.payment,
+                              color: _getPrimaryColor(),
+                              size: 20,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 14,
+                            ),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'Transfer Bank',
+                              child: Text('Transfer Bank'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Tunai',
+                              child: Text('Tunai'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Kartu Kredit/Debit',
+                              child: Text('Kartu Kredit/Debit'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Lainnya',
+                              child: Text('Lainnya'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null)
+                              paymentMethodController.text = value;
+                          },
+                        ),
+                        SizedBox(height: 12),
+                        _buildDialogTextField(
+                          controller: amountController,
+                          label: 'Jumlah Bayar',
+                          icon: Icons.attach_money,
+                          keyboardType: TextInputType.number,
+                        ),
+                        SizedBox(height: 12),
+                        _buildDialogTextField(
+                          controller: paymentDateController,
+                          label: 'Tanggal Bayar',
+                          icon: Icons.calendar_today,
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                            );
+                            if (date != null) {
+                              paymentDateController.text = date
+                                  .toString()
+                                  .split(' ')[0];
+                            }
+                          },
+                        ),
+                        SizedBox(height: 12),
+
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: selectedFile != null
+                                  ? Colors.green
+                                  : Colors.grey.shade200,
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.upload_file,
+                                color: selectedFile != null
+                                    ? Colors.green
+                                    : Colors.grey,
+                                size: 40,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                selectedFile != null
+                                    ? 'File terpilih: ${selectedFile!.path.split('/').last}'
+                                    : 'Pilih bukti pembayaran',
+                                style: TextStyle(
+                                  color: selectedFile != null
+                                      ? Colors.green
+                                      : Colors.grey,
+                                ),
+                              ),
+                              if (selectedFile != null) ...[
+                                SizedBox(height: 8),
+                                Text(
+                                  _getFileTypeText(selectedFile!.path),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                              SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: () => _pickFile(setDialogState),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _getPrimaryColor(),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Pilih File',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              side: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            child: Text(
+                              'Batal',
+                              style: TextStyle(color: Colors.grey.shade700),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (paymentMethodController.text.isEmpty ||
+                                  amountController.text.isEmpty)
+                                return;
+
+                              try {
+                                Navigator.pop(context); // Close form
+                                _uploadManualPayment(
+                                  bill: bill,
+                                  paymentMethod: paymentMethodController.text,
+                                  amount: double.parse(amountController.text),
+                                  date: paymentDateController.text,
+                                  file: selectedFile,
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getPrimaryColor(),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: Text(
+                              'Simpan',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _uploadManualPayment({
+    required dynamic bill,
+    required String paymentMethod,
+    required double amount,
+    required String date,
+    File? file,
+  }) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => Center(child: CircularProgressIndicator()),
+      );
+
+      if (file != null) {
+        await _apiService.uploadFile(
+          '/payment/manual',
+          file,
+          fileField: 'payment_receipt',
+          data: {
+            'bill_id': bill['id'],
+            'payment_method': paymentMethod,
+            'amount': amount.toString(),
+            'payment_date': date,
+            'status': 'verified',
+          },
+        );
+      } else {
+        await _apiService.post('/payment/manual', {
+          'bill_id': bill['id'],
+          'payment_method': paymentMethod,
+          'amount': amount.toString(),
+          'payment_date': date,
+          'status': 'verified',
+        });
+      }
+
+      if (mounted) Navigator.pop(context); // Close loading
+      _loadData(); // Refresh table
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pembayaran berhasil dicatat'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Color _getPrimaryColor() {
@@ -1134,7 +1664,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   title: Text('Bayar Manual (Tandai Lunas)'),
                   onTap: () {
                     Navigator.pop(context);
-                    _processManualPayment(bill, true);
+                    _showManualPaymentForm(bill);
                   },
                 ),
 
