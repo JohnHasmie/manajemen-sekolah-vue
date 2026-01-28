@@ -1301,7 +1301,12 @@ class FinanceScreenState extends State<FinanceScreen>
   Future<void> _loadJenisPembayaran() async {
     try {
       final response = await _apiService.get('/payment-types');
-      final List<dynamic> rawData = response is List ? response : [];
+      final List<dynamic> rawData;
+      if (response is Map && response.containsKey('data')) {
+        rawData = response['data'] is List ? response['data'] : [];
+      } else {
+        rawData = response is List ? response : [];
+      }
 
       if (mounted) {
         setState(() {
@@ -1324,6 +1329,8 @@ class FinanceScreenState extends State<FinanceScreen>
                 newItem['periode'] = 'tahunan';
               } else if (periode == 'SEMESTER') {
                 newItem['periode'] = 'semester';
+              } else if (periode == 'ONCE') {
+                newItem['periode'] = 'sekali bayar';
               } else if (newItem['periode'] != null) {
                 // Ensure lowercase for consistency if it was 'Bulanan' etc
                 newItem['periode'] = newItem['periode']
@@ -1432,7 +1439,40 @@ class FinanceScreenState extends State<FinanceScreen>
       final response = await _apiService.get('/payments?status=pending');
       if (mounted) {
         setState(() {
-          _pembayaranPendingList = response is List ? response : [];
+          final List<dynamic> rawList;
+          if (response is Map && response.containsKey('data')) {
+            rawList = response['data'] is List ? response['data'] : [];
+          } else {
+            rawList = response is List ? response : [];
+          }
+
+          _pembayaranPendingList = rawList.map((item) {
+            if (item is Map<String, dynamic>) {
+              final newItem = Map<String, dynamic>.from(item);
+              final bill = newItem['bill'] ?? {};
+              final student = bill['student'] ?? {};
+              final paymentType = bill['payment_type'] ?? {};
+
+              // Map nested data to flat keys used by UI
+              newItem['siswa_nama'] ??= student['name'];
+              newItem['jenis_pembayaran_nama'] ??= paymentType['name'];
+
+              // Safe extraction of class name
+              if (newItem['kelas_nama'] == null) {
+                if (student['classes'] is List &&
+                    (student['classes'] as List).isNotEmpty) {
+                  newItem['kelas_nama'] = student['classes'][0]['name'];
+                } else if (student['class_name'] != null) {
+                  newItem['kelas_nama'] = student['class_name'];
+                } else if (student['class'] != null) {
+                  newItem['kelas_nama'] = student['class']['name'];
+                }
+              }
+
+              return newItem;
+            }
+            return item;
+          }).toList();
         });
       }
     } catch (error) {
@@ -1623,7 +1663,12 @@ class FinanceScreenState extends State<FinanceScreen>
                               : periodeController.text,
                           label: 'Periode',
                           icon: Icons.calendar_today,
-                          items: ['bulanan', 'semester', 'tahunan'],
+                          items: [
+                            'sekali bayar',
+                            'bulanan',
+                            'semester',
+                            'tahunan',
+                          ],
                           onChanged: (value) {
                             periodeController.text = value!;
                           },
@@ -1916,6 +1961,8 @@ class FinanceScreenState extends State<FinanceScreen>
                     ? 'Aktif'
                     : item == 'non-aktif'
                     ? 'Non-Aktif'
+                    : item == 'sekali bayar'
+                    ? 'Sekali Bayar'
                     : item == 'bulanan'
                     ? 'Bulanan'
                     : item == 'semester'
@@ -3571,30 +3618,6 @@ class FinanceScreenState extends State<FinanceScreen>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // Tombol Lihat Bukti
-                            if (pembayaran['payment_receipt'] != null)
-                              OutlinedButton(
-                                onPressed: () =>
-                                    _showBuktiPembayaran(pembayaran),
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  side: BorderSide(color: Colors.blue),
-                                ),
-                                child: Text(
-                                  'Lihat Bukti',
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-
                             Spacer(),
 
                             // Tombol Verifikasi
