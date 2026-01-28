@@ -81,7 +81,6 @@ class PresencePageState extends State<PresencePage>
   String? _selectedClassId;
   String? _selectedClassName;
   String? _selectedDateFilter;
-  final List<dynamic> _subjectList = [];
   List<dynamic> _subjectTeacher = [];
   List<dynamic> _classList = [];
   List<Siswa> _studentList = [];
@@ -352,11 +351,13 @@ class PresencePageState extends State<PresencePage>
 
         // Use name from API if available, otherwise fallback to lookup
         final subjectName =
+            absen['subject_name'] ??
             absen['subject']?['name'] ??
             absen['mata_pelajaran_nama'] ??
             _getSubjectName(absen['subject_id']);
 
         final className =
+            absen['class_name'] ??
             absen['class']?['name'] ??
             absen['kelas_nama'] ??
             _getClassNameWithCount(
@@ -419,7 +420,7 @@ class PresencePageState extends State<PresencePage>
 
   String _getSubjectName(String subjectId) {
     try {
-      final subject = _subjectList.firstWhere(
+      final subject = _subjectTeacher.firstWhere(
         (mp) => mp['id'] == subjectId,
         orElse: () => {'nama': 'Unknown'},
       );
@@ -432,7 +433,7 @@ class PresencePageState extends State<PresencePage>
   String _getSubjectSelectedName() {
     if (_selectedSubjectId == null) return '-';
     try {
-      final subject = _subjectList.firstWhere(
+      final subject = _subjectTeacher.firstWhere(
         (mp) => mp['id'] == _selectedSubjectId,
         orElse: () => {'nama': 'Unknown'},
       );
