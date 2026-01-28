@@ -1317,9 +1317,16 @@ class ApiService {
   }
 
   // Generate Bills for a specific Payment Type
-  static Future<dynamic> generateBills({String? paymentTypeId}) async {
+  static Future<dynamic> generateBills({
+    String? paymentTypeId,
+    required String month,
+    required String academicYearId,
+  }) async {
     try {
-      final Map<String, dynamic> body = {};
+      final Map<String, dynamic> body = {
+        'month': month,
+        'academic_year_id': academicYearId,
+      };
       if (paymentTypeId != null) {
         body['payment_type_id'] = paymentTypeId;
       }
@@ -1330,6 +1337,27 @@ class ApiService {
         print('❌ Error generating bills: $e');
       }
       rethrow;
+    }
+  }
+
+  static Future<List<String>> getGeneratedMonths(
+    String paymentTypeId,
+    String academicYearId,
+  ) async {
+    try {
+      final apiService = ApiService();
+      final response = await apiService.get(
+        '/finance/generated-months?payment_type_id=$paymentTypeId&academic_year_id=$academicYearId',
+      );
+      if (response is List) {
+        return List<String>.from(response);
+      }
+      return [];
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error getting generated months: $e');
+      }
+      return [];
     }
   }
 

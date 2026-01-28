@@ -12,6 +12,7 @@ import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/class_finance_report_screen.dart';
+import 'package:manajemensekolah/services/api_academic_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/currency_formatter.dart';
@@ -2034,18 +2035,289 @@ class FinanceScreenState extends State<FinanceScreen>
   Future<void> _confirmGenerateBills(
     Map<String, dynamic> jenisPembayaran,
   ) async {
-    final confirmed = await showDialog(
+    String selectedMonth = DateFormat('MMMM', 'id_ID').format(DateTime.now());
+    String? selectedAcademicYearId;
+    List<dynamic> academicYears = [];
+    List<String> generatedMonths = [];
+    bool isLoadingYears = true;
+    bool isLoadingGenerated = false;
+
+    // Pre-calculate months
+    final List<String> months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    final result = await showDialog<Map<String, String>>(
       context: context,
-      builder: (context) => ConfirmationDialog(
-        title: 'Generate Tagihan',
-        content:
-            'Apakah Anda yakin ingin membuat tagihan untuk "${jenisPembayaran['name']}"? Tagihan akan dibuat untuk semua siswa yang sesuai tujuan pembayaran.',
-        confirmText: 'Generate',
-        confirmColor: Colors.blue,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          // Fetch Academic Years once
+          if (isLoadingYears && academicYears.isEmpty) {
+            ApiAcademicServices.getAcademicYears()
+                .then((years) {
+                  if (context.mounted) {
+                    setDialogState(() {
+                      academicYears = years;
+                      isLoadingYears = false;
+                      final activeYear = years.firstWhere(
+                        (y) => y['current'] == true || y['status'] == 'active',
+                        orElse: () => years.isNotEmpty ? years.first : null,
+                      );
+                      if (activeYear != null) {
+                        selectedAcademicYearId = activeYear['id'].toString();
+                        // Initial fetch for generated months
+                        isLoadingGenerated = true;
+                      }
+                    });
+
+                    if (selectedAcademicYearId != null) {
+                      ApiService.getGeneratedMonths(
+                        jenisPembayaran['id'].toString(),
+                        selectedAcademicYearId!,
+                      ).then((genMonths) {
+                        if (context.mounted) {
+                          setDialogState(() {
+                            generatedMonths = genMonths;
+                            isLoadingGenerated = false;
+                          });
+                        }
+                      });
+                    }
+                  }
+                })
+                .catchError((e) {
+                  if (context.mounted) {
+                    setDialogState(() => isLoadingYears = false);
+                  }
+                });
+          }
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.auto_awesome, color: Colors.blue.shade700),
+                SizedBox(width: 8),
+                Text(
+                  'Generate Tagihan',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ],
+            ),
+            content: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pilih periode untuk "${jenisPembayaran['name']}":',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  ),
+                  SizedBox(height: 20),
+
+                  // Academic Year Selection
+                  if (isLoadingYears)
+                    Center(child: CircularProgressIndicator())
+                  else
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedAcademicYearId,
+                          decoration: InputDecoration(
+                            labelText: 'Tahun Ajaran',
+                            labelStyle: TextStyle(color: Colors.grey.shade600),
+                            border: InputBorder.none,
+                          ),
+                          items: academicYears.map((y) {
+                            return DropdownMenuItem<String>(
+                              value: y['id'].toString(),
+                              child: Text(
+                                y['year'] ?? 'Unknown',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setDialogState(() {
+                                selectedAcademicYearId = val;
+                                isLoadingGenerated = true;
+                                generatedMonths = [];
+                              });
+                              ApiService.getGeneratedMonths(
+                                jenisPembayaran['id'].toString(),
+                                val,
+                              ).then((genMonths) {
+                                if (context.mounted) {
+                                  setDialogState(() {
+                                    generatedMonths = genMonths;
+                                    isLoadingGenerated = false;
+                                  });
+                                }
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+
+                  SizedBox(height: 24),
+
+                  // Month Grid
+                  Text(
+                    'Pilih Bulan',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  SizedBox(height: 12),
+                  if (isLoadingGenerated)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        childAspectRatio: 2.2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
+                      itemCount: months.length,
+                      itemBuilder: (context, index) {
+                        final month = months[index];
+                        final isGenerated = generatedMonths.contains(month);
+                        final isSelected = selectedMonth == month;
+
+                        return InkWell(
+                          onTap: isGenerated
+                              ? null
+                              : () {
+                                  setDialogState(() => selectedMonth = month);
+                                },
+                          child: Container(
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isGenerated
+                                  ? Colors.grey.shade200
+                                  : isSelected
+                                  ? Colors.blue.shade600
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.blue.shade700
+                                    : Colors.grey.shade300,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Text(
+                                    month,
+                                    style: TextStyle(
+                                      color: isGenerated
+                                          ? Colors.grey.shade500
+                                          : isSelected
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      fontSize: 12,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                                if (isGenerated)
+                                  Positioned(
+                                    right: 2,
+                                    top: 2,
+                                    child: Icon(
+                                      Icons.check_circle,
+                                      size: 10,
+                                      color: Colors.green.shade400,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Batal',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+              ElevatedButton(
+                onPressed:
+                    (selectedAcademicYearId == null ||
+                        generatedMonths.contains(selectedMonth))
+                    ? null
+                    : () {
+                        Navigator.pop(context, {
+                          'month': selectedMonth,
+                          'academicYearId': selectedAcademicYearId!,
+                        });
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _getPrimaryColor(),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: Text(
+                  'Generate Now',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
 
-    if (confirmed == true) {
+    if (result != null) {
       try {
         if (mounted) {
           setState(() => _isLoading = true);
@@ -2053,12 +2325,21 @@ class FinanceScreenState extends State<FinanceScreen>
 
         final response = await ApiService.generateBills(
           paymentTypeId: jenisPembayaran['id'].toString(),
+          month: result['month']!,
+          academicYearId: result['academicYearId']!,
         );
 
         if (mounted) {
           String message = 'Tagihan berhasil dibuat';
           if (response != null && response['message'] != null) {
             message = response['message'];
+          }
+
+          // Handle partial errors if any
+          if (response != null &&
+              response['errors'] != null &&
+              (response['errors'] as List).isNotEmpty) {
+            message = (response['errors'] as List).join('\n');
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
