@@ -444,11 +444,14 @@ class ApiSubjectService {
   static Future<List<dynamic>> getMateriProgress({
     required String guruId,
     required String mataPelajaranId,
+    String? classId,
   }) async {
+    String url =
+        '$baseUrl/material-progress?teacher_id=$guruId&subject_id=$mataPelajaranId';
+    if (classId != null) url += '&class_id=$classId';
+
     final response = await http.get(
-      Uri.parse(
-        '$baseUrl/material-progress?teacher_id=$guruId&subject_id=$mataPelajaranId',
-      ),
+      Uri.parse(url),
       headers: await ApiService.getHeaders(),
     );
 
@@ -475,6 +478,7 @@ class ApiSubjectService {
     final requestData = {
       'teacher_id': data['guru_id'],
       'subject_id': data['mata_pelajaran_id'],
+      'class_id': data['class_id'],
       'progress_items': (data['progress_items'] as List).map((item) {
         return {
           'chapter_id': item['bab_id'],
@@ -500,6 +504,7 @@ class ApiSubjectService {
     final requestData = {
       'teacher_id': data['teacher_id'],
       'subject_id': data['subject_id'],
+      'class_id': data['class_id'],
       'items': (data['items'] as List).map((item) {
         return {
           'chapter_id': item['bab_id'],
@@ -523,6 +528,7 @@ class ApiSubjectService {
     final requestData = {
       'teacher_id': data['teacher_id'],
       'subject_id': data['subject_id'],
+      'class_id': data['class_id'],
       'items': (data['items'] as List).map((item) {
         return {
           'chapter_id': item['bab_id'],

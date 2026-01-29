@@ -37,7 +37,10 @@ class MateriPageState extends State<MateriPage> {
   final TextEditingController _descriptionController = TextEditingController();
 
   String? _selectedSubject;
+  String? _selectedClassId;
+  String? _selectedClassName;
   List<dynamic> _subjectList = [];
+  List<dynamic> _classList = [];
   List<dynamic> _materiList = [];
   List<dynamic> _babMateriList = [];
   List<dynamic> _subBabMateriList = [];
@@ -165,8 +168,8 @@ class MateriPageState extends State<MateriPage> {
         builder: (context) => ClassActifityScreen(
           initialSubjectId: _selectedSubject,
           initialSubjectName: _getSelectedSubjectName(),
-          initialClassId: widget.initialClassId,
-          initialClassName: widget.initialClassName,
+          initialClassId: _selectedClassId ?? widget.initialClassId,
+          initialClassName: _selectedClassName ?? widget.initialClassName,
           initialBabId: selectedBabId,
           initialSubBabId: selectedSubBabId,
           initialAdditionalMaterials: additionalMaterials,
@@ -294,11 +297,26 @@ class MateriPageState extends State<MateriPage> {
         print('Mata pelajaran found: ${subject.length}');
       }
 
+      // Load Classes Taught by Teacher
+      final classes = await ApiTeacherService.getTeacherClasses(teacherId);
+
+      // Sort classes numerically/alphabetically (e.g., 7A, 7B, 8A)
+      classes.sort((a, b) {
+        String nameA = (a['name'] ?? a['nama'] ?? '').toString();
+        String nameB = (b['name'] ?? b['nama'] ?? '').toString();
+        return nameA.compareTo(nameB);
+      });
+
+      if (kDebugMode) {
+        print('Classes found: ${classes.length}');
+      }
+
       // Jika guru tidak memiliki mata pelajaran, tampilkan pesan
       if (subject.isEmpty) {
         setState(() {
           _isLoading = false;
           _subjectList = [];
+          _classList = classes;
           _debugInfo = 'Guru ini belum memiliki mata pelajaran yang ditugaskan';
         });
         return;
@@ -308,9 +326,20 @@ class MateriPageState extends State<MateriPage> {
 
       setState(() {
         _subjectList = subject;
+        _classList = classes;
         _materiList = materi;
         _isLoading = false;
         _debugInfo = '${subject.length} mata pelajaran ditemukan';
+
+        // Set initial class
+        if (widget.initialClassId != null &&
+            classes.any((c) => c['id'] == widget.initialClassId)) {
+          _selectedClassId = widget.initialClassId;
+          _selectedClassName = widget.initialClassName;
+        } else if (classes.isNotEmpty) {
+          _selectedClassId = classes[0]['id'];
+          _selectedClassName = classes[0]['name'] ?? classes[0]['nama'];
+        }
 
         // Use initialSubjectId if provided, otherwise use first subject
         if (widget.initialSubjectId != null &&
@@ -501,6 +530,7 @@ class MateriPageState extends State<MateriPage> {
       final progress = await ApiSubjectService.getMateriProgress(
         guruId: teacherId,
         mataPelajaranId: mataPelajaranId,
+        classId: _selectedClassId,
       );
 
       if (kDebugMode) {
@@ -575,6 +605,7 @@ class MateriPageState extends State<MateriPage> {
       await ApiSubjectService.saveMateriProgress({
         'teacher_id': teacherId,
         'subject_id': _selectedSubject,
+        'class_id': _selectedClassId,
         'chapter_id': babId,
         'sub_chapter_id': subBabId,
         'is_checked': isChecked ? 1 : 0,
@@ -640,6 +671,7 @@ class MateriPageState extends State<MateriPage> {
       await ApiSubjectService.batchSaveMateriProgress({
         'guru_id': teacherId,
         'mata_pelajaran_id': _selectedSubject,
+        'class_id': _selectedClassId,
         'progress_items': progressItems,
       });
 
@@ -1007,10 +1039,80 @@ class MateriPageState extends State<MateriPage> {
             SizedBox(height: 12),
           ],
 
+          // Dropdown Kelas
+          _buildKelasDropdown(languageProvider),
+          SizedBox(height: 12),
+
           // Dropdown Mata Pelajaran
           _buildMataPelajaranDropdown(languageProvider),
         ],
       ),
+    );
+  }
+
+  Widget _buildKelasDropdown(LanguageProvider languageProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        ),
+        SizedBox(height: 4),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedClassId,
+              isExpanded: true,
+              icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+              items: _classList.map((c) {
+                return DropdownMenuItem<String>(
+                  value: c['id'],
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.class_,
+                          size: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(c['name'] ?? c['nama'] ?? 'Unknown'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedClassId = newValue;
+                    final selectedClass = _classList.firstWhere(
+                      (c) => c['id'] == newValue,
+                    );
+                    _selectedClassName =
+                        selectedClass['name'] ?? selectedClass['nama'];
+                    _babMateriList = [];
+                    _subBabMateriList = [];
+                    _searchController.clear();
+                  });
+                  if (_selectedSubject != null) {
+                    _loadBabMateri(_selectedSubject!);
+                  }
+                }
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
