@@ -28,6 +28,8 @@ class AbsensiSummary {
   final int absent;
   final String? classId;
   final String? className;
+  final String? lessonHourId;
+  final String? lessonHourName;
 
   AbsensiSummary({
     required this.subjectId,
@@ -38,9 +40,12 @@ class AbsensiSummary {
     required this.absent,
     this.classId,
     this.className,
+    this.lessonHourId,
+    this.lessonHourName,
   });
 
-  String get key => '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}';
+  String get key =>
+      '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}-$lessonHourId';
 }
 
 class PresencePage extends StatefulWidget {
@@ -80,12 +85,10 @@ class PresencePageState extends State<PresencePage>
   String? _selectedSubjectName;
   String? _selectedClassId;
   String? _selectedClassName;
-  String? _selectedDateFilter;
   List<dynamic> _subjectTeacher = [];
   List<dynamic> _classList = [];
   List<Siswa> _studentList = [];
   List<Siswa> _filteredStudentList = [];
-  List<String> _selectedSubjectIds = [];
   final Map<String, String> _absensiStatus = {};
   bool _isLoadingInput = true;
   bool _isSubmitting = false;
@@ -97,10 +100,14 @@ class PresencePageState extends State<PresencePage>
   List<dynamic> _lessonHours = [];
   String? _selectedLessonHourId;
 
-  // Search dan Filter untuk Results Mode
+  // Filter untuk Results Mode
   final TextEditingController _searchController = TextEditingController();
   final List<String> _filterOptions = ['All', 'Today', 'This Week'];
   final String _selectedFilter = 'All';
+  String? _selectedDateFilter;
+  List<String> _selectedSubjectIds = [];
+  List<String> _selectedDayIds = [];
+  List<String> _selectedLessonHourIds = [];
 
   // Filter untuk Input Mode
   final TextEditingController _searchControllerInput = TextEditingController();
@@ -427,14 +434,16 @@ class PresencePageState extends State<PresencePage>
       final Map<String, AbsensiSummary> summaryMap = {};
 
       for (var absen in absensiData) {
-        // Include kelas_id in the grouping key
+        // Include kelas_id and lesson_hour_id in the grouping key
         final classId =
             absen['class_id']?.toString() ??
             absen['class']?['id']?.toString() ??
             absen['kelas_id']?.toString() ??
             '';
+        final lessonHourId = absen['lesson_hour_id']?.toString() ?? '';
 
-        final key = '${absen['subject_id']}-${absen['date']}-$classId';
+        final key =
+            '${absen['subject_id']}-${absen['date']}-$classId-$lessonHourId';
 
         // Use name from API if available, otherwise fallback to lookup
         final subjectName =
@@ -447,9 +456,19 @@ class PresencePageState extends State<PresencePage>
             absen['class_name'] ??
             absen['class']?['name'] ??
             absen['kelas_nama'] ??
-            _getClassNameWithCount(
-              classId,
-            ).split(' - ').first; // Basic fallback
+            _getClassNameWithCount(classId).split(' - ').first;
+
+        // Find lesson hour name
+        String? lessonHourName;
+        if (lessonHourId.isNotEmpty) {
+          final lh = _lessonHours.firstWhere(
+            (h) => h['id']?.toString() == lessonHourId,
+            orElse: () => null,
+          );
+          if (lh != null) {
+            lessonHourName = lh['name'];
+          }
+        }
 
         if (!summaryMap.containsKey(key)) {
           summaryMap[key] = AbsensiSummary(
@@ -461,6 +480,8 @@ class PresencePageState extends State<PresencePage>
             absent: 0,
             classId: classId.isNotEmpty ? classId : null,
             className: className,
+            lessonHourId: lessonHourId.isNotEmpty ? lessonHourId : null,
+            lessonHourName: lessonHourName,
           );
         }
 
@@ -477,6 +498,8 @@ class PresencePageState extends State<PresencePage>
           absent: summary.absent + (!isPresent ? 1 : 0),
           classId: summary.classId,
           className: summary.className,
+          lessonHourId: summary.lessonHourId,
+          lessonHourName: summary.lessonHourName,
         );
       }
 
@@ -565,7 +588,10 @@ class PresencePageState extends State<PresencePage>
   void _checkActiveFilter() {
     setState(() {
       _hasActiveFilter =
-          _selectedDateFilter != null || _selectedSubjectIds.isNotEmpty;
+          _selectedDateFilter != null ||
+          _selectedSubjectIds.isNotEmpty ||
+          _selectedDayIds.isNotEmpty ||
+          _selectedLessonHourIds.isNotEmpty;
     });
   }
 
@@ -573,6 +599,8 @@ class PresencePageState extends State<PresencePage>
     setState(() {
       _selectedDateFilter = null;
       _selectedSubjectIds.clear();
+      _selectedDayIds.clear();
+      _selectedLessonHourIds.clear();
       _hasActiveFilter = false;
     });
   }
@@ -1648,7 +1676,21 @@ class PresencePageState extends State<PresencePage>
           _selectedSubjectIds.isEmpty ||
           _selectedSubjectIds.contains(summary.subjectId);
 
-      return matchesSearch && matchesDateFilter && matchesSubject;
+      // Day filter
+      final matchesDay =
+          _selectedDayIds.isEmpty ||
+          _selectedDayIds.contains(summary.date.weekday.toString());
+
+      // Lesson Hour filter
+      final matchesLessonHour =
+          _selectedLessonHourIds.isEmpty ||
+          _selectedLessonHourIds.contains(summary.lessonHourId);
+
+      return matchesSearch &&
+          matchesDateFilter &&
+          matchesSubject &&
+          matchesDay &&
+          matchesLessonHour;
     }).toList();
   }
 
@@ -1928,10 +1970,51 @@ class PresencePageState extends State<PresencePage>
               options: _subjectTeacher.map((subject) {
                 return FilterOption(
                   label:
+                      subject['name'] ??
                       subject['nama'] ??
                       subject['mata_pelajaran_nama'] ??
                       'Subject',
                   value: subject['id'].toString(),
+                );
+              }).toList(),
+              multiSelect: true,
+            ),
+            FilterSection(
+              key: 'dayIds',
+              title: languageProvider.getTranslatedText({
+                'en': 'Day',
+                'id': 'Hari',
+              }),
+              options:
+                  [
+                    {'en': 'Monday', 'id': 'Senin', 'val': '1'},
+                    {'en': 'Tuesday', 'id': 'Selasa', 'val': '2'},
+                    {'en': 'Wednesday', 'id': 'Rabu', 'val': '3'},
+                    {'en': 'Thursday', 'id': 'Kamis', 'val': '4'},
+                    {'en': 'Friday', 'id': 'Jumat', 'val': '5'},
+                    {'en': 'Saturday', 'id': 'Sabtu', 'val': '6'},
+                    {'en': 'Sunday', 'id': 'Minggu', 'val': '7'},
+                  ].map((d) {
+                    return FilterOption(
+                      label: languageProvider.getTranslatedText({
+                        'en': d['en']!,
+                        'id': d['id']!,
+                      }),
+                      value: d['val']!,
+                    );
+                  }).toList(),
+              multiSelect: true,
+            ),
+            FilterSection(
+              key: 'lessonHourIds',
+              title: languageProvider.getTranslatedText({
+                'en': 'Lesson Hour',
+                'id': 'Jam Pelajaran',
+              }),
+              options: _lessonHours.map((lh) {
+                return FilterOption(
+                  label: lh['name'] ?? 'Jam',
+                  value: lh['id'].toString(),
                 );
               }).toList(),
               multiSelect: true,
@@ -1941,12 +2024,18 @@ class PresencePageState extends State<PresencePage>
         initialFilters: {
           'dateFilter': _selectedDateFilter,
           'subjectIds': _selectedSubjectIds,
+          'dayIds': _selectedDayIds,
+          'lessonHourIds': _selectedLessonHourIds,
         },
         onApplyFilters: (filters) {
           setState(() {
             _selectedDateFilter = filters['dateFilter'];
             _selectedSubjectIds = List<String>.from(
               filters['subjectIds'] ?? [],
+            );
+            _selectedDayIds = List<String>.from(filters['dayIds'] ?? []);
+            _selectedLessonHourIds = List<String>.from(
+              filters['lessonHourIds'] ?? [],
             );
             _checkActiveFilter();
           });
@@ -1995,6 +2084,32 @@ class PresencePageState extends State<PresencePage>
         'onRemove': () {
           setState(() {
             _selectedSubjectIds.clear();
+            _checkActiveFilter();
+          });
+        },
+      });
+    }
+
+    if (_selectedDayIds.isNotEmpty) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: ${_selectedDayIds.length}',
+        'onRemove': () {
+          setState(() {
+            _selectedDayIds.clear();
+            _checkActiveFilter();
+          });
+        },
+      });
+    }
+
+    if (_selectedLessonHourIds.isNotEmpty) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Hour', 'id': 'Jam'})}: ${_selectedLessonHourIds.length}',
+        'onRemove': () {
+          setState(() {
+            _selectedLessonHourIds.clear();
             _checkActiveFilter();
           });
         },
@@ -2123,6 +2238,17 @@ class PresencePageState extends State<PresencePage>
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                              if (summary.lessonHourName != null) ...[
+                                SizedBox(height: 2),
+                                Text(
+                                  summary.lessonHourName!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                               SizedBox(height: 2),
                               Text(
                                 DateFormat(
