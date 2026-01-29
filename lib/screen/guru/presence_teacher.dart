@@ -93,6 +93,10 @@ class PresencePageState extends State<PresencePage>
   bool _showSearch = false;
   final bool _showQuickActions = false;
 
+  // Lesson Hour State
+  List<dynamic> _lessonHours = [];
+  String? _selectedLessonHourId;
+
   // Search dan Filter untuk Results Mode
   final TextEditingController _searchController = TextEditingController();
   final List<String> _filterOptions = ['All', 'Today', 'This Week'];
@@ -151,13 +155,14 @@ class PresencePageState extends State<PresencePage>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final [classList, studentList] = await Future.wait([
+      final [classList, studentList, lessonHours] = await Future.wait([
         // Ambil kelas dan siswa terlebih dahulu
         ApiTeacherService.getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
         ),
         ApiStudentService.getStudent(academicYearId: academicYearId),
+        ApiScheduleService.getJamPelajaran(),
       ]);
 
       // Ambil mata pelajaran berdasarkan kelas yang terdeteksi atau default
@@ -170,6 +175,7 @@ class PresencePageState extends State<PresencePage>
         _subjectTeacher = subjects;
         _classList = classList;
         _studentList = studentList.map((s) => Siswa.fromJson(s)).toList();
+        _lessonHours = lessonHours;
         _filteredStudentList = _studentList;
 
         // Set default status untuk semua siswa
@@ -184,6 +190,8 @@ class PresencePageState extends State<PresencePage>
       if (widget.initialSubjectId == null) {
         await _detectCurrentSchedule();
       }
+
+      _detectCurrentLessonHour();
 
       // Load summary data untuk mode view
       _loadAbsensiSummary();
@@ -307,6 +315,7 @@ class PresencePageState extends State<PresencePage>
 
   // Check if current time is within schedule time
   bool _isWithinScheduleTime(String jamMulai, String jamSelesai) {
+    if (jamMulai.isEmpty || jamSelesai.isEmpty) return false;
     try {
       final now = TimeOfDay.now();
       final startParts = jamMulai.split(':');
@@ -329,6 +338,22 @@ class PresencePageState extends State<PresencePage>
     } catch (e) {
       print('Error parsing time: $e');
       return false;
+    }
+  }
+
+  void _detectCurrentLessonHour() {
+    if (_lessonHours.isEmpty) return;
+
+    for (var lh in _lessonHours) {
+      final startTime = lh['start_time']?.toString() ?? '';
+      final endTime = lh['end_time']?.toString() ?? '';
+
+      if (_isWithinScheduleTime(startTime, endTime)) {
+        setState(() {
+          _selectedLessonHourId = lh['id']?.toString();
+        });
+        break;
+      }
     }
   }
 
@@ -765,6 +790,66 @@ class PresencePageState extends State<PresencePage>
                                   ),
                                 ],
                               ),
+                            ),
+                          ),
+                          SizedBox(height: 20),
+
+                          // Lesson Hour Dropdown
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Lesson Hour',
+                              'id': 'Jam Pelajaran',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: DropdownButton<String>(
+                              value: _selectedLessonHourId,
+                              isExpanded: true,
+                              underline: Container(),
+                              icon: Icon(Icons.arrow_drop_down),
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontSize: 16,
+                              ),
+                              items: [
+                                DropdownMenuItem(
+                                  value: null,
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Select Lesson Hour',
+                                      'id': 'Pilih Jam Pelajaran',
+                                    }),
+                                  ),
+                                ),
+                                ..._lessonHours.map(
+                                  (lh) => DropdownMenuItem(
+                                    value: lh['id']?.toString(),
+                                    child: Text(
+                                      '${lh['name']} (${lh['start_time']} - ${lh['end_time']})',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedLessonHourId = value;
+                                });
+                                setModalState(() {});
+                              },
                             ),
                           ),
                           SizedBox(height: 20),
@@ -2311,15 +2396,46 @@ class PresencePageState extends State<PresencePage>
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              if (_selectedClassId != null)
-                                Text(
-                                  _getClassNameWithCount(_selectedClassId!),
-                                  style: TextStyle(
-                                    color: _getPrimaryColor(),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                              Row(
+                                children: [
+                                  if (_selectedClassId != null)
+                                    Text(
+                                      _getClassNameWithCount(_selectedClassId!),
+                                      style: TextStyle(
+                                        color: _getPrimaryColor(),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  if (_selectedLessonHourId != null) ...[
+                                    if (_selectedClassId != null)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        child: Text(
+                                          '|',
+                                          style: TextStyle(
+                                            color: Colors.grey[300],
+                                          ),
+                                        ),
+                                      ),
+                                    Text(
+                                      _lessonHours.firstWhere(
+                                        (lh) =>
+                                            lh['id']?.toString() ==
+                                            _selectedLessonHourId,
+                                        orElse: () => {'name': ''},
+                                      )['name'],
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ] else ...[
                               Row(
                                 children: [
@@ -2919,13 +3035,21 @@ class PresencePageState extends State<PresencePage>
             'date': date,
             'status': _mapStatusToBackend(status),
             'notes': '',
+            'lesson_hour_id': _selectedLessonHourId,
           });
 
           successCount++;
           await Future.delayed(const Duration(milliseconds: 50));
         } catch (e) {
           errorCount++;
-          errorMessages.add('${student.name}: $e');
+          // Debug logging as requested
+          if (kDebugMode) {
+            print('❌ Attendance save error for ${student.name}: $e');
+          }
+
+          // Clean user-friendly message
+          String cleanerMessage = e.toString().replaceAll('Exception: ', '');
+          errorMessages.add('${student.name}: $cleanerMessage');
         }
       }
 
