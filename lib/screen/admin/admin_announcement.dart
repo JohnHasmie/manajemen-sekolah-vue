@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
@@ -12,6 +15,8 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 class AdminAnnouncementScreen extends StatefulWidget {
@@ -24,6 +29,7 @@ class AdminAnnouncementScreen extends StatefulWidget {
 class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
+  File? _selectedFile;
   List<dynamic> _announcements = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -777,6 +783,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
         : null;
 
     final isEdit = announcementData != null;
+    _selectedFile = null; // Reset selected file
 
     showDialog(
       context: context,
@@ -921,6 +928,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                 ),
                               ],
                             ),
+                            SizedBox(height: 12),
+                            _buildFilePicker(setDialogState, languageProvider),
                           ],
                         ),
                       ),
@@ -974,22 +983,31 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                   }
 
                                   try {
-                                    final data = {
+                                    final Map<String, String> data = {
                                       'title': judulController.text,
                                       'content': kontenController.text,
-                                      'class_id': selectedClassId,
-                                      'role_target': selectedRole,
-                                      'priority': selectedPrioritas,
-                                      'start_date': tanggalAwal
-                                          ?.toIso8601String(),
-                                      'end_date': tanggalAkhir
-                                          ?.toIso8601String(),
+                                      'role_target': selectedRole ?? 'all',
+                                      'priority': selectedPrioritas ?? 'normal',
+                                      'type': 'general',
                                     };
 
+                                    if (selectedClassId != null) {
+                                      data['class_id'] = selectedClassId;
+                                    }
+                                    if (tanggalAwal != null) {
+                                      data['start_date'] = tanggalAwal!
+                                          .toIso8601String();
+                                    }
+                                    if (tanggalAkhir != null) {
+                                      data['end_date'] = tanggalAkhir!
+                                          .toIso8601String();
+                                    }
+
                                     if (isEdit) {
-                                      await _apiService.put(
-                                        '/announcement/${announcementData['id']}',
+                                      await ApiAnnouncementService.updateAnnouncement(
+                                        announcementData['id'],
                                         data,
+                                        _selectedFile,
                                       );
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(
@@ -1010,9 +1028,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                         Navigator.pop(context);
                                       }
                                     } else {
-                                      await _apiService.post(
-                                        '/announcement',
+                                      await ApiAnnouncementService.createAnnouncement(
                                         data,
+                                        _selectedFile,
                                       );
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(
@@ -1816,7 +1834,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -1843,7 +1861,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                       _formatDate(announcementData['created_at']),
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -1867,7 +1885,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
+                          color: Colors.orange.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.orange),
                         ),
@@ -1904,6 +1922,92 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                     ),
 
                     SizedBox(height: 20),
+
+                    // Attachment Section
+                    if (announcementData['file_path'] != null) ...[
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Attachment',
+                          'id': 'Lampiran',
+                        }),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _openFile(
+                          _getFileUrl(announcementData['file_path']),
+                          announcementData['file_name'] ?? 'attachment',
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.attach_file,
+                                  color: _getPrimaryColor(),
+                                  size: 20,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      announcementData['file_name'] ??
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Download File',
+                                            'id': 'Unduh File',
+                                          }),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ),
+                                    Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Tap to open',
+                                        'id': 'Ketuk untuk membuka',
+                                      }),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.download_rounded,
+                                color: Colors.grey.shade400,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                    ],
 
                     // Metadata
                     Container(
@@ -2002,6 +2106,53 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
     );
   }
 
+  String _getFileUrl(String path) {
+    if (path.startsWith('http')) return path;
+    final base = ApiService.baseUrl.replaceAll('/api', '');
+    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return '$base/storage/$cleanPath';
+  }
+
+  Future<void> _openFile(String url, String fileName) async {
+    try {
+      if (kDebugMode) {
+        print('Downloading file from: $url');
+      }
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(response.bodyBytes);
+
+        final result = await OpenFile.open(file.path);
+
+        if (result.type != ResultType.done) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Could not open file: ${result.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        throw Exception('Failed to download file: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildDetailRow({
     required IconData icon,
     required String label,
@@ -2075,6 +2226,134 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
       end: Alignment.bottomRight,
       colors: [primaryColor, ColorUtils.primaryColor],
     );
+  }
+
+  Widget _buildFilePicker(
+    StateSetter setDialogState,
+    LanguageProvider languageProvider,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            languageProvider.getTranslatedText({
+              'en': 'Attachment (Optional)',
+              'id': 'Lampiran (Opsional)',
+            }),
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8),
+          if (_selectedFile != null)
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.description, color: _getPrimaryColor(), size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _selectedFile!.path.split('/').last,
+                      style: TextStyle(fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.red, size: 20),
+                    onPressed: () {
+                      setDialogState(() {
+                        _selectedFile = null;
+                      });
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+          if (_selectedFile == null)
+            InkWell(
+              onTap: () => _pickFile(setDialogState),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _getPrimaryColor().withOpacity(0.5),
+                    style: BorderStyle.solid,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.cloud_upload_outlined,
+                      color: _getPrimaryColor(),
+                      size: 24,
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Tap to upload file',
+                        'id': 'Ketuk untuk unggah file',
+                      }),
+                      style: TextStyle(
+                        color: _getPrimaryColor(),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      'PDF, DOC, DOCX, JPG, PNG (Max 5MB)',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickFile(StateSetter setDialogState) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        setDialogState(() {
+          _selectedFile = File(result.files.single.path!);
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error picking file: $e');
+      }
+    }
   }
 
   @override

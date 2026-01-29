@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -248,5 +250,115 @@ class ApiAnnouncementService {
 
     // Handle old format (List)
     return result is List ? result : [];
+  }
+
+  // Create Announcement (with optional file)
+  static Future<dynamic> createAnnouncement(
+    Map<String, String> data,
+    File? file,
+  ) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/announcement'),
+      );
+
+      final headers = await _getHeaders();
+      request.headers.addAll(headers);
+
+      request.fields.addAll(data);
+
+      if (file != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            file.path,
+            contentType: MediaType.parse(_getMimeType(file.path)),
+          ),
+        );
+      }
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+
+      _debugResponse(
+        http.Response(responseBody, response.statusCode),
+        label: 'POST /announcement',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(responseBody);
+      } else {
+        throw Exception(
+          'Failed to create announcement: ${response.statusCode} - $responseBody',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error creating announcement: $e');
+      rethrow;
+    }
+  }
+
+  // Update Announcement (with optional file)
+  static Future<dynamic> updateAnnouncement(
+    String id,
+    Map<String, String> data,
+    File? file,
+  ) async {
+    try {
+      // Use POST with _method=PUT for file uploads in Laravel
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/announcement/$id'),
+      );
+
+      data['_method'] = 'PUT';
+
+      final headers = await _getHeaders();
+      request.headers.addAll(headers);
+
+      request.fields.addAll(data);
+
+      if (file != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            file.path,
+            contentType: MediaType.parse(_getMimeType(file.path)),
+          ),
+        );
+      }
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+
+      _debugResponse(
+        http.Response(responseBody, response.statusCode),
+        label: 'POST (PUT) /announcement/$id',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(responseBody);
+      } else {
+        throw Exception(
+          'Failed to update announcement: ${response.statusCode} - $responseBody',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error updating announcement: $e');
+      rethrow;
+    }
+  }
+
+  static String _getMimeType(String path) {
+    if (path.toLowerCase().endsWith('.jpg') ||
+        path.toLowerCase().endsWith('.jpeg'))
+      return 'image/jpeg';
+    if (path.toLowerCase().endsWith('.png')) return 'image/png';
+    if (path.toLowerCase().endsWith('.pdf')) return 'application/pdf';
+    if (path.toLowerCase().endsWith('.doc')) return 'application/msword';
+    if (path.toLowerCase().endsWith('.docx'))
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    return 'application/octet-stream';
   }
 }
