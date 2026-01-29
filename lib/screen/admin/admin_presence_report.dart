@@ -5,10 +5,13 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
+import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
+import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_presence_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
@@ -27,6 +30,8 @@ class AttendanceSummary {
   final int absent;
   final String classId;
   final String className;
+  final String? lessonHourId;
+  final String? lessonHourName;
 
   AttendanceSummary({
     required this.subjectId,
@@ -37,10 +42,12 @@ class AttendanceSummary {
     required this.absent,
     required this.classId,
     required this.className,
+    this.lessonHourId,
+    this.lessonHourName,
   });
 
   String get key =>
-      '$subjectId-$classId-${DateFormat('yyyy-MM-dd').format(date)}';
+      '$subjectId-$classId-${DateFormat('yyyy-MM-dd').format(date)}-$lessonHourId';
 }
 
 class AdminPresenceReportScreen extends StatefulWidget {
@@ -83,13 +90,17 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
   _selectedDateFilter; // 'today', 'week', 'month', atau null untuk semua
   List<String> _selectedSubjectIds = [];
   List<String> _selectedClassIds = [];
+  List<String> _selectedDayIds = [];
+  List<String> _selectedLessonHourIds = [];
   bool _hasActiveFilter = false;
 
   // Data for filters
   List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
+  List<dynamic> _lessonHours = [];
   Map<String, dynamic>? _selectedClassData;
   bool _isLoadingClasses = true;
+  List<dynamic> _fullTeacherList = [];
 
   // Animations
   late AnimationController _animationController;
@@ -162,15 +173,27 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
               if (kDebugMode) print('Error loading classes: $e');
               return [];
             }),
+        ApiTeacherService().getTeacher().catchError((e) {
+          if (kDebugMode) print('Error loading teachers: $e');
+          return [];
+        }),
+        ApiScheduleService.getJamPelajaran().catchError((e) {
+          if (kDebugMode) print('Error loading lesson hours: $e');
+          return [];
+        }),
       ]);
 
       subjects = results[0];
       classes = results[1];
+      final teachers = results[2];
+      final lessonHours = results[3];
 
       if (mounted) {
         setState(() {
           _subjectList = subjects;
           _classList = classes;
+          _fullTeacherList = teachers;
+          _lessonHours = lessonHours;
         });
 
         // Start animation if we have classes
@@ -202,7 +225,9 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       _hasActiveFilter =
           _selectedDateFilter != null ||
           _selectedSubjectIds.isNotEmpty ||
-          _selectedClassIds.isNotEmpty;
+          _selectedClassIds.isNotEmpty ||
+          _selectedDayIds.isNotEmpty ||
+          _selectedLessonHourIds.isNotEmpty;
     });
   }
 
@@ -211,6 +236,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       _selectedDateFilter = null;
       _selectedSubjectIds.clear();
       _selectedClassIds.clear();
+      _selectedDayIds.clear();
+      _selectedLessonHourIds.clear();
       _hasActiveFilter = false;
     });
   }
@@ -274,11 +301,11 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       for (var classId in _selectedClassIds) {
         final kelas = _classList.firstWhere(
           (k) => k['id'].toString() == classId,
-          orElse: () => {'nama': 'Class #$classId'},
+          orElse: () => {'name': 'Class #$classId'},
         );
         filterChips.add({
           'label':
-              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${kelas['name']}',
+              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${kelas['name'] ?? kelas['nama']}',
           'onRemove': () {
             setState(() {
               _selectedClassIds.remove(classId);
@@ -288,6 +315,34 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
           },
         });
       }
+    }
+
+    if (_selectedDayIds.isNotEmpty) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: ${_selectedDayIds.length}',
+        'onRemove': () {
+          setState(() {
+            _selectedDayIds.clear();
+            _checkActiveFilter();
+            _loadData();
+          });
+        },
+      });
+    }
+
+    if (_selectedLessonHourIds.isNotEmpty) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Hour', 'id': 'Jam'})}: ${_selectedLessonHourIds.length}',
+        'onRemove': () {
+          setState(() {
+            _selectedLessonHourIds.clear();
+            _checkActiveFilter();
+            _loadData();
+          });
+        },
+      });
     }
 
     return filterChips;
@@ -364,6 +419,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         tanggalStart: tanggalStart,
         tanggalEnd: tanggalEnd,
         academicYearId: academicYearId,
+        dayIds: _selectedDayIds,
+        lessonHourIds: _selectedLessonHourIds,
       );
 
       if (!mounted) return;
@@ -372,6 +429,18 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       final Map<String, dynamic> pagination = result['pagination'] ?? {};
 
       final List<AttendanceSummary> newItems = data.map((item) {
+        final lessonHourId = item['lesson_hour_id']?.toString();
+        String? lessonHourName;
+        if (lessonHourId != null && lessonHourId.isNotEmpty) {
+          final lh = _lessonHours.firstWhere(
+            (h) => h['id']?.toString() == lessonHourId,
+            orElse: () => null,
+          );
+          if (lh != null) {
+            lessonHourName = lh['name'];
+          }
+        }
+
         return AttendanceSummary(
           subjectId: item['subject_id']?.toString() ?? '',
           subjectName: item['subject_name'] ?? 'Unknown',
@@ -382,6 +451,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
           absent: int.tryParse(item['absent']?.toString() ?? '0') ?? 0,
           classId: item['class_id']?.toString() ?? '',
           className: item['class_name'] ?? 'Unknown',
+          lessonHourId: lessonHourId,
+          lessonHourName: lessonHourName,
         );
       }).toList();
 
@@ -437,6 +508,91 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     );
   }
 
+  void _showTeacherSelectionDialog() {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Select Teacher',
+                      'id': 'Pilih Guru',
+                    }),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.all(16),
+                itemCount: _fullTeacherList.length,
+                itemBuilder: (context, index) {
+                  final teacher = _fullTeacherList[index];
+                  return Card(
+                    margin: EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: _getPrimaryColor().withOpacity(0.1),
+                        child: Text(
+                          (teacher['name'] ?? 'G')[0].toUpperCase(),
+                          style: TextStyle(color: _getPrimaryColor()),
+                        ),
+                      ),
+                      title: Text(
+                        teacher['name'] ?? 'Unknown',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(teacher['nuptk'] ?? 'N/A'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PresencePage(teacher: teacher),
+                          ),
+                        ).then((_) => _loadData());
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showFilterSheet() {
     final languageProvider = Provider.of<LanguageProvider>(
       context,
@@ -446,6 +602,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     String? tempSelectedDate = _selectedDateFilter;
     List<String> tempSelectedSubjects = List.from(_selectedSubjectIds);
     List<String> tempSelectedClasses = List.from(_selectedClassIds);
+    List<String> tempSelectedDays = List.from(_selectedDayIds);
+    List<String> tempSelectedLessonHours = List.from(_selectedLessonHourIds);
 
     showModalBottomSheet(
       context: context,
@@ -487,6 +645,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                           tempSelectedDate = null;
                           tempSelectedSubjects.clear();
                           tempSelectedClasses.clear();
+                          tempSelectedDays.clear();
+                          tempSelectedLessonHours.clear();
                         });
                       },
                       child: Text(
@@ -611,6 +771,116 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                       ),
                       SizedBox(height: 24),
 
+                      // Day Filter
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Day',
+                          'id': 'Hari',
+                        }),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            [
+                              {'en': 'Monday', 'id': 'Senin', 'val': '1'},
+                              {'en': 'Tuesday', 'id': 'Selasa', 'val': '2'},
+                              {'en': 'Wednesday', 'id': 'Rabu', 'val': '3'},
+                              {'en': 'Thursday', 'id': 'Kamis', 'val': '4'},
+                              {'en': 'Friday', 'id': 'Jumat', 'val': '5'},
+                              {'en': 'Saturday', 'id': 'Sabtu', 'val': '6'},
+                              {'en': 'Sunday', 'id': 'Minggu', 'val': '7'},
+                            ].map<Widget>((d) {
+                              final val = d['val']!;
+                              final label = languageProvider.getTranslatedText({
+                                'en': d['en']!,
+                                'id': d['id']!,
+                              });
+                              final isSelected = tempSelectedDays.contains(val);
+                              return FilterChip(
+                                label: Text(label),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setModalState(() {
+                                    if (selected) {
+                                      tempSelectedDays.add(val);
+                                    } else {
+                                      tempSelectedDays.remove(val);
+                                    }
+                                  });
+                                },
+                                backgroundColor: Colors.grey.shade100,
+                                selectedColor: _getPrimaryColor().withOpacity(
+                                  0.2,
+                                ),
+                                checkmarkColor: _getPrimaryColor(),
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : Colors.grey.shade700,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                      SizedBox(height: 24),
+
+                      // Lesson Hour Filter
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Lesson Hour',
+                          'id': 'Jam Pelajaran',
+                        }),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _lessonHours.map<Widget>((lh) {
+                          final lhId = lh['id'].toString();
+                          final lhName = lh['name'] ?? 'Jam';
+                          final isSelected = tempSelectedLessonHours.contains(
+                            lhId,
+                          );
+                          return FilterChip(
+                            label: Text(lhName),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setModalState(() {
+                                if (selected) {
+                                  tempSelectedLessonHours.add(lhId);
+                                } else {
+                                  tempSelectedLessonHours.remove(lhId);
+                                }
+                              });
+                            },
+                            backgroundColor: Colors.grey.shade100,
+                            selectedColor: _getPrimaryColor().withOpacity(0.2),
+                            checkmarkColor: _getPrimaryColor(),
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? _getPrimaryColor()
+                                  : Colors.grey.shade700,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      SizedBox(height: 24),
+
                       // Class Filter
                       Text(
                         languageProvider.getTranslatedText({
@@ -692,6 +962,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                             _selectedDateFilter = tempSelectedDate;
                             _selectedSubjectIds = tempSelectedSubjects;
                             _selectedClassIds = tempSelectedClasses;
+                            _selectedDayIds = tempSelectedDays;
+                            _selectedLessonHourIds = tempSelectedLessonHours;
                             _checkActiveFilter();
                           });
                           _loadData(); // Reload data with new filters
@@ -1285,6 +1557,31 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                   ),
                 ),
 
+                // Delete button
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _deleteAbsensi(summary, languageProvider),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: Colors.red.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
                 Padding(
                   padding: EdgeInsets.all(16),
                   child: Column(
@@ -1319,6 +1616,17 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                                if (summary.lessonHourName != null) ...[
+                                  SizedBox(height: 2),
+                                  Text(
+                                    summary.lessonHourName!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[700],
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                                 SizedBox(height: 2),
                                 Text(
                                   DateFormat(
@@ -1514,7 +1822,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                   'id': 'Export Absensi',
                 }),
               ),
-              content: Container(
+              content: SizedBox(
                 width: double.maxFinite,
                 height: 300,
                 child: Column(
@@ -1807,10 +2115,22 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
           _selectedClassIds.isEmpty ||
           _selectedClassIds.contains(summary.classId);
 
+      // Day filter
+      final matchesDay =
+          _selectedDayIds.isEmpty ||
+          _selectedDayIds.contains(summary.date.weekday.toString());
+
+      // Lesson Hour filter
+      final matchesLessonHour =
+          _selectedLessonHourIds.isEmpty ||
+          _selectedLessonHourIds.contains(summary.lessonHourId);
+
       return matchesSearch &&
           matchesDateFilter &&
           matchesSubject &&
-          matchesClass;
+          matchesClass &&
+          matchesDay &&
+          matchesLessonHour;
     }).toList();
   }
 
@@ -1818,6 +2138,91 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     return date1.year == date2.year &&
         date1.month == date2.month &&
         date1.day == date2.day;
+  }
+
+  Future<void> _deleteAbsensi(
+    AttendanceSummary summary,
+    LanguageProvider languageProvider,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          languageProvider.getTranslatedText({
+            'en': 'Delete Attendance',
+            'id': 'Hapus Absensi',
+          }),
+        ),
+        content: Text(
+          languageProvider.getTranslatedText({
+            'en': 'Are you sure you want to delete this attendance record?',
+            'id': 'Apakah Anda yakin ingin menghapus data absensi ini?',
+          }),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Cancel',
+                'id': 'Batal',
+              }),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Delete',
+                'id': 'Hapus',
+              }),
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        setState(() {
+          _isLoadingSummary = true;
+        });
+
+        await ApiService.deleteAbsensi(
+          subjectId: summary.subjectId,
+          classId: summary.classId,
+          date: DateFormat('yyyy-MM-dd').format(summary.date),
+          lessonHourId: summary.lessonHourId,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Attendance deleted successfully',
+                'id': 'Absensi berhasil dihapus',
+              }),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        _loadData();
+      } catch (e) {
+        setState(() {
+          _isLoadingSummary = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal menghapus absensi: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _navigateToDetailAbsensi(AttendanceSummary summary) {
@@ -1828,8 +2233,10 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
           subjectId: summary.subjectId,
           subjectName: summary.subjectName,
           date: summary.date,
-          classId: summary.classId, // Kirim classId ke detail page
-          className: summary.className, // Kirim kelasNama ke detail page
+          classId: summary.classId,
+          className: summary.className,
+          lessonHourId: summary.lessonHourId,
+          lessonHourName: summary.lessonHourName,
         ),
       ),
     );
@@ -1852,6 +2259,15 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
 
         return Scaffold(
           backgroundColor: Color(0xFFF8F9FA),
+          floatingActionButton: FloatingActionButton(
+            onPressed: _showTeacherSelectionDialog,
+            backgroundColor: _getPrimaryColor(),
+            tooltip: languageProvider.getTranslatedText({
+              'en': 'Add Attendance',
+              'id': 'Tambah Absensi',
+            }),
+            child: Icon(Icons.add, color: Colors.white),
+          ),
           body: Column(
             children: [
               // Header dengan gradient
@@ -2267,16 +2683,20 @@ class AdminAbsensiDetailPage extends StatefulWidget {
   final String subjectId;
   final String subjectName;
   final DateTime date;
-  final String classId; // Tambahkan
-  final String className; // Tambahkan
+  final String classId;
+  final String className;
+  final String? lessonHourId;
+  final String? lessonHourName;
 
   const AdminAbsensiDetailPage({
     super.key,
     required this.subjectId,
     required this.subjectName,
     required this.date,
-    required this.classId, // Tambahkan
-    required this.className, // Tambahkan
+    required this.classId,
+    required this.className,
+    this.lessonHourId,
+    this.lessonHourName,
   });
 
   @override
@@ -2288,6 +2708,9 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
   List<dynamic> _absensiData = [];
   List<Siswa> _siswaList = [];
   bool _isLoading = true;
+  bool _isEditing = false;
+  final Map<String, String> _tempAbsensiStatus = {};
+  bool _isSaving = false;
 
   // Animations
   late AnimationController _animationController;
@@ -2327,6 +2750,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         classId: widget.classId,
+        lessonHourId: widget.lessonHourId,
       );
 
       // 2. Load students by class ID (from widget parameter)
@@ -2372,6 +2796,13 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
       setState(() {
         _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
         _absensiData = absensiData;
+
+        // Initialize temp status
+        _tempAbsensiStatus.clear();
+        for (var s in _siswaList) {
+          _tempAbsensiStatus[s.id] = _getStudentStatus(s.id);
+        }
+
         _isLoading = false;
       });
 
@@ -2432,9 +2863,71 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
         (a) => a['student_id']?.toString() == siswaId.toString(),
         orElse: () => {'status': 'alpha'}, // Fallback if not found
       );
-      return absenRecord['status'] ?? 'alpha';
+      return (absenRecord['status'] ?? 'alpha').toString().toLowerCase();
     } catch (e) {
       return 'alpha';
+    }
+  }
+
+  Future<void> _saveChanges() async {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+
+    setState(() => _isSaving = true);
+
+    try {
+      final List<Map<String, dynamic>> finalAbsensi = _siswaList.map((siswa) {
+        return {
+          'id_siswa': siswa.id,
+          'status': _tempAbsensiStatus[siswa.id] ?? 'alpha',
+        };
+      }).toList();
+
+      String? teacherId;
+      if (_absensiData.isNotEmpty) {
+        teacherId =
+            _absensiData.first['teacher_id']?.toString() ??
+            _absensiData.first['guru_id']?.toString();
+      }
+
+      await ApiService.tambahAbsensi({
+        'tanggal': DateFormat('yyyy-MM-dd').format(widget.date),
+        'mata_pelajaran_id': widget.subjectId,
+        'kelas_id': widget.classId,
+        'lesson_hour_id': widget.lessonHourId,
+        'teacher_id': teacherId,
+        'absensi': finalAbsensi,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Attendance updated successfully',
+              'id': 'Absensi berhasil diperbarui',
+            }),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      setState(() {
+        _isEditing = false;
+        _isSaving = false;
+      });
+      _loadData(); // Reload to get fresh data from server
+    } catch (e) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal menyimpan perubahan: ${ErrorUtils.getFriendlyMessage(e)}',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -2595,6 +3088,52 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                       ],
                     ),
                   ),
+
+                  // Edit mode status selector
+                  if (_isEditing)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.95),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildQuickStatusButton(
+                              'hadir',
+                              'H',
+                              Colors.green,
+                              siswa.id,
+                            ),
+                            _buildQuickStatusButton(
+                              'sakit',
+                              'S',
+                              Colors.orange,
+                              siswa.id,
+                            ),
+                            _buildQuickStatusButton(
+                              'izin',
+                              'I',
+                              Colors.blue,
+                              siswa.id,
+                            ),
+                            _buildQuickStatusButton(
+                              'alpa',
+                              'A',
+                              Colors.red,
+                              siswa.id,
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.close, color: Colors.grey),
+                              onPressed: () {
+                                // Do nothing, just visual close if needed
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -2770,6 +3309,41 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
     );
   }
 
+  Widget _buildQuickStatusButton(
+    String status,
+    String label,
+    Color color,
+    String studentId,
+  ) {
+    final isSelected = _tempAbsensiStatus[studentId] == status;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _tempAbsensiStatus[studentId] = status;
+        });
+      },
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: isSelected ? color : color.withOpacity(0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 1.5),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -2781,10 +3355,15 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
           backgroundColor: Color(0xFFF8F9FA),
           appBar: AppBar(
             title: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Attendance Details',
-                'id': 'Detail Absensi',
-              }),
+              _isEditing
+                  ? languageProvider.getTranslatedText({
+                      'en': 'Edit Attendance',
+                      'id': 'Edit Absensi',
+                    })
+                  : languageProvider.getTranslatedText({
+                      'en': 'Attendance Details',
+                      'id': 'Detail Absensi',
+                    }),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -2796,57 +3375,128 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
             centerTitle: true,
             iconTheme: IconThemeData(color: Colors.white),
             leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
+              icon: Icon(
+                _isEditing ? Icons.close : Icons.arrow_back,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                if (_isEditing) {
+                  setState(() {
+                    _isEditing = false;
+                    // Reset temp status
+                    for (var s in _siswaList) {
+                      _tempAbsensiStatus[s.id] = _getStudentStatus(s.id);
+                    }
+                  });
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
             ),
             actions: [
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.white),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'refresh':
-                      _loadData();
-                      break;
-                    case 'export':
-                      exportDetail();
-                      break;
+              IconButton(
+                icon: Icon(
+                  _isEditing ? Icons.check : Icons.edit,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  if (_isEditing) {
+                    _saveChanges();
+                  } else {
+                    setState(() {
+                      _isEditing = true;
+                    });
                   }
                 },
-                itemBuilder: (BuildContext context) => [
-                  PopupMenuItem<String>(
-                    value: 'export',
-                    child: Row(
-                      children: [
-                        Icon(Icons.file_download, color: _getPrimaryColor()),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Export to Excel',
-                            'id': 'Export ke Excel',
-                          }),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(Icons.refresh, color: _getPrimaryColor()),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Refresh',
-                            'id': 'Refresh',
-                          }),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
+              if (!_isEditing)
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'refresh':
+                        _loadData();
+                        break;
+                      case 'export':
+                        exportDetail();
+                        break;
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => [
+                    PopupMenuItem<String>(
+                      value: 'export',
+                      child: Row(
+                        children: [
+                          Icon(Icons.file_download, color: _getPrimaryColor()),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Export to Excel',
+                              'id': 'Export ke Excel',
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, color: _getPrimaryColor()),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Refresh',
+                              'id': 'Refresh',
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
+          bottomNavigationBar: _isEditing
+              ? SafeArea(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _saveChanges,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _getPrimaryColor(),
+                        minimumSize: Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isSaving
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Save Changes',
+                                'id': 'Simpan Perubahan',
+                              }),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  ),
+                )
+              : null,
           body: _isLoading
               ? LoadingScreen(
                   message: languageProvider.getTranslatedText({

@@ -45,7 +45,7 @@ class AbsensiSummary {
   });
 
   String get key =>
-      '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}-$lessonHourId';
+      '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}-$classId-$lessonHourId';
 }
 
 class PresencePage extends StatefulWidget {
@@ -426,7 +426,7 @@ class PresencePageState extends State<PresencePage>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final absensiData = await ApiService.getAbsensi(
+      final absensiData = await ApiService.getAbsensiSummary(
         teacherId: widget.teacher['id'],
         academicYearId: academicYearId,
       );
@@ -434,73 +434,31 @@ class PresencePageState extends State<PresencePage>
       final Map<String, AbsensiSummary> summaryMap = {};
 
       for (var absen in absensiData) {
-        // Include kelas_id and lesson_hour_id in the grouping key
-        final classId =
-            absen['class_id']?.toString() ??
-            absen['class']?['id']?.toString() ??
-            absen['kelas_id']?.toString() ??
-            '';
-        final lessonHourId = absen['lesson_hour_id']?.toString() ?? '';
+        // Data from summary endpoint is already aggregated
+        final subjectId = (absen['subject_id'] ?? '').toString();
+        final subjectName = absen['subject_name'] ?? 'Unknown';
+        final className = absen['class_name'] ?? 'Unknown';
+        final classId = (absen['class_id'] ?? '').toString();
+        final lessonHourId = (absen['lesson_hour_id'] ?? '').toString();
+        final lessonHourName = absen['lesson_hour_name'] ?? '';
+        final dateStr = absen['date']?.toString() ?? '';
+        final date = _parseLocalDate(dateStr);
 
-        final key =
-            '${absen['subject_id']}-${absen['date']}-$classId-$lessonHourId';
-
-        // Use name from API if available, otherwise fallback to lookup
-        final subjectName =
-            absen['subject_name'] ??
-            absen['subject']?['name'] ??
-            absen['mata_pelajaran_nama'] ??
-            _getSubjectName(absen['subject_id']);
-
-        final className =
-            absen['class_name'] ??
-            absen['class']?['name'] ??
-            absen['kelas_nama'] ??
-            _getClassNameWithCount(classId).split(' - ').first;
-
-        // Find lesson hour name
-        String? lessonHourName;
-        if (lessonHourId.isNotEmpty) {
-          final lh = _lessonHours.firstWhere(
-            (h) => h['id']?.toString() == lessonHourId,
-            orElse: () => null,
-          );
-          if (lh != null) {
-            lessonHourName = lh['name'];
-          }
-        }
-
-        if (!summaryMap.containsKey(key)) {
-          summaryMap[key] = AbsensiSummary(
-            subjectId: absen['subject_id'],
-            subjectName: subjectName,
-            date: _parseLocalDate(absen['date']),
-            totalStudent: 0,
-            present: 0,
-            absent: 0,
-            classId: classId.isNotEmpty ? classId : null,
-            className: className,
-            lessonHourId: lessonHourId.isNotEmpty ? lessonHourId : null,
-            lessonHourName: lessonHourName,
-          );
-        }
-
-        final summary = summaryMap[key]!;
-        final status = (absen['status'] ?? '').toString().toLowerCase();
-        final isPresent = status == 'hadir' || status == 'present';
-
-        summaryMap[key] = AbsensiSummary(
-          subjectId: summary.subjectId,
-          subjectName: summary.subjectName,
-          date: summary.date,
-          totalStudent: summary.totalStudent + 1,
-          present: summary.present + (isPresent ? 1 : 0),
-          absent: summary.absent + (!isPresent ? 1 : 0),
-          classId: summary.classId,
-          className: summary.className,
-          lessonHourId: summary.lessonHourId,
-          lessonHourName: summary.lessonHourName,
+        final summary = AbsensiSummary(
+          subjectId: subjectId,
+          subjectName: subjectName,
+          date: date,
+          totalStudent:
+              int.tryParse(absen['total_students']?.toString() ?? '0') ?? 0,
+          present: int.tryParse(absen['present']?.toString() ?? '0') ?? 0,
+          absent: int.tryParse(absen['absent']?.toString() ?? '0') ?? 0,
+          classId: classId,
+          className: className,
+          lessonHourId: lessonHourId,
+          lessonHourName: lessonHourName,
         );
+
+        summaryMap[summary.key] = summary;
       }
 
       // Check mounted sebelum setState
@@ -2422,6 +2380,8 @@ class PresencePageState extends State<PresencePage>
           classId: summary.classId ?? '',
           className: summary.className ?? 'Unknown Class',
           teacher: widget.teacher,
+          lessonHourId: summary.lessonHourId,
+          lessonHourName: summary.lessonHourName,
         ),
       ),
     );
@@ -3367,6 +3327,7 @@ class PresencePageState extends State<PresencePage>
       case 'sakit':
         return 'sick';
       case 'alpha':
+      case 'absent':
         return 'absent';
       default:
         return 'present';
@@ -3427,6 +3388,7 @@ class PresencePageState extends State<PresencePage>
         subjectId: summary.subjectId,
         date: DateFormat('yyyy-MM-dd').format(summary.date),
         classId: summary.classId,
+        lessonHourId: summary.lessonHourId,
       );
 
       if (!mounted) return;
@@ -4071,13 +4033,6 @@ LinearGradient _getCardGradient() {
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
 class TeacherAbsensiDetailPage extends StatefulWidget {
-  final String subjectId;
-  final String subjectName;
-  final DateTime date;
-  final String classId;
-  final String className;
-  final Map<String, dynamic> teacher;
-
   const TeacherAbsensiDetailPage({
     super.key,
     required this.subjectId,
@@ -4086,7 +4041,18 @@ class TeacherAbsensiDetailPage extends StatefulWidget {
     required this.classId,
     required this.className,
     required this.teacher,
+    this.lessonHourId,
+    this.lessonHourName,
   });
+
+  final String subjectId;
+  final String subjectName;
+  final DateTime date;
+  final String classId;
+  final String className;
+  final Map<String, dynamic> teacher;
+  final String? lessonHourId;
+  final String? lessonHourName;
 
   @override
   State<TeacherAbsensiDetailPage> createState() =>
@@ -4133,6 +4099,8 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         teacherId: widget.teacher['id'],
+        lessonHourId: widget.lessonHourId,
+        classId: widget.classId,
       );
 
       // 2. Load students by class ID
@@ -4221,6 +4189,29 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
     }
   }
 
+  String _mapStatusToBackend(String status) {
+    switch (status.toLowerCase()) {
+      case 'hadir':
+      case 'present':
+        return 'present';
+      case 'terlambat':
+      case 'late':
+        return 'late';
+      case 'izin':
+      case 'excused':
+      case 'permission':
+        return 'excused';
+      case 'sakit':
+      case 'sick':
+        return 'sick';
+      case 'alpha':
+      case 'absent':
+        return 'absent';
+      default:
+        return 'present';
+    }
+  }
+
   Future<void> _saveChanges() async {
     setState(() {
       _isSaving = true;
@@ -4238,14 +4229,45 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
         // Only update if status changed
         if (newStatus != null && newStatus != currentStatus) {
           try {
+            // Determine lesson_hour_id
+            // If widget.lessonHourId is null (All Hours view), try to find existing record's ID
+            String? targetLessonHourId = widget.lessonHourId;
+            if (targetLessonHourId == null) {
+              try {
+                final existingRecord = _absensiData.firstWhere(
+                  (a) => a['student_id'].toString() == siswa.id.toString(),
+                );
+                targetLessonHourId = existingRecord['lesson_hour_id']
+                    ?.toString();
+                if (kDebugMode) {
+                  print(
+                    '🔍 Found existing record for ${siswa.name}, resolved lesson_hour_id: $targetLessonHourId',
+                  );
+                }
+              } catch (_) {
+                if (kDebugMode) {
+                  print(
+                    '⚠️ No existing record found for ${siswa.name} in _absensiData',
+                  );
+                }
+              }
+            }
+
+            if (kDebugMode) {
+              print(
+                '🚀 Saving attendance for ${siswa.name} with lesson_hour_id: $targetLessonHourId',
+              );
+            }
+
             await ApiService.tambahAbsensi({
               'student_id': siswa.id,
               'teacher_id': widget.teacher['id'],
               'subject_id': widget.subjectId,
               'class_id': _detectedClassId ?? siswa.classId ?? '',
               'date': DateFormat('yyyy-MM-dd').format(widget.date),
-              'status': newStatus,
+              'status': _mapStatusToBackend(newStatus),
               'notes': '',
+              'lesson_hour_id': targetLessonHourId,
             });
             successCount++;
           } catch (e) {
@@ -4317,9 +4339,18 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
         (a) => a['student_id']?.toString() == siswaId.toString(),
         orElse: () => {'status': 'absent'}, // Fallback if not found
       );
-      final status = absenRecord['status'] ?? 'absent';
-      // Map 'alpha' to 'absent' if it exists in data
-      return status == 'alpha' ? 'absent' : status;
+      final status = (absenRecord['status'] ?? 'absent')
+          .toString()
+          .toLowerCase();
+
+      // Normalize Indonesian terms to English keys
+      if (status == 'hadir') return 'present';
+      if (status == 'terlambat') return 'late';
+      if (status == 'izin') return 'excused';
+      if (status == 'sakit') return 'sick';
+      if (status == 'alpha') return 'absent';
+
+      return status;
     } catch (e) {
       return 'absent';
     }

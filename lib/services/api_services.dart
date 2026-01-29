@@ -918,6 +918,7 @@ class ApiService {
     String? studentId,
     String? classId,
     String? academicYearId,
+    String? lessonHourId,
   }) async {
     String url = '$baseUrl/attendance?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
@@ -926,6 +927,7 @@ class ApiService {
     if (studentId != null) url += 'student_id=$studentId&';
     if (classId != null) url += 'classId=$classId&';
     if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
+    if (lessonHourId != null) url += 'lesson_hour_id=$lessonHourId&';
 
     if (kDebugMode) {
       print('📍 Calling getAbsensi: $url');
@@ -970,11 +972,15 @@ class ApiService {
     required String subjectId,
     required String date,
     String? classId,
+    String? lessonHourId,
   }) async {
     String query =
         '/attendance?teacher_id=$teacherId&subject_id=$subjectId&date=$date';
     if (classId != null && classId.isNotEmpty) {
       query += '&class_id=$classId';
+    }
+    if (lessonHourId != null && lessonHourId.isNotEmpty) {
+      query += '&lesson_hour_id=$lessonHourId';
     }
 
     final apiService = ApiService();
@@ -1052,9 +1058,19 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getAbsensiSummary({String? guruId}) async {
-    String url = '$baseUrl/attendance-summary?';
-    if (guruId != null) url += 'teacher_id=$guruId&';
+  static Future<List<dynamic>> getAbsensiSummary({
+    String? teacherId,
+    String? date,
+    String? subjectId,
+    String? classId,
+    String? academicYearId,
+  }) async {
+    String url = '$baseUrl/attendance/summary?';
+    if (teacherId != null) url += 'teacher_id=$teacherId&';
+    if (date != null) url += 'date=$date&';
+    if (subjectId != null) url += 'subjectId=$subjectId&';
+    if (classId != null) url += 'classId=$classId&';
+    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
 
     final response = await http.get(
       Uri.parse(url),
@@ -1062,6 +1078,9 @@ class ApiService {
     );
 
     final result = _handleResponse(response);
+    if (result is Map && result['data'] is List) {
+      return result['data'];
+    }
     return result is List ? result : [];
   }
 
@@ -1076,6 +1095,8 @@ class ApiService {
     String? tanggalStart,
     String? tanggalEnd,
     String? academicYearId,
+    List<String>? dayIds,
+    List<String>? lessonHourIds,
   }) async {
     try {
       final params = <String, String>{
@@ -1097,6 +1118,12 @@ class ApiService {
       }
       if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
         params['tanggalEnd'] = tanggalEnd;
+      }
+      if (dayIds != null && dayIds.isNotEmpty) {
+        params['day_ids'] = dayIds.join(',');
+      }
+      if (lessonHourIds != null && lessonHourIds.isNotEmpty) {
+        params['lesson_hour_ids'] = lessonHourIds.join(',');
       }
 
       final uri = Uri.parse(
@@ -1135,6 +1162,32 @@ class ApiService {
     );
 
     return _handleResponse(response);
+  }
+
+  static Future<dynamic> deleteAbsensi({
+    required String subjectId,
+    required String classId,
+    required String date,
+    String? lessonHourId,
+  }) async {
+    try {
+      final params = <String, String>{
+        'subject_id': subjectId,
+        'class_id': classId,
+        'date': date,
+      };
+      if (lessonHourId != null) params['lesson_hour_id'] = lessonHourId;
+
+      final uri = Uri.parse(
+        '$baseUrl/attendance',
+      ).replace(queryParameters: params);
+      final response = await http.delete(uri, headers: await _getHeaders());
+
+      return _handleResponse(response);
+    } catch (e) {
+      if (kDebugMode) print('ApiService.deleteAbsensi error: $e');
+      rethrow;
+    }
   }
 
   // Dalam class ApiService di api_services.dart
