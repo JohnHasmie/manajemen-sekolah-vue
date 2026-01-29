@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
@@ -9,6 +12,8 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -276,6 +281,92 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
                     SizedBox(height: 20),
 
+                    // Attachment Section
+                    if (announcementData['file_path'] != null) ...[
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Attachment',
+                          'id': 'Lampiran',
+                        }),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _openFile(
+                          _getFileUrl(announcementData['file_path']),
+                          announcementData['file_name'] ?? 'attachment',
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.attach_file,
+                                  color: _getPrimaryColor(),
+                                  size: 20,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      announcementData['file_name'] ??
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Download File',
+                                            'id': 'Unduh File',
+                                          }),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ),
+                                    Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Tap to open',
+                                        'id': 'Ketuk untuk membuka',
+                                      }),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.download_rounded,
+                                color: Colors.grey.shade400,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                    ],
+
                     // Metadata
                     Container(
                       padding: EdgeInsets.all(16),
@@ -371,6 +462,53 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
         ),
       ),
     );
+  }
+
+  String _getFileUrl(String path) {
+    if (path.startsWith('http')) return path;
+    final base = ApiService.baseUrl.replaceAll('/api', '');
+    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return '$base/storage/$cleanPath';
+  }
+
+  Future<void> _openFile(String url, String fileName) async {
+    try {
+      if (kDebugMode) {
+        print('Downloading file from: $url');
+      }
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(response.bodyBytes);
+
+        final result = await OpenFile.open(file.path);
+
+        if (result.type != ResultType.done) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Could not open file: ${result.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        throw Exception('Failed to download file: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildDetailRow({
