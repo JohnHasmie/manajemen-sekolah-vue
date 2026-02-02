@@ -28,7 +28,16 @@ class LocalCacheService {
         .getKeys()
         .where((key) => key.startsWith(fullPrefix))
         .toList();
+
+    if (kDebugMode) {
+      print('🗑️ Clearing cache keys starting with: $fullPrefix');
+      print('🗑️ Found ${keys.length} keys to clear');
+    }
+
     for (final key in keys) {
+      if (kDebugMode) {
+        print('🗑️ Removing cache key: $key');
+      }
       await prefs.remove(key);
     }
   }

@@ -28,6 +28,23 @@ class ApiSubjectService {
   // Get Filter Options for Subject Filters
   static Future<Map<String, dynamic>> getSubjectFilterOptions() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('user');
+      String schoolId = 'global';
+      if (userJson != null) {
+        final user = json.decode(userJson);
+        schoolId = user['school_id']?.toString() ?? 'global';
+      }
+
+      String cacheKey = 'subject_filters_$schoolId';
+
+      // 1. Try cache
+      final cachedData = await LocalCacheService.load(
+        cacheKey,
+        ttl: Duration(hours: 24),
+      );
+      if (cachedData != null) return cachedData;
+
       final response = await http.get(
         Uri.parse('$baseUrl/subject/filter-options'),
         headers: await ApiService.getHeaders(),
@@ -36,6 +53,7 @@ class ApiSubjectService {
       final result = _handleResponse(response);
 
       if (result is Map<String, dynamic>) {
+        await LocalCacheService.save(cacheKey, result);
         return result;
       }
 
@@ -81,7 +99,19 @@ class ApiSubjectService {
 
     // Build query string
     String queryString = Uri(queryParameters: queryParams).query;
-    String cacheKey = 'subject_$queryString';
+
+    // Get school_id context for cache key
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user');
+    String schoolId = 'global';
+    if (userJson != null) {
+      try {
+        final user = json.decode(userJson);
+        schoolId = user['school_id']?.toString() ?? 'global';
+      } catch (_) {}
+    }
+
+    String cacheKey = 'subject_${schoolId}_$queryString';
 
     try {
       // 1. Coba ambil dari cache
@@ -97,6 +127,9 @@ class ApiSubjectService {
       }
 
       // 2. Jika tidak ada di cache, ambil dari API
+      if (kDebugMode) {
+        print('🌐 Fetching subjects from API for School: $schoolId');
+      }
       final response = await http.get(
         Uri.parse('$baseUrl/subject?$queryString'),
         headers: await ApiService.getHeaders(),
@@ -154,19 +187,37 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  Future<dynamic> addSubject(Map<String, dynamic> data) async {
+  static Future<dynamic> addSubject(Map<String, dynamic> data) async {
     final response = await ApiService().post('/subject', data);
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
     return response;
   }
 
-  Future<void> updateSubject(String id, Map<String, dynamic> data) async {
+  static Future<void> updateSubject(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     await ApiService().put('/subject/$id', data);
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 
-  Future<void> deleteSubject(String id) async {
+  static Future<void> deleteSubject(String id) async {
     await ApiService().delete('/subject/$id');
+    await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
+  }
+
+  static Future<void> attachClass(String subjectId, String classId) async {
+    await ApiService().post('/subject-class', {
+      'subject_id': subjectId,
+      'class_id': classId,
+    });
+    await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
+  }
+
+  static Future<void> detachClass(String subjectId, String classId) async {
+    await ApiService().delete(
+      '/subject-class?subject_id=$subjectId&class_id=$classId',
+    );
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 

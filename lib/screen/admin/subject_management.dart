@@ -13,6 +13,7 @@ import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/excel_subject_service.dart';
+import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -27,7 +28,6 @@ class SubjectManagementScreen extends StatefulWidget {
 
 class SubjectManagementScreenState extends State<SubjectManagementScreen>
     with SingleTickerProviderStateMixin {
-  final ApiService _apiService = ApiService();
   List<dynamic> _subjectList = [];
   bool _isLoading = true;
   String _errorMessage = '';
@@ -95,6 +95,20 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     _loadFilterOptions();
     _loadMasterSubjects();
     _loadSubjects();
+
+    // Listen to background sync triggers (FCM)
+    FCMService().syncTrigger.addListener(_onSyncTriggered);
+  }
+
+  void _onSyncTriggered() {
+    if (FCMService().syncTrigger.value == 'refresh_subjects') {
+      if (kDebugMode) {
+        print('♻️ Refreshing subjects due to FCM sync trigger');
+      }
+      _loadSubjects(resetPage: true).then((_) {
+        // Optional: show a small snackbar if item count changed
+      });
+    }
   }
 
   Future<void> _loadMasterSubjects() async {
@@ -124,6 +138,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
     _searchController.dispose();
     _searchDebounce?.cancel();
+    FCMService().syncTrigger.removeListener(_onSyncTriggered);
     super.dispose();
   }
 
@@ -673,12 +688,19 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
       final data = response['data'] ?? [];
 
+      if (kDebugMode) {
+        print('✅ Subjects received: ${data.length} items');
+      }
+
       // Extract unique class names and grade levels from subjects
       Set<String> classNamesSet = {};
       Set<String> gradeLevelsSet = {};
 
       for (var subject in data) {
-        final kelasNames = subject['class_names']?.toString() ?? '';
+        // Support both naming conventions
+        final kelasNames =
+            (subject['class_names'] ?? subject['kelas_names'])?.toString() ??
+            '';
         if (kelasNames.isNotEmpty) {
           final names = kelasNames
               .split(',')
@@ -688,10 +710,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         }
 
         // Extract grade levels
-        final kelasGradeLevels =
-            subject['class_grade_levels']?.toString() ?? '';
-        if (kelasGradeLevels.isNotEmpty) {
-          final levels = kelasGradeLevels
+        final gradeLevels =
+            (subject['class_grade_levels'] ?? subject['kelas_grade_levels'])
+                ?.toString() ??
+            '';
+        if (gradeLevels.isNotEmpty) {
+          final levels = gradeLevels
               .split(',')
               .map((e) => e.trim())
               .where((e) => e.isNotEmpty);
@@ -1169,23 +1193,25 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
                                 try {
                                   if (subject == null) {
-                                    await _apiService.post('/subject', {
-                                      'code': codeController.text,
+                                    await ApiSubjectService.addSubject({
                                       'name': nameController.text,
+                                      'code': codeController.text,
                                       'description': descriptionController.text,
                                       'subject_id': selectedMasterSubjectId,
                                       'is_active': isActive,
                                     });
                                   } else {
-                                    await _apiService
-                                        .put('/subject/${subject['id']}', {
-                                          'code': codeController.text,
-                                          'name': nameController.text,
-                                          'description':
-                                              descriptionController.text,
-                                          'subject_id': selectedMasterSubjectId,
-                                          'is_active': isActive,
-                                        });
+                                    await ApiSubjectService.updateSubject(
+                                      subject['id'],
+                                      {
+                                        'name': nameController.text,
+                                        'code': codeController.text,
+                                        'description':
+                                            descriptionController.text,
+                                        'subject_id': selectedMasterSubjectId,
+                                        'is_active': isActive,
+                                      },
+                                    );
                                   }
                                   if (mounted) {
                                     Navigator.pop(context);
@@ -1302,7 +1328,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
 
     if (confirmed == true) {
       try {
-        await _apiService.delete('/subject/${subject['id']}');
+        await ApiSubjectService.deleteSubject(subject['id']);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -2337,10 +2363,10 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
 
   Future<void> _addClassToSubject(Map<String, dynamic> kelas) async {
     try {
-      await _apiService.post('/subject-class', {
-        'subject_id': widget.subject['id'],
-        'class_id': kelas['id'],
-      });
+      await ApiSubjectService.attachClass(
+        widget.subject['id'].toString(),
+        kelas['id'].toString(),
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2375,8 +2401,9 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
 
     if (confirmed == true) {
       try {
-        await _apiService.delete(
-          '/subject-class?subject_id=${widget.subject['id']}&class_id=${kelas['id']}',
+        await ApiSubjectService.detachClass(
+          widget.subject['id'].toString(),
+          kelas['id'].toString(),
         );
 
         if (mounted) {

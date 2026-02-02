@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Top-level handler untuk background messages
@@ -14,6 +15,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     print('Title: ${message.notification?.title}');
     print('Body: ${message.notification?.body}');
     print('Data: ${message.data}');
+  }
+
+  if (message.data['type'] == 'refresh_subjects') {
+    await LocalCacheService.clearStartingWith('subject_');
+    if (kDebugMode) {
+      print('♻️ Subject cache invalidated in background');
+    }
+    return;
   }
 
   // Show notification when app is in background
@@ -73,6 +82,9 @@ class FCMService {
 
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
+
+  // Notifier for UI components to listen to background changes
+  final ValueNotifier<String?> syncTrigger = ValueNotifier<String?>(null);
 
   // Initialize FCM
   Future<void> initialize() async {
@@ -190,12 +202,22 @@ class FCMService {
   // Setup message handlers
   void _setupMessageHandlers() {
     // Foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (kDebugMode) {
-        print('🔔 Foreground message received: ${message.messageId}');
-        print('Title: ${message.notification?.title}');
-        print('Body: ${message.notification?.body}');
         print('Data: ${message.data}');
+      }
+
+      if (message.data['type'] == 'refresh_subjects') {
+        await LocalCacheService.clearStartingWith('subject_');
+        syncTrigger.value = 'refresh_subjects';
+        // Reset to allow future triggers
+        Future.delayed(const Duration(milliseconds: 100), () {
+          syncTrigger.value = null;
+        });
+        if (kDebugMode) {
+          print('♻️ Subject cache invalidated in foreground');
+        }
+        return;
       }
 
       // Show local notification when app is in foreground
