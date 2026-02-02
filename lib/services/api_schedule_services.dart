@@ -19,9 +19,7 @@ class ApiScheduleService {
     }
   }
 
-  static Future<Map<String, String>> _getHeaders() async {
-    return ApiService.getHeaders();
-  }
+  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
@@ -524,9 +522,7 @@ class ApiScheduleService {
       );
 
       // Add headers
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      request.headers['Authorization'] = 'Bearer $token';
+      request.headers.addAll(await _getHeaders());
 
       // Add file
       request.files.add(

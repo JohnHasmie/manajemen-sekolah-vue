@@ -2,19 +2,11 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiAcademicServices {
   static String get baseUrl => ApiService.baseUrl;
 
-  static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
+  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
   static dynamic _handleResponse(http.Response response) {
     var responseBody;

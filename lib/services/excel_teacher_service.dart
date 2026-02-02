@@ -8,19 +8,11 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ExcelTeacherService {
   static String get baseUrl => ApiService.baseUrl;
 
-  static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
+  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
   // Export teachers to Excel using backend API
   static Future<void> exportTeachersToExcel({

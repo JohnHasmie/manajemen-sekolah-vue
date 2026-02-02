@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:manajemensekolah/services/api_services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiAnnouncementService {
   static String get baseUrl => ApiService.baseUrl;
@@ -29,30 +28,7 @@ class ApiAnnouncementService {
     }
   }
 
-  static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    // If token missing, trigger global logout/redirect to login so app
-    // doesn't stay on an error screen without navigating the user.
-    if (token == null || token.isEmpty) {
-      // Use ApiService helper to clear state and redirect to login
-      try {
-        await ApiService.logoutWithMessage(
-          'Authentication required. Please login.',
-        );
-      } catch (e) {
-        // ignore navigation errors here
-      }
-
-      // Return headers without Authorization to avoid sending 'Bearer null'
-      return {'Content-Type': 'application/json'};
-    }
-
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
+  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
   static dynamic _handleResponse(http.Response response) {
     dynamic responseBody;
