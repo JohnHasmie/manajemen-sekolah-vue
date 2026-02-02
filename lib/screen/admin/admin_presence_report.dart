@@ -1616,7 +1616,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                if (summary.lessonHourName != null) ...[
+                                if (summary.lessonHourName != null &&
+                                    summary.lessonHourName!.isNotEmpty) ...[
                                   SizedBox(height: 2),
                                   Text(
                                     summary.lessonHourName!,
@@ -3549,6 +3550,19 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
+                                if (widget.lessonHourName != null &&
+                                    widget.lessonHourName!.isNotEmpty) ...[
+                                  SizedBox(height: 4),
+                                  Text(
+                                    widget.lessonHourName!,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                                 SizedBox(height: 8),
                                 Text(
                                   '${stats['total']} ${languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'})}',

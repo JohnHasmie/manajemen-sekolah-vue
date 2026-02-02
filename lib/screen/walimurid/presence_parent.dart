@@ -544,6 +544,32 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              if ((absen['lesson_hour_name'] != null &&
+                                      absen['lesson_hour_name']
+                                          .toString()
+                                          .isNotEmpty) ||
+                                  (absen['jam_pelajaran_nama'] != null &&
+                                      absen['jam_pelajaran_nama']
+                                          .toString()
+                                          .isNotEmpty) ||
+                                  (absen['lesson_hour'] != null &&
+                                      absen['lesson_hour']['name'] !=
+                                          null)) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  (absen['lesson_hour_name'] ??
+                                          absen['jam_pelajaran_nama'] ??
+                                          (absen['lesson_hour'] != null
+                                              ? absen['lesson_hour']['name']
+                                              : ''))
+                                      .toString(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: 4),
                               Text(
                                 DateFormat(
