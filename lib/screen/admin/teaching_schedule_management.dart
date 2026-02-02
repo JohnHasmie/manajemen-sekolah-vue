@@ -35,7 +35,6 @@ class TeachingScheduleManagementScreenState
     extends State<TeachingScheduleManagementScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
-  final ApiClassService apiServiceClass = ApiClassService();
   final ApiSubjectService _apiSubjectService = ApiSubjectService();
   final ApiTeacherService apiTeacherService = ApiTeacherService();
 
@@ -357,7 +356,7 @@ class TeachingScheduleManagementScreenState
           print('Error getSubject: $e');
           throw e;
         }),
-        apiServiceClass.getClass().catchError((e) {
+        ApiClassService.getClass().catchError((e) {
           print('Error getClass: $e');
           throw e;
         }),

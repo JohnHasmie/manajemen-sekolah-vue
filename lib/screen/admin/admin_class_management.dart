@@ -14,6 +14,7 @@ import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_class_service.dart';
+import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -29,8 +30,6 @@ class AdminClassManagementScreen extends StatefulWidget {
 
 class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     with TickerProviderStateMixin {
-  final ApiClassService _classService = ApiClassService();
-
   List<dynamic> _classes = [];
   List<dynamic> _teachers = [];
   bool _isLoading = true;
@@ -104,6 +103,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     // Listen to search changes with debounce - Removed to match StudentManagement
     // _searchController.addListener(_onSearchChanged);
 
+    // Listen to sync triggers from FCM
+    FCMService().syncTrigger.addListener(_onSyncTriggered);
+
     _loadSchoolSettings(); // Load dynamic grade levels
     _fetchTeachers();
     _loadData();
@@ -111,6 +113,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   @override
   void dispose() {
+    FCMService().syncTrigger.removeListener(_onSyncTriggered);
     _animationController.dispose();
     _fabAnimationController.dispose();
     _scrollController.removeListener(_onScroll);
@@ -118,6 +121,16 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     _searchController.dispose();
     // _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  void _onSyncTriggered() {
+    final trigger = FCMService().syncTrigger.value;
+    if (trigger != null && trigger['type'] == 'refresh_classes') {
+      if (kDebugMode) {
+        print('🔄 Real-time sync triggered: Reloading classes');
+      }
+      _loadData(resetPage: true, useCache: false);
+    }
   }
 
   void _onScroll() {
@@ -679,7 +692,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     if (classData != null) {
       try {
         // Show loading indicator if needed, or just await (fast usually)
-        final freshData = await _classService.getClassById(
+        final freshData = await ApiClassService.getClassById(
           classData['id'].toString(),
         );
         if (freshData != null && freshData is Map<String, dynamic>) {
@@ -869,10 +882,10 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                               child: OutlinedButton(
                                 onPressed: () => Navigator.pop(context),
                                 style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  padding: EdgeInsets.symmetric(vertical: 12),
                                   side: BorderSide(color: Colors.grey.shade300),
                                 ),
                                 child: Text(
@@ -906,19 +919,25 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                   }
 
                                   try {
-                                    final data = {
-                                      'name': nama,
-                                      'grade_level': int.parse(
-                                        selectedGradeLevel!,
-                                      ),
-                                      'homeroom_teacher_id':
-                                          selectedHomeroomTeacherId,
-                                    };
+                                    final academicYearProvider =
+                                        Provider.of<AcademicYearProvider>(
+                                          context,
+                                          listen: false,
+                                        );
+                                    final selectedYearId = academicYearProvider
+                                        .selectedAcademicYear?['id']
+                                        ?.toString();
 
                                     if (isEdit) {
-                                      await _classService.updateClass(
-                                        classData!['id'],
-                                        data,
+                                      await ApiClassService.updateClass(
+                                        classData!['id'].toString(),
+                                        {
+                                          'name': nameController.text,
+                                          'grade_level': selectedGradeLevel,
+                                          'homeroom_teacher_id':
+                                              selectedHomeroomTeacherId,
+                                          'academic_year_id': selectedYearId,
+                                        },
                                       );
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(
@@ -939,7 +958,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                         Navigator.pop(context);
                                       }
                                     } else {
-                                      await _classService.addClass(data);
+                                      await ApiClassService.addClass({
+                                        'name': nameController.text,
+                                        'grade_level': selectedGradeLevel,
+                                        'homeroom_teacher_id':
+                                            selectedHomeroomTeacherId,
+                                        'academic_year_id': selectedYearId,
+                                      });
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(
                                           context,
@@ -968,8 +993,10 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                         SnackBar(
                                           content: Text(
                                             languageProvider.getTranslatedText({
-                                              'en': 'Failed to save class: $e',
-                                              'id': 'Gagal menyimpan kelas: $e',
+                                              'en':
+                                                  'Failed to save class: ${ErrorUtils.getFriendlyMessage(e)}',
+                                              'id':
+                                                  'Gagal menyimpan kelas: ${ErrorUtils.getFriendlyMessage(e)}',
                                             }),
                                           ),
                                           backgroundColor: Colors.red,
@@ -1164,8 +1191,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
     if (confirmed == true) {
       try {
-        await _classService.deleteClass(classData['id']);
-        await _loadData();
+        await ApiClassService.deleteClass(classData['id'].toString());
+        _loadData();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

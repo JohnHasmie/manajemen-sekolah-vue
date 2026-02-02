@@ -136,7 +136,19 @@ class ApiClassService {
     }
 
     String queryString = Uri(queryParameters: queryParams).query;
-    final cacheKey = 'class_paginated_$queryString';
+
+    // Get school_id context for cache key
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user');
+    String schoolId = 'global';
+    if (userJson != null) {
+      try {
+        final user = json.decode(userJson);
+        schoolId = user['school_id']?.toString() ?? 'global';
+      } catch (_) {}
+    }
+
+    final cacheKey = 'class_${schoolId}_paginated_$queryString';
 
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
@@ -179,18 +191,11 @@ class ApiClassService {
   }
 
   static Future<void> _clearClassCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    final keys = prefs
-        .getKeys()
-        .where((key) => key.startsWith('api_cache_class_'))
-        .toList();
-    for (final key in keys) {
-      await prefs.remove(key);
-    }
+    await LocalCacheService.clearStartingWith('class_');
     if (kDebugMode) print('🧹 Class cache cleared due to changes');
   }
 
-  Future<List<dynamic>> getClass({String? academicYearId}) async {
+  static Future<List<dynamic>> getClass({String? academicYearId}) async {
     try {
       String url = '/class';
       if (academicYearId != null) {
@@ -209,7 +214,7 @@ class ApiClassService {
     }
   }
 
-  Future<dynamic> getClassById(String id) async {
+  static Future<dynamic> getClassById(String id) async {
     try {
       final result = await ApiService().get('/class/$id');
       return result;
@@ -218,7 +223,7 @@ class ApiClassService {
     }
   }
 
-  Future<dynamic> addClass(Map<String, dynamic> data) async {
+  static Future<dynamic> addClass(Map<String, dynamic> data) async {
     try {
       if (data['name'] == null || data['name'].toString().isEmpty) {
         throw Exception('Nama kelas harus diisi');
@@ -236,7 +241,10 @@ class ApiClassService {
     }
   }
 
-  Future<dynamic> updateClass(String id, Map<String, dynamic> data) async {
+  static Future<dynamic> updateClass(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     try {
       if (data['name'] == null || data['name'].toString().isEmpty) {
         throw Exception('Nama kelas harus diisi');
@@ -254,7 +262,7 @@ class ApiClassService {
     }
   }
 
-  Future<void> deleteClass(String id) async {
+  static Future<void> deleteClass(String id) async {
     try {
       await ApiService().delete('/class/$id');
       await _clearClassCache();
@@ -263,7 +271,7 @@ class ApiClassService {
     }
   }
 
-  Future<List<dynamic>> getStudentsByClassId(String classId) async {
+  static Future<List<dynamic>> getStudentsByClassId(String classId) async {
     try {
       final result = await ApiService().get('/student/class/$classId');
 
@@ -280,7 +288,7 @@ class ApiClassService {
     }
   }
 
-  Future<dynamic> promoteStudents(Map<String, dynamic> data) async {
+  static Future<dynamic> promoteStudents(Map<String, dynamic> data) async {
     try {
       final result = await ApiService().post('/promotion/promote', data);
       await _clearClassCache();

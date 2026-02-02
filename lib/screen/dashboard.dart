@@ -503,7 +503,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       int total = 0;
       for (var classes in classesTaught) {
         try {
-          final students = await ApiClassService().getStudentsByClassId(
+          final students = await ApiClassService.getStudentsByClassId(
             classes['id']?.toString() ?? '',
             // Assuming getStudentsByClassId might also support academic year if classStudents table is time-bound?
             // But usually classId is unique per year if classes are not reused.
@@ -573,7 +573,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       List<dynamic> classes = [];
       for (var classId in classIds) {
         try {
-          final classData = await ApiClassService().getClassById(classId!);
+          final classData = await ApiClassService.getClassById(classId!);
           if (classData != null) {
             classes.add(classData);
             if (kDebugMode) {

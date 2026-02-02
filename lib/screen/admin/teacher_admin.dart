@@ -29,7 +29,6 @@ class TeacherAdminScreen extends StatefulWidget {
 class TeacherAdminScreenState extends State<TeacherAdminScreen>
     with SingleTickerProviderStateMixin {
   final ApiTeacherService _teacherService = ApiTeacherService();
-  final ApiClassService _classService = ApiClassService();
   final ApiSubjectService _subjectService = ApiSubjectService();
   List<dynamic> _teachers = [];
   List<dynamic> _subjects = [];
@@ -735,7 +734,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
       // Load subjects and classes (untuk dropdown/reference)
       final subjectData = await _subjectService.getSubject();
-      final classData = await _classService.getClass(
+      final classData = await ApiClassService.getClass(
         academicYearId: selectedYearId,
       );
 

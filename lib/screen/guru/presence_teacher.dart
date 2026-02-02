@@ -227,8 +227,7 @@ class PresencePageState extends State<PresencePage>
     String? classId,
   }) async {
     try {
-      final apiTeacherService = ApiTeacherService();
-      final result = await apiTeacherService.getSubjectByTeacher(
+      final result = await ApiTeacherService().getSubjectByTeacher(
         teacherId,
         classId: classId,
       );
@@ -3503,7 +3502,6 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   Future<void> _loadData() async {
     try {
       // Load siswa, absensi, dan kelas data
-      final apiServiceClass = ApiClassService();
       final [studentData, absensiData, classData] = await Future.wait([
         ApiStudentService.getStudent(),
         ApiService.getAbsensi(
@@ -3511,7 +3509,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
           subjectId: widget.subjectId,
           date: DateFormat('yyyy-MM-dd').format(widget.date),
         ),
-        apiServiceClass.getClass(),
+        ApiClassService.getClass(),
       ]);
 
       setState(() {

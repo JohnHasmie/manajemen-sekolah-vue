@@ -45,6 +45,12 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     _loadSchoolSettings();
   }
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
     try {
@@ -75,7 +81,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
           );
           classesData = response['data'] ?? [];
         } else {
-          classesData = await ApiClassService().getClass();
+          classesData = await ApiClassService.getClass();
         }
       }
 
@@ -103,7 +109,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   Future<void> _loadStudents(String classId) async {
     setState(() => _isLoading = true);
     try {
-      final students = await ApiClassService().getStudentsByClassId(classId);
+      final students = await ApiClassService.getStudentsByClassId(classId);
       setState(() {
         _students = students;
         _selectedStudentIds = students
@@ -210,7 +216,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
           // This is safer than just index + 1 if the list isn't sorted strictly
           final currentYearData = _academicYears[currentIndex];
           final String currentYearName =
-              currentYearData['year'] ?? ''; // e.g., "2024/2025"
+              currentYearData['year']?.toString() ?? ''; // e.g., "2024/2025"
           final startYearStr = currentYearName.split('/').first; // "2024"
           final startYear = int.tryParse(startYearStr);
 
@@ -219,7 +225,9 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
           if (startYear != null) {
             final nextStartYearPattern = (startYear + 1).toString(); // "2025"
             final nextYearObj = _academicYears.firstWhere(
-              (y) => (y['year'] as String).startsWith(nextStartYearPattern),
+              (y) => (y['year']?.toString() ?? '').startsWith(
+                nextStartYearPattern,
+              ),
               orElse: () => null,
             );
             if (nextYearObj != null) {
@@ -811,14 +819,17 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             if (currentIndex != -1 &&
                 currentIndex < _academicYears.length - 1) {
               final currentYearData = _academicYears[currentIndex];
-              final String currentYearName = currentYearData['year'] ?? '';
+              final String currentYearName =
+                  currentYearData['year']?.toString() ?? '';
               final startYearStr = currentYearName.split('/').first;
               final startYear = int.tryParse(startYearStr);
 
               if (startYear != null) {
                 final nextYearNameStart = (startYear + 1).toString();
                 final nextYear = _academicYears.firstWhere(
-                  (y) => (y['year'] as String).startsWith(nextYearNameStart),
+                  (y) => (y['year']?.toString() ?? '').startsWith(
+                    nextYearNameStart,
+                  ),
                   orElse: () => null,
                 );
                 if (nextYear != null) {
@@ -867,7 +878,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         'academic_year_id': _selectedTargetYearId,
       };
 
-      await ApiClassService().promoteStudents(data);
+      await ApiClassService.promoteStudents(data);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1098,7 +1109,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
 
   void _onStepCancel() {
     if (_currentStep > 0) {
-      setState(() => _currentStep--);
+      _goToStep(_currentStep - 1);
     } else {
       Navigator.pop(context);
     }
@@ -1258,7 +1269,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                                   // Pass academic year if API supports it, or it defaults to active
                                   'academic_year_id': _selectedTargetYearId,
                                 };
-                                await ApiClassService().addClass(data);
+                                await ApiClassService.addClass(data);
                                 Navigator.pop(context);
                                 if (_selectedTargetYearId != null) {
                                   _loadTargetClasses(_selectedTargetYearId!);

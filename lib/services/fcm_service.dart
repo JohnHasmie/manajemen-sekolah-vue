@@ -25,6 +25,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     return;
   }
 
+  if (message.data['type'] == 'refresh_classes') {
+    await LocalCacheService.clearStartingWith('class_');
+    if (kDebugMode) {
+      print('♻️ Class cache invalidated in background');
+    }
+    return;
+  }
+
   // Show notification when app is in background
   if (message.notification != null) {
     final FlutterLocalNotificationsPlugin localNotifications =
@@ -84,7 +92,8 @@ class FCMService {
   String? get fcmToken => _fcmToken;
 
   // Notifier for UI components to listen to background changes
-  final ValueNotifier<String?> syncTrigger = ValueNotifier<String?>(null);
+  final ValueNotifier<Map<String, dynamic>?> syncTrigger =
+      ValueNotifier<Map<String, dynamic>?>(null);
 
   // Initialize FCM
   Future<void> initialize() async {
@@ -209,13 +218,26 @@ class FCMService {
 
       if (message.data['type'] == 'refresh_subjects') {
         await LocalCacheService.clearStartingWith('subject_');
-        syncTrigger.value = 'refresh_subjects';
+        syncTrigger.value = {'type': 'refresh_subjects'};
         // Reset to allow future triggers
         Future.delayed(const Duration(milliseconds: 100), () {
           syncTrigger.value = null;
         });
         if (kDebugMode) {
           print('♻️ Subject cache invalidated in foreground');
+        }
+        return;
+      }
+
+      if (message.data['type'] == 'refresh_classes') {
+        await LocalCacheService.clearStartingWith('class_');
+        syncTrigger.value = {'type': 'refresh_classes'};
+        // Reset to allow future triggers
+        Future.delayed(const Duration(milliseconds: 100), () {
+          syncTrigger.value = null;
+        });
+        if (kDebugMode) {
+          print('♻️ Class cache invalidated in foreground');
         }
         return;
       }

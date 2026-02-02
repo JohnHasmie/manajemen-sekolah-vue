@@ -158,8 +158,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
               if (kDebugMode) print('Error loading subjects: $e');
               return [];
             }),
-        ApiClassService()
-            .getClass(
+        ApiClassService.getClass(
               academicYearId: context
                   .read<AcademicYearProvider>()
                   .selectedAcademicYear?['id']
@@ -1149,7 +1148,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
       }
 
       // 1. Fetch Students
-      final students = await ApiClassService().getStudentsByClassId(classId);
+      final students = await ApiClassService.getStudentsByClassId(classId);
 
       // 2. Fetch Attendance
       // We use a large limit to get all records for the range.
@@ -1970,7 +1969,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         academicYearProvider.selectedAcademicYear?['year']?.toString() ?? '-';
 
     // 1. Fetch Data
-    final students = await ApiClassService().getStudentsByClassId(classId);
+    final students = await ApiClassService.getStudentsByClassId(classId);
 
     final attendanceResult = await ApiService.getAbsensiPaginated(
       page: 1,

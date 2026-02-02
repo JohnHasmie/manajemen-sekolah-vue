@@ -9,7 +9,6 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
-import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/excel_student_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -35,8 +34,6 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   List<dynamic> _classList = [];
   bool _isLoading = true;
   String? _errorMessage;
-  final apiService = ApiService();
-  final apiServiceClass = ApiClassService();
   final ApiStudentService apiStudentService = ApiStudentService();
 
   final ScrollController _scrollController = ScrollController();
@@ -296,7 +293,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         useCache: useCache,
       );
 
-      final classData = await apiServiceClass.getClass();
+      final classData = await ApiClassService.getClass();
 
       if (!mounted) return;
 
