@@ -1,13 +1,15 @@
 // error_handler.dart
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:manajemensekolah/services/log_service.dart';
 
 class AppErrorHandler {
   static final AppErrorHandler _instance = AppErrorHandler._internal();
   factory AppErrorHandler() => _instance;
   AppErrorHandler._internal();
 
-  static final StreamController<Exception> _errorController = 
+  static final StreamController<Exception> _errorController =
       StreamController<Exception>.broadcast();
   static Stream<Exception> get errorStream => _errorController.stream;
 
@@ -17,10 +19,10 @@ class AppErrorHandler {
       if (kDebugMode) {
         FlutterError.presentError(details);
       }
-      
+
       // Kirim error ke stream
       _errorController.add(Exception(details.exception.toString()));
-      
+
       // Log error
       _logError('Flutter Error', details.exception, details.stack);
     };
@@ -31,13 +33,13 @@ class AppErrorHandler {
         print('Dart Error: $error');
         print('Stack: $stack');
       }
-      
+
       // Kirim error ke stream
       _errorController.add(Exception(error.toString()));
-      
+
       // Log error
       _logError('Dart Error', error, stack);
-      
+
       return true;
     };
   }
@@ -49,6 +51,9 @@ class AppErrorHandler {
         print('Stack: $stack');
       }
     }
+
+    // Send to Logging Backend
+    LogService.sendError(error, stack);
   }
 
   static void dispose() {

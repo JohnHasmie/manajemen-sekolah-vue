@@ -13,6 +13,7 @@ import 'package:manajemensekolah/screen/dashboard.dart';
 import 'package:manajemensekolah/screen/login_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
+import 'package:manajemensekolah/services/log_service.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,52 +22,61 @@ import 'package:shared_preferences/shared_preferences.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  try {
-    await dotenv.load(fileName: ".env");
-    if (kDebugMode) {
-      print('✅ .env loaded');
-    }
-  } catch (e) {
-    if (kDebugMode) {
-      print('⚠️ Failed to load .env: $e');
-    }
-  }
+      // Load environment variables
+      try {
+        await dotenv.load(fileName: ".env");
+        if (kDebugMode) {
+          print('✅ .env loaded');
+        }
+      } catch (e, stack) {
+        if (kDebugMode) {
+          print('⚠️ Failed to load .env: $e');
+        }
+        LogService.sendError(e, stack);
+      }
 
-  // Initialize ApiService FIRST (before anything else)
-  await ApiService.init();
-  if (kDebugMode) {
-    print('✅ ApiService initialized');
-  }
+      // Initialize ApiService FIRST (before anything else)
+      await ApiService.init();
+      if (kDebugMode) {
+        print('✅ ApiService initialized');
+      }
 
-  // Initialize Firebase
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    if (kDebugMode) {
-      print('✅ Firebase initialized');
-    }
-  } catch (e) {
-    if (kDebugMode) {
-      print('❌ Firebase initialization error: $e');
-      print(
-        '⚠️ Please configure Firebase using FlutterFire CLI or update firebase_options.dart',
-      );
-    }
-  }
+      // Initialize Firebase
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        if (kDebugMode) {
+          print('✅ Firebase initialized');
+        }
+      } catch (e, stack) {
+        if (kDebugMode) {
+          print('❌ Firebase initialization error: $e');
+          print(
+            '⚠️ Please configure Firebase using FlutterFire CLI or update firebase_options.dart',
+          );
+        }
+        LogService.sendError(e, stack);
+      }
 
-  await initializeDateFormatting('id_ID', null);
+      await initializeDateFormatting('id_ID', null);
 
-  // Initialize language provider and load saved language
-  await languageProvider.loadSavedLanguage();
+      // Initialize language provider and load saved language
+      await languageProvider.loadSavedLanguage();
 
-  // Setup error handling (non-blocking)
-  _setupErrorHandling();
+      // Setup error handling (non-blocking)
+      _setupErrorHandling();
 
-  runApp(SchoolManagementApp());
+      runApp(SchoolManagementApp());
+    },
+    (error, stack) {
+      LogService.sendError(error, stack);
+    },
+  );
 }
 
 void _setupErrorHandling() {
@@ -119,8 +129,9 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
       setState(() {
         _isInitialized = true;
       });
-    } catch (e) {
+    } catch (e, stack) {
       print('App initialization error: $e');
+      LogService.sendError(e, stack);
       setState(() {
         _isInitialized = true;
       });
