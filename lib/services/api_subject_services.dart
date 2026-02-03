@@ -427,9 +427,8 @@ class ApiSubjectService {
       );
 
       // Add headers
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      request.headers['Authorization'] = 'Bearer $token';
+      final headers = await ApiService.getHeaders();
+      request.headers.addAll(headers);
 
       // Add file
       request.files.add(
