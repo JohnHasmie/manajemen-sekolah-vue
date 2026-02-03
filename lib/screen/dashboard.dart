@@ -32,6 +32,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
@@ -848,6 +849,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     Map<String, dynamic> schoolInfo,
     String? selectedRole,
   ) async {
+    // Clear all cache to prevent stale data from previous school
+    await LocalCacheService.clearAll();
+
     // Update token
     final prefs = await SharedPreferences.getInstance();
     if (response['token'] != null) {
