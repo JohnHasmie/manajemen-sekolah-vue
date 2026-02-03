@@ -25,6 +25,15 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     return;
   }
 
+  if (message.data['type'] == 'refresh_teachers') {
+    await LocalCacheService.clearStartingWith('teacher_');
+    await LocalCacheService.clearStartingWith('class_');
+    if (kDebugMode) {
+      print('♻️ Teacher & Class cache invalidated in background');
+    }
+    return;
+  }
+
   if (message.data['type'] == 'refresh_classes') {
     await LocalCacheService.clearStartingWith('class_');
     if (kDebugMode) {
@@ -225,6 +234,20 @@ class FCMService {
         });
         if (kDebugMode) {
           print('♻️ Subject cache invalidated in foreground');
+        }
+        return;
+      }
+
+      if (message.data['type'] == 'refresh_teachers') {
+        await LocalCacheService.clearStartingWith('teacher_');
+        await LocalCacheService.clearStartingWith('class_');
+        syncTrigger.value = {'type': 'refresh_teachers'};
+        // Reset to allow future triggers
+        Future.delayed(const Duration(milliseconds: 100), () {
+          syncTrigger.value = null;
+        });
+        if (kDebugMode) {
+          print('♻️ Teacher & Class cache invalidated in foreground');
         }
         return;
       }

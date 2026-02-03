@@ -125,9 +125,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   void _onSyncTriggered() {
     final trigger = FCMService().syncTrigger.value;
-    if (trigger != null && trigger['type'] == 'refresh_classes') {
+    if (trigger != null &&
+        (trigger['type'] == 'refresh_classes' ||
+            trigger['type'] == 'refresh_teachers')) {
       if (kDebugMode) {
-        print('🔄 Real-time sync triggered: Reloading classes');
+        print(
+          '🔄 Real-time sync triggered (${trigger['type']}): Reloading classes',
+        );
       }
       _loadData(resetPage: true, useCache: false);
     }

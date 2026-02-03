@@ -14,6 +14,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_teacher_service.dart';
+import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -98,10 +99,24 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
     _loadFilterOptions();
     _loadData();
+
+    // Listen to real-time sync trigger
+    FCMService().syncTrigger.addListener(_onSyncTriggered);
+  }
+
+  void _onSyncTriggered() {
+    final trigger = FCMService().syncTrigger.value;
+    if (trigger != null && trigger['type'] == 'refresh_teachers') {
+      if (mounted) {
+        if (kDebugMode) print('📦 Sync triggered: refresh_teachers');
+        _loadData(useCache: false);
+      }
+    }
   }
 
   @override
   void dispose() {
+    FCMService().syncTrigger.removeListener(_onSyncTriggered);
     _animationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();

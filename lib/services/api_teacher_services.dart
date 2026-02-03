@@ -200,14 +200,7 @@ class ApiTeacherService {
   }
 
   static Future<void> _clearTeacherCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    final keys = prefs
-        .getKeys()
-        .where((key) => key.startsWith('api_cache_teacher_'))
-        .toList();
-    for (final key in keys) {
-      await prefs.remove(key);
-    }
+    await LocalCacheService.clearStartingWith('teacher_');
     if (kDebugMode) print('🧹 Teacher cache cleared due to changes');
   }
 
