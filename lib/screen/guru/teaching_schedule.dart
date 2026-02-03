@@ -11,6 +11,7 @@ import 'package:manajemensekolah/screen/guru/materi_screen.dart';
 import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -86,6 +87,19 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     super.initState();
     _setDefaultAcademicPeriod();
     _loadUserData();
+
+    // Listen to real-time sync trigger
+    FCMService().syncTrigger.addListener(_onSyncTriggered);
+  }
+
+  void _onSyncTriggered() {
+    final trigger = FCMService().syncTrigger.value;
+    if (trigger != null && trigger['type'] == 'refresh_schedules') {
+      if (mounted) {
+        if (kDebugMode) print('📦 Sync triggered: refresh_schedules');
+        _loadJadwal();
+      }
+    }
   }
 
   /// Calculate current academic year based on current date
@@ -114,6 +128,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
   @override
   void dispose() {
+    FCMService().syncTrigger.removeListener(_onSyncTriggered);
     _searchController.dispose();
     super.dispose();
   }

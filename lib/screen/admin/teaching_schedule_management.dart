@@ -16,6 +16,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/excel_schedule_service.dart';
+import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -88,6 +89,7 @@ class TeachingScheduleManagementScreenState
   bool _showTableView = false;
   List<ScheduleGridData> _gridData = [];
   TimetableDataSource? _timetableDataSource;
+  AcademicYearProvider? _academicYearProvider;
 
   @override
   void initState() {
@@ -112,22 +114,35 @@ class TeachingScheduleManagementScreenState
     // Listen to academic year changes
 
     // Set default academic year from provider
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
+    _academicYearProvider = Provider.of<AcademicYearProvider>(
       context,
       listen: false,
     );
-    if (academicYearProvider.selectedAcademicYear != null) {
-      _selectedAcademicYear = academicYearProvider.selectedAcademicYear!['id']
+    if (_academicYearProvider?.selectedAcademicYear != null) {
+      _selectedAcademicYear = _academicYearProvider!.selectedAcademicYear!['id']
           .toString();
     } else {
       _setDefaultAcademicPeriod();
     }
 
     // Listen to academic year changes
-    academicYearProvider.addListener(_onAcademicYearProviderChanged);
+    _academicYearProvider?.addListener(_onAcademicYearProviderChanged);
 
     _loadFilterOptions();
     _loadData();
+
+    // Listen to real-time sync trigger
+    FCMService().syncTrigger.addListener(_onSyncTriggered);
+  }
+
+  void _onSyncTriggered() {
+    final trigger = FCMService().syncTrigger.value;
+    if (trigger != null && trigger['type'] == 'refresh_schedules') {
+      if (mounted) {
+        if (kDebugMode) print('📦 Sync triggered: refresh_schedules');
+        _loadData(resetPage: true);
+      }
+    }
   }
 
   /// Set default academic period based on current date
@@ -232,30 +247,26 @@ class TeachingScheduleManagementScreenState
 
   @override
   void dispose() {
+    FCMService().syncTrigger.removeListener(_onSyncTriggered);
     _animationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.dispose();
     _searchDebounce?.cancel();
+    _academicYearProvider?.removeListener(_onAcademicYearProviderChanged);
     super.dispose();
   }
 
   void _onAcademicYearProviderChanged() {
-    if (mounted) {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
-      if (academicYearProvider.selectedAcademicYear != null) {
-        setState(() {
-          _selectedAcademicYear = academicYearProvider
-              .selectedAcademicYear!['id']
-              .toString();
-          // Usually changing year resets semester or keeps it if ID matches.
-        });
-        _loadFilterOptions(); // Reload classes based on new academic year
-        _loadData(resetPage: true);
-      }
+    if (mounted && _academicYearProvider?.selectedAcademicYear != null) {
+      setState(() {
+        _selectedAcademicYear = _academicYearProvider!
+            .selectedAcademicYear!['id']
+            .toString();
+        // Usually changing year resets semester or keeps it if ID matches.
+      });
+      _loadFilterOptions(); // Reload classes based on new academic year
+      _loadData(resetPage: true);
     }
   }
 
@@ -947,14 +958,6 @@ class TeachingScheduleManagementScreenState
     } catch (e) {
       _showErrorSnackBar('Failed to save schedule: $e');
     }
-  }
-
-  void _onSemesterChanged(String semesterId) {
-    setState(() {
-      _selectedSemester = semesterId;
-      _isLoading = true;
-    });
-    _loadData();
   }
 
   Color _getPrimaryColor() {

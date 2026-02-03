@@ -106,9 +106,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
 
   void _onSyncTriggered() {
     final trigger = FCMService().syncTrigger.value;
-    if (trigger != null && trigger['type'] == 'refresh_teachers') {
+    if (trigger != null &&
+        (trigger['type'] == 'refresh_teachers' ||
+            trigger['type'] == 'refresh_schedules')) {
       if (mounted) {
-        if (kDebugMode) print('📦 Sync triggered: refresh_teachers');
+        if (kDebugMode) print('📦 Sync triggered: ${trigger['type']}');
         _loadData(useCache: false);
       }
     }

@@ -41,6 +41,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     }
     return;
   }
+  if (message.data['type'] == 'refresh_schedules') {
+    await LocalCacheService.clearStartingWith('schedule_');
+    if (kDebugMode) {
+      print('♻️ Schedule cache invalidated in background');
+    }
+    return;
+  }
 
   // Show notification when app is in background
   if (message.notification != null) {
@@ -261,6 +268,18 @@ class FCMService {
         });
         if (kDebugMode) {
           print('♻️ Class cache invalidated in foreground');
+        }
+        return;
+      }
+      if (message.data['type'] == 'refresh_schedules') {
+        await LocalCacheService.clearStartingWith('schedule_');
+        syncTrigger.value = {'type': 'refresh_schedules'};
+        // Reset to allow future triggers
+        Future.delayed(const Duration(milliseconds: 100), () {
+          syncTrigger.value = null;
+        });
+        if (kDebugMode) {
+          print('♻️ Schedule cache invalidated in foreground');
         }
         return;
       }

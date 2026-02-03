@@ -141,8 +141,6 @@ class ExcelScheduleService {
     List<dynamic> schedules,
   ) async {
     try {
-      final token = await ApiService.getToken();
-
       final response = await http.post(
         Uri.parse('$baseUrl/teaching-schedule/validate'),
         headers: await ApiService.getHeaders(),
