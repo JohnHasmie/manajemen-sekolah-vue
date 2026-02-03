@@ -8,7 +8,6 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ExcelPresenceService {
   // static const String baseUrl = ApiService.baseUrl;
@@ -31,16 +30,11 @@ class ExcelPresenceService {
       }
 
       // Get auth token
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
 
       // Kirim request ke backend
       final response = await http.post(
         Uri.parse('$baseUrl/attendance/export'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+        headers: await ApiService.getHeaders(),
         body: jsonEncode({'presenceData': presenceData, 'filters': filters}),
       );
 
@@ -121,7 +115,7 @@ class ExcelPresenceService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/attendance/validate'),
-        headers: {'Content-Type': 'application/json'},
+        headers: await ApiService.getHeaders(),
         body: jsonEncode({'presenceData': presenceData}),
       );
 

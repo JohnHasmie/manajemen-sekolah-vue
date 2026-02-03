@@ -31,9 +31,8 @@ class ApiClassService {
         Uri.parse('$baseUrl/class/import'),
       );
 
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      request.headers['Authorization'] = 'Bearer $token';
+      final headers = await ApiService.getHeaders();
+      request.headers.addAll(headers);
 
       request.files.add(
         await http.MultipartFile.fromPath(

@@ -27,15 +27,10 @@ class ExcelRppService {
       // Note: ApiService.post returns decoded JSON, so we need to handle it differently
       // or we can just add headers manually here if we want to keep using http.post for blob response
 
-      final token =
-          await ApiService.getToken(); // Need to expose this or get from prefs
-
+      final headers = await ApiService.getHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/rpp/export'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
         body: jsonEncode({'rppList': validatedData}),
       );
 
@@ -87,9 +82,10 @@ class ExcelRppService {
     List<dynamic> rppData,
   ) async {
     try {
+      final headers = await ApiService.getHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/rpp/validate'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode({'rppData': rppData}),
       );
 

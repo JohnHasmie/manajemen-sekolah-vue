@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiTeacherService {
   static String get baseUrl => ApiService.baseUrl;
@@ -363,9 +362,8 @@ class ApiTeacherService {
         Uri.parse('${ApiService.baseUrl}/teacher/import'),
       );
 
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      request.headers['Authorization'] = 'Bearer $token';
+      final headers = await ApiService.getHeaders();
+      request.headers.addAll(headers);
       request.files.add(
         await http.MultipartFile.fromPath(
           'file',

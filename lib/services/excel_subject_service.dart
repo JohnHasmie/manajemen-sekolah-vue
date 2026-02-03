@@ -8,7 +8,6 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ExcelSubjectService {
   // static const String baseUrl = ApiService.baseUrl;
@@ -25,16 +24,11 @@ class ExcelSubjectService {
       // Validasi data terlebih dahulu
       final validatedData = validateSubjectData(subjects);
 
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-
+      final headers = await ApiService.getHeaders();
       // Kirim request ke backend
       final response = await http.post(
         Uri.parse('$baseUrl/subject/export'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
         body: jsonEncode({'subjects': validatedData}),
       );
 
@@ -86,13 +80,11 @@ class ExcelSubjectService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-
+      final headers = await ApiService.getHeaders();
       // Kirim request ke backend
       final response = await http.get(
         Uri.parse('$baseUrl/subject/template'),
-        headers: {'Authorization': 'Bearer $token'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -143,9 +135,10 @@ class ExcelSubjectService {
     List<dynamic> subjects,
   ) async {
     try {
+      final headers = await ApiService.getHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/subject/validate'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode({'subjects': subjects}),
       );
 

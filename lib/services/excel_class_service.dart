@@ -149,7 +149,11 @@ class ExcelClassService {
 
     try {
       // Kirim request ke backend
-      final response = await http.get(Uri.parse('$baseUrl/class/template/csv'));
+      final headers = await ApiService.getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/class/template/csv'),
+        headers: headers,
+      );
 
       if (response.statusCode == 200) {
         // Get directory untuk menyimpan file
@@ -200,9 +204,10 @@ class ExcelClassService {
     List<dynamic> classes,
   ) async {
     try {
+      final headers = await ApiService.getHeaders();
       final response = await http.post(
         Uri.parse('$baseUrl/class/validate'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode({'classes': classes}),
       );
 

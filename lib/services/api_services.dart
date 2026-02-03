@@ -877,9 +877,8 @@ class ApiService {
       );
 
       // Add headers
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      request.headers['Authorization'] = 'Bearer $token';
+      final headers = await _getHeaders();
+      request.headers.addAll(headers);
 
       // Add file dengan cara yang benar
       request.files.add(
@@ -1284,11 +1283,8 @@ class ApiService {
       );
 
       // Add headers dengan authorization
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token != null) {
-        request.headers['Authorization'] = 'Bearer $token';
-      }
+      final headers = await _getHeaders();
+      request.headers.addAll(headers);
 
       // Deteksi MIME type yang benar
       String? mimeType;
@@ -1455,11 +1451,7 @@ class ApiService {
 
       final response = await http.post(
         Uri.parse('$baseUrl/fcm/token'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-          'Accept': 'application/json',
-        },
+        headers: await _getHeaders(),
         body: json.encode({'token': token, 'device_type': deviceType}),
       );
 
@@ -1489,11 +1481,7 @@ class ApiService {
 
       final response = await http.delete(
         Uri.parse('$baseUrl/fcm/token'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-          'Accept': 'application/json',
-        },
+        headers: await _getHeaders(),
         body: json.encode({'token': token}),
       );
 

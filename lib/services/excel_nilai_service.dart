@@ -28,7 +28,7 @@ class ExcelNilaiService {
       // Kirim request ke backend
       final response = await http.post(
         Uri.parse('$baseUrl/grade/export'),
-        headers: {'Content-Type': 'application/json'},
+        headers: await ApiService.getHeaders(),
         body: jsonEncode({'nilaiData': validatedData, 'filters': filters}),
       );
 
