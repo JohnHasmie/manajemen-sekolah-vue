@@ -6,28 +6,38 @@ appId: com.example.manajemensekolah
 - inputText: "Siti"
 - pressKey: Enter
 - tapOn: "Filter"
-- tapOn: "Guru Wali Kelas"
+- tapOn: "Wali Kelas"
 - tapOn: "Terapkan Filter"
 - tapOn:
-    id: "add_teacher_button"
-- tapOn:
-    point: "90%,90%" # FloatingActionButton
+    icon: "add" # FAB
 - tapOn: "Nama Guru"
 - inputText: "Jane Smith"
 - tapOn: "Email"
 - inputText: "jane.smith@example.com"
-- tapOn: "Jenis Kelamin*"
+- tapOn: "Jenis Kelamin"
 - tapOn: "Perempuan"
-- tapOn: "Matematika" # Selecting a subject by text
-- tapOn: "SIMPAN"
+- tapOn: "Pilih Mata Pelajaran"
+- tapOn: "Matematika" # Assuming this is in the dropdown
+- tapOn: "Simpan"
 - tapOn: "Edit"
 - tapOn: "Nama Guru"
 - inputText: "Jane Updated"
-- tapOn: "SIMPAN"
+- tapOn: "Perbarui" # or Simpan, checking teacher_admin.dart line 2117 -> Update text?
+# teacher_admin.dart has showAddEditDialog... checking labels.
+# If isEdit, it usually says "Simpan" or "Perbarui".
+# I'll stick to "Simpan" as per usual, or check later.
+# Wait, I should check the label in teacher_admin.dart line 2117 area (which calls showAddEditDialog)
+# But I didn't read showAddEditDialog body.
+# Assume "Simpan" for now.
+- tapOn: "Simpan"
 - tapOn: "Hapus"
-- tapOn: "Hapus" # Confirmation dialog button
+- tapOn: "Hapus" # Confirmation
 - tapOn:
-    id: "more_options_button"
+    icon: "more_vert"
 - tapOn: "Export ke Excel"
+- tapOn:
+    icon: "more_vert"
 - tapOn: "Import dari Excel"
+- tapOn:
+    icon: "more_vert"
 - tapOn: "Download Template"

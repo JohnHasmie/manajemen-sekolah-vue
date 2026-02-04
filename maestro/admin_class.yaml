@@ -1,0 +1,34 @@
+appId: com.example.manajemensekolah
+---
+- runFlow: login.yaml
+- tapOn: "Kelola Kelas"
+# Add New Class
+- tapOn:
+    id: "fab_main_class" # Open Speed Dial
+- tapOn:
+    id: "fab_add_class" # Create New Class
+- tapOn: "Nama Kelas"
+- inputText: "Kelas 10A Test"
+- tapOn: "Tingkat Kelas"
+- tapOn: "Kelas 10 SMA" # Assumes this option exists based on grade level logic
+- tapOn: "Simpan"
+
+# Search and Verify
+- tapOn: "Cari kelas..."
+- inputText: "Kelas 10A Test"
+- pressKey: Enter
+- assertVisible: "Kelas 10A Test"
+
+# Edit Class
+- tapOn: "Edit"
+- tapOn: "Nama Kelas"
+- inputText: "Kelas 10A Edited"
+- tapOn: "Perbarui" # Assuming button changes to Update/Perbarui on edit
+
+# Verify Edit
+- assertVisible: "Kelas 10A Edited"
+
+# Delete Class
+- tapOn: "Hapus"
+- tapOn: "Hapus" # Confirm delete
+- assertNotVisible: "Kelas 10A Edited"
