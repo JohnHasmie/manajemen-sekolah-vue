@@ -774,7 +774,19 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
     );
     String? selectedClassId = announcementData?['kelas_id'];
     String? selectedRole = announcementData?['role_target'] ?? 'all';
-    String? selectedPrioritas = announcementData?['priority'] ?? 'normal';
+    String? rawPrioritas = announcementData?['priority'];
+    String? selectedPrioritas;
+    if (rawPrioritas != null) {
+      if (rawPrioritas.toLowerCase() == 'biasa') {
+        selectedPrioritas = 'normal';
+      } else if (rawPrioritas.toLowerCase() == 'penting') {
+        selectedPrioritas = 'important';
+      } else {
+        selectedPrioritas = rawPrioritas.toLowerCase();
+      }
+    } else {
+      selectedPrioritas = 'normal';
+    }
     DateTime? tanggalAwal = announcementData?['start_date'] != null
         ? DateTime.parse(announcementData!['start_date'])
         : null;
