@@ -2869,6 +2869,24 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
     }
   }
 
+  String _mapStatusToBackend(String status) {
+    switch (status.toLowerCase()) {
+      case 'hadir':
+        return 'present';
+      case 'terlambat':
+        return 'late';
+      case 'izin':
+        return 'excused';
+      case 'sakit':
+        return 'sick';
+      case 'alpha':
+      case 'absent':
+        return 'absent';
+      default:
+        return 'present';
+    }
+  }
+
   Future<void> _saveChanges() async {
     final languageProvider = Provider.of<LanguageProvider>(
       context,
@@ -2877,47 +2895,75 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
 
     setState(() => _isSaving = true);
 
-    try {
-      final List<Map<String, dynamic>> finalAbsensi = _siswaList.map((siswa) {
-        return {
-          'id_siswa': siswa.id,
-          'status': _tempAbsensiStatus[siswa.id] ?? 'alpha',
-        };
-      }).toList();
+    String? teacherId;
+    if (_absensiData.isNotEmpty) {
+      teacherId =
+          _absensiData.first['teacher_id']?.toString() ??
+          _absensiData.first['guru_id']?.toString();
+    }
 
-      String? teacherId;
-      if (_absensiData.isNotEmpty) {
-        teacherId =
-            _absensiData.first['teacher_id']?.toString() ??
-            _absensiData.first['guru_id']?.toString();
-      }
-
-      await ApiService.tambahAbsensi({
-        'tanggal': DateFormat('yyyy-MM-dd').format(widget.date),
-        'mata_pelajaran_id': widget.subjectId,
-        'kelas_id': widget.classId,
-        'lesson_hour_id': widget.lessonHourId,
-        'teacher_id': teacherId,
-        'absensi': finalAbsensi,
-      });
-
+    if (teacherId == null) {
+      setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Attendance updated successfully',
-              'id': 'Absensi berhasil diperbarui',
-            }),
-          ),
-          backgroundColor: Colors.green,
+          content: Text('Error: Guru ID tidak ditemukan'),
+          backgroundColor: Colors.red,
         ),
       );
+      return;
+    }
 
-      setState(() {
-        _isEditing = false;
-        _isSaving = false;
-      });
-      _loadData(); // Reload to get fresh data from server
+    int successCount = 0;
+    int errorCount = 0;
+    String lastError = '';
+
+    try {
+      final dateStr = DateFormat('yyyy-MM-dd').format(widget.date);
+
+      for (var siswa in _siswaList) {
+        try {
+          final status = _tempAbsensiStatus[siswa.id] ?? 'alpha';
+
+          await ApiService.tambahAbsensi({
+            'student_id': siswa.id,
+            'teacher_id': teacherId,
+            'subject_id': widget.subjectId,
+            'class_id': widget.classId,
+            'date': dateStr,
+            'status': _mapStatusToBackend(status),
+            'lesson_hour_id': widget.lessonHourId,
+            'notes': '',
+          });
+          successCount++;
+        } catch (e) {
+          errorCount++;
+          lastError = e.toString();
+          print('Error saving for student ${siswa.name}: $e');
+        }
+      }
+
+      if (successCount > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              languageProvider.getTranslatedText({
+                'en':
+                    'Attendance updated successfully ($successCount students)',
+                'id': 'Absensi berhasil diperbarui ($successCount siswa)',
+              }),
+            ),
+            backgroundColor: errorCount > 0 ? Colors.orange : Colors.green,
+          ),
+        );
+
+        setState(() {
+          _isEditing = false;
+          _isSaving = false;
+        });
+        _loadData(); // Reload to get fresh data from server
+      } else {
+        throw Exception('Gagal menyimpan semua data. Terakhir: $lastError');
+      }
     } catch (e) {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3011,129 +3057,132 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
 
                   Padding(
                     padding: EdgeInsets.all(16),
-                    child: Row(
+                    child: Column(
                       children: [
-                        // Avatar
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _getPrimaryColor().withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              siswa.name.isNotEmpty
-                                  ? siswa.name[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                color: _getPrimaryColor(),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-
-                        // Student Info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                siswa.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'NIS: ${siswa.nis}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Status Badge
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: statusColor.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Text(
-                            statusText,
-                            style: TextStyle(
-                              color: statusColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Edit mode status selector
-                  if (_isEditing)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.95),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        Row(
                           children: [
-                            _buildQuickStatusButton(
-                              'hadir',
-                              'H',
-                              Colors.green,
-                              siswa.id,
+                            // Avatar
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: _getPrimaryColor().withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  siswa.name.isNotEmpty
+                                      ? siswa.name[0].toUpperCase()
+                                      : '?',
+                                  style: TextStyle(
+                                    color: _getPrimaryColor(),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
                             ),
-                            _buildQuickStatusButton(
-                              'sakit',
-                              'S',
-                              Colors.orange,
-                              siswa.id,
+                            SizedBox(width: 12),
+
+                            // Student Info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    siswa.name,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'NIS: ${siswa.nis}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            _buildQuickStatusButton(
-                              'izin',
-                              'I',
-                              Colors.blue,
-                              siswa.id,
-                            ),
-                            _buildQuickStatusButton(
-                              'alpa',
-                              'A',
-                              Colors.red,
-                              siswa.id,
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.close, color: Colors.grey),
-                              onPressed: () {
-                                // Do nothing, just visual close if needed
-                              },
+
+                            // Status Badge
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: statusColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: statusColor.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                statusText,
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ),
+
+                        // Edit mode status selector
+                        if (_isEditing) ...[
+                          SizedBox(height: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildQuickStatusButton(
+                                  'hadir',
+                                  'H',
+                                  Colors.green,
+                                  siswa.id,
+                                ),
+                                _buildQuickStatusButton(
+                                  'sakit',
+                                  'S',
+                                  Colors.orange,
+                                  siswa.id,
+                                ),
+                                _buildQuickStatusButton(
+                                  'izin',
+                                  'I',
+                                  Colors.blue,
+                                  siswa.id,
+                                ),
+                                _buildQuickStatusButton(
+                                  'alpha',
+                                  'A',
+                                  Colors.red,
+                                  siswa.id,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
