@@ -1605,7 +1605,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     } else if (status == 'pending') {
       color = Colors.orange.shade800;
       bgColor = Colors.orange.shade50;
-      text = 'Belum';
+      text = 'Menunggu'; // Changed from 'Belum'
     } else {
       color = Colors.red.shade700;
       bgColor = Colors.red.shade50;

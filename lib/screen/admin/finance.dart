@@ -49,6 +49,7 @@ class FinanceScreenState extends State<FinanceScreen>
   List<dynamic> _jenisPembayaranList = [];
   List<dynamic> _tagihanList = [];
   List<dynamic> _pembayaranPendingList = [];
+  int _totalPembayaranPending = 0;
   List<dynamic> _kelasList = [];
   List<dynamic> _siswaList = [];
   Map<String, List<dynamic>> _siswaByKelas = {};
@@ -57,6 +58,13 @@ class FinanceScreenState extends State<FinanceScreen>
   bool _isLoading = true;
   String _errorMessage = '';
   int _currentTabIndex = 0;
+
+  // Pagination for pending payments
+  final ScrollController _pendingScrollController = ScrollController();
+  int _pendingPage = 1;
+  final int _pendingPerPage = 10;
+  bool _hasMorePending = true;
+  bool _isLoadingMorePending = false;
 
   // Pagination for tagihan
   final ScrollController _scrollController = ScrollController();
@@ -112,6 +120,16 @@ class FinanceScreenState extends State<FinanceScreen>
     });
 
     _loadData();
+
+    // Listen to pending scroll
+    _pendingScrollController.addListener(() {
+      if (_pendingScrollController.position.pixels >=
+          _pendingScrollController.position.maxScrollExtent - 200) {
+        if (!_isLoadingMorePending && _hasMorePending && !_isLoading) {
+          _loadMorePembayaranPending();
+        }
+      }
+    });
   }
 
   @override
@@ -121,6 +139,7 @@ class FinanceScreenState extends State<FinanceScreen>
     _searchSiswaController.dispose();
     _scrollController.removeListener(() {});
     _scrollController.dispose();
+    _pendingScrollController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
   }
@@ -1251,11 +1270,27 @@ class FinanceScreenState extends State<FinanceScreen>
     int totalPending = 0;
     int totalBelumBayar = 0;
 
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    final selectedAcademicYearId = academicYearProvider
+        .selectedAcademicYear?['id']
+        ?.toString();
+
     for (var siswa in siswaList) {
       final siswaId = siswa['id']?.toString();
       final tagihanList = _tagihanBySiswa[siswaId] ?? [];
 
       for (var tagihan in tagihanList) {
+        // Filter based on academic year
+        final tagihanAcademicYearId = tagihan['academic_year_id']?.toString();
+        if (selectedAcademicYearId != null &&
+            tagihanAcademicYearId != null &&
+            tagihanAcademicYearId != selectedAcademicYearId) {
+          continue;
+        }
+
         final status = tagihan['status'];
         if (status == 'verified') {
           totalLunas++;
@@ -1435,19 +1470,68 @@ class FinanceScreenState extends State<FinanceScreen>
     await _loadTagihan(resetPage: false);
   }
 
-  Future<void> _loadPembayaranPending() async {
+  Future<void> _loadMorePembayaranPending() async {
+    if (!_hasMorePending) return;
+    setState(() {
+      _isLoadingMorePending = true;
+    });
+    await _loadPembayaranPending(loadMore: true);
+    setState(() {
+      _isLoadingMorePending = false;
+    });
+  }
+
+  Future<void> _loadPembayaranPending({bool loadMore = false}) async {
     try {
-      final response = await _apiService.get('/payments?status=pending');
+      if (!loadMore) {
+        setState(() {
+          _pendingPage = 1;
+          _hasMorePending = true;
+        });
+      } else {
+        _pendingPage++;
+      }
+
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
+      String url =
+          '/payments?status=pending&limit=$_pendingPerPage&page=$_pendingPage';
+      if (academicYearId != null) {
+        url += '&academic_year_id=$academicYearId';
+      }
+
+      final response = await _apiService.get(url);
       if (mounted) {
         setState(() {
           final List<dynamic> rawList;
           if (response is Map && response.containsKey('data')) {
             rawList = response['data'] is List ? response['data'] : [];
+            // Parse total from pagination
+            if (response.containsKey('total')) {
+              _totalPembayaranPending =
+                  int.tryParse(response['total'].toString()) ?? 0;
+            } else if (response.containsKey('meta') &&
+                response['meta'] is Map) {
+              _totalPembayaranPending =
+                  int.tryParse(response['meta']['total'].toString()) ?? 0;
+            }
           } else {
             rawList = response is List ? response : [];
+            if (!loadMore) {
+              _totalPembayaranPending = rawList.length; // Fallback if no meta
+            }
           }
 
-          _pembayaranPendingList = rawList.map((item) {
+          if (rawList.length < _pendingPerPage) {
+            _hasMorePending = false;
+          }
+
+          final mappedList = rawList.map((item) {
             if (item is Map<String, dynamic>) {
               final newItem = Map<String, dynamic>.from(item);
               final bill = newItem['bill'] ?? {};
@@ -1474,10 +1558,18 @@ class FinanceScreenState extends State<FinanceScreen>
             }
             return item;
           }).toList();
+
+          if (loadMore) {
+            _pembayaranPendingList.addAll(mappedList);
+          } else {
+            _pembayaranPendingList = mappedList;
+          }
         });
       }
     } catch (error) {
       if (kDebugMode) print('Error loading pembayaran pending: $error');
+      // Revert page if error
+      if (loadMore) _pendingPage--;
     }
   }
 
@@ -2083,8 +2175,8 @@ class FinanceScreenState extends State<FinanceScreen>
 
                     if (selectedAcademicYearId != null) {
                       ApiService.getGeneratedMonths(
-                        jenisPembayaran['id'].toString(),
-                        selectedAcademicYearId!,
+                        paymentTypeId: jenisPembayaran['id'].toString(),
+                        academicYearId: selectedAcademicYearId!,
                       ).then((genMonths) {
                         if (context.mounted) {
                           setDialogState(() {
@@ -2117,7 +2209,7 @@ class FinanceScreenState extends State<FinanceScreen>
                 ),
               ],
             ),
-            content: Container(
+            content: SizedBox(
               width: MediaQuery.of(context).size.width * 0.9,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2141,7 +2233,7 @@ class FinanceScreenState extends State<FinanceScreen>
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButtonFormField<String>(
-                          value: selectedAcademicYearId,
+                          initialValue: selectedAcademicYearId,
                           decoration: InputDecoration(
                             labelText: 'Tahun Ajaran',
                             labelStyle: TextStyle(color: Colors.grey.shade600),
@@ -2164,8 +2256,8 @@ class FinanceScreenState extends State<FinanceScreen>
                                 generatedMonths = [];
                               });
                               ApiService.getGeneratedMonths(
-                                jenisPembayaran['id'].toString(),
-                                val,
+                                paymentTypeId: jenisPembayaran['id'].toString(),
+                                academicYearId: val,
                               ).then((genMonths) {
                                 if (context.mounted) {
                                   setDialogState(() {
@@ -3307,7 +3399,7 @@ class FinanceScreenState extends State<FinanceScreen>
                       ),
                       Tab(
                         text:
-                            '${languageProvider.getTranslatedText(AppLocalizations.verification)} (${_pembayaranPendingList.length})',
+                            '${languageProvider.getTranslatedText(AppLocalizations.verification)} (${_totalPembayaranPending > 99 ? '99+' : _totalPembayaranPending})',
                       ),
                       Tab(
                         text: languageProvider.getTranslatedText(
@@ -3588,8 +3680,18 @@ class FinanceScreenState extends State<FinanceScreen>
                         icon: Icons.verified_user,
                       )
                     : ListView.builder(
-                        itemCount: _pembayaranPendingList.length,
+                        controller: _pendingScrollController,
+                        physics: AlwaysScrollableScrollPhysics(),
+                        itemCount:
+                            _pembayaranPendingList.length +
+                            (_hasMorePending ? 1 : 0),
                         itemBuilder: (context, index) {
+                          if (index == _pembayaranPendingList.length) {
+                            return Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
                           return _buildPembayaranPendingCard(
                             _pembayaranPendingList[index],
                             index,

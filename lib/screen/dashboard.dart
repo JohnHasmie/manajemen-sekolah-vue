@@ -83,6 +83,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     'pengumuman_terbaru': 0,
   };
 
+  // Finance Badge State
+  int _unverifiedPaymentCount = 0;
+
   // Stats Pagination state
   late ScrollController _statsScrollController;
   int _currentStatsPage = 0;
@@ -434,6 +437,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'total_mapel': subjects.length,
           };
         });
+
+        // Load Finance Stats for Admin
+        await _loadFinanceStats();
       } else if (_effectiveRole == 'wali') {
         // Load data untuk wali murid
         final userData = _userData;
@@ -764,6 +770,26 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         print('❌ Error loading pengumuman: $e');
       }
       return [];
+    }
+  }
+
+  // Load Finance Stats (Admin Only)
+  Future<void> _loadFinanceStats() async {
+    try {
+      final financeStats = await ApiService.getFinanceDashboardStats();
+      if (mounted && financeStats.containsKey('pembayaran_pending')) {
+        setState(() {
+          _unverifiedPaymentCount =
+              int.tryParse(financeStats['pembayaran_pending'].toString()) ?? 0;
+        });
+        if (kDebugMode) {
+          print('💰 Unverified Payments: $_unverifiedPaymentCount');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading finance stats: $e');
+      }
     }
   }
 
@@ -1689,7 +1715,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildDashboardCard(String title, dynamic icon, VoidCallback onTap) {
+  Widget _buildDashboardCard(
+    String title,
+    dynamic icon,
+    VoidCallback onTap, {
+    int? badgeCount,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1739,6 +1770,28 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+
+              // Notification Badge
+              if (badgeCount != null && badgeCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      badgeCount > 99 ? '99+' : badgeCount.toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
 
               // Content - di tengah dengan icon di atas text
               Padding(
@@ -2531,6 +2584,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             context,
             MaterialPageRoute(builder: (context) => FinanceScreen()),
           ),
+          badgeCount: _unverifiedPaymentCount > 0
+              ? _unverifiedPaymentCount
+              : null,
         ),
         _buildDashboardCard(
           AppLocalizations.schoolSettings.tr,
