@@ -2,7 +2,11 @@ import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart'; // Required for MaterialPageRoute
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:manajemensekolah/main.dart'; // Import navigatorKey
+import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
+import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -376,9 +380,14 @@ class FCMService {
         );
         print('Student: ${data['student_name']}, Subject: ${data['subject']}');
       }
-    } else if (type == 'pengumuman') {
+    } else if (type == 'pengumuman' || type == 'announcement') {
       // Navigate to announcement screen
-      // This will be handled by the app's navigation system
+      if (kDebugMode) {
+        print('navigating to announcement screen');
+      }
+
+      _navigateToAnnouncementScreen();
+
       if (kDebugMode) {
         print('Navigate to pengumuman: ${data['announcement_id']}');
         print('Title: ${data['title']}, Priority: ${data['priority']}');
@@ -498,6 +507,38 @@ class FCMService {
         print('❌ Error force refreshing token: $e');
       }
       return null;
+    }
+  }
+
+  Future<void> _navigateToAnnouncementScreen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataStr = prefs.getString('user');
+      String role = 'wali'; // Default
+
+      if (userDataStr != null) {
+        final userData = jsonDecode(userDataStr);
+        role = userData['role'] ?? 'wali';
+      }
+
+      if (navigatorKey.currentState != null) {
+        if (role == 'admin') {
+          navigatorKey.currentState!.push(
+            MaterialPageRoute(
+              builder: (context) => const AdminAnnouncementScreen(),
+            ),
+          );
+        } else {
+          // For guru, wali, staff
+          navigatorKey.currentState!.push(
+            MaterialPageRoute(builder: (context) => const AnnouncementScreen()),
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error navigating to announcement screen: $e');
+      }
     }
   }
 }

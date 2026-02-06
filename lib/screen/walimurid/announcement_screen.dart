@@ -659,7 +659,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                     ),
                   ),
 
-                  // Background pattern effect
+                  // Background pattern effect (Indicator)
                   Positioned(
                     right: -8,
                     top: -8,
@@ -667,8 +667,30 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
+                        color:
+                            (announcementData['is_read'] == true ||
+                                announcementData['is_read'] == 1 ||
+                                announcementData['is_read'] == '1')
+                            ? Colors.grey.withValues(alpha: 0.1) // Read: Grey
+                            : Colors.red.withValues(
+                                alpha: 0.1,
+                              ), // Unread: Red tint
                         shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color:
+                                (announcementData['is_read'] == true ||
+                                    announcementData['is_read'] == 1 ||
+                                    announcementData['is_read'] == '1')
+                                ? Colors.transparent
+                                : Colors.red, // Unread: Red Dot
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
                     ),
                   ),

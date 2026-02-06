@@ -1491,7 +1491,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                       ),
                     ),
 
-                    // Background pattern effect
+                    // Background pattern effect (Indicator)
                     Positioned(
                       right: -8,
                       top: -8,
@@ -1499,8 +1499,28 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
+                          color:
+                              (announcementData['is_read'] == true ||
+                                  announcementData['is_read'] == 1 ||
+                                  announcementData['is_read'] == '1')
+                              ? Colors.grey.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
                           shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color:
+                                  (announcementData['is_read'] == true ||
+                                      announcementData['is_read'] == 1 ||
+                                      announcementData['is_read'] == '1')
+                                  ? Colors.transparent
+                                  : Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                         ),
                       ),
                     ),
