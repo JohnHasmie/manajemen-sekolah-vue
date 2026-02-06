@@ -608,6 +608,40 @@ class ApiService {
   }
 
   // Switch sekolah
+  static Future<int> getUnreadAnnouncementCount() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/announcement/unread-count'),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['count'] ?? 0;
+      }
+      return 0;
+    } catch (e) {
+      if (kDebugMode) print('Error fetching unread count: $e');
+      return 0;
+    }
+  }
+
+  static Future<bool> markAnnouncementRead(List<String> ids) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/announcement/mark-read'),
+        headers: await _getHeaders(),
+        body: json.encode({'ids': ids}),
+      );
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      if (kDebugMode) print('Error marking announcement read: $e');
+      return false;
+    }
+  }
+
   static Future<Map<String, dynamic>> switchSchool(
     String schoolId, {
     String? role,

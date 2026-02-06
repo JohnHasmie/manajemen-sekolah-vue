@@ -93,6 +93,10 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
     _loadData();
   }
 
+  final Set<String> _processedIds = {}; // IDs we've already handled/queued
+  final Set<String> _pendingReadIds = {}; // IDs waitng to be sent to API
+  Timer? _markReadDebounce;
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -100,8 +104,58 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
     _scrollController.dispose();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    _searchDebounce?.cancel();
+    _searchDebounce?.cancel(); // Cancel search debounce
+    _markReadDebounce?.cancel(); // Cancel visibility debounce
     super.dispose();
+  }
+
+  void _onItemVisible(Map<String, dynamic> announcement) {
+    final id = announcement['id'].toString();
+    final isRead =
+        announcement['is_read'] == true ||
+        announcement['is_read'] == 1 ||
+        announcement['is_read'] == '1';
+
+    if (!isRead && !_processedIds.contains(id)) {
+      _processedIds.add(id);
+      _pendingReadIds.add(id);
+      _scheduleMarkRead();
+    }
+  }
+
+  void _scheduleMarkRead() {
+    if (_markReadDebounce?.isActive ?? false) return;
+
+    _markReadDebounce = Timer(const Duration(seconds: 1), () {
+      if (_pendingReadIds.isNotEmpty) {
+        final idsToMark = _pendingReadIds.toList();
+        _pendingReadIds.clear(); // Clear pending first to avoid duplicates
+        _flushMarkRead(idsToMark);
+      }
+    });
+  }
+
+  Future<void> _flushMarkRead(List<String> ids) async {
+    try {
+      if (kDebugMode) {
+        print(
+          '📨 Admin Auto-marking ${ids.length} visible announcements as read...',
+        );
+      }
+
+      // Optimistic Update (update local list UI immediately)
+      setState(() {
+        for (var item in _announcements) {
+          if (ids.contains(item['id'].toString())) {
+            item['is_read'] = true;
+          }
+        }
+      });
+
+      await ApiService.markAnnouncementRead(ids);
+    } catch (e) {
+      if (kDebugMode) print("Error auto-marking read: $e");
+    }
   }
 
   void _onScroll() {
@@ -541,6 +595,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
           _hasMoreData = true;
           _announcements = []; // Reset list
           _errorMessage = null;
+          _processedIds.clear(); // Clear processed IDs on new data load
         });
       }
 
@@ -626,6 +681,11 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
           // Clear error message on successful load
           _errorMessage = null;
         });
+
+        // Removed eager marking
+        // if (_announcements.isNotEmpty) {
+        //   _markAnnouncementsAsRead(_announcements);
+        // }
       } else {
         if (kDebugMode) {
           print('❌ Unexpected response structure');
@@ -745,6 +805,11 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoadingMore = false;
       });
+
+      // Removed eager marking
+      // if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+      //   _markAnnouncementsAsRead(response['data']);
+      // }
 
       if (kDebugMode) {
         print(
@@ -2712,9 +2777,15 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                               );
                             }
 
-                            return _buildAnnouncementCard(
-                              _announcements[index],
-                              index,
+                            return Builder(
+                              builder: (context) {
+                                // Trigger visibility check
+                                _onItemVisible(_announcements[index]);
+                                return _buildAnnouncementCard(
+                                  _announcements[index],
+                                  index,
+                                );
+                              },
                             );
                           },
                         ),

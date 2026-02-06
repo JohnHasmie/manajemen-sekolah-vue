@@ -32,6 +32,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -121,6 +122,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     _statsScrollController = ScrollController();
 
     _animationController.forward();
+
+    // Listen to background sync triggers (e.g. from FCM)
+    FCMService().syncTrigger.addListener(_handleSyncTrigger);
+
     _initializeData();
   }
 
@@ -388,6 +393,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           );
         }
 
+        final unreadCount = await ApiService.getUnreadAnnouncementCount();
+
         if (!mounted) return;
 
         setState(() {
@@ -397,6 +404,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'kelas_hari_ini': todaysClasses,
             'total_materi': subjects.length,
             'total_rpp': rpp.length,
+            'unread_announcements': unreadCount,
           };
         });
       } else if (_effectiveRole == 'admin') {
@@ -427,6 +435,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final classesList = classes['data'] as List? ?? [];
 
         final subjects = await ApiSubjectService().getSubject();
+        final unreadCount = await ApiService.getUnreadAnnouncementCount();
 
         if (!mounted) return;
         setState(() {
@@ -435,6 +444,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'total_guru': teacher.length,
             'total_kelas': classesList.length,
             'total_mapel': subjects.length,
+            'unread_announcements': unreadCount,
           };
         });
 
@@ -456,8 +466,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Untuk pengumuman, kita gunakan fallback dulu
         final announcements = await _getAnnouncements();
+        final unreadCount = await ApiService.getUnreadAnnouncementCount();
+
         if (kDebugMode) {
-          print('📢 Pengumuman untuk wali: ${announcements.length}');
+          print(
+            '📢 Pengumuman untuk wali: ${announcements.length}, Unread: $unreadCount',
+          );
         }
 
         if (!mounted) return;
@@ -465,6 +479,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           _stats = {
             'anak_terdaftar': studentsData.length,
             'pengumuman_terbaru': announcements.length,
+            'unread_announcements': unreadCount,
           };
         });
       }
@@ -964,10 +979,36 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    FCMService().syncTrigger.removeListener(_handleSyncTrigger);
     _animationController.dispose();
     _curtainController.dispose();
     _statsScrollController.dispose();
     super.dispose();
+  }
+
+  void _handleSyncTrigger() {
+    final trigger = FCMService().syncTrigger.value;
+    if (trigger != null) {
+      if (trigger['type'] == 'refresh_announcements') {
+        if (kDebugMode) {
+          print(
+            '🔄 Dashboard flushing announcement cache due to background/foreground sync',
+          );
+        }
+        // Reload announcements count
+        if (_effectiveRole == 'wali' ||
+            _effectiveRole == 'admin' ||
+            _effectiveRole == 'guru') {
+          ApiService.getUnreadAnnouncementCount().then((count) {
+            if (mounted) {
+              setState(() {
+                _stats['unread_announcements'] = count;
+              });
+            }
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -2546,10 +2587,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _buildDashboardCard(
           AppLocalizations.announcements.tr,
           Icons.announcement_outlined,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AdminAnnouncementScreen()),
-          ),
+          () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminAnnouncementScreen(),
+              ),
+            );
+            _loadStats();
+          },
+          badgeCount: _stats['unread_announcements'],
         ),
         _buildDashboardCard(
           AppLocalizations.classActivities.tr,
@@ -2736,10 +2783,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _buildDashboardCard(
           AppLocalizations.announcements.tr,
           Icons.announcement_outlined,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
-          ),
+          () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+            );
+            _loadStats();
+          },
+          badgeCount: _stats['unread_announcements'],
         ),
       ];
     } else if (_effectiveRole == 'wali') {
@@ -2747,10 +2798,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _buildDashboardCard(
           AppLocalizations.announcements.tr,
           Icons.announcement_outlined,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
-          ),
+          () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+            );
+            _loadStats();
+          },
+          badgeCount: _stats['unread_announcements'],
         ),
         _buildDashboardCard(
           AppLocalizations.classActivities.tr,

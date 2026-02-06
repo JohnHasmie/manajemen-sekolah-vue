@@ -32,6 +32,68 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _userRole = 'wali'; // Default role
 
+  // Visibility Tracking
+  final Set<String> _processedIds = {}; // IDs we've already handled/queued
+  final Set<String> _pendingReadIds = {}; // IDs waitng to be sent to API
+  Timer? _markReadDebounce;
+
+  @override
+  void dispose() {
+    // Assuming _searchDebounce might be defined elsewhere if needed
+    // _searchDebounce?.cancel();
+    _markReadDebounce?.cancel(); // Cancel visibility debounce
+    super.dispose();
+  }
+
+  void _onItemVisible(Map<String, dynamic> announcement) {
+    final id = announcement['id'].toString();
+    final isRead =
+        announcement['is_read'] == true ||
+        announcement['is_read'] == 1 ||
+        announcement['is_read'] == '1';
+
+    if (!isRead && !_processedIds.contains(id)) {
+      _processedIds.add(id);
+      _pendingReadIds.add(id);
+      _scheduleMarkRead();
+    }
+  }
+
+  void _scheduleMarkRead() {
+    if (_markReadDebounce?.isActive ?? false) return;
+
+    _markReadDebounce = Timer(const Duration(seconds: 1), () {
+      if (_pendingReadIds.isNotEmpty) {
+        final idsToMark = _pendingReadIds.toList();
+        _pendingReadIds.clear(); // Clear pending first to avoid duplicates
+        _flushMarkRead(idsToMark);
+      }
+    });
+  }
+
+  Future<void> _flushMarkRead(List<String> ids) async {
+    try {
+      if (kDebugMode) {
+        print('📨 Auto-marking ${ids.length} visible announcements as read...');
+      }
+
+      // Optimistic Update (update local list UI immediately)
+      setState(() {
+        for (var item in _announcementList) {
+          if (ids.contains(item['id'].toString())) {
+            item['is_read'] = true;
+          }
+        }
+      });
+
+      await ApiService.markAnnouncementRead(ids);
+    } catch (e) {
+      if (kDebugMode) print("Error auto-marking read: $e");
+      // On error, maybe remove from _processedIds to retry?
+      // For now, silent fail is safer to avoid endless retry loops.
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -83,6 +145,11 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
           '📊 Data berhasil dimuat: ${_announcementList.length} pengumuman',
         );
       }
+
+      // Removed: Eagerly marking all as read. Now handled by visibility check.
+      // if (_announcementList.isNotEmpty) {
+      //   _markAnnouncementsAsRead(_announcementList);
+      // }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error loading announcements: $e');
@@ -1039,9 +1106,15 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                           padding: EdgeInsets.only(top: 8, bottom: 16),
                           itemCount: _filteredAnnouncement.length,
                           itemBuilder: (context, index) {
-                            return _buildAnnouncementCard(
-                              _filteredAnnouncement[index],
-                              index,
+                            return Builder(
+                              builder: (context) {
+                                // Trigger visibility logic when built
+                                _onItemVisible(_filteredAnnouncement[index]);
+                                return _buildAnnouncementCard(
+                                  _filteredAnnouncement[index],
+                                  index,
+                                );
+                              },
                             );
                           },
                         ),
