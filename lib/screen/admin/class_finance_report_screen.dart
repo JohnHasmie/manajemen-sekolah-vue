@@ -1598,18 +1598,35 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     Color bgColor;
     String text;
 
+    // 1. Check Verified/Lunas
     if (status == 'verified') {
       color = Colors.green.shade700;
       bgColor = Colors.green.shade50;
       text = 'Lunas';
-    } else if (status == 'pending') {
-      color = Colors.orange.shade800;
-      bgColor = Colors.orange.shade50;
-      text = 'Menunggu'; // Changed from 'Belum'
-    } else {
-      color = Colors.red.shade700;
-      bgColor = Colors.red.shade50;
-      text = 'Belum';
+    }
+    // 2. Check Pending Verification (Menunggu)
+    else {
+      bool hasPendingPayment = false;
+      if (bill['payments'] != null && bill['payments'] is List) {
+        for (var p in bill['payments']) {
+          final pStatus = p['status'];
+          if (pStatus == 'pending' || pStatus == 'test_status') {
+            hasPendingPayment = true;
+            break;
+          }
+        }
+      }
+
+      if (hasPendingPayment) {
+        color = Colors.orange.shade800;
+        bgColor = Colors.orange.shade50;
+        text = 'Menunggu';
+      } else {
+        // 3. Fallback: Belum Bayar
+        color = Colors.red.shade700;
+        bgColor = Colors.red.shade50;
+        text = 'Belum';
+      }
     }
 
     return InkWell(

@@ -1292,12 +1292,32 @@ class FinanceScreenState extends State<FinanceScreen>
         }
 
         final status = tagihan['status'];
+
+        // 1. Check Verified/Lunas
         if (status == 'verified') {
           totalLunas++;
-        } else if (status == 'pending') {
-          totalPending++;
-        } else if (status == 'unpaid') {
-          totalBelumBayar++;
+        }
+        // 2. Check Pending Verification (Menunggu)
+        // Logic: Has a payment with status 'pending' (regardless of bill status being pending/unpaid)
+        else {
+          bool hasPendingPayment = false;
+          if (tagihan['payments'] != null && tagihan['payments'] is List) {
+            for (var p in tagihan['payments']) {
+              final pStatus = p['status'];
+              if (pStatus == 'pending' || pStatus == 'test_status') {
+                hasPendingPayment = true;
+                break;
+              }
+            }
+          }
+
+          if (hasPendingPayment) {
+            totalPending++;
+          } else {
+            // 3. Fallback: Belum Bayar
+            // Typically bill status is 'unpaid' or 'pending' here with no pending proof
+            totalBelumBayar++;
+          }
         }
       }
     }
@@ -1575,7 +1595,19 @@ class FinanceScreenState extends State<FinanceScreen>
 
   Future<void> _loadDashboardData() async {
     try {
-      final response = await _apiService.get('/finance/dashboard');
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
+      String url = '/finance/dashboard';
+      if (academicYearId != null) {
+        url += '?academic_year_id=$academicYearId';
+      }
+
+      final response = await _apiService.get(url);
       if (mounted) {
         final data = Map<String, dynamic>.from(response is Map ? response : {});
 
