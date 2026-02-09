@@ -673,8 +673,21 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
 
       // Check if response has the expected structure
       if (response.containsKey('data') && response.containsKey('pagination')) {
+        var fetchedList = response['data'] ?? [];
+
+        // Filter: Hanya tampilkan yang belum dibaca (sesuai request user)
+        if (fetchedList is List) {
+          fetchedList = fetchedList.where((item) {
+            final isRead =
+                item['is_read'] == true ||
+                item['is_read'] == 1 ||
+                item['is_read'] == '1';
+            return !isRead;
+          }).toList();
+        }
+
         setState(() {
-          _announcements = response['data'] ?? [];
+          _announcements = fetchedList;
           _paginationMeta = response['pagination'];
           _hasMoreData = response['pagination']?['has_next_page'] ?? false;
           _isLoading = false;
@@ -798,13 +811,37 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
 
       if (!mounted) return;
 
-      setState(() {
-        // Append new data to existing list
-        _announcements.addAll(response['data'] ?? []);
-        _paginationMeta = response['pagination'];
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
-        _isLoadingMore = false;
-      });
+      if (response.containsKey('data') && response.containsKey('pagination')) {
+        var newItems = response['data'] ?? [];
+
+        // Filter: Hanya tampilkan yang belum dibaca
+        if (newItems is List) {
+          newItems = newItems.where((item) {
+            final isRead =
+                item['is_read'] == true ||
+                item['is_read'] == 1 ||
+                item['is_read'] == '1';
+            return !isRead;
+          }).toList();
+        }
+
+        setState(() {
+          if (newItems is List) {
+            _announcements.addAll(newItems);
+          }
+          _paginationMeta = response['pagination'];
+          _hasMoreData = response['pagination']?['has_next_page'] ?? false;
+          _isLoadingMore = false;
+        });
+      } else {
+        if (kDebugMode) {
+          print('❌ Unexpected response structure for _loadMoreAnnouncements');
+        }
+        setState(() {
+          _isLoadingMore = false;
+          _currentPage--; // Revert page increment on error
+        });
+      }
 
       // Removed eager marking
       // if (response['data'] != null && (response['data'] as List).isNotEmpty) {
