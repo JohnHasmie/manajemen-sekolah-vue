@@ -8,6 +8,7 @@ import 'package:manajemensekolah/main.dart'; // Import navigatorKey
 import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
 import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
+import 'package:manajemensekolah/screen/walimurid/parent_grade_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -402,6 +403,11 @@ class FCMService {
         print('Jumlah: Rp ${data['amount']}');
         print('Jatuh Tempo: ${data['due_date']}');
       }
+    } else if (type == 'grade') {
+      _navigateToGradeScreen();
+      if (kDebugMode) {
+        print('Navigate to grade for: ${data['grade_id']}');
+      }
     }
   }
 
@@ -553,6 +559,20 @@ class FCMService {
     } catch (e) {
       if (kDebugMode) {
         print('Error navigating to class activity screen: $e');
+      }
+    }
+  }
+
+  Future<void> _navigateToGradeScreen() async {
+    try {
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.push(
+          MaterialPageRoute(builder: (context) => const ParentGradeScreen()),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error navigating to grade screen: $e');
       }
     }
   }

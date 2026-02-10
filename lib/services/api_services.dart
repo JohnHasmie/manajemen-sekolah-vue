@@ -1615,4 +1615,32 @@ class ApiService {
       return {};
     }
   }
+
+  static Future<int> getUnreadGradeCount() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/grade/unread-count'),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
+    } catch (e) {
+      if (kDebugMode) print('Error fetching unread grade count: $e');
+      return 0;
+    }
+  }
+
+  static Future<void> markGradeAsRead(List<String> gradeIds) async {
+    if (gradeIds.isEmpty) return;
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/grade/mark-read'),
+        headers: await _getHeaders(),
+        body: json.encode({'grade_ids': gradeIds}),
+      );
+    } catch (e) {
+      if (kDebugMode) print('Error marking grades as read: $e');
+    }
+  }
 }

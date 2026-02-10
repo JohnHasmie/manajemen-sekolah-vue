@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -24,6 +25,76 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   String? _selectedStudentId;
   String _parentName = '';
   bool _isLoading = true;
+
+  // Visibility Tracking
+  final Set<String> _processedIds = {}; // IDs we've already handled/queued
+  final Set<String> _pendingReadIds = {}; // IDs waiting to be sent to API
+  Timer? _markReadDebounce;
+
+  @override
+  void dispose() {
+    _markReadDebounce?.cancel(); // Cancel visibility debounce
+    if (_pendingReadIds.isNotEmpty) {
+      _flushMarkReadSilently(List.from(_pendingReadIds));
+      _pendingReadIds.clear();
+    }
+    super.dispose();
+  }
+
+  Future<void> _flushMarkReadSilently(List<String> ids) async {
+    try {
+      await ApiService.markGradeAsRead(ids);
+    } catch (e) {
+      if (kDebugMode) print("Error silent auto-marking read: $e");
+    }
+  }
+
+  void _onItemVisible(Map<String, dynamic> grade) {
+    final id = grade['id'].toString();
+    final isRead =
+        grade['is_read'] == true ||
+        grade['is_read'] == 1 ||
+        grade['is_read'] == '1';
+
+    if (!isRead && !_processedIds.contains(id)) {
+      _processedIds.add(id);
+      _pendingReadIds.add(id);
+      _scheduleMarkRead();
+    }
+  }
+
+  void _scheduleMarkRead() {
+    if (_markReadDebounce?.isActive ?? false) return;
+
+    _markReadDebounce = Timer(const Duration(seconds: 1), () {
+      if (_pendingReadIds.isNotEmpty) {
+        final idsToMark = _pendingReadIds.toList();
+        _pendingReadIds.clear(); // Clear pending first to avoid duplicates
+        _flushMarkRead(idsToMark);
+      }
+    });
+  }
+
+  Future<void> _flushMarkRead(List<String> ids) async {
+    try {
+      if (kDebugMode) {
+        print('📨 Auto-marking ${ids.length} visible grades as read...');
+      }
+
+      // Optimistic Update (update local list UI immediately)
+      setState(() {
+        for (var item in _gradeList) {
+          if (ids.contains(item['id'].toString())) {
+            item['is_read'] = true;
+          }
+        }
+      });
+
+      await ApiService.markGradeAsRead(ids);
+    } catch (e) {
+      if (kDebugMode) print("Error auto-marking read: $e");
+    }
+  }
 
   final Map<String, Color> _gradeTypeColorMap = {
     'tugas': Color(0xFF6366F1),
@@ -523,152 +594,201 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         final typeColor = _gradeTypeColorMap[type] ?? Colors.blue;
         final score = double.tryParse(grade['score']?.toString() ?? '0') ?? 0;
         final assessmentTitle = grade['title']?.toString();
+        final isRead =
+            grade['is_read'] == true ||
+            grade['is_read'] == 1 ||
+            grade['is_read'] == '1';
 
-        return Container(
-          margin: EdgeInsets.symmetric(vertical: 6, horizontal: 0),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _showGradeDetail(grade),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
+        return Builder(
+          builder: (context) {
+            _onItemVisible(grade);
+            return Container(
+              margin: EdgeInsets.symmetric(vertical: 6, horizontal: 0),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showGradeDetail(grade),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      blurRadius: 5,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // Strip berwarna di pinggir kiri
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 6,
-                        decoration: BoxDecoration(
-                          color: typeColor,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isRead
+                          ? Colors.white
+                          : Colors.red.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(
+                            alpha: isRead ? 0.3 : 0.4,
                           ),
+                          blurRadius: 5,
+                          offset: Offset(0, 4),
                         ),
-                      ),
+                      ],
                     ),
-
-                    // Badge Score
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        width: 54, // Diperlebar agar muat 100.0
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: typeColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: typeColor.withOpacity(0.3)),
-                        ),
-                        child: Center(
-                          child: Text(
-                            score.toStringAsFixed(0) == score.toString()
-                                ? score.toStringAsFixed(0)
-                                : score.toString(),
-                            style: TextStyle(
-                              color: typeColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        22,
-                        16,
-                        70,
-                        16,
-                      ), // Right padding ditambah
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
+                    child: Stack(
+                      children: [
+                        // Strip berwarna di pinggir kiri
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 6,
                             decoration: BoxDecoration(
                               color: typeColor,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              type.toUpperCase(),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
                               ),
                             ),
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            grade['subject_name'] ??
-                                grade['mata_pelajaran'] ??
-                                AppLocalizations.subject.tr,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (assessmentTitle != null &&
-                              assessmentTitle.isNotEmpty) ...[
-                            SizedBox(height: 4),
-                            Text(
-                              assessmentTitle,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.black87,
+                        ),
+
+                        // Badge Score
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: Container(
+                            width: 54, // Diperlebar agar muat 100.0
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: typeColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: typeColor.withOpacity(0.3),
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
-                          SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                size: 12,
-                                color: Colors.grey.shade500,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                _formatDate(grade['date']),
+                            child: Center(
+                              child: Text(
+                                score.toStringAsFixed(0) == score.toString()
+                                    ? score.toStringAsFixed(0)
+                                    : score.toString(),
                                 style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 12,
+                                  color: typeColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Indikator unread (red dot)
+                        if (!isRead)
+                          Positioned(
+                            right: -8,
+                            top: -8,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.red.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        blurRadius: 4,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            22,
+                            16,
+                            70,
+                            16,
+                          ), // Right padding ditambah
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: typeColor,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  type.toUpperCase(),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                grade['subject_name'] ??
+                                    grade['mata_pelajaran'] ??
+                                    AppLocalizations.subject.tr,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (assessmentTitle != null &&
+                                  assessmentTitle.isNotEmpty) ...[
+                                SizedBox(height: 4),
+                                Text(
+                                  assessmentTitle,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                              SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today,
+                                    size: 12,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    _formatDate(grade['date']),
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

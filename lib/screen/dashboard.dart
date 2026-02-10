@@ -478,6 +478,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final unreadCount = await ApiService.getUnreadAnnouncementCount();
         final unreadActivityCount =
             await ApiClassActivityService.getUnreadCount();
+        final unreadGradeCount = await ApiService.getUnreadGradeCount();
 
         if (!mounted) return;
         setState(() {
@@ -486,6 +487,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'pengumuman_terbaru': announcements.length,
             'unread_announcements': unreadCount,
             'unread_class_activities': unreadActivityCount,
+            'unread_grades': unreadGradeCount,
           };
         });
       }
@@ -2835,19 +2837,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _buildDashboardCard(
           AppLocalizations.grades.tr,
           Icons.grade_outlined,
-          () {
+          () async {
             final academicYearId = Provider.of<AcademicYearProvider>(
               context,
               listen: false,
             ).selectedAcademicYear?['id']?.toString();
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
                     ParentGradeScreen(academicYearId: academicYearId),
               ),
             );
+            _loadStats();
           },
+          badgeCount: _stats['unread_grades'],
         ),
         _buildDashboardCard(
           AppLocalizations.presence.tr,
