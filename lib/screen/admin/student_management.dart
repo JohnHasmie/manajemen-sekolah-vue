@@ -287,6 +287,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         gender: _selectedGenderFilter,
         academicYearId: selectedYearId,
         guardianName: _selectedGuardian,
+        status: _selectedStatusFilter,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
@@ -358,6 +359,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         gender: _selectedGenderFilter,
         academicYearId: selectedYearId,
         guardianName: _selectedGuardian,
+        status: _selectedStatusFilter,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),

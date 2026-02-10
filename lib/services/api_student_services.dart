@@ -277,6 +277,7 @@ class ApiStudentService {
     String? search,
     String? academicYearId,
     String? guardianName,
+    String? status,
     bool useCache = true,
   }) async {
     Map<String, dynamic> queryParams = {
@@ -301,6 +302,9 @@ class ApiStudentService {
     }
     if (guardianName != null && guardianName.isNotEmpty) {
       queryParams['guardian_name'] = guardianName;
+    }
+    if (status != null && status.isNotEmpty) {
+      queryParams['status'] = status;
     }
 
     String queryString = Uri(queryParameters: queryParams).query;
