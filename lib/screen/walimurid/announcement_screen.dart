@@ -135,15 +135,6 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
         announcementList = response;
       }
 
-      // Filter: Hanya tampilkan yang belum dibaca
-      announcementList = announcementList.where((item) {
-        final isRead =
-            item['is_read'] == true ||
-            item['is_read'] == 1 ||
-            item['is_read'] == '1';
-        return !isRead;
-      }).toList();
-
       setState(() {
         _announcementList = announcementList;
         _isLoading = false;
@@ -680,7 +671,8 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                             (announcementData['is_read'] == true ||
                                 announcementData['is_read'] == 1 ||
                                 announcementData['is_read'] == '1')
-                            ? Colors.grey.withValues(alpha: 0.1) // Read: Grey
+                            ? Colors
+                                  .transparent // Read: Completely hidden
                             : Colors.red.withValues(
                                 alpha: 0.1,
                               ), // Unread: Red tint

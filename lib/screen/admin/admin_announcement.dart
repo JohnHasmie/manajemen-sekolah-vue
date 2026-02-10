@@ -675,15 +675,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
       if (response.containsKey('data') && response.containsKey('pagination')) {
         var fetchedList = response['data'] ?? [];
 
-        // Filter: Hanya tampilkan yang belum dibaca (sesuai request user)
+        // Keep all items (including read ones) as per user request
         if (fetchedList is List) {
-          fetchedList = fetchedList.where((item) {
-            final isRead =
-                item['is_read'] == true ||
-                item['is_read'] == 1 ||
-                item['is_read'] == '1';
-            return !isRead;
-          }).toList();
+          // No filtering
         }
 
         setState(() {
@@ -814,15 +808,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
       if (response.containsKey('data') && response.containsKey('pagination')) {
         var newItems = response['data'] ?? [];
 
-        // Filter: Hanya tampilkan yang belum dibaca
+        // Keep all items (including read ones) as per user request
         if (newItems is List) {
-          newItems = newItems.where((item) {
-            final isRead =
-                item['is_read'] == true ||
-                item['is_read'] == 1 ||
-                item['is_read'] == '1';
-            return !isRead;
-          }).toList();
+          // No filtering
         }
 
         setState(() {
@@ -1540,7 +1528,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                               (announcementData['is_read'] == true ||
                                   announcementData['is_read'] == 1 ||
                                   announcementData['is_read'] == '1')
-                              ? Colors.grey.withOpacity(0.1)
+                              ? Colors.transparent
                               : Colors.red.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
