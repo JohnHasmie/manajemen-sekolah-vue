@@ -424,19 +424,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
             ?.toString();
 
-        final student = await ApiStudentService.getStudent();
-        // Note: Generic getStudent might need filtering by year if we want "Active Students in Year".
-        // For now, let's keep it simple or check if getStudent supports filtering.
-        // Usually "Total Students" is global, but "Total Classes" IS year-specific.
+        final studentStats = await ApiStudentService.getStudentStats(
+          academicYearId: selectedYearId,
+          status: 'active',
+        );
 
-        final teacher = await ApiTeacherService().getTeacher();
+        final teacherStats = await ApiTeacherService.getTeacherStats(
+          academicYearId: selectedYearId,
+        );
 
         // Filter classes by active year
         final classes = await ApiClassService.getClassPaginated(
-          limit: 1000,
+          limit: 1, // We only need the total_items from pagination
           academicYearId: selectedYearId,
         );
-        final classesList = classes['data'] as List? ?? [];
+        final totalClasses = classes['pagination']?['total_items'] ?? 0;
 
         final subjects = await ApiSubjectService().getSubject();
         final unreadCount = await ApiService.getUnreadAnnouncementCount();
@@ -446,9 +448,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         if (!mounted) return;
         setState(() {
           _stats = {
-            'total_siswa': student.length,
-            'total_guru': teacher.length,
-            'total_kelas': classesList.length,
+            'total_siswa': studentStats['total'] ?? 0,
+            'total_guru': teacherStats['total'] ?? 0,
+            'total_kelas': totalClasses,
             'total_mapel': subjects.length,
             'unread_announcements': unreadCount,
             'unread_class_activities': unreadActivityCount,
@@ -1313,7 +1315,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             _buildStatCard(
               title: AppLocalizations.totalTeachers.tr,
               value: _stats['total_guru'].toString(),
-              subtitle: AppLocalizations.active.tr,
+              subtitle: AppLocalizations.registered.tr,
               icon: "👨‍🏫",
               iconColor: Color(0xFF2EC4B6),
               backgroundColor: Color(0xFF2EC4B6).withOpacity(0.1),

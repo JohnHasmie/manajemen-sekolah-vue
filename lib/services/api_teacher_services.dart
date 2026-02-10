@@ -198,6 +198,42 @@ class ApiTeacherService {
     }
   }
 
+  static Future<Map<String, dynamic>> getTeacherStats({
+    String? gender,
+    String? employmentStatus,
+    String? name,
+    String? employeeNumber,
+    String? academicYearId,
+  }) async {
+    Map<String, dynamic> queryParams = {};
+    if (gender != null && gender.isNotEmpty) queryParams['gender'] = gender;
+    if (employmentStatus != null && employmentStatus.isNotEmpty) {
+      queryParams['employment_status'] = employmentStatus;
+    }
+    if (name != null && name.isNotEmpty) queryParams['name'] = name;
+    if (employeeNumber != null && employeeNumber.isNotEmpty) {
+      queryParams['employee_number'] = employeeNumber;
+    }
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
+    }
+
+    String queryString = Uri(queryParameters: queryParams).query;
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/teacher/stats?$queryString'),
+        headers: await ApiService.getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return result['data'] ?? {};
+    } catch (e) {
+      if (kDebugMode) print('Error fetching teacher stats: $e');
+      return {};
+    }
+  }
+
   static Future<void> _clearTeacherCache() async {
     await LocalCacheService.clearStartingWith('teacher_');
     if (kDebugMode) print('🧹 Teacher cache cleared due to changes');

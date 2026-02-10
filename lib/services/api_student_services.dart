@@ -318,32 +318,69 @@ class ApiStudentService {
       }
     }
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/student?$queryString'),
-      headers: await ApiService.getHeaders(),
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/student?$queryString'),
+        headers: await ApiService.getHeaders(),
+      );
 
-    final result = _handleResponse(response);
+      final result = _handleResponse(response);
 
-    if (result is Map<String, dynamic>) {
-      await LocalCacheService.save(cacheKey, result);
-      return result;
+      if (result is Map<String, dynamic>) {
+        await LocalCacheService.save(cacheKey, result);
+        return result;
+      }
+
+      final fallback = {
+        'success': true,
+        'data': result is List ? result : [],
+        'pagination': {
+          'total_items': result is List ? result.length : 0,
+          'total_pages': 1,
+          'current_page': 1,
+          'per_page': limit,
+          'has_next_page': false,
+          'has_prev_page': false,
+        },
+      };
+      await LocalCacheService.save(cacheKey, fallback);
+      return fallback;
+    } catch (e) {
+      rethrow;
     }
+  }
 
-    final fallback = {
-      'success': true,
-      'data': result is List ? result : [],
-      'pagination': {
-        'total_items': result is List ? result.length : 0,
-        'total_pages': 1,
-        'current_page': 1,
-        'per_page': limit,
-        'has_next_page': false,
-        'has_prev_page': false,
-      },
-    };
-    await LocalCacheService.save(cacheKey, fallback);
-    return fallback;
+  static Future<Map<String, dynamic>> getStudentStats({
+    String? classId,
+    String? gender,
+    String? search,
+    String? academicYearId,
+    String? status,
+  }) async {
+    Map<String, dynamic> queryParams = {};
+    if (classId != null && classId.isNotEmpty)
+      queryParams['class_id'] = classId;
+    if (gender != null && gender.isNotEmpty) queryParams['gender'] = gender;
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
+    }
+    if (status != null && status.isNotEmpty) queryParams['status'] = status;
+
+    String queryString = Uri(queryParameters: queryParams).query;
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/student/stats?$queryString'),
+        headers: await ApiService.getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return result['data'] ?? {};
+    } catch (e) {
+      if (kDebugMode) print('Error fetching student stats: $e');
+      return {};
+    }
   }
 
   static Future<void> _clearStudentCache() async {

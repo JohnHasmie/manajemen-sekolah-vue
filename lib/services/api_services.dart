@@ -1545,4 +1545,74 @@ class ApiService {
       rethrow;
     }
   }
+
+  static Future<Map<String, dynamic>> getAttendanceStats({
+    String? date,
+    String? classId,
+    String? subjectId,
+    String? teacherId,
+    String? lessonHourId,
+  }) async {
+    Map<String, dynamic> queryParams = {};
+    if (date != null && date.isNotEmpty) queryParams['tanggal'] = date;
+    if (classId != null && classId.isNotEmpty)
+      queryParams['class_id'] = classId;
+    if (subjectId != null && subjectId.isNotEmpty) {
+      queryParams['subject_id'] = subjectId;
+    }
+    if (teacherId != null && teacherId.isNotEmpty) {
+      queryParams['teacher_id'] = teacherId;
+    }
+    if (lessonHourId != null && lessonHourId.isNotEmpty) {
+      queryParams['lesson_hour_id'] = lessonHourId;
+    }
+
+    String queryString = Uri(queryParameters: queryParams).query;
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/attendance/stats?$queryString'),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return result['data'] ?? {};
+    } catch (e) {
+      if (kDebugMode) print('Error fetching attendance stats: $e');
+      return {};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getFinanceBillStats({
+    String? academicYearId,
+    String? paymentTypeId,
+    String? month,
+    String? classId,
+  }) async {
+    Map<String, dynamic> queryParams = {};
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
+    }
+    if (paymentTypeId != null && paymentTypeId.isNotEmpty) {
+      queryParams['payment_type_id'] = paymentTypeId;
+    }
+    if (month != null && month.isNotEmpty) queryParams['month'] = month;
+    if (classId != null && classId.isNotEmpty)
+      queryParams['class_id'] = classId;
+
+    String queryString = Uri(queryParameters: queryParams).query;
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/finance/bills/stats?$queryString'),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return result['data'] ?? {};
+    } catch (e) {
+      if (kDebugMode) print('Error fetching finance bill stats: $e');
+      return {};
+    }
+  }
 }
