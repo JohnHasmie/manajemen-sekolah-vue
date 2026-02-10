@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manajemensekolah/main.dart'; // Import navigatorKey
 import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
 import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
+import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -371,14 +372,12 @@ class FCMService {
       if (kDebugMode) {
         print('Navigate to absensi screen for siswa: ${data['student_id']}');
       }
-    } else if (type == 'class_activity') {
-      // Navigate to class activity screen
-      // This will be handled by the app's navigation system
+    } else if (type == 'class_activity' || type == 'class_activity_detail') {
+      _navigateToClassActivityScreen();
       if (kDebugMode) {
         print(
           'Navigate to class activity for kegiatan: ${data['activity_id']}',
         );
-        print('Student: ${data['student_name']}, Subject: ${data['subject']}');
       }
     } else if (type == 'pengumuman' || type == 'announcement') {
       // Navigate to announcement screen
@@ -538,6 +537,22 @@ class FCMService {
     } catch (e) {
       if (kDebugMode) {
         print('Error navigating to announcement screen: $e');
+      }
+    }
+  }
+
+  Future<void> _navigateToClassActivityScreen() async {
+    try {
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.push(
+          MaterialPageRoute(
+            builder: (context) => const ParentClassActivityScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error navigating to class activity screen: $e');
       }
     }
   }

@@ -42,7 +42,19 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     // Assuming _searchDebounce might be defined elsewhere if needed
     // _searchDebounce?.cancel();
     _markReadDebounce?.cancel(); // Cancel visibility debounce
+    if (_pendingReadIds.isNotEmpty) {
+      _flushMarkReadSilently(List.from(_pendingReadIds));
+      _pendingReadIds.clear();
+    }
     super.dispose();
+  }
+
+  Future<void> _flushMarkReadSilently(List<String> ids) async {
+    try {
+      await ApiService.markAnnouncementRead(ids);
+    } catch (e) {
+      if (kDebugMode) print("Error silent auto-marking read: $e");
+    }
   }
 
   void _onItemVisible(Map<String, dynamic> announcement) {

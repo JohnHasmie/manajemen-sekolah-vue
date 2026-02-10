@@ -26,6 +26,7 @@ import 'package:manajemensekolah/screen/walimurid/parent_billing.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_grade_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/presence_parent.dart';
+import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -394,6 +395,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         }
 
         final unreadCount = await ApiService.getUnreadAnnouncementCount();
+        final unreadActivityCount =
+            await ApiClassActivityService.getUnreadCount();
 
         if (!mounted) return;
 
@@ -405,6 +408,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'total_materi': subjects.length,
             'total_rpp': rpp.length,
             'unread_announcements': unreadCount,
+            'unread_class_activities': unreadActivityCount,
           };
         });
       } else if (_effectiveRole == 'admin') {
@@ -436,6 +440,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         final subjects = await ApiSubjectService().getSubject();
         final unreadCount = await ApiService.getUnreadAnnouncementCount();
+        final unreadActivityCount =
+            await ApiClassActivityService.getUnreadCount();
 
         if (!mounted) return;
         setState(() {
@@ -445,6 +451,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'total_kelas': classesList.length,
             'total_mapel': subjects.length,
             'unread_announcements': unreadCount,
+            'unread_class_activities': unreadActivityCount,
           };
         });
 
@@ -467,12 +474,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         // Untuk pengumuman, kita gunakan fallback dulu
         final announcements = await _getAnnouncements();
         final unreadCount = await ApiService.getUnreadAnnouncementCount();
-
-        if (kDebugMode) {
-          print(
-            '📢 Pengumuman untuk wali: ${announcements.length}, Unread: $unreadCount',
-          );
-        }
+        final unreadActivityCount =
+            await ApiClassActivityService.getUnreadCount();
 
         if (!mounted) return;
         setState(() {
@@ -480,6 +483,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'anak_terdaftar': studentsData.length,
             'pengumuman_terbaru': announcements.length,
             'unread_announcements': unreadCount,
+            'unread_class_activities': unreadActivityCount,
           };
         });
       }
@@ -2810,19 +2814,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _buildDashboardCard(
           AppLocalizations.classActivities.tr,
           Icons.local_activity_outlined,
-          () {
+          () async {
             final academicYearId = Provider.of<AcademicYearProvider>(
               context,
               listen: false,
             ).selectedAcademicYear?['id']?.toString();
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
                     ParentClassActivityScreen(academicYearId: academicYearId),
               ),
             );
+            _loadStats();
           },
+          badgeCount: _stats['unread_class_activities'],
         ),
         _buildDashboardCard(
           AppLocalizations.grades.tr,

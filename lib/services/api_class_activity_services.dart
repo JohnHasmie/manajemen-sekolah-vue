@@ -390,4 +390,42 @@ class ApiClassActivityService {
       rethrow;
     }
   }
+
+  // Get unread class activity count
+  static Future<int> getUnreadCount() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/class-activity/unread-count'),
+        headers: headers,
+      );
+
+      final result = _handleResponse(response);
+      if (result is Map && result.containsKey('count')) {
+        return int.tryParse(result['count'].toString()) ?? 0;
+      }
+      return 0;
+    } catch (e) {
+      if (kDebugMode) print('Error getUnreadCount: $e');
+      return 0;
+    }
+  }
+
+  // Mark class activities as read
+  static Future<bool> markAsRead(List<String> activityIds) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/class-activity/mark-read'),
+        headers: headers,
+        body: json.encode({'activity_ids': activityIds}),
+      );
+
+      final result = _handleResponse(response);
+      return result is Map && result['success'] == true;
+    } catch (e) {
+      if (kDebugMode) print('Error markAsRead: $e');
+      return false;
+    }
+  }
 }
