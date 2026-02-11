@@ -9,6 +9,7 @@ import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
 import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_grade_screen.dart';
+import 'package:manajemensekolah/screen/walimurid/presence_parent.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -367,9 +368,8 @@ class FCMService {
     // You can navigate to specific screens based on notification type
     final type = data['type'];
 
-    if (type == 'absensi') {
-      // Navigate to presence screen
-      // This will be handled by the app's navigation system
+    if (type == 'absensi' || type == 'attendance') {
+      _navigateToPresenceScreen(data);
       if (kDebugMode) {
         print('Navigate to absensi screen for siswa: ${data['student_id']}');
       }
@@ -573,6 +573,32 @@ class FCMService {
     } catch (e) {
       if (kDebugMode) {
         print('Error navigating to grade screen: $e');
+      }
+    }
+  }
+
+  Future<void> _navigateToPresenceScreen(Map<String, dynamic> data) async {
+    try {
+      if (navigatorKey.currentState != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final userDataString = prefs.getString('user');
+        if (userDataString == null) return;
+
+        final userData = json.decode(userDataString);
+        final studentId = data['student_id']?.toString();
+
+        if (studentId == null) return;
+
+        navigatorKey.currentState!.push(
+          MaterialPageRoute(
+            builder: (context) =>
+                PresenceParentPage(parent: userData, studentId: studentId),
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error navigating to presence screen: $e');
       }
     }
   }

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
@@ -29,7 +32,10 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   List<dynamic> _absensiData = [];
   Siswa? _student;
   bool _isLoading = true;
-  DateTime _selectedMonth = DateTime.now();
+  String? _selectedMonthFilter;
+  String? _selectedSemesterFilter;
+  bool _hasActiveFilter = false;
+  final TextEditingController _searchController = TextEditingController();
   final Map<String, int> _monthlySummary = {
     'hadir': 0,
     'terlambat': 0,
@@ -37,6 +43,76 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     'sakit': 0,
     'alpha': 0,
   };
+
+  // Visibility Tracking
+  final Set<String> _processedIds = {}; // IDs we've already handled/queued
+  final Set<String> _pendingReadIds = {}; // IDs waiting to be sent to API
+  Timer? _markReadDebounce;
+
+  @override
+  void dispose() {
+    _markReadDebounce?.cancel(); // Cancel visibility debounce
+    if (_pendingReadIds.isNotEmpty) {
+      _flushMarkReadSilently(List.from(_pendingReadIds));
+      _pendingReadIds.clear();
+    }
+    super.dispose();
+  }
+
+  Future<void> _flushMarkReadSilently(List<String> ids) async {
+    try {
+      await ApiService.markPresenceAsRead(ids);
+    } catch (e) {
+      if (kDebugMode) print("Error silent auto-marking read: $e");
+    }
+  }
+
+  void _onItemVisible(Map<String, dynamic> absen) {
+    final id = absen['id'].toString();
+    final isRead =
+        absen['is_read'] == true ||
+        absen['is_read'] == 1 ||
+        absen['is_read'] == '1';
+
+    if (!isRead && !_processedIds.contains(id)) {
+      _processedIds.add(id);
+      _pendingReadIds.add(id);
+      _scheduleMarkRead();
+    }
+  }
+
+  void _scheduleMarkRead() {
+    if (_markReadDebounce?.isActive ?? false) return;
+
+    _markReadDebounce = Timer(const Duration(seconds: 1), () {
+      if (_pendingReadIds.isNotEmpty) {
+        final idsToMark = _pendingReadIds.toList();
+        _pendingReadIds.clear(); // Clear pending first to avoid duplicates
+        _flushMarkRead(idsToMark);
+      }
+    });
+  }
+
+  Future<void> _flushMarkRead(List<String> ids) async {
+    try {
+      if (kDebugMode) {
+        print('📨 Auto-marking ${ids.length} visible presence as read...');
+      }
+
+      // Optimistic Update (update local list UI immediately)
+      setState(() {
+        for (var item in _absensiData) {
+          if (ids.contains(item['id'].toString())) {
+            item['is_read'] = true;
+          }
+        }
+      });
+
+      await ApiService.markPresenceAsRead(ids);
+    } catch (e) {
+      if (kDebugMode) print("Error auto-marking read: $e");
+    }
+  }
 
   @override
   void initState() {
@@ -68,34 +144,15 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         academicYearId: widget.academicYearId,
       );
 
-      // Find the most recent month with data
-      DateTime? latestMonth;
-      if (absensiData.isNotEmpty) {
-        // Parse all dates and find the most recent one
-        for (var absen in absensiData) {
-          final absenDate = _parseLocalDate(absen['tanggal']);
-          if (latestMonth == null || absenDate.isAfter(latestMonth)) {
-            latestMonth = absenDate;
-          }
-        }
-
-        // Set selected month to the month of the most recent attendance record
-        if (latestMonth != null) {
-          _selectedMonth = DateTime(latestMonth.year, latestMonth.month, 1);
-          if (kDebugMode) {
-            print(
-              '🎯 Auto-selected month with latest data: ${_selectedMonth.month}/${_selectedMonth.year}',
-            );
-          }
-        }
-      }
-
       setState(() {
         _student = student;
         _absensiData = absensiData;
         _calculateMonthlySummary();
         _isLoading = false;
       });
+
+      // Mark notifications as read
+      ApiService.markAttendanceRead(studentId: widget.studentId);
 
       if (kDebugMode) {
         print(
@@ -125,58 +182,190 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     // Reset summary
     _monthlySummary.updateAll((key, value) => 0);
 
-    final monthStart = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
-    final monthEnd = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0);
-
-    if (kDebugMode) {
-      print(
-        '📅 Selected month: ${_selectedMonth.month}/${_selectedMonth.year}',
-      );
-      print('📅 Month range: $monthStart to $monthEnd');
-      print('📊 Total absensi records: ${_absensiData.length}');
-    }
-
-    int matchCount = 0;
     for (var absen in _absensiData) {
-      final absenDate = _parseLocalDate(absen['tanggal']);
-      final matches =
-          absenDate.isAfter(monthStart.subtract(const Duration(days: 1))) &&
-          absenDate.isBefore(monthEnd.add(const Duration(days: 1)));
+      final date = _parseLocalDate(absen['tanggal']);
 
-      if (kDebugMode) {
-        print(
-          '  📌 Record date: ${absen['tanggal']} -> parsed: $absenDate -> matches: $matches',
-        );
+      // Apply same filter logic for summary
+      if (_selectedMonthFilter != null) {
+        if (date.month.toString() != _selectedMonthFilter) continue;
       }
 
-      if (matches) {
-        matchCount++;
-        final status = _normalizeStatus(absen['status']);
-        _monthlySummary[status] = (_monthlySummary[status] ?? 0) + 1;
+      if (_selectedSemesterFilter != null) {
+        final month = date.month;
+        final semester = (month >= 7) ? '1' : '2';
+        if (semester != _selectedSemesterFilter) continue;
       }
-    }
-    if (kDebugMode) {
-      print('✅ Records matching current month: $matchCount');
-      print('📈 Summary: $_monthlySummary');
+
+      final status = _normalizeStatus(absen['status']);
+      _monthlySummary[status] = (_monthlySummary[status] ?? 0) + 1;
     }
   }
 
-  Future<void> _selectMonth(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedMonth,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      initialEntryMode: DatePickerEntryMode.calendar,
-      initialDatePickerMode: DatePickerMode.year,
+  void _checkActiveFilter() {
+    setState(() {
+      _hasActiveFilter =
+          _selectedMonthFilter != null ||
+          _selectedSemesterFilter != null ||
+          _searchController.text.isNotEmpty;
+    });
+  }
+
+  void _clearAllFilters() {
+    setState(() {
+      _selectedMonthFilter = null;
+      _selectedSemesterFilter = null;
+      _searchController.clear();
+      _hasActiveFilter = false;
+    });
+  }
+
+  void _showFilterSheet() {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
     );
 
-    if (picked != null && picked != _selectedMonth) {
-      setState(() {
-        _selectedMonth = picked;
-        _calculateMonthlySummary();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FilterSheet(
+        primaryColor: _getPrimaryColor(),
+        config: FilterConfig(
+          sections: [
+            FilterSection(
+              key: 'month',
+              title: languageProvider.getTranslatedText({
+                'en': 'Month',
+                'id': 'Bulan',
+              }),
+              options:
+                  [
+                    {'en': 'January', 'id': 'Januari', 'val': '1'},
+                    {'en': 'February', 'id': 'Februari', 'val': '2'},
+                    {'en': 'March', 'id': 'Maret', 'val': '3'},
+                    {'en': 'April', 'id': 'April', 'val': '4'},
+                    {'en': 'May', 'id': 'Mei', 'val': '5'},
+                    {'en': 'June', 'id': 'Juni', 'val': '6'},
+                    {'en': 'July', 'id': 'Juli', 'val': '7'},
+                    {'en': 'August', 'id': 'Agustus', 'val': '8'},
+                    {'en': 'September', 'id': 'September', 'val': '9'},
+                    {'en': 'October', 'id': 'Oktober', 'val': '10'},
+                    {'en': 'November', 'id': 'November', 'val': '11'},
+                    {'en': 'December', 'id': 'Desember', 'val': '12'},
+                  ].map((m) {
+                    return FilterOption(
+                      label: languageProvider.getTranslatedText({
+                        'en': m['en']!,
+                        'id': m['id']!,
+                      }),
+                      value: m['val']!,
+                    );
+                  }).toList(),
+              multiSelect: false,
+            ),
+            FilterSection(
+              key: 'semester',
+              title: languageProvider.getTranslatedText({
+                'en': 'Semester',
+                'id': 'Semester',
+              }),
+              options:
+                  [
+                    {'en': 'Semester 1', 'id': 'Semester 1', 'val': '1'},
+                    {'en': 'Semester 2', 'id': 'Semester 2', 'val': '2'},
+                  ].map((s) {
+                    return FilterOption(
+                      label: languageProvider.getTranslatedText({
+                        'en': s['en']!,
+                        'id': s['id']!,
+                      }),
+                      value: s['val']!,
+                    );
+                  }).toList(),
+              multiSelect: false,
+            ),
+          ],
+        ),
+        initialFilters: {
+          'month': _selectedMonthFilter,
+          'semester': _selectedSemesterFilter,
+        },
+        onApplyFilters: (filters) {
+          setState(() {
+            _selectedMonthFilter = filters['month'];
+            _selectedSemesterFilter = filters['semester'];
+            _checkActiveFilter();
+          });
+        },
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _buildFilterChips(
+    LanguageProvider languageProvider,
+  ) {
+    List<Map<String, dynamic>> filterChips = [];
+
+    if (_selectedMonthFilter != null) {
+      final months = [
+        {'en': 'January', 'id': 'Januari', 'val': '1'},
+        {'en': 'February', 'id': 'Februari', 'val': '2'},
+        {'en': 'March', 'id': 'Maret', 'val': '3'},
+        {'en': 'April', 'id': 'April', 'val': '4'},
+        {'en': 'May', 'id': 'Mei', 'val': '5'},
+        {'en': 'June', 'id': 'Juni', 'val': '6'},
+        {'en': 'July', 'id': 'Juli', 'val': '7'},
+        {'en': 'August', 'id': 'Agustus', 'val': '8'},
+        {'en': 'September', 'id': 'September', 'val': '9'},
+        {'en': 'October', 'id': 'Oktober', 'val': '10'},
+        {'en': 'November', 'id': 'November', 'val': '11'},
+        {'en': 'December', 'id': 'Desember', 'val': '12'},
+      ];
+      final month = months.firstWhere((m) => m['val'] == _selectedMonthFilter);
+      final label = languageProvider.getTranslatedText({
+        'en': month['en']!,
+        'id': month['id']!,
+      });
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Month', 'id': 'Bulan'})}: $label',
+        'onRemove': () {
+          setState(() {
+            _selectedMonthFilter = null;
+            _checkActiveFilter();
+          });
+        },
       });
     }
+
+    if (_selectedSemesterFilter != null) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Semester', 'id': 'Semester'})}: $_selectedSemesterFilter',
+        'onRemove': () {
+          setState(() {
+            _selectedSemesterFilter = null;
+            _checkActiveFilter();
+          });
+        },
+      });
+    }
+
+    if (_searchController.text.isNotEmpty) {
+      filterChips.add({
+        'label':
+            '${languageProvider.getTranslatedText({'en': 'Search', 'id': 'Cari'})}: ${_searchController.text}',
+        'onRemove': () {
+          setState(() {
+            _searchController.clear();
+            _checkActiveFilter();
+          });
+        },
+      });
+    }
+
+    return filterChips;
   }
 
   Widget _buildMonthlySummary() {
@@ -209,23 +398,18 @@ class PresenceParentPageState extends State<PresenceParentPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                AppLocalizations.monthlyRecap.tr,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              TextButton(
-                onPressed: () => _selectMonth(context),
-                child: Text(
-                  DateFormat(
-                    'MMMM yyyy',
-                    context.watch<LanguageProvider>().currentLanguage == 'id'
-                        ? 'id_ID'
-                        : 'en_US',
-                  ).format(_selectedMonth),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.blue,
-                    fontWeight: FontWeight.w500,
-                  ),
+                _hasActiveFilter
+                    ? languageProvider.getTranslatedText({
+                        'en': 'Filtered Recap',
+                        'id': 'Rekap Terfilter',
+                      })
+                    : languageProvider.getTranslatedText({
+                        'en': 'Yearly Recap',
+                        'id': 'Rekap Tahunan',
+                      }),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -333,30 +517,46 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   }
 
   Widget _buildAbsensiList() {
-    final monthAbsensi =
+    final filteredAbsensi =
         _absensiData.where((absen) {
-          final absenDate = _parseLocalDate(absen['tanggal']);
-          final monthStart = DateTime(
-            _selectedMonth.year,
-            _selectedMonth.month,
-            1,
-          );
-          final monthEnd = DateTime(
-            _selectedMonth.year,
-            _selectedMonth.month + 1,
-            0,
-          );
-          return absenDate.isAfter(
-                monthStart.subtract(const Duration(days: 1)),
-              ) &&
-              absenDate.isBefore(monthEnd.add(const Duration(days: 1)));
+          final date = _parseLocalDate(absen['tanggal']);
+
+          // Month Filter
+          if (_selectedMonthFilter != null) {
+            if (date.month.toString() != _selectedMonthFilter) {
+              return false;
+            }
+          }
+
+          // Semester Filter (1: July-Dec, 2: Jan-June)
+          if (_selectedSemesterFilter != null) {
+            final month = date.month;
+            final semester = (month >= 7) ? '1' : '2';
+            if (semester != _selectedSemesterFilter) {
+              return false;
+            }
+          }
+
+          // Search Filter
+          if (_searchController.text.isNotEmpty) {
+            final query = _searchController.text.toLowerCase();
+            final subject = (absen['mata_pelajaran_nama'] ?? '')
+                .toString()
+                .toLowerCase();
+            final status = (absen['status'] ?? '').toString().toLowerCase();
+            if (!subject.contains(query) && !status.contains(query)) {
+              return false;
+            }
+          }
+
+          return true;
         }).toList()..sort((a, b) {
           final dateA = a['tanggal']?.toString() ?? '';
           final dateB = b['tanggal']?.toString() ?? '';
           return dateB.compareTo(dateA);
         });
 
-    if (monthAbsensi.isEmpty) {
+    if (filteredAbsensi.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -367,11 +567,19 @@ class PresenceParentPageState extends State<PresenceParentPage> {
               AppLocalizations.noPresenceData.tr,
               style: TextStyle(color: Colors.grey[500], fontSize: 16),
             ),
-            const SizedBox(height: 8),
-            Text(
-              '${AppLocalizations.forMonth.tr} ${DateFormat('MMMM yyyy', context.watch<LanguageProvider>().currentLanguage == 'id' ? 'id_ID' : 'en_US').format(_selectedMonth)}',
-              style: TextStyle(color: Colors.grey[400], fontSize: 14),
-            ),
+            if (_hasActiveFilter) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Try adjusting your filters',
+                style: TextStyle(color: Colors.grey[400], fontSize: 14),
+              ),
+            ] else ...[
+              const SizedBox(height: 8),
+              Text(
+                'No attendance records found for this year',
+                style: TextStyle(color: Colors.grey[400], fontSize: 14),
+              ),
+            ],
           ],
         ),
       );
@@ -379,10 +587,15 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: monthAbsensi.length,
+      itemCount: filteredAbsensi.length,
       itemBuilder: (context, index) {
-        final absen = monthAbsensi[index];
-        return _buildAbsensiItem(absen);
+        final absen = filteredAbsensi[index];
+        return Builder(
+          builder: (context) {
+            _onItemVisible(absen);
+            return _buildAbsensiItem(absen);
+          },
+        );
       },
     );
   }
@@ -401,6 +614,11 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           : 'en_US',
     ).format(date);
 
+    final isRead =
+        absen['is_read'] == true ||
+        absen['is_read'] == 1 ||
+        absen['is_read'] == '1';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
@@ -410,11 +628,11 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           onTap: () {},
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isRead ? Colors.white : Colors.red.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: isRead ? 0.3 : 0.4),
                   blurRadius: 5,
                   offset: const Offset(0, 4),
                 ),
@@ -477,6 +695,38 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                     ),
                   ),
                 ),
+
+                // Indikator unread (red dot)
+                if (!isRead)
+                  Positioned(
+                    right: -8,
+                    top: -8,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withValues(alpha: 0.5),
+                                blurRadius: 4,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
 
                 // Content
                 Padding(
@@ -674,75 +924,150 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   }
 
   Widget _buildHeader() {
+    final languageProvider = Provider.of<LanguageProvider>(context);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
         left: 16,
         right: 16,
-        bottom: 16,
+        bottom: 24,
       ),
       decoration: BoxDecoration(
         gradient: _getCardGradient(),
-        boxShadow: [
-          BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              ),
+              Text(
+                AppLocalizations.childPresence.tr,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 48), // Spacer to balance back button
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Search and Filter Row
+          Row(
+            children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppLocalizations.childPresence.tr,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                child: Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      _checkActiveFilter();
+                      _calculateMonthlySummary();
+                    },
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: languageProvider.getTranslatedText({
+                        'en': 'Search subject or status...',
+                        'id': 'Cari mapel atau status...',
+                      }),
+                      hintStyle: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
                       ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.white70,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 15),
                     ),
-                    SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(Icons.person, color: Colors.white70, size: 14),
-                        SizedBox(width: 4),
-                        Text(
-                          _student?.name ?? AppLocalizations.studentName.tr,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              InkWell(
+                onTap: _showFilterSheet,
+                child: Container(
+                  height: 50,
+                  width: 50,
+                  decoration: BoxDecoration(
+                    color: _hasActiveFilter
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Icon(
+                    Icons.filter_list,
+                    color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
+                  ),
                 ),
               ),
             ],
           ),
+
+          // Filter Chips
+          if (_hasActiveFilter) ...[
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ..._buildFilterChips(languageProvider).map((chip) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Chip(
+                        label: Text(
+                          chip['label'],
+                          style: TextStyle(
+                            color: _getPrimaryColor(),
+                            fontSize: 12,
+                          ),
+                        ),
+                        backgroundColor: Colors.white,
+                        onDeleted: chip['onRemove'],
+                        deleteIcon: Icon(
+                          Icons.close,
+                          size: 14,
+                          color: _getPrimaryColor(),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    );
+                  }),
+                  TextButton(
+                    onPressed: _clearAllFilters,
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Clear All',
+                        'id': 'Hapus Semua',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

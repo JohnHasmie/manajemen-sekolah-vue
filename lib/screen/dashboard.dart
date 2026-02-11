@@ -479,6 +479,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final unreadActivityCount =
             await ApiClassActivityService.getUnreadCount();
         final unreadGradeCount = await ApiService.getUnreadGradeCount();
+        final unreadPresenceCount = await ApiService.getUnreadPresenceCount();
 
         if (!mounted) return;
         setState(() {
@@ -488,6 +489,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'unread_announcements': unreadCount,
             'unread_class_activities': unreadActivityCount,
             'unread_grades': unreadGradeCount,
+            'unread_presence': unreadPresenceCount,
           };
         });
       }
@@ -517,7 +519,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'total_mapel': 15,
           };
         } else if (_effectiveRole == 'wali') {
-          _stats = {'anak_terdaftar': 2, 'pengumuman_terbaru': 3};
+          _stats = {
+            'anak_terdaftar': 2,
+            'pengumuman_terbaru': 3,
+            'unread_grades': 0,
+            'unread_presence': 0,
+          };
         }
       });
     }
@@ -2879,7 +2886,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             if (!context.mounted) return;
 
             if (studentsData.length == 1) {
-              Navigator.push(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => PresenceParentPage(
@@ -2889,15 +2896,18 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   ),
                 ),
               );
+              _loadStats();
             } else {
-              _showStudentSelectionDialog(
+              await _showStudentSelectionDialog(
                 context,
                 userData,
                 studentsData,
                 academicYearId: academicYearId,
               );
+              _loadStats();
             }
           },
+          badgeCount: _stats['unread_presence'],
         ),
         _buildDashboardCard(
           AppLocalizations.billing.tr,
@@ -2911,78 +2921,87 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
     return [];
   }
-}
 
-void _showStudentSelectionDialog(
-  BuildContext context,
-  Map<String, dynamic> parent,
-  List<dynamic> studentData, {
-  String? academicYearId,
-}) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text('Pilih Anak', style: TextStyle(fontWeight: FontWeight.bold)),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: studentData.length,
-          itemBuilder: (context, index) {
-            final student = studentData[index];
-            return Material(
-              color: Colors.transparent,
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue.shade50,
-                  child: Text(
-                    student['name'][0].toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.blue.shade700,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  student['name'],
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(student['kelas_nama'] ?? 'Kelas tidak tersedia'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PresenceParentPage(
-                        parent: parent,
-                        studentId: student['id'],
-                        academicYearId: academicYearId,
+  Future<void> _showStudentSelectionDialog(
+    BuildContext context,
+    Map<String, dynamic> parent,
+    List<dynamic> studentData, {
+    String? academicYearId,
+  }) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Pilih Anak',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: studentData.length,
+            itemBuilder: (context, index) {
+              final student = studentData[index];
+              return Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blue.shade50,
+                    child: Text(
+                      student['name'][0].toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
-              ),
-            );
-          },
+                  ),
+                  title: Text(
+                    student['name'],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    student['kelas_nama'] ?? 'Kelas tidak tersedia',
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PresenceParentPage(
+                          parent: parent,
+                          studentId: student['id'],
+                          academicYearId: academicYearId,
+                        ),
+                      ),
+                    );
+                    _loadStats();
+                  },
+                ),
+              );
+            },
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-void _showNoStudentsDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Informasi'),
-      content: Text(
-        'Tidak ada data siswa yang terhubung dengan akun wali murid ini. Silakan hubungi administrator.',
+  void _showNoStudentsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Informasi'),
+        content: Text(
+          'Tidak ada data siswa yang terhubung dengan akun wali murid ini. Silakan hubungi administrator.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
-      ],
-    ),
-  );
+    );
+  }
 }

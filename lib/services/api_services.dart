@@ -1381,6 +1381,26 @@ class ApiService {
     }
   }
 
+  static Future<void> markAttendanceRead({required String studentId}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/attendance/mark-read'),
+        headers: await _getHeaders(),
+        body: jsonEncode({'student_id': studentId}),
+      );
+
+      if (response.statusCode != 200) {
+        if (kDebugMode) {
+          print('❌ Error marking attendance as read: ${response.body}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error marking attendance read: $e');
+      }
+    }
+  }
+
   // Check server health
   static Future<Map<String, dynamic>> checkHealth() async {
     final response = await http.get(Uri.parse('$baseUrl/health'));
@@ -1641,6 +1661,34 @@ class ApiService {
       );
     } catch (e) {
       if (kDebugMode) print('Error marking grades as read: $e');
+    }
+  }
+
+  static Future<int> getUnreadPresenceCount() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/attendance/unread-count'),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
+    } catch (e) {
+      if (kDebugMode) print('Error fetching unread presence count: $e');
+      return 0;
+    }
+  }
+
+  static Future<void> markPresenceAsRead(List<String> attendanceIds) async {
+    if (attendanceIds.isEmpty) return;
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/attendance/mark-read'),
+        headers: await _getHeaders(),
+        body: json.encode({'attendance_ids': attendanceIds}),
+      );
+    } catch (e) {
+      if (kDebugMode) print('Error marking presence as read: $e');
     }
   }
 }
