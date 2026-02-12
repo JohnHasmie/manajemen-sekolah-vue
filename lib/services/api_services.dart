@@ -53,10 +53,14 @@ class ApiService {
     }
   }
 
-  Future<dynamic> get(String endpoint) async {
+  Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
     try {
+      Uri uri = Uri.parse('$baseUrl$endpoint');
+      if (params != null && params.isNotEmpty) {
+        uri = uri.replace(queryParameters: params);
+      }
       final response = await http
-          .get(Uri.parse('$baseUrl$endpoint'), headers: await _getHeaders())
+          .get(uri, headers: await _getHeaders())
           .timeout(const Duration(seconds: 30));
       return _handleResponse(response);
     } catch (e) {
@@ -1398,6 +1402,69 @@ class ApiService {
       if (kDebugMode) {
         print('❌ Error marking attendance read: $e');
       }
+    }
+  }
+
+  static Future<void> markBillRead({
+    String? studentId,
+    List<String>? billIds,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/bill/mark-read'),
+        headers: await _getHeaders(),
+        body: jsonEncode({
+          if (studentId != null) 'student_id': studentId,
+          if (billIds != null) 'bill_ids': billIds,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        if (kDebugMode) {
+          print('❌ Error marking bills as read: ${response.body}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error marking bills read: $e');
+      }
+    }
+  }
+
+  static Future<void> markSingleBillRead({required String billId}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/bill/mark-single-read'),
+        headers: await _getHeaders(),
+        body: jsonEncode({'bill_id': billId}),
+      );
+
+      if (response.statusCode != 200) {
+        if (kDebugMode) {
+          print('❌ Error marking bill as read: ${response.body}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error marking bill read: $e');
+      }
+    }
+  }
+
+  static Future<int> getUnreadBillingCount() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/bill/unread-count'),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error getting unread billing count: $e');
+      }
+      return 0;
     }
   }
 

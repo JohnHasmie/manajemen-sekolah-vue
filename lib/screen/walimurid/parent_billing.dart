@@ -1,5 +1,5 @@
-// tagihan_wali.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -10,10 +10,13 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ParentBillingScreen extends StatefulWidget {
   const ParentBillingScreen({super.key});
@@ -36,6 +39,16 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
   // Map<String, dynamic>? _paginationMeta; // Unused
+
+  // Student list
+  List<Siswa> _students = [];
+  String? _selectedStudentId;
+  Siswa? _selectedStudent;
+
+  // Track processed and pending read IDs
+  final Set<String> _processedIds = {};
+  final Set<String> _pendingReadIds = {};
+  Timer? _markReadTimer;
 
   // Search and Enhanced Filters
   final TextEditingController _searchController = TextEditingController();
@@ -85,11 +98,18 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
 
-    _loadData();
+    _loadInitialData();
   }
 
   @override
   void dispose() {
+    // Flush pending read IDs before departing
+    if (_pendingReadIds.isNotEmpty) {
+      final idsToMark = List<String>.from(_pendingReadIds);
+      _pendingReadIds.clear();
+      _markAsReadBulk(idsToMark);
+    }
+    _markReadTimer?.cancel();
     _animationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
@@ -98,11 +118,58 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
   }
 
   Future<void> _loadData() async {
+    await _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = '';
-      });
+      setState(() => _isLoading = true);
+
+      // Get user data from shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      final userString = prefs.getString('user');
+      if (userString == null) throw Exception('User not logged in');
+      final userData = json.decode(userString);
+      final userId = userData['id'].toString();
+      final guardianEmail = userData['email'];
+
+      // Load students for this parent using ApiStudentService
+      final allStudents = await ApiStudentService.getStudent(
+        userId: userId,
+        guardianEmail: guardianEmail,
+      );
+
+      // Filter students like in dashboard.dart
+      List<dynamic> filteredStudents = [];
+
+      // Check for siswa_id in user data first
+      if (userData['siswa_id'] != null && userData['siswa_id'].isNotEmpty) {
+        final student = allStudents.firstWhere(
+          (student) => student['id'] == userData['siswa_id'],
+          orElse: () => null,
+        );
+        if (student != null) {
+          filteredStudents = [student];
+        }
+      }
+
+      if (filteredStudents.isEmpty) {
+        filteredStudents = allStudents.where((student) {
+          final emailMatch = student['guardian_email'] == userData['email'];
+          final nameMatch = student['guardian_name'] == userData['name'];
+          final userIdMatch = student['user_id'].toString() == userId;
+          return emailMatch || nameMatch || userIdMatch;
+        }).toList();
+      }
+
+      if (filteredStudents.isNotEmpty) {
+        _students = filteredStudents.map((s) => Siswa.fromJson(s)).toList();
+
+        if (_students.isNotEmpty) {
+          _selectedStudentId = _students[0].id;
+          _selectedStudent = _students[0];
+        }
+      }
 
       await _loadTagihan();
 
@@ -112,7 +179,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
 
       _animationController.forward();
     } catch (error) {
-      if (kDebugMode) print('Load billing data error: $error');
+      if (kDebugMode) print('Load initial billing data error: $error');
       setState(() {
         _isLoading = false;
         _errorMessage = ErrorUtils.getFriendlyMessage(error);
@@ -121,15 +188,68 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
   }
 
   Future<void> _loadTagihan() async {
+    if (_selectedStudentId == null) return;
+
     try {
-      final response = await _apiService.get('/bill/parent');
+      final response = await _apiService.get(
+        '/bill/parent',
+        params: {'student_id': _selectedStudentId},
+      );
       setState(() {
         _billingList = response is List ? response : [];
       });
+
+      // Automatically mark ALL finance notifications for this student as read when entering/switching student
+      // This ensures the dashboard unread count is updated, even for notifications
+      // not linked to a specific bill in the current list.
+      ApiService.markBillRead(studentId: _selectedStudentId!);
     } catch (error) {
       if (kDebugMode) {
         print('Error loading tagihan: $error');
       }
+    }
+  }
+
+  void _scheduleMarkRead() {
+    _markReadTimer?.cancel();
+    _markReadTimer = Timer(const Duration(milliseconds: 500), () {
+      if (_pendingReadIds.isNotEmpty) {
+        final idsToMark = List<String>.from(_pendingReadIds);
+        _pendingReadIds.clear();
+        _markAsReadBulk(idsToMark);
+      }
+    });
+  }
+
+  Future<void> _markAsReadBulk(List<String> ids) async {
+    if (_selectedStudentId == null) return;
+
+    // Optimistic Update
+    if (mounted) {
+      setState(() {
+        for (var item in _billingList) {
+          if (ids.contains(item['id'].toString())) {
+            item['is_read'] = true;
+          }
+        }
+      });
+    }
+
+    try {
+      await ApiService.markBillRead(
+        studentId: _selectedStudentId!,
+        billIds: ids,
+      );
+    } catch (e) {
+      if (kDebugMode) print('Error marking bills read: $e');
+    }
+  }
+
+  void _onItemVisible(String id, bool isRead) {
+    if (!isRead && !_processedIds.contains(id)) {
+      _processedIds.add(id);
+      _pendingReadIds.add(id);
+      _scheduleMarkRead();
     }
   }
 
@@ -1323,231 +1443,286 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withOpacity(0.2),
                     blurRadius: 5,
-                    offset: Offset(0, 4),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: Stack(
-                children: [
-                  // Strip berwarna di pinggir kiri
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 6,
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor(),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
+              child: Builder(
+                builder: (context) {
+                  final isRead =
+                      billing['is_read'] == true ||
+                      billing['is_read'] == 1 ||
+                      billing['is_read'] == '1' ||
+                      billing['is_read'] == 'true';
 
-                  // Background pattern effect
-                  Positioned(
-                    right: -8,
-                    top: -8,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: isRead
+                          ? Colors.white
+                          : Colors.red.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ),
-
-                  // Status badge positioned
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: statusColor.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        status,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Content
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Stack(
                       children: [
-                        // Judul tagihan
+                        // Strip berwarna di pinggir kiri
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 6,
+                            decoration: BoxDecoration(
+                              color: _getPrimaryColor(),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Background pattern effect / Unread Indicator
+                        Positioned(
+                          right: -8,
+                          top: -8,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isRead
+                                  ? Colors.grey.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: isRead
+                                ? null
+                                : Center(
+                                    child: Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.red.withOpacity(0.4),
+                                            blurRadius: 4,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ),
+
+                        // Status badge positioned
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: statusColor.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Text(
+                              status,
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Content
                         Padding(
-                          padding: EdgeInsets.only(right: 80),
+                          padding: EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                billing['jenis_pembayaran_nama'] ?? 'No Name',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                _formatCurrency(billing['jumlah']),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 8),
-
-                        if (billing['jenis_pembayaran_deskripsi'] != null &&
-                            billing['jenis_pembayaran_deskripsi'].isNotEmpty)
-                          Text(
-                            billing['jenis_pembayaran_deskripsi'],
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-
-                        SizedBox(height: 8),
-
-                        Row(
-                          children: [
-                            Icon(Icons.person, size: 12, color: Colors.grey),
-                            SizedBox(width: 4),
-                            Text(
-                              billing['siswa_nama'] ?? '-',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Icon(Icons.school, size: 12, color: Colors.grey),
-                            SizedBox(width: 4),
-                            Text(
-                              billing['kelas_nama'] ?? '-',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 4),
-
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today,
-                              size: 12,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'Jatuh Tempo: ${billing['jatuh_tempo']?.split('T')[0] ?? '-'}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        if (billing['pembayaran_status'] == 'rejected' &&
-                            billing['admin_notes'] != null)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 8),
-                              Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.red.shade100,
-                                  ),
-                                ),
-                                child: Row(
+                              // Judul tagihan
+                              Padding(
+                                padding: EdgeInsets.only(right: 80),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(
-                                      Icons.info,
-                                      size: 12,
-                                      color: Colors.red,
+                                    Text(
+                                      billing['jenis_pembayaran_nama'] ??
+                                          'No Name',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        'Catatan: ${billing['admin_notes']}',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.red.shade700,
-                                        ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      _formatCurrency(billing['jumlah']),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
+
+                              SizedBox(height: 8),
+
+                              if (billing['jenis_pembayaran_deskripsi'] !=
+                                      null &&
+                                  billing['jenis_pembayaran_deskripsi']
+                                      .isNotEmpty)
+                                Text(
+                                  billing['jenis_pembayaran_deskripsi'],
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+
+                              SizedBox(height: 8),
+
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.person,
+                                    size: 12,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    billing['siswa_nama'] ?? '-',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Icon(
+                                    Icons.school,
+                                    size: 12,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    billing['kelas_nama'] ?? '-',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              SizedBox(height: 4),
+
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today,
+                                    size: 12,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Jatuh Tempo: ${billing['jatuh_tempo']?.split('T')[0] ?? '-'}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              if (billing['pembayaran_status'] == 'rejected' &&
+                                  billing['admin_notes'] != null)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 8),
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.shade50,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Colors.red.shade100,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.info,
+                                            size: 12,
+                                            color: Colors.red,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              'Catatan: ${billing['admin_notes']}',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.red.shade700,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                              SizedBox(height: 12),
+
+                              if (billing['pembayaran_status'] != 'verified' &&
+                                  billing['pembayaran_status'] != 'pending')
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: ElevatedButton(
+                                    onPressed: () =>
+                                        _showUploadPaymentDialog(billing),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _getPrimaryColor(),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      AppLocalizations.payNow.tr,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
-
-                        SizedBox(height: 12),
-
-                        if (billing['pembayaran_status'] != 'verified' &&
-                            billing['pembayaran_status'] != 'pending')
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: ElevatedButton(
-                              onPressed: () =>
-                                  _showUploadPaymentDialog(billing),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _getPrimaryColor(),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                              ),
-                              child: Text(
-                                AppLocalizations.payNow.tr,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ),
@@ -1609,25 +1784,87 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppLocalizations.myBills.tr,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          AppLocalizations.myBills.tr,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (_billingList.any((b) => b['is_read'] == false))
+                          Container(
+                            margin: EdgeInsets.only(left: 8),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${_billingList.where((b) => b['is_read'] == false).length}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      AppLocalizations.manageBillPayments.tr,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                    if (_selectedStudent != null)
+                      Text(
+                        _selectedStudent!.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
+              if (_students.length > 1)
+                Theme(
+                  data: Theme.of(
+                    context,
+                  ).copyWith(canvasColor: _getPrimaryColor().withOpacity(0.9)),
+                  child: DropdownButton<String>(
+                    value: _selectedStudentId,
+                    onChanged: (String? newValue) {
+                      if (newValue != null && newValue != _selectedStudentId) {
+                        setState(() {
+                          _selectedStudentId = newValue;
+                          _selectedStudent = _students.firstWhere(
+                            (s) => s.id == newValue,
+                          );
+                          _billingList = [];
+                          _processedIds.clear();
+                          _pendingReadIds.clear();
+                        });
+                        _loadTagihan();
+                      }
+                    },
+                    underline: SizedBox(),
+                    icon: Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                    items: _students.map<DropdownMenuItem<String>>((Siswa s) {
+                      return DropdownMenuItem<String>(
+                        value: s.id,
+                        child: Text(
+                          s.name,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
               IconButton(
                 icon: Icon(Icons.refresh, color: Colors.white),
                 onPressed: _loadData,
@@ -1834,9 +2071,21 @@ class ParentBillingScreenState extends State<ParentBillingScreen>
                                 ),
                               );
                             }
-                            return _buildTagihanCard(
-                              filteredBilling[index],
-                              index,
+                            return Builder(
+                              builder: (context) {
+                                // Track visibility for read status
+                                final bill = filteredBilling[index];
+                                _onItemVisible(
+                                  bill['id'].toString(),
+                                  bill['is_read'] == true ||
+                                      bill['is_read'] == 1 ||
+                                      bill['is_read'] == 'true',
+                                );
+                                return _buildTagihanCard(
+                                  filteredBilling[index],
+                                  index,
+                                );
+                              },
                             );
                           },
                         ),

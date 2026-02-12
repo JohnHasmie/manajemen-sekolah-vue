@@ -83,6 +83,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     'total_rpp': 0,
     'anak_terdaftar': 0,
     'pengumuman_terbaru': 0,
+    'unread_billing': 0,
   };
 
   // Finance Badge State
@@ -480,6 +481,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             await ApiClassActivityService.getUnreadCount();
         final unreadGradeCount = await ApiService.getUnreadGradeCount();
         final unreadPresenceCount = await ApiService.getUnreadPresenceCount();
+        final unreadBillingCount = await ApiService.getUnreadBillingCount();
 
         if (!mounted) return;
         setState(() {
@@ -490,6 +492,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'unread_class_activities': unreadActivityCount,
             'unread_grades': unreadGradeCount,
             'unread_presence': unreadPresenceCount,
+            'unread_billing': unreadBillingCount,
           };
         });
       }
@@ -2912,10 +2915,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _buildDashboardCard(
           AppLocalizations.billing.tr,
           Icons.account_balance_wallet_outlined,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ParentBillingScreen()),
-          ),
+          () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ParentBillingScreen()),
+            );
+            _loadStats();
+          },
+          badgeCount: _stats['unread_billing'],
         ),
       ];
     }
