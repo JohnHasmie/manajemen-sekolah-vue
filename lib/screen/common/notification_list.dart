@@ -5,7 +5,6 @@ import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_billing.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
 import 'package:manajemensekolah/services/api_notification_service.dart';
-import 'package:manajemensekolah/utils/color_utils.dart';
 
 class NotificationListScreen extends StatefulWidget {
   final String role; // 'guru', 'admin', 'wali'
@@ -19,7 +18,7 @@ class NotificationListScreen extends StatefulWidget {
 class _NotificationListScreenState extends State<NotificationListScreen> {
   final ApiNotificationService _apiService = ApiNotificationService();
   List<dynamic> _notifications = [];
-  List<dynamic> _todaySchedule = [];
+
   bool _isLoading = true;
 
   @override
@@ -32,16 +31,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     setState(() => _isLoading = true);
     try {
       final notifs = await _apiService.getNotifications(role: widget.role);
-      // Load schedule only for teachers
-      List<dynamic> schedule = [];
-      if (widget.role == 'guru' || widget.role == 'teacher') {
-        schedule = await _apiService.getTodaySchedule();
-      }
-
       if (mounted) {
         setState(() {
           _notifications = notifs;
-          _todaySchedule = schedule;
           _isLoading = false;
         });
       }
@@ -119,22 +111,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               child: ListView(
                 padding: EdgeInsets.all(16),
                 children: [
-                  if ((widget.role == 'guru' || widget.role == 'teacher') &&
-                      _todaySchedule.isNotEmpty) ...[
-                    Text(
-                      'Jadwal Mengajar Hari Ini',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    ..._todaySchedule.map((s) => _buildScheduleCard(s)),
-                    SizedBox(height: 24),
-                    Divider(),
-                    SizedBox(height: 16),
-                  ],
-
                   Text(
                     'Notifikasi',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -155,64 +131,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 ],
               ),
             ),
-    );
-  }
-
-  Widget _buildScheduleCard(Map<String, dynamic> schedule) {
-    // Handling start/end time
-    // API returns full objects in some cases, need to check structure
-    // Controller logic: with(['class', 'subject', 'lessonHour'])
-
-    final className = schedule['class']?['name'] ?? '-';
-    final subjectName = schedule['subject']?['name'] ?? '-';
-    final startTime = schedule['lesson_hour']?['start_time'] ?? '-';
-    final endTime = schedule['lesson_hour']?['end_time'] ?? '-';
-
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: ColorUtils.infoLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.infoDark.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.class_outlined, color: ColorUtils.infoDark),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  className,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(subjectName, style: TextStyle(color: Colors.grey[700])),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$startTime - $endTime',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: ColorUtils.infoDark,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
