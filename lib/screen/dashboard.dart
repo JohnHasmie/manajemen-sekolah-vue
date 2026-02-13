@@ -15,6 +15,7 @@ import 'package:manajemensekolah/screen/admin/student_management.dart';
 import 'package:manajemensekolah/screen/admin/subject_management.dart';
 import 'package:manajemensekolah/screen/admin/teacher_admin.dart';
 import 'package:manajemensekolah/screen/admin/teaching_schedule_management.dart';
+import 'package:manajemensekolah/screen/common/notification_list.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/input_grade_teacher.dart';
 import 'package:manajemensekolah/screen/guru/materi_screen.dart';
@@ -1177,7 +1178,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               _buildIconButton(
                 icon: Icons.notifications_none,
                 color: Colors.white,
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          NotificationListScreen(role: widget.role),
+                    ),
+                  );
+                },
               ),
               _buildIconButton(
                 icon: Icons.account_circle,
