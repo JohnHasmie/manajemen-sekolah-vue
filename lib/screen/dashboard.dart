@@ -5,15 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
 import 'package:manajemensekolah/screen/admin/admin_class_activity.dart';
-import 'package:manajemensekolah/screen/admin/admin_class_management.dart';
+import 'package:manajemensekolah/screen/admin/admin_data_management.dart';
 import 'package:manajemensekolah/screen/admin/admin_presence_report.dart';
 import 'package:manajemensekolah/screen/admin/admin_rpp_screen.dart';
 import 'package:manajemensekolah/screen/admin/finance.dart';
 import 'package:manajemensekolah/screen/admin/school_settings_screen.dart';
 import 'package:manajemensekolah/screen/admin/settings_screen.dart';
-import 'package:manajemensekolah/screen/admin/student_management.dart';
-import 'package:manajemensekolah/screen/admin/subject_management.dart';
-import 'package:manajemensekolah/screen/admin/teacher_admin.dart';
 import 'package:manajemensekolah/screen/admin/teaching_schedule_management.dart';
 import 'package:manajemensekolah/screen/common/notification_list.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
@@ -2539,37 +2536,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     if (_effectiveRole == 'admin') {
       return [
         _buildDashboardCard(
-          AppLocalizations.manageStudents.tr,
-          Icons.people_alt_outlined,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => StudentManagementScreen()),
-          ),
-        ),
-        _buildDashboardCard(
-          AppLocalizations.manageTeachers.tr,
-          Icons.person_outline,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TeacherAdminScreen()),
-          ),
-        ),
-        _buildDashboardCard(
-          AppLocalizations.manageClasses.tr,
-          Icons.class_outlined,
+          'Kelola Data',
+          Icons.folder_shared_outlined,
           () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AdminClassManagementScreen(),
+              builder: (context) => AdminDataManagementScreen(),
             ),
-          ),
-        ),
-        _buildDashboardCard(
-          AppLocalizations.manageSubjects.tr,
-          Icons.book_outlined,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => SubjectManagementScreen()),
           ),
         ),
         _buildDashboardCard(
