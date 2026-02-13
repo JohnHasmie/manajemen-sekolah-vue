@@ -90,7 +90,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          'Notifikasi & Jadwal',
+          'Notifikasi',
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
