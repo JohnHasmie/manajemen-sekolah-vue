@@ -663,6 +663,153 @@ ListView.separated(
 )
 ```
 
+### 7. Gradient Header (Detail Pages)
+
+#### Usage
+Use this header pattern for detail/management pages (e.g., Kelola Data, Kelola Jadwal) to provide a professional gradient header with back button, title, and subtitle.
+
+#### Structure
+```dart
+Widget _buildGradientHeader(BuildContext context) {
+  return Container(
+    width: double.infinity,
+    padding: EdgeInsets.only(
+      top: MediaQuery.of(context).padding.top + 16,
+      left: 16,
+      right: 16,
+      bottom: 16,
+    ),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          ColorUtils.corporateBlue600,
+          ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+        ],
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        // Back button
+        GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+        ),
+        SizedBox(width: 12),
+        // Title and subtitle
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Page Title',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'Page description or subtitle',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Optional: Action button (e.g., toggle view)
+        // GestureDetector(
+        //   onTap: () { /* action */ },
+        //   child: Container(
+        //     width: 40,
+        //     height: 40,
+        //     decoration: BoxDecoration(
+        //       color: Colors.white.withValues(alpha: 0.2),
+        //       borderRadius: BorderRadius.circular(10),
+        //     ),
+        //     child: Icon(Icons.action, color: Colors.white, size: 20),
+        //   ),
+        // ),
+      ],
+    ),
+  );
+}
+```
+
+#### Layout Pattern
+```dart
+Scaffold(
+  backgroundColor: ColorUtils.slate50,
+  body: Column(
+    children: [
+      // Gradient header
+      _buildGradientHeader(context),
+
+      // Content area
+      Expanded(
+        child: ListView(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          children: [
+            // Your content here (MenuItemCard, etc.)
+          ],
+        ),
+      ),
+    ],
+  ),
+)
+```
+
+#### Specifications
+- **Back button:** 40×40px with semi-transparent background (alpha: 0.2)
+- **Title:** 20px, bold, white
+- **Subtitle:** 14px, white with 90% opacity
+- **Gradient:** Role-specific color to lighter variant (alpha: 0.8)
+- **Shadow:** Role color with 30% opacity, 8px blur, (0,2) offset
+- **Spacing:** 12px between back button and title
+- **Border radius:** 10px for buttons
+
+#### Color Variations by Role
+```dart
+// Admin
+ColorUtils.corporateBlue600
+
+// Teacher
+Color(0xFF16A34A) // Green
+
+// Parent
+Color(0xFF9333EA) // Purple
+```
+
+#### Notes
+- Always include MediaQuery padding for safe area
+- Back button should use Navigator.pop(context)
+- Gradient provides depth and professionalism
+- Semi-transparent buttons blend well with gradient
+- Subtitle is optional but recommended for context
+
 ---
 
 ## 🎬 Animation Guidelines
@@ -891,11 +1038,17 @@ Container(
 ## 🎯 Next Steps
 
 ### Pages to Redesign Using This System
-1. **Login/Auth pages** - Apply hero gradient, professional forms
-2. **Student/Teacher lists** - Use menu card pattern for list items
-3. **Detail pages** - Overview card pattern for stats, clean layouts
-4. **Forms** - Professional input styling, consistent spacing
-5. **Settings** - Category sections for organized options
+1. **Management/Detail pages** - Use gradient header pattern (Pattern #7), MenuItemCard for lists
+   - Example: Student Management, Teacher Management, Class Management, Subject Management
+2. **Login/Auth pages** - Apply hero gradient, professional forms
+3. **List screens** - Use MenuItemCard pattern for list items, gradient header
+4. **Dashboard-like pages** - Overview card pattern for stats, clean layouts
+5. **Forms** - Professional input styling, consistent spacing, gradient header
+6. **Settings** - Category sections for organized options, gradient header
+
+### Already Redesigned (Reference Examples)
+✅ **Dashboard** - Complete Kamil Edu design with hero, quick actions, overview cards, categorized menu
+✅ **Kelola Data (Admin Data Management)** - Gradient header + MenuItemCard list
 
 ### When Applying to New Pages
 1. **Read this guide first**
