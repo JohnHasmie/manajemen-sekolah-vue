@@ -22,7 +22,7 @@ class ApiService {
   static late final String baseUrl;
 
   static Future<void> init() async {
-    final envBaseUrl = dotenv.env['API_BASE_URL'];
+    // final envBaseUrl = dotenv.env['API_BASE_URL'];
 
     // if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
     //   baseUrl = envBaseUrl;

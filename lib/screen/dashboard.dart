@@ -33,11 +33,18 @@ import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
+import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:manajemensekolah/widgets/dashboard/category_section.dart';
+import 'package:manajemensekolah/widgets/dashboard/menu_item_card.dart';
+// Dashboard redesign imports
+import 'package:manajemensekolah/widgets/dashboard/enhanced_stat_card.dart';
+import 'package:manajemensekolah/widgets/dashboard/overview_card.dart';
+import 'package:manajemensekolah/widgets/dashboard/quick_action_button.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shimmer/shimmer.dart';
 
 class Dashboard extends StatefulWidget {
   final String role;
@@ -1032,73 +1039,908 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
-          backgroundColor: _getBackgroundColor(),
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Modern Header (Fixed)
-                _buildModernHeader(context, languageProvider),
+          backgroundColor: ColorUtils.slate50,
+          body: CustomScrollView(
+            physics: BouncingScrollPhysics(),
+            slivers: [
+              // Modern App Bar
+              _buildModernAppBar(context, languageProvider),
 
-                // Scrollable Content
-                Expanded(
-                  child: CustomScrollView(
-                    physics: BouncingScrollPhysics(),
-                    slivers: [
-                      // Curtain Area (Welcome, Stats, Search)
-                      SliverToBoxAdapter(
-                        child: SizeTransition(
-                          sizeFactor: _curtainAnimation,
-                          axisAlignment: -1.0,
-                          child: Column(
-                            children: [
-                              SizedBox(height: 5),
+              // Hero Section with Stats Overlay
+              SliverToBoxAdapter(child: _buildHeroSection()),
 
-                              // Welcome Section
-                              FadeTransition(
-                                opacity: _fadeAnimation,
-                                child: ScaleTransition(
-                                  scale: _scaleAnimation,
-                                  child: _buildWelcomeSection(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
+              // Quick Actions
+              SliverToBoxAdapter(child: _buildQuickActions()),
 
-                              // Stats Section
-                              _buildStatsSection(),
-                              SizedBox(height: 10),
-                              // Search Bar
-                              _buildModernSearchBar(),
-                            ],
-                          ),
-                        ),
-                      ),
+              // Today's Overview
+              SliverToBoxAdapter(child: _buildTodaysOverview()),
 
-                      // Gap between curtain and grid
-                      SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-                      // Grid Menu
-                      _buildSliverGridMenu(context),
-
-                      // Bottom padding
-                      SliverPadding(padding: EdgeInsets.only(bottom: 20)),
-                    ],
+              // Section Divider
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(12, 12, 12, 10),
+                  child: Text(
+                    'Menu',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate900,
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+
+              // Navigation Menu
+              _buildSliverGridMenu(context),
+
+              // Bottom Padding
+              SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+            ],
           ),
         );
       },
     );
   }
 
+  // ==================== NEW MODERN UI COMPONENTS ====================
+
+  Widget _buildModernAppBar(
+    BuildContext context,
+    LanguageProvider languageProvider,
+  ) {
+    return SliverAppBar(
+      floating: false,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      toolbarHeight: 50,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            bottom: BorderSide(color: ColorUtils.slate200, width: 1),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                // Logo - simpler design
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: _getPrimaryColor(),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.school, color: Colors.white, size: 18),
+                ),
+                SizedBox(width: 12),
+
+                // Title - single line
+                Expanded(
+                  child: Text(
+                    _userData['nama_sekolah'] ?? AppLocalizations.appTitle.tr,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: ColorUtils.slate900,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                // Actions - more compact
+                IconButton(
+                  icon: Icon(
+                    Icons.language,
+                    size: 20,
+                    color: ColorUtils.slate600,
+                  ),
+                  iconSize: 20,
+                  padding: EdgeInsets.all(8),
+                  constraints: BoxConstraints(),
+                  onPressed: () =>
+                      _showLanguageDialog(context, languageProvider),
+                ),
+                SizedBox(width: 4),
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.notifications_outlined,
+                        size: 20,
+                        color: ColorUtils.slate600,
+                      ),
+                      iconSize: 20,
+                      padding: EdgeInsets.all(8),
+                      constraints: BoxConstraints(),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                NotificationListScreen(role: widget.role),
+                          ),
+                        );
+                      },
+                    ),
+                    if (_stats['unread_announcements'] != null &&
+                        _stats['unread_announcements'] > 0)
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: Container(
+                          padding: EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: ColorUtils.error600,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          child: Text(
+                            _stats['unread_announcements'] > 9
+                                ? '9+'
+                                : _stats['unread_announcements'].toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 7,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(width: 4),
+                IconButton(
+                  icon: Icon(
+                    Icons.account_circle,
+                    size: 20,
+                    color: ColorUtils.slate600,
+                  ),
+                  iconSize: 20,
+                  padding: EdgeInsets.all(8),
+                  constraints: BoxConstraints(),
+                  onPressed: () => _showAccountBottomSheet(context),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroSection() {
+    final primaryColor = _getPrimaryColor();
+
+    return Container(
+      margin: EdgeInsets.fromLTRB(12, 8, 12, 0),
+      decoration: BoxDecoration(
+        gradient: ColorUtils.heroGradient(primaryColor: primaryColor),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Decorative circle - top right
+            Positioned(
+              top: -40,
+              right: -30,
+              child: Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            // Decorative circle - bottom left
+            Positioned(
+              bottom: -25,
+              left: 15,
+              child: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            // Small accent dot
+            Positioned(
+              top: 20,
+              right: 70,
+              child: Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+
+            // Academic Year & Semester - Top Right
+            Positioned(
+              top: 10,
+              right: 12,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showAcademicYearDialog(context),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.calendar_today_outlined,
+                            size: 12,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Consumer<AcademicYearProvider>(
+                          builder: (context, provider, _) {
+                            final academicYear =
+                                provider.selectedAcademicYear?['year'] ?? '-';
+                            final semester = _currentSemesterLabel ?? '-';
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  academicYear,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.1,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  semester,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Main content
+            Padding(
+              padding: EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Greeting
+                  Row(
+                    children: [
+                      Text(
+                        _getGreeting(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Text(_getGreetingEmoji(), style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    _userData['nama'] ?? 'User',
+                    style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 14),
+
+                  // 4-Column Stats Grid
+                  Row(
+                    children: _buildFourColumnStats()
+                        .map((stat) => Expanded(child: stat))
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAcademicYearDialog(BuildContext context) {
+    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final years = provider.academicYears;
+
+    showDialog(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Pilih Tahun Ajaran'),
+        children: years.map((year) {
+          final isSelected = provider.selectedAcademicYear?['id'] == year['id'];
+          return SimpleDialogOption(
+            onPressed: () {
+              provider.setSelectedYear(year['id'].toString());
+              Navigator.pop(context);
+            },
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  year['year'] ?? '-',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: isSelected
+                        ? ColorUtils.corporateBlue600
+                        : ColorUtils.slate900,
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check,
+                    color: ColorUtils.corporateBlue600,
+                    size: 20,
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  String _getGreetingEmoji() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return '🌅';
+    if (hour < 17) return '☀️';
+    return '🌙';
+  }
+
+  List<Widget> _buildFourColumnStats() {
+    if (_effectiveRole == 'admin') {
+      return [
+        _buildHeroStat(
+          Icons.people_outline,
+          _stats['total_siswa']?.toString() ?? '0',
+          'Siswa',
+        ),
+        _buildHeroStat(
+          Icons.school_outlined,
+          _stats['total_guru']?.toString() ?? '0',
+          'Guru',
+        ),
+        _buildHeroStat(
+          Icons.class_outlined,
+          _stats['total_kelas']?.toString() ?? '0',
+          'Kelas',
+        ),
+        _buildHeroStat(
+          Icons.book_outlined,
+          _stats['total_mapel']?.toString() ?? '0',
+          'Mapel',
+        ),
+      ];
+    } else if (_effectiveRole == 'guru') {
+      return [
+        _buildHeroStat(
+          Icons.people_outline,
+          _stats['total_siswa']?.toString() ?? '0',
+          'Siswa',
+        ),
+        _buildHeroStat(
+          Icons.class_outlined,
+          _stats['total_kelas']?.toString() ?? '0',
+          'Kelas',
+        ),
+        _buildHeroStat(
+          Icons.schedule_outlined,
+          _stats['kelas_hari_ini']?.toString() ?? '0',
+          'Hari Ini',
+        ),
+        _buildHeroStat(
+          Icons.assignment_outlined,
+          _stats['total_rpp']?.toString() ?? '0',
+          'RPP',
+        ),
+      ];
+    } else {
+      return [
+        _buildHeroStat(
+          Icons.child_care_outlined,
+          _stats['anak_terdaftar']?.toString() ?? '0',
+          'Anak',
+        ),
+        _buildHeroStat(
+          Icons.announcement_outlined,
+          _stats['pengumuman_terbaru']?.toString() ?? '0',
+          'Info',
+        ),
+        _buildHeroStat(
+          Icons.grade_outlined,
+          _stats['unread_grades']?.toString() ?? '0',
+          'Nilai',
+        ),
+        _buildHeroStat(
+          Icons.calendar_today_outlined,
+          _stats['unread_presence']?.toString() ?? '0',
+          'Absen',
+        ),
+      ];
+    }
+  }
+
+  Widget _buildHeroStat(IconData icon, String value, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Icon with glass morphism effect
+        Container(
+          padding: EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: Icon(icon, color: Colors.white, size: 17),
+        ),
+        SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: -0.3,
+          ),
+        ),
+        SizedBox(height: 1),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.white.withValues(alpha: 0.85),
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActions() {
+    List<Widget> actions = _getQuickActions();
+
+    if (actions.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(12, 12, 12, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Section header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Quick Access',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: ColorUtils.slate900,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          // Action buttons
+          SizedBox(
+            height: 85,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: BouncingScrollPhysics(),
+              itemCount: actions.length,
+              separatorBuilder: (context, index) => SizedBox(width: 10),
+              itemBuilder: (context, index) => actions[index],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodaysOverview() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Today's Overview",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate900,
+            ),
+          ),
+          GridView.count(
+            padding: EdgeInsets.only(top: 12),
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1.4,
+            children: _getTodaysOverviewCards(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _getTodaysOverviewCards() {
+    if (_effectiveRole == 'admin') {
+      return [
+        OverviewCard(
+          title: "Today's Classes",
+          value: _stats['kelas_hari_ini']?.toString() ?? '0',
+          subtitle: 'Scheduled for today',
+          icon: Icons.calendar_today_outlined,
+          accentColor: ColorUtils.corporateBlue600,
+          onTap: () {
+            // Navigate to schedule
+          },
+        ),
+        OverviewCard(
+          title: 'Pending Tasks',
+          value: (_stats['unread_announcements'] ?? 0).toString(),
+          subtitle: 'Requires attention',
+          icon: Icons.task_alt_outlined,
+          accentColor: ColorUtils.warning600,
+          onTap: () {
+            // Navigate to tasks
+          },
+        ),
+        OverviewCard(
+          title: 'Active Teachers',
+          value: _stats['total_guru']?.toString() ?? '0',
+          subtitle: 'Currently teaching',
+          icon: Icons.people_alt_outlined,
+          accentColor: ColorUtils.success600,
+          onTap: () {
+            // Navigate to teachers
+          },
+        ),
+        OverviewCard(
+          title: 'Announcements',
+          value: _stats['pengumuman_terbaru']?.toString() ?? '0',
+          subtitle: 'Recent updates',
+          icon: Icons.campaign_outlined,
+          accentColor: ColorUtils.info600,
+          onTap: () {
+            // Navigate to announcements
+          },
+        ),
+      ];
+    } else if (_effectiveRole == 'guru') {
+      return [
+        OverviewCard(
+          title: "Today's Schedule",
+          value: _stats['kelas_hari_ini']?.toString() ?? '0',
+          subtitle: 'Classes today',
+          icon: Icons.schedule_outlined,
+          accentColor: ColorUtils.corporateBlue600,
+          onTap: () {
+            // Navigate to schedule
+          },
+        ),
+        OverviewCard(
+          title: 'Pending Grades',
+          value: '0',
+          subtitle: 'Need to be inputted',
+          icon: Icons.grading_outlined,
+          accentColor: ColorUtils.warning600,
+          onTap: () {
+            // Navigate to grades
+          },
+        ),
+        OverviewCard(
+          title: 'Attendance',
+          value: _stats['total_siswa']?.toString() ?? '0',
+          subtitle: 'Students today',
+          icon: Icons.how_to_reg_outlined,
+          accentColor: ColorUtils.success600,
+          onTap: () {
+            // Navigate to attendance
+          },
+        ),
+        OverviewCard(
+          title: 'Materials',
+          value: _stats['total_materi']?.toString() ?? '0',
+          subtitle: 'Learning resources',
+          icon: Icons.book_outlined,
+          accentColor: ColorUtils.info600,
+          onTap: () {
+            // Navigate to materials
+          },
+        ),
+      ];
+    } else {
+      return [
+        OverviewCard(
+          title: 'My Children',
+          value: _stats['anak_terdaftar']?.toString() ?? '0',
+          subtitle: 'Registered students',
+          icon: Icons.family_restroom_outlined,
+          accentColor: ColorUtils.corporateBlue600,
+          onTap: () {
+            // Navigate to children
+          },
+        ),
+        OverviewCard(
+          title: 'New Grades',
+          value: _stats['unread_grades']?.toString() ?? '0',
+          subtitle: 'Recent updates',
+          icon: Icons.grade_outlined,
+          accentColor: ColorUtils.success600,
+          onTap: () {
+            // Navigate to grades
+          },
+        ),
+        OverviewCard(
+          title: 'Attendance',
+          value: _stats['unread_presence']?.toString() ?? '0',
+          subtitle: 'New records',
+          icon: Icons.calendar_month_outlined,
+          accentColor: ColorUtils.warning600,
+          onTap: () {
+            // Navigate to attendance
+          },
+        ),
+        OverviewCard(
+          title: 'Announcements',
+          value: _stats['pengumuman_terbaru']?.toString() ?? '0',
+          subtitle: 'Latest info',
+          icon: Icons.announcement_outlined,
+          accentColor: ColorUtils.info600,
+          onTap: () {
+            // Navigate to announcements
+          },
+        ),
+      ];
+    }
+  }
+
+  List<Widget> _getQuickActions() {
+    final primaryColor = _getPrimaryColor();
+
+    if (_effectiveRole == 'admin') {
+      return [
+        QuickActionButton(
+          label: 'Data',
+          icon: Icons.folder_outlined,
+          color: primaryColor,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminDataManagementScreen(),
+            ),
+          ),
+        ),
+        QuickActionButton(
+          label: 'Jadwal',
+          icon: Icons.schedule_outlined,
+          color: ColorUtils.info600,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TeachingScheduleManagementScreen(),
+            ),
+          ),
+        ),
+        QuickActionButton(
+          label: 'Keuangan',
+          icon: Icons.account_balance_wallet_outlined,
+          color: ColorUtils.success600,
+          badgeCount: _unverifiedPaymentCount > 0
+              ? _unverifiedPaymentCount
+              : null,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FinanceScreen()),
+          ),
+        ),
+        QuickActionButton(
+          label: 'Pengumuman',
+          icon: Icons.announcement_outlined,
+          color: ColorUtils.warning600,
+          badgeCount: _stats['unread_announcements'],
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminAnnouncementScreen(),
+              ),
+            );
+            _loadStats();
+          },
+        ),
+      ];
+    } else if (_effectiveRole == 'guru') {
+      return [
+        QuickActionButton(
+          label: 'Jadwal',
+          icon: Icons.schedule_outlined,
+          color: primaryColor,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
+          ),
+        ),
+        QuickActionButton(
+          label: 'Aktivitas',
+          icon: Icons.local_activity_outlined,
+          color: ColorUtils.info600,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ClassActifityScreen()),
+          ),
+        ),
+        QuickActionButton(
+          label: 'Nilai',
+          icon: Icons.edit_note_outlined,
+          color: ColorUtils.success600,
+          onTap: () async {
+            final prefs = await SharedPreferences.getInstance();
+            final userData = json.decode(prefs.getString('user') ?? '{}');
+            final teacherData = {
+              'id': userData['id'] ?? '',
+              'nama': userData['nama'] ?? 'Teacher',
+              'email': userData['email'] ?? '',
+              'role': _effectiveRole,
+            };
+            if (teacherData['id']!.isEmpty) return;
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GradePage(teacher: teacherData),
+              ),
+            );
+          },
+        ),
+      ];
+    } else {
+      return [
+        QuickActionButton(
+          label: 'Pengumuman',
+          icon: Icons.announcement_outlined,
+          color: primaryColor,
+          badgeCount: _stats['unread_announcements'],
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+            );
+            _loadStats();
+          },
+        ),
+        QuickActionButton(
+          label: 'Tagihan',
+          icon: Icons.account_balance_wallet_outlined,
+          color: ColorUtils.error600,
+          badgeCount: _stats['unread_billing'],
+          onTap: () async {
+            final academicYearId = Provider.of<AcademicYearProvider>(
+              context,
+              listen: false,
+            ).selectedAcademicYear?['id']?.toString();
+
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ParentBillingScreen()),
+            );
+            _loadStats();
+          },
+        ),
+      ];
+    }
+  }
+
+  Widget _buildStatsGrid() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Statistics',
+            style: DashboardTypography.heading3(color: ColorUtils.slate900),
+          ),
+          SizedBox(height: 12),
+          _buildStatsSection(),
+        ],
+      ),
+    );
+  }
+
+  // ==================== END NEW UI COMPONENTS ====================
+
   Widget _buildModernHeader(
     BuildContext context,
     LanguageProvider languageProvider,
   ) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         gradient: _getHeaderGradient(),
         boxShadow: [
@@ -1119,7 +1961,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               height: 44,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
@@ -1411,88 +2253,20 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     required dynamic icon,
     required Color iconColor,
     required Color backgroundColor,
-    TextStyle? valueStyle,
+    String? trend,
+    double? progress,
+    List<double>? sparklineData,
   }) {
-    return Container(
-      width: 140,
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: icon is IconData
-                    ? Icon(icon, color: iconColor, size: 18)
-                    : Center(
-                        child: Text(
-                          icon is String ? icon : "👨‍🎓",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12),
-          _isInitializing
-              ? Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
-                  child: Container(
-                    width: 40,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                )
-              : Text(
-                  value,
-                  style:
-                      valueStyle ??
-                      TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
-                      ),
-                ),
-          SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade600,
-              height: 1.3,
-            ),
-          ),
-          SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-          ),
-        ],
-      ),
+    return EnhancedStatCard(
+      title: title,
+      value: value,
+      subtitle: subtitle,
+      icon: icon,
+      accentColor: iconColor,
+      isLoading: _isInitializing,
+      trend: trend,
+      progress: progress,
+      sparklineData: sparklineData,
     );
   }
 
@@ -1525,7 +2299,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   Widget _buildWelcomeSection() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 20),
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: _getCardGradient(),
         borderRadius: BorderRadius.circular(20),
@@ -1744,40 +2518,472 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget _buildSliverGridMenu(BuildContext context) {
-    final cards = _getDashboardCards(context);
-
+    // All roles now use professional MenuItemCard design
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      sliver: SliverGrid(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.1,
-        ),
-        delegate: SliverChildBuilderDelegate((context, index) {
-          return AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              final delay = (index * 0.1).clamp(0.0, 0.8);
-              final animation = CurvedAnimation(
-                parent: _animationController,
-                curve: Interval(delay, 1.0, curve: Curves.easeOut),
-              );
-
-              return FadeTransition(
-                opacity: animation,
-                child: Transform.translate(
-                  offset: Offset(0, 50 * (1 - animation.value)),
-                  child: child,
-                ),
-              );
-            },
-            child: cards[index],
-          );
-        }, childCount: cards.length),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList(
+        delegate: SliverChildListDelegate(_buildCategorizedMenu(context)),
       ),
     );
+  }
+
+  List<Widget> _buildCategorizedMenu(BuildContext context) {
+    final primaryColor = _getPrimaryColor();
+
+    if (_effectiveRole == 'admin') {
+      return [
+        CategorySection(
+          title: '📊 MANAJEMEN DATA',
+          icon: Icons.folder_shared,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getAdminDataManagementItems(context),
+        ),
+        CategorySection(
+          title: '📢 AKADEMIK & KOMUNIKASI',
+          icon: Icons.school,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getAdminAcademicItems(context),
+        ),
+        CategorySection(
+          title: '💰 KEUANGAN & PENGATURAN',
+          icon: Icons.settings,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getAdminFinanceItems(context),
+        ),
+      ];
+    } else if (_effectiveRole == 'guru') {
+      return [
+        CategorySection(
+          title: '📚 MENGAJAR',
+          icon: Icons.school,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getTeacherTeachingItems(context),
+        ),
+        CategorySection(
+          title: '✏️ PENILAIAN & PERENCANAAN',
+          icon: Icons.edit_note,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getTeacherAssessmentItems(context),
+        ),
+      ];
+    } else if (_effectiveRole == 'wali') {
+      // Parent role: Simple list without categories (only 5 items)
+      final items = _getParentMenuItems(context);
+      return items
+          .map((item) => Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: MenuItemCard(
+                  title: item.title,
+                  icon: item.icon,
+                  onTap: item.onTap,
+                  badgeCount: item.badgeCount,
+                  primaryColor: primaryColor,
+                ),
+              ))
+          .toList();
+    }
+
+    return [];
+  }
+
+  // Admin - Data Management Category
+  List<MenuItem> _getAdminDataManagementItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: 'Kelola Data',
+        icon: Icons.folder_shared_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminDataManagementScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.manageTeachingSchedule.tr,
+        icon: Icons.schedule_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TeachingScheduleManagementScreen(),
+          ),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.inputGrades.tr,
+        icon: Icons.edit_note_outlined,
+        onTap: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          final adminData = {
+            'id': userData['id'] ?? '',
+            'nama': userData['nama'] ?? 'Admin',
+            'email': userData['email'] ?? '',
+            'role': _effectiveRole,
+          };
+          if (adminData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Admin ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GradePage(teacher: adminData),
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
+  // Admin - Academic & Communication Category
+  List<MenuItem> _getAdminAcademicItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.announcements.tr,
+        icon: Icons.announcement_outlined,
+        badgeCount: _stats['unread_announcements'],
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AdminAnnouncementScreen()),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.classActivities.tr,
+        icon: Icons.local_activity_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminClassActivityScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.presenceReport.tr,
+        icon: Icons.check_circle_outline,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminPresenceReportScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.manageRpp.tr,
+        icon: Icons.description_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminRppScreen()),
+        ),
+      ),
+    ];
+  }
+
+  // Admin - Finance & Settings Category
+  List<MenuItem> _getAdminFinanceItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.finance.tr,
+        icon: Icons.account_balance_wallet_outlined,
+        badgeCount: _unverifiedPaymentCount > 0
+            ? _unverifiedPaymentCount
+            : null,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => FinanceScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.schoolSettings.tr,
+        icon: Icons.settings_applications,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SchoolSettingsScreen()),
+        ),
+      ),
+    ];
+  }
+
+  // Teacher - Teaching Category
+  List<MenuItem> _getTeacherTeachingItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.teachingSchedule.tr,
+        icon: Icons.schedule_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.classActivities.tr,
+        icon: Icons.local_activity_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ClassActifityScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.studentAttendance.tr,
+        icon: Icons.check_circle_outline,
+        onTap: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          final guruData = {
+            'id': userData['id'] ?? '',
+            'nama': userData['nama'] ?? 'Teacher',
+            'email': userData['email'] ?? '',
+            'role': _effectiveRole,
+          };
+          if (guruData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PresencePage(teacher: guruData),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.learningMaterials.tr,
+        icon: Icons.book_outlined,
+        onTap: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          final teacherData = {
+            'id': userData['id'] ?? '',
+            'name': userData['name'] ?? 'Teacher',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MateriPage(teacher: teacherData),
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
+  // Teacher - Assessment & Planning Category
+  List<MenuItem> _getTeacherAssessmentItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.inputGrades.tr,
+        icon: Icons.edit_note_outlined,
+        onTap: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          final teacherData = {
+            'id': userData['id'] ?? '',
+            'nama': userData['nama'] ?? 'Teacher',
+            'email': userData['email'] ?? '',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GradePage(teacher: teacherData),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.myRpp.tr,
+        icon: Icons.description_outlined,
+        onTap: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          final teacherData = {
+            'id': userData['id'] ?? '',
+            'nama': userData['nama'] ?? 'Teacher',
+            'email': userData['email'] ?? '',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RppScreen(
+                teacherId: teacherData['id']!,
+                teacherName: teacherData['nama']!,
+              ),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.announcements.tr,
+        icon: Icons.announcement_outlined,
+        badgeCount: _stats['unread_announcements'],
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+          );
+          _loadStats();
+        },
+      ),
+    ];
+  }
+
+  // Parent - Menu Items (Simple list, no categories)
+  List<MenuItem> _getParentMenuItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.announcements.tr,
+        icon: Icons.announcement_outlined,
+        badgeCount: _stats['unread_announcements'],
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.classActivities.tr,
+        icon: Icons.local_activity_outlined,
+        badgeCount: _stats['unread_class_activities'],
+        onTap: () async {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ParentClassActivityScreen(academicYearId: academicYearId),
+            ),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.grades.tr,
+        icon: Icons.grade_outlined,
+        badgeCount: _stats['unread_grades'],
+        onTap: () async {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ParentGradeScreen(academicYearId: academicYearId),
+            ),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.presence.tr,
+        icon: Icons.check_circle_outline,
+        badgeCount: _stats['unread_presence'],
+        onTap: () async {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          // Load students
+          final studentsData = await _getStudentDataForParent(
+            userData['id'] ?? '',
+          );
+
+          if (studentsData.isEmpty) {
+            if (context.mounted) {
+              _showNoStudentsDialog(context);
+            }
+            return;
+          }
+
+          if (!context.mounted) return;
+
+          if (studentsData.length == 1) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PresenceParentPage(
+                  parent: userData,
+                  studentId: studentsData[0]['id'],
+                  academicYearId: academicYearId,
+                ),
+              ),
+            );
+            _loadStats();
+          } else {
+            await _showStudentSelectionDialog(
+              context,
+              userData,
+              studentsData,
+              academicYearId: academicYearId,
+            );
+            _loadStats();
+          }
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.billing.tr,
+        icon: Icons.account_balance_wallet_outlined,
+        badgeCount: _stats['unread_billing'],
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ParentBillingScreen()),
+          );
+          _loadStats();
+        },
+      ),
+    ];
   }
 
   Widget _buildDashboardCard(
@@ -2528,6 +3734,17 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         return AppLocalizations.parentRole.tr;
       default:
         return 'User';
+    }
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 17) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
     }
   }
 

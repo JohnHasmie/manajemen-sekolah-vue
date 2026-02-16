@@ -251,4 +251,185 @@ class ColorUtils {
 
   // Primary Alias
   static Color get primary => primaryColor;
+
+  // Corporate Blue Colors (Professional & Conservative)
+  static Color get corporateBlue900 => Color(0xFF1E3A8A); // Dark headings
+  static Color get corporateBlue800 => Color(0xFF1E40AF);
+  static Color get corporateBlue700 => Color(0xFF1D4ED8); // Primary actions
+  static Color get corporateBlue600 => Color(0xFF2563EB);
+  static Color get corporateBlue500 => Color(0xFF3B82F6); // Interactive elements
+  static Color get corporateBlue400 => Color(0xFF60A5FA);
+  static Color get corporateBlue300 => Color(0xFF93C5FD);
+  static Color get corporateBlue200 => Color(0xFFBFDBFE);
+  static Color get corporateBlue100 => Color(0xFFDBEAFE); // Light backgrounds
+  static Color get corporateBlue50 => Color(0xFFEFF6FF);
+
+  // Semantic Colors for Dashboard
+  static Color get success600 => Color(0xFF059669);
+  static Color get warning600 => Color(0xFFD97706);
+  static Color get error600 => Color(0xFFDC2626);
+  static Color get info600 => Color(0xFF0891B2);
+
+  /// Professional card decoration for corporate dashboard
+  static BoxDecoration corporateCard({
+    Color? accentColor,
+    bool withBorder = true,
+  }) {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12), // Sharper than default 16
+      border: withBorder
+          ? Border.all(
+              color: slate200,
+              width: 1,
+            )
+          : null,
+      boxShadow: corporateShadow(),
+    );
+  }
+
+  /// Layered shadow for professional depth
+  static List<BoxShadow> corporateShadow({double elevation = 1.0}) {
+    return [
+      BoxShadow(
+        color: slate900.withOpacity(0.04 * elevation),
+        blurRadius: 6 * elevation,
+        offset: Offset(0, 2 * elevation),
+      ),
+      BoxShadow(
+        color: slate900.withOpacity(0.02 * elevation),
+        blurRadius: 12 * elevation,
+        offset: Offset(0, 4 * elevation),
+      ),
+    ];
+  }
+
+  /// Subtle gradient for cards
+  static LinearGradient corporateGradient({
+    required Color color,
+    double opacity = 0.1,
+  }) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        color.withOpacity(opacity),
+        color.withOpacity(opacity * 0.5),
+      ],
+    );
+  }
+
+  /// Professional stat card decoration
+  static BoxDecoration statCardDecoration({required Color accentColor}) {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: slate200,
+        width: 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: accentColor.withOpacity(0.08),
+          blurRadius: 12,
+          offset: Offset(0, 4),
+        ),
+        BoxShadow(
+          color: slate900.withOpacity(0.04),
+          blurRadius: 6,
+          offset: Offset(0, 2),
+        ),
+      ],
+    );
+  }
+
+  /// Category header decoration
+  static BoxDecoration categoryHeaderDecoration({
+    required Color accentColor,
+    bool isExpanded = true,
+  }) {
+    return BoxDecoration(
+      color: accentColor.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: accentColor.withOpacity(0.2),
+        width: 1,
+      ),
+    );
+  }
+
+  /// Modern hero gradient
+  // Kamil Edu Professional Colors
+  static Color get kamilPrimary => Color(0xFF143068); // Deep professional blue
+  static Color get kamilAccent => Color(0xFF21AFE6); // Vibrant teal
+  static Color get kamilPrimaryLight => Color(0xFFE8EEF7);
+  static Color get kamilAccentLight => Color(0xFFE6F7FD);
+
+  /// Modern hero gradient with vibrant colors
+  static LinearGradient heroGradient({required Color primaryColor}) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        primaryColor,
+        _adjustColor(primaryColor, 0.15), // Slightly lighter mid-tone
+        _adjustColor(primaryColor, 0.35), // Vibrant accent mix
+      ],
+      stops: [0.0, 0.5, 1.4],
+    );
+  }
+
+  /// Helper to adjust color brightness for gradients
+  static Color _adjustColor(Color color, double factor) {
+    final r = (color.r * 255.0).round();
+    final g = (color.g * 255.0).round();
+    final b = (color.b * 255.0).round();
+    final a = (color.a * 255.0).round();
+
+    return Color.fromARGB(
+      a,
+      (r + (255 - r) * factor).round().clamp(0, 255),
+      (g + (255 - g) * factor).round().clamp(0, 255),
+      (b + (255 - b) * (factor * 1.5)).round().clamp(0, 255),
+    );
+  }
+
+  /// Glass morphism effect
+  static BoxDecoration glassMorphism({
+    Color? color,
+    double blur = 10,
+    double opacity = 0.1,
+  }) {
+    return BoxDecoration(
+      color: (color ?? Colors.white).withValues(alpha: opacity),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.2),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: blur,
+          offset: Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
+  /// Quick action button decoration
+  static BoxDecoration quickActionDecoration({required Color color}) {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: slate200, width: 1),
+      boxShadow: [
+        BoxShadow(
+          color: color.withValues(alpha: 0.1),
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
+    );
+  }
 }
