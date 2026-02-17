@@ -1,6 +1,6 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
-**Last Updated:** 2026-02-16
+**Last Updated:** 2026-02-17
 **Reference:** Kamil Edu Dashboard Design
 **Applied To:** Dashboard redesign (complete)
 
@@ -810,6 +810,822 @@ Color(0xFF9333EA) // Purple
 - Semi-transparent buttons blend well with gradient
 - Subtitle is optional but recommended for context
 
+### 8. Compact Management List Card
+
+#### Usage
+Use for data management screens (students, teachers, employees) where lists need to display key info in a compact, scannable format.
+
+#### Structure
+```dart
+Container(
+  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+  child: Material(
+    child: InkWell(
+      onTap: () => _showDetailPopup(item),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: ColorUtils.slate200, width: 1),
+          boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+        ),
+        child: Row(
+          children: [
+            // 1. Colored initial avatar
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: avatarColor.withValues(alpha: 0.15),
+              child: Text(
+                name[0].toUpperCase(),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: avatarColor,
+                ),
+              ),
+            ),
+            SizedBox(width: 12),
+            // 2. Name + info tags
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate900,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Row(children: [
+                    _buildInfoTag(Icons.school_outlined, classLabel),
+                    SizedBox(width: 6),
+                    _buildInfoTag(Icons.person_outline, secondaryLabel),
+                  ]),
+                ],
+              ),
+            ),
+            SizedBox(width: 8),
+            // 3. Status chip + action buttons
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Active status chip
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: ColorUtils.success600.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: ColorUtils.success600.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Container(
+                      width: 5, height: 5,
+                      decoration: BoxDecoration(
+                        color: ColorUtils.success600,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Active',
+                      style: TextStyle(
+                        color: ColorUtils.success600,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ]),
+                ),
+                SizedBox(height: 8),
+                // Edit + Delete buttons
+                Row(children: [
+                  InkWell(
+                    onTap: onEdit,
+                    child: Container(
+                      padding: EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.edit_outlined, size: 16, color: ColorUtils.corporateBlue600),
+                    ),
+                  ),
+                  SizedBox(width: 6),
+                  InkWell(
+                    onTap: onDelete,
+                    child: Container(
+                      padding: EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.error600.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.delete_outline, size: 16, color: ColorUtils.error600),
+                    ),
+                  ),
+                ]),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  ),
+)
+```
+
+#### Info Tag Helper (`_buildInfoTag`)
+```dart
+Widget _buildInfoTag(IconData icon, String text) {
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+    decoration: BoxDecoration(
+      color: ColorUtils.slate50,
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: ColorUtils.slate200),
+    ),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 11, color: ColorUtils.slate600),
+      SizedBox(width: 3),
+      Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          color: ColorUtils.slate700,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ]),
+  );
+}
+```
+
+#### Avatar Color Coding
+```dart
+// In list: use index for consistent color rotation
+final avatarColor = ColorUtils.getColorForIndex(index);
+
+// In detail popup (no index): use name hash for consistent per-record color
+final nameHash = name.codeUnits.fold(0, (sum, c) => sum + c);
+final avatarColor = ColorUtils.getColorForIndex(nameHash);
+```
+
+#### Specifications
+- **Card border radius:** 14px
+- **Card padding:** 12px horizontal, 12px vertical
+- **Card margin:** 5px vertical, 16px horizontal
+- **Avatar radius:** 22px (44×44px touch target)
+- **Info tag font:** 11px w500
+- **Status dot:** 5×5px circle
+- **Action icon size:** 16px inside 6px-padded container
+- **Shadow:** `ColorUtils.corporateShadow(elevation: 1.0)`
+
+---
+
+### 9. Form Dialog (Add/Edit)
+
+#### Usage
+Use for add/edit dialogs that collect structured data. Preferred over full-screen forms for compact data sets (≤10 fields).
+
+#### Structure
+```dart
+showDialog(
+  context: context,
+  builder: (context) => Dialog(
+    backgroundColor: Colors.white,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    child: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // --- Gradient Header ---
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Icon container
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                  ),
+                  child: Icon(isEdit ? Icons.edit_rounded : Icons.add_rounded, color: Colors.white, size: 22),
+                ),
+                SizedBox(width: 14),
+                // Title + subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(isEdit ? 'Edit Record' : 'Add Record',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      SizedBox(height: 2),
+                      Text(isEdit ? 'Update record information' : 'Fill in record information',
+                        style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                    ],
+                  ),
+                ),
+                // X close button
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 32, height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // --- Form Fields ---
+          Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              children: [
+                _buildFormTextField(/* ... */),
+                SizedBox(height: 12),
+                _buildFormDropdown(/* ... */),
+                // ... more fields
+              ],
+            ),
+          ),
+
+          // --- Footer Buttons ---
+          Container(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: ColorUtils.slate100)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 13),
+                      side: BorderSide(color: ColorUtils.slate300),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text('Cancel',
+                      style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600, fontSize: 14)),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onSave,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorUtils.corporateBlue600,
+                      padding: EdgeInsets.symmetric(vertical: 13),
+                      elevation: 2,
+                      shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(isEdit ? 'Update' : 'Save',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
+);
+```
+
+#### Form Field Helper (`_buildFormTextField`)
+```dart
+Widget _buildFormTextField({
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+  TextInputType? keyboardType,
+  int maxLines = 1,
+  String? hintText,
+  VoidCallback? onTap,
+  bool readOnly = false,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: ColorUtils.slate50,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: ColorUtils.slate200),
+    ),
+    child: TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+        hintText: hintText,
+        hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
+        prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
+        border: InputBorder.none,
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      ),
+      style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      onTap: onTap,
+      readOnly: readOnly,
+    ),
+  );
+}
+```
+
+#### Form Dropdown Helper (`_buildFormDropdown`)
+```dart
+Widget _buildFormDropdown({
+  required String? value,
+  required String label,
+  required IconData icon,
+  required List<DropdownMenuItem<String>> items,
+  required Function(String?) onChanged,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: ColorUtils.slate50,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: ColorUtils.slate200),
+    ),
+    child: DropdownButtonFormField<String>(
+      initialValue: value,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+        prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
+        border: InputBorder.none,
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+      ),
+      items: items,
+      onChanged: onChanged,
+      style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
+      dropdownColor: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+    ),
+  );
+}
+```
+
+#### Specifications
+- **Dialog border radius:** 20px
+- **Header padding:** `fromLTRB(20, 20, 12, 20)` (right is 12 to fit close button)
+- **Icon container:** 44×44px, 12px border radius, `white.withValues(alpha: 0.2)` bg with 0.3 border
+- **Close button:** 32×32px circle, `white.withValues(alpha: 0.2)` bg
+- **Field container bg:** `ColorUtils.slate50` with `slate200` border
+- **Field focused border:** 1.5px `corporateBlue600`
+- **Footer top divider:** `slate100`
+- **Cancel button:** `slate300` border, `slate700` text, 13px vertical padding
+- **Save button:** `corporateBlue600` bg, `w600` text, elevation 2 with `corporateBlue600` shadow
+
+---
+
+### 10. Detail Popup
+
+#### Usage
+Use for read-only detail views triggered by tapping a list card. Shows comprehensive record information in a scrollable dialog.
+
+#### Structure
+```dart
+showDialog(
+  context: context,
+  builder: (context) => Dialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    child: FutureBuilder(
+      future: apiService.getById(id),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+        }
+        final details = snapshot.hasData ? snapshot.data : localData;
+
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- Colored Avatar Header ---
+              Builder(builder: (context) {
+                final nameHash = name.codeUnits.fold(0, (sum, c) => sum + c);
+                final avatarColor = ColorUtils.getColorForIndex(nameHash);
+                return Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(/* role gradient */),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Column(
+                        children: [
+                          // Colored avatar with white border
+                          Container(
+                            width: 72, height: 72,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: avatarColor,
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 3),
+                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: Offset(0, 4))],
+                            ),
+                            child: Center(
+                              child: Text(initial, style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+                          SizedBox(height: 6),
+                          // Badge chips row (NIS, class, etc.)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildHeaderBadge(Icons.badge_outlined, 'NIS: $nis'),
+                              if (className.isNotEmpty) ...[
+                                SizedBox(width: 8),
+                                _buildHeaderBadge(Icons.school_outlined, className),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                      // X close button top-right
+                      Positioned(
+                        top: 0, right: 0,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+
+              // --- Content ---
+              Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailItem(icon: Icons.school, label: 'Class', value: className),
+                    _buildDetailItem(icon: Icons.cake, label: 'Birth Date', value: birthDate),
+                    // ...
+
+                    // --- Section Header ---
+                    SizedBox(height: 16),
+                    _buildDetailSectionHeader(Icons.history_rounded, 'Section Title'),
+                    SizedBox(height: 12),
+
+                    // --- More detail items ---
+                    _buildDetailItem(/* ... */),
+
+                    // --- Footer Buttons ---
+                    SizedBox(height: 20),
+                    Container(
+                      padding: EdgeInsets.only(top: 12),
+                      decoration: BoxDecoration(border: Border(top: BorderSide(color: ColorUtils.slate100))),
+                      child: Row(children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              side: BorderSide(color: ColorUtils.slate300),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text('Close', style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600, fontSize: 14)),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () { Navigator.pop(context); openEditDialog(); },
+                            icon: Icon(Icons.edit_rounded, size: 16, color: Colors.white),
+                            label: Text('Edit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorUtils.corporateBlue600,
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              elevation: 2,
+                              shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  ),
+);
+```
+
+#### Header Badge Helper
+```dart
+Widget _buildHeaderBadge(IconData icon, String text) {
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.2),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+    ),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 12, color: Colors.white),
+      SizedBox(width: 4),
+      Text(text, style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
+    ]),
+  );
+}
+```
+
+#### Section Header Helper
+```dart
+Widget _buildDetailSectionHeader(IconData icon, String title) {
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: ColorUtils.slate50,
+      borderRadius: BorderRadius.circular(8),
+      border: Border(left: BorderSide(color: ColorUtils.corporateBlue600, width: 3)),
+    ),
+    child: Row(children: [
+      Icon(icon, size: 16, color: ColorUtils.corporateBlue600),
+      SizedBox(width: 8),
+      Text(
+        title,
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: ColorUtils.slate800, letterSpacing: 0.3),
+      ),
+    ]),
+  );
+}
+```
+
+#### Detail Item Helper (`_buildDetailItem`)
+```dart
+Widget _buildDetailItem({
+  required IconData icon,
+  required String label,
+  required String value,
+  bool isMultiline = false,
+}) {
+  return Container(
+    margin: EdgeInsets.only(bottom: 10),
+    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(
+      color: ColorUtils.slate50,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: ColorUtils.slate100),
+    ),
+    child: Row(
+      crossAxisAlignment: isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+            color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ColorUtils.corporateBlue600.withValues(alpha: 0.15)),
+          ),
+          child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
+        ),
+        SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500, letterSpacing: 0.3)),
+            SizedBox(height: 3),
+            Text(value,
+              style: TextStyle(fontSize: 14, color: ColorUtils.slate800, fontWeight: FontWeight.w600),
+              maxLines: isMultiline ? 3 : 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ]),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+#### Specifications
+- **Dialog border radius:** 20px
+- **Avatar size:** 72×72px with 3px white border and shadow
+- **Avatar color:** `ColorUtils.getColorForIndex(name.codeUnits.fold(0, (sum, c) => sum + c))`
+- **Badge chips:** pill shape, `white.withValues(alpha: 0.2)` bg, 20px border radius
+- **Section header:** `slate50` bg, 3px `corporateBlue600` left border, 8px border radius
+- **Detail item bg:** `slate50` with `slate100` border, 10px border radius
+- **Detail icon container:** 36×36px, `corporateBlue600 * 0.1` bg with `* 0.15` border
+- **Label:** 11px, `slate500`, w500, letterSpacing 0.3
+- **Value:** 14px, `slate800`, w600
+- **Footer divider:** `slate100`
+- **Close button:** 32×32px circle at `Positioned(top: 0, right: 0)`
+- **Edit button:** `ElevatedButton.icon` with edit icon, `corporateBlue600` bg
+
+---
+
+### 11. Filter Bottom Sheet
+
+#### Usage
+Use for filtering lists with multiple filter categories. Slides up from the bottom with organized sections.
+
+#### Structure
+```dart
+showModalBottomSheet(
+  context: context,
+  isScrollControlled: true,
+  backgroundColor: Colors.transparent,
+  builder: (context) => Container(
+    height: MediaQuery.of(context).size.height * 0.75,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(24),
+        topRight: Radius.circular(24),
+      ),
+    ),
+    child: Column(
+      children: [
+        // --- Gradient Header ---
+        Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [ColorUtils.corporateBlue600, ColorUtils.corporateBlue600.withValues(alpha: 0.8)],
+            ),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(children: [
+                Icon(Icons.filter_list_rounded, color: Colors.white, size: 22),
+                SizedBox(width: 12),
+                Text('Filter', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              ]),
+              TextButton(
+                onPressed: onReset,
+                child: Text('Reset', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        ),
+
+        // --- Scrollable Filter Sections ---
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildFilterSectionHeader(Icons.class_outlined, 'By Class'),
+                SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: items.map((item) => FilterChip(
+                    label: Text(item.name),
+                    selected: selectedItems.contains(item.id),
+                    onSelected: (selected) => onToggle(item.id),
+                    backgroundColor: Colors.white,
+                    selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
+                    checkmarkColor: ColorUtils.corporateBlue600,
+                    labelStyle: TextStyle(
+                      color: selectedItems.contains(item.id) ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    side: BorderSide(
+                      color: selectedItems.contains(item.id) ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
+                      width: 1,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  )).toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // --- Footer Buttons ---
+        Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: ColorUtils.slate200)),
+            boxShadow: [BoxShadow(color: ColorUtils.slate900.withValues(alpha: 0.05), blurRadius: 8, offset: Offset(0, -2))],
+          ),
+          child: Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  side: BorderSide(color: ColorUtils.slate300),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Cancel', style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600)),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onApply,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ColorUtils.corporateBlue600,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Apply Filter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ]),
+        ),
+      ],
+    ),
+  ),
+);
+```
+
+#### Filter Section Header Helper
+```dart
+Widget _buildFilterSectionHeader(IconData icon, String title) {
+  return Row(children: [
+    Icon(icon, size: 16, color: ColorUtils.slate600),
+    SizedBox(width: 8),
+    Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800)),
+  ]);
+}
+```
+
+#### Specifications
+- **Sheet height:** 75% of screen height
+- **Sheet border radius (top):** 24px
+- **Header padding:** 20px all sides
+- **Header gradient:** `corporateBlue600` → `corporateBlue600.withValues(alpha: 0.8)`
+- **FilterChip border radius:** 10px, horizontal padding 12px, vertical 8px
+- **Selected chip bg:** `corporateBlue600.withValues(alpha: 0.15)`
+- **Section header icon size:** 16px, `slate600`
+- **Footer shadow:** upward, `slate900 * 0.05`, 8px blur, `(0, -2)` offset
+- **Footer padding:** 20px all sides
+- **Apply button:** `corporateBlue600` fill with elevation 2
+
 ---
 
 ## 🎬 Animation Guidelines
@@ -1049,6 +1865,7 @@ Container(
 ### Already Redesigned (Reference Examples)
 ✅ **Dashboard** - Complete Kamil Edu design with hero, quick actions, overview cards, categorized menu
 ✅ **Kelola Data (Admin Data Management)** - Gradient header + MenuItemCard list
+✅ **Student Management** - Gradient header (#7), compact list cards (#8), form dialog (#9), detail popup (#10), filter sheet (#11)
 
 ### When Applying to New Pages
 1. **Read this guide first**
@@ -1071,6 +1888,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 1.0
+**Design System Version:** 1.1
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
