@@ -293,33 +293,51 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.7,
+          height: MediaQuery.of(context).size.height * 0.75,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: SafeArea(
             child: Column(
               children: [
-                // Header
+                // Gradient Header
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        ColorUtils.corporateBlue600,
+                        ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Filter',
-                          'id': 'Filter',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.filter_list, color: Colors.white, size: 20),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          languageProvider.getTranslatedText({'en': 'Filter Subjects', 'id': 'Filter Mata Pelajaran'}),
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       TextButton(
@@ -332,11 +350,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                           });
                         },
                         child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Reset',
-                            'id': 'Reset',
-                          }),
-                          style: TextStyle(color: _getPrimaryColor()),
+                          languageProvider.getTranslatedText({'en': 'Reset', 'id': 'Reset'}),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -345,22 +364,15 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                 // Filter Content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Status Filter
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Status',
-                            'id': 'Status',
-                          }),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                        _buildFilterSectionHeader(
+                          languageProvider.getTranslatedText({'en': 'Status', 'id': 'Status'}),
+                          Icons.circle_outlined,
                         ),
-                        SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -400,38 +412,29 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                           : null;
                                     });
                                   },
-                                  backgroundColor: Colors.grey.shade100,
-                                  selectedColor: _getPrimaryColor().withValues(
-                                    alpha: 0.2,
+                                  backgroundColor: Colors.white,
+                                  selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+                                  checkmarkColor: ColorUtils.corporateBlue600,
+                                  side: BorderSide(
+                                    color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
+                                    width: 1,
                                   ),
-                                  checkmarkColor: _getPrimaryColor(),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? _getPrimaryColor()
-                                        : Colors.grey.shade700,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                                    color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                    fontSize: 13,
                                   ),
                                 );
                               }).toList(),
                         ),
-                        SizedBox(height: 24),
-
-                        SizedBox(height: 24),
 
                         // Status Kelas Filter
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Classes Status',
-                            'id': 'Status Kelas',
-                          }),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                        _buildFilterSectionHeader(
+                          languageProvider.getTranslatedText({'en': 'Classes Status', 'id': 'Status Kelas'}),
+                          Icons.class_outlined,
                         ),
-                        SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -464,199 +467,194 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                           : null;
                                     });
                                   },
-                                  backgroundColor: Colors.grey.shade100,
-                                  selectedColor: _getPrimaryColor().withValues(
-                                    alpha: 0.2,
+                                  backgroundColor: Colors.white,
+                                  selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+                                  checkmarkColor: ColorUtils.corporateBlue600,
+                                  side: BorderSide(
+                                    color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
+                                    width: 1,
                                   ),
-                                  checkmarkColor: _getPrimaryColor(),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? _getPrimaryColor()
-                                        : Colors.grey.shade700,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                                    color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                    fontSize: 13,
                                   ),
                                 );
                               }).toList(),
                         ),
 
-                        SizedBox(height: 24),
-
                         // Tingkat Kelas Filter
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Grade Level',
-                            'id': 'Tingkat Kelas',
-                          }),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                        _buildFilterSectionHeader(
+                          languageProvider.getTranslatedText({'en': 'Grade Level', 'id': 'Tingkat Kelas'}),
+                          Icons.layers_outlined,
                         ),
-                        SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: _availableGradeLevels.isEmpty
-                              ? List.generate(12, (index) {
-                                  final gradeLevel = (index + 1).toString();
-                                  final isSelected =
-                                      tempSelectedGradeLevel == gradeLevel;
-                                  return FilterChip(
-                                    label: Text('Kelas $gradeLevel'),
-                                    selected: isSelected,
-                                    onSelected: (selected) {
-                                      setModalState(() {
-                                        tempSelectedGradeLevel = selected
-                                            ? gradeLevel
-                                            : null;
-                                      });
-                                    },
-                                    backgroundColor: Colors.grey.shade100,
-                                    selectedColor: _getPrimaryColor()
-                                        .withValues(alpha: 0.2),
-                                    checkmarkColor: _getPrimaryColor(),
-                                    labelStyle: TextStyle(
-                                      color: isSelected
-                                          ? _getPrimaryColor()
-                                          : Colors.grey.shade700,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                  );
-                                }).toList()
-                              : _availableGradeLevels.map((gradeLevel) {
-                                  final isSelected =
-                                      tempSelectedGradeLevel == gradeLevel;
-                                  return FilterChip(
-                                    label: Text('Kelas $gradeLevel'),
-                                    selected: isSelected,
-                                    onSelected: (selected) {
-                                      setModalState(() {
-                                        tempSelectedGradeLevel = selected
-                                            ? gradeLevel
-                                            : null;
-                                      });
-                                    },
-                                    backgroundColor: Colors.grey.shade100,
-                                    selectedColor: _getPrimaryColor()
-                                        .withValues(alpha: 0.2),
-                                    checkmarkColor: _getPrimaryColor(),
-                                    labelStyle: TextStyle(
-                                      color: isSelected
-                                          ? _getPrimaryColor()
-                                          : Colors.grey.shade700,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                  );
-                                }).toList(),
+                          children: (_availableGradeLevels.isEmpty
+                              ? List.generate(12, (i) => (i + 1).toString())
+                              : _availableGradeLevels
+                          ).map((gradeLevel) {
+                            final isSelected = tempSelectedGradeLevel == gradeLevel;
+                            return FilterChip(
+                              label: Text('Kelas $gradeLevel'),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setModalState(() {
+                                  tempSelectedGradeLevel = selected ? gradeLevel : null;
+                                });
+                              },
+                              backgroundColor: Colors.white,
+                              selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+                              checkmarkColor: ColorUtils.corporateBlue600,
+                              side: BorderSide(
+                                color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
+                                width: 1,
+                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              labelStyle: TextStyle(
+                                color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                fontSize: 13,
+                              ),
+                            );
+                          }).toList(),
                         ),
-
-                        SizedBox(height: 24),
 
                         // Class Name Filter (Dynamic)
                         if (_availableClassNames.isNotEmpty) ...[
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Class Name',
-                              'id': 'Nama Kelas',
-                            }),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          _buildFilterSectionHeader(
+                            languageProvider.getTranslatedText({'en': 'Class Name', 'id': 'Nama Kelas'}),
+                            Icons.school_outlined,
                           ),
-                          SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: _availableClassNames.map((className) {
-                              final isSelected =
-                                  tempSelectedClassName == className;
+                              final isSelected = tempSelectedClassName == className;
                               return FilterChip(
                                 label: Text(className),
                                 selected: isSelected,
                                 onSelected: (selected) {
                                   setModalState(() {
-                                    tempSelectedClassName = selected
-                                        ? className
-                                        : null;
+                                    tempSelectedClassName = selected ? className : null;
                                   });
                                 },
-                                backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withValues(
-                                  alpha: 0.2,
+                                backgroundColor: Colors.white,
+                                selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+                                checkmarkColor: ColorUtils.corporateBlue600,
+                                side: BorderSide(
+                                  color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
+                                  width: 1,
                                 ),
-                                checkmarkColor: _getPrimaryColor(),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : Colors.grey.shade700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                  color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  fontSize: 13,
                                 ),
                               );
                             }).toList(),
                           ),
-                          SizedBox(height: 24),
+                          SizedBox(height: 12),
                         ],
+                        SizedBox(height: 16),
                       ],
                     ),
                   ),
                 ),
-                // Apply Button
+                // Footer buttons
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate100)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.2),
-                        blurRadius: 4,
+                        color: ColorUtils.slate900.withValues(alpha: 0.06),
+                        blurRadius: 8,
                         offset: Offset(0, -2),
                       ),
                     ],
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedStatusFilter = tempSelectedStatus;
-                          _selectedKelasStatusFilter = tempSelectedClassStatus;
-                          _selectedGradeLevelFilter = tempSelectedGradeLevel;
-                          _selectedClassNameFilter = tempSelectedClassName;
-                        });
-                        _checkActiveFilter();
-                        Navigator.pop(context);
-                        _loadSubjects(); // Reload data setelah apply filter
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _getPrimaryColor(),
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: ColorUtils.slate300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
+                            style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Apply Filter',
-                          'id': 'Terapkan Filter',
-                        }),
-                        style: TextStyle(color: Colors.white),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedStatusFilter = tempSelectedStatus;
+                              _selectedKelasStatusFilter = tempSelectedClassStatus;
+                              _selectedGradeLevelFilter = tempSelectedGradeLevel;
+                              _selectedClassNameFilter = tempSelectedClassName;
+                            });
+                            _checkActiveFilter();
+                            Navigator.pop(context);
+                            _loadSubjects();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: ColorUtils.corporateBlue600,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({'en': 'Apply Filter', 'id': 'Terapkan Filter'}),
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFilterSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.only(top: 20, bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: ColorUtils.slate600),
+          SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate800,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -928,46 +926,77 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                     // Header
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.fromLTRB(20, 20, 16, 20),
                       decoration: BoxDecoration(
-                        gradient: _getCardGradient(),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            ColorUtils.corporateBlue600,
+                            ColorUtils.corporateBlue600.withValues(alpha: 0.85),
+                          ],
+                        ),
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20),
                         ),
                       ),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 40,
-                            height: 40,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                             ),
                             child: Icon(
-                              subject == null ? Icons.add : Icons.edit,
+                              subject == null ? Icons.add_rounded : Icons.edit_rounded,
                               color: Colors.white,
-                              size: 20,
+                              size: 22,
                             ),
                           ),
                           SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              subject == null
-                                  ? languageProvider.getTranslatedText({
-                                      'en': 'Add Subject',
-                                      'id': 'Tambah Mata Pelajaran',
-                                    })
-                                  : languageProvider.getTranslatedText({
-                                      'en': 'Edit Subject',
-                                      'id': 'Edit Mata Pelajaran',
-                                    }),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  subject == null
+                                      ? languageProvider.getTranslatedText({'en': 'Add Subject', 'id': 'Tambah Mata Pelajaran'})
+                                      : languageProvider.getTranslatedText({'en': 'Edit Subject', 'id': 'Edit Mata Pelajaran'}),
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  subject == null
+                                      ? languageProvider.getTranslatedText({'en': 'Fill in subject details', 'id': 'Isi detail mata pelajaran'})
+                                      : languageProvider.getTranslatedText({'en': 'Update subject information', 'id': 'Perbarui informasi mata pelajaran'}),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => Navigator.pop(context),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
                               ),
+                              child: Icon(Icons.close, color: Colors.white, size: 18),
                             ),
                           ),
                         ],
@@ -1113,7 +1142,8 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                           // Active Status Switch
                           Container(
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
+                              color: ColorUtils.slate50,
+                              border: Border.all(color: ColorUtils.slate200),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: SwitchListTile(
@@ -1125,10 +1155,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
+                                  color: ColorUtils.slate700,
                                 ),
                               ),
                               value: isActive,
-                              activeThumbColor: _getPrimaryColor(),
+                              activeThumbColor: ColorUtils.corporateBlue600,
+                              activeTrackColor: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
                               onChanged: (bool value) {
                                 setDialogState(() {
                                   isActive = value;
@@ -1136,9 +1168,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                               },
                               secondary: Icon(
                                 Icons.check_circle_outline,
-                                color: isActive
-                                    ? _getPrimaryColor()
-                                    : Colors.grey,
+                                color: isActive ? ColorUtils.corporateBlue600 : ColorUtils.slate400,
                               ),
                             ),
                           ),
@@ -1146,9 +1176,13 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                       ),
                     ),
 
-                    // Actions
+                    // Actions footer
                     Container(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -1158,12 +1192,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                padding: EdgeInsets.symmetric(vertical: 12),
-                                side: BorderSide(color: Colors.grey.shade300),
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                side: BorderSide(color: ColorUtils.slate300),
                               ),
                               child: Text(
                                 AppLocalizations.cancel.tr,
-                                style: TextStyle(color: Colors.grey.shade700),
+                                style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -1248,15 +1282,17 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: _getPrimaryColor(),
+                                backgroundColor: ColorUtils.corporateBlue600,
+                                foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                elevation: 2,
                               ),
                               child: Text(
                                 AppLocalizations.save.tr,
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -1282,9 +1318,9 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: ColorUtils.slate50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextField(
         controller: controller,
@@ -1292,8 +1328,14 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
         maxLines: maxLines,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 20),
+          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 14),
+          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 20),
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+          ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
       ),
@@ -1409,362 +1451,166 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
   Widget _buildSubjectCard(Map<String, dynamic> subject, int index) {
     final languageProvider = context.read<LanguageProvider>();
     final kelasCount = subject['jumlah_kelas'] ?? 0;
-    final kelasNames = subject['kelas_names']?.toString().split(',') ?? [];
+    final isActive = subject['is_active'] ?? true;
+    final avatarColor = ColorUtils.getColorForIndex(index);
+    final subjectCode = subject['code'] ?? subject['kode'] ?? '-';
+    final kelasNames = (subject['kelas_names']?.toString() ?? '')
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
 
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        final delay = index * 0.1;
+        final delay = (index * 0.1).clamp(0.0, 0.9);
         final animation = CurvedAnimation(
           parent: _animationController,
           curve: Interval(delay, 1.0, curve: Curves.easeOut),
         );
-
         return FadeTransition(
           opacity: animation,
           child: Transform.translate(
-            offset: Offset(0, 50 * (1 - animation.value)),
+            offset: Offset(0, 30 * (1 - animation.value)),
             child: child,
           ),
         );
       },
-      child: GestureDetector(
-        onTap: () => _navigateToClassManagement(subject),
-        child: Container(
-          margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _navigateToClassManagement(subject),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.3),
-                      blurRadius: 5,
-                      offset: Offset(0, 4),
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: ColorUtils.slate200, width: 1),
+          boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: () => _navigateToClassManagement(subject),
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // CircleAvatar with first letter
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: avatarColor.withValues(alpha: 0.15),
+                    child: Text(
+                      (subject['name'] ?? 'S')[0].toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: avatarColor,
+                      ),
                     ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // Strip biru di pinggir kiri
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 6,
+                  ),
+                  SizedBox(width: 12),
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Subject name
+                        Text(
+                          subject['name'] ?? 'No Name',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate900,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 6),
+                        // Code below name
+                        _buildInfoTag(Icons.code, subjectCode),
+                        SizedBox(height: 5),
+                        // Class count below code
+                        _buildInfoTag(
+                          Icons.class_outlined,
+                          '$kelasCount ${languageProvider.getTranslatedText({'en': 'Classes', 'id': 'Kelas'})}',
+                        ),
+                        // Class names list below count
+                        if (kelasNames.isNotEmpty) ...[
+                          SizedBox(height: 5),
+                          Wrap(
+                            spacing: 5,
+                            runSpacing: 4,
+                            children: kelasNames.map((name) => _buildInfoTag(Icons.school_outlined, name)).toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  // Right column: status chip + edit + delete
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Status chip top right
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _getPrimaryColor(),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
+                          color: isActive
+                              ? ColorUtils.success600.withValues(alpha: 0.1)
+                              : ColorUtils.error600.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isActive
+                                ? ColorUtils.success600.withValues(alpha: 0.3)
+                                : ColorUtils.error600.withValues(alpha: 0.3),
                           ),
                         ),
-                      ),
-                    ),
-
-                    // Background pattern effect
-                    Positioned(
-                      right: -8,
-                      top: -8,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-
-                    Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header dengan nama dan kode
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            subject['name'] ?? 'No Name',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Container(
-                                          margin: EdgeInsets.only(left: 8),
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                (subject['is_active'] ?? true)
-                                                ? Colors.green.withValues(
-                                                    alpha: 0.1,
-                                                  )
-                                                : Colors.red.withValues(
-                                                    alpha: 0.1,
-                                                  ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color:
-                                                  (subject['is_active'] ?? true)
-                                                  ? Colors.green.withValues(
-                                                      alpha: 0.3,
-                                                    )
-                                                  : Colors.red.withValues(
-                                                      alpha: 0.3,
-                                                    ),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            (subject['is_active'] ?? true)
-                                                ? languageProvider
-                                                      .getTranslatedText({
-                                                        'en': 'Active',
-                                                        'id': 'Aktif',
-                                                      })
-                                                : languageProvider
-                                                      .getTranslatedText({
-                                                        'en': 'Non-Active',
-                                                        'id': 'Tidak Aktif',
-                                                      }),
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color:
-                                                  (subject['is_active'] ?? true)
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Kode: ${subject['code'] ?? subject['kode'] ?? 'No Code'}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    SizedBox(height: 6),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _getPrimaryColor().withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: _getPrimaryColor().withValues(
-                                            alpha: 0.3,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        '$kelasCount ${languageProvider.getTranslatedText({'en': 'Classes', 'id': 'Kelas'})}',
-                                        style: TextStyle(
-                                          color: _getPrimaryColor(),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    if (subject['description'] != null &&
-                                        subject['description']
-                                            .toString()
-                                            .isNotEmpty) ...[
-                                      SizedBox(height: 4),
-                                      Text(
-                                        subject['description'],
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ],
-                                ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: isActive ? ColorUtils.success600 : ColorUtils.error600,
+                                shape: BoxShape.circle,
                               ),
-                            ],
-                          ),
-
-                          SizedBox(height: 12),
-
-                          // Informasi kelas
-                          if (kelasNames.isNotEmpty)
-                            Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: _getPrimaryColor().withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Icon(
-                                    Icons.class_,
-                                    color: _getPrimaryColor(),
-                                    size: 16,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Registered Classes',
-                                          'id': 'Kelas Terdaftar',
-                                        }),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey.shade600,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      SizedBox(height: 1),
-                                      Text(
-                                        kelasNames.take(2).join(', ') +
-                                            (kelasNames.length > 2
-                                                ? '...'
-                                                : ''),
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
                             ),
-
-                          // Informasi deskripsi
-                          if (subject['deskripsi'] != null &&
-                              subject['deskripsi'].isNotEmpty) ...[
-                            SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: _getPrimaryColor().withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Icon(
-                                    Icons.description,
-                                    color: _getPrimaryColor(),
-                                    size: 16,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Description',
-                                          'id': 'Deskripsi',
-                                        }),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey.shade600,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      SizedBox(height: 1),
-                                      Text(
-                                        subject['deskripsi'],
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.black,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            SizedBox(width: 4),
+                            Text(
+                              isActive
+                                  ? languageProvider.getTranslatedText({'en': 'Active', 'id': 'Aktif'})
+                                  : languageProvider.getTranslatedText({'en': 'Inactive', 'id': 'Tidak Aktif'}),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: isActive ? ColorUtils.success600 : ColorUtils.error600,
+                              ),
                             ),
                           ],
-
-                          SizedBox(height: 12),
-
-                          // Action buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _buildActionButton(
-                                icon: Icons.edit,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Edit',
-                                  'id': 'Edit',
-                                }),
-                                color: _getPrimaryColor(),
-                                backgroundColor: Colors.white,
-                                borderColor: _getPrimaryColor(),
-                                onPressed: () =>
-                                    _showAddEditDialog(subject: subject),
-                              ),
-                              SizedBox(width: 8),
-                              _buildActionButton(
-                                icon: Icons.delete,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Delete',
-                                  'id': 'Hapus',
-                                }),
-                                color: Colors.red,
-                                backgroundColor: Colors.white,
-                                borderColor: Colors.red,
-                                onPressed: () => _deleteSubject(subject),
-                              ),
-                            ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      // Edit + Delete side by side
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildCircleActionButton(
+                            icon: Icons.edit_outlined,
+                            color: _getPrimaryColor(),
+                            onPressed: () => _showAddEditDialog(subject: subject),
+                          ),
+                          SizedBox(width: 8),
+                          _buildCircleActionButton(
+                            icon: Icons.delete_outline,
+                            color: ColorUtils.error600,
+                            onPressed: () => _deleteSubject(subject),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -1773,55 +1619,64 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     );
   }
 
-  Widget _buildActionButton({
+  Widget _buildInfoTag(IconData icon, String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: ColorUtils.slate600),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCircleActionButton({
     required IconData icon,
-    required String label,
     required Color color,
-    Color? backgroundColor,
-    Color? borderColor,
     required VoidCallback onPressed,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onPressed,
+      borderRadius: BorderRadius.circular(18),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: borderColor ?? Colors.white.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: color),
-            SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.15),
+              blurRadius: 4,
+              offset: Offset(0, 2),
             ),
           ],
         ),
+        child: Icon(icon, size: 16, color: color),
       ),
     );
   }
 
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');
-  }
-
-  LinearGradient _getCardGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.7)],
-    );
   }
 
   @override
@@ -2460,38 +2315,73 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                   // Header dengan gradient
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.fromLTRB(20, 20, 16, 20),
                     decoration: BoxDecoration(
-                      gradient: _getCardGradient(),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          _getPrimaryColor(),
+                          _getPrimaryColor().withValues(alpha: 0.85),
+                        ],
+                      ),
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(20),
                         topRight: Radius.circular(20),
                       ),
                     ),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                           ),
                           child: Icon(
-                            Icons.add_circle,
+                            Icons.add_circle_outline_rounded,
                             color: Colors.white,
-                            size: 20,
+                            size: 22,
                           ),
                         ),
                         SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            'Tambah Kelas',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tambah Kelas',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Pilih kelas untuk ditambahkan',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => Navigator.pop(context),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
                             ),
+                            child: Icon(Icons.close, color: Colors.white, size: 18),
                           ),
                         ),
                       ],
@@ -2507,7 +2397,7 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                           'Pilih kelas yang ingin ditambahkan ke ${widget.subject['nama']}:',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: ColorUtils.slate600,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -2516,16 +2406,18 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                         // Search bar dalam dialog
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
+                            color: ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade200),
+                            border: Border.all(color: ColorUtils.slate200),
                           ),
                           child: TextField(
                             decoration: InputDecoration(
                               hintText: 'Cari kelas...',
+                              hintStyle: TextStyle(color: ColorUtils.slate400),
                               prefixIcon: Icon(
                                 Icons.search,
-                                color: _getPrimaryColor(),
+                                color: ColorUtils.corporateBlue600,
+                                size: 20,
                               ),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.symmetric(
@@ -2609,7 +2501,7 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                                                 'Wali: ${kelas['wali_kelas_nama']}',
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: Colors.grey[600],
+                                                  color: ColorUtils.slate500,
                                                 ),
                                               ),
                                           ],
@@ -2641,9 +2533,13 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                     ),
                   ),
 
-                  // Actions
+                  // Actions footer
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                    ),
                     child: Row(
                       children: [
                         Expanded(
@@ -2653,12 +2549,12 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              side: BorderSide(color: Colors.grey.shade300),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
                               'Batal',
-                              style: TextStyle(color: Colors.grey.shade700),
+                              style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -2670,15 +2566,17 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                               setState(() {});
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _getPrimaryColor(),
+                              backgroundColor: ColorUtils.corporateBlue600,
+                              foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              elevation: 2,
                             ),
                             child: Text(
                               'Lihat Semua',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -2747,10 +2645,22 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isAssigned
+                ? ColorUtils.corporateBlue600.withValues(alpha: 0.3)
+                : ColorUtils.slate200,
+            width: isAssigned ? 1.5 : 1,
+          ),
+          boxShadow: ColorUtils.corporateShadow(elevation: isAssigned ? 1.5 : 1.0),
+        ),
         child: Material(
           color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             onTap: () {
               if (isAssigned) {
                 _removeClassFromSubject(kelas);
@@ -2758,153 +2668,91 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                 _addClassToSubject(kelas);
               }
             },
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: isAssigned
-                    ? _getCardGradient()
-                    : LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Colors.grey.shade100, Colors.grey.shade50],
-                      ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: (isAssigned ? _getPrimaryColor() : Colors.grey)
-                        .withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-                border: Border.all(
-                  color: isAssigned
-                      ? _getPrimaryColor().withValues(alpha: 0.3)
-                      : Colors.grey.shade300,
-                  width: 1,
-                ),
-              ),
-              child: Stack(
+            child: Padding(
+              padding: EdgeInsets.all(14),
+              child: Row(
                 children: [
-                  // Background pattern untuk kelas yang sudah ditetapkan
-                  if (isAssigned)
-                    Positioned(
-                      right: -10,
-                      top: -10,
-                      child: Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
+                  // Icon container
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: isAssigned
+                          ? ColorUtils.corporateBlue600.withValues(alpha: 0.1)
+                          : ColorUtils.slate100,
+                      borderRadius: BorderRadius.circular(11),
+                      border: Border.all(
+                        color: isAssigned
+                            ? ColorUtils.corporateBlue600.withValues(alpha: 0.2)
+                            : ColorUtils.slate200,
                       ),
                     ),
+                    child: Icon(
+                      Icons.class_outlined,
+                      color: isAssigned ? ColorUtils.corporateBlue600 : ColorUtils.slate500,
+                      size: 22,
+                    ),
+                  ),
+                  SizedBox(width: 12),
 
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Row(
+                  // Informasi kelas
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Icon kelas
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isAssigned
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : _getPrimaryColor().withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.class_,
-                            color: isAssigned
-                                ? Colors.white
-                                : _getPrimaryColor(),
-                            size: 20,
+                        Text(
+                          kelas['name'] ?? 'Kelas',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate900,
                           ),
                         ),
-                        SizedBox(width: 12),
-
-                        // Informasi kelas
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                kelas['name'] ?? 'Kelas',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: isAssigned
-                                      ? Colors.white
-                                      : Colors.black87,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              if (kelas['tingkat'] != null)
-                                Text(
-                                  'Tingkat: ${kelas['tingkat']}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isAssigned
-                                        ? Colors.white.withValues(alpha: 0.8)
-                                        : Colors.grey[600],
-                                  ),
-                                ),
-                              if (kelas['wali_kelas_nama'] != null)
-                                Text(
-                                  'Wali: ${kelas['wali_kelas_nama']}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isAssigned
-                                        ? Colors.white.withValues(alpha: 0.7)
-                                        : Colors.grey[500],
-                                  ),
-                                ),
-                            ],
-                          ),
+                        SizedBox(height: 4),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            if (kelas['tingkat'] != null)
+                              _buildClassInfoTag(Icons.layers_outlined, 'Tingkat ${kelas['tingkat']}'),
+                            if (kelas['wali_kelas_nama'] != null)
+                              _buildClassInfoTag(Icons.person_outline, kelas['wali_kelas_nama']),
+                          ],
                         ),
+                      ],
+                    ),
+                  ),
 
-                        // Status indicator
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isAssigned
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isAssigned
-                                  ? Colors.white.withValues(alpha: 0.3)
-                                  : Colors.grey.shade300,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isAssigned
-                                    ? Icons.check_circle
-                                    : Icons.add_circle,
-                                size: 12,
-                                color: isAssigned
-                                    ? Colors.white
-                                    : Colors.grey.shade600,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                isAssigned ? 'Terdaftar' : 'Tambahkan',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: isAssigned
-                                      ? Colors.white
-                                      : Colors.grey.shade600,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                  SizedBox(width: 8),
+                  // Status indicator
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isAssigned
+                          ? ColorUtils.success600.withValues(alpha: 0.1)
+                          : ColorUtils.corporateBlue600.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isAssigned
+                            ? ColorUtils.success600.withValues(alpha: 0.3)
+                            : ColorUtils.corporateBlue600.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isAssigned ? Icons.check_circle_outline : Icons.add_circle_outline,
+                          size: 14,
+                          color: isAssigned ? ColorUtils.success600 : ColorUtils.corporateBlue600,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          isAssigned ? 'Terdaftar' : 'Tambahkan',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isAssigned ? ColorUtils.success600 : ColorUtils.corporateBlue600,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -2920,14 +2768,34 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
   }
 
   Color _getPrimaryColor() {
-    return Color(0xFF4361EE); // Blue untuk admin
+    return ColorUtils.getRoleColor('admin');
   }
 
-  LinearGradient _getCardGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.7)],
+  Widget _buildClassInfoTag(IconData icon, String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: ColorUtils.slate600),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -2948,13 +2816,13 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
     ];
 
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: ColorUtils.slate50,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.subject['nama'] ?? 'Subject',
+              widget.subject['name'] ?? widget.subject['nama'] ?? 'Subject',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -2962,7 +2830,7 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
               ),
             ),
             Text(
-              'Kelas Management',
+              'Manajemen Kelas',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.white.withValues(alpha: 0.8),
@@ -2970,12 +2838,12 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
             ),
           ],
         ),
-        backgroundColor: _getPrimaryColor(),
+        backgroundColor: ColorUtils.corporateBlue600,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: _loadData,
             tooltip: 'Refresh',
           ),
@@ -2990,15 +2858,16 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                   margin: EdgeInsets.all(16),
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: _getCardGradient(),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        ColorUtils.corporateBlue600,
+                        ColorUtils.corporateBlue600.withValues(alpha: 0.75),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getPrimaryColor().withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+                    boxShadow: ColorUtils.corporateShadow(elevation: 2.0),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -3060,7 +2929,7 @@ class SubjectClassManagementPageState extends State<SubjectClassManagementPage>
                         Text(
                           '${filteredClasses.length} kelas ditemukan',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: ColorUtils.slate500,
                             fontSize: 12,
                           ),
                         ),

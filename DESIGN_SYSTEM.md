@@ -1,8 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-17
+**Version:** 1.4
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard redesign (complete)
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2125,6 +2126,7 @@ Container(
 ✅ **Student Management** - Gradient header (#7), compact list cards (#8), form dialog (#9), detail popup (#10), filter sheet (#11)
 ✅ **Teacher Management** - Gradient header (#7), compact list cards (#8) with vertical info stacking, form dialog (#9), filter sheet (#11), full-screen detail (#12)
 ✅ **Class Management** - Gradient header (#7), compact list cards (#8) with `_buildInfoTag`, form dialog (#9) with grade/teacher dropdowns, filter sheet (#11), detail popup (#10)
+✅ **Subject Management** - Gradient header (#7), compact list cards (#8) with CircleAvatar + `_buildInfoTag` + `_buildCircleActionButton`, form dialog (#9) with Autocomplete + SwitchListTile, filter sheet (#11) with 4 sections; SubjectClassManagementPage with modern class assignment cards
 
 ### When Applying to New Pages
 1. **Read this guide first**
