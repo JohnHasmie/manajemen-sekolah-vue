@@ -4,6 +4,7 @@ import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -91,7 +92,13 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
     bool isMultiline = false,
   }) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: ColorUtils.slate100),
+      ),
       child: Row(
         crossAxisAlignment: isMultiline
             ? CrossAxisAlignment.start
@@ -101,13 +108,16 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Color(0xFF4361EE).withOpacity(0.1),
+              color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
+              ),
             ),
             child: Icon(
               _getIconForLabel(label),
               size: 18,
-              color: Color(0xFF4361EE),
+              color: ColorUtils.corporateBlue600,
             ),
           ),
           SizedBox(width: 12),
@@ -118,32 +128,33 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
+                    fontSize: 11,
+                    color: ColorUtils.slate500,
                     fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 3),
                 if (value is List<String>)
                   Wrap(
-                    spacing: 8,
+                    spacing: 6,
                     runSpacing: 4,
                     children: value.map((item) {
-                      return Chip(
-                        label: Text(
+                      return Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: ColorUtils.corporateBlue600.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: ColorUtils.corporateBlue600.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Text(
                           item,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF4361EE),
-                          ),
-                        ),
-                        backgroundColor: Color(0xFF4361EE).withOpacity(0.05),
-                        padding: EdgeInsets.zero,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(
-                            color: Color(0xFF4361EE).withOpacity(0.2),
+                            color: ColorUtils.corporateBlue600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       );
@@ -151,18 +162,45 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
                   )
                 else
                   Text(
-                    value.toString().isNotEmpty
-                        ? value.toString()
-                        : 'Tidak ada',
+                    value.toString().isNotEmpty ? value.toString() : 'Tidak ada',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade800,
-                      fontWeight: FontWeight.w500,
+                      color: ColorUtils.slate800,
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: isMultiline ? 3 : 1,
                     overflow: TextOverflow.ellipsis,
                   ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(IconData icon, String title) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(color: ColorUtils.corporateBlue600, width: 3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: ColorUtils.corporateBlue600),
+          SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate800,
+              letterSpacing: 0.3,
             ),
           ),
         ],
@@ -280,295 +318,324 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
       }
     }
 
+    final nameStr = teacher['name'] ?? '';
+    final nameHash = nameStr.codeUnits.fold(0, (sum, c) => sum + c);
+    final avatarColor = ColorUtils.getColorForIndex(nameHash);
+    final initial = nameStr.isNotEmpty ? nameStr[0].toUpperCase() : '?';
+    final nip = teacher['employee_number'] ?? '';
+
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: Text(
-          'Detail Guru',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Color(0xFF4361EE),
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.white),
-            onPressed: _loadTeacherDetail,
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF4361EE),
-                          Color(0xFF4361EE).withOpacity(0.7),
-                        ],
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      strokeWidth: 3,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Memuat detail guru...',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                  ),
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        children: [
+          // --- Gradient Header (Pattern #7) ---
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  ColorUtils.corporateBlue600,
+                  ColorUtils.corporateBlue600.withValues(alpha: 0.8),
                 ],
               ),
-            )
-          : _errorMessage != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
+              boxShadow: [
+                BoxShadow(
+                  color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.red.withOpacity(0.1),
-                          Colors.red.withOpacity(0.05),
-                        ],
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Detail Guru',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.error_outline_rounded,
-                      size: 40,
-                      color: Colors.red.withOpacity(0.6),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Terjadi kesalahan:',
-                    style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _loadTeacherDetail,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF4361EE),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      SizedBox(height: 2),
+                      Text(
+                        nameStr.isNotEmpty ? nameStr : 'Informasi lengkap guru',
+                        style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                    ),
-                    child: Text(
-                      'Coba Lagi',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            )
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header dengan avatar
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(20),
+                ),
+                GestureDetector(
+                  onTap: _loadTeacherDetail,
+                  child: Container(
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF4361EE),
-                          Color(0xFF4361EE).withOpacity(0.8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF4361EE).withOpacity(0.3),
-                          blurRadius: 15,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child: Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // --- Body (conditional) ---
+          Expanded(
+            child: _isLoading
+                ? Center(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Color(0xFF4361EE),
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(ColorUtils.corporateBlue600),
+                            strokeWidth: 3,
                           ),
                         ),
                         SizedBox(height: 16),
                         Text(
-                          teacher['name'],
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                          'Memuat detail guru...',
+                          style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  )
+                : _errorMessage != null
+                ? Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: ColorUtils.error600.withValues(alpha: 0.08),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: ColorUtils.error600.withValues(alpha: 0.2)),
+                            ),
+                            child: Icon(Icons.error_outline_rounded, size: 36, color: ColorUtils.error600),
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Terjadi kesalahan',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            _errorMessage!,
+                            style: TextStyle(color: ColorUtils.slate600, fontSize: 13),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: _loadTeacherDetail,
+                            icon: Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+                            label: Text('Coba Lagi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorUtils.corporateBlue600,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              elevation: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : SingleChildScrollView(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // --- Profile Header Card ---
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.fromLTRB(20, 24, 20, 20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                ColorUtils.corporateBlue600,
+                                ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: ColorUtils.corporateShadow(elevation: 2.0),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 72,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: avatarColor,
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 3),
+                                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: Offset(0, 4))],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    initial,
+                                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                nameStr,
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (nip.isNotEmpty)
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                                      ),
+                                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                        Icon(Icons.badge_outlined, size: 12, color: Colors.white),
+                                        SizedBox(width: 4),
+                                        Text('NIP: $nip', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
+                                      ]),
+                                    ),
+                                  if (homeroomStatus != '-') ...[
+                                    SizedBox(width: 8),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                                      ),
+                                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                        Icon(Icons.groups_outlined, size: 12, color: Colors.white),
+                                        SizedBox(width: 4),
+                                        Text('Wali Kelas', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
+                                      ]),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+
+                        // --- Personal Information Card ---
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
                             color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: ColorUtils.slate200),
+                            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          teacher['employee_number'] ?? 'Tidak ada NIP',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Informasi Pribadi
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Informasi Pribadi',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF4361EE),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionHeader(Icons.person_rounded, 'Informasi Pribadi'),
+                              _buildInfoRow('Nama', teacher['name']),
+                              _buildInfoRow('NIP', teacher['employee_number'] ?? 'Tidak ada'),
+                              _buildInfoRow('Email', teacher['user']?['email'] ?? teacher['email']),
+                            ],
                           ),
                         ),
                         SizedBox(height: 12),
-                        _buildInfoRow('Nama', teacher['name']),
-                        _buildInfoRow(
-                          'NIP',
-                          teacher['employee_number'] ?? 'Tidak ada',
-                        ),
-                        _buildInfoRow(
-                          'Email',
-                          teacher['user']?['email'] ?? teacher['email'],
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 16),
 
-                  // Informasi Mengajar
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Informasi Mengajar',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF4361EE),
+                        // --- Teaching Information Card ---
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: ColorUtils.slate200),
+                            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionHeader(Icons.school_rounded, 'Informasi Mengajar'),
+                              _buildInfoRow(
+                                'Kelas',
+                                teachingClassNames.isNotEmpty ? teachingClassNames : 'Belum dijadwalkan',
+                                isMultiline: true,
+                              ),
+                              _buildInfoRow(
+                                'Mata Pelajaran',
+                                displaySubjectNames.isNotEmpty ? displaySubjectNames : 'Belum ditugaskan',
+                                isMultiline: true,
+                              ),
+                              _buildInfoRow('Role', teacher['role']?.toUpperCase() ?? 'GURU'),
+                              _buildInfoRow('Status Wali Kelas', homeroomStatus),
+                            ],
                           ),
                         ),
-                        SizedBox(height: 12),
-                        _buildInfoRow(
-                          'Kelas',
-                          teachingClassNames.isNotEmpty
-                              ? teachingClassNames
-                              : 'Belum dijadwalkan',
-                          isMultiline: true,
+                        SizedBox(height: 24),
+
+                        // --- Back Button ---
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => Navigator.pop(context),
+                            icon: Icon(Icons.arrow_back_rounded, size: 18, color: ColorUtils.slate700),
+                            label: Text(
+                              'Kembali ke Daftar Guru',
+                              style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              side: BorderSide(color: ColorUtils.slate300),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
                         ),
-                        _buildInfoRow(
-                          'Mata Pelajaran',
-                          displaySubjectNames.isNotEmpty
-                              ? displaySubjectNames
-                              : 'Belum ditugaskan',
-                          isMultiline: true,
-                        ),
-                        _buildInfoRow(
-                          'Role',
-                          teacher['role']?.toUpperCase() ?? 'GURU',
-                        ),
-                        _buildInfoRow('Status Wali Kelas', homeroomStatus),
+                        SizedBox(height: 16),
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
-
-                  SizedBox(height: 32),
-
-                  // Tombol Kembali
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF4361EE),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: Text(
-                        'Kembali ke Daftar Guru',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ),
+        ],
+      ),
     );
   }
 }

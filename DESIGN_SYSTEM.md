@@ -960,11 +960,37 @@ Widget _buildInfoTag(IconData icon, String text) {
           color: ColorUtils.slate700,
           fontWeight: FontWeight.w500,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     ]),
   );
 }
 ```
+
+#### Info Tag Layout: Horizontal vs Vertical
+When all tags contain **short text** (class name, gender, 1-2 words), use a horizontal `Row`:
+```dart
+Row(children: [
+  _buildInfoTag(Icons.school_outlined, classLabel),
+  SizedBox(width: 6),
+  _buildInfoTag(Icons.person_outline, genderLabel),
+])
+```
+
+When any tag may contain **long text** (email, full name, address), stack vertically in a `Column`:
+```dart
+Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    _buildInfoTag(Icons.class_outlined, classLabel),  // short: first
+    SizedBox(height: 4),
+    _buildInfoTag(Icons.email_outlined, email),       // long: last
+  ],
+)
+```
+
+> ⚠️ **Never wrap `_buildInfoTag` in `Flexible` inside a `Column`** — `Flexible` in an unbounded-height Column causes a `RenderFlex` crash. The `Expanded` parent already constrains the Column's width, so the text's `overflow: ellipsis` handles truncation automatically.
 
 #### Avatar Color Coding
 ```dart
@@ -1628,6 +1654,237 @@ Widget _buildFilterSectionHeader(IconData icon, String title) {
 
 ---
 
+### 12. Full-Screen Detail Page
+
+#### Usage
+Use for detail pages that require more space than a popup allows — e.g., teacher profiles with subjects, class lists, and contact info. Navigated to via route (not showDialog). Complements Pattern #10 (Detail Popup) for data-rich entities.
+
+#### Structure
+```dart
+Scaffold(
+  backgroundColor: ColorUtils.slate50,
+  body: Column(
+    children: [
+      // --- Pattern #7 Gradient Header ---
+      _buildGradientHeader(context),
+
+      // --- Scrollable Content ---
+      Expanded(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Profile header card
+              _buildProfileCard(details),
+              SizedBox(height: 16),
+
+              // Section cards
+              _buildSectionCard(
+                icon: Icons.info_outline,
+                title: 'Personal Information',
+                children: [
+                  _buildInfoRow(Icons.badge, 'NIP', nip),
+                  _buildInfoRow(Icons.email, 'Email', email),
+                  // ...
+                ],
+              ),
+              SizedBox(height: 16),
+
+              // Back button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.arrow_back, size: 18, color: ColorUtils.slate700),
+                  label: Text('Back', style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600)),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 13),
+                    side: BorderSide(color: ColorUtils.slate300),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    ],
+  ),
+)
+```
+
+#### Profile Card
+```dart
+Widget _buildProfileCard(Map<String, dynamic> details) {
+  final name = details['name'] ?? '';
+  final nameHash = name.codeUnits.fold(0, (sum, c) => sum + c);
+  final avatarColor = ColorUtils.getColorForIndex(nameHash);
+
+  return Container(
+    width: double.infinity,
+    padding: EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [ColorUtils.corporateBlue600, ColorUtils.corporateBlue600.withValues(alpha: 0.8)],
+      ),
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: ColorUtils.corporateShadow(elevation: 2.0),
+    ),
+    child: Column(
+      children: [
+        // Avatar with white border
+        Container(
+          width: 72, height: 72,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: avatarColor,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 3),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: Offset(0, 4))],
+          ),
+          child: Center(
+            child: Text(
+              name.isNotEmpty ? name[0].toUpperCase() : '?',
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+        ),
+        SizedBox(height: 12),
+        Text(name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+        SizedBox(height: 4),
+        Text(details['role'] ?? '', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85))),
+        SizedBox(height: 10),
+        // Badge chips row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeaderBadge(Icons.badge_outlined, details['nip'] ?? ''),
+            if ((details['homeroom_class'] ?? '') != '') ...[
+              SizedBox(width: 8),
+              _buildHeaderBadge(Icons.school_outlined, details['homeroom_class']),
+            ],
+          ],
+        ),
+      ],
+    ),
+  );
+}
+```
+
+#### Section Card
+```dart
+Widget _buildSectionCard({required IconData icon, required String title, required List<Widget> children}) {
+  return Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: ColorUtils.slate200),
+      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header with left border accent
+        _buildSectionHeader(icon, title),
+        Divider(height: 1, color: ColorUtils.slate100),
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(children: children),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+#### Section Header Helper
+```dart
+Widget _buildSectionHeader(IconData icon, String title) {
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: ColorUtils.slate50,
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(16),
+        topRight: Radius.circular(16),
+      ),
+      border: Border(left: BorderSide(color: ColorUtils.corporateBlue600, width: 3)),
+    ),
+    child: Row(children: [
+      Icon(icon, size: 16, color: ColorUtils.corporateBlue600),
+      SizedBox(width: 8),
+      Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800)),
+    ]),
+  );
+}
+```
+
+#### Info Row Helper (`_buildInfoRow`)
+```dart
+Widget _buildInfoRow(IconData icon, String label, String value) {
+  return Container(
+    margin: EdgeInsets.only(bottom: 10),
+    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(
+      color: ColorUtils.slate50,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: ColorUtils.slate100),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+            color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ColorUtils.corporateBlue600.withValues(alpha: 0.15)),
+          ),
+          child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
+        ),
+        SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500, letterSpacing: 0.3)),
+            SizedBox(height: 3),
+            Text(value,
+              style: TextStyle(fontSize: 14, color: ColorUtils.slate800, fontWeight: FontWeight.w600),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ]),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+#### Specifications
+- **Scaffold bg:** `ColorUtils.slate50`
+- **Header:** Pattern #7 gradient (same as management screens)
+- **Profile card:** same avatar specs as Pattern #10 (72px, name-hash color, 3px white border)
+- **Profile card gradient:** `corporateBlue600` → `corporateBlue600 * 0.8`, 16px border radius
+- **Section card:** white, `slate200` border, `corporateShadow(1.0)`, 16px border radius
+- **Section header accent:** 3px `corporateBlue600` left border, `slate50` bg
+- **Info row:** identical to `_buildDetailItem` in Pattern #10
+- **Back button:** full-width `OutlinedButton.icon`, `slate300` border, 12px border radius
+- **Back button bottom padding:** 24px below
+
+#### When to Use vs Pattern #10
+| Pattern #10 (Popup) | Pattern #12 (Full Screen) |
+|---|---|
+| Few fields (≤8) | Many fields (>8) |
+| Quick reference | Deep inspection |
+| Triggered from any screen | Has its own route |
+| Overlay dismissable | Back-navigable |
+| No list data | Can show lists (subjects, classes) |
+
+---
+
 ## 🎬 Animation Guidelines
 
 ### Standard Durations
@@ -1866,6 +2123,7 @@ Container(
 ✅ **Dashboard** - Complete Kamil Edu design with hero, quick actions, overview cards, categorized menu
 ✅ **Kelola Data (Admin Data Management)** - Gradient header + MenuItemCard list
 ✅ **Student Management** - Gradient header (#7), compact list cards (#8), form dialog (#9), detail popup (#10), filter sheet (#11)
+✅ **Teacher Management** - Gradient header (#7), compact list cards (#8) with vertical info stacking, form dialog (#9), filter sheet (#11), full-screen detail (#12)
 
 ### When Applying to New Pages
 1. **Read this guide first**
@@ -1888,6 +2146,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 1.1
+**Design System Version:** 1.2
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
