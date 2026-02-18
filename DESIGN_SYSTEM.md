@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-18
-**Version:** 1.7
+**Version:** 1.8
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2475,6 +2475,15 @@ Container(
 ✅ **Class Management** - Gradient header (#7), compact list cards (#8) with `_buildInfoTag`, add/edit form bottom sheet (#13) with grade/teacher dropdowns + StatefulBuilder inside Consumer, filter sheet (#11), detail popup (#10)
 ✅ **Subject Management** - Gradient header (#7), compact list cards (#8) with CircleAvatar + `_buildInfoTag` + `_buildCircleActionButton`, add/edit form bottom sheet (#13) with Autocomplete + SwitchListTile, filter sheet (#11) with 4 sections; SubjectClassManagementPage with modern class assignment cards
 ✅ **Teaching Schedule Management** - Gradient header (#7), compact list cards (#8) with colored icon container + `_buildInfoTag` (class/day/time) + `_buildCircleActionButton`, add/edit form bottom sheet (#13, via ScheduleFormDialog component), detail dialog (#10), filter sheet (#11), table view with styled info bar + SfDataGrid card
+✅ **Admin Announcement** - Full redesign (v1.8 final):
+  - **Header** (#7): `_getCardGradient()` fixed to `[primaryColor, primaryColor.withValues(alpha:0.85)]` — solid admin-blue, no purple bleed; search bar + filter button with active dot indicator; active filter chips (`visualDensity: compact`, white text on gradient); clear-all button uses `ColorUtils.error600`
+  - **List cards** (#8): compact horizontal `Row` layout — 44×44 colored icon container (accentColor for priority) on left, title + 2-line content preview + `_buildInfoTag` chips in middle, icon-only action buttons (`edit`/`delete` 28×28 squares) on right column; unread dot above action buttons; no tall info rows
+  - **`_buildInfoTag`**: reusable pill chip `px:6 py:3` with icon(10) + text(10), optional `tagColor` for priority/orange variant; matches Pattern #8 chip from student/teacher management
+  - **Filter sheet** (#11): 75% height, gradient header, Priority/Target/Status FilterChip sections with `ColorUtils.slate*` colors; Cancel + Apply footer
+  - **Add/Edit form** (#13): `showModalBottomSheet(isScrollControlled: true)`, 92% height, gradient header + subtitle + X close, `Expanded(SingleChildScrollView(Column))` form body, slate-styled `_buildDialogTextField` / `_buildPrioritasDropdown` / `_buildRoleTargetDropdown` / `_buildDateField` helpers, `_buildFilePicker` with `ColorUtils.slate*` throughout
+  - **Delete dialog** (#14): inline Pattern #14 red gradient danger dialog — no `ConfirmationDialog` import
+  - **Snackbars**: `ColorUtils.success600` / `ColorUtils.error600` replacing `Colors.green` / `Colors.red`
+  - **Zero raw colors**: `Colors.grey`, `withOpacity`, `Color(0xFF...)`, `Colors.red/green` fully eliminated
 ✅ **Grade (Nilai) Page** - Four classes redesigned:
   - `GradePage`: Gradient header (#7) with search embedded, class/subject selection cards (#8) with color-coded avatar + `_buildInfoTag`
   - `GradeBookPage`: Gradient header (#7) with inline export + filter action buttons (40×40 semi-transparent), filter bottom sheet (#11) with toggle chips, styled assessment detail dialog (#10), danger confirm dialog (#14) for delete
@@ -2502,6 +2511,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 1.7
+**Design System Version:** 1.8
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
