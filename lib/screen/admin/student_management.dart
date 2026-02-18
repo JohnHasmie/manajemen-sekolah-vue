@@ -1081,18 +1081,26 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
     final isEdit = student != null;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => Consumer<LanguageProvider>(
         builder: (context, languageProvider, child) {
-          return Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: SingleChildScrollView(
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.92,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Header dengan gradient
                   Container(
@@ -1101,8 +1109,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                     decoration: BoxDecoration(
                       gradient: _getCardGradient(),
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
                       ),
                     ),
                     child: Row(
@@ -1179,11 +1187,12 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                     ),
                   ),
 
-                  Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                         _buildDialogTextField(
                           controller: nameController,
                           label: languageProvider.getTranslatedText({
@@ -1341,7 +1350,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                           icon: Icons.phone,
                           keyboardType: TextInputType.phone,
                         ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 

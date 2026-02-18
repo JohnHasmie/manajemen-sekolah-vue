@@ -908,20 +908,27 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
     // Default to true for new subjects, or use existing value
     bool isActive = subject?['is_active'] ?? true;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Consumer<LanguageProvider>(
-          // Use StatefulBuilder to manage dialog state
           builder: (context, languageProvider, child) {
-            return Dialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
-              child: SingleChildScrollView(
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.92,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Header
                     Container(
@@ -937,8 +944,8 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                           ],
                         ),
                         borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
+                          topLeft: Radius.circular(24),
+                          topRight: Radius.circular(24),
                         ),
                       ),
                       child: Row(
@@ -1003,11 +1010,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                       ),
                     ),
 
-                    Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                           _buildDialogTextField(
                             controller: codeController,
                             label: languageProvider.getTranslatedText({
@@ -1172,7 +1180,8 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen>
                               ),
                             ),
                           ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
 

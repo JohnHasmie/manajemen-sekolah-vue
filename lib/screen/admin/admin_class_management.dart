@@ -761,20 +761,28 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       }
     }
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => Consumer<LanguageProvider>(
         builder: (context, languageProvider, child) {
           return StatefulBuilder(
             builder: (context, setDialogState) {
-              return Dialog(
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-                child: SingleChildScrollView(
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.92,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // Header gradient (Pattern #9)
                       Container(
@@ -790,8 +798,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                             ],
                           ),
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20),
+                            topLeft: Radius.circular(24),
+                            topRight: Radius.circular(24),
                           ),
                         ),
                         child: Row(
@@ -844,11 +852,12 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                         ),
                       ),
 
-                      Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                             _buildDialogTextField(
                               controller: nameController,
                               label: languageProvider.getTranslatedText({
@@ -877,7 +886,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                               },
                               languageProvider: languageProvider,
                             ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
 

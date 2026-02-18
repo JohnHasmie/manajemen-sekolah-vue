@@ -1,7 +1,7 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
-**Last Updated:** 2026-02-17
-**Version:** 1.5
+**Last Updated:** 2026-02-18
+**Version:** 1.6
 **Reference:** Kamil Edu Dashboard Design
 **Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management
 
@@ -1884,6 +1884,235 @@ Widget _buildInfoRow(IconData icon, String label, String value) {
 | Overlay dismissable | Back-navigable |
 | No list data | Can show lists (subjects, classes) |
 
+### 13. Add/Edit Form Bottom Sheet
+
+#### Usage
+Use for add/edit forms in management screens. Slides up from the bottom at 92% screen height — preferred over center dialogs (Pattern #9) when the form has many fields, uses dropdowns, or needs keyboard-aware scrolling.
+
+Applied to: Student Management, Teacher Management, Class Management, Subject Management.
+
+#### Key Differences from Pattern #9 (Form Dialog)
+| | Pattern #9 (Dialog) | Pattern #13 (Bottom Sheet) |
+|---|---|---|
+| Trigger | `showDialog` | `showModalBottomSheet` |
+| Presentation | Centered overlay | Slides from bottom |
+| Height | Intrinsic (min content) | 92% screen height |
+| Form body | `Padding(Column)` | `Expanded(SingleChildScrollView(...))` |
+| Header radius | 20px | 24px (matches outer container) |
+| Keyboard | Dialog auto-adjusts | Requires `Padding(viewInsets.bottom)` |
+| Ideal for | ≤ 6 simple fields | Many fields / dropdowns / long forms |
+
+#### Structure
+```dart
+showModalBottomSheet(
+  context: context,
+  isScrollControlled: true,
+  backgroundColor: Colors.transparent,
+  builder: (context) => Padding(
+    // Lift sheet above keyboard
+    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+    child: Container(
+      height: MediaQuery.of(context).size.height * 0.92,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      child: Column(
+        children: [
+          // --- Gradient Header ---
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),  // must match outer container
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Icon container
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                  ),
+                  child: Icon(isEdit ? Icons.edit_rounded : Icons.add_rounded,
+                      color: Colors.white, size: 22),
+                ),
+                SizedBox(width: 14),
+                // Title + subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(isEdit ? 'Edit Record' : 'Add Record',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      SizedBox(height: 2),
+                      Text(isEdit ? 'Update record information' : 'Fill in record information',
+                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                    ],
+                  ),
+                ),
+                // X close button (32×32 circle)
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 32, height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // --- Scrollable Form Body ---
+          // NOTE: Use Expanded + SingleChildScrollView (not Padding + Column)
+          // This is the critical structural difference from Pattern #9.
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildFormTextField(/* field 1 */),
+                  SizedBox(height: 12),
+                  _buildFormDropdown(/* field 2 */),
+                  SizedBox(height: 12),
+                  // ... more fields
+                ],
+              ),
+            ),
+          ),
+
+          // --- Footer Buttons ---
+          Container(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: ColorUtils.slate100)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 13),
+                      side: BorderSide(color: ColorUtils.slate300),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text('Cancel',
+                        style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600, fontSize: 14)),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onSave,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorUtils.corporateBlue600,
+                      padding: EdgeInsets.symmetric(vertical: 13),
+                      elevation: 2,
+                      shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(isEdit ? 'Update' : 'Save',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
+);
+```
+
+#### Stateful Dropdowns Inside Bottom Sheet
+When the form contains dropdowns that need local state (e.g., selected class, selected teacher), wrap the sheet body in `StatefulBuilder` to enable `setState` without rebuilding the entire screen:
+
+```dart
+showModalBottomSheet(
+  context: context,
+  isScrollControlled: true,
+  backgroundColor: Colors.transparent,
+  builder: (context) => StatefulBuilder(
+    builder: (context, setModalState) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        // ... same structure
+        // Use setModalState(() { ... }) instead of setState(() { ... })
+      ),
+    ),
+  ),
+);
+```
+
+If the bottom sheet also needs Provider/Consumer data (e.g., for loading dropdown items), wrap `StatefulBuilder` inside `Consumer`, or vice versa depending on which is the outer builder:
+```dart
+builder: (context) => Consumer<MyProvider>(
+  builder: (context, provider, _) => StatefulBuilder(
+    builder: (context, setModalState) => Padding(/* ... */),
+  ),
+),
+```
+
+#### Critical Bracket Rule
+When converting from Pattern #9 (dialog) to Pattern #13 (bottom sheet), the form body changes from:
+```dart
+// Pattern #9: 2 closing brackets after last field
+Padding(
+  padding: EdgeInsets.all(20),
+  child: Column(
+    children: [/* fields */],
+  ),  // ← closes Column
+),   // ← closes Padding
+```
+to:
+```dart
+// Pattern #13: 3 closing brackets after last field
+Expanded(
+  child: SingleChildScrollView(
+    padding: EdgeInsets.all(20),
+    child: Column(
+      children: [/* fields */],
+    ),  // ← closes Column
+  ),   // ← closes SingleChildScrollView
+),    // ← closes Expanded   ← THIS EXTRA BRACKET IS REQUIRED
+```
+Missing this third bracket causes `"Expected to find ')'"` and `"Too many positional arguments"` errors in the footer section.
+
+#### Specifications
+- **`showModalBottomSheet` params:** `isScrollControlled: true`, `backgroundColor: Colors.transparent`
+- **Outer padding:** `EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom)` — keyboard-aware
+- **Sheet height:** `MediaQuery.of(context).size.height * 0.92`
+- **Sheet border radius (top):** 24px
+- **Header border radius:** must match sheet — 24px (not 20px)
+- **Header icon container:** 44×44px, 12px radius, `white * 0.2` bg + `white * 0.3` border
+- **Close button:** 32×32px circle, `white * 0.2` bg
+- **Form body:** `Expanded(SingleChildScrollView(...))` — never bare `Padding(Column(...))`
+- **Field spacing:** 12px `SizedBox` between fields
+- **Footer divider:** `slate100` top border
+- **Footer padding:** `fromLTRB(16, 8, 16, 16)`
+- **Cancel button:** `slate300` border, `slate700` text, 13px vertical padding
+- **Save button:** `corporateBlue600` bg, elevation 2, 13px vertical padding
+
 ---
 
 ## 🎬 Animation Guidelines
@@ -2123,11 +2352,11 @@ Container(
 ### Already Redesigned (Reference Examples)
 ✅ **Dashboard** - Complete Kamil Edu design with hero, quick actions, overview cards, categorized menu
 ✅ **Kelola Data (Admin Data Management)** - Gradient header + MenuItemCard list
-✅ **Student Management** - Gradient header (#7), compact list cards (#8), form dialog (#9), detail popup (#10), filter sheet (#11)
-✅ **Teacher Management** - Gradient header (#7), compact list cards (#8) with vertical info stacking, form dialog (#9), filter sheet (#11), full-screen detail (#12)
-✅ **Class Management** - Gradient header (#7), compact list cards (#8) with `_buildInfoTag`, form dialog (#9) with grade/teacher dropdowns, filter sheet (#11), detail popup (#10)
-✅ **Subject Management** - Gradient header (#7), compact list cards (#8) with CircleAvatar + `_buildInfoTag` + `_buildCircleActionButton`, form dialog (#9) with Autocomplete + SwitchListTile, filter sheet (#11) with 4 sections; SubjectClassManagementPage with modern class assignment cards
-✅ **Teaching Schedule Management** - Gradient header (#7), compact list cards (#8) with colored icon container + `_buildInfoTag` (class/day/time) + `_buildCircleActionButton`, filter sheet (#11) with Day/Class/Semester/Lesson Hour sections
+✅ **Student Management** - Gradient header (#7), compact list cards (#8), add/edit form bottom sheet (#13), detail popup (#10), filter sheet (#11)
+✅ **Teacher Management** - Gradient header (#7), compact list cards (#8) with vertical info stacking, add/edit form bottom sheet (#13), filter sheet (#11), full-screen detail (#12)
+✅ **Class Management** - Gradient header (#7), compact list cards (#8) with `_buildInfoTag`, add/edit form bottom sheet (#13) with grade/teacher dropdowns + StatefulBuilder inside Consumer, filter sheet (#11), detail popup (#10)
+✅ **Subject Management** - Gradient header (#7), compact list cards (#8) with CircleAvatar + `_buildInfoTag` + `_buildCircleActionButton`, add/edit form bottom sheet (#13) with Autocomplete + SwitchListTile, filter sheet (#11) with 4 sections; SubjectClassManagementPage with modern class assignment cards
+✅ **Teaching Schedule Management** - Gradient header (#7), compact list cards (#8) with colored icon container + `_buildInfoTag` (class/day/time) + `_buildCircleActionButton`, schedule form dialog (#9, via ScheduleFormDialog component), detail dialog (#10), filter sheet (#11), table view with styled info bar + SfDataGrid card
 
 ### When Applying to New Pages
 1. **Read this guide first**
@@ -2150,6 +2379,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 1.3
+**Design System Version:** 1.6
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
