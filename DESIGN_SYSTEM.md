@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-18
-**Version:** 1.6
+**Version:** 1.7
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2115,6 +2115,124 @@ Missing this third bracket causes `"Expected to find ')'"` and `"Too many positi
 
 ---
 
+### 14. Danger / Confirm Dialog
+
+#### Usage
+Use for destructive actions (delete, reset, irreversible operations) that require explicit user confirmation. Replaces generic `AlertDialog` with a styled `Dialog` that communicates severity through a red gradient header.
+
+#### Structure
+```dart
+showDialog(
+  context: context,
+  builder: (context) => Dialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // --- Red gradient header ---
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [ColorUtils.error600, ColorUtils.error600.withValues(alpha: 0.8)],
+            ),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Row(children: [
+            Icon(Icons.delete_outline, color: Colors.white, size: 24),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Delete Record?',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ),
+          ]),
+        ),
+        // --- Descriptive message ---
+        Padding(
+          padding: EdgeInsets.all(20),
+          child: Text(
+            'Are you sure you want to delete this record? This action cannot be undone.',
+            style: TextStyle(color: ColorUtils.slate700, fontSize: 14),
+          ),
+        ),
+        // --- Cancel + Confirm buttons ---
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  side: BorderSide(color: ColorUtils.slate300),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Cancel',
+                    style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600)),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  onConfirm();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ColorUtils.error600,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Delete',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ]),
+        ),
+      ],
+    ),
+  ),
+);
+```
+
+#### Color Variations
+```dart
+// Delete (default) — red
+colors: [ColorUtils.error600, ColorUtils.error600.withValues(alpha: 0.8)]
+icon: Icons.delete_outline
+
+// Warning / Reset — orange
+colors: [ColorUtils.warning600, ColorUtils.warning600.withValues(alpha: 0.8)]
+icon: Icons.warning_amber_rounded
+
+// Logout / Exit — slate
+colors: [ColorUtils.slate700, ColorUtils.slate700.withValues(alpha: 0.8)]
+icon: Icons.logout_rounded
+```
+
+#### Specifications
+- **Dialog border radius:** 20px
+- **Header padding:** 20px all sides
+- **Header gradient:** semantic color to `* 0.8` (error, warning, or slate)
+- **Header icon size:** 24px, white
+- **Title:** 18px bold white
+- **Message padding:** 20px all sides, `slate700`, 14px
+- **Footer padding:** `fromLTRB(20, 0, 20, 20)`
+- **Cancel:** `slate300` border, `slate600` text, 12px vertical padding
+- **Confirm:** semantic color fill, white text, 12px vertical padding
+- **Button border radius:** 12px
+- **No X close button** — user must explicitly choose Cancel or Confirm
+
+---
+
 ## 🎬 Animation Guidelines
 
 ### Standard Durations
@@ -2357,6 +2475,11 @@ Container(
 ✅ **Class Management** - Gradient header (#7), compact list cards (#8) with `_buildInfoTag`, add/edit form bottom sheet (#13) with grade/teacher dropdowns + StatefulBuilder inside Consumer, filter sheet (#11), detail popup (#10)
 ✅ **Subject Management** - Gradient header (#7), compact list cards (#8) with CircleAvatar + `_buildInfoTag` + `_buildCircleActionButton`, add/edit form bottom sheet (#13) with Autocomplete + SwitchListTile, filter sheet (#11) with 4 sections; SubjectClassManagementPage with modern class assignment cards
 ✅ **Teaching Schedule Management** - Gradient header (#7), compact list cards (#8) with colored icon container + `_buildInfoTag` (class/day/time) + `_buildCircleActionButton`, add/edit form bottom sheet (#13, via ScheduleFormDialog component), detail dialog (#10), filter sheet (#11), table view with styled info bar + SfDataGrid card
+✅ **Grade (Nilai) Page** - Four classes redesigned:
+  - `GradePage`: Gradient header (#7) with search embedded, class/subject selection cards (#8) with color-coded avatar + `_buildInfoTag`
+  - `GradeBookPage`: Gradient header (#7) with inline export + filter action buttons (40×40 semi-transparent), filter bottom sheet (#11) with toggle chips, styled assessment detail dialog (#10), danger confirm dialog (#14) for delete
+  - `GradeInputForm`: Gradient header (#7) showing student name as subtitle, info summary card with `_buildDetailItem` rows, Pattern #9 styled form fields (`slate50` bg + `slate200` border + role-color focus ring)
+  - `GradeInputFormNew`: Gradient header (#7), same styled configuration panel and form fields; progress counter badge using `success600`/`slate` semantic colors
 
 ### When Applying to New Pages
 1. **Read this guide first**
@@ -2379,6 +2502,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 1.6
+**Design System Version:** 1.7
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team

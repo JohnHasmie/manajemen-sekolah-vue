@@ -470,11 +470,33 @@ class GradePageState extends State<GradePage> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withOpacity(0.8)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
     );
   }
 
   // ==================== BUILDERS ====================
+
+  Widget _buildInfoTag(IconData icon, String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 11, color: ColorUtils.slate600),
+        SizedBox(width: 3),
+        Text(text,
+            style: TextStyle(
+                fontSize: 11,
+                color: ColorUtils.slate700,
+                fontWeight: FontWeight.w500),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
+      ]),
+    );
+  }
 
   Widget _buildStep0ClassList(LanguageProvider languageProvider) {
     // Filter locally if needed
@@ -523,154 +545,98 @@ class GradePageState extends State<GradePage> {
           }
           final classData = filtered[index];
           final isHomeroom = classData['is_homeroom'] == true;
+          final accentColor = isHomeroom ? ColorUtils.primary : _getPrimaryColor();
+          final isToday = _todaySchedules.any(
+            (s) =>
+                (s['class_id'] ?? s['kelas_id'] ?? '').toString() ==
+                classData['id'].toString(),
+          );
+          final gradeLevel = classData['grade_level'] ?? classData['tingkat'];
+          final homeroomTeacher = classData['homeroom_teacher_name'];
 
-          return Card(
-            elevation: 2,
-            shadowColor: ColorUtils.slate200,
-            margin: EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedClass = classData;
-                  _currentStep = 1;
-                  _searchController.clear();
-                });
-                _loadSubjects();
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Row(
-                  children: [
+          return Container(
+            margin: EdgeInsets.symmetric(vertical: 5),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedClass = classData;
+                    _currentStep = 1;
+                    _searchController.clear();
+                  });
+                  _loadSubjects();
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: ColorUtils.slate200, width: 1),
+                    boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                  ),
+                  child: Row(children: [
                     Container(
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: isHomeroom
-                            ? ColorUtils.primary.withOpacity(0.1)
-                            : _getPrimaryColor().withOpacity(0.1),
+                        color: accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: isHomeroom
-                            ? Border.all(
-                                color: ColorUtils.primary.withOpacity(0.5),
-                              )
-                            : null,
+                        border: Border.all(color: accentColor.withValues(alpha: 0.15)),
                       ),
                       child: Icon(
-                        isHomeroom
-                            ? Icons.home_work_outlined
-                            : Icons.class_outlined,
-                        color: isHomeroom
-                            ? ColorUtils.primary
-                            : _getPrimaryColor(),
+                        isHomeroom ? Icons.home_work_outlined : Icons.class_outlined,
+                        color: accentColor,
+                        size: 24,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          Text(
+                            classData['nama'] ?? classData['name'] ?? '-',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate900,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  classData['nama'] ?? classData['name'] ?? '-',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
+                              if (gradeLevel != null && gradeLevel.toString().isNotEmpty)
+                                _buildInfoTag(Icons.school_outlined, gradeLevel.toString()),
                               if (isHomeroom)
+                                _buildInfoTag(Icons.home_outlined, 'Wali Kelas'),
+                              if (homeroomTeacher != null)
+                                _buildInfoTag(Icons.person_outlined, homeroomTeacher.toString()),
+                              if (isToday)
                                 Container(
-                                  margin: EdgeInsets.only(left: 8),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
+                                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: ColorUtils.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(20),
+                                    color: ColorUtils.success600.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: ColorUtils.success600.withValues(alpha: 0.3)),
                                   ),
-                                  child: Text(
-                                    'Wali Kelas',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: ColorUtils.primary,
-                                    ),
-                                  ),
-                                ),
-                              if (_todaySchedules.any(
-                                (s) =>
-                                    (s['class_id'] ?? s['kelas_id'] ?? '')
-                                        .toString() ==
-                                    classData['id'].toString(),
-                              ))
-                                Container(
-                                  margin: EdgeInsets.only(left: 8),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    'Sesuai Jadwal',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
-                                    ),
-                                  ),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Icon(Icons.today, size: 11, color: ColorUtils.success600),
+                                    SizedBox(width: 3),
+                                    Text('Today',
+                                        style: TextStyle(fontSize: 11, color: ColorUtils.success600, fontWeight: FontWeight.w600)),
+                                  ]),
                                 ),
                             ],
                           ),
-                          SizedBox(height: 4),
-                          // Subtitle: Grade • Major
-                          if ([
-                            classData['grade_level'],
-                            classData['tingkat'],
-                            classData['jurusan'],
-                          ].any((e) => e != null && e.toString().isNotEmpty))
-                            Text(
-                              [
-                                    classData['grade_level'] ??
-                                        classData['tingkat'],
-                                    classData['jurusan'],
-                                  ]
-                                  .where(
-                                    (e) => e != null && e.toString().isNotEmpty,
-                                  )
-                                  .join(' • '),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          // Homeroom Teacher Name
-                          if (classData['homeroom_teacher_name'] != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                'Wali Kelas: ${classData['homeroom_teacher_name']}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: Colors.grey[400]),
-                  ],
+                    Icon(Icons.chevron_right, color: ColorUtils.slate400, size: 20),
+                  ]),
                 ),
               ),
             ),
@@ -722,35 +688,49 @@ class GradePageState extends State<GradePage> {
         itemCount: filtered.length,
         itemBuilder: (context, index) {
           final subject = filtered[index];
-          return Card(
-            elevation: 2,
-            shadowColor: ColorUtils.slate200,
-            margin: EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedSubject = subject;
-                  _currentStep = 2;
-                });
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Row(
-                  children: [
+          final subjectCode = subject['kode'] ?? subject['code'];
+          final canEdit = subject['can_edit'] != false;
+          final isToday = _todaySchedules.any(
+            (s) =>
+                (s['class_id'] ?? s['kelas_id'] ?? '').toString() ==
+                    _selectedClass!['id'].toString() &&
+                (s['subject_id'] ?? s['mata_pelajaran_id'] ?? '').toString() ==
+                    subject['id'].toString(),
+          );
+          final accentColor = ColorUtils.warning600;
+
+          return Container(
+            margin: EdgeInsets.symmetric(vertical: 5),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedSubject = subject;
+                    _currentStep = 2;
+                  });
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: ColorUtils.slate200, width: 1),
+                    boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                  ),
+                  child: Row(children: [
                     Container(
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
+                        color: accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: accentColor.withValues(alpha: 0.15)),
                       ),
-                      child: Icon(Icons.book_outlined, color: Colors.orange),
+                      child: Icon(Icons.book_outlined, color: accentColor, size: 24),
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -758,72 +738,56 @@ class GradePageState extends State<GradePage> {
                           Text(
                             subject['nama'] ?? subject['name'] ?? '-',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (_todaySchedules.any(
-                            (s) =>
-                                (s['class_id'] ?? s['kelas_id'] ?? '')
-                                        .toString() ==
-                                    _selectedClass!['id'].toString() &&
-                                (s['subject_id'] ??
-                                            s['mata_pelajaran_id'] ??
-                                            '')
-                                        .toString() ==
-                                    subject['id'].toString(),
-                          ))
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Jadwal Hari Ini',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ),
-                          SizedBox(height: 4),
-                          Text(
-                            subject['kode'] ?? subject['code'] ?? '-',
-                            style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate900,
                             ),
                           ),
-                          if (subject['can_edit'] == false)
-                            Container(
-                              margin: EdgeInsets.only(top: 4),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Colors.orange.withOpacity(0.5),
-                                  width: 1,
+                          SizedBox(height: 4),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: [
+                              if (subjectCode != null && subjectCode.toString().isNotEmpty)
+                                _buildInfoTag(Icons.tag, subjectCode.toString()),
+                              if (isToday)
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: ColorUtils.success600.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: ColorUtils.success600.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Icon(Icons.today, size: 11, color: ColorUtils.success600),
+                                    SizedBox(width: 3),
+                                    Text('Today',
+                                        style: TextStyle(fontSize: 11, color: ColorUtils.success600, fontWeight: FontWeight.w600)),
+                                  ]),
                                 ),
-                              ),
-                              child: Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Read Only',
-                                  'id': 'Hanya Lihat',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.orange,
-                                  fontWeight: FontWeight.bold,
+                              if (!canEdit)
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: ColorUtils.warning600.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Icon(Icons.lock_outline, size: 11, color: ColorUtils.warning600),
+                                    SizedBox(width: 3),
+                                    Text(
+                                      languageProvider.getTranslatedText({'en': 'Read Only', 'id': 'Hanya Lihat'}),
+                                      style: TextStyle(fontSize: 11, color: ColorUtils.warning600, fontWeight: FontWeight.w600)),
+                                  ]),
                                 ),
-                              ),
-                            ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: Colors.grey[400]),
-                  ],
+                    Icon(Icons.chevron_right, color: ColorUtils.slate400, size: 20),
+                  ]),
                 ),
               ),
             ),
@@ -889,9 +853,9 @@ class GradePageState extends State<GradePage> {
         ),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.3),
+            color: _getPrimaryColor().withValues(alpha: 0.3),
             blurRadius: 8,
-            offset: Offset(0, 4),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -909,7 +873,7 @@ class GradePageState extends State<GradePage> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -933,7 +897,7 @@ class GradePageState extends State<GradePage> {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -946,7 +910,7 @@ class GradePageState extends State<GradePage> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ),
@@ -1029,7 +993,7 @@ class GradePageState extends State<GradePage> {
         return WillPopScope(
           onWillPop: _handleWillPop,
           child: Scaffold(
-            backgroundColor: Color(0xFFF8F9FA),
+            backgroundColor: ColorUtils.slate50,
             body: Column(
               children: [
                 _buildHeader(context, languageProvider),
@@ -1352,55 +1316,103 @@ class GradeBookPageState extends State<GradeBookPage> {
   }
 
   void _showFilterDialog(LanguageProvider languageProvider) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.filter_list, color: _getPrimaryColor()),
-              SizedBox(width: 8),
-              Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Filter Grade Types',
-                  'id': 'Filter Jenis Nilai',
-                }),
-              ),
-            ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          height: MediaQuery.of(context).size.height * 0.6,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: _allJenisNilaiList.map((jenis) {
+          child: Column(children: [
+            // Gradient header
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Row(children: [
+                  Icon(Icons.filter_list_rounded, color: Colors.white, size: 22),
+                  SizedBox(width: 12),
+                  Text(
+                    languageProvider.getTranslatedText({'en': 'Filter Grade Types', 'id': 'Filter Jenis Nilai'}),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ]),
+                TextButton(
+                  onPressed: () {
+                    setSheetState(() {
+                      for (var key in _jenisNilaiFilter.keys) {
+                        _jenisNilaiFilter[key] = true;
+                      }
+                    });
+                    setState(() => _updateFilteredJenisNilai());
+                  },
+                  child: Text('Reset', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
+              ]),
+            ),
+            // Scrollable content
+            Expanded(child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Column(children: _allJenisNilaiList.map((jenis) {
                 return CheckboxListTile(
-                  title: Text(_getJenisNilaiLabel(jenis, languageProvider)),
+                  title: Text(
+                    _getJenisNilaiLabel(jenis, languageProvider),
+                    style: TextStyle(color: ColorUtils.slate800, fontWeight: FontWeight.w500),
+                  ),
                   value: _jenisNilaiFilter[jenis],
                   activeColor: _getPrimaryColor(),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   onChanged: (bool? value) {
-                    setState(() {
+                    setSheetState(() {
                       _jenisNilaiFilter[jenis] = value ?? false;
-                      _updateFilteredJenisNilai();
                     });
+                    setState(() => _updateFilteredJenisNilai());
                   },
                 );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Close',
-                  'id': 'Tutup',
-                }),
-                style: TextStyle(color: _getPrimaryColor()),
+              }).toList()),
+            )),
+            // Footer
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: ColorUtils.slate200)),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _getPrimaryColor(),
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    languageProvider.getTranslatedText({'en': 'Apply', 'id': 'Terapkan'}),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
               ),
             ),
-          ],
-        );
-      },
+          ]),
+        ),
+      ),
     );
   }
 
@@ -1500,45 +1512,63 @@ class GradeBookPageState extends State<GradeBookPage> {
 
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          padding: EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
           child: SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Gradient header bar
                 Container(
-                  width: 40,
-                  height: 4,
-                  margin: EdgeInsets.only(bottom: 20),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
                   ),
+                  child: Row(children: [
+                    Icon(Icons.assessment_outlined, color: Colors.white, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "${_getJenisNilaiLabel(jenis, languageProvider)} - $displayTitle",
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ]),
                 ),
-                Text(
-                  "${_getJenisNilaiLabel(jenis, languageProvider)} - $displayTitle",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 20),
+                SizedBox(height: 8),
                 ListTile(
                   leading: Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.visibility, color: Colors.blue),
+                    child: Icon(Icons.visibility, color: ColorUtils.corporateBlue600),
                   ),
                   title: Text(
                     languageProvider.getTranslatedText({
                       'en': 'View Details',
                       'id': 'Lihat Detail',
                     }),
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w600, color: ColorUtils.slate800),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -1550,17 +1580,17 @@ class GradeBookPageState extends State<GradeBookPage> {
                     leading: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
+                        color: ColorUtils.warning600.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.edit, color: Colors.orange),
+                      child: Icon(Icons.edit, color: ColorUtils.warning600),
                     ),
                     title: Text(
                       languageProvider.getTranslatedText({
                         'en': 'Edit Assessment',
                         'id': 'Edit Penilaian',
                       }),
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      style: TextStyle(fontWeight: FontWeight.w600, color: ColorUtils.slate800),
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -1571,30 +1601,24 @@ class GradeBookPageState extends State<GradeBookPage> {
                     leading: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade50,
+                        color: ColorUtils.error600.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.delete_outline, color: Colors.red),
+                      child: Icon(Icons.delete_outline, color: ColorUtils.error600),
                     ),
                     title: Text(
                       languageProvider.getTranslatedText({
                         'en': 'Delete Assessment',
                         'id': 'Hapus Penilaian',
                       }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.red,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600, color: ColorUtils.error600),
                     ),
                     subtitle: Text(
                       languageProvider.getTranslatedText({
                         'en': 'Delete all grades for this assessment',
                         'id': 'Hapus semua nilai penilaian ini',
                       }),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.red.shade300,
-                      ),
+                      style: TextStyle(fontSize: 12, color: ColorUtils.error600.withValues(alpha: 0.7)),
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -1602,7 +1626,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                     },
                   ),
                 ],
-                SizedBox(height: 20),
+                SizedBox(height: 12),
               ],
             ),
           ),
@@ -1744,7 +1768,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         // Edit Header
         Container(
           padding: EdgeInsets.all(16),
-          color: Colors.orange.shade50,
+          color: ColorUtils.warning600.withValues(alpha: 0.08),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1755,7 +1779,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                     Text(
                       'Edit Mode',
                       style: TextStyle(
-                        color: Colors.orange.shade800,
+                        color: ColorUtils.warning600,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -1765,6 +1789,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: ColorUtils.slate800,
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -1832,7 +1857,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                   }),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: _getPrimaryColor(),
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -1853,10 +1878,8 @@ class GradeBookPageState extends State<GradeBookPage> {
                     Container(
                       height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade300),
-                        ),
+                        color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
+                        border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
                       ),
                       child: Row(
                         children: [
@@ -1907,9 +1930,7 @@ class GradeBookPageState extends State<GradeBookPage> {
 
                       return Container(
                         decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade200),
-                          ),
+                          border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
                           color: Colors.white,
                         ),
                         child: Row(
@@ -1917,27 +1938,19 @@ class GradeBookPageState extends State<GradeBookPage> {
                             // Name
                             Container(
                               width: 150,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     siswa.name,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.w500, color: ColorUtils.slate900),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
                                     siswa.nis,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey,
-                                    ),
+                                    style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                                   ),
                                 ],
                               ),
@@ -1948,10 +1961,8 @@ class GradeBookPageState extends State<GradeBookPage> {
                               padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 border: Border(
-                                  left: BorderSide(color: Colors.grey.shade200),
-                                  right: BorderSide(
-                                    color: Colors.grey.shade200,
-                                  ),
+                                  left: BorderSide(color: ColorUtils.slate200),
+                                  right: BorderSide(color: ColorUtils.slate200),
                                 ),
                               ),
                               child: TextFormField(
@@ -1960,13 +1971,12 @@ class GradeBookPageState extends State<GradeBookPage> {
                                 enabled: !_isReadOnly,
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.center,
+                                style: TextStyle(color: ColorUtils.slate900),
                                 decoration: InputDecoration(
                                   isDense: true,
                                   border: InputBorder.none,
                                   hintText: '-',
-                                  hintStyle: TextStyle(
-                                    color: Colors.grey.shade400,
-                                  ),
+                                  hintStyle: TextStyle(color: ColorUtils.slate400),
                                 ),
                                 onFieldSubmitted: (value) {
                                   _saveInlineGrade(
@@ -1993,15 +2003,11 @@ class GradeBookPageState extends State<GradeBookPage> {
                                   decoration: InputDecoration(
                                     isDense: true,
                                     border: InputBorder.none,
-                                    hintText: languageProvider
-                                        .getTranslatedText({
-                                          'en': 'Add description...',
-                                          'id': 'Tambah deskripsi...',
-                                        }),
-                                    hintStyle: TextStyle(
-                                      color: Colors.grey.shade400,
-                                      fontSize: 12,
-                                    ),
+                                    hintText: languageProvider.getTranslatedText({
+                                      'en': 'Add description...',
+                                      'id': 'Tambah deskripsi...',
+                                    }),
+                                    hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 12),
                                   ),
                                   onFieldSubmitted: (value) {
                                     _saveInlineGrade(
@@ -2065,66 +2071,65 @@ class GradeBookPageState extends State<GradeBookPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Assessment Details',
-            'id': 'Detail Penilaian',
-          }),
-        ),
-        content: Column(
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailRow(
-              languageProvider.getTranslatedText({'en': 'Type', 'id': 'Jenis'}),
-              _getJenisNilaiLabel(jenis, languageProvider),
-            ),
-            _buildDetailRow(
-              languageProvider.getTranslatedText({
-                'en': 'Date',
-                'id': 'Tanggal',
-              }),
-              _formatDateDisplay(date),
-            ),
-            if (title != null && title.isNotEmpty)
-              _buildDetailRow(
-                languageProvider.getTranslatedText({
-                  'en': 'Title',
-                  'id': 'Judul',
-                }),
-                title,
+            // Gradient header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20), topRight: Radius.circular(20),
+                ),
               ),
-            Divider(),
-            _buildDetailRow(
-              languageProvider.getTranslatedText({
-                'en': 'Total Students',
-                'id': 'Total Siswa',
-              }),
-              totalSiswa.toString(),
+              child: Row(children: [
+                Icon(Icons.assessment_outlined, color: Colors.white, size: 22),
+                SizedBox(width: 12),
+                Text(
+                  languageProvider.getTranslatedText({'en': 'Assessment Details', 'id': 'Detail Penilaian'}),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ]),
             ),
-            _buildDetailRow(
-              languageProvider.getTranslatedText({
-                'en': 'Graded',
-                'id': 'Sudah Dinilai',
-              }),
-              "$gradedCount / $totalSiswa",
+            // Content
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                _buildDetailRow(languageProvider.getTranslatedText({'en': 'Type', 'id': 'Jenis'}), _getJenisNilaiLabel(jenis, languageProvider)),
+                _buildDetailRow(languageProvider.getTranslatedText({'en': 'Date', 'id': 'Tanggal'}), _formatDateDisplay(date)),
+                if (title != null && title.isNotEmpty)
+                  _buildDetailRow(languageProvider.getTranslatedText({'en': 'Title', 'id': 'Judul'}), title),
+                Divider(color: ColorUtils.slate200),
+                _buildDetailRow(languageProvider.getTranslatedText({'en': 'Total Students', 'id': 'Total Siswa'}), totalSiswa.toString()),
+                _buildDetailRow(languageProvider.getTranslatedText({'en': 'Graded', 'id': 'Sudah Dinilai'}), "$gradedCount / $totalSiswa"),
+                _buildDetailRow(languageProvider.getTranslatedText({'en': 'Average Score', 'id': 'Rata-rata Nilai'}), average.toStringAsFixed(2)),
+              ]),
             ),
-            _buildDetailRow(
-              languageProvider.getTranslatedText({
-                'en': 'Average Score',
-                'id': 'Rata-rata Nilai',
-              }),
-              average.toStringAsFixed(2),
+            // OK button
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _getPrimaryColor(),
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('OK', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
+              ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("OK"),
-          ),
-        ],
       ),
     );
   }
@@ -2135,8 +2140,8 @@ class GradeBookPageState extends State<GradeBookPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600])),
-          Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(label, style: TextStyle(color: ColorUtils.slate500, fontSize: 13)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: ColorUtils.slate800, fontSize: 13)),
         ],
       ),
     );
@@ -2152,46 +2157,86 @@ class GradeBookPageState extends State<GradeBookPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Delete Assessment?',
-            'id': 'Hapus Penilaian?',
-          }),
-        ),
-        content: Text(
-          languageProvider.getTranslatedText({
-            'en':
-                'Are you sure you want to delete all grades for ${_getJenisNilaiLabel(jenis, languageProvider)} on ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? This action cannot be undone.',
-            'id':
-                'Apakah Anda yakin ingin menghapus semua nilai ${_getJenisNilaiLabel(jenis, languageProvider)} pada tanggal ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? Tindakan ini tidak dapat dibatalkan.',
-          }),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Cancel',
-                'id': 'Batal',
-              }),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Red gradient header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [ColorUtils.error600, ColorUtils.error600.withValues(alpha: 0.8)],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(children: [
+                Icon(Icons.delete_outline, color: Colors.white, size: 24),
+                SizedBox(width: 12),
+                Expanded(child: Text(
+                  languageProvider.getTranslatedText({'en': 'Delete Assessment?', 'id': 'Hapus Penilaian?'}),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                )),
+              ]),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteAssessment(jenis, header);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Delete',
-                'id': 'Hapus',
-              }),
-              style: TextStyle(color: Colors.white),
+            // Content
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Are you sure you want to delete all grades for ${_getJenisNilaiLabel(jenis, languageProvider)} on ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? This action cannot be undone.',
+                  'id': 'Apakah Anda yakin ingin menghapus semua nilai ${_getJenisNilaiLabel(jenis, languageProvider)} pada tanggal ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? Tindakan ini tidak dapat dibatalkan.',
+                }),
+                style: TextStyle(color: ColorUtils.slate700, fontSize: 14),
+              ),
             ),
-          ),
-        ],
+            // Buttons
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Row(children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      side: BorderSide(color: ColorUtils.slate300),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(
+                      languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
+                      style: TextStyle(color: ColorUtils.slate600),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _deleteAssessment(jenis, header);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorUtils.error600,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(
+                      languageProvider.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2350,25 +2395,23 @@ class GradeBookPageState extends State<GradeBookPage> {
       width: 120,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          right: BorderSide(color: Colors.grey.shade300, width: 2),
-        ),
+        border: Border(right: BorderSide(color: ColorUtils.slate200, width: 2)),
       ),
       child: Column(
         children: [
           // Header Nama
           Container(
-            height: 70, // Matches right side header height
+            height: 70,
             width: 120,
             padding: EdgeInsets.all(12),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+              color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
+              border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
             ),
             child: Text(
               languageProvider.getTranslatedText({'en': 'Name', 'id': 'Nama'}),
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: ColorUtils.slate700),
             ),
           ),
           // Student Names
@@ -2378,7 +2421,7 @@ class GradeBookPageState extends State<GradeBookPage> {
               width: 120,
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
                 color: Colors.white,
               ),
               child: Column(
@@ -2387,13 +2430,13 @@ class GradeBookPageState extends State<GradeBookPage> {
                 children: [
                   Text(
                     siswa.name,
-                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 11, color: ColorUtils.slate800),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
                   Text(
                     '${languageProvider.getTranslatedText({'en': 'NIS', 'id': 'NIS'})}: ${siswa.nis}',
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                    style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
@@ -2425,8 +2468,8 @@ class GradeBookPageState extends State<GradeBookPage> {
             Container(
               height: 70,
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+                color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
+                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
               ),
               child: Row(
                 children: _filteredJenisNilaiList.expand((jenis) {
@@ -2450,9 +2493,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                           width: 90,
                           padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            border: Border(
-                              right: BorderSide(color: Colors.grey.shade300),
-                            ),
+                            border: Border(right: BorderSide(color: ColorUtils.slate200)),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -2460,24 +2501,15 @@ class GradeBookPageState extends State<GradeBookPage> {
                               Text(
                                 title != null && title.isNotEmpty
                                     ? title
-                                    : _getJenisNilaiLabel(
-                                        jenis,
-                                        languageProvider,
-                                      ),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                ),
+                                    : _getJenisNilaiLabel(jenis, languageProvider),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: ColorUtils.slate700),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 displayDate,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey.shade700,
-                                ),
+                                style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -2494,33 +2526,20 @@ class GradeBookPageState extends State<GradeBookPage> {
                         width: 65,
                         padding: EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          border: Border(
-                            right: BorderSide(
-                              color: Colors.grey.shade400,
-                              width: 1,
-                            ),
-                          ),
+                          border: Border(right: BorderSide(color: ColorUtils.slate300, width: 1)),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               _getJenisNilaiLabel(jenis, languageProvider),
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade700,
-                              ),
+                              style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: ColorUtils.slate600),
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(height: 2),
                             InkWell(
                               onTap: () => _addNewAssessment(jenis),
-                              child: Icon(
-                                Icons.add_circle_outline,
-                                size: 20,
-                                color: _getPrimaryColor(),
-                              ),
+                              child: Icon(Icons.add_circle_outline, size: 20, color: _getPrimaryColor()),
                             ),
                           ],
                         ),
@@ -2538,7 +2557,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                 height: 60,
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
+                    bottom: BorderSide(color: ColorUtils.slate200),
                   ),
                 ),
                 child: Row(
@@ -2562,42 +2581,31 @@ class GradeBookPageState extends State<GradeBookPage> {
                           width: 90,
                           padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            border: Border(
-                              right: BorderSide(color: Colors.grey.shade100),
-                            ),
+                            border: Border(right: BorderSide(color: ColorUtils.slate100)),
                           ),
                           child: GestureDetector(
                             onTap: (_canEdit && !_isReadOnly)
-                                ? () => _openInputForm(
-                                    siswa,
-                                    jenis,
-                                    languageProvider,
-                                    header: header,
-                                  )
+                                ? () => _openInputForm(siswa, jenis, languageProvider, header: header)
                                 : null,
                             child: Container(
                               height: 40,
                               decoration: BoxDecoration(
                                 color: hasValue
-                                    ? Colors.green.shade50
-                                    : Colors.grey.shade50,
+                                    ? ColorUtils.success600.withValues(alpha: 0.08)
+                                    : ColorUtils.slate50,
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
                                   color: hasValue
-                                      ? Colors.green.shade200
-                                      : Colors.grey.shade300,
+                                      ? ColorUtils.success600.withValues(alpha: 0.3)
+                                      : ColorUtils.slate200,
                                 ),
                               ),
                               child: Center(
                                 child: Text(
                                   nilaiText,
                                   style: TextStyle(
-                                    fontWeight: hasValue
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: hasValue
-                                        ? Colors.green.shade800
-                                        : Colors.grey.shade600,
+                                    fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
+                                    color: hasValue ? ColorUtils.success600 : ColorUtils.slate500,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -2614,9 +2622,9 @@ class GradeBookPageState extends State<GradeBookPage> {
                           width: 65,
                           decoration: BoxDecoration(
                             border: Border(
-                              right: BorderSide(color: Colors.grey.shade200),
+                              right: BorderSide(color: ColorUtils.slate200),
                             ),
-                            color: Colors.grey.shade50.withOpacity(0.3),
+                            color: ColorUtils.slate50.withValues(alpha: 0.3),
                           ),
                         ),
                       );
@@ -2685,235 +2693,224 @@ class GradeBookPageState extends State<GradeBookPage> {
             .length;
 
         return Scaffold(
-          backgroundColor: Colors.grey.shade50,
-          appBar: AppBar(
-            title: Text(
-              '${languageProvider.getTranslatedText({'en': 'Grades', 'id': 'Nilai'})} - ${widget.subject['name']} - ${widget.classData['name']}',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-            iconTheme: IconThemeData(color: Colors.black),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () {
-                if (widget.onBack != null) {
-                  widget.onBack!();
-                } else {
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.download, color: Colors.black),
-                onPressed: () => _exportGrades(languageProvider),
-                tooltip: languageProvider.getTranslatedText({
-                  'en': 'Export to Excel',
-                  'id': 'Ekspor ke Excel',
-                }),
-              ),
-              // Tombol Filter dengan badge
-              Stack(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.filter_list, color: Colors.black),
-                    onPressed: () => _showFilterDialog(languageProvider),
-                    tooltip: languageProvider.getTranslatedText({
-                      'en': 'Filter Grade Types',
-                      'id': 'Filter Jenis Nilai',
-                    }),
+          backgroundColor: ColorUtils.slate50,
+          body: Column(
+            children: [
+              // Pattern #7 Gradient Header
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 20,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
                   ),
-                  if (activeFilterCount < _allJenisNilaiList.length)
-                    Positioned(
-                      right: 8,
-                      top: 8,
+                  boxShadow: [BoxShadow(color: _getPrimaryColor().withValues(alpha: 0.3), blurRadius: 8, offset: Offset(0, 2))],
+                ),
+                child: Row(children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (widget.onBack != null) {
+                        widget.onBack!();
+                      } else {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                      child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(
+                      languageProvider.getTranslatedText({'en': 'Grade Book', 'id': 'Buku Nilai'}),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    Text(
+                      '${widget.subject['name'] ?? widget.subject['nama'] ?? ''} - ${widget.classData['name'] ?? widget.classData['nama'] ?? ''}',
+                      style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.9)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ])),
+                  // Export button
+                  GestureDetector(
+                    onTap: () => _exportGrades(languageProvider),
+                    child: Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                      child: Icon(Icons.download, color: Colors.white, size: 20),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  // Filter button with badge
+                  Stack(children: [
+                    GestureDetector(
+                      onTap: () => _showFilterDialog(languageProvider),
                       child: Container(
-                        padding: EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        constraints: BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: Text(
-                          '${_allJenisNilaiList.length - activeFilterCount}',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                        child: Icon(Icons.filter_list_rounded, color: Colors.white, size: 20),
                       ),
                     ),
-                ],
-              ),
-              IconButton(
-                icon: Icon(Icons.refresh, color: Colors.black),
-                onPressed: _loadData,
-                tooltip: languageProvider.getTranslatedText({
-                  'en': 'Refresh',
-                  'id': 'Muat Ulang',
-                }),
-              ),
-            ],
-            bottom: PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Container(height: 1, color: Colors.grey.shade300),
-            ),
-          ),
-          body: _isLoading
-              ? LoadingScreen(
-                  message: languageProvider.getTranslatedText({
-                    'en': 'Loading grade data...',
-                    'id': 'Memuat data nilai...',
-                  }),
-                )
-              : _isEditMode
-              ? _buildEditTable(languageProvider)
-              : Column(
-                  children: [
-                    // Header Info
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Colors.grey.shade200,
-                            width: 1,
+                    if (activeFilterCount < _allJenisNilaiList.length)
+                      Positioned(
+                        right: 4, top: 4,
+                        child: Container(
+                          padding: EdgeInsets.all(2),
+                          decoration: BoxDecoration(color: ColorUtils.error600, borderRadius: BorderRadius.circular(6)),
+                          constraints: BoxConstraints(minWidth: 14, minHeight: 14),
+                          child: Text(
+                            '${_allJenisNilaiList.length - activeFilterCount}',
+                            style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ]),
+                  SizedBox(width: 8),
+                  // Refresh button
+                  GestureDetector(
+                    onTap: _loadData,
+                    child: Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                      child: Icon(Icons.refresh, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ]),
+              ),
+
+              // Body
+              Expanded(
+                child: _isLoading
+                    ? LoadingScreen(
+                        message: languageProvider.getTranslatedText({
+                          'en': 'Loading grade data...',
+                          'id': 'Memuat data nilai...',
+                        }),
+                      )
+                    : _isEditMode
+                    ? _buildEditTable(languageProvider)
+                    : Column(
                         children: [
-                          Text(
-                            '${widget.subject['name']} - ${widget.classData['name']}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                          // Info bar (Pattern from spec)
+                          Container(
+                            margin: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: ColorUtils.slate200),
+                              boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
+                            ),
+                            child: Row(children: [
+                              Container(
+                                width: 36, height: 36,
+                                decoration: BoxDecoration(
+                                  color: _getPrimaryColor().withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(Icons.book_outlined, color: _getPrimaryColor(), size: 18),
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(
+                                  widget.subject['name'] ?? widget.subject['nama'] ?? '-',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate900),
+                                ),
+                                Text(
+                                  '${languageProvider.getTranslatedText({'en': 'Types', 'id': 'Jenis'})}: ${_filteredJenisNilaiList.map((j) => _getJenisNilaiLabel(j, languageProvider)).join(', ')}',
+                                  style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ])),
+                            ]),
+                          ),
+
+                          // Search Bar
+                          Container(
+                            margin: EdgeInsets.fromLTRB(16, 10, 16, 0),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: ColorUtils.slate200),
+                              boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              style: TextStyle(color: ColorUtils.slate900),
+                              decoration: InputDecoration(
+                                hintText: languageProvider.getTranslatedText({
+                                  'en': 'Search students...',
+                                  'id': 'Cari siswa...',
+                                }),
+                                hintStyle: TextStyle(color: ColorUtils.slate400),
+                                prefixIcon: Icon(Icons.search, color: ColorUtils.slate400, size: 20),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
                             ),
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            '${languageProvider.getTranslatedText({'en': 'Grade types', 'id': 'Jenis nilai'})}: ${_filteredJenisNilaiList.map((jenis) => _getJenisNilaiLabel(jenis, languageProvider)).join(', ')}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
+
+                          if (_filteredSiswaList.isNotEmpty)
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                              child: Row(children: [
+                                Text(
+                                  '${_filteredSiswaList.length} ${languageProvider.getTranslatedText({'en': 'students found', 'id': 'siswa ditemukan'})}',
+                                  style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
+                                ),
+                                Spacer(),
+                                Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Tap cells to edit',
+                                    'id': 'Klik sel untuk mengedit',
+                                  }),
+                                  style: TextStyle(fontSize: 12, color: ColorUtils.slate400),
+                                ),
+                              ]),
                             ),
+                          SizedBox(height: 8),
+
+                          // Tabel Nilai
+                          Expanded(
+                            child: _filteredSiswaList.isEmpty
+                                ? EmptyState(
+                                    title: languageProvider.getTranslatedText({
+                                      'en': 'No students found',
+                                      'id': 'Tidak ada siswa',
+                                    }),
+                                    subtitle: _searchController.text.isEmpty
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'No students in this class',
+                                            'id': 'Tidak ada siswa di kelas ini',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'No search results found',
+                                            'id': 'Tidak ditemukan hasil pencarian',
+                                          }),
+                                    icon: Icons.people_outline,
+                                  )
+                                : SingleChildScrollView(
+                                    scrollDirection: Axis.vertical,
+                                    child: _buildGradeTable(languageProvider),
+                                  ),
                           ),
                         ],
                       ),
-                    ),
-
-                    // Search Bar
-                    Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: languageProvider.getTranslatedText({
-                              'en': 'Search students...',
-                              'id': 'Cari siswa...',
-                            }),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: Colors.grey.shade600,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    if (_filteredSiswaList.isNotEmpty)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Text(
-                              '${_filteredSiswaList.length} ${languageProvider.getTranslatedText({'en': 'students found', 'id': 'siswa ditemukan'})}',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    SizedBox(height: 8),
-
-                    // Instruction
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Click on grade cells to input/edit',
-                          'id':
-                              'Klik pada kolom nilai untuk menginput/mengedit',
-                        }),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-
-                    // Tabel Nilai
-                    Expanded(
-                      child: _filteredSiswaList.isEmpty
-                          ? EmptyState(
-                              title: languageProvider.getTranslatedText({
-                                'en': 'No students found',
-                                'id': 'Tidak ada siswa',
-                              }),
-                              subtitle: _searchController.text.isEmpty
-                                  ? languageProvider.getTranslatedText({
-                                      'en': 'No students in this class',
-                                      'id': 'Tidak ada siswa di kelas ini',
-                                    })
-                                  : languageProvider.getTranslatedText({
-                                      'en': 'No search results found',
-                                      'id': 'Tidak ditemukan hasil pencarian',
-                                    }),
-                              icon: Icons.people_outline,
-                            )
-                          : SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: _buildGradeTable(languageProvider),
-                            ),
-                    ),
-                  ],
-                ),
+              ),
+            ],
+          ),
           floatingActionButton: (_isEditMode || !_canEdit || _isReadOnly)
               ? null
               : FloatingActionButton(
@@ -3136,261 +3133,262 @@ class GradeInputFormState extends State<GradeInputForm> {
     return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
   }
 
+  Widget _buildDetailItem(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(children: [
+        Container(
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+            color: ColorUtils.corporateBlue600.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
+        ),
+        SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500)),
+          Text(value, style: TextStyle(fontSize: 14, color: ColorUtils.slate800, fontWeight: FontWeight.w600)),
+        ])),
+      ]),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
-          backgroundColor: Colors.grey.shade50,
-          appBar: AppBar(
-            title: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Input Grade',
-                'id': 'Input Nilai',
-              }),
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+          backgroundColor: ColorUtils.slate50,
+          body: Column(children: [
+            // Pattern #7 Gradient Header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 16,
+                left: 16, right: 16, bottom: 20,
               ),
-            ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-            iconTheme: IconThemeData(color: Colors.black),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            bottom: PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Container(height: 1, color: Colors.grey.shade300),
-            ),
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                children: [
-                  // Info Siswa dan Mata Pelajaran
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.person, color: _getPrimaryColor()),
-                            SizedBox(width: 8),
-                            Text(
-                              '${languageProvider.getTranslatedText({'en': 'Student', 'id': 'Siswa'})}: ${widget.siswa.name}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _getPrimaryColor(),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.badge, color: _getPrimaryColor()),
-                            SizedBox(width: 8),
-                            Text(
-                              '${languageProvider.getTranslatedText({'en': 'NIS', 'id': 'NIS'})}: ${widget.siswa.nis}',
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.menu_book, color: _getPrimaryColor()),
-                            SizedBox(width: 8),
-                            Text(
-                              '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})}: ${widget.subject['nama']}',
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.assignment, color: _getPrimaryColor()),
-                            SizedBox(width: 8),
-                            Text(
-                              '${languageProvider.getTranslatedText({'en': 'Type', 'id': 'Jenis'})}: ${_getJenisNilaiLabel(widget.jenisNilai, languageProvider)}',
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+                ),
+                boxShadow: [BoxShadow(color: _getPrimaryColor().withValues(alpha: 0.3), blurRadius: 8, offset: Offset(0, 2))],
+              ),
+              child: Row(children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                    child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Input Title
-                  TextFormField(
-                    controller: _titleController,
-                    decoration: InputDecoration(
-                      labelText: languageProvider.getTranslatedText({
-                        'en': 'Assessment Title (Optional)',
-                        'id': 'Judul Penilaian (Opsional)',
-                      }),
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.title, color: _getPrimaryColor()),
-                      helperText: languageProvider.getTranslatedText({
-                        'en': 'E.g., Quiz 1, Project A',
-                        'id': 'Contoh: Kuis 1, Proyek A',
-                      }),
-                    ),
+                ),
+                SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(
+                    languageProvider.getTranslatedText({'en': 'Input Grade', 'id': 'Input Nilai'}),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Input Nilai
-                  TextFormField(
-                    controller: _nilaiController,
-                    decoration: InputDecoration(
-                      labelText: languageProvider.getTranslatedText({
-                        'en': 'Grade',
-                        'id': 'Nilai',
-                      }),
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.score, color: _getPrimaryColor()),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return languageProvider.getTranslatedText({
-                          'en': 'Please enter grade',
-                          'id': 'Masukkan nilai',
-                        });
-                      }
-                      if (double.tryParse(value) == null) {
-                        return languageProvider.getTranslatedText({
-                          'en': 'Please enter valid number',
-                          'id': 'Masukkan angka yang valid',
-                        });
-                      }
-                      final nilai = double.parse(value);
-                      if (nilai < 0 || nilai > 100) {
-                        return languageProvider.getTranslatedText({
-                          'en': 'Grade must be between 0-100',
-                          'id': 'Nilai harus antara 0-100',
-                        });
-                      }
-                      return null;
-                    },
+                  Text(
+                    widget.siswa.name,
+                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.9)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ])),
+              ]),
+            ),
 
-                  const SizedBox(height: 16),
+            // Body
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(children: [
+                    // Info card - Pattern #10 detail items style
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: ColorUtils.slate200),
+                        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                      ),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        _buildDetailItem(Icons.person_outline,
+                          languageProvider.getTranslatedText({'en': 'Student', 'id': 'Siswa'}),
+                          widget.siswa.name),
+                        _buildDetailItem(Icons.badge_outlined,
+                          languageProvider.getTranslatedText({'en': 'NIS', 'id': 'NIS'}),
+                          widget.siswa.nis),
+                        _buildDetailItem(Icons.menu_book_outlined,
+                          languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'}),
+                          widget.subject['nama'] ?? widget.subject['name'] ?? '-'),
+                        _buildDetailItem(Icons.assignment_outlined,
+                          languageProvider.getTranslatedText({'en': 'Type', 'id': 'Jenis'}),
+                          _getJenisNilaiLabel(widget.jenisNilai, languageProvider)),
+                      ]),
+                    ),
 
-                  // Input Deskripsi
-                  TextFormField(
-                    controller: _deskripsiController,
-                    decoration: InputDecoration(
-                      labelText: languageProvider.getTranslatedText({
-                        'en': 'Description',
-                        'id': 'Deskripsi',
-                      }),
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(
-                        Icons.description,
-                        color: _getPrimaryColor(),
+                    const SizedBox(height: 16),
+
+                    // Input Title - Pattern #9 styled field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: ColorUtils.slate200),
+                      ),
+                      child: TextFormField(
+                        controller: _titleController,
+                        style: TextStyle(color: ColorUtils.slate900),
+                        decoration: InputDecoration(
+                          labelText: languageProvider.getTranslatedText({
+                            'en': 'Assessment Title (Optional)',
+                            'id': 'Judul Penilaian (Opsional)',
+                          }),
+                          labelStyle: TextStyle(color: ColorUtils.slate500),
+                          border: InputBorder.none,
+                          prefixIcon: Icon(Icons.title, color: _getPrimaryColor()),
+                          helperText: languageProvider.getTranslatedText({
+                            'en': 'E.g., Quiz 1, Project A',
+                            'id': 'Contoh: Kuis 1, Proyek A',
+                          }),
+                          helperStyle: TextStyle(color: ColorUtils.slate400, fontSize: 11),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: _getPrimaryColor(), width: 1.5),
+                          ),
+                        ),
                       ),
                     ),
-                    maxLines: 3,
-                  ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
-                  // Pilih Tanggal
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 2,
-                          offset: Offset(0, 1),
+                    // Input Nilai - Pattern #9 styled field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: ColorUtils.slate200),
+                      ),
+                      child: TextFormField(
+                        controller: _nilaiController,
+                        style: TextStyle(color: ColorUtils.slate900),
+                        decoration: InputDecoration(
+                          labelText: languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Nilai'}),
+                          labelStyle: TextStyle(color: ColorUtils.slate500),
+                          border: InputBorder.none,
+                          prefixIcon: Icon(Icons.score, color: _getPrimaryColor()),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: _getPrimaryColor(), width: 1.5),
+                          ),
                         ),
-                      ],
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return languageProvider.getTranslatedText({'en': 'Please enter grade', 'id': 'Masukkan nilai'});
+                          }
+                          if (double.tryParse(value) == null) {
+                            return languageProvider.getTranslatedText({'en': 'Please enter valid number', 'id': 'Masukkan angka yang valid'});
+                          }
+                          final nilai = double.parse(value);
+                          if (nilai < 0 || nilai > 100) {
+                            return languageProvider.getTranslatedText({'en': 'Grade must be between 0-100', 'id': 'Nilai harus antara 0-100'});
+                          }
+                          return null;
+                        },
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today, color: _getPrimaryColor()),
+
+                    const SizedBox(height: 12),
+
+                    // Input Deskripsi - Pattern #9 styled field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: ColorUtils.slate200),
+                      ),
+                      child: TextFormField(
+                        controller: _deskripsiController,
+                        style: TextStyle(color: ColorUtils.slate900),
+                        decoration: InputDecoration(
+                          labelText: languageProvider.getTranslatedText({'en': 'Description', 'id': 'Deskripsi'}),
+                          labelStyle: TextStyle(color: ColorUtils.slate500),
+                          border: InputBorder.none,
+                          prefixIcon: Icon(Icons.description, color: _getPrimaryColor()),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: _getPrimaryColor(), width: 1.5),
+                          ),
+                        ),
+                        maxLines: 3,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Date picker - Pattern #9 field container style
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: ColorUtils.slate200),
+                      ),
+                      child: Row(children: [
+                        Icon(Icons.calendar_today, color: _getPrimaryColor(), size: 20),
                         SizedBox(width: 12),
                         Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Date:',
-                            'id': 'Tanggal:',
-                          }),
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          languageProvider.getTranslatedText({'en': 'Date:', 'id': 'Tanggal:'}),
+                          style: TextStyle(fontWeight: FontWeight.w500, color: ColorUtils.slate600),
                         ),
                         Spacer(),
                         TextButton(
                           onPressed: () => _selectDate(context),
                           child: Text(
                             '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: _getPrimaryColor(),
-                            ),
+                            style: TextStyle(fontSize: 15, color: _getPrimaryColor(), fontWeight: FontWeight.w600),
                           ),
                         ),
-                      ],
+                      ]),
                     ),
-                  ),
 
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  // Tombol Simpan
-                  ElevatedButton(
-                    onPressed: _submitNilai,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getPrimaryColor(),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    // Submit button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _submitNilai,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          widget.existingNilai != null
+                              ? languageProvider.getTranslatedText({'en': 'Update Grade', 'id': 'Update Nilai'})
+                              : languageProvider.getTranslatedText({'en': 'Save Grade', 'id': 'Simpan Nilai'}),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                    child: Text(
-                      widget.existingNilai != null
-                          ? languageProvider.getTranslatedText({
-                              'en': 'Update Grade',
-                              'id': 'Update Nilai',
-                            })
-                          : languageProvider.getTranslatedText({
-                              'en': 'Save Grade',
-                              'id': 'Simpan Nilai',
-                            }),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                  ]),
+                ),
               ),
             ),
-          ),
+          ]),
         );
       },
     );
@@ -3665,9 +3663,9 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
               Container(
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
                   border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade300),
+                    bottom: BorderSide(color: ColorUtils.slate200),
                   ),
                 ),
                 child: Row(
@@ -3729,9 +3727,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
 
                 return Container(
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
-                    ),
+                    border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
                     color: Colors.white,
                   ),
                   child: Row(
@@ -3739,25 +3735,19 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                       // Name
                       Container(
                         width: 150,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               siswa.name,
-                              style: TextStyle(fontWeight: FontWeight.w500),
+                              style: TextStyle(fontWeight: FontWeight.w500, color: ColorUtils.slate900),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               siswa.nis,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey,
-                              ),
+                              style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                             ),
                           ],
                         ),
@@ -3768,75 +3758,56 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           border: Border(
-                            left: BorderSide(color: Colors.grey.shade200),
-                            right: BorderSide(color: Colors.grey.shade200),
+                            left: BorderSide(color: ColorUtils.slate200),
+                            right: BorderSide(color: ColorUtils.slate200),
                           ),
                         ),
                         child: TextFormField(
                           controller: _tableControllers[nilaiKey],
                           focusNode: _tableFocusNodes[nilaiKey],
-                          keyboardType: TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                          keyboardType: TextInputType.numberWithOptions(decimal: true),
                           textAlign: TextAlign.center,
+                          style: TextStyle(color: ColorUtils.slate900),
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d*'),
-                            ),
+                            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                           ],
                           decoration: InputDecoration(
                             isDense: true,
                             border: InputBorder.none,
                             hintText: '-',
-                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            hintStyle: TextStyle(color: ColorUtils.slate400),
                             errorStyle: TextStyle(fontSize: 10),
                           ),
                           validator: (value) {
                             if (value != null && value.isNotEmpty) {
                               final numValue = double.tryParse(value);
                               if (numValue == null) {
-                                return languageProvider.getTranslatedText({
-                                  'en': 'Numbers only',
-                                  'id': 'Hanya angka',
-                                });
+                                return languageProvider.getTranslatedText({'en': 'Numbers only', 'id': 'Hanya angka'});
                               }
                               if (numValue < 0 || numValue > 100) {
-                                return languageProvider.getTranslatedText({
-                                  'en': '0-100',
-                                  'id': '0-100',
-                                });
+                                return languageProvider.getTranslatedText({'en': '0-100', 'id': '0-100'});
                               }
                             }
                             return null;
                           },
                           onChanged: (value) {
-                            setState(() {
-                              _nilaiSiswaMap[siswa.id]?['nilai'] = value;
-                            });
+                            setState(() { _nilaiSiswaMap[siswa.id]?['nilai'] = value; });
                           },
                         ),
                       ),
                       // Deskripsi Input
                       Expanded(
                         child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           child: TextFormField(
                             controller: _tableControllers[deskripsiKey],
                             focusNode: _tableFocusNodes[deskripsiKey],
+                            style: TextStyle(color: ColorUtils.slate900),
                             decoration: InputDecoration(
                               isDense: true,
                               border: InputBorder.none,
-                              hintText: languageProvider.getTranslatedText({
-                                'en': 'Add description...',
-                                'id': 'Tambah deskripsi...',
-                              }),
-                              hintStyle: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 12,
-                              ),
+                              hintText: languageProvider.getTranslatedText({'en': 'Add description...', 'id': 'Tambah deskripsi...'}),
+                              hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 12),
                             ),
                             onChanged: (value) {
                               _nilaiSiswaMap[siswa.id]?['deskripsi'] = value;
@@ -3855,39 +3826,32 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
     );
   }
 
-  // Build header untuk mode add setelah di-set (mirip dengan edit mode)
+  // Build header for add mode after configured (similar to edit mode)
   Widget _buildAddHeader(LanguageProvider languageProvider) {
     return Container(
       padding: EdgeInsets.all(16),
-      color: Colors.orange.shade50,
+      color: ColorUtils.warning600.withValues(alpha: 0.08),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Left side: Jenis Nilai with edit icon
           GestureDetector(
             onTap: () {
-              setState(() {
-                _isConfigurationSet = false;
-              });
+              setState(() { _isConfigurationSet = false; });
             },
-            child: Row(
-              children: [
-                Text(
-                  _getJenisNilaiLabel(
-                    _confirmedJenisNilai ?? '',
-                    languageProvider,
-                  ),
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.edit, size: 16, color: _getPrimaryColor()),
-              ],
-            ),
+            child: Row(children: [
+              Text(
+                _getJenisNilaiLabel(_confirmedJenisNilai ?? '', languageProvider),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: ColorUtils.warning600),
+              ),
+              SizedBox(width: 8),
+              Icon(Icons.edit, size: 16, color: ColorUtils.warning600),
+            ]),
           ),
           // Right side: Date in Indonesian format
           Text(
             _formatDateIndonesian(_confirmedDate!),
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: ColorUtils.slate700),
           ),
         ],
       ),
@@ -3920,74 +3884,65 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
 
   // Build configuration panel (selection stage)
   Widget _buildConfigurationPanel(LanguageProvider languageProvider) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+    return SingleChildScrollView(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(bottom: BorderSide(color: ColorUtils.slate200, width: 1)),
         ),
-      ),
-      child: Column(
-        children: [
+        child: Column(children: [
           // Subject Info
-          Row(
-            children: [
-              Icon(Icons.menu_book, color: _getPrimaryColor(), size: 40),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})}: ${widget.subject['nama']}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: _getPrimaryColor(),
-                      ),
-                    ),
-                    if (widget.subject['code'] != null ||
-                        widget.subject['kode'] != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${widget.subject['code'] ?? widget.subject['kode']}',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Pilih Jenis Nilai
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorUtils.slate50,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 2,
-                  offset: Offset(0, 1),
+              border: Border.all(color: ColorUtils.slate200),
+            ),
+            child: Row(children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: _getPrimaryColor().withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
+                child: Icon(Icons.menu_book_outlined, color: _getPrimaryColor(), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(
+                  widget.subject['nama'] ?? widget.subject['name'] ?? '-',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: ColorUtils.slate900),
+                ),
+                if (widget.subject['code'] != null || widget.subject['kode'] != null)
+                  Text(
+                    '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${widget.subject['code'] ?? widget.subject['kode']}',
+                    style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
+                  ),
+              ])),
+            ]),
+          ),
+          const SizedBox(height: 12),
+          // Pilih Jenis Nilai - Pattern #9 style
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: ColorUtils.slate50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ColorUtils.slate200),
             ),
             child: DropdownButtonFormField<String>(
               initialValue: _selectedJenisNilai,
               decoration: InputDecoration(
                 border: InputBorder.none,
-                prefixIcon: Icon(Icons.assignment, color: _getPrimaryColor()),
-                hintText: languageProvider.getTranslatedText({
-                  'en': 'Select grade type',
-                  'id': 'Pilih jenis nilai',
-                }),
+                prefixIcon: Icon(Icons.assignment_outlined, color: _getPrimaryColor()),
+                hintText: languageProvider.getTranslatedText({'en': 'Select grade type', 'id': 'Pilih jenis nilai'}),
+                hintStyle: TextStyle(color: ColorUtils.slate400),
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
               ),
+              style: TextStyle(color: ColorUtils.slate900),
               items: _jenisNilaiList.map((String jenis) {
                 return DropdownMenuItem<String>(
                   value: jenis,
@@ -3995,95 +3950,67 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                 );
               }).toList(),
               onChanged: (String? newValue) {
-                setState(() {
-                  _selectedJenisNilai = newValue;
-                });
+                setState(() { _selectedJenisNilai = newValue; });
               },
               validator: (value) {
                 if (value == null) {
-                  return languageProvider.getTranslatedText({
-                    'en': 'Please select grade type',
-                    'id': 'Pilih jenis nilai terlebih dahulu',
-                  });
+                  return languageProvider.getTranslatedText({'en': 'Please select grade type', 'id': 'Pilih jenis nilai terlebih dahulu'});
                 }
                 return null;
               },
             ),
           ),
-          const SizedBox(height: 16),
-          // Pilih Tanggal
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 2,
-                  offset: Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, color: _getPrimaryColor()),
-                const SizedBox(width: 12),
-                Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Date:',
-                    'id': 'Tanggal:',
-                  }),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => _selectDate(context),
-                  child: Text(
-                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                    style: TextStyle(fontSize: 16, color: _getPrimaryColor()),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          // Pilih Tanggal - Pattern #9 style
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorUtils.slate50,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 2,
-                  offset: Offset(0, 1),
+              border: Border.all(color: ColorUtils.slate200),
+            ),
+            child: Row(children: [
+              Icon(Icons.calendar_today, color: _getPrimaryColor(), size: 20),
+              const SizedBox(width: 12),
+              Text(
+                languageProvider.getTranslatedText({'en': 'Date:', 'id': 'Tanggal:'}),
+                style: TextStyle(fontWeight: FontWeight.w500, color: ColorUtils.slate600),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => _selectDate(context),
+                child: Text(
+                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                  style: TextStyle(fontSize: 15, color: _getPrimaryColor(), fontWeight: FontWeight.w600),
                 ),
-              ],
+              ),
+            ]),
+          ),
+          const SizedBox(height: 12),
+          // Title field - Pattern #9 style
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: ColorUtils.slate50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ColorUtils.slate200),
             ),
             child: TextFormField(
               controller: _titleController,
+              style: TextStyle(color: ColorUtils.slate900),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 prefixIcon: Icon(Icons.title, color: _getPrimaryColor()),
-                hintText: languageProvider.getTranslatedText({
-                  'en': 'Assessment Title (Optional)',
-                  'id': 'Judul Penilaian (Opsional)',
-                }),
-                helperText: languageProvider.getTranslatedText({
-                  'en': 'E.g., Quiz 1, Chapter 5 Test',
-                  'id': 'Contoh: Kuis 1, Ulangan Bab 5',
-                }),
+                hintText: languageProvider.getTranslatedText({'en': 'Assessment Title (Optional)', 'id': 'Judul Penilaian (Opsional)'}),
+                hintStyle: TextStyle(color: ColorUtils.slate400),
+                helperText: languageProvider.getTranslatedText({'en': 'E.g., Quiz 1, Chapter 5 Test', 'id': 'Contoh: Kuis 1, Ulangan Bab 5'}),
+                helperStyle: TextStyle(color: ColorUtils.slate400, fontSize: 11),
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
           const SizedBox(height: 20),
-          // Tombol Set
+          // Set button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -4097,25 +4024,18 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                     }
                   : null,
               icon: Icon(Icons.check),
-              label: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Set',
-                  'id': 'Tetapkan',
-                }),
-              ),
+              label: Text(languageProvider.getTranslatedText({'en': 'Set', 'id': 'Tetapkan'})),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _getPrimaryColor(),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                disabledBackgroundColor: Colors.grey.shade300,
-                disabledForegroundColor: Colors.grey.shade600,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                disabledBackgroundColor: ColorUtils.slate200,
+                disabledForegroundColor: ColorUtils.slate500,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
-        ],
+        ]),
       ),
     );
   }
@@ -4130,160 +4050,148 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
         }).length;
 
         return Scaffold(
-          backgroundColor: Colors.grey.shade50,
-          appBar: AppBar(
-            title: Text(
-              languageProvider.getTranslatedText({
-                'en': 'New Grade Input',
-                'id': 'Input Nilai Baru',
-              }),
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+          backgroundColor: ColorUtils.slate50,
+          body: Column(children: [
+            // Pattern #7 Gradient Header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 16,
+                left: 16, right: 16, bottom: 20,
               ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+                ),
+                boxShadow: [BoxShadow(color: _getPrimaryColor().withValues(alpha: 0.3), blurRadius: 8, offset: Offset(0, 2))],
+              ),
+              child: Row(children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                    child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(
+                    languageProvider.getTranslatedText({'en': 'New Grade Input', 'id': 'Input Nilai Baru'}),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  Text(
+                    widget.subject['nama'] ?? widget.subject['name'] ?? '',
+                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.9)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ])),
+              ]),
             ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-            iconTheme: IconThemeData(color: Colors.black),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            bottom: PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Container(height: 1, color: Colors.grey.shade300),
-            ),
-          ),
-          body: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                // Conditional header based on state
-                if (!_isConfigurationSet)
-                  _buildConfigurationPanel(languageProvider)
-                else
-                  _buildAddHeader(languageProvider),
 
-                // Student List Section - only show after configuration is set
-                if (_isConfigurationSet) ...[
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
+            // Body
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: Column(children: [
+                  // Conditional header based on state
+                  if (!_isConfigurationSet)
+                    _buildConfigurationPanel(languageProvider)
+                  else
+                    _buildAddHeader(languageProvider),
+
+                  // Student List Section - only show after configuration is set
+                  if (_isConfigurationSet) ...[
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: Row(children: [
                         Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Student List',
-                            'id': 'Daftar Siswa',
-                          }),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.grey.shade700,
-                          ),
+                          languageProvider.getTranslatedText({'en': 'Student List', 'id': 'Daftar Siswa'}),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: ColorUtils.slate700),
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
                             color: siswaWithNilaiCount > 0
-                                ? Colors.green.shade50
-                                : Colors.grey.shade100,
+                                ? ColorUtils.success600.withValues(alpha: 0.08)
+                                : ColorUtils.slate100,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: siswaWithNilaiCount > 0
-                                  ? Colors.green.shade200
-                                  : Colors.grey.shade300,
+                                  ? ColorUtils.success600.withValues(alpha: 0.3)
+                                  : ColorUtils.slate200,
                             ),
                           ),
                           child: Text(
                             '$siswaWithNilaiCount/${widget.siswaList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
                             style: TextStyle(
-                              color: siswaWithNilaiCount > 0
-                                  ? Colors.green.shade800
-                                  : Colors.grey.shade600,
+                              color: siswaWithNilaiCount > 0 ? ColorUtils.success600 : ColorUtils.slate500,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ],
+                      ]),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Edit grade and description for each student',
-                        'id': 'Edit nilai dan deskripsi untuk setiap siswa',
-                      }),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Edit grade and description for each student',
+                          'id': 'Edit nilai dan deskripsi untuk setiap siswa',
+                        }),
+                        style: TextStyle(fontSize: 12, color: ColorUtils.slate400),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _buildInputTable(languageProvider)),
-                ] else ...[
-                  const Expanded(
-                    child: EmptyState(
-                      title: 'Select grade type and date',
-                      subtitle:
-                          'Please select grade type and date first then click Set',
-                      icon: Icons.assignment,
+                    const SizedBox(height: 12),
+                    Expanded(child: _buildInputTable(languageProvider)),
+                  ] else ...[
+                    const Expanded(
+                      child: EmptyState(
+                        title: 'Select grade type and date',
+                        subtitle: 'Please select grade type and date first then click Set',
+                        icon: Icons.assignment,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
 
-                // Tombol Finish - only show after configuration is set
-                if (_isConfigurationSet) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        top: BorderSide(color: Colors.grey.shade300),
+                  // Finish button - only show after configuration is set
+                  if (_isConfigurationSet) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(top: BorderSide(color: ColorUtils.slate200)),
                       ),
-                    ),
-                    child: SafeArea(
-                      child: ElevatedButton(
-                        onPressed: _submitNilai,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _getPrimaryColor(),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Finish',
-                            'id': 'Selesai',
-                          }),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      child: SafeArea(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _submitNilai,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getPrimaryColor(),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              minimumSize: const Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({'en': 'Finish', 'id': 'Selesai'}),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ],
+                  ],
+                ]),
+              ),
             ),
-          ),
+          ]),
         );
       },
     );
