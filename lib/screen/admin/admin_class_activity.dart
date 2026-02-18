@@ -44,15 +44,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
 
-  final Map<String, Color> _dayColorMap = {
-    'Senin': Color(0xFF6366F1),
-    'Selasa': Color(0xFF10B981),
-    'Rabu': Color(0xFFF59E0B),
-    'Kamis': Color(0xFFEF4444),
-    'Jumat': Color(0xFF8B5CF6),
-    'Sabtu': Color(0xFF06B6D4),
-  };
-
   @override
   void initState() {
     super.initState();
@@ -198,7 +189,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      // We use the paginated service to filter by both teacher and subject
       final response = await ApiClassActivityService.getClassActivityPaginated(
         guruId: _selectedTeacherId,
         mataPelajaranId: subjectId,
@@ -226,7 +216,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: ColorUtils.error600,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -296,10 +286,12 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
     }).toList();
   }
 
+  // ─── Pattern #8: Teacher Card ──────────────────────────────────────────────
   Widget _buildTeacherCard(Map<String, dynamic> teacher, int index) {
     final teacherName = teacher['name']?.toString() ?? 'Nama tidak tersedia';
     final teacherEmail = teacher['email']?.toString() ?? '';
     final teacherNip = teacher['nip']?.toString() ?? '';
+    final avatarColor = ColorUtils.getColorForIndex(index);
 
     return AnimatedBuilder(
       animation: _animationController,
@@ -309,609 +301,340 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
           parent: _animationController,
           curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
         );
-
         return FadeTransition(
           opacity: animation,
           child: Transform.translate(
-            offset: Offset(0, 50 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: GestureDetector(
-        onTap: () =>
-            _loadSubjectsByTeacher(teacher['id'].toString(), teacherName),
-        child: Container(
-          margin: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: index == 0 ? 0 : 6,
-            bottom: 6,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () =>
-                  _loadSubjectsByTeacher(teacher['id'].toString(), teacherName),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      blurRadius: 5,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // Strip biru di pinggir kiri
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 6,
-                        decoration: BoxDecoration(
-                          color: _getPrimaryColor(),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: _getPrimaryColor(),
-                              size: 30,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  teacherName,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (teacherEmail.isNotEmpty) ...[
-                                  SizedBox(height: 2),
-                                  Text(
-                                    teacherEmail,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                                if (teacherNip.isNotEmpty) ...[
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'NIP: $teacherNip',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right,
-                            color: Colors.grey.shade400,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubjectCard(Map<String, dynamic> subject, int index) {
-    final subjectName = subject['name']?.toString() ?? 'Mata Pelajaran';
-
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final delay = index * 0.1;
-        final animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
-        );
-
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 50 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: GestureDetector(
-        onTap: () =>
-            _loadActivitiesBySubject(subject['id'].toString(), subjectName),
-        child: Container(
-          margin: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: index == 0 ? 0 : 6,
-            bottom: 6,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _loadActivitiesBySubject(
-                subject['id'].toString(),
-                subjectName,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      blurRadius: 5,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 6,
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.menu_book,
-                              color: Colors.orange,
-                              size: 30,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  subjectName,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'Klik untuk melihat kegiatan',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right,
-                            color: Colors.grey.shade400,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActivityCard(Map<String, dynamic> activity, int index) {
-    final isAssignment = activity['type'] == 'assignment';
-    final isSpecificTarget = activity['target'] == 'specific';
-
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final delay = index * 0.1;
-        final animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(delay, 1.0, curve: Curves.easeOut),
-        );
-
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 50 * (1 - animation.value)),
+            offset: Offset(0, 30 * (1 - animation.value)),
             child: child,
           ),
         );
       },
       child: Container(
-        margin: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: index == 0 ? 0 : 6,
-          bottom: 6,
+        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () =>
+                _loadSubjectsByTeacher(teacher['id'].toString(), teacherName),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ColorUtils.slate200, width: 1),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+              ),
+              child: Row(
+                children: [
+                  // CircleAvatar with first letter
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: avatarColor.withValues(alpha: 0.15),
+                    child: Text(
+                      teacherName[0].toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: avatarColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Teacher info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          teacherName,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate900,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (teacherEmail.isNotEmpty || teacherNip.isNotEmpty) ...[
+                          SizedBox(height: 5),
+                          Wrap(
+                            spacing: 5,
+                            runSpacing: 4,
+                            children: [
+                              if (teacherEmail.isNotEmpty)
+                                _buildInfoTag(
+                                  Icons.email_outlined,
+                                  teacherEmail,
+                                ),
+                              if (teacherNip.isNotEmpty)
+                                _buildInfoTag(
+                                  Icons.badge_outlined,
+                                  'NIP: $teacherNip',
+                                ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  // Chevron
+                  Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: ColorUtils.slate100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: ColorUtils.slate500,
+                      size: 18,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
+      ),
+    );
+  }
+
+  // ─── Pattern #8: Subject Card ──────────────────────────────────────────────
+  Widget _buildSubjectCard(Map<String, dynamic> subject, int index) {
+    final subjectName = subject['name']?.toString() ?? 'Mata Pelajaran';
+    final subjectColor = ColorUtils.getColorForIndex(index);
+
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final delay = index * 0.1;
+        final animation = CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
+        );
+        return FadeTransition(
+          opacity: animation,
+          child: Transform.translate(
+            offset: Offset(0, 30 * (1 - animation.value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () =>
+                _loadActivitiesBySubject(subject['id'].toString(), subjectName),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ColorUtils.slate200, width: 1),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+              ),
+              child: Row(
+                children: [
+                  // Colored icon container
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: subjectColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: subjectColor.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.menu_book_rounded,
+                      color: subjectColor,
+                      size: 22,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Subject name + hint
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subjectName,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate900,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Ketuk untuk melihat kegiatan',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: ColorUtils.slate100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: ColorUtils.slate500,
+                      size: 18,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Pattern #8: Activity Card ─────────────────────────────────────────────
+  Widget _buildActivityCard(Map<String, dynamic> activity, int index) {
+    final isAssignment = activity['type'] == 'assignment';
+    final isSpecificTarget = activity['target'] == 'specific';
+    final accentColor =
+        isAssignment ? ColorUtils.corporateBlue600 : ColorUtils.success600;
+
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final delay = index * 0.1;
+        final animation = CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
+        );
+        return FadeTransition(
+          opacity: animation,
+          child: Transform.translate(
+            offset: Offset(0, 30 * (1 - animation.value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () => _showActivityDetail(activity),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    blurRadius: 5,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ColorUtils.slate200, width: 1),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
               ),
-              child: Stack(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Strip biru di pinggir kiri
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 6,
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor(),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
+                  // Icon container (tugas vs materi)
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: accentColor.withValues(alpha: 0.25),
                       ),
                     ),
-                  ),
-
-                  // Background pattern effect
-                  Positioned(
-                    right: -8,
-                    top: -8,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
+                    child: Icon(
+                      isAssignment
+                          ? Icons.assignment_outlined
+                          : Icons.menu_book_outlined,
+                      color: accentColor,
+                      size: 22,
                     ),
                   ),
-
-                  Padding(
-                    padding: EdgeInsets.all(16),
+                  SizedBox(width: 12),
+                  // Info
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header dengan judul dan jenis
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    activity['title'] ?? 'Judul Kegiatan',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    '${activity['subject_name']} • ${activity['class_name']}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: _getPrimaryColor().withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                isAssignment ? 'TUGAS' : 'MATERI',
-                                style: TextStyle(
-                                  color: _getPrimaryColor(),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Informasi tanggal dan hari
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.calendar_today,
-                                color: _getPrimaryColor(),
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tanggal',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    '${activity['day']} • ${_formatDate(activity['date'])}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Informasi guru
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.person,
-                                color: _getPrimaryColor(),
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Guru Pengajar',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    activity['teacher_name'] ??
-                                        'Tidak Diketahui',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Informasi deskripsi
-                        if (activity['description'] != null &&
-                            activity['description'].isNotEmpty) ...[
-                          SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: _getPrimaryColor().withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Icon(
-                                  Icons.description,
-                                  color: _getPrimaryColor(),
-                                  size: 16,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Deskripsi',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    SizedBox(height: 1),
-                                    Text(
-                                      activity['description'],
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                        Text(
+                          activity['title'] ?? 'Judul Kegiatan',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate900,
                           ),
-                        ],
-
-                        SizedBox(height: 12),
-
-                        // Status dan action buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          '${activity['subject_name'] ?? '-'} • ${activity['class_name'] ?? '-'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 8),
+                        Wrap(
+                          spacing: 5,
+                          runSpacing: 4,
                           children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSpecificTarget
-                                    ? Colors.purple.withOpacity(0.1)
-                                    : Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: isSpecificTarget
-                                      ? Colors.purple
-                                      : Colors.green,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    isSpecificTarget
-                                        ? Icons.person
-                                        : Icons.group,
-                                    size: 12,
-                                    color: isSpecificTarget
-                                        ? Colors.purple
-                                        : Colors.green,
-                                  ),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    isSpecificTarget
-                                        ? 'Khusus Siswa'
-                                        : 'Semua Siswa',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: isSpecificTarget
-                                          ? Colors.purple
-                                          : Colors.green,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            _buildInfoTag(
+                              Icons.calendar_today_outlined,
+                              '${activity['day'] ?? '-'} • ${_formatDate(activity['date'])}',
                             ),
-                            _buildActionButton(
-                              icon: Icons.visibility,
-                              label: 'Detail',
-                              color: _getPrimaryColor(),
-                              backgroundColor: Colors.white,
-                              borderColor: _getPrimaryColor(),
-                              onPressed: () => _showActivityDetail(activity),
+                            _buildInfoTag(
+                              isAssignment
+                                  ? Icons.assignment_outlined
+                                  : Icons.menu_book_outlined,
+                              isAssignment ? 'Tugas' : 'Materi',
+                              tagColor: accentColor,
+                            ),
+                            _buildInfoTag(
+                              isSpecificTarget
+                                  ? Icons.person_outline
+                                  : Icons.group_outlined,
+                              isSpecificTarget ? 'Khusus' : 'Semua',
+                              tagColor: isSpecificTarget
+                                  ? ColorUtils.corporateBlue600
+                                  : ColorUtils.success600,
                             ),
                           ],
                         ),
                       ],
                     ),
                   ),
+                  SizedBox(width: 8),
+                  Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: ColorUtils.slate100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: ColorUtils.slate500,
+                      size: 18,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -921,49 +644,46 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    Color? backgroundColor,
-    Color? borderColor,
-    required VoidCallback onPressed,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: borderColor ?? Colors.white.withOpacity(0.3),
-            width: 1,
-          ),
+  // ─── Reusable info chip (Pattern #8) ──────────────────────────────────────
+  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
+    final c = tagColor ?? ColorUtils.slate600;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: tagColor != null
+            ? tagColor.withValues(alpha: 0.08)
+            : ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: tagColor != null
+              ? tagColor.withValues(alpha: 0.3)
+              : ColorUtils.slate200,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: color),
-            SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: c),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              color: c,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
+  // ─── Pattern #10: Activity Detail Dialog ──────────────────────────────────
   void _showActivityDetail(Map<String, dynamic> activity) {
     final languageProvider = context.read<LanguageProvider>();
     final isAssignment = activity['jenis'] == 'tugas';
     final isSpecificTarget = activity['target'] == 'khusus';
+    final primaryColor = _getPrimaryColor();
 
     showDialog(
       context: context,
@@ -974,7 +694,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header dengan gradient
+              // Gradient header (Pattern #10)
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(20),
@@ -985,37 +705,45 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                     topRight: Radius.circular(20),
                   ),
                 ),
-                child: Column(
+                child: Row(
                   children: [
                     Container(
-                      width: 60,
-                      height: 60,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         isAssignment ? Icons.assignment : Icons.menu_book,
-                        size: 30,
-                        color: _getPrimaryColor(),
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      activity['judul'] ?? 'Judul Kegiatan',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        size: 22,
                         color: Colors.white,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      '${activity['mata_pelajaran_nama']} • ${activity['kelas_nama']}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                    SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            activity['judul'] ?? 'Judul Kegiatan',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            '${activity['mata_pelajaran_nama'] ?? ''} • ${activity['kelas_nama'] ?? ''}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -1057,7 +785,8 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                     _buildDetailItem(
                       icon: Icons.group,
                       label: 'Target Siswa',
-                      value: isSpecificTarget ? 'Khusus Siswa' : 'Semua Siswa',
+                      value:
+                          isSpecificTarget ? 'Khusus Siswa' : 'Semua Siswa',
                     ),
 
                     if (activity['deskripsi'] != null &&
@@ -1066,24 +795,25 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                       Text(
                         'Deskripsi',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate700,
                         ),
                       ),
                       SizedBox(height: 8),
                       Container(
                         padding: EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade200),
+                          color: ColorUtils.slate50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: ColorUtils.slate200),
                         ),
                         child: Text(
                           activity['deskripsi'],
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey.shade800,
+                            color: ColorUtils.slate700,
+                            height: 1.5,
                           ),
                         ),
                       ),
@@ -1095,9 +825,9 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                       Text(
                         'Informasi Bab',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate700,
                         ),
                       ),
                       SizedBox(height: 8),
@@ -1117,15 +847,15 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                           activity['additional_material'] is List &&
                           (activity['additional_material'] as List)
                               .isNotEmpty) ...[
-                        SizedBox(height: 8),
+                        SizedBox(height: 4),
                         ...(activity['additional_material'] as List)
                             .map<Widget>((item) {
-                              return _buildDetailItem(
-                                icon: Icons.bookmark_add,
-                                label: 'Sub Bab (Tambahan)',
-                                value: item['sub_chapter_title'] ?? 'Unknown',
-                              );
-                            }),
+                          return _buildDetailItem(
+                            icon: Icons.bookmark_add,
+                            label: 'Sub Bab (Tambahan)',
+                            value: item['sub_chapter_title'] ?? 'Unknown',
+                          );
+                        }),
                       ],
                     ],
 
@@ -1139,15 +869,18 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              side: BorderSide(color: Colors.grey.shade300),
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Close',
                                 'id': 'Tutup',
                               }),
-                              style: TextStyle(color: Colors.grey.shade700),
+                              style: TextStyle(
+                                color: ColorUtils.slate700,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -1177,7 +910,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: _getPrimaryColor().withOpacity(0.1),
+              color: _getPrimaryColor().withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 18, color: _getPrimaryColor()),
@@ -1191,7 +924,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: ColorUtils.slate500,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1200,8 +933,8 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                   value,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey.shade800,
-                    fontWeight: FontWeight.w500,
+                    color: ColorUtils.slate800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -1217,15 +950,12 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
   }
 
   LinearGradient _getCardGradient() {
+    final primaryColor = _getPrimaryColor();
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.7)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
     );
-  }
-
-  Color _getDayColor(String day) {
-    return _dayColorMap[day] ?? Color(0xFF6B7280);
   }
 
   String _formatDate(String? date) {
@@ -1280,10 +1010,10 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                   : _getFilteredActivities());
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.slate50,
           body: Column(
             children: [
-              // Header dengan gradient
+              // ─── Pattern #7 Gradient Header ──────────────────────────────
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.only(
@@ -1296,7 +1026,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                   gradient: _getCardGradient(),
                   boxShadow: [
                     BoxShadow(
-                      color: _getPrimaryColor().withOpacity(0.3),
+                      color: _getPrimaryColor().withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),
@@ -1307,6 +1037,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                   children: [
                     Row(
                       children: [
+                        // Back button (40x40 semi-transparent)
                         GestureDetector(
                           onTap: _showTeacherList
                               ? () => Navigator.pop(context)
@@ -1317,7 +1048,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -1328,6 +1059,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                           ),
                         ),
                         SizedBox(width: 12),
+                        // Title + subtitle
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1378,22 +1110,27 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                                   'Melihat kegiatan untuk $_selectedSubjectName',
                                             })),
                                 style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 13,
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        // Icon badge
                         Container(
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
-                            _showTeacherList ? Icons.people : Icons.assignment,
+                            _showTeacherList
+                                ? Icons.people
+                                : (_showSubjectList
+                                      ? Icons.menu_book
+                                      : Icons.assignment),
                             color: Colors.white,
                             size: 20,
                           ),
@@ -1403,76 +1140,65 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                     SizedBox(height: 16),
 
                     // Search Bar
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _searchController,
-                                    style: TextStyle(color: Colors.black87),
-                                    decoration: InputDecoration(
-                                      hintText: _showTeacherList
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              style: TextStyle(color: ColorUtils.slate800),
+                              decoration: InputDecoration(
+                                hintText: _showTeacherList
+                                    ? languageProvider.getTranslatedText({
+                                        'en': 'Search teachers...',
+                                        'id': 'Cari guru...',
+                                      })
+                                    : (_showSubjectList
                                           ? languageProvider.getTranslatedText({
-                                              'en': 'Search teachers...',
-                                              'id': 'Cari guru...',
+                                              'en': 'Search subjects...',
+                                              'id': 'Cari mata pelajaran...',
                                             })
-                                          : (_showSubjectList
-                                                ? languageProvider
-                                                      .getTranslatedText({
-                                                        'en':
-                                                            'Search subjects...',
-                                                        'id':
-                                                            'Cari mata pelajaran...',
-                                                      })
-                                                : languageProvider
-                                                      .getTranslatedText({
-                                                        'en':
-                                                            'Search activities...',
-                                                        'id':
-                                                            'Cari kegiatan...',
-                                                      })),
-                                      hintStyle: TextStyle(color: Colors.grey),
-                                      prefixIcon: Icon(
-                                        Icons.search,
-                                        color: Colors.grey,
-                                      ),
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                    onSubmitted: (_) => setState(() {}),
-                                  ),
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Search activities...',
+                                              'id': 'Cari kegiatan...',
+                                            })),
+                                hintStyle:
+                                    TextStyle(color: ColorUtils.slate400),
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: ColorUtils.slate400,
                                 ),
-                                Container(
-                                  margin: EdgeInsets.only(right: 4),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.search,
-                                      color: _getPrimaryColor(),
-                                    ),
-                                    onPressed: () => setState(() {}),
-                                  ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
-                              ],
+                              ),
+                              onSubmitted: (_) => setState(() {}),
                             ),
                           ),
-                        ),
-                      ],
+                          Container(
+                            margin: EdgeInsets.only(right: 4),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.search,
+                                color: _getPrimaryColor(),
+                              ),
+                              onPressed: () => setState(() {}),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
 
-              // Content
+              // ─── Content ─────────────────────────────────────────────────
               Expanded(
                 child: filteredItems.isEmpty
                     ? EmptyState(
@@ -1520,7 +1246,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                   : Icons.event_note),
                       )
                     : ListView.builder(
-                        padding: EdgeInsets.only(top: 8),
+                        padding: EdgeInsets.only(top: 8, bottom: 16),
                         itemCount: filteredItems.length,
                         itemBuilder: (context, index) {
                           final item = filteredItems[index];

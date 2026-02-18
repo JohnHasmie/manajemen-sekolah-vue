@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-18
-**Version:** 1.8
+**Version:** 1.9
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2484,6 +2484,18 @@ Container(
   - **Delete dialog** (#14): inline Pattern #14 red gradient danger dialog — no `ConfirmationDialog` import
   - **Snackbars**: `ColorUtils.success600` / `ColorUtils.error600` replacing `Colors.green` / `Colors.red`
   - **Zero raw colors**: `Colors.grey`, `withOpacity`, `Color(0xFF...)`, `Colors.red/green` fully eliminated
+✅ **Admin Class Activity** - Full redesign (v1.9 final):
+  - **Header** (#7): Dynamic 3-state title — `_buildTeacherList` shows "Aktivitas Kelas" + subtitle; `_buildSubjectList` shows selected teacher name as title; `_buildActivityList` shows subject name as title; `_getCardGradient()` = `[primaryColor, primaryColor.withValues(alpha:0.85)]` solid admin-blue; 40×40 semi-transparent back button; icon badge (right) toggles per state; embedded `_buildSearchBar`
+  - **Teacher cards** (#8): `CircleAvatar(radius:22)` colored via `ColorUtils.getColorForIndex(index)`, teacher name + NIP + `_buildInfoTag` chips (email, NIP label), slate100 40×40 chevron container on right
+  - **Subject cards** (#8): 44×44 colored icon container `getColorForIndex(index)` with `Icons.menu_book_rounded`, subject name + hint "Tap untuk lihat aktivitas", slate100 chevron right
+  - **Activity cards** (#8): 44×44 icon container — `corporateBlue600` for `tugas` type, `success600` for `materi` type; title + "subject • class" preview text; `_buildInfoTag` chips for date, type (colored tagColor), target role
+  - **`_buildInfoTag`**: Pill chip `px:6 py:3`, icon(10) + text(10), optional `tagColor` for semantic type coloring — same pattern as Announcement and Student Management
+  - **Detail dialog** (#10): `showDialog > Dialog(borderRadius:20)` with gradient header `Row` — 44×44 icon container + title+subtitle column, scrollable `_buildDetailItem` rows (36×36 icon container, label slate500, value slate800), `OutlinedButton` close footer with `ColorUtils.slate300/700`
+  - **`_buildDetailItem`**: 36×36 icon container `primaryColor.withValues(alpha:0.1)`, `ColorUtils.slate500` label, `ColorUtils.slate800` value
+  - **Error snackbar**: `ColorUtils.error600` replacing `Colors.red`
+  - **Scaffold**: `ColorUtils.slate50` background replacing `Color(0xFFF8F9FA)`
+  - **Zero raw colors**: `Colors.grey`, `withOpacity`, `Colors.orange/purple/green/red`, left accent strips fully eliminated
+
 ✅ **Grade (Nilai) Page** - Four classes redesigned:
   - `GradePage`: Gradient header (#7) with search embedded, class/subject selection cards (#8) with color-coded avatar + `_buildInfoTag`
   - `GradeBookPage`: Gradient header (#7) with inline export + filter action buttons (40×40 semi-transparent), filter bottom sheet (#11) with toggle chips, styled assessment detail dialog (#10), danger confirm dialog (#14) for delete
@@ -2511,6 +2523,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 1.8
+**Design System Version:** 1.9
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
