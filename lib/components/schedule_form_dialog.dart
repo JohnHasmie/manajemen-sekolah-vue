@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -382,73 +383,121 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         );
         final uniqueSubjectList = _removeDuplicates(_filteredSubjectList, 'id');
 
+        final isEdit = widget.schedule != null;
+        final title = isEdit
+            ? languageProvider.getTranslatedText({
+                'en': 'Edit Schedule',
+                'id': 'Edit Jadwal',
+              })
+            : languageProvider.getTranslatedText({
+                'en': 'Add Schedule',
+                'id': 'Tambah Jadwal',
+              });
+        final subtitle = isEdit
+            ? languageProvider.getTranslatedText({
+                'en': 'Update schedule information',
+                'id': 'Perbarui informasi jadwal',
+              })
+            : languageProvider.getTranslatedText({
+                'en': 'Fill in the schedule information',
+                'id': 'Isi informasi jadwal',
+              });
+
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header dengan gradient
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        _getPrimaryColor(),
-                        _getPrimaryColor().withOpacity(0.7),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          widget.schedule != null ? Icons.edit : Icons.add,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          widget.schedule != null
-                              ? languageProvider.getTranslatedText({
-                                  'en': 'Edit Schedule',
-                                  'id': 'Edit Jadwal',
-                                })
-                              : languageProvider.getTranslatedText({
-                                  'en': 'Add Schedule',
-                                  'id': 'Tambah Jadwal',
-                                }),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Pattern #9 Header ──
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      _getPrimaryColor(),
+                      _getPrimaryColor().withValues(alpha: 0.82),
                     ],
                   ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
+                child: Row(
+                  children: [
+                    // 44×44 icon container
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        isEdit ? Icons.edit_calendar_outlined : Icons.add_chart,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 32×32 circle X close button
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                Padding(
-                  padding: EdgeInsets.all(20),
+              // ── Form body ──
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -458,26 +507,26 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                           uniqueTeacherList,
                           languageProvider,
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _buildSubjectDropdown(
                           uniqueSubjectList,
                           languageProvider,
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _buildClassDropdown(uniqueClassList, languageProvider),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _buildDayMultiSelect(uniqueHariList, languageProvider),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _buildAcademicYearDropdown(
                           widget.academicYearList,
                           languageProvider,
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _buildSemesterDropdown(
                           uniqueSemesterList,
                           languageProvider,
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _buildTeachingHourDropdown(
                           uniqueJamPelajaranList,
                           languageProvider,
@@ -486,53 +535,65 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     ),
                   ),
                 ),
+              ),
 
-                // Actions
-                Container(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            side: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          child: Text(
-                            AppLocalizations.cancel.tr,
-                            style: TextStyle(color: Colors.grey.shade700),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _saveSchedule,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _getPrimaryColor(),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Save',
-                              'id': 'Simpan',
-                            }),
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ],
+              // ── Pattern #9 Footer ──
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: ColorUtils.slate100, width: 1),
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          side: BorderSide(color: ColorUtils.slate300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Cancel',
+                            'id': 'Batal',
+                          }),
+                          style: TextStyle(color: ColorUtils.slate600),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _saveSchedule,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Save',
+                            'id': 'Simpan',
+                          }),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -548,14 +609,18 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       children: [
         Text(
           languageProvider.getTranslatedText({'en': 'Teacher', 'id': 'Guru'}),
-          style: TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: ColorUtils.slate700,
+          ),
         ),
         SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
@@ -637,14 +702,18 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             'en': 'Subject',
             'id': 'Mata Pelajaran',
           }),
-          style: TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: ColorUtils.slate700,
+          ),
         ),
         SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
@@ -722,14 +791,18 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       children: [
         Text(
           languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-          style: TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: ColorUtils.slate700,
+          ),
         ),
         SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
@@ -802,16 +875,20 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       children: [
         Text(
           languageProvider.getTranslatedText({'en': 'Days', 'id': 'Hari'}),
-          style: TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: ColorUtils.slate700,
+          ),
         ),
         SizedBox(height: 8),
         Container(
           width: double.infinity,
           padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -842,22 +919,22 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                         _filterAvailableJamPelajaran();
                       }
                     },
-                    selectedColor: _getPrimaryColor().withOpacity(0.2),
+                    backgroundColor: Colors.white,
+                    selectedColor: _getPrimaryColor().withValues(alpha: 0.12),
                     checkmarkColor: _getPrimaryColor(),
                     labelStyle: TextStyle(
-                      color: isSelected ? _getPrimaryColor() : Colors.black87,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
+                      fontSize: 13,
+                      color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                    side: BorderSide(
+                      color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
+                      width: 1,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: isSelected
-                            ? _getPrimaryColor()
-                            : Colors.grey.shade300,
-                      ),
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   );
                 }).toList(),
               ),
@@ -900,14 +977,18 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             'en': 'Academic Year',
             'id': 'Tahun Ajaran',
           }),
-          style: TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: ColorUtils.slate700,
+          ),
         ),
         SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
@@ -974,14 +1055,18 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             'en': 'Semester',
             'id': 'Semester',
           }),
-          style: TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: ColorUtils.slate700,
+          ),
         ),
         SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
@@ -1059,14 +1144,18 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
             'en': 'Teaching Hour',
             'id': 'Jam Pelajaran',
           }),
-          style: TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: ColorUtils.slate700,
+          ),
         ),
         SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,

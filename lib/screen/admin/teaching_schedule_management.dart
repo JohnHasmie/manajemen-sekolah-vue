@@ -964,11 +964,76 @@ class TeachingScheduleManagementScreenState
     return ColorUtils.getRoleColor('admin');
   }
 
-  LinearGradient _getCardGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor()],
+  Widget _buildFilterSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: ColorUtils.slate700),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: ColorUtils.slate900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTag(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: ColorUtils.slate600),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCircleActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.15),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, size: 16, color: color),
+      ),
     );
   }
 
@@ -1128,30 +1193,44 @@ class TeachingScheduleManagementScreenState
             height: MediaQuery.of(context).size.height * 0.75,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: SafeArea(
               child: Column(
                 children: [
-                  // Header
+                  // Gradient Header
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                     decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey.shade200),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          ColorUtils.corporateBlue600,
+                          ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
                       ),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Filter',
-                            'id': 'Filter',
-                          }),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(Icons.filter_list, color: Colors.white, size: 20),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            languageProvider.getTranslatedText({'en': 'Filter Schedules', 'id': 'Filter Jadwal'}),
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                         ),
                         TextButton(
@@ -1160,16 +1239,12 @@ class TeachingScheduleManagementScreenState
                               tempSelectedHariId = null;
                               tempSelectedClassId = null;
                               tempSelectedJamPelajaran = null;
-                              // Reset ke nilai default saat ini
                               tempSelectedSemester = _selectedSemester;
                             });
                           },
                           child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Reset',
-                              'id': 'Reset',
-                            }),
-                            style: TextStyle(color: _getPrimaryColor()),
+                            languageProvider.getTranslatedText({'en': 'Reset', 'id': 'Reset'}),
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                           ),
                         ),
                       ],
@@ -1178,32 +1253,22 @@ class TeachingScheduleManagementScreenState
                   // Filter Content
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Day Filter
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Day',
-                              'id': 'Hari',
-                            }),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          _buildFilterSectionHeader(
+                            languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'}),
+                            Icons.calendar_today_outlined,
                           ),
-                          SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: _availableDays.map<Widget>((day) {
                               final dayId = day['id'].toString();
-                              final dayNameRaw =
-                                  day['name'] ?? day['nama'] ?? '';
+                              final dayNameRaw = day['name'] ?? day['nama'] ?? '';
                               final isSelected = tempSelectedHariId == dayId;
-
-                              // Localization helper for days
                               final dayMap = {
                                 'senin': {'en': 'Monday', 'id': 'Senin'},
                                 'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
@@ -1221,223 +1286,151 @@ class TeachingScheduleManagementScreenState
                                 'saturday': {'en': 'Saturday', 'id': 'Sabtu'},
                                 'sunday': {'en': 'Sunday', 'id': 'Minggu'},
                               };
-
-                              final normalizedKey = dayNameRaw
-                                  .toString()
-                                  .toLowerCase();
+                              final normalizedKey = dayNameRaw.toString().toLowerCase();
                               final dayName = dayMap[normalizedKey] != null
-                                  ? languageProvider.getTranslatedText(
-                                      dayMap[normalizedKey]!,
-                                    )
+                                  ? languageProvider.getTranslatedText(dayMap[normalizedKey]!)
                                   : dayNameRaw;
-
                               return FilterChip(
                                 label: Text(dayName),
                                 selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedHariId = selected
-                                        ? dayId
-                                        : null;
-                                  });
-                                },
-                                backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withOpacity(
-                                  0.2,
-                                ),
-                                checkmarkColor: _getPrimaryColor(),
+                                onSelected: (selected) => setModalState(() => tempSelectedHariId = selected ? dayId : null),
+                                backgroundColor: Colors.white,
+                                selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+                                checkmarkColor: ColorUtils.corporateBlue600,
+                                side: BorderSide(color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300, width: 1),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : Colors.grey.shade700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                  color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  fontSize: 13,
                                 ),
                               );
                             }).toList(),
                           ),
-                          SizedBox(height: 24),
 
                           // Class Filter
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Class',
-                              'id': 'Kelas',
-                            }),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          _buildFilterSectionHeader(
+                            languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+                            Icons.class_outlined,
                           ),
-                          SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: _availableClasses.map<Widget>((cls) {
                               final classId = cls['id'].toString();
-                              final className =
-                                  cls['name'] ?? cls['nama'] ?? '';
+                              final className = cls['name'] ?? cls['nama'] ?? '';
                               final isSelected = tempSelectedClassId == classId;
                               return FilterChip(
                                 label: Text(className),
                                 selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedClassId = selected
-                                        ? classId
-                                        : null;
-                                  });
-                                },
-                                backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withOpacity(
-                                  0.2,
-                                ),
-                                checkmarkColor: _getPrimaryColor(),
+                                onSelected: (selected) => setModalState(() => tempSelectedClassId = selected ? classId : null),
+                                backgroundColor: Colors.white,
+                                selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+                                checkmarkColor: ColorUtils.corporateBlue600,
+                                side: BorderSide(color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300, width: 1),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : Colors.grey.shade700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                  color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  fontSize: 13,
                                 ),
                               );
                             }).toList(),
                           ),
-                          SizedBox(height: 24),
 
                           // Semester Filter
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Semester',
-                              'id': 'Semester',
-                            }),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          _buildFilterSectionHeader(
+                            languageProvider.getTranslatedText({'en': 'Semester', 'id': 'Semester'}),
+                            Icons.school_outlined,
                           ),
-                          SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: _semesterList.map<Widget>((semester) {
                               final semesterId = semester['id'].toString();
-                              String semesterNameRaw =
-                                  semester['name'] ??
-                                  semester['nama'] ??
-                                  'Semester $semesterId';
-                              if (semester['academic_year'] != null &&
-                                  semester['academic_year']['year'] != null) {
-                                semesterNameRaw +=
-                                    ' (${semester['academic_year']['year']})';
+                              String semesterName = semester['name'] ?? semester['nama'] ?? 'Semester $semesterId';
+                              if (semester['academic_year'] != null && semester['academic_year']['year'] != null) {
+                                semesterName += ' (${semester['academic_year']['year']})';
                               }
-                              final semesterName = semesterNameRaw;
-                              final isSelected =
-                                  tempSelectedSemester == semesterId;
+                              final isSelected = tempSelectedSemester == semesterId;
                               return FilterChip(
                                 label: Text(semesterName),
                                 selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedSemester = selected
-                                        ? semesterId
-                                        : null;
-                                  });
-                                },
-                                backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withOpacity(
-                                  0.2,
-                                ),
-                                checkmarkColor: _getPrimaryColor(),
+                                onSelected: (selected) => setModalState(() => tempSelectedSemester = selected ? semesterId : null),
+                                backgroundColor: Colors.white,
+                                selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+                                checkmarkColor: ColorUtils.corporateBlue600,
+                                side: BorderSide(color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300, width: 1),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : Colors.grey.shade700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                  color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  fontSize: 13,
                                 ),
                               );
                             }).toList(),
                           ),
-                          SizedBox(height: 24),
 
                           // Jam Pelajaran Filter
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Lesson Hour',
-                              'id': 'Jam Pelajaran',
-                            }),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          _buildFilterSectionHeader(
+                            languageProvider.getTranslatedText({'en': 'Lesson Hour', 'id': 'Jam Pelajaran'}),
+                            Icons.access_time_outlined,
                           ),
-                          SizedBox(height: 12),
                           Builder(
                             builder: (context) {
-                              // Extract unique hour numbers
                               final Set<String> uniqueHours = {};
                               for (var jp in _jamPelajaranList) {
-                                final h = (jp['hour_number'] ?? jp['jam_ke'])
-                                    ?.toString();
+                                final h = (jp['hour_number'] ?? jp['jam_ke'])?.toString();
                                 if (h != null) uniqueHours.add(h);
                               }
-
                               final sortedHours = uniqueHours.toList()
-                                ..sort((a, b) {
-                                  final intA = int.tryParse(a) ?? 0;
-                                  final intB = int.tryParse(b) ?? 0;
-                                  return intA.compareTo(intB);
-                                });
-
+                                ..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
                               return Wrap(
                                 spacing: 8,
                                 runSpacing: 8,
                                 children: sortedHours.map<Widget>((hourNum) {
-                                  final isSelected =
-                                      tempSelectedJamPelajaran == hourNum;
+                                  final isSelected = tempSelectedJamPelajaran == hourNum;
                                   return FilterChip(
-                                    label: Text(hourNum),
+                                    label: Text('Jam $hourNum'),
                                     selected: isSelected,
-                                    onSelected: (selected) {
-                                      setModalState(() {
-                                        tempSelectedJamPelajaran = selected
-                                            ? hourNum
-                                            : null;
-                                      });
-                                    },
-                                    backgroundColor: Colors.grey.shade100,
-                                    selectedColor: _getPrimaryColor()
-                                        .withOpacity(0.2),
-                                    checkmarkColor: _getPrimaryColor(),
+                                    onSelected: (selected) => setModalState(() => tempSelectedJamPelajaran = selected ? hourNum : null),
+                                    backgroundColor: Colors.white,
+                                    selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+                                    checkmarkColor: ColorUtils.corporateBlue600,
+                                    side: BorderSide(color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300, width: 1),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     labelStyle: TextStyle(
-                                      color: isSelected
-                                          ? _getPrimaryColor()
-                                          : Colors.grey.shade700,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                      color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                      fontSize: 13,
                                     ),
                                   );
                                 }).toList(),
                               );
                             },
                           ),
-                          SizedBox(height: 24),
+                          SizedBox(height: 16),
                         ],
                       ),
                     ),
                   ),
-                  // Actions
+                  // Footer buttons
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
                     decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: Colors.grey.shade200),
-                      ),
+                      color: Colors.white,
+                      border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorUtils.slate900.withValues(alpha: 0.06),
+                          blurRadius: 8,
+                          offset: Offset(0, -2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -1445,22 +1438,17 @@ class TeachingScheduleManagementScreenState
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              side: BorderSide(color: Colors.grey.shade300),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Cancel',
-                                'id': 'Batal',
-                              }),
-                              style: TextStyle(color: Colors.grey.shade800),
+                              languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
+                              style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
-                        SizedBox(width: 16),
+                        SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -1468,31 +1456,22 @@ class TeachingScheduleManagementScreenState
                                 _selectedHariId = tempSelectedHariId;
                                 _selectedClassId = tempSelectedClassId;
                                 _selectedFilterSemester = tempSelectedSemester;
-                                _selectedJamPelajaran =
-                                    tempSelectedJamPelajaran;
+                                _selectedJamPelajaran = tempSelectedJamPelajaran;
                                 _checkActiveFilter();
                               });
                               Navigator.pop(context);
                               _loadData();
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _getPrimaryColor(),
+                              backgroundColor: ColorUtils.corporateBlue600,
                               foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Apply Filter',
-                                'id': 'Terapkan Filter',
-                              }),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                              languageProvider.getTranslatedText({'en': 'Apply Filter', 'id': 'Terapkan Filter'}),
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -1631,47 +1610,105 @@ class TeachingScheduleManagementScreenState
 
     return Column(
       children: [
-        // Header dengan tombol export
+        // ── Table info bar ──
         Container(
-          padding: EdgeInsets.all(16),
-          color: Colors.white,
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
+          ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${_gridData.length} ${languageProvider.getTranslatedText({'en': 'schedule entries', 'id': 'entri jadwal'})}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: _getPrimaryColor().withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.table_chart_outlined,
+                  size: 18,
+                  color: _getPrimaryColor(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Weekly Schedule Table',
+                        'id': 'Tabel Jadwal Mingguan',
+                      }),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.slate900,
+                      ),
+                    ),
+                    Text(
+                      '${_gridData.length} ${languageProvider.getTranslatedText({'en': 'schedule entries', 'id': 'entri jadwal'})}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ColorUtils.slate500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               ElevatedButton.icon(
                 onPressed: _exportToExcel,
-                icon: Icon(Icons.file_download, size: 16),
+                icon: const Icon(Icons.file_download_outlined, size: 16),
                 label: Text(
                   languageProvider.getTranslatedText({
-                    'en': 'Export Excel',
-                    'id': 'Ekspor Excel',
+                    'en': 'Export',
+                    'id': 'Ekspor',
                   }),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _getPrimaryColor(),
                   foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
         ),
 
-        // DataGrid dengan Sticky Column
+        const SizedBox(height: 12),
+
+        // ── DataGrid with styled card ──
         Expanded(
-          child: Card(
-            margin: EdgeInsets.all(8),
-            elevation: 2,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: SfDataGridTheme(
               data: SfDataGridThemeData(
-                gridLineColor: Colors.black,
+                gridLineColor: ColorUtils.slate200,
                 gridLineStrokeWidth: 1.0,
+                headerColor: _getPrimaryColor(),
               ),
               child: SfDataGrid(
                 source: _timetableDataSource!,
@@ -1679,27 +1716,23 @@ class TeachingScheduleManagementScreenState
                 columnWidthMode: ColumnWidthMode.none,
                 gridLinesVisibility: GridLinesVisibility.both,
                 headerGridLinesVisibility: GridLinesVisibility.both,
-                headerRowHeight: 80,
+                headerRowHeight: 72,
                 onQueryRowHeight: (RowHeightDetails details) {
-                  if (details.rowIndex == 0) return 80.0; // Header row height
+                  if (details.rowIndex == 0) return 72.0;
 
                   final String timeSlot =
                       _timetableDataSource!.timeSlots[details.rowIndex - 1];
-                  final days = _timetableDataSource!.days;
+                  final rowDays = _timetableDataSource!.days;
 
                   int maxSchedules = 0;
-                  for (var day in days) {
+                  for (var day in rowDays) {
                     final count = _gridData
                         .where((d) => d.waktu == timeSlot && d.hari == day)
                         .length;
                     if (count > maxSchedules) maxSchedules = count;
                   }
 
-                  // If empty in all days for this time slot, use a small min height
                   if (maxSchedules == 0) return 40.0;
-
-                  // Adjust height based on number of schedules:
-                  // Base 10px + (number of schedules * ~32px each)
                   return (maxSchedules * 32.0 + 10.0).clamp(40.0, 500.0);
                 },
                 columns: [
@@ -1708,18 +1741,32 @@ class TeachingScheduleManagementScreenState
                     width: 100,
                     label: Container(
                       color: _getPrimaryColor(),
-                      padding: EdgeInsets.all(4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                       alignment: Alignment.center,
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Time',
-                          'id': 'Waktu',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            color: Colors.white.withValues(alpha: 0.85),
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Time',
+                              'id': 'Waktu',
+                            }),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -1729,43 +1776,46 @@ class TeachingScheduleManagementScreenState
                       width: 150,
                       label: Container(
                         color: _getPrimaryColor(),
-                        padding: EdgeInsets.all(4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 6,
+                        ),
                         alignment: Alignment.center,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               day,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
                                 color: Colors.white,
-                                fontSize: 12,
+                                fontSize: 13,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Flexible(
                               child: Wrap(
-                                spacing: 2,
-                                runSpacing: 1,
+                                spacing: 3,
+                                runSpacing: 2,
                                 alignment: WrapAlignment.center,
                                 children: classNames.map((className) {
                                   return Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 3,
-                                      vertical: 1,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(2),
+                                      color: Colors.white.withValues(alpha: 0.22),
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
-                                      className.toString().length > 3
-                                          ? className.toString().substring(0, 3)
+                                      className.toString().length > 4
+                                          ? className.toString().substring(0, 4)
                                           : className.toString(),
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.w500,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   );
@@ -1815,10 +1865,17 @@ class TeachingScheduleManagementScreenState
                   bottom: 16,
                 ),
                 decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      ColorUtils.corporateBlue600,
+                      ColorUtils.corporateBlue600.withValues(alpha: 0.85),
+                    ],
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: _getPrimaryColor().withOpacity(0.3),
+                      color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),
@@ -1835,7 +1892,7 @@ class TeachingScheduleManagementScreenState
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -1869,7 +1926,7 @@ class TeachingScheduleManagementScreenState
                                 }),
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -1893,7 +1950,7 @@ class TeachingScheduleManagementScreenState
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -1924,7 +1981,7 @@ class TeachingScheduleManagementScreenState
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -1996,7 +2053,7 @@ class TeachingScheduleManagementScreenState
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -2062,10 +2119,10 @@ class TeachingScheduleManagementScreenState
                           decoration: BoxDecoration(
                             color: _hasActiveFilter
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.2),
+                                : Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Stack(
@@ -2169,10 +2226,10 @@ class TeachingScheduleManagementScreenState
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.2),
+                                  color: Colors.red.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: Colors.red.withOpacity(0.3),
+                                    color: Colors.red.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -2273,10 +2330,17 @@ class TeachingScheduleManagementScreenState
     );
   }
 
-  // ... (sisanya tetap sama - _buildScheduleCard, _buildActionButton, _formatTime, _showScheduleDetail, _buildDetailItem)
-
   Widget _buildScheduleCard(Map<String, dynamic> schedule, int index) {
-    final languageProvider = context.read<LanguageProvider>();
+    final color = ColorUtils.getColorForIndex(index);
+    final subjectName = schedule['mata_pelajaran_nama'] ?? 'No Subject';
+    final teacherName = schedule['guru_nama'] ?? '-';
+    final className = schedule['kelas_nama'] ?? '-';
+    final dayLabel = _formatScheduleDays(schedule);
+    final timeLabel = _formatTime(schedule);
+    final isReadOnly = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    ).isReadOnly;
 
     return AnimatedBuilder(
       animation: _animationController,
@@ -2286,7 +2350,6 @@ class TeachingScheduleManagementScreenState
           parent: _animationController,
           curve: Interval(delay, 1.0, curve: Curves.easeOut),
         );
-
         return FadeTransition(
           opacity: animation,
           child: Transform.translate(
@@ -2295,270 +2358,105 @@ class TeachingScheduleManagementScreenState
           ),
         );
       },
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showScheduleDetail(schedule),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            margin: EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 5,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
+      child: GestureDetector(
+        onTap: () => _showScheduleDetail(schedule),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorUtils.slate200, width: 1),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Strip biru di pinggir kiri
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 6,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor(),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
-                      ),
+                // Colored icon container
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.2),
+                      width: 1,
                     ),
                   ),
-                ),
-
-                // Background pattern effect
-                Positioned(
-                  right: -8,
-                  top: -8,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
+                  child: Icon(
+                    Icons.calendar_today_rounded,
+                    color: color,
+                    size: 22,
                   ),
                 ),
-
-                // Content
-                Padding(
-                  padding: EdgeInsets.all(16),
+                const SizedBox(width: 14),
+                // Main content
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header dengan subject dan status
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  schedule['mata_pelajaran_nama'] ??
-                                      'No Subject',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  schedule['guru_nama'] ?? 'No Teacher',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            _formatScheduleDays(schedule),
-                            style: TextStyle(
-                              color: _getPrimaryColor(),
-                              fontSize: 14, // Adjusted size
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 12),
-
-                      // Informasi kelas dan hari
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.school,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Class',
-                                    'id': 'Kelas',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  schedule['kelas_nama'] ?? 'No Class',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 8),
-
-                      // Informasi hari dan jam
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.access_time,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Schedule',
-                                    'id': 'Jadwal',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  _formatTime(schedule),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 12),
-
-                      // Action buttons
-                      if (!Provider.of<AcademicYearProvider>(
-                        context,
-                        listen: false,
-                      ).isReadOnly)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _buildActionButton(
-                              icon: Icons.edit,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Edit',
-                                'id': 'Edit',
-                              }),
-                              color: _getPrimaryColor(),
-                              onPressed: () => _editSchedule(schedule),
-                            ),
-                            SizedBox(width: 8),
-                            _buildActionButton(
-                              icon: Icons.delete,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Delete',
-                                'id': 'Hapus',
-                              }),
-                              color: Colors.red,
-                              onPressed: () => _deleteSchedule(schedule['id']),
-                            ),
-                          ],
+                      // Subject name
+                      Text(
+                        subjectName,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      // Teacher name
+                      Text(
+                        teacherName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate500,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 10),
+                      // Info tags row
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          _buildInfoTag(Icons.school_outlined, className),
+                          _buildInfoTag(Icons.today_outlined, dayLabel),
+                          _buildInfoTag(Icons.access_time_outlined, timeLabel),
+                        ],
+                      ),
                     ],
                   ),
                 ),
+                // Action buttons column
+                if (!isReadOnly) ...[
+                  const SizedBox(width: 10),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildCircleActionButton(
+                        icon: Icons.edit_outlined,
+                        color: _getPrimaryColor(),
+                        onPressed: () => _editSchedule(schedule),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildCircleActionButton(
+                        icon: Icons.delete_outline,
+                        color: ColorUtils.error600,
+                        onPressed: () => _deleteSchedule(schedule['id']),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return SizedBox(
-      height: 28,
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 12, color: Colors.white),
-        label: Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 1,
         ),
       ),
     );
@@ -2706,107 +2604,233 @@ class TeachingScheduleManagementScreenState
 
   void _showScheduleDetail(Map<String, dynamic> schedule) {
     final languageProvider = context.read<LanguageProvider>();
+    final isReadOnly = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    ).isReadOnly;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.schedule, color: _getPrimaryColor()),
-            SizedBox(width: 8),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'Schedule Details',
-                'id': 'Detail Jadwal',
-              }),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: _getPrimaryColor(),
+            // ── Pattern #10 Gradient Header ──
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _getPrimaryColor(),
+                    _getPrimaryColor().withValues(alpha: 0.82),
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.calendar_today_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Schedule Details',
+                            'id': 'Detail Jadwal',
+                          }),
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          schedule['mata_pelajaran_nama'] ?? '-',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Detail rows ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                children: [
+                  _buildDetailItem(
+                    icon: Icons.subject_outlined,
+                    title: languageProvider.getTranslatedText({
+                      'en': 'Subject',
+                      'id': 'Mata Pelajaran',
+                    }),
+                    value: schedule['mata_pelajaran_nama'] ?? '-',
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.person_outline,
+                    title: languageProvider.getTranslatedText({
+                      'en': 'Teacher',
+                      'id': 'Guru',
+                    }),
+                    value: schedule['guru_nama'] ?? '-',
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.school_outlined,
+                    title: languageProvider.getTranslatedText({
+                      'en': 'Class',
+                      'id': 'Kelas',
+                    }),
+                    value: schedule['kelas_nama'] ?? '-',
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.today_outlined,
+                    title: languageProvider.getTranslatedText({
+                      'en': 'Day',
+                      'id': 'Hari',
+                    }),
+                    value: _formatScheduleDays(schedule, languageProvider),
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.access_time_outlined,
+                    title: languageProvider.getTranslatedText({
+                      'en': 'Time',
+                      'id': 'Waktu',
+                    }),
+                    value: _formatTime(schedule),
+                  ),
+                  _buildDetailItem(
+                    icon: Icons.grade_outlined,
+                    title: languageProvider.getTranslatedText({
+                      'en': 'Grade Level',
+                      'id': 'Tingkat Kelas',
+                    }),
+                    value: _getGradeLevel(schedule['class_id'] ?? ''),
+                    isLast: true,
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Footer ──
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: ColorUtils.slate100, width: 1),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        side: BorderSide(color: ColorUtils.slate300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Close',
+                          'id': 'Tutup',
+                        }),
+                        style: TextStyle(color: ColorUtils.slate600),
+                      ),
+                    ),
+                  ),
+                  if (!isReadOnly) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _editSchedule(schedule);
+                        },
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Edit',
+                            'id': 'Edit',
+                          }),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailItem(
-              icon: Icons.subject,
-              title: languageProvider.getTranslatedText({
-                'en': 'Subject',
-                'id': 'Mata Pelajaran',
-              }),
-              value: schedule['mata_pelajaran_nama'] ?? 'No Subject',
-            ),
-            _buildDetailItem(
-              icon: Icons.person,
-              title: languageProvider.getTranslatedText({
-                'en': 'Teacher',
-                'id': 'Guru',
-              }),
-              value: schedule['guru_nama'] ?? 'No Teacher',
-            ),
-            _buildDetailItem(
-              icon: Icons.school,
-              title: languageProvider.getTranslatedText({
-                'en': 'Class',
-                'id': 'Kelas',
-              }),
-              value: schedule['kelas_nama'] ?? 'No Class',
-            ),
-            _buildDetailItem(
-              icon: Icons.calendar_today,
-              title: languageProvider.getTranslatedText({
-                'en': 'Day',
-                'id': 'Hari',
-              }),
-              value: _formatScheduleDays(schedule, languageProvider),
-            ),
-            _buildDetailItem(
-              icon: Icons.access_time,
-              title: languageProvider.getTranslatedText({
-                'en': 'Time',
-                'id': 'Waktu',
-              }),
-              value: _formatTime(schedule),
-            ),
-            _buildDetailItem(
-              icon: Icons.school,
-              title: languageProvider.getTranslatedText({
-                'en': 'Grade Level',
-                'id': 'Tingkat Kelas',
-              }),
-              value: _getGradeLevel(schedule['class_id'] ?? ''),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Close',
-                'id': 'Tutup',
-              }),
-              style: TextStyle(color: _getPrimaryColor()),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _editSchedule(schedule);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _getPrimaryColor(),
-            ),
-            child: Text(
-              languageProvider.getTranslatedText({'en': 'Edit', 'id': 'Edit'}),
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -2815,14 +2839,31 @@ class TeachingScheduleManagementScreenState
     required IconData icon,
     required String title,
     required String value,
+    bool isLast = false,
   }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: ColorUtils.slate100, width: 1)),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: _getPrimaryColor()),
-          SizedBox(width: 8),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: _getPrimaryColor().withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _getPrimaryColor().withValues(alpha: 0.15),
+              ),
+            ),
+            child: Icon(icon, size: 18, color: _getPrimaryColor()),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2830,18 +2871,18 @@ class TeachingScheduleManagementScreenState
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+                    fontSize: 11,
+                    color: ColorUtils.slate500,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   value,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+                    color: ColorUtils.slate900,
                   ),
                 ),
               ],
@@ -2957,10 +2998,10 @@ class TimetableDataSource extends DataGridSource {
               margin: EdgeInsets.only(bottom: 2),
               padding: EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
+                color: primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
-                  color: primaryColor.withOpacity(0.3),
+                  color: primaryColor.withValues(alpha: 0.3),
                   width: 0.5,
                 ),
               ),
@@ -2972,7 +3013,7 @@ class TimetableDataSource extends DataGridSource {
                     width: 24,
                     padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
                     decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.2),
+                      color: primaryColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
