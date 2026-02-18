@@ -403,14 +403,21 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                 'id': 'Isi informasi jadwal',
               });
 
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.92,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
               // ── Pattern #9 Header ──
               Container(
                 width: double.infinity,
@@ -425,8 +432,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     ],
                   ),
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
                   ),
                 ),
                 child: Row(
@@ -495,7 +502,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
               ),
 
               // ── Form body ──
-              Flexible(
+              Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Form(
@@ -595,6 +602,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
               ),
             ],
           ),
+        ),
         );
       },
     );

@@ -813,8 +813,10 @@ class TeachingScheduleManagementScreenState
   }
 
   Future<void> _addSchedule() async {
-    final result = await showDialog(
+    final result = await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => ScheduleFormDialog(
         teacherList: _availableTeachers,
         subjectList: _subjectList,
@@ -836,8 +838,10 @@ class TeachingScheduleManagementScreenState
   }
 
   Future<void> _editSchedule(dynamic schedule) async {
-    final result = await showDialog(
+    final result = await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => ScheduleFormDialog(
         teacherList: _availableTeachers,
         subjectList: _subjectList,

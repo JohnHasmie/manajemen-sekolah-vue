@@ -2356,7 +2356,7 @@ Container(
 ✅ **Teacher Management** - Gradient header (#7), compact list cards (#8) with vertical info stacking, add/edit form bottom sheet (#13), filter sheet (#11), full-screen detail (#12)
 ✅ **Class Management** - Gradient header (#7), compact list cards (#8) with `_buildInfoTag`, add/edit form bottom sheet (#13) with grade/teacher dropdowns + StatefulBuilder inside Consumer, filter sheet (#11), detail popup (#10)
 ✅ **Subject Management** - Gradient header (#7), compact list cards (#8) with CircleAvatar + `_buildInfoTag` + `_buildCircleActionButton`, add/edit form bottom sheet (#13) with Autocomplete + SwitchListTile, filter sheet (#11) with 4 sections; SubjectClassManagementPage with modern class assignment cards
-✅ **Teaching Schedule Management** - Gradient header (#7), compact list cards (#8) with colored icon container + `_buildInfoTag` (class/day/time) + `_buildCircleActionButton`, schedule form dialog (#9, via ScheduleFormDialog component), detail dialog (#10), filter sheet (#11), table view with styled info bar + SfDataGrid card
+✅ **Teaching Schedule Management** - Gradient header (#7), compact list cards (#8) with colored icon container + `_buildInfoTag` (class/day/time) + `_buildCircleActionButton`, add/edit form bottom sheet (#13, via ScheduleFormDialog component), detail dialog (#10), filter sheet (#11), table view with styled info bar + SfDataGrid card
 
 ### When Applying to New Pages
 1. **Read this guide first**
