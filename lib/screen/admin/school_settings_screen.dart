@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/screen/admin/school_level_settings_screen.dart';
 import 'package:manajemensekolah/screen/admin/time_settings_screen.dart';
+import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -12,164 +13,168 @@ class SchoolSettingsScreen extends StatefulWidget {
 }
 
 class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
-  Color _getPrimaryColor() {
-    return Color(0xFF4361EE);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
+
+    final menuItems = [
+      _MenuItem(
+        title: AppLocalizations.generalSettings.tr,
+        subtitle: 'Jenjang & informasi sekolah',
+        icon: Icons.school_rounded,
+        color: ColorUtils.getColorForIndex(0),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => SchoolLevelSettingsScreen()),
+        ),
+      ),
+      _MenuItem(
+        title: AppLocalizations.timeSettings.tr,
+        subtitle: 'Jadwal & waktu pembelajaran',
+        icon: Icons.access_time_rounded,
+        color: ColorUtils.getColorForIndex(2),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => TimeSettingsScreen()),
+        ),
+      ),
+    ];
+
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: ColorUtils.slate50,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: ColorUtils.corporateBlue600,
+        iconTheme: IconThemeData(color: Colors.white),
         title: Text(
-          context.watch<LanguageProvider>().getTranslatedText(
-            AppLocalizations.schoolSettings,
-          ),
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          lang.getTranslatedText(AppLocalizations.schoolSettings),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
         ),
-        iconTheme: IconThemeData(color: Colors.black),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                ColorUtils.corporateBlue600,
+                ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.watch<LanguageProvider>().getTranslatedText(
-                  AppLocalizations.settingsMenu,
-                ),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-              SizedBox(height: 16),
-              GridView.count(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.1,
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section header
+            Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: Row(
                 children: [
-                  _buildMenuCard(
-                    context,
-                    AppLocalizations.generalSettings.tr,
-                    Icons.school,
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SchoolLevelSettingsScreen(),
-                      ),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.tune_rounded, color: ColorUtils.corporateBlue600, size: 17),
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    lang.getTranslatedText(AppLocalizations.settingsMenu),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate800,
                     ),
                   ),
-                  _buildMenuCard(
-                    context,
-                    AppLocalizations.timeSettings.tr,
-                    Icons.access_time,
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TimeSettingsScreen(),
-                      ),
-                    ),
-                  ),
-                  // Add more menu items here in the future
                 ],
               ),
-            ],
-          ),
+            ),
+
+            // Menu grid
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.05,
+              ),
+              itemCount: menuItems.length,
+              itemBuilder: (context, index) => _buildMenuCard(menuItems[index]),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuCard(
-    BuildContext context,
-    String title,
-    IconData icon,
-    VoidCallback onTap,
-  ) {
+  Widget _buildMenuCard(_MenuItem item) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: item.onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
-          child: Stack(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Strip color
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 6,
-                  decoration: BoxDecoration(
-                    color: _getPrimaryColor(),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: item.color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: item.color.withValues(alpha: 0.2)),
                     ),
+                    child: Icon(item.icon, color: item.color, size: 24),
                   ),
-                ),
-              ),
-              // Background pattern
-              Positioned(
-                right: -8,
-                top: -8,
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: _getPrimaryColor().withOpacity(0.05),
-                    shape: BoxShape.circle,
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: ColorUtils.slate100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.chevron_right_rounded, color: ColorUtils.slate500, size: 18),
                   ),
-                ),
+                ],
               ),
-              // Content
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor().withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: _getPrimaryColor(), size: 30),
-                    ),
-                    Spacer(),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              Spacer(),
+              Text(
+                item.title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: ColorUtils.slate900,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 3),
+              Text(
+                item.subtitle,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: ColorUtils.slate500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -177,4 +182,20 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
       ),
     );
   }
+}
+
+class _MenuItem {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _MenuItem({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 }
