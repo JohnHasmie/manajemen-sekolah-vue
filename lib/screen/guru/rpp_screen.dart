@@ -107,7 +107,7 @@ class RppScreenState extends State<RppScreen>
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           return Container(
-            height: MediaQuery.of(context).size.height * 0.4,
+            height: MediaQuery.of(context).size.height * 0.5,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
@@ -117,26 +117,42 @@ class RppScreenState extends State<RppScreen>
             ),
             child: Column(
               children: [
-                // Header
+                // Header (Pattern #11 gradient)
                 Container(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _getPrimaryColor(),
+                        _getPrimaryColor().withValues(alpha: 0.85),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Filter',
-                          'id': 'Filter',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                          SizedBox(width: 10),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Filter',
+                              'id': 'Filter',
+                            }),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                       TextButton(
                         onPressed: () {
@@ -144,12 +160,22 @@ class RppScreenState extends State<RppScreen>
                             tempSelectedStatus = null;
                           });
                         },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
                         child: Text(
                           languageProvider.getTranslatedText({
                             'en': 'Reset',
                             'id': 'Reset',
                           }),
-                          style: TextStyle(color: _getPrimaryColor()),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -164,15 +190,26 @@ class RppScreenState extends State<RppScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Status Filter
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Status',
-                            'id': 'Status',
-                          }),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.swap_horiz_rounded,
+                              size: 18,
+                              color: ColorUtils.slate700,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Status',
+                                'id': 'Status',
+                              }),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate900,
+                              ),
+                            ),
+                          ],
                         ),
                         SizedBox(height: 12),
                         Wrap(
@@ -234,9 +271,12 @@ class RppScreenState extends State<RppScreen>
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: ColorUtils.slate200),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.shade300,
+                        color: ColorUtils.slate900.withValues(alpha: 0.05),
                         offset: Offset(0, -2),
                         blurRadius: 8,
                       ),
@@ -248,8 +288,8 @@ class RppScreenState extends State<RppScreen>
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: _getPrimaryColor()),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: ColorUtils.slate300),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -259,7 +299,7 @@ class RppScreenState extends State<RppScreen>
                               'en': 'Cancel',
                               'id': 'Batal',
                             }),
-                            style: TextStyle(color: _getPrimaryColor()),
+                            style: TextStyle(color: ColorUtils.slate600),
                           ),
                         ),
                       ),
@@ -276,7 +316,8 @@ class RppScreenState extends State<RppScreen>
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _getPrimaryColor(),
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -286,7 +327,10 @@ class RppScreenState extends State<RppScreen>
                               'en': 'Apply Filter',
                               'id': 'Terapkan Filter',
                             }),
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -313,13 +357,13 @@ class RppScreenState extends State<RppScreen>
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => onSelected(),
-      selectedColor: _getPrimaryColor().withOpacity(0.2),
+      selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
       labelStyle: TextStyle(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade700,
+        color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade300,
+        color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
       ),
     );
   }
@@ -363,20 +407,33 @@ class RppScreenState extends State<RppScreen>
   }
 
   void _tambahRpp() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) =>
-          RppFormDialog(teacherId: widget.teacherId, onSaved: _loadRpp),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: RppFormDialog(teacherId: widget.teacherId, onSaved: _loadRpp),
+      ),
     );
   }
 
   void _editRpp(Map<String, dynamic> rpp) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => RppFormDialog(
-        teacherId: widget.teacherId,
-        onSaved: _loadRpp,
-        rppData: rpp,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: RppFormDialog(
+          teacherId: widget.teacherId,
+          onSaved: _loadRpp,
+          rppData: rpp,
+        ),
       ),
     );
   }
@@ -400,7 +457,13 @@ class RppScreenState extends State<RppScreen>
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorUtils.error600,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
             child: Text(
               AppLocalizations.delete.tr,
               style: TextStyle(color: Colors.white),
@@ -423,7 +486,7 @@ class RppScreenState extends State<RppScreen>
                   'id': 'RPP berhasil dihapus',
                 }),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: ColorUtils.success600,
             ),
           );
         }
@@ -435,7 +498,7 @@ class RppScreenState extends State<RppScreen>
               content: Text(
                 '${languageProvider.getTranslatedText({'en': 'Failed to delete RPP: ', 'id': 'Gagal menghapus RPP: '})}${ErrorUtils.getFriendlyMessage(e)}',
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: ColorUtils.error600,
             ),
           );
         }
@@ -454,35 +517,37 @@ class RppScreenState extends State<RppScreen>
     switch (status) {
       case 'Disetujui':
       case 'Approved':
-        return Colors.green;
+        return ColorUtils.success600;
       case 'Menunggu':
       case 'Pending':
-        return Colors.orange;
+        return ColorUtils.warning600;
       case 'Ditolak':
       case 'Rejected':
-        return Colors.red;
+        return ColorUtils.error600;
+      case 'Draft':
       case 'draft':
-        return Colors.blue;
+        return ColorUtils.info600;
       default:
-        return Colors.grey;
+        return ColorUtils.slate400;
     }
   }
 
-  IconData _getStatusIcon(String status) {
+  String _getStatusLabel(String? status) {
     switch (status) {
-      case 'Disetujui':
       case 'Approved':
-        return Icons.check_circle;
-      case 'Menunggu':
+      case 'Disetujui':
+        return 'Disetujui';
       case 'Pending':
-        return Icons.access_time;
-      case 'Ditolak':
-      case 'Rejected':
-        return Icons.cancel;
+      case 'Menunggu':
+        return 'Menunggu';
+      case 'Draft':
       case 'draft':
-        return Icons.drafts;
+        return 'Draft';
+      case 'Rejected':
+      case 'Ditolak':
+        return 'Ditolak';
       default:
-        return Icons.help;
+        return status ?? '-';
     }
   }
 
@@ -495,17 +560,65 @@ class RppScreenState extends State<RppScreen>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
+    );
+  }
+
+  Widget _buildInfoTag({required IconData icon, required String label, Color? tagColor}) {
+    final color = tagColor ?? ColorUtils.slate500;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCircleActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
+        ),
+        child: Icon(icon, size: 18, color: color),
+      ),
     );
   }
 
   Widget _buildRppCard(Map<String, dynamic> rpp, int index) {
+    final accentColor = ColorUtils.getColorForIndex(index);
+    final statusColor = _getStatusColor(rpp['status'] ?? '');
+
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) {
-          final delay = index * 0.1;
+          final delay = (index * 0.1).clamp(0.0, 0.9);
           final animation = CurvedAnimation(
             parent: _animationController,
             curve: Interval(delay, 1.0, curve: Curves.easeOut),
@@ -514,7 +627,7 @@ class RppScreenState extends State<RppScreen>
           return FadeTransition(
             opacity: animation,
             child: Transform.translate(
-              offset: Offset(0, 50 * (1 - animation.value)),
+              offset: Offset(0, 30 * (1 - animation.value)),
               child: child,
             ),
           );
@@ -525,235 +638,127 @@ class RppScreenState extends State<RppScreen>
             onTap: () => _lihatDetailRpp(rpp),
             borderRadius: BorderRadius.circular(16),
             child: Container(
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    blurRadius: 5,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                border: Border.all(color: ColorUtils.slate200),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
               ),
-              child: Stack(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Strip berwarna di pinggir kiri
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 6,
-                      decoration: BoxDecoration(
+                  // Header: icon + title/subject + status badge
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.description_rounded,
+                          color: accentColor,
+                          size: 22,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              rpp['judul'] ?? 'No Title',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate900,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 3),
+                            Text(
+                              rpp['mata_pelajaran_nama'] ?? 'No Subject',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: ColorUtils.slate500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: statusColor.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          _getStatusLabel(rpp['status']),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Divider(color: ColorUtils.slate100, height: 1),
+                  SizedBox(height: 10),
+                  // Info tags: class
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      _buildInfoTag(
+                        icon: Icons.class_,
+                        label: rpp['kelas_nama'] ?? 'No Class',
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _buildCircleActionButton(
+                        icon: Icons.visibility_outlined,
                         color: _getPrimaryColor(),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
+                        onPressed: () => _lihatDetailRpp(rpp),
                       ),
-                    ),
-                  ),
-
-                  // Background pattern effect
-                  Positioned(
-                    right: -8,
-                    top: -8,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        shape: BoxShape.circle,
+                      SizedBox(width: 8),
+                      _buildCircleActionButton(
+                        icon: Icons.edit_outlined,
+                        color: ColorUtils.warning600,
+                        onPressed: () => _editRpp(rpp),
                       ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header dengan judul dan status
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    rpp['judul'] ?? 'No Title',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    '${rpp['mata_pelajaran_nama'] ?? 'No Subject'}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getStatusColor(
-                                  rpp['status'],
-                                ).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: _getStatusColor(
-                                    rpp['status'],
-                                  ).withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                rpp['status'] == 'Pending' ||
-                                        rpp['status'] == 'Menunggu'
-                                    ? 'Menunggu'
-                                    : rpp['status'] == 'Approved' ||
-                                          rpp['status'] == 'Disetujui'
-                                    ? 'Disetujui'
-                                    : rpp['status'] == 'draft'
-                                    ? 'Draft'
-                                    : 'Ditolak',
-                                style: TextStyle(
-                                  color: _getStatusColor(rpp['status']),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Informasi kelas
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.school,
-                                color: _getPrimaryColor(),
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Kelas',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[600],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    rpp['kelas_nama'] ?? 'No Class',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Action buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _buildActionButton(
-                              icon: Icons.visibility,
-                              label: 'Detail',
-                              color: _getPrimaryColor(),
-                              onPressed: () => _lihatDetailRpp(rpp),
-                            ),
-                            SizedBox(width: 8),
-                            _buildActionButton(
-                              icon: Icons.edit,
-                              label: 'Edit',
-                              color: _getPrimaryColor(),
-                              onPressed: () => _editRpp(rpp),
-                            ),
-                            SizedBox(width: 8),
-                            _buildActionButton(
-                              icon: Icons.delete,
-                              label: 'Hapus',
-                              color: Colors.red,
-                              onPressed: () => _deleteRpp(rpp),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                      SizedBox(width: 8),
+                      _buildCircleActionButton(
+                        icon: Icons.delete_outlined,
+                        color: ColorUtils.error600,
+                        onPressed: () => _deleteRpp(rpp),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: color),
-            SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -764,16 +769,31 @@ class RppScreenState extends State<RppScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.description, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: ColorUtils.slate100,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(Icons.description_outlined, size: 36, color: ColorUtils.slate400),
+          ),
+          SizedBox(height: 20),
           Text(
             AppLocalizations.noRppCreated.tr,
-            style: TextStyle(fontSize: 18, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: ColorUtils.slate700,
+            ),
           ),
           SizedBox(height: 8),
           Text(
             AppLocalizations.clickPlusToCreate.tr,
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(
+              fontSize: 13,
+              color: ColorUtils.slate500,
+            ),
           ),
         ],
       ),
@@ -782,20 +802,51 @@ class RppScreenState extends State<RppScreen>
 
   Widget _buildErrorState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('${AppLocalizations.error.tr}: $_errorMessage'),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadRpp,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _getPrimaryColor(),
-              foregroundColor: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: ColorUtils.error600.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(Icons.error_outline_rounded, size: 36, color: ColorUtils.error600),
             ),
-            child: Text(AppLocalizations.retry.tr),
-          ),
-        ],
+            SizedBox(height: 20),
+            Text(
+              AppLocalizations.error.tr,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate700,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              _errorMessage ?? '',
+              style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _loadRpp,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _getPrimaryColor(),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text(AppLocalizations.retry.tr),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -806,7 +857,7 @@ class RppScreenState extends State<RppScreen>
       builder: (context, languageProvider, child) {
         if (_isLoading) {
           return Scaffold(
-            backgroundColor: Color(0xFFF8F9FA),
+            backgroundColor: ColorUtils.slate50,
             body: Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(_getPrimaryColor()),
@@ -834,7 +885,7 @@ class RppScreenState extends State<RppScreen>
                   gradient: _getCardGradient(),
                   boxShadow: [
                     BoxShadow(
-                      color: _getPrimaryColor().withOpacity(0.3),
+                      color: _getPrimaryColor().withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),
@@ -851,7 +902,7 @@ class RppScreenState extends State<RppScreen>
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -879,16 +930,27 @@ class RppScreenState extends State<RppScreen>
                                 AppLocalizations.viewAndManageRpp.tr,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.refresh, color: Colors.white),
-                          onPressed: _loadRpp,
-                          tooltip: AppLocalizations.refresh.tr,
+                        GestureDetector(
+                          onTap: _loadRpp,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.refresh_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -900,7 +962,7 @@ class RppScreenState extends State<RppScreen>
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -908,17 +970,17 @@ class RppScreenState extends State<RppScreen>
                                 Expanded(
                                   child: TextField(
                                     controller: _searchController,
-                                    style: TextStyle(color: Colors.black87),
+                                    style: TextStyle(color: ColorUtils.slate800),
                                     decoration: InputDecoration(
                                       hintText: languageProvider
                                           .getTranslatedText({
                                             'en': 'Search RPP...',
                                             'id': 'Cari RPP...',
                                           }),
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      hintStyle: TextStyle(color: ColorUtils.slate400),
                                       prefixIcon: Icon(
                                         Icons.search,
-                                        color: Colors.grey,
+                                        color: ColorUtils.slate400,
                                       ),
                                       border: InputBorder.none,
                                       contentPadding: EdgeInsets.symmetric(
@@ -951,10 +1013,10 @@ class RppScreenState extends State<RppScreen>
                           decoration: BoxDecoration(
                             color: _hasActiveFilter
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.2),
+                                : Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Stack(
@@ -979,7 +1041,7 @@ class RppScreenState extends State<RppScreen>
                                   child: Container(
                                     padding: EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: Colors.red,
+                                      color: ColorUtils.error600,
                                       shape: BoxShape.circle,
                                     ),
                                     constraints: BoxConstraints(
@@ -1011,10 +1073,10 @@ class RppScreenState extends State<RppScreen>
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: Colors.white.withOpacity(0.5),
+                                        color: Colors.white.withValues(alpha: 0.5),
                                       ),
                                     ),
                                     child: Row(
@@ -1371,200 +1433,513 @@ class _RppFormDialogState extends State<RppFormDialog> {
     }
   }
 
+  Color _getPrimaryColor() => ColorUtils.getRoleColor('guru');
+
+  LinearGradient _getDialogGradient() {
+    final color = _getPrimaryColor();
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [color, color.withValues(alpha: 0.85)],
+    );
+  }
+
+  Widget _buildDialogTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    String? hintText,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+          hintText: hintText,
+          hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
+          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
+          border: InputBorder.none,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: ColorUtils.error600),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: ColorUtils.error600, width: 1.5),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        validator: validator,
+      ),
+    );
+  }
+
+  Widget _buildDialogDropdown({
+    required String? value,
+    required String label,
+    required IconData icon,
+    required List<DropdownMenuItem<dynamic>> items,
+    required Function(dynamic) onChanged,
+    String? Function(dynamic)? validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: DropdownButtonFormField(
+        initialValue: value,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
+          border: InputBorder.none,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: ColorUtils.error600),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
+        items: items,
+        onChanged: onChanged,
+        validator: validator,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
-    return AlertDialog(
-      title: Text(
-        widget.rppData != null
-            ? languageProvider.getTranslatedText({
-                'en': 'Edit RPP',
-                'id': 'Edit RPP',
-              })
-            : AppLocalizations.createRpp.tr,
+    final primaryColor = _getPrimaryColor();
+    final isEditMode = widget.rppData != null;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.92,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
       ),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _judulController,
-                decoration: InputDecoration(
-                  labelText: '${AppLocalizations.title.tr} *',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return AppLocalizations.titleRequired.tr;
-                  }
-                  return null;
-                },
+      child: Column(
+        children: [
+          // Gradient Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+            decoration: BoxDecoration(
+              gradient: _getDialogGradient(),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
               ),
-              SizedBox(height: 10),
-              DropdownButtonFormField(
-                decoration: InputDecoration(
-                  labelText: '${AppLocalizations.subject.tr} *',
-                ),
-                items: _mataPelajaranList.map((mp) {
-                  return DropdownMenuItem(
-                    value: mp['id'],
-                    child: Text(
-                      mp['name'] ??
-                          mp['nama'] ??
-                          mp['subject_name'] ??
-                          'Tanpa Nama',
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
-                  );
-                }).toList(),
-                initialValue: _selectedMataPelajaranId,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedMataPelajaranId = value.toString();
-                    _selectedClassId = null;
-                  });
-                  _loadKelasByMataPelajaran(value.toString());
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return AppLocalizations.subjectRequired.tr;
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 10),
-              DropdownButtonFormField(
-                decoration: InputDecoration(
-                  labelText: '${AppLocalizations.class_.tr} *',
+                  ),
+                  child: Icon(
+                    isEditMode ? Icons.edit_note_rounded : Icons.note_add_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                 ),
-                items: _kelasList.map((kelas) {
-                  return DropdownMenuItem(
-                    value: kelas['id'],
-                    child: Text(
-                      kelas['name'] ??
-                          kelas['nama'] ??
-                          kelas['class_name'] ??
-                          'Tanpa Nama',
-                    ),
-                  );
-                }).toList(),
-                initialValue: _selectedClassId,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedClassId = value.toString();
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return AppLocalizations.classNameRequired.tr;
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 10),
-              DropdownButtonFormField(
-                decoration: InputDecoration(
-                  labelText: '${AppLocalizations.semester.tr} *',
-                ),
-                items: ['Ganjil', 'Genap'].map((semester) {
-                  return DropdownMenuItem(
-                    value: semester,
-                    child: Text(semester),
-                  );
-                }).toList(),
-                initialValue: _selectedSemester,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedSemester = value;
-                  });
-                },
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _tahunAjaranController,
-                decoration: InputDecoration(
-                  labelText: '${AppLocalizations.academicYear.tr} *',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return AppLocalizations.academicYearRequired.tr;
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.description, color: Colors.grey),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _selectedFileName ??
-                            languageProvider.getTranslatedText({
-                              'en': 'No file selected',
-                              'id': 'Belum ada file dipilih',
-                            }),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isEditMode
+                            ? languageProvider.getTranslatedText({
+                                'en': 'Edit RPP',
+                                'id': 'Edit RPP',
+                              })
+                            : AppLocalizations.createRpp.tr,
                         style: TextStyle(
-                          color: _selectedFileName != null
-                              ? Colors.black87
-                              : Colors.grey,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Fill in the RPP details',
+                          'id': 'Lengkapi detail RPP',
+                        }),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Form Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDialogTextField(
+                      controller: _judulController,
+                      label: '${AppLocalizations.title.tr} *',
+                      icon: Icons.title_rounded,
+                      hintText: languageProvider.getTranslatedText({
+                        'en': 'Enter RPP title',
+                        'id': 'Masukkan judul RPP',
+                      }),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return AppLocalizations.titleRequired.tr;
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildDialogDropdown(
+                      value: _selectedMataPelajaranId,
+                      label: '${AppLocalizations.subject.tr} *',
+                      icon: Icons.book_outlined,
+                      items: _mataPelajaranList.map((mp) {
+                        return DropdownMenuItem(
+                          value: mp['id'],
+                          child: Text(
+                            mp['name'] ??
+                                mp['nama'] ??
+                                mp['subject_name'] ??
+                                'Tanpa Nama',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedMataPelajaranId = value.toString();
+                          _selectedClassId = null;
+                        });
+                        _loadKelasByMataPelajaran(value.toString());
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return AppLocalizations.subjectRequired.tr;
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildDialogDropdown(
+                      value: _selectedClassId,
+                      label: '${AppLocalizations.class_.tr} *',
+                      icon: Icons.class_outlined,
+                      items: _kelasList.map((kelas) {
+                        return DropdownMenuItem(
+                          value: kelas['id'],
+                          child: Text(
+                            kelas['name'] ??
+                                kelas['nama'] ??
+                                kelas['class_name'] ??
+                                'Tanpa Nama',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedClassId = value.toString();
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return AppLocalizations.classNameRequired.tr;
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildDialogDropdown(
+                      value: _selectedSemester,
+                      label: '${AppLocalizations.semester.tr} *',
+                      icon: Icons.calendar_view_month_rounded,
+                      items: ['Ganjil', 'Genap'].map((semester) {
+                        return DropdownMenuItem(
+                          value: semester,
+                          child: Text(semester),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedSemester = value;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildDialogTextField(
+                      controller: _tahunAjaranController,
+                      label: '${AppLocalizations.academicYear.tr} *',
+                      icon: Icons.calendar_today_rounded,
+                      hintText: '2024/2025',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return AppLocalizations.academicYearRequired.tr;
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 16),
+                    // File upload section
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'File Attachment',
+                        'id': 'Lampiran File',
+                      }),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: ColorUtils.slate700,
                       ),
                     ),
-                    if (widget.rppData != null &&
-                        widget.rppData!['file_path'] != null)
-                      IconButton(
-                        icon: Icon(Icons.visibility, color: Colors.blue),
-                        onPressed: _viewCurrentFile,
-                        tooltip: 'Lihat File',
+                    SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate50,
+                        border: Border.all(color: ColorUtils.slate200),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _showFilePickerDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade200,
-                        foregroundColor: Colors.black87,
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Choose',
-                          'id': 'Pilih',
-                        }),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _selectedFileName != null
+                                  ? ColorUtils.info600.withValues(alpha: 0.1)
+                                  : ColorUtils.slate100,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              _selectedFileName != null
+                                  ? Icons.description_rounded
+                                  : Icons.upload_file_rounded,
+                              color: _selectedFileName != null
+                                  ? ColorUtils.info600
+                                  : ColorUtils.slate400,
+                              size: 20,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _selectedFileName ??
+                                      languageProvider.getTranslatedText({
+                                        'en': 'No file selected',
+                                        'id': 'Belum ada file dipilih',
+                                      }),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: _selectedFileName != null
+                                        ? ColorUtils.slate800
+                                        : ColorUtils.slate400,
+                                    fontWeight: _selectedFileName != null
+                                        ? FontWeight.w500
+                                        : FontWeight.normal,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (_selectedFileName == null)
+                                  Text(
+                                    'PDF, DOC, DOCX',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: ColorUtils.slate400,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (isEditMode &&
+                              widget.rppData!['file_path'] != null)
+                            GestureDetector(
+                              onTap: _viewCurrentFile,
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: ColorUtils.info600.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: ColorUtils.info600.withValues(alpha: 0.25),
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.visibility_outlined,
+                                  size: 18,
+                                  color: ColorUtils.info600,
+                                ),
+                              ),
+                            ),
+                          SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: _showFilePickerDialog,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: primaryColor.withValues(alpha: 0.25),
+                                ),
+                              ),
+                              child: Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Choose',
+                                  'id': 'Pilih',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: primaryColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+
+          // Footer Buttons
+          Container(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: ColorUtils.slate100)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _isUploading ? null : () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 13),
+                      side: BorderSide(color: ColorUtils.slate300),
+                    ),
+                    child: Text(
+                      AppLocalizations.cancel.tr,
+                      style: TextStyle(
+                        color: ColorUtils.slate700,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isUploading ? null : _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorUtils.corporateBlue600,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 13),
+                      elevation: 2,
+                      shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                    ),
+                    child: _isUploading
+                        ? SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            isEditMode
+                                ? languageProvider.getTranslatedText({
+                                    'en': 'Update',
+                                    'id': 'Perbarui',
+                                  })
+                                : AppLocalizations.save.tr,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.cancel.tr),
-        ),
-        ElevatedButton(
-          onPressed: _isUploading ? null : _submitForm,
-          child: _isUploading
-              ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(),
-                )
-              : Text(AppLocalizations.save.tr),
-        ),
-      ],
     );
   }
 }
@@ -1622,7 +1997,7 @@ Future<void> _downloadAndOpenFile(BuildContext context, String filePath) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Gagal membuka file: $e'),
-        backgroundColor: Colors.red,
+        backgroundColor: ColorUtils.error600,
       ),
     );
   }
@@ -1633,118 +2008,257 @@ class RppDetailPage extends StatelessWidget {
 
   const RppDetailPage({super.key, required this.rpp});
 
+  Color _getPrimaryColor() => ColorUtils.getRoleColor('guru');
+
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'Disetujui':
+      case 'Approved':
+        return ColorUtils.success600;
+      case 'Menunggu':
+      case 'Pending':
+        return ColorUtils.warning600;
+      case 'Ditolak':
+      case 'Rejected':
+        return ColorUtils.error600;
+      case 'Draft':
+      case 'draft':
+        return ColorUtils.info600;
+      default:
+        return ColorUtils.slate400;
+    }
+  }
+
+  String _getStatusLabel(String? status) {
+    switch (status) {
+      case 'Approved':
+      case 'Disetujui':
+        return 'Disetujui';
+      case 'Pending':
+      case 'Menunggu':
+        return 'Menunggu';
+      case 'Draft':
+      case 'draft':
+        return 'Draft';
+      case 'Rejected':
+      case 'Ditolak':
+        return 'Ditolak';
+      default:
+        return status ?? '-';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
+    final statusColor = _getStatusColor(rpp['status']);
 
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA), // Light grey background
-      body: CustomScrollView(
-        slivers: [
-          // Header Gradient with Back Button
-          SliverAppBar(
-            expandedHeight: 120.0,
-            floating: false,
-            pinned: true,
-            backgroundColor: Colors.transparent,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    ColorUtils.getRoleColor('guru').withOpacity(0.8),
-                    ColorUtils.getRoleColor('guru'),
-                  ],
-                ),
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        children: [
+          // Pattern #7 Inline Gradient Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 16,
+              right: 16,
+              bottom: 20,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _getPrimaryColor(),
+                  _getPrimaryColor().withValues(alpha: 0.85),
+                ],
               ),
-              child: FlexibleSpaceBar(
-                centerTitle: false,
-                titlePadding: EdgeInsets.only(left: 56, bottom: 16),
-                title: Text(
-                  AppLocalizations.rppDetails.tr,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+              boxShadow: [
+                BoxShadow(
+                  color: _getPrimaryColor().withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
-              ),
-            ),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppLocalizations.rppDetails.tr,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      if ((rpp['judul'] ?? '').isNotEmpty) ...[
+                        SizedBox(height: 2),
+                        Text(
+                          rpp['judul'] ?? '',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Content
-          SliverToBoxAdapter(
-            child: Padding(
+          // Scrollable Body
+          Expanded(
+            child: SingleChildScrollView(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title Card
-                  _buildDetailCard(
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Title',
-                      'id': 'Judul',
-                    }),
-                    content: rpp['judul'] ?? 'No Title',
-                    icon: Icons.title,
-                    isTitle: true,
+                  // Title + Status card
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ColorUtils.slate200),
+                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          rpp['judul'] ?? 'No Title',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate900,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: statusColor.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                _getStatusLabel(rpp['status']),
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+
                   SizedBox(height: 16),
 
                   // Info Card
-                  Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ColorUtils.slate200),
+                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          _buildDetailRow(
-                            icon: Icons.book,
-                            label: languageProvider.getTranslatedText({
-                              'en': 'Subject',
-                              'id': 'Mata Pelajaran',
-                            }),
-                            value: rpp['mata_pelajaran_nama'] ?? '-',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'RPP Information',
+                            'id': 'Informasi RPP',
+                          }),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate600,
                           ),
-                          Divider(),
-                          _buildDetailRow(
-                            icon: Icons.class_,
-                            label: languageProvider.getTranslatedText({
-                              'en': 'Class',
-                              'id': 'Kelas',
+                        ),
+                        SizedBox(height: 12),
+                        _buildDetailItem(
+                          languageProvider.getTranslatedText({
+                            'en': 'Subject',
+                            'id': 'Mata Pelajaran',
+                          }),
+                          rpp['mata_pelajaran_nama'] ?? '-',
+                        ),
+                        _buildDetailItem(
+                          languageProvider.getTranslatedText({
+                            'en': 'Class',
+                            'id': 'Kelas',
+                          }),
+                          rpp['kelas_nama'] ?? '-',
+                        ),
+                        _buildDetailItem(
+                          languageProvider.getTranslatedText({
+                            'en': 'Academic Year',
+                            'id': 'Tahun Ajaran',
+                          }),
+                          '${rpp['semester'] ?? '-'} ${rpp['tahun_ajaran'] ?? '-'}',
+                        ),
+                        if (rpp['catatan'] != null &&
+                            rpp['catatan'].toString().isNotEmpty)
+                          _buildDetailItem(
+                            languageProvider.getTranslatedText({
+                              'en': 'Notes',
+                              'id': 'Catatan',
                             }),
-                            value: rpp['kelas_nama'] ?? '-',
+                            rpp['catatan'],
                           ),
-                          Divider(),
-                          _buildDetailRow(
-                            icon: Icons.calendar_today,
-                            label: languageProvider.getTranslatedText({
-                              'en': 'Academic Year',
-                              'id': 'Tahun Ajaran',
-                            }),
-                            value:
-                                '${rpp['semester'] ?? '-'} ${rpp['tahun_ajaran'] ?? '-'}',
-                          ),
-                          Divider(),
-                          _buildDetailRow(
-                            icon: Icons.info_outline,
-                            label: languageProvider.getTranslatedText({
-                              'en': 'Status',
-                              'id': 'Status',
-                            }),
-                            value: rpp['status'] ?? '-',
-                            valueColor: _getStatusColor(rpp['status']),
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
 
@@ -1752,59 +2266,68 @@ class RppDetailPage extends StatelessWidget {
 
                   // File Section
                   if (rpp['file_path'] != null)
-                    Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: ColorUtils.slate200),
+                        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                       ),
-                      child: InkWell(
-                        onTap: () =>
-                            _downloadAndOpenFile(context, rpp['file_path']),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () =>
+                              _downloadAndOpenFile(context, rpp['file_path']),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: ColorUtils.info600.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.picture_as_pdf_rounded,
+                                    color: ColorUtils.info600,
+                                    size: 22,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.picture_as_pdf,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                              SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Attached File',
-                                        'id': 'File Terlampir',
-                                      }),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
+                                SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Attached File',
+                                          'id': 'File Terlampir',
+                                        }),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: ColorUtils.slate900,
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      rpp['file_path'].split('/').last,
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
+                                      SizedBox(height: 4),
+                                      Text(
+                                        rpp['file_path'].split('/').last,
+                                        style: TextStyle(
+                                          color: ColorUtils.slate500,
+                                          fontSize: 12,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Icon(Icons.download_rounded, color: Colors.grey),
-                            ],
+                                Icon(Icons.download_rounded, color: ColorUtils.slate400),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -1818,99 +2341,31 @@ class RppDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailCard({
-    required String title,
-    required String content,
-    required IconData icon,
-    bool isTitle = false,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isTitle
-                    ? Colors.blue.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: isTitle ? Colors.blue : Colors.grey[700],
-              ),
-            ),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    content,
-                    style: TextStyle(
-                      fontSize: isTitle ? 18 : 16,
-                      fontWeight: isTitle ? FontWeight.bold : FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
+  Widget _buildDetailItem(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+      padding: EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          SizedBox(width: 12),
-          Text(label, style: TextStyle(color: Colors.grey[700])),
-          Spacer(),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: ColorUtils.slate500,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 4),
           Text(
             value,
             style: TextStyle(
+              fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: valueColor ?? Colors.black87,
+              color: ColorUtils.slate900,
             ),
           ),
         ],
       ),
     );
-  }
-
-  Color _getStatusColor(String? status) {
-    switch (status) {
-      case 'Disetujui':
-      case 'Approved':
-        return Colors.green;
-      case 'Menunggu':
-      case 'Pending':
-        return Colors.orange;
-      case 'Ditolak':
-      case 'Rejected':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
   }
 }

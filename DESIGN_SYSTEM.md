@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.7
+**Version:** 2.8
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran)
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP)
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2594,6 +2594,22 @@ Container(
   - **Scaffold**: `ColorUtils.slate50` background (both pages)
   - **`_dayColorMap`**: Hardcoded hex colors retained for day-specific semantic meaning (same as Teaching Schedule)
   - **Zero raw colors**: All `Colors.grey`, `Colors.blue`, `Colors.black12`, `withOpacity()` fully eliminated
+
+✅ **Teacher RPP (Guru RPP)** (`lib/screen/guru/rpp_screen.dart`) - Full redesign (v2.7):
+  - **`RppScreen` header** (#7): `_getCardGradient()` with `[primaryColor, primaryColor.withValues(alpha:0.85)]`; 40×40 semi-transparent back/refresh buttons (`Colors.white.withValues(alpha:0.2)`, `borderRadius:10`); title + subtitle; search bar with `Colors.white.withValues(alpha:0.9)` bg; filter button with active dot indicator (`error600`); active filter chips pill style `Colors.white.withValues(alpha:0.2)` bg + `0.5` border with clear button
+  - **RPP cards** (`_buildRppCard`, #8): `AnimatedBuilder` with staggered `FadeTransition + Transform.translate` using `Interval((index*0.1).clamp(0.0,0.9), 1.0, curve: Curves.easeOut)`; `Material > InkWell > Container` — `corporateShadow(elevation:1.5)` + `slate200` border + `borderRadius:16`; 44×44 colored icon container `getColorForIndex(index).withValues(alpha:0.15)` bg + `Icons.description_rounded`; title `slate900 w700 fontSize:15` + subject `slate500 fontSize:12`; status badge chip `statusColor.withValues(alpha:0.1)` bg + `0.3` border + `fontSize:10 w600`; `Divider(slate100)`; `Wrap(_buildInfoTag(class))`; `_buildCircleActionButton` row (detail:primary, edit:warning600, delete:error600); no Stack/accent strip/decorative circle
+  - **`_buildInfoTag`**: Pill chip `px:6 py:3`, icon(10)+text(10), optional `tagColor`, alpha `0.1` bg + `0.2` border — matches design system standard
+  - **`_buildCircleActionButton`**: 36×36 rounded square, `color.withValues(alpha:0.1)` bg + `color.withValues(alpha:0.25)` border + `borderRadius:10`
+  - **Filter sheet** (#11): Gradient header `LinearGradient([primaryColor, primaryColor.withValues(alpha:0.85)])` with `Icon(tune_rounded) + Text` and white Reset button; status section header `Row(Icon(swap_horiz_rounded, size:18, slate700), Text(slate900 w700))` with spacing 12; `_buildStatusChip` using `ChoiceChip` — `selectedColor: primaryColor.withValues(alpha:0.2)`, `labelStyle` toggling between `primaryColor/bold` and `slate600/normal`, `side: isSelected?primaryColor:slate300`; Cancel + Apply footer with `slate200` top border + shadow
+  - **Add/Edit form** (#13): `showModalBottomSheet(isScrollControlled: true)`, 92% height, gradient header (44×44 icon container `white*0.2` bg + `white*0.3` border + edit/add icon, title 18px bold + subtitle 12px `white*0.8`, 32×32 circle close button `white*0.2`); `Expanded(SingleChildScrollView(Column))` form body; slate-styled `_buildDialogTextField` (Container `slate50` bg + `slate200` border + `borderRadius:12`, `TextFormField` with `labelText` + `corporateBlue600` prefix icons size:18, `InputBorder.none` + `focusedBorder: corporateBlue600 w:1.5` + `errorBorder: error600`) / `_buildDialogDropdown` (same container + `DropdownButtonFormField` with `initialValue`); semester & academic year as separate fields; file upload section (`slate50` bg container + 40×40 icon indicator + view button `info600` + choose button `primaryColor`); footer `fromLTRB(16,8,16,16)` — Cancel `OutlinedButton(slate300 side, slate700 text, w600)` + Save `ElevatedButton(corporateBlue600 bg, elevation:2, shadowColor:corporateBlue600*0.4)` with loading spinner
+  - **`RppDetailPage`** (#12-style): Inline gradient header (#7) with back button + "Detail RPP" title + judul subtitle; `body: Column([header, Expanded(SingleChildScrollView(...))])` with 3 content cards — title+status card (outline badge with 6×6 dot indicator, `statusColor.withValues(alpha:0.1)` bg + `0.3` border), info card (`_buildDetailItem` with `slate500` label + `slate900` value), file card (44×44 `info600` icon container + file name + download icon); all cards use `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`
+  - **Delete dialog**: Inline `AlertDialog` with `error600` bg `ElevatedButton` + `borderRadius:10`
+  - **Snackbars**: `success600` / `error600` replacing raw green/red
+  - **Empty state**: 72×72 container `slate100` bg + `borderRadius:20` + `Icons.description_outlined` `slate400`; title `slate700 w600 fontSize:16`; subtitle `slate500 fontSize:13`
+  - **Error state**: Same 72×72 container with `error600.withValues(alpha:0.1)` bg; retry `ElevatedButton` with `primaryColor` bg
+  - **`_getStatusColor`**: `success600` (Approved) / `warning600` (Pending) / `error600` (Rejected) / `info600` (Draft) / `slate400` (default)
+  - **Scaffold**: `Color(0xFFF8F9FA)` for list screen, `ColorUtils.slate50` for detail page
+  - **Zero raw colors**: All `Colors.grey`, `Colors.red/green/blue/orange/black`, `withOpacity()` fully eliminated; only pre-existing `print()` statements remain (guarded by `kDebugMode` where applicable)
 
 ### When Applying to New Pages
 1. **Read this guide first**
