@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.5
+**Version:** 2.6
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru)
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2565,6 +2565,22 @@ Container(
   - **Scaffold**: `slate50` background
   - **Zero raw colors**: All `Colors.grey`, `Colors.blue`, `Colors.red`, `withOpacity()` fully eliminated; `kDebugMode` guards on all `print()` calls
 
+✅ **Teacher Presence (Absensi Guru)** (`lib/screen/guru/presence_teacher.dart`) - Full redesign aligned with Admin Presence Report (v2.5):
+  - **Header** (#7): `PresencePage` — `_getCardGradient()` with `[primaryColor, primaryColor.withValues(alpha:0.85)]`; 40×40 semi-transparent back/filter buttons; dynamic title; search bar with `Colors.white.withValues(alpha:0.9)` bg
+  - **Class list** (`_buildInlineClassList`, #8): `AnimatedBuilder` with staggered `FadeTransition + Transform.translate` using `Interval((index*0.1).clamp(0.0,0.8), 1.0, curve: Curves.easeOut)`; 40×40 icon container `borderRadius:10` + `alpha:0.15` bg; name `w700`; plain `Icon(arrow_forward_ios)` chevron; `corporateShadow(elevation:1.0)` + `slate200` border
+  - **Summary cards** (`_buildSummaryCard`, #8): `AnimatedBuilder` with staggered animation; `corporateShadow(elevation:1.5)` + `slate200` border + `borderRadius:16`; 40×40 icon container `borderRadius:10` + `alpha:0.15`; inline class+lesson text; `_buildInfoTag` row for Present/Absent/Total counts; `LinearProgressIndicator(minHeight:6, borderRadius:4)` with `success600`/`warning600`/`error600` based on percentage; circle delete button
+  - **`_buildInfoTag`**: Pill chip `px:6 py:3`, icon(10)+text(10), alpha `0.1` bg + `0.2` border — aligned with admin pattern
+  - **Filter sheet** (#11): Gradient header with Icon+Title; section headers using `Row(Icon(size:16, slate700) + Text(w600, fontSize:14, slate900))` with `padding top:24`; `FilterChip` widgets for date range, subject, day, lesson hour sections — `selectedColor: primaryColor.withValues(alpha:0.2)`, `checkmarkColor: primaryColor`, `labelStyle` toggling between `primaryColor/bold` and `slate600/normal`; Cancel + Apply footer with `slate200` top border + shadow
+  - **Edit bottom sheet** (#13): Existing pattern preserved
+  - **`TeacherAbsensiDetailPage` header** (#7): Inline gradient header with close/back toggle (close when editing, back when viewing); dynamic title ("Edit Kehadiran" / "Detail Kehadiran"); date+lesson hour info row at bottom; `fontSize:18`
+  - **Student cards** (`_buildStudentCard`, detail page): Flat `Container` with `corporateShadow(elevation:1.0)` + `borderRadius:14` + `slate200` border; `CircleAvatar(radius:22)` with `getColorForIndex(index)` + `0.15` alpha bg; name `fontSize:15 w700 slate900`; status badge `px:10 py:5`; quick-status buttons when editing — no Stack/accent strip
+  - **`_buildQuickStatusButton`**: 36×36 circle, `isSelected ? color : color.withValues(alpha:0.1)` bg, `Border.all(color:color, width:1.5)`, text `bold fontSize:12`, white/color text toggle
+  - **Stat cards** (`_buildStatCard`, detail page): Flat `color.withValues(alpha:0.1)` bg + `color.withValues(alpha:0.2)` border; 36×36 circle icon `color.withValues(alpha:0.15)`; count `w800` in `color`; label `color.withValues(alpha:0.8)`; height `120`, padding `h:16`; conditional Permission/Sick cards
+  - **`_getStatusColor`**: `success600` (Hadir) / `info600` (Sakit) / `warning600` (Izin) / `error600` (Alpha) / `Color(0xFF7C3AED)` (Terlambat)
+  - **`_buildInfoChip`** (detail page): Alpha `0.1` bg + `0.2` border — aligned with admin
+  - **Animations**: `TickerProviderStateMixin` for dual controllers (`TabController` + `_listAnimationController`); animation triggered on `_loadInitialData` and `_loadAbsensiSummary`
+  - **Zero raw colors**: All `Colors.grey`, `Colors.green`, `Colors.blue`, `Colors.orange`, `Colors.red`, `Colors.purple`, `withOpacity()` fully eliminated
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2586,6 +2602,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.5
+**Design System Version:** 2.6
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team

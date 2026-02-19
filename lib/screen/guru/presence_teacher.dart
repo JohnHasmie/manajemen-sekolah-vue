@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
-import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/models/siswa.dart';
@@ -71,9 +70,12 @@ class PresencePage extends StatefulWidget {
 }
 
 class PresencePageState extends State<PresencePage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   // Tab Controller for TabSwitcher
   late TabController _tabController;
+
+  // Animation controller for staggered list animations
+  late AnimationController _listAnimationController;
 
   // Data untuk mode View Results
   List<AbsensiSummary> _absensiSummaryList = [];
@@ -144,12 +146,19 @@ class PresencePageState extends State<PresencePage>
         }
       });
     });
+
+    _listAnimationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 800),
+    );
+
     _loadInitialData();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _listAnimationController.dispose();
     _searchController.dispose();
     _searchControllerInput.dispose();
     super.dispose();
@@ -192,6 +201,7 @@ class PresencePageState extends State<PresencePage>
 
         _isLoadingInput = false;
       });
+      _listAnimationController.forward(from: 0.0);
 
       // Auto-detect current schedule if not initialized from teaching_schedule
       if (widget.initialSubjectId == null) {
@@ -208,7 +218,7 @@ class PresencePageState extends State<PresencePage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ErrorUtils.getFriendlyMessage(e)),
-          backgroundColor: Colors.red.shade400,
+          backgroundColor: ColorUtils.error600,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -468,6 +478,7 @@ class PresencePageState extends State<PresencePage>
           ..sort((a, b) => b.date.compareTo(a.date));
         _isLoadingSummary = false;
       });
+      _listAnimationController.forward(from: 0.0);
 
       if (kDebugMode) {
         print('Loaded ${_absensiSummaryList.length} absensi summaries');
@@ -669,55 +680,118 @@ class PresencePageState extends State<PresencePage>
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
               ),
               child: Column(
                 children: [
-                  // Handle bar
+                  // Gradient header (Pattern #11)
                   Container(
-                    margin: EdgeInsets.only(top: 12),
-                    width: 40,
-                    height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          _getPrimaryColor(),
+                          _getPrimaryColor().withValues(alpha: 0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
                     ),
-                  ),
-
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    padding: EdgeInsets.fromLTRB(20, 16, 16, 20),
+                    child: Column(
                       children: [
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Edit Schedule',
-                            'id': 'Edit Jadwal',
-                          }),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                        // Handle bar
+                        Center(
+                          child: Container(
+                            width: 36,
+                            height: 4,
+                            margin: EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
                           ),
                         ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(Icons.close),
-                          color: Colors.grey[600],
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.edit_calendar,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Edit Schedule',
+                                      'id': 'Edit Jadwal',
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    languageProvider.getTranslatedText({
+                                      'en':
+                                          'Manually select date, class, and subject',
+                                      'id':
+                                          'Pilih tanggal, kelas, dan mata pelajaran',
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.85,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () => Navigator.pop(context),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
 
-                  Divider(height: 1),
-
                   // Form Content
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -728,9 +802,9 @@ class PresencePageState extends State<PresencePage>
                               'id': 'Tanggal',
                             }),
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
+                              color: ColorUtils.slate700,
                             ),
                           ),
                           SizedBox(height: 8),
@@ -749,14 +823,16 @@ class PresencePageState extends State<PresencePage>
                                 setModalState(() {});
                               }
                             },
+                            borderRadius: BorderRadius.circular(12),
                             child: Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 16,
+                                horizontal: 14,
+                                vertical: 14,
                               ),
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(8),
+                                color: ColorUtils.slate50,
+                                border: Border.all(color: ColorUtils.slate200),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -767,11 +843,15 @@ class PresencePageState extends State<PresencePage>
                                       'EEEE, dd MMMM yyyy',
                                       'id_ID',
                                     ).format(_selectedDate),
-                                    style: TextStyle(fontSize: 16),
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: ColorUtils.slate800,
+                                    ),
                                   ),
                                   Icon(
                                     Icons.calendar_today,
                                     color: _getPrimaryColor(),
+                                    size: 20,
                                   ),
                                 ],
                               ),
@@ -786,29 +866,33 @@ class PresencePageState extends State<PresencePage>
                               'id': 'Jam Pelajaran',
                             }),
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
+                              color: ColorUtils.slate700,
                             ),
                           ),
                           SizedBox(height: 8),
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: 12,
+                              horizontal: 14,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
+                              color: ColorUtils.slate50,
+                              border: Border.all(color: ColorUtils.slate200),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: DropdownButton<String>(
                               value: _selectedLessonHourId,
                               isExpanded: true,
                               underline: Container(),
-                              icon: Icon(Icons.arrow_drop_down),
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: ColorUtils.slate600,
+                              ),
                               style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 16,
+                                color: ColorUtils.slate800,
+                                fontSize: 15,
                               ),
                               items: [
                                 DropdownMenuItem(
@@ -818,6 +902,9 @@ class PresencePageState extends State<PresencePage>
                                       'en': 'Select Lesson Hour',
                                       'id': 'Pilih Jam Pelajaran',
                                     }),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate500,
+                                    ),
                                   ),
                                 ),
                                 ..._lessonHours.map(
@@ -846,29 +933,33 @@ class PresencePageState extends State<PresencePage>
                               'id': 'Kelas',
                             }),
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
+                              color: ColorUtils.slate700,
                             ),
                           ),
                           SizedBox(height: 8),
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: 12,
+                              horizontal: 14,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
+                              color: ColorUtils.slate50,
+                              border: Border.all(color: ColorUtils.slate200),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: DropdownButton<String>(
                               value: _selectedClassId,
                               isExpanded: true,
                               underline: Container(),
-                              icon: Icon(Icons.arrow_drop_down),
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: ColorUtils.slate600,
+                              ),
                               style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 16,
+                                color: ColorUtils.slate800,
+                                fontSize: 15,
                               ),
                               items: [
                                 DropdownMenuItem(
@@ -878,6 +969,9 @@ class PresencePageState extends State<PresencePage>
                                       'en': 'All Classes',
                                       'id': 'Semua Kelas',
                                     }),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate500,
+                                    ),
                                   ),
                                 ),
                                 ..._classList.map(
@@ -892,7 +986,6 @@ class PresencePageState extends State<PresencePage>
                                   _selectedClassId = value;
                                   _filterStudentsByClass(value);
                                 });
-                                // Reload subjects whenever class changes
                                 _loadSubjectsByClass(
                                   value,
                                   setModalState: setModalState,
@@ -909,29 +1002,33 @@ class PresencePageState extends State<PresencePage>
                               'id': 'Mata Pelajaran',
                             }),
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
+                              color: ColorUtils.slate700,
                             ),
                           ),
                           SizedBox(height: 8),
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: 12,
+                              horizontal: 14,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
+                              color: ColorUtils.slate50,
+                              border: Border.all(color: ColorUtils.slate200),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: DropdownButton<String>(
                               value: _selectedSubjectId,
                               isExpanded: true,
                               underline: Container(),
-                              icon: Icon(Icons.arrow_drop_down),
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: ColorUtils.slate600,
+                              ),
                               style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 16,
+                                color: ColorUtils.slate800,
+                                fontSize: 15,
                               ),
                               items: [
                                 DropdownMenuItem(
@@ -941,6 +1038,9 @@ class PresencePageState extends State<PresencePage>
                                       'en': 'Select Subject',
                                       'id': 'Pilih Mata Pelajaran',
                                     }),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate500,
+                                    ),
                                   ),
                                 ),
                                 ..._subjectTeacher.map(
@@ -958,7 +1058,6 @@ class PresencePageState extends State<PresencePage>
                               onChanged: (value) {
                                 setState(() {
                                   _selectedSubjectId = value;
-                                  // Update nama mata pelajaran
                                   final selected = _subjectTeacher.firstWhere(
                                     (mp) => mp['id'] == value,
                                     orElse: () => {},
@@ -972,20 +1071,23 @@ class PresencePageState extends State<PresencePage>
                             ),
                           ),
 
+                          // Warning jika tidak ada mata pelajaran
                           if (_subjectTeacher.isEmpty)
                             Container(
                               margin: EdgeInsets.only(top: 12),
                               padding: EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.orange[50],
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.orange),
+                                color: Colors.orange.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors.orange.withValues(alpha: 0.3),
+                                ),
                               ),
                               child: Row(
                                 children: [
                                   Icon(
-                                    Icons.warning,
-                                    color: Colors.orange[800],
+                                    Icons.warning_amber_rounded,
+                                    color: Colors.orange,
                                     size: 20,
                                   ),
                                   SizedBox(width: 8),
@@ -998,8 +1100,10 @@ class PresencePageState extends State<PresencePage>
                                             'Anda tidak mengampu mata pelajaran apapun.',
                                       }),
                                       style: TextStyle(
-                                        color: Colors.orange[800],
-                                        fontSize: 12,
+                                        fontSize: 13,
+                                        color: Colors.orange.withValues(
+                                          alpha: 0.9,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1011,94 +1115,43 @@ class PresencePageState extends State<PresencePage>
                     ),
                   ),
 
-                  // Bottom Buttons
+                  // Footer Apply Button
                   Container(
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: Offset(0, -5),
-                        ),
-                      ],
+                      border: Border(
+                        top: BorderSide(color: ColorUtils.slate200),
+                      ),
                     ),
-                    child: SafeArea(
-                      child: Container(
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.grey[700],
-                                  side: BorderSide(color: Colors.grey[300]!),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                ),
-                                child: Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Cancel',
-                                    'id': 'Batal',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  if (_selectedSubjectId != null) {
-                                    Navigator.pop(context);
-                                    setState(() {
-                                      // Reset auto schedule since this is manual
-                                      _currentSchedule = null;
-                                    });
-                                    _filterStudents();
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          languageProvider.getTranslatedText({
-                                            'en':
-                                                'Please select a subject first',
-                                            'id':
-                                                'Pilih mata pelajaran terlebih dahulu',
-                                          }),
-                                        ),
-                                        backgroundColor: Colors.red.shade400,
-                                      ),
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _getPrimaryColor(),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                ),
-                                child: Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Apply',
-                                    'id': 'Terapkan',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _detectCurrentSchedule();
+                          });
+                          Navigator.pop(context);
+                        },
+                        icon: Icon(Icons.check, size: 20),
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Apply',
+                            'id': 'Terapkan',
+                          }),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
                         ),
                       ),
                     ),
@@ -1144,75 +1197,258 @@ class PresencePageState extends State<PresencePage>
       listen: false,
     );
 
+    String? tempStatus = _selectedStatusFilter;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => FilterSheet(
-        primaryColor: _getPrimaryColor(),
-        config: FilterConfig(
-          sections: [
-            FilterSection(
-              key: 'statusFilter',
-              title: languageProvider.getTranslatedText({
-                'en': 'Attendance Status',
-                'id': 'Status Kehadiran',
-              }),
-              options: [
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'All Status',
-                    'id': 'Semua Status',
-                  }),
-                  value: null,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Gradient header
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _getPrimaryColor(),
+                        _getPrimaryColor().withValues(alpha: 0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(20, 14, 16, 20),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          margin: EdgeInsets.only(bottom: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.filter_list,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Filter Students',
+                                'id': 'Filter Siswa',
+                              }),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setSheetState(() {
+                                tempStatus = null;
+                              });
+                            },
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Reset',
+                                'id': 'Reset',
+                              }),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Present',
-                    'id': 'Hadir',
-                  }),
-                  value: 'hadir',
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Status section
+                        _buildSectionHeader(
+                          languageProvider.getTranslatedText({
+                            'en': 'Attendance Status',
+                            'id': 'Status Kehadiran',
+                          }),
+                          Icons.how_to_reg_outlined,
+                        ),
+                        SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children:
+                              [
+                                null,
+                                'hadir',
+                                'terlambat',
+                                'izin',
+                                'sakit',
+                                'alpha',
+                              ].map((statusVal) {
+                                final isSelected = tempStatus == statusVal;
+                                final label = statusVal == null
+                                    ? languageProvider.getTranslatedText({
+                                        'en': 'All',
+                                        'id': 'Semua',
+                                      })
+                                    : _getStatusText(
+                                        statusVal,
+                                        languageProvider,
+                                      );
+                                return AnimatedContainer(
+                                  duration: Duration(milliseconds: 200),
+                                  child: GestureDetector(
+                                    onTap: () => setSheetState(
+                                      () => tempStatus = statusVal,
+                                    ),
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? _getPrimaryColor().withValues(
+                                                alpha: 0.12,
+                                              )
+                                            : ColorUtils.slate50,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? _getPrimaryColor()
+                                              : ColorUtils.slate200,
+                                          width: isSelected ? 1.5 : 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        label,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                          color: isSelected
+                                              ? _getPrimaryColor()
+                                              : ColorUtils.slate700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Late',
-                    'id': 'Terlambat',
-                  }),
-                  value: 'terlambat',
-                ),
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Permission',
-                    'id': 'Izin',
-                  }),
-                  value: 'izin',
-                ),
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Sick',
-                    'id': 'Sakit',
-                  }),
-                  value: 'sakit',
-                ),
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Absent',
-                    'id': 'Alpha',
-                  }),
-                  value: 'alpha',
+
+                // Footer buttons
+                Container(
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 13),
+                            side: BorderSide(color: ColorUtils.slate300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Cancel',
+                              'id': 'Batal',
+                            }),
+                            style: TextStyle(
+                              color: ColorUtils.slate700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedStatusFilter = tempStatus;
+                              _checkActiveFilterInput();
+                              _filterStudents();
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 13),
+                            backgroundColor: _getPrimaryColor(),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Apply Filter',
+                              'id': 'Terapkan Filter',
+                            }),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-              multiSelect: false,
             ),
-          ],
-        ),
-        initialFilters: {'statusFilter': _selectedStatusFilter},
-        onApplyFilters: (filters) {
-          setState(() {
-            _selectedStatusFilter = filters['statusFilter'];
-            _checkActiveFilterInput();
-            _filterStudents();
-          });
+          );
         },
       ),
     );
@@ -1304,122 +1540,145 @@ class PresencePageState extends State<PresencePage>
 
     return ListView.builder(
       padding: EdgeInsets.all(16),
+      physics: AlwaysScrollableScrollPhysics(),
       itemCount: _classList.length,
       itemBuilder: (context, index) {
         final classData = _classList[index];
-        // Check homeroom via explicit flag from backend
-        // Since we are now using ApiTeacherService.getTeacherClasses,
-        // the backend populates 'is_homeroom' correctly.
         final isHomeroom = classData['is_homeroom'] == true;
+        final accentColor = isHomeroom
+            ? _getPrimaryColor()
+            : ColorUtils.getColorForIndex(index);
 
-        return Card(
-          elevation: 2,
-          shadowColor: ColorUtils.slate200,
-          margin: EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: InkWell(
-            onTap: () {
-              setState(() {
-                _selectedClassId = classData['id'];
-                _selectedClassName = classData['nama'] ?? classData['name'];
-              });
+        return AnimatedBuilder(
+          animation: _listAnimationController,
+          builder: (context, child) {
+            final delay = (index * 0.1).clamp(0.0, 0.8);
+            final animation = CurvedAnimation(
+              parent: _listAnimationController,
+              curve: Interval(delay, 1.0, curve: Curves.easeOut),
+            );
 
-              // Pre-load subjects for the selected class
-              _loadSubjectsByClass(classData['id']);
-
-              // Load data depending on tab
-              if (_tabController.index == 0) {
-                _loadAbsensiSummary();
-              }
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: isHomeroom
-                          ? ColorUtils.primary.withOpacity(0.1)
-                          : ColorUtils.slate100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
+            return FadeTransition(
+              opacity: animation,
+              child: Transform.translate(
+                offset: Offset(0, 50 * (1 - animation.value)),
+                child: child,
+              ),
+            );
+          },
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _selectedClassId = classData['id'];
+                  _selectedClassName = classData['nama'] ?? classData['name'];
+                });
+                _loadSubjectsByClass(classData['id']);
+                if (_tabController.index == 0) {
+                  _loadAbsensiSummary();
+                }
+                _listAnimationController.forward(from: 0.0);
+              },
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                margin: EdgeInsets.only(bottom: 10),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: ColorUtils.slate200),
+                  boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: accentColor.withValues(alpha: 0.15)),
+                      ),
                       child: Icon(
                         isHomeroom
                             ? Icons.home_work_rounded
                             : Icons.class_rounded,
-                        color: isHomeroom
-                            ? ColorUtils.primary
-                            : ColorUtils.slate500,
+                        color: accentColor,
+                        size: 22,
                       ),
                     ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              classData['nama'] ??
-                                  classData['name'] ??
-                                  'Unknown Class',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: ColorUtils.slate900,
-                              ),
-                            ),
-                            if (isHomeroom)
-                              Container(
-                                margin: EdgeInsets.only(left: 8),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: ColorUtils.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                    SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
                                 child: Text(
-                                  'Wali Kelas',
+                                  classData['nama'] ??
+                                      classData['name'] ??
+                                      'Unknown Class',
                                   style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: ColorUtils.slate900,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isHomeroom) ...[
+                                SizedBox(width: 8),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _getPrimaryColor().withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: _getPrimaryColor().withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Wali Kelas',
+                                    style: TextStyle(
+                                      color: _getPrimaryColor(),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                              ),
-                          ],
-                        ),
-                        SizedBox(height: 4),
-                        // Subtitle: Grade • Major
-                        if ([
-                          classData['tingkat'],
-                          classData['jurusan'],
-                        ].any((e) => e != null && e.toString().isNotEmpty))
-                          Text(
-                            [classData['tingkat'], classData['jurusan']]
-                                .where(
-                                  (e) => e != null && e.toString().isNotEmpty,
-                                )
-                                .join(' • '),
-                            style: TextStyle(
-                              color: ColorUtils.slate500,
-                              fontSize: 12,
-                            ),
+                              ],
+                            ],
                           ),
-                        // Homeroom Teacher Name
-                        if (classData['homeroom_teacher_name'] != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
+                          if ([
+                            classData['tingkat'],
+                            classData['jurusan'],
+                          ].any((e) => e != null && e.toString().isNotEmpty)) ...[
+                            SizedBox(height: 3),
+                            Text(
+                              [classData['tingkat'], classData['jurusan']]
+                                  .where(
+                                    (e) => e != null && e.toString().isNotEmpty,
+                                  )
+                                  .join(' • '),
+                              style: TextStyle(
+                                color: ColorUtils.slate600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                          if (classData['homeroom_teacher_name'] != null) ...[
+                            SizedBox(height: 2),
+                            Text(
                               'Wali Kelas: ${classData['homeroom_teacher_name']}',
                               style: TextStyle(
                                 color: ColorUtils.slate500,
@@ -1427,16 +1686,13 @@ class PresencePageState extends State<PresencePage>
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ),
-                      ],
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                    color: ColorUtils.slate400,
-                  ),
-                ],
+                    Icon(Icons.arrow_forward_ios, size: 14, color: ColorUtils.slate400),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1472,75 +1728,90 @@ class PresencePageState extends State<PresencePage>
 
             // Filter Chips
             if (_hasActiveFilter) ...[
-              SizedBox(height: 8),
+              SizedBox(height: 4),
               SizedBox(
-                height: 32,
+                height: 34,
                 child: Row(
                   children: [
                     Expanded(
                       child: ListView(
                         scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        padding: EdgeInsets.symmetric(horizontal: 16),
                         children: [
                           ..._buildFilterChips(languageProvider).map((filter) {
                             return Container(
                               margin: EdgeInsets.only(right: 6),
-                              child: Chip(
-                                label: Text(
-                                  filter['label'],
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
+                              child: InkWell(
+                                onTap: filter['onRemove'],
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _getPrimaryColor().withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: _getPrimaryColor().withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        filter['label'],
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: _getPrimaryColor(),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Icon(
+                                        Icons.close,
+                                        size: 14,
+                                        color: _getPrimaryColor(),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                deleteIcon: Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                                onDeleted: filter['onRemove'],
-                                backgroundColor: _getPrimaryColor().withOpacity(
-                                  0.7,
-                                ),
-                                side: BorderSide.none,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                labelPadding: EdgeInsets.only(left: 4),
                               ),
                             );
                           }),
                         ],
                       ),
                     ),
-                    SizedBox(width: 8),
                     Padding(
                       padding: EdgeInsets.only(right: 16),
                       child: InkWell(
                         onTap: _clearAllFilters,
+                        borderRadius: BorderRadius.circular(8),
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 12,
+                            horizontal: 10,
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.8),
+                            color: ColorUtils.error600.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: ColorUtils.error600.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Text(
                             languageProvider.getTranslatedText({
-                              'en': 'Clear All',
-                              'id': 'Hapus Semua',
+                              'en': 'Clear',
+                              'id': 'Hapus',
                             }),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
+                              color: ColorUtils.error600,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -1549,7 +1820,7 @@ class PresencePageState extends State<PresencePage>
                   ],
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 4),
             ],
 
             SizedBox(height: 8),
@@ -1581,7 +1852,7 @@ class PresencePageState extends State<PresencePage>
                       itemCount: filteredSummaries.length,
                       itemBuilder: (context, index) {
                         final summary = filteredSummaries[index];
-                        return _buildSummaryCard(summary, languageProvider);
+                        return _buildSummaryCard(summary, languageProvider, index);
                       },
                     ),
             ),
@@ -1671,7 +1942,7 @@ class PresencePageState extends State<PresencePage>
         gradient: _getCardGradient(),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.3),
+            color: _getPrimaryColor().withValues(alpha: 0.3),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -1698,7 +1969,7 @@ class PresencePageState extends State<PresencePage>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -1738,7 +2009,7 @@ class PresencePageState extends State<PresencePage>
                             }),
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -1758,7 +2029,7 @@ class PresencePageState extends State<PresencePage>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.more_vert, color: Colors.white, size: 20),
@@ -1795,7 +2066,7 @@ class PresencePageState extends State<PresencePage>
   // ========== SEARCH BAR DENGAN FILTER SEPERTI ADMIN ==========
   Widget _buildSearchAndFilter(LanguageProvider languageProvider) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
         children: [
           Expanded(
@@ -1803,62 +2074,57 @@ class PresencePageState extends State<PresencePage>
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: ColorUtils.slate200),
+                boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(color: Colors.black87),
-                      decoration: InputDecoration(
-                        hintText: languageProvider.getTranslatedText({
-                          'en': 'Search attendance...',
-                          'id': 'Cari absensi...',
-                        }),
-                        hintStyle: TextStyle(color: Colors.grey),
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      onSubmitted: (_) {
-                        setState(() {});
-                      },
-                    ),
+              child: TextField(
+                controller: _searchController,
+                style: TextStyle(color: ColorUtils.slate900, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: languageProvider.getTranslatedText({
+                    'en': 'Search attendance...',
+                    'id': 'Cari absensi...',
+                  }),
+                  hintStyle: TextStyle(
+                    color: ColorUtils.slate400,
+                    fontSize: 14,
                   ),
-                  Container(
-                    margin: EdgeInsets.only(right: 4),
-                    child: IconButton(
-                      icon: Icon(Icons.search, color: _getPrimaryColor()),
-                      onPressed: () {
-                        setState(() {});
-                      },
-                    ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: ColorUtils.slate400,
+                    size: 20,
                   ),
-                ],
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onChanged: (_) => setState(() {}),
               ),
             ),
           ),
           if (_tabController.index == 0) ...[
             SizedBox(width: 8),
             Container(
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _hasActiveFilter
                       ? _getPrimaryColor()
-                      : Colors.grey.shade300,
+                      : ColorUtils.slate200,
                 ),
+                boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
               ),
               child: IconButton(
                 onPressed: _showFilterSheet,
                 icon: Icon(
                   Icons.tune,
-                  color: _hasActiveFilter ? Colors.white : Colors.grey.shade700,
+                  color: _hasActiveFilter ? Colors.white : ColorUtils.slate600,
+                  size: 20,
                 ),
                 tooltip: languageProvider.getTranslatedText({
                   'en': 'Filter',
@@ -1879,124 +2145,411 @@ class PresencePageState extends State<PresencePage>
       listen: false,
     );
 
+    String? tempDateFilter = _selectedDateFilter;
+    List<String> tempSubjectIds = List.from(_selectedSubjectIds);
+    List<String> tempDayIds = List.from(_selectedDayIds);
+    List<String> tempLessonHourIds = List.from(_selectedLessonHourIds);
+
+    final days = [
+      {'en': 'Monday', 'id': 'Senin', 'val': '1'},
+      {'en': 'Tuesday', 'id': 'Selasa', 'val': '2'},
+      {'en': 'Wednesday', 'id': 'Rabu', 'val': '3'},
+      {'en': 'Thursday', 'id': 'Kamis', 'val': '4'},
+      {'en': 'Friday', 'id': 'Jumat', 'val': '5'},
+      {'en': 'Saturday', 'id': 'Sabtu', 'val': '6'},
+      {'en': 'Sunday', 'id': 'Minggu', 'val': '7'},
+    ];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => FilterSheet(
-        primaryColor: _getPrimaryColor(),
-        config: FilterConfig(
-          sections: [
-            FilterSection(
-              key: 'dateFilter',
-              title: languageProvider.getTranslatedText({
-                'en': 'Date Range',
-                'id': 'Rentang Tanggal',
-              }),
-              options: [
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Today',
-                    'id': 'Hari Ini',
-                  }),
-                  value: 'today',
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Gradient header
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _getPrimaryColor(),
+                        _getPrimaryColor().withValues(alpha: 0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(20, 14, 16, 20),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          margin: EdgeInsets.only(bottom: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.filter_list,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Filter Attendance',
+                                'id': 'Filter Absensi',
+                              }),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setSheetState(() {
+                                tempDateFilter = null;
+                                tempSubjectIds.clear();
+                                tempDayIds.clear();
+                                tempLessonHourIds.clear();
+                              });
+                            },
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Reset',
+                                'id': 'Reset',
+                              }),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'This Week',
-                    'id': 'Minggu Ini',
-                  }),
-                  value: 'week',
+
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Date Range
+                        _buildSectionHeader(
+                          languageProvider.getTranslatedText({
+                            'en': 'Date Range',
+                            'id': 'Rentang Tanggal',
+                          }),
+                          Icons.calendar_today_outlined,
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children:
+                              [
+                                {
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'Today',
+                                    'id': 'Hari Ini',
+                                  }),
+                                  'val': 'today',
+                                },
+                                {
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'This Week',
+                                    'id': 'Minggu Ini',
+                                  }),
+                                  'val': 'week',
+                                },
+                                {
+                                  'label': languageProvider.getTranslatedText({
+                                    'en': 'This Month',
+                                    'id': 'Bulan Ini',
+                                  }),
+                                  'val': 'month',
+                                },
+                              ].map((item) {
+                                final isSelected =
+                                    tempDateFilter == item['val'];
+                                return FilterChip(
+                                  label: Text(item['label']!),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    setSheetState(() {
+                                      tempDateFilter = selected ? item['val'] : null;
+                                    });
+                                  },
+                                  backgroundColor: Colors.white,
+                                  selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                                  checkmarkColor: _getPrimaryColor(),
+                                  labelStyle: TextStyle(
+                                    color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+
+                        // Subject
+                        if (_subjectTeacher.isNotEmpty) ...[
+                          _buildSectionHeader(
+                            languageProvider.getTranslatedText({
+                              'en': 'Subject',
+                              'id': 'Mata Pelajaran',
+                            }),
+                            Icons.book_outlined,
+                          ),
+                          SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _subjectTeacher.map((subject) {
+                              final subjectId = subject['id'].toString();
+                              final isSelected = tempSubjectIds.contains(
+                                subjectId,
+                              );
+                              final label =
+                                  subject['name'] ??
+                                  subject['nama'] ??
+                                  subject['mata_pelajaran_nama'] ??
+                                  'Subject';
+                              return FilterChip(
+                                label: Text(label),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setSheetState(() {
+                                    if (selected) {
+                                      tempSubjectIds.add(subjectId);
+                                    } else {
+                                      tempSubjectIds.remove(subjectId);
+                                    }
+                                  });
+                                },
+                                backgroundColor: Colors.white,
+                                selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                                checkmarkColor: _getPrimaryColor(),
+                                labelStyle: TextStyle(
+                                  color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+
+                        // Day
+                        _buildSectionHeader(
+                          languageProvider.getTranslatedText({
+                            'en': 'Day',
+                            'id': 'Hari',
+                          }),
+                          Icons.today_outlined,
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: days.map((d) {
+                            final val = d['val']!;
+                            final isSelected = tempDayIds.contains(val);
+                            final label = languageProvider.getTranslatedText({
+                              'en': d['en']!,
+                              'id': d['id']!,
+                            });
+                            return FilterChip(
+                              label: Text(label),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setSheetState(() {
+                                  if (selected) {
+                                    tempDayIds.add(val);
+                                  } else {
+                                    tempDayIds.remove(val);
+                                  }
+                                });
+                              },
+                              backgroundColor: Colors.white,
+                              selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                              checkmarkColor: _getPrimaryColor(),
+                              labelStyle: TextStyle(
+                                color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+
+                        // Lesson Hour
+                        if (_lessonHours.isNotEmpty) ...[
+                          _buildSectionHeader(
+                            languageProvider.getTranslatedText({
+                              'en': 'Lesson Hour',
+                              'id': 'Jam Pelajaran',
+                            }),
+                            Icons.access_time_outlined,
+                          ),
+                          SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _lessonHours.map((lh) {
+                              final lhId = lh['id'].toString();
+                              final isSelected = tempLessonHourIds.contains(
+                                lhId,
+                              );
+                              return FilterChip(
+                                label: Text(lh['name'] ?? 'Jam'),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setSheetState(() {
+                                    if (selected) {
+                                      tempLessonHourIds.add(lhId);
+                                    } else {
+                                      tempLessonHourIds.remove(lhId);
+                                    }
+                                  });
+                                },
+                                backgroundColor: Colors.white,
+                                selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                                checkmarkColor: _getPrimaryColor(),
+                                labelStyle: TextStyle(
+                                  color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-                FilterOption(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'This Month',
-                    'id': 'Bulan Ini',
-                  }),
-                  value: 'month',
+
+                // Footer
+                Container(
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 13),
+                            side: BorderSide(color: ColorUtils.slate300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Cancel',
+                              'id': 'Batal',
+                            }),
+                            style: TextStyle(
+                              color: ColorUtils.slate700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedDateFilter = tempDateFilter;
+                              _selectedSubjectIds = tempSubjectIds;
+                              _selectedDayIds = tempDayIds;
+                              _selectedLessonHourIds = tempLessonHourIds;
+                              _checkActiveFilter();
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 13),
+                            backgroundColor: _getPrimaryColor(),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Apply Filter',
+                              'id': 'Terapkan Filter',
+                            }),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-              multiSelect: false,
             ),
-            FilterSection(
-              key: 'subjectIds',
-              title: languageProvider.getTranslatedText({
-                'en': 'Subject',
-                'id': 'Mata Pelajaran',
-              }),
-              options: _subjectTeacher.map((subject) {
-                return FilterOption(
-                  label:
-                      subject['name'] ??
-                      subject['nama'] ??
-                      subject['mata_pelajaran_nama'] ??
-                      'Subject',
-                  value: subject['id'].toString(),
-                );
-              }).toList(),
-              multiSelect: true,
-            ),
-            FilterSection(
-              key: 'dayIds',
-              title: languageProvider.getTranslatedText({
-                'en': 'Day',
-                'id': 'Hari',
-              }),
-              options:
-                  [
-                    {'en': 'Monday', 'id': 'Senin', 'val': '1'},
-                    {'en': 'Tuesday', 'id': 'Selasa', 'val': '2'},
-                    {'en': 'Wednesday', 'id': 'Rabu', 'val': '3'},
-                    {'en': 'Thursday', 'id': 'Kamis', 'val': '4'},
-                    {'en': 'Friday', 'id': 'Jumat', 'val': '5'},
-                    {'en': 'Saturday', 'id': 'Sabtu', 'val': '6'},
-                    {'en': 'Sunday', 'id': 'Minggu', 'val': '7'},
-                  ].map((d) {
-                    return FilterOption(
-                      label: languageProvider.getTranslatedText({
-                        'en': d['en']!,
-                        'id': d['id']!,
-                      }),
-                      value: d['val']!,
-                    );
-                  }).toList(),
-              multiSelect: true,
-            ),
-            FilterSection(
-              key: 'lessonHourIds',
-              title: languageProvider.getTranslatedText({
-                'en': 'Lesson Hour',
-                'id': 'Jam Pelajaran',
-              }),
-              options: _lessonHours.map((lh) {
-                return FilterOption(
-                  label: lh['name'] ?? 'Jam',
-                  value: lh['id'].toString(),
-                );
-              }).toList(),
-              multiSelect: true,
-            ),
-          ],
-        ),
-        initialFilters: {
-          'dateFilter': _selectedDateFilter,
-          'subjectIds': _selectedSubjectIds,
-          'dayIds': _selectedDayIds,
-          'lessonHourIds': _selectedLessonHourIds,
+          );
         },
-        onApplyFilters: (filters) {
-          setState(() {
-            _selectedDateFilter = filters['dateFilter'];
-            _selectedSubjectIds = List<String>.from(
-              filters['subjectIds'] ?? [],
-            );
-            _selectedDayIds = List<String>.from(filters['dayIds'] ?? []);
-            _selectedLessonHourIds = List<String>.from(
-              filters['lessonHourIds'] ?? [],
-            );
-            _checkActiveFilter();
-          });
-        },
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.only(top: 24, bottom: 0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: ColorUtils.slate700),
+          SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: ColorUtils.slate900,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2079,292 +2632,240 @@ class PresencePageState extends State<PresencePage>
   Widget _buildSummaryCard(
     AbsensiSummary summary,
     LanguageProvider languageProvider,
+    int index,
   ) {
     final presentaseHadir = summary.totalStudent > 0
         ? (summary.present / summary.totalStudent * 100).round()
         : 0;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            blurRadius: 5,
-            offset: Offset(0, 4),
+    final progressColor = presentaseHadir >= 80
+        ? ColorUtils.success600
+        : presentaseHadir >= 60
+        ? ColorUtils.warning600
+        : ColorUtils.error600;
+
+    return AnimatedBuilder(
+      animation: _listAnimationController,
+      builder: (context, child) {
+        final delay = (index * 0.1).clamp(0.0, 0.8);
+        final animation = CurvedAnimation(
+          parent: _listAnimationController,
+          curve: Interval(delay, 1.0, curve: Curves.easeOut),
+        );
+
+        return FadeTransition(
+          opacity: animation,
+          child: Transform.translate(
+            offset: Offset(0, 50 * (1 - animation.value)),
+            child: child,
           ),
-        ],
-      ),
+        );
+      },
       child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _navigateToDetailAbsensi(summary),
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _navigateToDetailAbsensi(summary),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Strip biru di pinggir kiri
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 6,
-                  decoration: BoxDecoration(
-                    color: _getPrimaryColor(),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
+              // Header row: subject name + delete button
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Subject icon
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _getPrimaryColor().withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.15)),
+                    ),
+                    child: Icon(Icons.book_outlined, color: _getPrimaryColor(), size: 20),
+                  ),
+                  SizedBox(width: 12),
+                  // Subject + class + date info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          summary.subjectName,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate900,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(Icons.class_outlined, size: 12, color: _getPrimaryColor()),
+                            SizedBox(width: 4),
+                            Text(
+                              summary.className ?? 'Kelas',
+                              style: TextStyle(fontSize: 12, color: _getPrimaryColor(), fontWeight: FontWeight.w500),
+                            ),
+                            if (summary.lessonHourName != null && summary.lessonHourName!.isNotEmpty) ...[
+                              Text(' • ', style: TextStyle(color: ColorUtils.slate400, fontSize: 12)),
+                              Text(
+                                summary.lessonHourName!,
+                                style: TextStyle(fontSize: 12, color: ColorUtils.slate600, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ],
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(summary.date),
+                          style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-
-              // Background pattern effect
-              Positioned(
-                right: -8,
-                top: -8,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
-                    shape: BoxShape.circle,
+                  SizedBox(width: 8),
+                  // Delete button
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _deleteAbsensi(summary, languageProvider),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: ColorUtils.error600.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: ColorUtils.error600.withValues(alpha: 0.2)),
+                        ),
+                        child: Icon(Icons.delete_outline, size: 16, color: ColorUtils.error600),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
 
-              // Delete button
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _deleteAbsensi(summary, languageProvider),
-                    borderRadius: BorderRadius.circular(20),
+              SizedBox(height: 12),
+              Divider(color: ColorUtils.slate100, height: 1),
+              SizedBox(height: 10),
+
+              // Attendance info row with info tags
+              Row(
+                children: [
+                  _buildInfoTag(
+                    icon: Icons.check_circle_outline,
+                    label: '${summary.present} Hadir',
+                    tagColor: ColorUtils.success600,
+                  ),
+                  SizedBox(width: 8),
+                  _buildInfoTag(
+                    icon: Icons.cancel_outlined,
+                    label: '${summary.absent} Absen',
+                    tagColor: ColorUtils.error600,
+                  ),
+                  SizedBox(width: 8),
+                  _buildInfoTag(
+                    icon: Icons.people_outline,
+                    label: '${summary.totalStudent} Siswa',
+                    tagColor: _getPrimaryColor(),
+                  ),
+                  Spacer(),
+                  // Detail button
+                  GestureDetector(
+                    onTap: () => _navigateToDetailAbsensi(summary),
                     child: Container(
-                      padding: EdgeInsets.all(6),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        shape: BoxShape.circle,
+                        color: _getPrimaryColor().withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.2)),
                       ),
-                      child: Icon(
-                        Icons.delete_outline,
-                        size: 18,
-                        color: Colors.red.shade700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header dengan mata pelajaran, kelas, dan tanggal
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                summary.subjectName,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                summary.className ?? 'Unknown Class',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: _getPrimaryColor(),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (summary.lessonHourName != null &&
-                                  summary.lessonHourName!.isNotEmpty) ...[
-                                SizedBox(height: 2),
-                                Text(
-                                  summary.lessonHourName!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[700],
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                              SizedBox(height: 2),
-                              Text(
-                                DateFormat(
-                                  'EEEE, dd MMMM yyyy',
-                                  'id_ID',
-                                ).format(summary.date),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey[600],
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 12),
-
-                    // Informasi kehadiran
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: _getPrimaryColor().withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Icon(
-                            Icons.people,
-                            color: _getPrimaryColor(),
-                            size: 16,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Kehadiran',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: 1),
-                              Text(
-                                '${summary.present} Hadir • ${summary.absent} Tidak Hadir',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 8),
-
-                    // Progress bar
-                    Container(
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Stack(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              return Container(
-                                width:
-                                    constraints.maxWidth *
-                                    (summary.totalStudent > 0
-                                        ? summary.present / summary.totalStudent
-                                        : 0),
-                                decoration: BoxDecoration(
-                                  color: presentaseHadir >= 80
-                                      ? Colors.green
-                                      : presentaseHadir >= 60
-                                      ? Colors.orange
-                                      : Colors.red,
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                              );
-                            },
+                          Icon(Icons.visibility_outlined, size: 12, color: _getPrimaryColor()),
+                          SizedBox(width: 4),
+                          Text(
+                            'Detail',
+                            style: TextStyle(fontSize: 11, color: _getPrimaryColor(), fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
                     ),
+                  ),
+                ],
+              ),
 
-                    SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        _buildActionButton(
-                          icon: Icons.visibility,
-                          label: 'Detail',
-                          color: _getPrimaryColor(),
-                          onPressed: () => _navigateToDetailAbsensi(summary),
-                        ),
-                      ],
-                    ),
-                  ],
+              SizedBox(height: 10),
+
+              // Progress bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: summary.totalStudent > 0 ? summary.present / summary.totalStudent : 0,
+                  minHeight: 6,
+                  backgroundColor: ColorUtils.slate200,
+                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                 ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
+                style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
               ),
             ],
           ),
         ),
       ),
+    ),
     );
   }
 
-  Widget _buildActionButton({
+  Widget _buildInfoTag({
     required IconData icon,
     required String label,
-    required Color color,
-    required VoidCallback onPressed,
+    Color? tagColor,
   }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: tagColor != null
+            ? tagColor.withValues(alpha: 0.1)
+            : ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: tagColor != null
+              ? tagColor.withValues(alpha: 0.2)
+              : ColorUtils.slate200,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: color),
-            SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: tagColor ?? ColorUtils.slate600),
+          SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: tagColor ?? ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -2404,18 +2905,13 @@ class PresencePageState extends State<PresencePage>
           children: [
             // Header Info - Always show (whether schedule detected or not)
             Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ColorUtils.slate200),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
               ),
               child: Column(
                 children: [
@@ -2434,10 +2930,10 @@ class PresencePageState extends State<PresencePage>
                                     child: Text(
                                       _selectedSubjectName ??
                                           _getSubjectSelectedName(),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
+                                        color: ColorUtils.slate900,
                                       ),
                                     ),
                                   ),
@@ -2449,10 +2945,13 @@ class PresencePageState extends State<PresencePage>
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.withOpacity(0.1),
+                                        color: ColorUtils.success600.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         borderRadius: BorderRadius.circular(6),
                                         border: Border.all(
-                                          color: Colors.green.withOpacity(0.3),
+                                          color: ColorUtils.success600
+                                              .withValues(alpha: 0.3),
                                         ),
                                       ),
                                       child: Row(
@@ -2471,7 +2970,7 @@ class PresencePageState extends State<PresencePage>
                                             }),
                                             style: TextStyle(
                                               fontSize: 10,
-                                              color: Colors.green[700],
+                                              color: ColorUtils.successDark,
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
@@ -2502,7 +3001,7 @@ class PresencePageState extends State<PresencePage>
                                         child: Text(
                                           '|',
                                           style: TextStyle(
-                                            color: Colors.grey[300],
+                                            color: ColorUtils.slate300,
                                           ),
                                         ),
                                       ),
@@ -2514,7 +3013,7 @@ class PresencePageState extends State<PresencePage>
                                         orElse: () => {'name': ''},
                                       )['name'],
                                       style: TextStyle(
-                                        color: Colors.grey[700],
+                                        color: ColorUtils.slate700,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -2537,10 +3036,10 @@ class PresencePageState extends State<PresencePage>
                                         'en': 'No Schedule Now',
                                         'id': 'Tidak Ada Jadwal Sekarang',
                                       }),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
+                                        color: ColorUtils.slate900,
                                       ),
                                     ),
                                   ),
@@ -2553,8 +3052,8 @@ class PresencePageState extends State<PresencePage>
                                 'EEEE, dd MMMM yyyy',
                                 'id_ID',
                               ).format(_selectedDate),
-                              style: const TextStyle(
-                                color: Colors.grey,
+                              style: TextStyle(
+                                color: ColorUtils.slate500,
                                 fontSize: 12,
                               ),
                             ),
@@ -2567,7 +3066,7 @@ class PresencePageState extends State<PresencePage>
                           // Icon Search
                           Container(
                             decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
+                              color: _getPrimaryColor().withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: IconButton(
@@ -2605,7 +3104,7 @@ class PresencePageState extends State<PresencePage>
                           // Icon untuk Quick Actions
                           Container(
                             decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
+                              color: _getPrimaryColor().withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: IconButton(
@@ -2633,7 +3132,7 @@ class PresencePageState extends State<PresencePage>
                           // Icon Edit
                           Container(
                             decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
+                              color: _getPrimaryColor().withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: IconButton(
@@ -2675,7 +3174,7 @@ class PresencePageState extends State<PresencePage>
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: ColorUtils.slate900.withValues(alpha: 0.05),
                         blurRadius: 4,
                         offset: Offset(0, 2),
                       ),
@@ -2704,7 +3203,7 @@ class PresencePageState extends State<PresencePage>
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.grey[50],
+                      fillColor: ColorUtils.slate50,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -2728,7 +3227,7 @@ class PresencePageState extends State<PresencePage>
                             Icon(
                               Icons.edit_calendar_outlined,
                               size: 80,
-                              color: Colors.grey[300],
+                              color: ColorUtils.slate300,
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -2739,7 +3238,7 @@ class PresencePageState extends State<PresencePage>
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
+                                color: ColorUtils.slate600,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -2753,7 +3252,7 @@ class PresencePageState extends State<PresencePage>
                               }),
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey[500],
+                                color: ColorUtils.slate500,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -2820,7 +3319,7 @@ class PresencePageState extends State<PresencePage>
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: ColorUtils.success600,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2849,19 +3348,19 @@ class PresencePageState extends State<PresencePage>
     Color backgroundColor = Colors.white;
     switch (status) {
       case 'hadir':
-        backgroundColor = Colors.green.withOpacity(0.05);
+        backgroundColor = ColorUtils.success600.withValues(alpha: 0.05);
         break;
       case 'terlambat':
-        backgroundColor = Colors.purple.withOpacity(0.05);
+        backgroundColor = Colors.purple.withValues(alpha: 0.05);
         break;
       case 'izin':
-        backgroundColor = Colors.blue.withOpacity(0.05);
+        backgroundColor = Colors.blue.withValues(alpha: 0.05);
         break;
       case 'sakit':
-        backgroundColor = Colors.orange.withOpacity(0.05);
+        backgroundColor = Colors.orange.withValues(alpha: 0.05);
         break;
       case 'alpha':
-        backgroundColor = Colors.red.withOpacity(0.05);
+        backgroundColor = ColorUtils.error600.withValues(alpha: 0.05);
         break;
     }
 
@@ -2873,17 +3372,17 @@ class PresencePageState extends State<PresencePage>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: ColorUtils.slate900.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
           BoxShadow(
-            color: statusColor.withOpacity(0.1),
+            color: statusColor.withValues(alpha: 0.1),
             blurRadius: 2,
             spreadRadius: 1,
           ),
         ],
-        border: Border.all(color: statusColor.withOpacity(0.3), width: 1),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -2918,16 +3417,19 @@ class PresencePageState extends State<PresencePage>
                   children: [
                     Text(
                       siswa.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                        color: ColorUtils.slate900,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${languageProvider.getTranslatedText({'en': 'NIS:', 'id': 'NIS:'})} ${siswa.nis}',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ColorUtils.slate500,
+                      ),
                     ),
                   ],
                 ),
@@ -2940,9 +3442,9 @@ class PresencePageState extends State<PresencePage>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.15),
+                  color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: statusColor.withOpacity(0.3)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   _getStatusText(status, languageProvider),
@@ -3004,10 +3506,12 @@ class PresencePageState extends State<PresencePage>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? statusColor : statusColor.withOpacity(0.1),
+          color: isSelected ? statusColor : statusColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? statusColor : statusColor.withOpacity(0.3),
+            color: isSelected
+                ? statusColor
+                : statusColor.withValues(alpha: 0.3),
           ),
         ),
         child: Text(
@@ -3059,7 +3563,7 @@ class PresencePageState extends State<PresencePage>
               'id': 'Data guru tidak valid. Silakan login ulang.',
             }),
           ),
-          backgroundColor: Colors.red.shade400,
+          backgroundColor: ColorUtils.error600,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -3075,7 +3579,7 @@ class PresencePageState extends State<PresencePage>
               'id': 'Pilih mata pelajaran terlebih dahulu',
             }),
           ),
-          backgroundColor: Colors.red.shade400,
+          backgroundColor: ColorUtils.error600,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -3091,7 +3595,7 @@ class PresencePageState extends State<PresencePage>
               'id': 'Tidak ada siswa untuk disimpan',
             }),
           ),
-          backgroundColor: Colors.red.shade400,
+          backgroundColor: ColorUtils.error600,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -3152,7 +3656,7 @@ class PresencePageState extends State<PresencePage>
                 'id': 'Absensi berhasil disimpan untuk $successCount siswa',
               }),
             ),
-            backgroundColor: Colors.green.shade400,
+            backgroundColor: ColorUtils.success600,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -3171,7 +3675,7 @@ class PresencePageState extends State<PresencePage>
                 'id': '$successCount berhasil, $errorCount gagal',
               }),
             ),
-            backgroundColor: Colors.orange.shade400,
+            backgroundColor: ColorUtils.warning600,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -3184,7 +3688,7 @@ class PresencePageState extends State<PresencePage>
           content: Text(
             '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e',
           ),
-          backgroundColor: Colors.red.shade400,
+          backgroundColor: ColorUtils.error600,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -3401,7 +3905,7 @@ class PresencePageState extends State<PresencePage>
               'id': 'Absensi berhasil dihapus',
             }),
           ),
-          backgroundColor: Colors.green.shade400,
+          backgroundColor: ColorUtils.success600,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -3414,7 +3918,7 @@ class PresencePageState extends State<PresencePage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red.shade400,
+            backgroundColor: ColorUtils.error600,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -3423,18 +3927,8 @@ class PresencePageState extends State<PresencePage>
   }
 
   Color _getAvatarColor(String nama) {
-    final colors = [
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
-      Colors.indigo,
-      Colors.pink,
-    ];
-    final index = nama.codeUnitAt(0) % colors.length;
-    return colors[index];
+    final index = nama.isNotEmpty ? nama.codeUnitAt(0) % 6 : 0;
+    return ColorUtils.getColorForIndex(index);
   }
 
   @override
@@ -3442,9 +3936,8 @@ class PresencePageState extends State<PresencePage>
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
-          backgroundColor: Color(
-            0xFFF8F9FA,
-          ), // Background sama dengan pengumuman
+          backgroundColor:
+              ColorUtils.slate50, // Background sama dengan pengumuman
           body: Column(
             children: [
               // Header baru seperti pengumuman
@@ -3567,7 +4060,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: ColorUtils.slate900.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -3606,7 +4099,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 ),
                 Text(
                   '${languageProvider.getTranslatedText({'en': 'NIS:', 'id': 'NIS:'})} ${siswa.nis}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
                 ),
               ],
             ),
@@ -3616,9 +4109,9 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: statusColor.withOpacity(0.3)),
+              border: Border.all(color: statusColor.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -3733,7 +4226,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 'id': 'Berhasil update $successCount absensi',
               }),
             ),
-            backgroundColor: Colors.green.shade400,
+            backgroundColor: ColorUtils.success600,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -3746,7 +4239,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
             content: Text(
               '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e',
             ),
-            backgroundColor: Colors.red.shade400,
+            backgroundColor: ColorUtils.error600,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -3816,7 +4309,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
-          backgroundColor: Colors.grey.shade50,
+          backgroundColor: ColorUtils.slate50,
           appBar: AppBar(
             title: Text(
               languageProvider.getTranslatedText({
@@ -3850,7 +4343,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
             ],
             bottom: PreferredSize(
               preferredSize: Size.fromHeight(1),
-              child: Container(height: 1, color: Colors.grey.shade300),
+              child: Container(height: 1, color: ColorUtils.slate300),
             ),
           ),
           body: _isLoading
@@ -3871,7 +4364,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: ColorUtils.slate900.withValues(alpha: 0.1),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -3905,8 +4398,8 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                               'EEEE, dd MMMM yyyy',
                               'id_ID',
                             ).format(widget.date),
-                            style: const TextStyle(
-                              color: Colors.grey,
+                            style: TextStyle(
+                              color: ColorUtils.slate500,
                               fontSize: 14,
                             ),
                             textAlign: TextAlign.center,
@@ -3914,8 +4407,8 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                           const SizedBox(height: 8),
                           Text(
                             '${_studentList.length} ${languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'})}',
-                            style: const TextStyle(
-                              color: Colors.grey,
+                            style: TextStyle(
+                              color: ColorUtils.slate500,
                               fontSize: 12,
                             ),
                           ),
@@ -4026,7 +4519,7 @@ LinearGradient _getCardGradient() {
   return LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primaryColor, primaryColor.withOpacity(0.7)],
+    colors: [primaryColor, primaryColor.withValues(alpha: 0.7)],
   );
 }
 
@@ -4291,7 +4784,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                   'id': 'Absensi berhasil diperbarui',
                 }),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: ColorUtils.success600,
             ),
           );
           _loadData(); // Reload data to reflect changes
@@ -4327,7 +4820,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.8)],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
     );
   }
 
@@ -4363,190 +4856,109 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
     final status = _getStudentStatus(siswa.id);
     final Color statusColor = _getStatusColor(status);
     final String statusText = _getStatusText(status, languageProvider);
+    final avatarColor = ColorUtils.getColorForIndex(index);
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          final delay = index * 0.1;
-          final animation = CurvedAnimation(
-            parent: _animationController,
-            curve: Interval(delay, 1.0, curve: Curves.easeOut),
-          );
-
-          return FadeTransition(
-            opacity: animation,
-            child: Transform.translate(
-              offset: Offset(0, 50 * (1 - animation.value)),
-              child: child,
-            ),
-          );
-        },
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    blurRadius: 5,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final delay = (index * 0.1).clamp(0.0, 0.8);
+        final animation = CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(delay, 1.0, curve: Curves.easeOut),
+        );
+        return FadeTransition(
+          opacity: animation,
+          child: Transform.translate(
+            offset: Offset(0, 50 * (1 - animation.value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: ColorUtils.slate200),
+          boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  // Strip biru di pinggir kiri
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 6,
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor(),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: avatarColor.withValues(alpha: 0.15),
+                    child: Text(
+                      siswa.name.isNotEmpty ? siswa.name[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        color: avatarColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
-
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Row(
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Avatar
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _getPrimaryColor().withOpacity(0.1),
-                            shape: BoxShape.circle,
+                        Text(
+                          siswa.name,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate900,
                           ),
-                          child: Center(
-                            child: Text(
-                              siswa.name.isNotEmpty
-                                  ? siswa.name[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                color: _getPrimaryColor(),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(width: 12),
-
-                        // Student Info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                siswa.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'NIS: ${siswa.nis}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
+                        SizedBox(height: 2),
+                        Text(
+                          'NIS: ${siswa.nis}',
+                          style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
                         ),
-
-                        // Status Badge or Dropdown
-                        _isEditing
-                            ? Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey[300]!),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _editedStatus[siswa.id]
-                                        ?.toLowerCase(),
-                                    items:
-                                        [
-                                          'present',
-                                          'late',
-                                          'excused',
-                                          'sick',
-                                          'absent',
-                                        ].map((String value) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(
-                                              _getStatusText(
-                                                value,
-                                                languageProvider,
-                                              ),
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: _getStatusColor(value),
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          );
-                                        }).toList(),
-                                    onChanged: (String? newValue) {
-                                      if (newValue != null) {
-                                        setState(() {
-                                          _editedStatus[siswa.id] = newValue;
-                                        });
-                                      }
-                                    },
-                                    isDense: true,
-                                  ),
-                                ),
-                              )
-                            : Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: statusColor.withOpacity(0.3),
-                                  ),
-                                ),
-                                child: Text(
-                                  statusText,
-                                  style: TextStyle(
-                                    color: statusColor,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
                       ],
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
               ),
-            ),
+              if (_isEditing) ...[
+                SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ColorUtils.slate200),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildQuickStatusButton('hadir', 'H', ColorUtils.success600, siswa.id),
+                      _buildQuickStatusButton('sakit', 'S', ColorUtils.warning600, siswa.id),
+                      _buildQuickStatusButton('izin', 'I', ColorUtils.info600, siswa.id),
+                      _buildQuickStatusButton('alpha', 'A', ColorUtils.error600, siswa.id),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -4558,22 +4970,22 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
     switch (status.toLowerCase()) {
       case 'hadir':
       case 'present':
-        return Colors.green;
+        return ColorUtils.success600;
       case 'izin':
       case 'excused':
       case 'permission':
-        return Colors.blue;
+        return ColorUtils.info600;
       case 'sakit':
       case 'sick':
-        return Colors.orange;
+        return ColorUtils.warning600;
       case 'alpha':
       case 'absent':
-        return Colors.red;
+        return ColorUtils.error600;
       case 'terlambat':
       case 'late':
-        return Colors.purple;
+        return Color(0xFF7C3AED);
       default:
-        return Colors.grey;
+        return ColorUtils.slate400;
     }
   }
 
@@ -4616,6 +5028,41 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
           'id': 'Tidak Diketahui',
         });
     }
+  }
+
+  Widget _buildQuickStatusButton(
+    String status,
+    String label,
+    Color color,
+    String studentId,
+  ) {
+    final isSelected = _editedStatus[studentId]?.toLowerCase() == status;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _editedStatus[studentId] = status;
+        });
+      },
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: isSelected ? color : color.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 1.5),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // Method untuk menghitung statistik
@@ -4666,54 +5113,44 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
   Widget _buildStatCard(String label, int count, Color color, IconData icon) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            width: 100,
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [color.withOpacity(0.8), color.withOpacity(0.6)],
+      child: Container(
+        width: 90,
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
-              ],
+              child: Icon(icon, color: color, size: 18),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: Colors.white, size: 24),
-                SizedBox(height: 8),
-                Text(
-                  count.toString(),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.white.withOpacity(0.9),
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            SizedBox(height: 8),
+            Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
             ),
-          ),
+            SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -4726,233 +5163,416 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
         final stats = _calculateStatistics();
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
-          appBar: AppBar(
-            title: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Attendance Details',
-                'id': 'Detail Absensi',
-              }),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            backgroundColor: _getPrimaryColor(),
-            elevation: 0,
-            centerTitle: true,
-            iconTheme: IconThemeData(color: Colors.white),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            actions: [
-              if (!_isLoading)
-                IconButton(
-                  icon: Icon(
-                    _isEditing ? Icons.save : Icons.edit,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    if (_isEditing) {
-                      _saveChanges();
-                    } else {
-                      setState(() {
-                        _isEditing = true;
-                        // Reset edited status to current status
-                        for (var siswa in _siswaList) {
-                          _editedStatus[siswa.id] = _getStudentStatus(siswa.id);
-                        }
-                      });
-                    }
-                  },
+          backgroundColor: ColorUtils.slate50,
+          body: Column(
+            children: [
+              // === HEADER (Pattern #7) ===
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 12,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
                 ),
-            ],
-          ),
-          body: _isLoading || _isSaving
-              ? LoadingScreen(
-                  message: languageProvider.getTranslatedText({
-                    'en': _isSaving
-                        ? 'Saving changes...'
-                        : 'Loading attendance details...',
-                    'id': _isSaving
-                        ? 'Menyimpan perubahan...'
-                        : 'Memuat detail absensi...',
-                  }),
-                )
-              : Column(
-                  children: [
-                    // Header Info Card
-                    Container(
-                      margin: EdgeInsets.all(16),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: _getCardGradient(),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _getPrimaryColor().withOpacity(0.2),
-                                  blurRadius: 12,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            padding: EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                Text(
-                                  widget.subjectName,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  DateFormat(
-                                    'EEEE, dd MMMM yyyy',
-                                    'id_ID',
-                                  ).format(widget.date),
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                if (widget.lessonHourName != null &&
-                                    widget.lessonHourName!.isNotEmpty) ...[
-                                  SizedBox(height: 4),
-                                  Text(
-                                    widget.lessonHourName!,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                                SizedBox(height: 8),
-                                Text(
-                                  '${stats['total']} ${languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'})}',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Statistics Cards
-                    SizedBox(
-                      height: 120,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        children: [
-                          _buildStatCard(
-                            languageProvider.getTranslatedText({
-                              'en': 'Present',
-                              'id': 'Hadir',
-                            }),
-                            stats['hadir']!,
-                            Colors.green,
-                            Icons.check_circle,
-                          ),
-                          _buildStatCard(
-                            languageProvider.getTranslatedText({
-                              'en': 'Late',
-                              'id': 'Terlambat',
-                            }),
-                            stats['terlambat']!,
-                            Colors.purple,
-                            Icons.watch_later,
-                          ),
-                          _buildStatCard(
-                            languageProvider.getTranslatedText({
-                              'en': 'Permission',
-                              'id': 'Izin',
-                            }),
-                            stats['izin']!,
-                            Colors.blue,
-                            Icons.assignment_turned_in,
-                          ),
-                          _buildStatCard(
-                            languageProvider.getTranslatedText({
-                              'en': 'Sick',
-                              'id': 'Sakit',
-                            }),
-                            stats['sakit']!,
-                            Colors.orange,
-                            Icons.local_hospital,
-                          ),
-                          _buildStatCard(
-                            languageProvider.getTranslatedText({
-                              'en': 'Absent',
-                              'id': 'Alpha',
-                            }),
-                            stats['alpha']!,
-                            Colors.red,
-                            Icons.cancel,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: 16),
-
-                    // Student List Header
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Student List',
-                              'id': 'Daftar Siswa',
-                            }),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: 8),
-
-                    // Student List
-                    Expanded(
-                      child: ListView.builder(
-                        padding: EdgeInsets.only(bottom: 16),
-                        itemCount: _siswaList.length,
-                        itemBuilder: (context, index) {
-                          final siswa = _siswaList[index];
-                          return _buildStudentCard(
-                            siswa,
-                            languageProvider,
-                            index,
-                          );
-                        },
-                      ),
+                decoration: BoxDecoration(
+                  gradient: _getCardGradient(),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _getPrimaryColor().withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
                     ),
                   ],
                 ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Back/Close button
+                        GestureDetector(
+                          onTap: () {
+                            if (_isEditing) {
+                              setState(() {
+                                _isEditing = false;
+                                for (var s in _siswaList) {
+                                  _editedStatus[s.id] = _getStudentStatus(s.id);
+                                }
+                              });
+                            } else {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              _isEditing ? Icons.close : Icons.arrow_back,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+
+                        // Title
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _isEditing
+                                    ? languageProvider.getTranslatedText({'en': 'Edit Attendance', 'id': 'Edit Absensi'})
+                                    : languageProvider.getTranslatedText({'en': 'Attendance Details', 'id': 'Detail Absensi'}),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                widget.subjectName,
+                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Edit/Save button
+                        if (!_isLoading)
+                          GestureDetector(
+                            onTap: () {
+                              if (_isEditing) {
+                                _saveChanges();
+                              } else {
+                                setState(() => _isEditing = true);
+                              }
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: _isSaving
+                                  ? Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : Icon(
+                                      _isEditing ? Icons.check : Icons.edit,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+                        SizedBox(width: 6),
+                        Text(
+                          DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(widget.date),
+                          style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)),
+                        ),
+                        if (widget.lessonHourName != null && widget.lessonHourName!.isNotEmpty) ...[
+                          Text(' • ', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+                          Text(widget.lessonHourName!, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600)),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // === BODY ===
+              _isLoading || _isSaving
+                  ? Expanded(
+                      child: LoadingScreen(
+                        message: languageProvider.getTranslatedText({
+                          'en': _isSaving ? 'Saving changes...' : 'Loading attendance details...',
+                          'id': _isSaving ? 'Menyimpan perubahan...' : 'Memuat detail absensi...',
+                        }),
+                      ),
+                    )
+                  : Expanded(
+                      child: Column(
+                        children: [
+                          // Info Card (Pattern #8 flat)
+                          Container(
+                            margin: EdgeInsets.fromLTRB(16, 12, 16, 8),
+                            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: ColorUtils.slate200),
+                              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: _getPrimaryColor().withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _getPrimaryColor().withValues(alpha: 0.25),
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.assignment_outlined,
+                                    color: _getPrimaryColor(),
+                                    size: 22,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.subjectName,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: ColorUtils.slate900,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 4),
+                                      Wrap(
+                                        spacing: 6,
+                                        runSpacing: 4,
+                                        children: [
+                                          _buildInfoChip(
+                                            Icons.class_outlined,
+                                            widget.className,
+                                            _getPrimaryColor(),
+                                          ),
+                                          _buildInfoChip(
+                                            Icons.calendar_today,
+                                            DateFormat('dd MMM yyyy', 'id_ID').format(widget.date),
+                                            null,
+                                          ),
+                                          if (widget.lessonHourName != null && widget.lessonHourName!.isNotEmpty)
+                                            _buildInfoChip(
+                                              Icons.access_time,
+                                              widget.lessonHourName!,
+                                              null,
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: _getPrimaryColor().withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.25)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        '${stats['total']}',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: _getPrimaryColor(),
+                                        ),
+                                      ),
+                                      Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Siswa',
+                                          'id': 'Siswa',
+                                        }),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: _getPrimaryColor(),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Statistics Row
+                          SizedBox(height: 16),
+                          SizedBox(
+                            height: 120,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              children: [
+                                _buildStatCard(
+                                  languageProvider.getTranslatedText({'en': 'Present', 'id': 'Hadir'}),
+                                  stats['hadir']!,
+                                  ColorUtils.success600,
+                                  Icons.check_circle,
+                                ),
+                                _buildStatCard(
+                                  languageProvider.getTranslatedText({'en': 'Late', 'id': 'Terlambat'}),
+                                  stats['terlambat']!,
+                                  ColorUtils.warning600,
+                                  Icons.access_time,
+                                ),
+                                _buildStatCard(
+                                  languageProvider.getTranslatedText({'en': 'Absent', 'id': 'Tidak Hadir'}),
+                                  stats['alpha']! + stats['izin']! + stats['sakit']!,
+                                  ColorUtils.error600,
+                                  Icons.cancel,
+                                ),
+                                if (stats['izin']! > 0)
+                                  _buildStatCard(
+                                    languageProvider.getTranslatedText({'en': 'Permission', 'id': 'Izin'}),
+                                    stats['izin']!,
+                                    ColorUtils.info600,
+                                    Icons.event_note,
+                                  ),
+                                if (stats['sakit']! > 0)
+                                  _buildStatCard(
+                                    languageProvider.getTranslatedText({'en': 'Sick', 'id': 'Sakit'}),
+                                    stats['sakit']!,
+                                    Color(0xFF7C3AED),
+                                    Icons.medical_services,
+                                  ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 8),
+
+                          // Student List Header
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: _getPrimaryColor(),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Student List',
+                                    'id': 'Daftar Siswa',
+                                  }),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: ColorUtils.slate900,
+                                  ),
+                                ),
+                                Spacer(),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: ColorUtils.slate100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '${_siswaList.length} siswa',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: ColorUtils.slate600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Student List
+                          Expanded(
+                            child: _siswaList.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.people_outline, size: 64, color: ColorUtils.slate300),
+                                        SizedBox(height: 12),
+                                        Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'No student data found',
+                                            'id': 'Tidak ada data siswa',
+                                          }),
+                                          style: TextStyle(
+                                            color: ColorUtils.slate500,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    padding: EdgeInsets.only(bottom: 16),
+                                    itemCount: _siswaList.length,
+                                    itemBuilder: (context, index) => _buildStudentCard(
+                                      _siswaList[index],
+                                      languageProvider,
+                                      index,
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String label, Color? color) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color != null ? color.withValues(alpha: 0.1) : ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color != null ? color.withValues(alpha: 0.2) : ColorUtils.slate200,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color ?? ColorUtils.slate600),
+          SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: color ?? ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
