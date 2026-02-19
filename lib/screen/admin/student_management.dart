@@ -202,7 +202,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
               'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: ColorUtils.error600,
         ),
       );
     }
@@ -234,7 +234,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                   'id': 'Data siswa berhasil diimpor',
                 }),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: ColorUtils.success600,
             ),
           );
         }
@@ -251,7 +251,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
               'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: ColorUtils.error600,
         ),
       );
     }
@@ -325,7 +325,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                   'Gagal memuat data siswa/kelas: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: ColorUtils.error600,
         ),
       );
     }
@@ -555,8 +555,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          ColorUtils.corporateBlue600,
-                          ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+                          _getPrimaryColor(),
+                          _getPrimaryColor().withValues(alpha: 0.8),
                         ],
                       ),
                       borderRadius: BorderRadius.only(
@@ -678,13 +678,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
+                                          color: ColorUtils.slate300,
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
+                                          color: ColorUtils.slate300,
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
@@ -695,7 +695,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                       ),
                                       prefixIcon: Icon(
                                         Icons.person_search,
-                                        color: Colors.grey,
+                                        color: ColorUtils.slate400,
                                       ),
                                       suffixIcon: tempSelectedGuardian != null
                                           ? IconButton(
@@ -826,11 +826,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                   });
                                 },
                                 backgroundColor: Colors.white,
-                                selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
-                                checkmarkColor: ColorUtils.corporateBlue600,
+                                selectedColor: _getPrimaryColor().withValues(alpha: 0.15),
+                                checkmarkColor: _getPrimaryColor(),
                                 labelStyle: TextStyle(
                                   color: isSelected
-                                      ? ColorUtils.corporateBlue600
+                                      ? _getPrimaryColor()
                                       : ColorUtils.slate700,
                                   fontWeight: isSelected
                                       ? FontWeight.w600
@@ -838,7 +838,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                 ),
                                 side: BorderSide(
                                   color: isSelected
-                                      ? ColorUtils.corporateBlue600
+                                      ? _getPrimaryColor()
                                       : ColorUtils.slate300,
                                   width: 1,
                                 ),
@@ -975,7 +975,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               _loadData();
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorUtils.corporateBlue600,
+                              backgroundColor: _getPrimaryColor(),
                               padding: EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -1020,11 +1020,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       onSelected: (_) => onSelected(),
       selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
       labelStyle: TextStyle(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade700,
+        color: isSelected ? _getPrimaryColor() : ColorUtils.slate700,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade300,
+        color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
       ),
     );
   }
@@ -1043,11 +1043,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       onSelected: (_) => onSelected(),
       selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
       labelStyle: TextStyle(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade700,
+        color: isSelected ? _getPrimaryColor() : ColorUtils.slate700,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade300,
+        color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
       ),
     );
   }
@@ -1416,7 +1416,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                         'id': 'Semua field harus diisi',
                                       }),
                                     ),
-                                    backgroundColor: Colors.orange,
+                                    backgroundColor: ColorUtils.warning600,
                                   ),
                                 );
                                 return;
@@ -1434,7 +1434,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                         'id': 'Format email tidak valid',
                                       }),
                                     ),
-                                    backgroundColor: Colors.orange,
+                                    backgroundColor: ColorUtils.warning600,
                                   ),
                                 );
                                 return;
@@ -1478,7 +1478,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                                     })
                                                   : ''),
                                         ),
-                                        backgroundColor: Colors.green,
+                                        backgroundColor: ColorUtils.success600,
                                       ),
                                     );
                                     Navigator.pop(context);
@@ -1505,7 +1505,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                                     })
                                                   : ''),
                                         ),
-                                        backgroundColor: Colors.green,
+                                        backgroundColor: ColorUtils.success600,
                                       ),
                                     );
                                     Navigator.pop(context);
@@ -1526,7 +1526,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                         children: [
                                           Icon(
                                             Icons.error_outline,
-                                            color: Colors.red,
+                                            color: ColorUtils.error600,
                                           ),
                                           SizedBox(width: 8),
                                           Text(
@@ -1534,7 +1534,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                               'en': 'Error',
                                               'id': 'Gagal',
                                             }),
-                                            style: TextStyle(color: Colors.red),
+                                            style: TextStyle(color: ColorUtils.error600),
                                           ),
                                         ],
                                       ),
@@ -1559,13 +1559,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorUtils.corporateBlue600,
+                              backgroundColor: _getPrimaryColor(),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               padding: EdgeInsets.symmetric(vertical: 13),
                               elevation: 2,
-                              shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                              shadowColor: _getPrimaryColor().withValues(alpha: 0.4),
                             ),
                             child: Text(
                               isEdit
@@ -1620,11 +1620,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
           hintText: hintText,
           hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
-          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
+          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+            borderSide: BorderSide(color: _getPrimaryColor(), width: 1.5),
           ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
@@ -1655,11 +1655,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
+          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+            borderSide: BorderSide(color: _getPrimaryColor(), width: 1.5),
           ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12),
         ),
@@ -1689,7 +1689,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           'en': 'Delete',
           'id': 'Hapus',
         }),
-        confirmColor: Colors.red,
+        confirmColor: ColorUtils.error600,
       ),
     );
 
@@ -1706,7 +1706,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                   'id': 'Siswa berhasil dihapus',
                 }),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: ColorUtils.success600,
             ),
           );
         }
@@ -1723,7 +1723,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                       'Gagal menghapus siswa: ${ErrorUtils.getFriendlyMessage(e)}',
                 }),
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: ColorUtils.error600,
             ),
           );
         }
@@ -1952,12 +1952,12 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               color: ColorUtils.slate50,
                               borderRadius: BorderRadius.circular(8),
                               border: Border(
-                                left: BorderSide(color: ColorUtils.corporateBlue600, width: 3),
+                                left: BorderSide(color: _getPrimaryColor(), width: 3),
                               ),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.history_rounded, size: 16, color: ColorUtils.corporateBlue600),
+                                Icon(Icons.history_rounded, size: 16, color: _getPrimaryColor()),
                                 SizedBox(width: 8),
                                 Text(
                                   languageProvider.getTranslatedText({
@@ -1994,12 +1994,12 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             color: ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(8),
                             border: Border(
-                              left: BorderSide(color: ColorUtils.corporateBlue600, width: 3),
+                              left: BorderSide(color: _getPrimaryColor(), width: 3),
                             ),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.family_restroom_rounded, size: 16, color: ColorUtils.corporateBlue600),
+                              Icon(Icons.family_restroom_rounded, size: 16, color: _getPrimaryColor()),
                               SizedBox(width: 8),
                               Text(
                                 languageProvider.getTranslatedText({
@@ -2097,13 +2097,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                     ),
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: ColorUtils.corporateBlue600,
+                                    backgroundColor: _getPrimaryColor(),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     padding: EdgeInsets.symmetric(vertical: 13),
                                     elevation: 2,
-                                    shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                                    shadowColor: _getPrimaryColor().withValues(alpha: 0.4),
                                   ),
                                 ),
                               ),
@@ -2145,13 +2145,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+              color: _getPrimaryColor().withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
+                color: _getPrimaryColor().withValues(alpha: 0.15),
               ),
             ),
-            child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
+            child: Icon(icon, size: 18, color: _getPrimaryColor()),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -2332,13 +2332,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             child: Container(
                               padding: EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+                                color: _getPrimaryColor().withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
                                 Icons.edit_outlined,
                                 size: 16,
-                                color: ColorUtils.corporateBlue600,
+                                color: _getPrimaryColor(),
                               ),
                             ),
                           ),
@@ -2407,7 +2407,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor()],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
     );
   }
 
@@ -2425,13 +2425,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            ColorUtils.corporateBlue600,
-            ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+            _getPrimaryColor(),
+            _getPrimaryColor().withValues(alpha: 0.8),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
+            color: _getPrimaryColor().withValues(alpha: 0.3),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -2590,10 +2590,10 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               'en': 'Search students...',
                               'id': 'Cari siswa...',
                             }),
-                            hintStyle: TextStyle(color: Colors.grey),
+                            hintStyle: TextStyle(color: ColorUtils.slate400),
                             prefixIcon: Icon(
                               Icons.search,
-                              color: Colors.grey,
+                              color: ColorUtils.slate400,
                             ),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
@@ -2662,7 +2662,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                         child: Container(
                           padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: ColorUtils.error600,
                             shape: BoxShape.circle,
                           ),
                           constraints: BoxConstraints(
@@ -2716,7 +2716,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               deleteIcon: Icon(
                                 Icons.close,
                                 size: 16,
-                                color: Colors.red,
+                                color: ColorUtils.error600,
                               ),
                               onDeleted: filter['onRemove'],
                               backgroundColor: Colors.white.withValues(alpha: 0.2),
@@ -2745,7 +2745,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                     child: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: ColorUtils.error600,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
