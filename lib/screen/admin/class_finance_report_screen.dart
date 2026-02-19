@@ -333,16 +333,16 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border(
-                right: BorderSide(color: Colors.grey.shade300),
-                bottom: BorderSide(color: Colors.grey.shade300),
+                right: BorderSide(color: ColorUtils.slate300),
+                bottom: BorderSide(color: ColorUtils.slate300),
               ),
-              color: Colors.grey.shade100,
+              color: ColorUtils.slate100,
             ),
             child: Text(
               'Nama Siswa',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700,
+                color: ColorUtils.slate700,
               ),
             ),
           ),
@@ -359,10 +359,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
               padding: EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 border: Border(
-                  right: BorderSide(color: Colors.grey.shade300),
-                  bottom: BorderSide(color: Colors.grey.shade200),
+                  right: BorderSide(color: ColorUtils.slate300),
+                  bottom: BorderSide(color: ColorUtils.slate200),
                 ),
-                color: i % 2 == 0 ? Colors.white : Colors.grey.shade50,
+                color: i % 2 == 0 ? Colors.white : ColorUtils.slate50,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -376,7 +376,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   if (student['student_number'] != null)
                     Text(
                       student['student_number'],
-                      style: TextStyle(color: Colors.grey, fontSize: 11),
+                      style: TextStyle(color: ColorUtils.slate400, fontSize: 11),
                     ),
                 ],
               ),
@@ -403,17 +403,17 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 border: Border(
-                  right: BorderSide(color: Colors.grey.shade300),
-                  bottom: BorderSide(color: Colors.grey.shade300),
+                  right: BorderSide(color: ColorUtils.slate300),
+                  bottom: BorderSide(color: ColorUtils.slate300),
                 ),
-                color: Colors.blue.shade50,
+                color: ColorUtils.corporateBlue600,
               ),
               child: Text(
                 group.monthName,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
-                  color: Colors.blue.shade800,
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -429,17 +429,17 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   border: Border(
-                    right: BorderSide(color: Colors.grey.shade300),
-                    bottom: BorderSide(color: Colors.grey.shade300),
+                    right: BorderSide(color: ColorUtils.slate300),
+                    bottom: BorderSide(color: ColorUtils.slate300),
                   ),
-                  color: Colors.grey.shade100,
+                  color: ColorUtils.slate100,
                 ),
                 child: Text(
                   '-',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade400,
+                    color: ColorUtils.slate400,
                   ),
                 ),
               ),
@@ -453,17 +453,17 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     border: Border(
-                      right: BorderSide(color: Colors.grey.shade300),
-                      bottom: BorderSide(color: Colors.grey.shade300),
+                      right: BorderSide(color: ColorUtils.slate300),
+                      bottom: BorderSide(color: ColorUtils.slate300),
                     ),
-                    color: Colors.grey.shade100,
+                    color: ColorUtils.slate100,
                   ),
                   child: Text(
                     type.name,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600,
+                      color: ColorUtils.slate600,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -499,10 +499,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     border: Border(
-                      right: BorderSide(color: Colors.grey.shade200),
-                      bottom: BorderSide(color: Colors.grey.shade200),
+                      right: BorderSide(color: ColorUtils.slate200),
+                      bottom: BorderSide(color: ColorUtils.slate200),
                     ),
-                    color: i % 2 == 0 ? Colors.white : Colors.grey.shade50,
+                    color: i % 2 == 0 ? Colors.white : ColorUtils.slate50,
                   ),
                   child: SizedBox(), // Empty content
                 ),
@@ -533,10 +533,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     // padding: EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       border: Border(
-                        right: BorderSide(color: Colors.grey.shade200),
-                        bottom: BorderSide(color: Colors.grey.shade200),
+                        right: BorderSide(color: ColorUtils.slate200),
+                        bottom: BorderSide(color: ColorUtils.slate200),
                       ),
-                      color: i % 2 == 0 ? Colors.white : Colors.grey.shade50,
+                      color: i % 2 == 0 ? Colors.white : ColorUtils.slate50,
                     ),
                     child: _buildStatusCell(bill),
                   ),
@@ -556,7 +556,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: ColorUtils.slate900.withValues(alpha: 0.05),
                     offset: Offset(4, 0),
                     blurRadius: 5,
                     spreadRadius: 0,
@@ -605,7 +605,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.7)],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.7)],
     );
   }
 
@@ -619,9 +619,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: ColorUtils.slate50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextField(
         controller: controller,
@@ -772,6 +772,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
+            clipBehavior: Clip.antiAlias,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -781,35 +782,44 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: _getCardGradient(),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            Icons.upload,
+                            Icons.payment_rounded,
                             color: Colors.white,
-                            size: 20,
+                            size: 22,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: 14),
                         Expanded(
-                          child: Text(
-                            AppLocalizations.uploadPaymentProof.tr,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppLocalizations.uploadPaymentProof.tr,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Catat pembayaran manual siswa',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -850,17 +860,17 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: Colors.grey.shade200,
+                                color: ColorUtils.slate200,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: Colors.grey.shade200,
+                                color: ColorUtils.slate200,
                               ),
                             ),
                             filled: true,
-                            fillColor: Colors.grey.shade50,
+                            fillColor: ColorUtils.slate50,
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 14,
@@ -921,12 +931,12 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
+                            color: ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: selectedFile != null
-                                  ? Colors.green
-                                  : Colors.grey.shade200,
+                                  ? ColorUtils.success600
+                                  : ColorUtils.slate200,
                               width: 2,
                             ),
                           ),
@@ -935,8 +945,8 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               Icon(
                                 Icons.upload_file,
                                 color: selectedFile != null
-                                    ? Colors.green
-                                    : Colors.grey,
+                                    ? ColorUtils.success600
+                                    : ColorUtils.slate400,
                                 size: 40,
                               ),
                               SizedBox(height: 8),
@@ -946,8 +956,8 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                     : 'Pilih bukti pembayaran',
                                 style: TextStyle(
                                   color: selectedFile != null
-                                      ? Colors.green
-                                      : Colors.grey,
+                                      ? ColorUtils.success600
+                                      : ColorUtils.slate400,
                                 ),
                               ),
                               if (selectedFile != null) ...[
@@ -956,7 +966,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                   _getFileTypeText(selectedFile!.path),
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: Colors.grey.shade600,
+                                    color: ColorUtils.slate600,
                                   ),
                                 ),
                               ],
@@ -985,7 +995,18 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   ),
 
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorUtils.slate900.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, -2),
+                        ),
+                      ],
+                    ),
                     child: Row(
                       children: [
                         Expanded(
@@ -995,12 +1016,12 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              side: BorderSide(color: Colors.grey.shade300),
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
                               'Batal',
-                              style: TextStyle(color: Colors.grey.shade700),
+                              style: TextStyle(color: ColorUtils.slate600),
                             ),
                           ),
                         ),
@@ -1009,8 +1030,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           child: ElevatedButton(
                             onPressed: () async {
                               if (paymentMethodController.text.isEmpty ||
-                                  amountController.text.isEmpty)
+                                  amountController.text.isEmpty) {
                                 return;
+                              }
 
                               try {
                                 Navigator.pop(context); // Close form
@@ -1025,7 +1047,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text('Error: $e'),
-                                    backgroundColor: Colors.red,
+                                    backgroundColor: ColorUtils.error600,
                                   ),
                                 );
                               }
@@ -1098,13 +1120,13 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Pembayaran berhasil dicatat'),
-          backgroundColor: Colors.green,
+          backgroundColor: ColorUtils.success600,
         ),
       );
     } catch (e) {
       if (mounted) Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Gagal: $e'), backgroundColor: ColorUtils.error600),
       );
     }
   }
@@ -1121,7 +1143,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
           // Custom Gradient Header
@@ -1138,12 +1160,12 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                 end: Alignment.bottomRight,
                 colors: [
                   _getPrimaryColor(),
-                  _getPrimaryColor().withOpacity(0.8),
+                  _getPrimaryColor().withValues(alpha: 0.8),
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _getPrimaryColor().withOpacity(0.3),
+                  color: _getPrimaryColor().withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: Offset(0, 2),
                 ),
@@ -1161,7 +1183,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -1189,7 +1211,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             'Laporan Keuangan',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                         ],
@@ -1205,14 +1227,14 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: TextField(
                           decoration: InputDecoration(
                             hintText: 'Cari siswa...',
-                            hintStyle: TextStyle(color: Colors.grey),
-                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            hintStyle: TextStyle(color: ColorUtils.slate400),
+                            prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 16,
@@ -1238,7 +1260,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                   _selectedMonthKey != null ||
                                   _selectedPaymentTypeId != null)
                               ? Colors.white
-                              : Colors.white.withOpacity(0.2),
+                              : Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1323,12 +1345,12 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         label,
         style: TextStyle(fontSize: 12, color: _getPrimaryColor()),
       ),
-      backgroundColor: _getPrimaryColor().withOpacity(0.1),
+      backgroundColor: _getPrimaryColor().withValues(alpha: 0.1),
       deleteIcon: Icon(Icons.close, size: 16, color: _getPrimaryColor()),
       onDeleted: onDeleted,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: _getPrimaryColor().withOpacity(0.2)),
+        side: BorderSide(color: _getPrimaryColor().withValues(alpha: 0.2)),
       ),
     );
   }
@@ -1356,38 +1378,117 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
+          Widget buildSectionHeader(String title, IconData icon) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: _getPrimaryColor().withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: Icon(icon, size: 15, color: _getPrimaryColor()),
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate800,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          Widget buildStyledDropdown<T>({
+            required T? value,
+            required String hint,
+            required List<DropdownMenuItem<T>> items,
+            required ValueChanged<T?> onChanged,
+          }) {
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: ColorUtils.slate200),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: ColorUtils.slate900.withValues(alpha: 0.04),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<T>(
+                  isExpanded: true,
+                  hint: Text(hint, style: TextStyle(color: ColorUtils.slate400, fontSize: 14)),
+                  value: value,
+                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+                  items: items,
+                  onChanged: onChanged,
+                ),
+              ),
+            );
+          }
+
           return Container(
             height: MediaQuery.of(context).size.height * 0.75,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
               children: [
-                // Sheet Header
+                // Handle bar
                 Container(
-                  padding: EdgeInsets.all(20),
+                  margin: EdgeInsets.only(top: 10),
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
-                    ),
+                    color: ColorUtils.slate300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Gradient Header (Pattern #11)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.fromLTRB(20, 14, 12, 18),
+                  decoration: BoxDecoration(
+                    gradient: _getCardGradient(),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Filter Laporan',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.filter_list_rounded, color: Colors.white, size: 20),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Filter Laporan',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       TextButton(
                         onPressed: () {
-                          // Reset local and parent state
                           setModalState(() {
                             _selectedStatus = 'Semua';
                             _selectedMonthKey = null;
@@ -1398,18 +1499,22 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             _selectedMonthKey = null;
                             _selectedPaymentTypeId = null;
                           });
-                          Navigator.pop(context);
                         },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        ),
                         child: Text(
                           'Reset',
-                          style: TextStyle(color: _getPrimaryColor()),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                // Content
+                // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.all(20),
@@ -1417,168 +1522,132 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Status Filter
-                        Text(
-                          'Status Pembayaran',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        SizedBox(height: 12),
+                        buildSectionHeader('Status Pembayaran', Icons.circle_outlined),
                         Wrap(
                           spacing: 8,
-                          children:
-                              [
-                                'Semua',
-                                'Lunas',
-                                'Belum Dibayar',
-                                'Belum Diverifikasi',
-                              ].map((status) {
-                                bool isSelected = _selectedStatus == status;
-                                return ChoiceChip(
-                                  label: Text(status),
-                                  selected: isSelected,
-                                  onSelected: (selected) {
-                                    if (selected) {
-                                      setModalState(
-                                        () => _selectedStatus = status,
-                                      );
-                                      setState(() => _selectedStatus = status);
-                                    }
-                                  },
-                                  selectedColor: _getPrimaryColor().withOpacity(
-                                    0.2,
+                          runSpacing: 8,
+                          children: [
+                            'Semua',
+                            'Lunas',
+                            'Belum Dibayar',
+                            'Belum Diverifikasi',
+                          ].map((statusOpt) {
+                            final isSelected = _selectedStatus == statusOpt;
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() => _selectedStatus = statusOpt);
+                                setState(() => _selectedStatus = statusOpt);
+                              },
+                              child: AnimatedContainer(
+                                duration: Duration(milliseconds: 180),
+                                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? _getPrimaryColor().withValues(alpha: 0.12)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSelected ? _getPrimaryColor() : ColorUtils.slate200,
+                                    width: isSelected ? 1.5 : 1,
                                   ),
-                                  labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? _getPrimaryColor()
-                                        : Colors.black,
+                                ),
+                                child: Text(
+                                  statusOpt,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                    color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
                                   ),
-                                  backgroundColor: Colors.grey.shade100,
-                                );
-                              }).toList(),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
-                        SizedBox(height: 24),
 
+                        SizedBox(height: 24),
                         // Month Filter
-                        Text(
-                          'Bulan',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String?>(
-                              isExpanded: true,
-                              hint: Text('Semua Bulan'),
-                              value: _selectedMonthKey,
-                              items: [
-                                DropdownMenuItem(
-                                  value: null,
-                                  child: Text('Semua Bulan'),
-                                ),
-                                ...months.map(
-                                  (m) => DropdownMenuItem(
-                                    value: m['key'],
-                                    child: Text(m['name']!),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (val) {
-                                setModalState(() => _selectedMonthKey = val);
-                                setState(() => _selectedMonthKey = val);
-                              },
+                        buildSectionHeader('Bulan', Icons.calendar_month_rounded),
+                        buildStyledDropdown<String?>(
+                          value: _selectedMonthKey,
+                          hint: 'Semua Bulan',
+                          items: [
+                            DropdownMenuItem(value: null, child: Text('Semua Bulan')),
+                            ...months.map(
+                              (m) => DropdownMenuItem(value: m['key'], child: Text(m['name']!)),
                             ),
-                          ),
+                          ],
+                          onChanged: (val) {
+                            setModalState(() => _selectedMonthKey = val);
+                            setState(() => _selectedMonthKey = val);
+                          },
                         ),
-                        SizedBox(height: 24),
 
+                        SizedBox(height: 24),
                         // Payment Type Filter
-                        Text(
-                          'Jenis Pembayaran',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String?>(
-                              isExpanded: true,
-                              hint: Text('Semua Jenis'),
-                              value: _selectedPaymentTypeId,
-                              items: [
-                                DropdownMenuItem(
-                                  value: null,
-                                  child: Text('Semua Jenis'),
-                                ),
-                                ...uniqueTypes.entries.map(
-                                  (e) => DropdownMenuItem(
-                                    value: e.key,
-                                    child: Text(e.value),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (val) {
-                                setModalState(
-                                  () => _selectedPaymentTypeId = val,
-                                );
-                                setState(() => _selectedPaymentTypeId = val);
-                              },
+                        buildSectionHeader('Jenis Pembayaran', Icons.receipt_long_rounded),
+                        buildStyledDropdown<String?>(
+                          value: _selectedPaymentTypeId,
+                          hint: 'Semua Jenis',
+                          items: [
+                            DropdownMenuItem(value: null, child: Text('Semua Jenis')),
+                            ...uniqueTypes.entries.map(
+                              (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                             ),
-                          ),
+                          ],
+                          onChanged: (val) {
+                            setModalState(() => _selectedPaymentTypeId = val);
+                            setState(() => _selectedPaymentTypeId = val);
+                          },
                         ),
                       ],
                     ),
                   ),
                 ),
 
-                // Apply Button
+                // Footer
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate100)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.shade200,
+                        color: ColorUtils.slate900.withValues(alpha: 0.05),
+                        blurRadius: 8,
                         offset: Offset(0, -2),
-                        blurRadius: 4,
                       ),
                     ],
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _getPrimaryColor(),
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: ColorUtils.slate300),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text('Batal', style: TextStyle(color: ColorUtils.slate600)),
                         ),
                       ),
-                      child: Text(
-                        'Terapkan Filter',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _getPrimaryColor(),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Terapkan',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ],
@@ -1595,13 +1664,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
 
     final status = bill['status'];
     Color color;
-    Color bgColor;
     String text;
 
     // 1. Check Verified/Lunas
     if (status == 'verified') {
-      color = Colors.green.shade700;
-      bgColor = Colors.green.shade50;
+      color = ColorUtils.success600;
       text = 'Lunas';
     }
     // 2. Check Pending Verification (Menunggu)
@@ -1618,34 +1685,43 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       }
 
       if (hasPendingPayment) {
-        color = Colors.orange.shade800;
-        bgColor = Colors.orange.shade50;
+        color = ColorUtils.warning600;
         text = 'Menunggu';
       } else {
         // 3. Fallback: Belum Bayar
-        color = Colors.red.shade700;
-        bgColor = Colors.red.shade50;
+        color = ColorUtils.error600;
         text = 'Belum';
       }
     }
 
     return InkWell(
       onTap: () => _showPaymentOptions(bill),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            SizedBox(width: 4),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1654,55 +1730,194 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   void _showPaymentOptions(dynamic bill) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        String currentStatus = bill['status'] ?? 'pending';
-        bool isPaid = currentStatus == 'verified';
+        final String currentStatus = bill['status'] ?? 'pending';
+        final bool isPaid = currentStatus == 'verified';
+        final statusColor = isPaid ? ColorUtils.success600 : ColorUtils.error600;
+
+        Widget buildOptionTile({
+          required IconData icon,
+          required String title,
+          String? subtitle,
+          required Color color,
+          required VoidCallback onTap,
+        }) {
+          return InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: color, size: 20),
+                  ),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: ColorUtils.slate900,
+                          ),
+                        ),
+                        if (subtitle != null) ...[
+                          SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: ColorUtils.slate500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: ColorUtils.slate400, size: 20),
+                ],
+              ),
+            ),
+          );
+        }
 
         return Container(
-          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Opsi Pembayaran',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Text('Status saat ini: ${isPaid ? "Lunas" : "Belum Lunas"}'),
-              SizedBox(height: 20),
-
-              if (!isPaid)
-                ListTile(
-                  leading: Icon(Icons.payment, color: Colors.green),
-                  title: Text('Bayar Manual (Tandai Lunas)'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showManualPaymentForm(bill);
-                  },
+              // Handle bar
+              Container(
+                margin: EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate300,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-
-              if (isPaid)
-                ListTile(
-                  leading: Icon(Icons.cancel_outlined, color: Colors.red),
-                  title: Text('Batalkan Pembayaran'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _processManualPayment(bill, false);
-                  },
-                ),
-
-              ListTile(
-                leading: Icon(Icons.info_outline, color: Colors.blue),
-                title: Text('Lihat Detail'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDetailDialog(bill);
-                },
               ),
+              // Gradient Header
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
+                decoration: BoxDecoration(
+                  gradient: _getCardGradient(),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.payment_rounded, color: Colors.white, size: 22),
+                    ),
+                    SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Opsi Pembayaran',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                isPaid ? 'Status: Lunas' : 'Status: Belum Lunas',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Options
+              Padding(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
+                child: Column(
+                  children: [
+                    if (!isPaid)
+                      buildOptionTile(
+                        icon: Icons.payment_rounded,
+                        title: 'Bayar Manual',
+                        subtitle: 'Tandai tagihan sebagai lunas',
+                        color: ColorUtils.success600,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showManualPaymentForm(bill);
+                        },
+                      ),
+                    if (isPaid) ...[
+                      buildOptionTile(
+                        icon: Icons.cancel_outlined,
+                        title: 'Batalkan Pembayaran',
+                        subtitle: 'Kembalikan status ke belum lunas',
+                        color: ColorUtils.error600,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _processManualPayment(bill, false);
+                        },
+                      ),
+                    ],
+                    SizedBox(height: 10),
+                    buildOptionTile(
+                      icon: Icons.info_outline_rounded,
+                      title: 'Lihat Detail',
+                      subtitle: 'Riwayat dan informasi tagihan',
+                      color: ColorUtils.corporateBlue600,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showDetailDialog(bill);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
           ),
         );
@@ -1801,7 +2016,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     } catch (e) {
       if (mounted) Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Gagal: $e'), backgroundColor: ColorUtils.error600),
       );
     }
   }
@@ -1866,7 +2081,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
             width: 100,
             child: Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              style: TextStyle(color: ColorUtils.slate600, fontSize: 13),
             ),
           ),
           Expanded(
