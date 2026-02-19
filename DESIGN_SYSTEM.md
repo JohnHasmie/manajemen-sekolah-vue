@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.3
+**Version:** 2.4
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2528,6 +2528,23 @@ Container(
   - `GradeInputForm`: Gradient header (#7) showing student name as subtitle, info summary card with `_buildDetailItem` rows, Pattern #9 styled form fields (`slate50` bg + `slate200` border + role-color focus ring)
   - `GradeInputFormNew`: Gradient header (#7), same styled configuration panel and form fields; progress counter badge using `success600`/`slate` semantic colors
 
+✅ **Notification List** (`lib/screen/common/notification_list.dart`) - Full redesign (v2.4):
+  - **AppBar**: Gradient `corporateBlue600` with `flexibleSpace LinearGradient`; white title + dynamic subtitle `"$unreadCount belum dibaca"` (visible only when > 0); "Tandai semua dibaca" action button only rendered when `_hasUnread` — 36×36 frosted glass container (`Colors.white.withValues(alpha:0.2)`, `BorderRadius.circular(10)`) with `Icons.done_all_rounded`
+  - **`_buildNotificationCard`** (#8): `Dismissible > GestureDetector > Container` — `corporateShadow(elevation: isRead ? 0.5 : 1.2)`; border `isRead ? slate200 w:1.0 : color.withValues(alpha:0.35) w:1.5`; `ClipRRect(borderRadius:14) > IntrinsicHeight > Row` — **left accent bar** 4px wide with type color (only on unread), then `Expanded(Padding)` with icon + text content
+  - **Icon container**: 44×44, `color.withValues(alpha:0.12)` bg + `color.withValues(alpha:0.2)` border, type-colored icon 22px; read cards use `ColorUtils.slate400` as color
+  - **Unread dot indicator**: 8×8 circle in top-right of title row, only on unread cards; title is `w700 slate900` (unread) vs `w500 slate600` (read)
+  - **Body preview**: `maxLines:2 overflow:ellipsis`, `slate600` unread / `slate400` read
+  - **Timestamp row**: `Icons.access_time_rounded` size:11 + relative text — "Baru saja" / "N menit lalu" / "N jam lalu" / "N hari lalu" / full date; color `slate400`
+  - **Dismissible background**: `error600` bg + `BorderRadius.circular(14)` + `Icons.delete_rounded` + "Hapus" label — styled dismiss target
+  - **`_getColor(type)`**: Semantic mapping — `bill/tagihan → success600`, `announcement/pengumuman → corporateBlue600`, `class_activity/activity → warning600`, `reminder_teaching → Color(0xFF7C3AED)`, `grade/nilai/exam_score → Color(0xFF0D9488)`, default `→ slate500`
+  - **`_getIcon(type)`**: Rounded icon variants — `receipt_long_rounded`, `campaign_rounded`, `assignment_rounded`, `class_rounded`, `grade_rounded`, `notifications_rounded`
+  - **`_showDetailDialog`** (#10): `Dialog(borderRadius:20, clipBehavior:Clip.antiAlias)` — gradient header `[color, color.withValues(alpha:0.8)]` with 44×44 frosted icon + title + timestamp subtitle; body text `slate700 height:1.6`; footer `slate100` top border + full-width `ElevatedButton` colored to match type
+  - **Empty state**: `ListView(children:[SizedBox(120), Center(Column(...))])` — 80×80 circle container `corporateBlue600.withValues(alpha:0.1)` + `notifications_off_rounded` icon; "Tidak Ada Notifikasi" heading `slate800 w700`; "Semua notifikasi akan muncul di sini." subtitle `slate500`
+  - **`_isUnread` helper**: Handles both `bool` and `int` (0/1) `is_read` field — centralizes read-state logic used by `_unreadCount`, `_hasUnread`, and card rendering
+  - **Loading**: `CircularProgressIndicator(color: corporateBlue600)`; `RefreshIndicator(color: corporateBlue600)`
+  - **Scaffold**: `slate50` background
+  - **Zero raw colors**: All `Colors.grey`, `Colors.blue`, `Colors.red`, `withOpacity()` fully eliminated; `kDebugMode` guards on all `print()` calls
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2549,6 +2566,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.1
+**Design System Version:** 2.4
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
