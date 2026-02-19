@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.9
+**Version:** 2.10
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2623,6 +2623,24 @@ Container(
   - **Zero raw colors**: All `Colors.grey.shade*`, `Colors.black`, `Colors.black87`, `Colors.red`, `Colors.orange`, `withOpacity()` fully eliminated
   - **Note**: Read-only screen (no add/edit/delete features) — matched to admin announcement card/detail patterns without admin-only features (filter sheet, FAB, form dialog, delete dialog, pagination)
 
+✅ **Wali Murid Presence** (`lib/screen/walimurid/presence_parent.dart`) - Full redesign (v2.10):
+  - **Header** (#7): `_getCardGradient()` with `[primaryColor, primaryColor.withValues(alpha:0.85)]`; flat bottom (no border radius); 40×40 semi-transparent back button (`Colors.white.withValues(alpha:0.2)`, `borderRadius:10`); title + subtitle; search bar with `Colors.white.withValues(alpha:0.9)` bg, `ColorUtils.slate400` hint/prefix icon, `ColorUtils.slate900` text; filter button with `error600` active dot indicator (8×8); filter chips `Colors.white.withValues(alpha:0.2)` bg + `0.5` border with close icon
+  - **`_getPrimaryColor()`**: `ColorUtils.getRoleColor('wali')` replacing hardcoded `Color(0xFF9333EA)`
+  - **`_getStatusColor()`**: Semantic mapping — hadir→`success600`, terlambat→`corporateBlue600`, izin→`info600`, sakit→`warning600`, alpha→`error600`, default→`slate400`
+  - **`_getStatusIcon()`**: Status-specific outlined icons — hadir→`check_circle_outline`, terlambat→`schedule`, izin→`event_busy_outlined`, sakit→`local_hospital_outlined`, alpha→`cancel_outlined`, default→`help_outline`
+  - **Attendance cards** (`_buildAbsensiItem`, #8): `Material > InkWell > Container` — `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`; 50×50 date container `primaryColor.withValues(alpha:0.1)` bg + `0.2` border + `borderRadius:12` displaying day number (`primaryColor w800 fontSize:18`) + month abbrev (`primaryColor.withValues(alpha:0.7) fontSize:10`); subject name `slate900 w700 fontSize:14` + day name `slate500 fontSize:12`; `Wrap(_buildInfoTag)` chips for full date, lesson hour, status (with `_getStatusIcon` + `_getStatusColor`); 8×8 unread dot `error600`; no Stack/accent strip/decorative circle
+  - **`_buildInfoTag`**: Pill chip `px:6 py:3`, icon(10)+text(10), optional `tagColor`, alpha `0.08` bg + `0.3` border — matches design system standard
+  - **Monthly summary** (`_buildMonthlySummary`): `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`; header row with `slate900 w700 fontSize:15` title + attendance rate badge (`primaryColor.withValues(alpha:0.1)` bg + `0.3` border); stat items via `_buildStatItem` with `statusColor.withValues(alpha:0.1)` bg circle (28×28) + count `slate900 w700` + label `slate500 fontSize:11`; `_getStatusColor` applied to each stat category
+  - **Student info card**: `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`; 48×48 `CircleAvatar` with `primaryColor.withValues(alpha:0.15)` bg + `primaryColor` border + initial letter `primaryColor w700 fontSize:18`; name `slate900 w700 fontSize:15` + class info `slate600 fontSize:13`
+  - **Empty state**: 72×72 container `slate100` bg + `borderRadius:20` + `Icons.assignment_outlined` `slate400`; title `slate700 w600 fontSize:16`; subtitle `slate500 fontSize:13`
+  - **Loading state**: `CircularProgressIndicator` with `primaryColor`, text `slate600 fontSize:14`
+  - **Snackbars**: `ColorUtils.error600` replacing raw `Colors.red`
+  - **Scaffold**: `ColorUtils.slate50` replacing raw `Color(0xFFF8F9FA)`
+  - **Section title**: "Riwayat Absensi" with translation support, `ColorUtils.slate900 w700 fontSize:16`
+  - **Zero raw colors**: All `Colors.grey.shade*`, `Colors.black`, `Colors.red`, `Colors.purple`, `Color(0xFF9333EA)`, `withOpacity()` fully eliminated
+  - **Filter sheet** (#11): Replaced shared `FilterSheet` component with inline `StatefulBuilder`; gradient header `LinearGradient([primaryColor, primaryColor.withValues(alpha:0.8)])` with `borderRadius:24` top corners, 36×4 drag handle `white*0.5`, 36×36 icon container `white*0.2` bg + `borderRadius:10` + `Icons.filter_list`, title `fontSize:18 bold white`, white Reset `TextButton`; `_buildSectionHeader(title, icon)` — `Padding(top:24)` + `Row(Icon(16, slate700), Text(fontSize:14 w600 slate900))`; 2 sections (Month with `calendar_month_outlined`, Semester with `school_outlined`); `FilterChip` — `backgroundColor: Colors.white`, `selectedColor: primaryColor.withValues(alpha:0.2)`, `checkmarkColor: primaryColor`, label toggles `primaryColor/bold` ↔ `slate600/normal`; footer `fromLTRB(20,12,20,24)` with `slate200` top border — Cancel `OutlinedButton(slate300 side, slate700 text, borderRadius:12)` + Apply `ElevatedButton(primaryColor bg, white foreground, elevation:0, borderRadius:12, bold text)`
+  - **Bug fix**: Added missing `languageProvider = context.read<LanguageProvider>()` declaration in `_buildMonthlySummary()`
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2644,6 +2662,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.9
+**Design System Version:** 2.10
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team

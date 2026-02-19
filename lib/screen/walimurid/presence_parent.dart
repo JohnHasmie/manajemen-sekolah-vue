@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
+import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -171,7 +171,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
           ),
         );
       }
@@ -225,78 +225,282 @@ class PresenceParentPageState extends State<PresenceParentPage> {
       listen: false,
     );
 
+    String? tempMonthFilter = _selectedMonthFilter;
+    String? tempSemesterFilter = _selectedSemesterFilter;
+
+    final months = [
+      {'en': 'January', 'id': 'Januari', 'val': '1'},
+      {'en': 'February', 'id': 'Februari', 'val': '2'},
+      {'en': 'March', 'id': 'Maret', 'val': '3'},
+      {'en': 'April', 'id': 'April', 'val': '4'},
+      {'en': 'May', 'id': 'Mei', 'val': '5'},
+      {'en': 'June', 'id': 'Juni', 'val': '6'},
+      {'en': 'July', 'id': 'Juli', 'val': '7'},
+      {'en': 'August', 'id': 'Agustus', 'val': '8'},
+      {'en': 'September', 'id': 'September', 'val': '9'},
+      {'en': 'October', 'id': 'Oktober', 'val': '10'},
+      {'en': 'November', 'id': 'November', 'val': '11'},
+      {'en': 'December', 'id': 'Desember', 'val': '12'},
+    ];
+
+    final semesters = [
+      {'en': 'Semester 1', 'id': 'Semester 1', 'val': '1'},
+      {'en': 'Semester 2', 'id': 'Semester 2', 'val': '2'},
+    ];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => FilterSheet(
-        primaryColor: _getPrimaryColor(),
-        config: FilterConfig(
-          sections: [
-            FilterSection(
-              key: 'month',
-              title: languageProvider.getTranslatedText({
-                'en': 'Month',
-                'id': 'Bulan',
-              }),
-              options:
-                  [
-                    {'en': 'January', 'id': 'Januari', 'val': '1'},
-                    {'en': 'February', 'id': 'Februari', 'val': '2'},
-                    {'en': 'March', 'id': 'Maret', 'val': '3'},
-                    {'en': 'April', 'id': 'April', 'val': '4'},
-                    {'en': 'May', 'id': 'Mei', 'val': '5'},
-                    {'en': 'June', 'id': 'Juni', 'val': '6'},
-                    {'en': 'July', 'id': 'Juli', 'val': '7'},
-                    {'en': 'August', 'id': 'Agustus', 'val': '8'},
-                    {'en': 'September', 'id': 'September', 'val': '9'},
-                    {'en': 'October', 'id': 'Oktober', 'val': '10'},
-                    {'en': 'November', 'id': 'November', 'val': '11'},
-                    {'en': 'December', 'id': 'Desember', 'val': '12'},
-                  ].map((m) {
-                    return FilterOption(
-                      label: languageProvider.getTranslatedText({
-                        'en': m['en']!,
-                        'id': m['id']!,
-                      }),
-                      value: m['val']!,
-                    );
-                  }).toList(),
-              multiSelect: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
             ),
-            FilterSection(
-              key: 'semester',
-              title: languageProvider.getTranslatedText({
-                'en': 'Semester',
-                'id': 'Semester',
-              }),
-              options:
-                  [
-                    {'en': 'Semester 1', 'id': 'Semester 1', 'val': '1'},
-                    {'en': 'Semester 2', 'id': 'Semester 2', 'val': '2'},
-                  ].map((s) {
-                    return FilterOption(
-                      label: languageProvider.getTranslatedText({
-                        'en': s['en']!,
-                        'id': s['id']!,
-                      }),
-                      value: s['val']!,
-                    );
-                  }).toList(),
-              multiSelect: false,
+            child: Column(
+              children: [
+                // Gradient header
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _getPrimaryColor(),
+                        _getPrimaryColor().withValues(alpha: 0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(20, 14, 16, 20),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          margin: EdgeInsets.only(bottom: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.filter_list,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Filter Attendance',
+                                'id': 'Filter Absensi',
+                              }),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setSheetState(() {
+                                tempMonthFilter = null;
+                                tempSemesterFilter = null;
+                              });
+                            },
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Reset',
+                                'id': 'Reset',
+                              }),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Month section
+                        _buildSectionHeader(
+                          languageProvider.getTranslatedText({
+                            'en': 'Month',
+                            'id': 'Bulan',
+                          }),
+                          Icons.calendar_month_outlined,
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: months.map((m) {
+                            final val = m['val']!;
+                            final isSelected = tempMonthFilter == val;
+                            final label = languageProvider.getTranslatedText({
+                              'en': m['en']!,
+                              'id': m['id']!,
+                            });
+                            return FilterChip(
+                              label: Text(label),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setSheetState(() {
+                                  tempMonthFilter = selected ? val : null;
+                                });
+                              },
+                              backgroundColor: Colors.white,
+                              selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                              checkmarkColor: _getPrimaryColor(),
+                              labelStyle: TextStyle(
+                                color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+
+                        // Semester section
+                        _buildSectionHeader(
+                          languageProvider.getTranslatedText({
+                            'en': 'Semester',
+                            'id': 'Semester',
+                          }),
+                          Icons.school_outlined,
+                        ),
+                        SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: semesters.map((s) {
+                            final val = s['val']!;
+                            final isSelected = tempSemesterFilter == val;
+                            final label = languageProvider.getTranslatedText({
+                              'en': s['en']!,
+                              'id': s['id']!,
+                            });
+                            return FilterChip(
+                              label: Text(label),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setSheetState(() {
+                                  tempSemesterFilter = selected ? val : null;
+                                });
+                              },
+                              backgroundColor: Colors.white,
+                              selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                              checkmarkColor: _getPrimaryColor(),
+                              labelStyle: TextStyle(
+                                color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Footer buttons
+                Container(
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 13),
+                            side: BorderSide(color: ColorUtils.slate300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Cancel',
+                              'id': 'Batal',
+                            }),
+                            style: TextStyle(
+                              color: ColorUtils.slate700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedMonthFilter = tempMonthFilter;
+                              _selectedSemesterFilter = tempSemesterFilter;
+                              _checkActiveFilter();
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 13),
+                            backgroundColor: _getPrimaryColor(),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Apply Filter',
+                              'id': 'Terapkan Filter',
+                            }),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        initialFilters: {
-          'month': _selectedMonthFilter,
-          'semester': _selectedSemesterFilter,
-        },
-        onApplyFilters: (filters) {
-          setState(() {
-            _selectedMonthFilter = filters['month'];
-            _selectedSemesterFilter = filters['semester'];
-            _checkActiveFilter();
-          });
+          );
         },
       ),
     );
@@ -368,7 +572,63 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     return filterChips;
   }
 
+  // Pattern #11 filter section header
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.only(top: 24, bottom: 0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: ColorUtils.slate700),
+          SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: ColorUtils.slate900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Pattern #8 info tag chip
+  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
+    final c = tagColor ?? ColorUtils.slate600;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: tagColor != null
+            ? tagColor.withValues(alpha: 0.08)
+            : ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: tagColor != null
+              ? tagColor.withValues(alpha: 0.3)
+              : ColorUtils.slate200,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: c),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              color: c,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMonthlySummary() {
+    final languageProvider = context.read<LanguageProvider>();
     final totalDays = _monthlySummary.values.reduce((a, b) => a + b);
     final presentaseAbsensi = totalDays > 0
         ? ((_monthlySummary['hadir']! + _monthlySummary['terlambat']!) /
@@ -382,14 +642,9 @@ class PresenceParentPageState extends State<PresenceParentPage> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
       child: Column(
         children: [
@@ -407,9 +662,10 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                         'en': 'Yearly Recap',
                         'id': 'Rekap Tahunan',
                       }),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
+                  color: ColorUtils.slate900,
                 ),
               ),
             ],
@@ -420,26 +676,29 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: _getPrimaryColor().withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _getPrimaryColor().withValues(alpha: 0.15),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   '$presentaseAbsensi%',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                    color: _getPrimaryColor(),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.attendanceRate.tr,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Colors.blue,
+                    color: _getPrimaryColor(),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -455,27 +714,27 @@ class PresenceParentPageState extends State<PresenceParentPage> {
               _buildStatItem(
                 AppLocalizations.present.tr,
                 _monthlySummary['hadir']!,
-                Colors.green,
+                _getStatusColor('hadir'),
               ),
               _buildStatItem(
                 AppLocalizations.late.tr,
                 _monthlySummary['terlambat']!,
-                Colors.orange,
+                _getStatusColor('terlambat'),
               ),
               _buildStatItem(
                 AppLocalizations.permission.tr,
                 _monthlySummary['izin']!,
-                Colors.blue,
+                _getStatusColor('izin'),
               ),
               _buildStatItem(
                 AppLocalizations.sick.tr,
                 _monthlySummary['sakit']!,
-                Colors.purple,
+                _getStatusColor('sakit'),
               ),
               _buildStatItem(
                 AppLocalizations.alpha.tr,
                 _monthlySummary['alpha']!,
-                Colors.red,
+                _getStatusColor('alpha'),
               ),
             ],
           ),
@@ -491,9 +750,9 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Center(
             child: Text(
@@ -509,7 +768,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 9, color: Colors.grey),
+          style: TextStyle(fontSize: 9, color: ColorUtils.slate500),
           textAlign: TextAlign.center,
         ),
       ],
@@ -561,23 +820,39 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_today, size: 64, color: Colors.grey[300]),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: ColorUtils.slate100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.calendar_today,
+                size: 36,
+                color: ColorUtils.slate400,
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               AppLocalizations.noPresenceData.tr,
-              style: TextStyle(color: Colors.grey[500], fontSize: 16),
+              style: TextStyle(
+                color: ColorUtils.slate700,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             if (_hasActiveFilter) ...[
               const SizedBox(height: 8),
               Text(
                 'Try adjusting your filters',
-                style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
               ),
             ] else ...[
               const SizedBox(height: 8),
               Text(
                 'No attendance records found for this year',
-                style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
               ),
             ],
           ],
@@ -600,6 +875,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     );
   }
 
+  // Pattern #8: Material > InkWell > Container with corporateShadow
   Widget _buildAbsensiItem(Map<String, dynamic> absen) {
     final status = _normalizeStatus(absen['status']);
     final date = _parseLocalDate(absen['tanggal']);
@@ -619,230 +895,144 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         absen['is_read'] == 1 ||
         absen['is_read'] == '1';
 
+    // Get lesson hour name
+    final lessonHourName = (absen['lesson_hour_name'] ??
+            absen['jam_pelajaran_nama'] ??
+            (absen['lesson_hour'] != null
+                ? absen['lesson_hour']['name']
+                : null))
+        ?.toString();
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           onTap: () {},
           child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: isRead ? Colors.white : Colors.red.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: isRead ? 0.3 : 0.4),
-                  blurRadius: 5,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200, width: 1),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
-            child: Stack(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Strip berwarna di pinggir kiri
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 6,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor(),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
-                      ),
+                // Left: date box
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: _getPrimaryColor().withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _getPrimaryColor().withValues(alpha: 0.2),
                     ),
                   ),
-                ),
-
-                // Background pattern effect
-                Positioned(
-                  right: -8,
-                  top: -8,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-
-                // Status badge positioned
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: statusColor.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      statusText,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Indikator unread (red dot)
-                if (!isRead)
-                  Positioned(
-                    right: -8,
-                    top: -8,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.red.withValues(alpha: 0.5),
-                                blurRadius: 4,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Tanggal
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: _getPrimaryColor().withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              DateFormat('dd').format(date),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: _getPrimaryColor(),
-                              ),
-                            ),
-                            Text(
-                              DateFormat(
-                                'MMM',
-                                context
-                                            .watch<LanguageProvider>()
-                                            .currentLanguage ==
-                                        'id'
-                                    ? 'id_ID'
-                                    : 'en_US',
-                              ).format(date),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: _getPrimaryColor(),
-                              ),
-                            ),
-                          ],
+                      Text(
+                        DateFormat('dd').format(date),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: _getPrimaryColor(),
                         ),
                       ),
-                      const SizedBox(width: 12),
-
-                      // Detail absensi
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 80),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                day,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                subjectName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              if ((absen['lesson_hour_name'] != null &&
-                                      absen['lesson_hour_name']
-                                          .toString()
-                                          .isNotEmpty) ||
-                                  (absen['jam_pelajaran_nama'] != null &&
-                                      absen['jam_pelajaran_nama']
-                                          .toString()
-                                          .isNotEmpty) ||
-                                  (absen['lesson_hour'] != null &&
-                                      absen['lesson_hour']['name'] !=
-                                          null)) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  (absen['lesson_hour_name'] ??
-                                          absen['jam_pelajaran_nama'] ??
-                                          (absen['lesson_hour'] != null
-                                              ? absen['lesson_hour']['name']
-                                              : ''))
-                                      .toString(),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[700],
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 4),
-                              Text(
-                                DateFormat(
-                                  'dd MMMM yyyy',
-                                  context
-                                              .watch<LanguageProvider>()
-                                              .currentLanguage ==
-                                          'id'
-                                      ? 'id_ID'
-                                      : 'en_US',
-                                ).format(date),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
+                      Text(
+                        DateFormat(
+                          'MMM',
+                          context
+                                      .watch<LanguageProvider>()
+                                      .currentLanguage ==
+                                  'id'
+                              ? 'id_ID'
+                              : 'en_US',
+                        ).format(date),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: _getPrimaryColor(),
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 12),
+
+                // Middle: subject + day + info tags
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        subjectName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        day,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate600,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      // Info tags row
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 4,
+                        children: [
+                          _buildInfoTag(
+                            Icons.calendar_today_outlined,
+                            DateFormat(
+                              'dd MMM yyyy',
+                              context
+                                          .watch<LanguageProvider>()
+                                          .currentLanguage ==
+                                      'id'
+                                  ? 'id_ID'
+                                  : 'en_US',
+                            ).format(date),
+                          ),
+                          if (lessonHourName != null &&
+                              lessonHourName.isNotEmpty)
+                            _buildInfoTag(
+                              Icons.access_time_outlined,
+                              lessonHourName,
+                            ),
+                          _buildInfoTag(
+                            _getStatusIcon(status),
+                            statusText,
+                            tagColor: statusColor,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8),
+
+                // Right: unread dot
+                if (!isRead)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: EdgeInsets.only(top: 4),
+                    decoration: BoxDecoration(
+                      color: ColorUtils.error600,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -851,18 +1041,35 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     );
   }
 
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'hadir':
+        return Icons.check_circle_outline;
+      case 'terlambat':
+        return Icons.watch_later_outlined;
+      case 'izin':
+        return Icons.assignment_turned_in_outlined;
+      case 'sakit':
+        return Icons.local_hospital_outlined;
+      case 'alpha':
+        return Icons.cancel_outlined;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'izin':
-        return Colors.blue;
+        return ColorUtils.info600;
       case 'sakit':
-        return Colors.orange;
+        return ColorUtils.warning600;
       case 'alpha':
-        return Colors.red;
+        return ColorUtils.error600;
       case 'terlambat':
-        return Colors.purple;
-      default:
-        return Colors.green;
+        return ColorUtils.corporateBlue600;
+      default: // hadir
+        return ColorUtils.success600;
     }
   }
 
@@ -871,8 +1078,9 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     // Normalize status just in case
     String s = status.trim();
     if (s.toLowerCase() == 'hadir') return AppLocalizations.present.tr;
-    if (s.toLowerCase() == 'telat' || s.toLowerCase() == 'terlambat')
+    if (s.toLowerCase() == 'telat' || s.toLowerCase() == 'terlambat') {
       return AppLocalizations.late.tr;
+    }
     if (s.toLowerCase() == 'izin') return AppLocalizations.permission.tr;
     if (s.toLowerCase() == 'sakit') return AppLocalizations.sick.tr;
     if (s.toLowerCase() == 'alpha') return AppLocalizations.alpha.tr;
@@ -911,7 +1119,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   }
 
   Color _getPrimaryColor() {
-    return Color(0xFF9333EA); // Warna purple untuk wali murid
+    return ColorUtils.getRoleColor('wali');
   }
 
   LinearGradient _getCardGradient() {
@@ -919,10 +1127,11 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withOpacity(0.7)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
     );
   }
 
+  // Pattern #7: Gradient header
   Widget _buildHeader() {
     final languageProvider = Provider.of<LanguageProvider>(context);
     return Container(
@@ -931,88 +1140,151 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         top: MediaQuery.of(context).padding.top + 16,
         left: 16,
         right: 16,
-        bottom: 24,
+        bottom: 16,
       ),
       decoration: BoxDecoration(
         gradient: _getCardGradient(),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: _getPrimaryColor().withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              ),
-              Text(
-                AppLocalizations.childPresence.tr,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              const SizedBox(width: 48), // Spacer to balance back button
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.childPresence.tr,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (_student != null) ...[
+                      SizedBox(height: 2),
+                      Text(
+                        _student!.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.calendar_month,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 16),
 
           // Search and Filter Row
           Row(
             children: [
               Expanded(
                 child: Container(
-                  height: 50,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: (value) {
                       _checkActiveFilter();
                       _calculateMonthlySummary();
+                      setState(() {});
                     },
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: ColorUtils.slate900),
                     decoration: InputDecoration(
                       hintText: languageProvider.getTranslatedText({
                         'en': 'Search subject or status...',
                         'id': 'Cari mapel atau status...',
                       }),
-                      hintStyle: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
-                      ),
-                      prefixIcon: const Icon(
+                      hintStyle: TextStyle(color: ColorUtils.slate400),
+                      prefixIcon: Icon(
                         Icons.search,
-                        color: Colors.white70,
+                        color: ColorUtils.slate400,
                       ),
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              InkWell(
+              SizedBox(width: 12),
+              GestureDetector(
                 onTap: _showFilterSheet,
                 child: Container(
-                  height: 50,
-                  width: 50,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: _hasActiveFilter
                         ? Colors.white
-                        : Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(15),
+                        : Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    Icons.filter_list,
-                    color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.tune_rounded,
+                          color: _hasActiveFilter
+                              ? _getPrimaryColor()
+                              : Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                      if (_hasActiveFilter)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: ColorUtils.error600,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -1021,7 +1293,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
           // Filter Chips
           if (_hasActiveFilter) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -1029,38 +1301,64 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                   ..._buildFilterChips(languageProvider).map((chip) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: Chip(
-                        label: Text(
-                          chip['label'],
-                          style: TextStyle(
-                            color: _getPrimaryColor(),
-                            fontSize: 12,
+                      child: InkWell(
+                        onTap: chip['onRemove'],
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
                           ),
-                        ),
-                        backgroundColor: Colors.white,
-                        onDeleted: chip['onRemove'],
-                        deleteIcon: Icon(
-                          Icons.close,
-                          size: 14,
-                          color: _getPrimaryColor(),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                chip['label'],
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
                   }),
-                  TextButton(
-                    onPressed: _clearAllFilters,
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Clear All',
-                        'id': 'Hapus Semua',
-                      }),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        decoration: TextDecoration.underline,
+                  InkWell(
+                    onTap: _clearAllFilters,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Clear All',
+                          'id': 'Hapus Semua',
+                        }),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -1075,20 +1373,32 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = context.read<LanguageProvider>();
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
           _buildHeader(),
           Expanded(
             child: _isLoading
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(),
+                        CircularProgressIndicator(
+                          color: _getPrimaryColor(),
+                        ),
                         SizedBox(height: 16),
-                        Text('Memuat data absensi...'),
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Loading attendance data...',
+                            'id': 'Memuat data absensi...',
+                          }),
+                          style: TextStyle(
+                            color: ColorUtils.slate600,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   )
@@ -1101,14 +1411,11 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: ColorUtils.slate200),
+                          boxShadow: ColorUtils.corporateShadow(
+                            elevation: 1.0,
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -1117,12 +1424,19 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: Colors.blue[100],
+                                color: _getPrimaryColor().withValues(
+                                  alpha: 0.1,
+                                ),
                                 shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _getPrimaryColor().withValues(
+                                    alpha: 0.2,
+                                  ),
+                                ),
                               ),
                               child: Icon(
                                 Icons.person,
-                                color: Colors.blue[700],
+                                color: _getPrimaryColor(),
                                 size: 24,
                               ),
                             ),
@@ -1134,24 +1448,25 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                   Text(
                                     _student?.name ??
                                         AppLocalizations.studentName.tr,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: ColorUtils.slate900,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     'NIS: ${_student?.nis ?? '-'}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: ColorUtils.slate600,
                                     ),
                                   ),
                                   Text(
                                     'Kelas: ${_student?.className ?? '-'}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: ColorUtils.slate600,
                                     ),
                                   ),
                                 ],
@@ -1165,13 +1480,17 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                       _buildMonthlySummary(),
 
                       // Daftar absensi
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'Riwayat Absensi',
+                          languageProvider.getTranslatedText({
+                            'en': 'Attendance History',
+                            'id': 'Riwayat Absensi',
+                          }),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate900,
                           ),
                         ),
                       ),
