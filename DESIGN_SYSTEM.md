@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.13
+**Version:** 2.14
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity, Wali Murid Grade, Wali Murid Billing
+**Applied To:** Dashboard, Student Management, Student Detail Screen, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity, Wali Murid Grade, Wali Murid Billing
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2470,7 +2470,7 @@ Container(
 ### Already Redesigned (Reference Examples)
 ✅ **Dashboard** - Complete Kamil Edu design with hero, quick actions, overview cards, categorized menu
 ✅ **Kelola Data (Admin Data Management)** - Gradient header + MenuItemCard list
-✅ **Student Management** - Gradient header (#7), compact list cards (#8), add/edit form bottom sheet (#13), detail popup (#10), filter sheet (#11)
+✅ **Student Management** - Gradient header (#7), compact list cards (#8), add/edit form bottom sheet (#13), full-screen detail (#12, via StudentDetailScreen), filter sheet (#11)
 ✅ **Teacher Management** - Gradient header (#7), compact list cards (#8) with vertical info stacking, add/edit form bottom sheet (#13), filter sheet (#11), full-screen detail (#12)
 ✅ **Class Management** - Gradient header (#7), compact list cards (#8) with `_buildInfoTag`, add/edit form bottom sheet (#13) with grade/teacher dropdowns + StatefulBuilder inside Consumer, filter sheet (#11), detail popup (#10)
 ✅ **Subject Management** - Gradient header (#7), compact list cards (#8) with CircleAvatar + `_buildInfoTag` + `_buildCircleActionButton`, add/edit form bottom sheet (#13) with Autocomplete + SwitchListTile, filter sheet (#11) with 4 sections; SubjectClassManagementPage with modern class assignment cards
@@ -2692,6 +2692,25 @@ Container(
   - **Scaffold**: `ColorUtils.slate50` replacing `Color(0xFFF8F9FA)`
   - **Zero raw colors**: All `Colors.grey.shade*`, `Colors.red`, `Colors.green`, hardcoded hex colors, `withOpacity()` fully eliminated
 
+✅ **Student Detail Screen** (`lib/screen/admin/student_detail_screen.dart`) - Full-screen detail page (v2.14), Pattern #12:
+  - **Architecture**: `StatefulWidget` with `student` Map + optional `onEdit` callback; `_loadStudentDetail()` via `ApiStudentService.getStudentById()`; three-state UI (loading/error/content)
+  - **`_getPrimaryColor()`**: `ColorUtils.getRoleColor('admin')` — same as Student Management parent screen
+  - **Header** (#7): Gradient `[primaryColor, primaryColor.withValues(alpha:0.8)]` with shadow; 40×40 semi-transparent back/refresh/edit buttons (`Colors.white.withValues(alpha:0.2)`, `borderRadius:10`); title "Detail Siswa" + student name subtitle; edit button conditionally shown via `onEdit != null` (hidden in read-only mode)
+  - **Profile card**: Gradient card `corporateShadow(elevation:2.0)` + `borderRadius:16`; 72×72 CircleAvatar with name-hash color `getColorForIndex(nameHash)` + 3px white border + black shadow; name `fontSize:20 bold white`; NIS badge pill `white*0.2` bg + `white*0.3` border + `badge_outlined` icon; class badge pill (conditional on className.isNotEmpty)
+  - **Personal Info card**: White card `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:16`; `_buildSectionHeader(person_rounded, "Informasi Pribadi")`; `_buildInfoRow` for NIS, Class, Gender, Birth Date, Address (isMultiline)
+  - **Class History card** (conditional on classes.isNotEmpty): Same white card pattern; `_buildSectionHeader(history_rounded, "Riwayat Kelas")`; dynamic `_buildInfoRow` per class with academic year label + class name value
+  - **Parent Info card**: Same white card pattern; `_buildSectionHeader(family_restroom_rounded, "Informasi Wali")`; `_buildInfoRow` for Parent Name, Phone, Email
+  - **`_buildInfoRow`**: 36×36 icon container `primaryColor.withValues(alpha:0.1)` bg + `0.15` border + `borderRadius:8`; label `slate500 fontSize:11 w500`; value `slate800 fontSize:14 w600`; supports `isMultiline` (maxLines:3); icon via param or `_getIconForLabel()` fallback
+  - **`_buildSectionHeader`**: 3px `primaryColor` left border + `slate50` bg + `borderRadius:8`; icon(16) `primaryColor` + title `slate800 w700 fontSize:13`
+  - **`_getIconForLabel`**: Maps labels (Kelas→school, Jenis Kelamin→transgender, Tanggal Lahir→cake, Alamat→location_on, Nama Wali→person, No. Telepon→phone, Email Wali→email, NIS→badge) to Material icons
+  - **Loading state**: 60×60 circle `primaryColor.withValues(alpha:0.1)` bg + `CircularProgressIndicator(primaryColor, strokeWidth:3)` + text `slate600 fontSize:14`
+  - **Error state**: 72×72 circle `error600.withValues(alpha:0.08)` bg + `0.2` border + `error_outline_rounded` icon; title `slate800 w700`; message `slate600`; retry `ElevatedButton(primaryColor bg, borderRadius:12)`
+  - **Back button**: Full-width `OutlinedButton.icon` with `arrow_back_rounded` icon `slate700` + text `slate700 w600`; `slate300` side + `borderRadius:12`; 24px bottom spacing
+  - **Navigation**: Called via `Navigator.push(MaterialPageRoute(builder: StudentDetailScreen(student, onEdit)))` from `student_management.dart._navigateToStudentDetail()`; edit triggers `Navigator.pop` then `onEdit` callback to parent's `_showStudentDialog`
+  - **Scaffold**: `ColorUtils.slate50` background
+  - **Snackbars**: `ColorUtils.error600` with `SnackBarBehavior.floating`
+  - **Zero raw colors**: No `Colors.grey`, `Colors.red`, `withOpacity()` — all design system colors
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2713,6 +2732,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.13
+**Design System Version:** 2.14
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
