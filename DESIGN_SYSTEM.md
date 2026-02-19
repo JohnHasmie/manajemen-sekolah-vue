@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.14
+**Version:** 2.15
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Student Detail Screen, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity, Wali Murid Grade, Wali Murid Billing
+**Applied To:** Dashboard, Student Management, Student Detail Screen, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity, Wali Murid Grade, Wali Murid Billing, Class Promotion Wizard
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2710,6 +2710,25 @@ Container(
   - **Scaffold**: `ColorUtils.slate50` background
   - **Snackbars**: `ColorUtils.error600` with `SnackBarBehavior.floating`
   - **Zero raw colors**: No `Colors.grey`, `Colors.red`, `withOpacity()` — all design system colors
+
+✅ **Class Promotion Wizard** (`lib/screen/admin/class_promotion_wizard.dart` + `lib/screen/admin/components/promotion_step_indicator.dart`) - Full redesign (v2.15):
+  - **`_getPrimaryColor()`**: `ColorUtils.getRoleColor('admin')` — consistent with admin screens
+  - **`_getCardGradient()`**: `[primaryColor, primaryColor.withValues(alpha: 0.85)]`
+  - **Header** (#7): Gradient with flat bottom; 40×40 semi-transparent back button (`Colors.white.withValues(alpha: 0.2)`, `borderRadius:10`); title "Naik Kelas" + dynamic step subtitle "Langkah N dari 4: StepName"
+  - **PromotionStepIndicator** (redesigned component): `primaryColor` param; 36×36 step circles — active: `primaryColor` fill + white number/check, inactive: `Colors.white` fill + `slate300` border + `slate500` number; current step has `primaryColor.withValues(alpha:0.3)` glow shadow; completed steps show `check_rounded` icon; connector lines 2.5px `primaryColor`/`slate200`; labels `fontSize:11` — current `primaryColor w700`, active `slate700 w500`, inactive `slate400 w500`; white bg with `slate200` bottom border + subtle shadow
+  - **Step 1 (Source)**: `_buildSectionHeader(school_rounded, "Pilih Kelas Asal")`; white card `corporateShadow(1.0)` + `slate200` border + `borderRadius:16`; `DropdownButtonHideUnderline` in `slate50` container + `slate200` border + `borderRadius:12`; info banner `primaryColor.withValues(alpha:0.06)` bg + `0.15` border with 36×36 icon container showing student count
+  - **Step 2 (Students)**: Stats card with `_buildStatRow` — colored stat rows `color.withValues(alpha:0.06)` bg + `0.15` border, 32×32 icon container `alpha:0.12`, value `w800 fontSize:16`; Total=`primaryColor`, Eligible=`success600`, Already Promoted=`warning600`; dual action buttons: "Pilih Semua" `ElevatedButton(primaryColor)` + "Pilih Siswa" `OutlinedButton(primaryColor side)`; selected count badge `success600.withValues(alpha:0.08/0.25)` with `check_circle_rounded` icon
+  - **Step 3 (Target)**: White card with `_buildDropdown` — label `slate600 fontSize:12 w600`, `slate50` container + icon prefix + `DropdownButtonHideUnderline`; "Buat Kelas Baru" as `OutlinedButton.icon(primaryColor side)`
+  - **Step 4 (Summary)**: Info card with `_buildInfoRow` (36×36 icon container pattern); student list in `maxHeight:220` card with `CircleAvatar(radius:16)` colored by `getColorForIndex(nameHash)` + numbered names `slate800 w500`
+  - **Student Selection Dialog**: `showModalBottomSheet(isScrollControlled: true, 80% height)`; gradient header with drag handle `white*0.5` + 44×44 icon container `white*0.2` + title + count subtitle + 32×32 close circle; student cards with `CircleAvatar(radius:18)` + name + custom 24×24 checkbox (rounded square `borderRadius:6`, checked: `primaryColor` fill + white check, unchecked: `white` fill + `slate300` border); promoted students: `slate200` avatar bg + `slate400` text + strikethrough + "Sudah Naik Kelas" `warning600` subtitle; footer with full-width "Selesai" `ElevatedButton(primaryColor)`
+  - **Create Class Dialog** (#10-style): `Dialog(clipBehavior: Clip.antiAlias, borderRadius:20)`; gradient header with 44×44 icon container `white*0.2` bg + `white*0.3` border; `_buildDialogTextField` with `slate50` bg + `slate200` border + `borderRadius:12` + `primaryColor` prefix icon; `_buildGradeLevelDropdown` / `_buildHomeroomTeacherDropdown` same container pattern; footer Cancel `OutlinedButton(slate300 side, slate700 text)` + Create `ElevatedButton(primaryColor, elevation:2)`
+  - **`_buildSectionHeader`**: 3px `primaryColor` left border + `slate50` bg + `borderRadius:8`; icon(16) `primaryColor` + title `slate800 w700 fontSize:13`
+  - **`_buildInfoRow`**: 36×36 icon container `primaryColor.withValues(alpha:0.1)` bg + `0.15` border + `borderRadius:8`; label `slate500 fontSize:11 w500`; value `slate800 fontSize:14 w600`
+  - **Bottom controls**: White bg + `slate200` top border + shadow; `SafeArea` wrapped; Back `OutlinedButton.icon(slate300 side, slate700 text, arrow_back_rounded)` + Continue/Finish `ElevatedButton.icon(primaryColor/success600, arrow_forward/check icon, elevation:2)`
+  - **Loading overlay**: `Colors.black.withValues(alpha:0.3)` + 60×60 circle `primaryColor.withValues(alpha:0.1)` + `CircularProgressIndicator(primaryColor, strokeWidth:3)`
+  - **Scaffold**: `ColorUtils.slate50` replacing default white
+  - **Snackbars**: `success600` (success) / `error600` (errors) / `warning600` (validation) with `SnackBarBehavior.floating`
+  - **Zero raw colors**: All `Colors.red`, `Colors.green`, `Colors.orange`, `Colors.blue.shade*`, `Colors.grey.*`, `Colors.black.withOpacity`, `withOpacity()` fully eliminated
 
 ### When Applying to New Pages
 1. **Read this guide first**

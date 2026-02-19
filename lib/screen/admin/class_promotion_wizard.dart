@@ -37,6 +37,16 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   String? _selectedTargetClassId;
   Set<String> _selectedStudentIds = {};
 
+  Color _getPrimaryColor() => ColorUtils.getRoleColor('admin');
+
+  LinearGradient _getCardGradient() {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -56,7 +66,6 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     try {
       final yearsData = await ApiAcademicServices.getAcademicYears();
 
-      // Get selected year from provider
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
@@ -65,14 +74,12 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
 
       List<dynamic> classesData = [];
       if (selectedYear != null) {
-        // Fetch classes for selected year from dashboard
         final response = await ApiClassService.getClassPaginated(
           limit: 1000,
           academicYearId: selectedYear['id'].toString(),
         );
         classesData = response['data'] ?? [];
       } else {
-        // Fallback to active year or all classes
         final activeYear = await ApiAcademicServices.getActiveAcademicYear();
         if (activeYear != null) {
           final response = await ApiClassService.getClassPaginated(
@@ -97,7 +104,8 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             content: Text(
               'Gagal memuat data awal: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -114,7 +122,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         _students = students;
         _selectedStudentIds = students
             .map((s) => s['id'].toString())
-            .toSet(); // Default select all
+            .toSet();
       });
     } catch (e) {
       if (kDebugMode) print('Error loading students: $e');
@@ -124,7 +132,8 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             content: Text(
               'Gagal memuat daftar siswa: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -157,7 +166,8 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             content: Text(
               'Gagal memuat kelas tujuan: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -183,14 +193,14 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             content: Text(
               'Gagal memuat data guru: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     }
   }
 
-  // Predict the next academic year based on source class
   void _predictTargetYear() {
     if (_selectedSourceClassId == null || _academicYears.isEmpty) return;
 
@@ -201,7 +211,6 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
 
     if (sourceClass != null) {
       String? sourceYearId = sourceClass['academic_year_id']?.toString();
-      // Handle nested object if needed
       if (sourceYearId == null && sourceClass['academic_year'] != null) {
         sourceYearId = sourceClass['academic_year']['id']?.toString();
       }
@@ -212,18 +221,16 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         );
 
         if (currentIndex != -1 && currentIndex < _academicYears.length - 1) {
-          // Try to find the actual next year based on year string first
-          // This is safer than just index + 1 if the list isn't sorted strictly
           final currentYearData = _academicYears[currentIndex];
           final String currentYearName =
-              currentYearData['year']?.toString() ?? ''; // e.g., "2024/2025"
-          final startYearStr = currentYearName.split('/').first; // "2024"
+              currentYearData['year']?.toString() ?? '';
+          final startYearStr = currentYearName.split('/').first;
           final startYear = int.tryParse(startYearStr);
 
           String? nextYearId;
 
           if (startYear != null) {
-            final nextStartYearPattern = (startYear + 1).toString(); // "2025"
+            final nextStartYearPattern = (startYear + 1).toString();
             final nextYearObj = _academicYears.firstWhere(
               (y) => (y['year']?.toString() ?? '').startsWith(
                 nextStartYearPattern,
@@ -235,7 +242,6 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             }
           }
 
-          // Fallback to index + 1 if pattern match fails
           nextYearId ??= _academicYears[currentIndex + 1]['id'].toString();
 
           setState(() {
@@ -250,17 +256,14 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   bool _isAlreadyPromoted(dynamic student) {
     if (_selectedTargetYearId == null) return false;
 
-    // Check 'classes' list to see if student has a class in the target year
     final List classes = student['classes'] ?? [];
     for (var cls in classes) {
-      // Check pivot data if available
       if (cls['pivot'] != null) {
         final yearId = cls['pivot']['academic_year_id']?.toString();
         if (yearId == _selectedTargetYearId) {
           return true;
         }
       }
-      // Or check nested academic_year object if backend structure differs
       if (cls['academic_year_id']?.toString() == _selectedTargetYearId) {
         return true;
       }
@@ -287,7 +290,8 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             content: Text(
               'Gagal memuat pengaturan sekolah: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -329,6 +333,95 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     );
   }
 
+  // --- Section Header ---
+  Widget _buildSectionHeader(IconData icon, String title) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(color: _getPrimaryColor(), width: 3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: _getPrimaryColor()),
+          SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Info Row (reusable for summary) ---
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: ColorUtils.slate100),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: _getPrimaryColor().withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: _getPrimaryColor().withValues(alpha: 0.15),
+              ),
+            ),
+            child: Icon(icon, size: 18, color: _getPrimaryColor()),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: ColorUtils.slate500,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: ColorUtils.slate800,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
@@ -340,34 +433,93 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Promote Class',
-            'id': 'Naik Kelas',
-          }),
-        ),
-        backgroundColor: ColorUtils.getRoleColor('admin'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            if (_currentStep > 0) {
-              _onStepCancel();
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-      ),
+      backgroundColor: ColorUtils.slate50,
       body: Stack(
         children: [
           Column(
             children: [
+              // --- Gradient Header (Pattern #7) ---
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                ),
+                decoration: BoxDecoration(
+                  gradient: _getCardGradient(),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _getPrimaryColor().withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        if (_currentStep > 0) {
+                          _onStepCancel();
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Promote Class',
+                              'id': 'Naik Kelas',
+                            }),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Step ${_currentStep + 1} of ${steps.length}: ${steps[_currentStep]}',
+                              'id': 'Langkah ${_currentStep + 1} dari ${steps.length}: ${steps[_currentStep]}',
+                            }),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // --- Step Indicator ---
               PromotionStepIndicator(
                 currentStep: _currentStep,
                 totalSteps: steps.length,
                 steps: steps,
+                primaryColor: _getPrimaryColor(),
               ),
+
+              // --- Step Content ---
               Expanded(
                 child: PageView(
                   controller: _pageController,
@@ -380,13 +532,28 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                   ],
                 ),
               ),
+
+              // --- Bottom Controls ---
               _buildBottomControls(languageProvider),
             ],
           ),
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.3),
-              child: Center(child: CircularProgressIndicator()),
+              color: Colors.black.withValues(alpha: 0.3),
+              child: Center(
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: _getPrimaryColor().withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(_getPrimaryColor()),
+                    strokeWidth: 3,
+                  ),
+                ),
+              ),
             ),
         ],
       ),
@@ -399,167 +566,302 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
 
   Widget _buildBottomControls(LanguageProvider languageProvider) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
         color: Colors.white,
+        border: Border(top: BorderSide(color: ColorUtils.slate200)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: Offset(0, -4),
-            blurRadius: 10,
+            color: ColorUtils.slate900.withValues(alpha: 0.05),
+            offset: Offset(0, -2),
+            blurRadius: 8,
           ),
         ],
       ),
-      child: Row(
-        children: [
-          if (_currentStep > 0)
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            if (_currentStep > 0) ...[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _onStepCancel,
+                  icon: Icon(Icons.arrow_back_rounded, size: 18, color: ColorUtils.slate700),
+                  label: Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Back',
+                      'id': 'Kembali',
+                    }),
+                    style: TextStyle(
+                      color: ColorUtils.slate700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: ColorUtils.slate300),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12),
+            ],
             Expanded(
-              child: OutlinedButton(
-                onPressed: _onStepCancel,
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: Colors.grey.shade300),
+              child: ElevatedButton.icon(
+                onPressed: _onStepContinue,
+                icon: Icon(
+                  _currentStep == 3 ? Icons.check_rounded : Icons.arrow_forward_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  _currentStep == 3
+                      ? languageProvider.getTranslatedText({
+                          'en': 'Finish',
+                          'id': 'Selesai',
+                        })
+                      : languageProvider.getTranslatedText({
+                          'en': 'Continue',
+                          'id': 'Lanjut',
+                        }),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _currentStep == 3 ? ColorUtils.success600 : _getPrimaryColor(),
+                  padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-                child: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Back',
-                    'id': 'Kembali',
-                  }),
-                  style: TextStyle(color: Colors.grey.shade700),
+                  elevation: 2,
+                  shadowColor: _getPrimaryColor().withValues(alpha: 0.4),
                 ),
               ),
             ),
-          if (_currentStep > 0) SizedBox(width: 16),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _onStepContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorUtils.getRoleColor('admin'),
-                padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                _currentStep == 3
-                    ? languageProvider.getTranslatedText({
-                        'en': 'Finish',
-                        'id': 'Selesai',
-                      })
-                    : languageProvider.getTranslatedText({
-                        'en': 'Continue',
-                        'id': 'Lanjut',
-                      }),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  // ==============================
+  // STEP 1: SOURCE CLASS
+  // ==============================
   Widget _buildSourceStep(LanguageProvider languageProvider) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            labelText: languageProvider.getTranslatedText({
-              'en': 'Select Source Class',
-              'id': 'Pilih Kelas Asal',
-            }),
-            border: OutlineInputBorder(),
+        _buildSectionHeader(
+          Icons.school_rounded,
+          languageProvider.getTranslatedText({
+            'en': 'Select Source Class',
+            'id': 'Pilih Kelas Asal',
+          }),
+        ),
+        SizedBox(height: 4),
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
-          initialValue: _selectedSourceClassId,
-          items: _classes.map<DropdownMenuItem<String>>((c) {
-            return DropdownMenuItem(
-              value: c['id'].toString(),
-              child: Text(c['name'] ?? 'Unknown'),
-            );
-          }).toList(),
-          onChanged: (val) {
-            setState(() {
-              _selectedSourceClassId = val;
-            });
-            if (val != null) {
-              _loadStudents(val);
-              // reset target year on class change to force re-prediction
-              _selectedTargetYearId = null;
-              _predictTargetYear();
-            }
-          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Source Class',
+                  'id': 'Kelas Asal',
+                }),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: ColorUtils.slate600,
+                ),
+              ),
+              SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: ColorUtils.slate200),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedSourceClassId,
+                    isExpanded: true,
+                    icon: Icon(Icons.arrow_drop_down, color: ColorUtils.slate500),
+                    hint: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Select a class',
+                        'id': 'Pilih kelas',
+                      }),
+                      style: TextStyle(color: ColorUtils.slate400, fontSize: 14),
+                    ),
+                    items: _classes.map<DropdownMenuItem<String>>((c) {
+                      return DropdownMenuItem(
+                        value: c['id'].toString(),
+                        child: Text(
+                          c['name'] ?? 'Unknown',
+                          style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedSourceClassId = val;
+                      });
+                      if (val != null) {
+                        _loadStudents(val);
+                        _selectedTargetYearId = null;
+                        _predictTargetYear();
+                      }
+                    },
+                  ),
+                ),
+              ),
+              if (_selectedSourceClassId != null) ...[
+                SizedBox(height: 16),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _getPrimaryColor().withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _getPrimaryColor().withValues(alpha: 0.15),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: _getPrimaryColor().withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.info_outline_rounded, size: 18, color: _getPrimaryColor()),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': '${_students.length} students found in this class',
+                            'id': '${_students.length} siswa ditemukan di kelas ini',
+                          }),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _getPrimaryColor(),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ],
     );
   }
 
+  // ==============================
+  // STEP 2: STUDENTS
+  // ==============================
   Widget _buildStudentsStep(LanguageProvider languageProvider) {
-    // Calculate stats
     final eligibleStudents = _students
         .where((s) => !_isAlreadyPromoted(s))
         .length;
     final alreadyPromotedCount = _students.length - eligibleStudents;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildSectionHeader(
+          Icons.people_rounded,
+          languageProvider.getTranslatedText({
+            'en': 'Student Selection',
+            'id': 'Pilih Siswa',
+          }),
+        ),
+        SizedBox(height: 4),
+
+        // Stats card
         Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.blue.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.blue.shade200),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
           child: Column(
             children: [
               _buildStatRow(
-                languageProvider.getTranslatedText({
+                icon: Icons.groups_rounded,
+                label: languageProvider.getTranslatedText({
                   'en': 'Total Students',
                   'id': 'Total Siswa',
                 }),
-                _students.length.toString(),
+                value: _students.length.toString(),
+                color: _getPrimaryColor(),
               ),
+              SizedBox(height: 8),
               _buildStatRow(
-                languageProvider.getTranslatedText({
+                icon: Icons.check_circle_rounded,
+                label: languageProvider.getTranslatedText({
                   'en': 'Eligible for Promotion',
                   'id': 'Bisa Naik Kelas',
                 }),
-                eligibleStudents.toString(),
-                color: Colors.green,
+                value: eligibleStudents.toString(),
+                color: ColorUtils.success600,
               ),
-              if (alreadyPromotedCount > 0)
+              if (alreadyPromotedCount > 0) ...[
+                SizedBox(height: 8),
                 _buildStatRow(
-                  languageProvider.getTranslatedText({
+                  icon: Icons.warning_rounded,
+                  label: languageProvider.getTranslatedText({
                     'en': 'Already Promoted',
                     'id': 'Sudah Naik Kelas',
                   }),
-                  alreadyPromotedCount.toString(),
-                  color: Colors.orange,
+                  value: alreadyPromotedCount.toString(),
+                  color: ColorUtils.warning600,
                 ),
+              ],
             ],
           ),
         ),
-        SizedBox(height: 24),
+        SizedBox(height: 16),
+
+        // Action buttons
         Row(
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                icon: Icon(Icons.select_all),
+                icon: Icon(Icons.select_all_rounded, size: 18, color: Colors.white),
                 label: Text(
                   languageProvider.getTranslatedText({
                     'en': 'Select Eligible',
                     'id': 'Pilih Semua',
                   }),
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: ColorUtils.getRoleColor('admin'),
-                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: _getPrimaryColor(),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
                 ),
                 onPressed: () {
                   setState(() {
@@ -578,58 +880,132 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                           'id': 'Semua siswa yang memenuhi syarat dipilih',
                         }),
                       ),
+                      backgroundColor: ColorUtils.success600,
+                      behavior: SnackBarBehavior.floating,
                       duration: Duration(seconds: 1),
                     ),
                   );
                 },
               ),
             ),
-          ],
-        ),
-        SizedBox(height: 12),
-        Row(
-          children: [
+            SizedBox(width: 12),
             Expanded(
               child: OutlinedButton.icon(
-                icon: Icon(Icons.list),
+                icon: Icon(Icons.checklist_rounded, size: 18, color: _getPrimaryColor()),
                 label: Text(
                   languageProvider.getTranslatedText({
                     'en': 'Select Manually',
                     'id': 'Pilih Siswa',
                   }),
+                  style: TextStyle(
+                    color: _getPrimaryColor(),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  side: BorderSide(color: _getPrimaryColor()),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () => _showStudentSelectionDialog(languageProvider),
               ),
             ),
           ],
         ),
-        SizedBox(height: 24),
-        Text(
-          languageProvider.getTranslatedText({
-            'en': 'Selected: ${_selectedStudentIds.length} students',
-            'id': 'Terpilih: ${_selectedStudentIds.length} siswa',
-          }),
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        SizedBox(height: 20),
+
+        // Selected count badge
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: _selectedStudentIds.isNotEmpty
+                ? ColorUtils.success600.withValues(alpha: 0.08)
+                : ColorUtils.slate50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _selectedStudentIds.isNotEmpty
+                  ? ColorUtils.success600.withValues(alpha: 0.25)
+                  : ColorUtils.slate200,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                _selectedStudentIds.isNotEmpty
+                    ? Icons.check_circle_rounded
+                    : Icons.info_outline_rounded,
+                size: 20,
+                color: _selectedStudentIds.isNotEmpty
+                    ? ColorUtils.success600
+                    : ColorUtils.slate500,
+              ),
+              SizedBox(width: 8),
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Selected: ${_selectedStudentIds.length} students',
+                  'id': 'Terpilih: ${_selectedStudentIds.length} siswa',
+                }),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: _selectedStudentIds.isNotEmpty
+                      ? ColorUtils.success600
+                      : ColorUtils.slate700,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildStatRow(String label, String value, {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+  Widget _buildStatRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[700])),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: color),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: ColorUtils.slate700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
           Text(
             value,
             style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: color ?? Colors.black87,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: color,
             ),
           ),
         ],
@@ -637,112 +1013,110 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     );
   }
 
+  // ==============================
+  // STEP 3: TARGET
+  // ==============================
   Widget _buildTargetStep(LanguageProvider languageProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Adjust width based on screen size
-            double cardWidth = constraints.maxWidth;
-            if (cardWidth > 600) cardWidth = 600;
-
-            return Container(
-              width: cardWidth,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-                border: Border.all(color: Colors.grey.shade200),
+        _buildSectionHeader(
+          Icons.school_rounded,
+          languageProvider.getTranslatedText({
+            'en': 'Target Configuration',
+            'id': 'Konfigurasi Tujuan',
+          }),
+        ),
+        SizedBox(height: 4),
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+          ),
+          child: Column(
+            children: [
+              _buildDropdown(
+                label: languageProvider.getTranslatedText({
+                  'en': 'Target Academic Year',
+                  'id': 'Tahun Ajaran Tujuan',
+                }),
+                value: _selectedTargetYearId,
+                items: _academicYears.map<DropdownMenuItem<String>>((y) {
+                  return DropdownMenuItem(
+                    value: y['id'].toString(),
+                    child: Text(
+                      y['year'] ?? 'Unknown',
+                      style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedTargetYearId = val;
+                    _selectedTargetClassId = null;
+                  });
+                  if (val != null) _loadTargetClasses(val);
+                },
+                icon: Icons.calendar_today_rounded,
               ),
-              child: Column(
-                children: [
-                  _buildDropdown(
-                    label: languageProvider.getTranslatedText({
-                      'en': 'Target Academic Year',
-                      'id': 'Tahun Ajaran Tujuan',
+              SizedBox(height: 16),
+              _buildDropdown(
+                label: languageProvider.getTranslatedText({
+                  'en': 'Target Class',
+                  'id': 'Kelas Tujuan',
+                }),
+                value: _selectedTargetClassId,
+                items: _targetClasses.isEmpty
+                    ? []
+                    : _targetClasses.map<DropdownMenuItem<String>>((c) {
+                        return DropdownMenuItem(
+                          value: c['id'].toString(),
+                          child: Text(
+                            c['name'] ?? 'Unknown',
+                            style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+                          ),
+                        );
+                      }).toList(),
+                onChanged: (val) =>
+                    setState(() => _selectedTargetClassId = val),
+                hint: _targetClasses.isEmpty
+                    ? languageProvider.getTranslatedText({
+                        'en': 'No classes found',
+                        'id': 'Tidak ada kelas',
+                      })
+                    : null,
+                icon: Icons.class_rounded,
+              ),
+              SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: Icon(Icons.add_rounded, size: 18, color: _getPrimaryColor()),
+                  label: Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Create New Class',
+                      'id': 'Buat Kelas Baru',
                     }),
-                    value: _selectedTargetYearId,
-                    items: _academicYears.map<DropdownMenuItem<String>>((y) {
-                      return DropdownMenuItem(
-                        value: y['id'].toString(),
-                        child: Text(y['year'] ?? 'Unknown'),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedTargetYearId = val;
-                        _selectedTargetClassId = null;
-                      });
-                      if (val != null) _loadTargetClasses(val);
-                    },
-                    icon: Icons.calendar_today,
-                  ),
-                  SizedBox(height: 20),
-                  _buildDropdown(
-                    label: languageProvider.getTranslatedText({
-                      'en': 'Target Class',
-                      'id': 'Kelas Tujuan',
-                    }),
-                    value: _selectedTargetClassId,
-                    items: _targetClasses.isEmpty
-                        ? []
-                        : _targetClasses.map<DropdownMenuItem<String>>((c) {
-                            return DropdownMenuItem(
-                              value: c['id'].toString(),
-                              child: Text(c['name'] ?? 'Unknown'),
-                            );
-                          }).toList(),
-                    onChanged: (val) =>
-                        setState(() => _selectedTargetClassId = val),
-                    hint: _targetClasses.isEmpty
-                        ? languageProvider.getTranslatedText({
-                            'en': 'No classes found',
-                            'id': 'Tidak ada kelas',
-                          })
-                        : null,
-                    icon: Icons.class_,
-                  ),
-
-                  SizedBox(height: 24),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: Icon(Icons.add, color: Colors.white),
-                      label: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Create New Class',
-                          'id': 'Buat Kelas Baru',
-                        }),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorUtils.getRoleColor('admin'),
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                      onPressed: _showCreateClassDialog,
+                    style: TextStyle(
+                      color: _getPrimaryColor(),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ],
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: _getPrimaryColor()),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _showCreateClassDialog,
+                ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ],
     );
@@ -762,36 +1136,472 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
+            color: ColorUtils.slate600,
           ),
         ),
         SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           padding: EdgeInsets.symmetric(horizontal: 12),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              icon: Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
-              items: items,
-              onChanged: onChanged,
-              hint: hint != null
-                  ? Text(hint, style: TextStyle(color: Colors.grey))
-                  : null,
-            ),
+          child: Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 18, color: _getPrimaryColor()),
+                SizedBox(width: 8),
+              ],
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: value,
+                    isExpanded: true,
+                    icon: Icon(Icons.arrow_drop_down, color: ColorUtils.slate500),
+                    items: items,
+                    onChanged: onChanged,
+                    hint: hint != null
+                        ? Text(hint, style: TextStyle(color: ColorUtils.slate400, fontSize: 14))
+                        : null,
+                    style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
+  // ==============================
+  // STEP 4: SUMMARY
+  // ==============================
+  Widget _buildSummaryStep(LanguageProvider languageProvider) {
+    final sourceClass = _classes.firstWhere(
+      (c) => c['id'].toString() == _selectedSourceClassId,
+      orElse: () => {'name': 'Unknown'},
+    );
+    final targetClass = _targetClasses.firstWhere(
+      (c) => c['id'].toString() == _selectedTargetClassId,
+      orElse: () => {'name': 'Unknown'},
+    );
+    final targetYear = _academicYears.firstWhere(
+      (y) => y['id'].toString() == _selectedTargetYearId,
+      orElse: () => {'year': 'Unknown'},
+    );
+
+    final selectedStudentsList = _students
+        .where((s) => _selectedStudentIds.contains(s['id'].toString()))
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          Icons.summarize_rounded,
+          languageProvider.getTranslatedText({
+            'en': 'Promotion Summary',
+            'id': 'Ringkasan Kenaikan',
+          }),
+        ),
+        SizedBox(height: 4),
+
+        // Summary info card
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+          ),
+          child: Column(
+            children: [
+              _buildInfoRow(
+                icon: Icons.school_rounded,
+                label: languageProvider.getTranslatedText({
+                  'en': 'Source Class',
+                  'id': 'Kelas Asal',
+                }),
+                value: sourceClass['name'] ?? '-',
+              ),
+              _buildInfoRow(
+                icon: Icons.arrow_forward_rounded,
+                label: languageProvider.getTranslatedText({
+                  'en': 'Target Class',
+                  'id': 'Kelas Tujuan',
+                }),
+                value: targetClass['name'] ?? '-',
+              ),
+              _buildInfoRow(
+                icon: Icons.calendar_today_rounded,
+                label: languageProvider.getTranslatedText({
+                  'en': 'Target Academic Year',
+                  'id': 'Tahun Ajaran Tujuan',
+                }),
+                value: targetYear['year'] ?? '-',
+              ),
+              _buildInfoRow(
+                icon: Icons.people_rounded,
+                label: languageProvider.getTranslatedText({
+                  'en': 'Students to Promote',
+                  'id': 'Siswa yang Dinaikkan',
+                }),
+                value: '${selectedStudentsList.length} siswa',
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16),
+
+        // Student list
+        _buildSectionHeader(
+          Icons.list_rounded,
+          languageProvider.getTranslatedText({
+            'en': 'Selected Students (${selectedStudentsList.length})',
+            'id': 'Siswa Terpilih (${selectedStudentsList.length})',
+          }),
+        ),
+        SizedBox(height: 4),
+        Container(
+          constraints: BoxConstraints(maxHeight: 220),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            padding: EdgeInsets.all(12),
+            itemCount: selectedStudentsList.length,
+            separatorBuilder: (ctx, i) => Divider(height: 1, color: ColorUtils.slate100),
+            itemBuilder: (context, index) {
+              final student = selectedStudentsList[index];
+              final nameStr = student['name'] ?? '-';
+              final nameHash = nameStr.codeUnits.fold(0, (sum, c) => sum + c);
+              final avatarColor = ColorUtils.getColorForIndex(nameHash);
+
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: avatarColor.withValues(alpha: 0.15),
+                      child: Text(
+                        nameStr.isNotEmpty ? nameStr[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: avatarColor,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '${index + 1}. $nameStr',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: ColorUtils.slate800,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==============================
+  // STUDENT SELECTION DIALOG
+  // ==============================
+  void _showStudentSelectionDialog(LanguageProvider languageProvider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Gradient header
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.fromLTRB(20, 16, 12, 16),
+                  decoration: BoxDecoration(
+                    gradient: _getCardGradient(),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Drag handle
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          margin: EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                            child: Icon(Icons.checklist_rounded, color: Colors.white, size: 22),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Select Students',
+                                    'id': 'Pilih Siswa',
+                                  }),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  '${_selectedStudentIds.length}/${_students.length} dipilih',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Student list
+                Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: _students.length,
+                    itemBuilder: (context, index) {
+                      final student = _students[index];
+                      final id = student['id'].toString();
+                      final isPromoted = _isAlreadyPromoted(student);
+                      final isSelected = _selectedStudentIds.contains(id);
+                      final nameStr = student['name'] ?? 'Unknown';
+                      final nameHash = nameStr.codeUnits.fold(0, (sum, c) => sum + c);
+                      final avatarColor = ColorUtils.getColorForIndex(nameHash);
+
+                      return Container(
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isPromoted
+                              ? ColorUtils.slate50
+                              : isSelected
+                                  ? _getPrimaryColor().withValues(alpha: 0.05)
+                                  : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected
+                                ? _getPrimaryColor().withValues(alpha: 0.3)
+                                : ColorUtils.slate200,
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: isPromoted
+                                ? null
+                                : () {
+                                    setDialogState(() {
+                                      if (isSelected) {
+                                        _selectedStudentIds.remove(id);
+                                      } else {
+                                        _selectedStudentIds.add(id);
+                                      }
+                                    });
+                                    setState(() {});
+                                  },
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor: isPromoted
+                                        ? ColorUtils.slate200
+                                        : avatarColor.withValues(alpha: 0.15),
+                                    child: Text(
+                                      nameStr.isNotEmpty ? nameStr[0].toUpperCase() : '?',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: isPromoted ? ColorUtils.slate400 : avatarColor,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          nameStr,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: isPromoted ? ColorUtils.slate400 : ColorUtils.slate900,
+                                            fontWeight: FontWeight.w600,
+                                            decoration: isPromoted ? TextDecoration.lineThrough : null,
+                                          ),
+                                        ),
+                                        if (isPromoted)
+                                          Text(
+                                            languageProvider.getTranslatedText({
+                                              'en': 'Already Promoted',
+                                              'id': 'Sudah Naik Kelas',
+                                            }),
+                                            style: TextStyle(
+                                              color: ColorUtils.warning600,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (!isPromoted)
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? _getPrimaryColor()
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? _getPrimaryColor()
+                                              : ColorUtils.slate300,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: isSelected
+                                          ? Icon(Icons.check_rounded, color: Colors.white, size: 16)
+                                          : null,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // Footer
+                Container(
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ColorUtils.slate900.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Done',
+                            'id': 'Selesai',
+                          }),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ==============================
+  // STEP NAVIGATION
+  // ==============================
   void _onStepContinue() async {
     final languageProvider = context.read<LanguageProvider>();
     if (_currentStep == 0) {
@@ -801,7 +1611,6 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     } else if (_currentStep == 1) {
       if (_selectedStudentIds.isEmpty) return;
 
-      // Auto-select next academic year logic
       if (_selectedSourceClassId != null && _academicYears.isNotEmpty) {
         final sourceClass = _classes.firstWhere(
           (c) => c['id'].toString() == _selectedSourceClassId,
@@ -856,13 +1665,14 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                 'id': 'Silakan pilih atau buat kelas tujuan',
               }),
             ),
+            backgroundColor: ColorUtils.warning600,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         return;
       }
       _goToStep(3);
     } else if (_currentStep == 3) {
-      // Submit
       _submitPromotion();
     }
   }
@@ -889,6 +1699,8 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
               'id': 'Kenaikan kelas berhasil',
             }),
           ),
+          backgroundColor: ColorUtils.success600,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       Navigator.pop(context, true);
@@ -900,211 +1712,14 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             content: Text(
               'Gagal memproses kenaikan kelas: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Widget _buildSummaryStep(LanguageProvider languageProvider) {
-    // Find names
-    final sourceClass = _classes.firstWhere(
-      (c) => c['id'].toString() == _selectedSourceClassId,
-      orElse: () => {'name': 'Unknown'},
-    );
-    final targetClass = _targetClasses.firstWhere(
-      (c) => c['id'].toString() == _selectedTargetClassId,
-      orElse: () => {'name': 'Unknown'},
-    );
-
-    final selectedStudentsList = _students
-        .where((s) => _selectedStudentIds.contains(s['id'].toString()))
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSummaryItem(
-          languageProvider.getTranslatedText({
-            'en': 'Source Class',
-            'id': 'Kelas Asal',
-          }),
-          sourceClass['name'] ?? '-',
-        ),
-        Divider(),
-        _buildSummaryItem(
-          languageProvider.getTranslatedText({
-            'en': 'Target Class',
-            'id': 'Kelas Tujuan',
-          }),
-          targetClass['name'] ?? '-',
-        ),
-        Divider(),
-        Text(
-          languageProvider.getTranslatedText({
-            'en': 'Selected Students (${selectedStudentsList.length})',
-            'id': 'Siswa Terpilih (${selectedStudentsList.length})',
-          }),
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        SizedBox(height: 8),
-        Container(
-          height: 200,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ListView.separated(
-            padding: EdgeInsets.all(8),
-            itemCount: selectedStudentsList.length,
-            separatorBuilder: (ctx, i) => Divider(height: 1),
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  '${index + 1}. ${selectedStudentsList[index]['name'] ?? '-'}',
-                  style: TextStyle(fontSize: 14),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(color: Colors.grey[600])),
-          Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showStudentSelectionDialog(LanguageProvider languageProvider) {
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Select Students',
-                          'id': 'Pilih Siswa',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(height: 1),
-                SizedBox(
-                  height: 400,
-                  child: ListView.builder(
-                    itemCount: _students.length,
-                    itemBuilder: (context, index) {
-                      final student = _students[index];
-                      final id = student['id'].toString();
-                      final isPromoted = _isAlreadyPromoted(student);
-                      final isSelected = _selectedStudentIds.contains(id);
-
-                      return CheckboxListTile(
-                        title: Text(
-                          student['name'] ?? 'Unknown',
-                          style: TextStyle(
-                            color: isPromoted ? Colors.grey : Colors.black,
-                            decoration: isPromoted
-                                ? TextDecoration.lineThrough
-                                : null,
-                          ),
-                        ),
-                        subtitle: isPromoted
-                            ? Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Already Promoted',
-                                  'id': 'Sudah Naik Kelas',
-                                }),
-                                style: TextStyle(
-                                  color: Colors.orange,
-                                  fontSize: 12,
-                                ),
-                              )
-                            : null,
-                        value: isPromoted ? false : isSelected,
-                        enabled: !isPromoted,
-                        onChanged: (val) {
-                          setDialogState(() {
-                            if (val == true) {
-                              _selectedStudentIds.add(id);
-                            } else {
-                              _selectedStudentIds.remove(id);
-                            }
-                          });
-                          // Also update parent state to reflect changes immediately if needed,
-                          // though usually dialog state is local until closed or we use setState here.
-                          // Since _selectedStudentIds is from parent, modifying it works,
-                          // but parent UI won't update until dialog closes or we call parent setState.
-                          // But we want the CHECKBOX to update, so setDialogState is correct.
-                          setState(() {}); // Update background stats too
-                        },
-                      );
-                    },
-                  ),
-                ),
-                Divider(height: 1),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Done',
-                            'id': 'Selesai',
-                          }),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
   }
 
   void _onStepCancel() {
@@ -1115,6 +1730,9 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     }
   }
 
+  // ==============================
+  // CREATE CLASS DIALOG
+  // ==============================
   void _showCreateClassDialog() {
     final languageProvider = context.read<LanguageProvider>();
     final nameController = TextEditingController();
@@ -1130,75 +1748,77 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
+            clipBehavior: Clip.antiAlias,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Gradient header
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          ColorUtils.getRoleColor('admin'),
-                          ColorUtils.getRoleColor('admin').withOpacity(0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
+                      gradient: _getCardGradient(),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                           ),
-                          child: Icon(Icons.add, color: Colors.white, size: 20),
+                          child: Icon(Icons.add_rounded, color: Colors.white, size: 22),
                         ),
                         SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Add Class',
-                              'id': 'Buat Kelas Baru',
-                            }),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Create New Class',
+                                  'id': 'Buat Kelas Baru',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Add a new target class',
+                                  'id': 'Tambah kelas tujuan baru',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
+
+                  // Form body
                   Padding(
                     padding: EdgeInsets.all(20),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextFormField(
+                        _buildDialogTextField(
                           controller: nameController,
-                          decoration: InputDecoration(
-                            labelText: languageProvider.getTranslatedText({
-                              'en': 'Class Name',
-                              'id': 'Nama Kelas',
-                            }),
-                            prefixIcon: Icon(
-                              Icons.school,
-                              color: ColorUtils.getRoleColor('admin'),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+                          label: languageProvider.getTranslatedText({
+                            'en': 'Class Name',
+                            'id': 'Nama Kelas',
+                          }),
+                          icon: Icons.school_rounded,
                         ),
                         SizedBox(height: 12),
                         _buildGradeLevelDropdown(
@@ -1223,24 +1843,31 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                       ],
                     ),
                   ),
+
+                  // Footer
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: ColorUtils.slate300),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: EdgeInsets.symmetric(vertical: 13),
                             ),
                             child: Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Cancel',
                                 'id': 'Batal',
                               }),
+                              style: TextStyle(
+                                color: ColorUtils.slate700,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -1252,9 +1879,9 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                                   selectedGradeLevel == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(
-                                      'Please fill required fields',
-                                    ),
+                                    content: Text('Please fill required fields'),
+                                    backgroundColor: ColorUtils.warning600,
+                                    behavior: SnackBarBehavior.floating,
                                   ),
                                 );
                                 return;
@@ -1266,7 +1893,6 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                                   'grade_level': int.parse(selectedGradeLevel!),
                                   'homeroom_teacher_id':
                                       selectedHomeroomTeacherId,
-                                  // Pass academic year if API supports it, or it defaults to active
                                   'academic_year_id': _selectedTargetYearId,
                                 };
                                 await ApiClassService.addClass(data);
@@ -1275,7 +1901,11 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                                   _loadTargetClasses(_selectedTargetYearId!);
                                 }
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Class Created')),
+                                  SnackBar(
+                                    content: Text('Class Created'),
+                                    backgroundColor: ColorUtils.success600,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
                                 );
                               } catch (e) {
                                 if (kDebugMode) print('Create class error: $e');
@@ -1285,25 +1915,31 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                                       content: Text(
                                         'Gagal membuat kelas: ${ErrorUtils.getFriendlyMessage(e)}',
                                       ),
-                                      backgroundColor: Colors.red,
+                                      backgroundColor: ColorUtils.error600,
+                                      behavior: SnackBarBehavior.floating,
                                     ),
                                   );
                                 }
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorUtils.getRoleColor('admin'),
+                              backgroundColor: _getPrimaryColor(),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              elevation: 2,
+                              shadowColor: _getPrimaryColor().withValues(alpha: 0.4),
                             ),
                             child: Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Create',
                                 'id': 'Buat',
                               }),
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -1319,6 +1955,31 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     );
   }
 
+  Widget _buildDialogTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: TextFormField(
+        controller: controller,
+        style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
+          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
+      ),
+    );
+  }
+
   Widget _buildGradeLevelDropdown({
     required String? value,
     required Function(String?) onChanged,
@@ -1326,9 +1987,9 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: ColorUtils.slate50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
         initialValue: value,
@@ -1337,10 +1998,11 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             'en': 'Grade Level',
             'id': 'Tingkat Kelas',
           }),
+          labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
           prefixIcon: Icon(
-            Icons.grade,
-            color: ColorUtils.getRoleColor('admin'),
-            size: 20,
+            Icons.grade_rounded,
+            color: _getPrimaryColor(),
+            size: 18,
           ),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 12),
@@ -1362,7 +2024,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
           );
         }).toList(),
         onChanged: onChanged,
-        style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
       ),
     );
   }
@@ -1378,7 +2040,6 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         uniqueTeachers[teacher['id'].toString()] = teacher;
       }
     }
-    // Validate value
     String? validValue = value;
     if (validValue != null && !uniqueTeachers.containsKey(validValue)) {
       validValue = null;
@@ -1386,9 +2047,9 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: ColorUtils.slate50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
         isExpanded: true,
@@ -1398,10 +2059,11 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             'en': 'Homeroom Teacher',
             'id': 'Wali Kelas',
           }),
+          labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
           prefixIcon: Icon(
-            Icons.person,
-            color: ColorUtils.getRoleColor('admin'),
-            size: 20,
+            Icons.person_rounded,
+            color: _getPrimaryColor(),
+            size: 18,
           ),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -1414,6 +2076,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                 'en': 'No Homeroom Teacher',
                 'id': 'Tidak ada wali kelas',
               }),
+              style: TextStyle(color: ColorUtils.slate500),
             ),
           ),
           ...uniqueTeachers.values.map((teacher) {
@@ -1429,6 +2092,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
           }),
         ],
         onChanged: onChanged,
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
       ),
     );
   }
