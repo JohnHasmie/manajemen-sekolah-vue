@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
-**Last Updated:** 2026-02-18
-**Version:** 1.9
+**Last Updated:** 2026-02-19
+**Version:** 2.1
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2496,6 +2496,18 @@ Container(
   - **Scaffold**: `ColorUtils.slate50` background replacing `Color(0xFFF8F9FA)`
   - **Zero raw colors**: `Colors.grey`, `withOpacity`, `Colors.orange/purple/green/red`, left accent strips fully eliminated
 
+✅ **Admin RPP** - Full redesign (v2.1 final):
+  - **Header** (#7): `AdminRppScreen` — `_getCardGradient()` fixed to `[primaryColor, primaryColor.withValues(alpha:0.85)]`; 40×40 back button with `Colors.white.withValues(alpha:0.2)` bg; dynamic title ("Pilih Guru" / "RPP - TeacherName"); popup menu (40×40 semi-transparent); search bar with `Colors.white.withValues(alpha:0.9)` bg; filter button with active dot indicator (`error600`)
+  - **RPP cards** (`_buildRppCard`, #8): `AnimatedBuilder > Material > InkWell > Container(corporateShadow(1.5), slate200 border)` — 44×44 colored icon container `getColorForIndex(index)` + `Icons.description_rounded`; title (slate900 w700) + subject (slate500); status badge chip (statusColor alpha + border); `Divider(slate100)`; `Wrap(_buildInfoTag(class), _buildInfoTag(teacher))`; `_buildCircleActionButton(detail:primary, edit:warning600)`; no accent strip or decorative circle
+  - **Teacher cards** (`_buildTeacherCard`, #8): `CircleAvatar(radius:22)` with `getColorForIndex(index)` + 0.15 alpha bg; name (slate900 w700) + NIP (slate500); slate100 36×36 chevron container on right; `corporateShadow(elevation:1.0)` + slate200 border
+  - **`_buildInfoTag`**: Pill chip `px:6 py:3`, icon(10)+text(10), optional `tagColor` — matches design system standard
+  - **`_buildCircleActionButton`**: 36×36 rounded square, `color.withValues(alpha:0.1)` bg + `color.withValues(alpha:0.25)` border
+  - **Filter sheet** (#11): Gradient header `LinearGradient([primaryColor, primaryColor.withValues(alpha:0.85)])` with `Icon(tune_rounded) + Text` and white Reset button; status section header `Row(Icon(swap_horiz_rounded), Text(slate900))`; Cancel+Apply footer with `slate200` top border + shadow
+  - **`_buildStatusChip`**: `selectedColor: primaryColor.withValues(alpha:0.2)`, `labelStyle: isSelected?primaryColor:slate600`, `side: isSelected?primaryColor:slate300`
+  - **`RppAdminDetailPage`**: AppBar replaced with Pattern #7 inline gradient header (back button, "Detail RPP" + judul subtitle, `PopupMenuButton` 40×40 semi-transparent); `body: Column([header, Expanded(SingleChildScrollView(...))])`; status card uses outline badge with dot indicator (statusColor alpha); `_buildDetailItem` (slate600 label, slate800 value); `_buildContentSection` (slate700 title, slate50 bg, slate200 border); content cards use `corporateShadow(1.0)` + `slate200` border + `BorderRadius.circular(14)`
+  - **Both `_getStatusColor()`**: `success600/warning600/error600/info600/slate400`; `_getStatusLabel`/`_getStatusLabelDetail` helpers
+  - **Zero raw colors**: All `Colors.grey`, `withOpacity()`, `Colors.red/green/blue/orange`, accent strips, decorative circles eliminated
+
 ✅ **Admin Presence Report** - Full redesign (v2.0 final):
   - **Header** (#7): Both `AdminPresenceReportScreen` and `AdminAbsensiDetailPage` — `_getCardGradient()` fixed to `[primaryColor, primaryColor.withValues(alpha:0.85)]`; `AdminAbsensiDetailPage` AppBar replaced with inline Pattern #7 gradient header (back button, title/subject/date, edit/check/popup actions); old "Header Info Card" Container removed
   - **Filter sheet** (#11): Gradient header with Icon+Title; section headers using `Row(Icon+Text)` with `ColorUtils.slate700`; FilterChips with `Colors.white` background + `selectedColor: primaryColor.withValues(alpha:0.2)` + `checkmarkColor: primaryColor`; Cancel + Apply footer with border+shadow, `BorderRadius.circular(12)` buttons
@@ -2537,6 +2549,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.0
+**Design System Version:** 2.1
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team

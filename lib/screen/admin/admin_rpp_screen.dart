@@ -147,26 +147,42 @@ class _AdminRppScreenState extends State<AdminRppScreen>
             ),
             child: Column(
               children: [
-                // Header
+                // Header (Pattern #11 gradient)
                 Container(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _getPrimaryColor(),
+                        _getPrimaryColor().withValues(alpha: 0.85),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Filter',
-                          'id': 'Filter',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                          SizedBox(width: 10),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Filter',
+                              'id': 'Filter',
+                            }),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                       TextButton(
                         onPressed: () {
@@ -174,12 +190,22 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                             tempSelectedStatus = null;
                           });
                         },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
                         child: Text(
                           languageProvider.getTranslatedText({
                             'en': 'Reset',
                             'id': 'Reset',
                           }),
-                          style: TextStyle(color: _getPrimaryColor()),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -194,15 +220,26 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Status Filter
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Status',
-                            'id': 'Status',
-                          }),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.swap_horiz_rounded,
+                              size: 18,
+                              color: ColorUtils.slate700,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Status',
+                                'id': 'Status',
+                              }),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate900,
+                              ),
+                            ),
+                          ],
                         ),
                         SizedBox(height: 12),
                         Wrap(
@@ -264,9 +301,12 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: ColorUtils.slate200),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.shade300,
+                        color: ColorUtils.slate900.withValues(alpha: 0.05),
                         offset: Offset(0, -2),
                         blurRadius: 8,
                       ),
@@ -278,8 +318,8 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: _getPrimaryColor()),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: ColorUtils.slate300),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -289,7 +329,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                               'en': 'Cancel',
                               'id': 'Batal',
                             }),
-                            style: TextStyle(color: _getPrimaryColor()),
+                            style: TextStyle(color: ColorUtils.slate600),
                           ),
                         ),
                       ),
@@ -305,7 +345,8 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _getPrimaryColor(),
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -315,7 +356,10 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                               'en': 'Apply Filter',
                               'id': 'Terapkan Filter',
                             }),
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -342,13 +386,13 @@ class _AdminRppScreenState extends State<AdminRppScreen>
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => onSelected(),
-      selectedColor: _getPrimaryColor().withOpacity(0.2),
+      selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
       labelStyle: TextStyle(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade700,
+        color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? _getPrimaryColor() : Colors.grey.shade300,
+        color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
       ),
     );
   }
@@ -589,22 +633,39 @@ class _AdminRppScreenState extends State<AdminRppScreen>
     switch (status) {
       case 'Approved':
       case 'Disetujui':
-        return Colors.green;
+        return ColorUtils.success600;
       case 'Pending':
       case 'Menunggu':
-        return Colors.orange;
+        return ColorUtils.warning600;
       case 'Rejected':
       case 'Ditolak':
-        return Colors.red;
+        return ColorUtils.error600;
       case 'Draft':
       case 'draft':
-        return Colors.blue;
+        return ColorUtils.info600;
       default:
-        return Colors.grey;
+        return ColorUtils.slate400;
     }
   }
 
-  // status icon helper not used currently
+  String _getStatusLabel(String? status) {
+    switch (status) {
+      case 'Approved':
+      case 'Disetujui':
+        return 'Disetujui';
+      case 'Pending':
+      case 'Menunggu':
+        return 'Menunggu';
+      case 'Draft':
+      case 'draft':
+        return 'Draft';
+      case 'Rejected':
+      case 'Ditolak':
+        return 'Ditolak';
+      default:
+        return status ?? '-';
+    }
+  }
 
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');
@@ -614,328 +675,69 @@ class _AdminRppScreenState extends State<AdminRppScreen>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor()],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
     );
   }
 
-  Widget _buildRppCard(Map<String, dynamic> rpp, int index) {
+  Widget _buildInfoTag({required IconData icon, required String label, Color? tagColor}) {
+    final color = tagColor ?? ColorUtils.slate500;
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          final delay = index * 0.1;
-          final animation = CurvedAnimation(
-            parent: _animationController,
-            curve: Interval(delay, 1.0, curve: Curves.easeOut),
-          );
-
-          return FadeTransition(
-            opacity: animation,
-            child: Transform.translate(
-              offset: Offset(0, 50 * (1 - animation.value)),
-              child: child,
-            ),
-          );
-        },
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _viewRppDetail(rpp),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    blurRadius: 5,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Strip biru di pinggir kiri
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 6,
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor(),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Background pattern effect
-                  Positioned(
-                    right: -8,
-                    top: -8,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header dengan judul dan status
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    rpp['judul'] ?? rpp['title'] ?? 'No Title',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    '${rpp['mata_pelajaran_nama'] ?? rpp['subject_name'] ?? 'No Subject'}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getStatusColor(
-                                  rpp['status'],
-                                ).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: _getStatusColor(
-                                    rpp['status'],
-                                  ).withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                rpp['status'] == 'Pending' ||
-                                        rpp['status'] == 'Menunggu'
-                                    ? 'Menunggu'
-                                    : rpp['status'] == 'Approved' ||
-                                          rpp['status'] == 'Disetujui'
-                                    ? 'Disetujui'
-                                    : rpp['status'] == 'draft' ||
-                                          rpp['status'] == 'Draft'
-                                    ? 'Draft'
-                                    : 'Ditolak',
-                                style: TextStyle(
-                                  color: _getStatusColor(rpp['status']),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Informasi kelas dan guru
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.school,
-                                color: _getPrimaryColor(),
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Kelas',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[600],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    rpp['kelas_nama'] ??
-                                        rpp['class_name'] ??
-                                        'No Class',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 8),
-
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.person,
-                                color: _getPrimaryColor(),
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Guru',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[600],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    rpp['teacher_name'] ??
-                                        rpp['guru_nama'] ??
-                                        'No Teacher',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Action buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _buildActionButton(
-                              icon: Icons.visibility,
-                              label: 'Detail',
-                              color: _getPrimaryColor(),
-                              onPressed: () => _viewRppDetail(rpp),
-                            ),
-                            SizedBox(width: 8),
-                            _buildActionButton(
-                              icon: Icons.edit,
-                              label: 'Status',
-                              color: _getPrimaryColor(),
-                              onPressed: () =>
-                                  _updateStatus(rpp['id'], rpp['status']),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildActionButton({
+  Widget _buildCircleActionButton({
     required IconData icon,
-    required String label,
     required Color color,
     required VoidCallback onPressed,
   }) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.3)),
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: color),
-            SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+        child: Icon(icon, size: 18, color: color),
       ),
     );
   }
 
-  Widget _buildTeacherCard(Map<String, dynamic> teacher, int index) {
+  Widget _buildRppCard(Map<String, dynamic> rpp, int index) {
+    final accentColor = ColorUtils.getColorForIndex(index);
+    final statusColor = _getStatusColor(rpp['status'] ?? '');
+
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) {
-          final delay = index * 0.05;
+          final delay = (index * 0.1).clamp(0.0, 0.9);
           final animation = CurvedAnimation(
             parent: _animationController,
             curve: Interval(delay, 1.0, curve: Curves.easeOut),
           );
-
           return FadeTransition(
             opacity: animation,
             child: Transform.translate(
@@ -947,44 +749,193 @@ class _AdminRppScreenState extends State<AdminRppScreen>
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => _selectTeacher(teacher),
+            onTap: () => _viewRppDetail(rpp),
             borderRadius: BorderRadius.circular(16),
             child: Container(
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: Offset(0, 2),
+                border: Border.all(color: ColorUtils.slate200),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header: icon + title/subject + status badge
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.description_rounded,
+                          color: accentColor,
+                          size: 22,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              rpp['judul'] ?? rpp['title'] ?? 'No Title',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate900,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 3),
+                            Text(
+                              rpp['mata_pelajaran_nama'] ??
+                                  rpp['subject_name'] ??
+                                  'No Subject',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: ColorUtils.slate500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: statusColor.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          _getStatusLabel(rpp['status']),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Divider(color: ColorUtils.slate100, height: 1),
+                  SizedBox(height: 10),
+                  // Info tags: class + teacher
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      _buildInfoTag(
+                        icon: Icons.class_,
+                        label:
+                            rpp['kelas_nama'] ??
+                            rpp['class_name'] ??
+                            'No Class',
+                      ),
+                      _buildInfoTag(
+                        icon: Icons.person_outline,
+                        label:
+                            rpp['teacher_name'] ??
+                            rpp['guru_nama'] ??
+                            'No Teacher',
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _buildCircleActionButton(
+                        icon: Icons.visibility_outlined,
+                        color: _getPrimaryColor(),
+                        onPressed: () => _viewRppDetail(rpp),
+                      ),
+                      SizedBox(width: 8),
+                      _buildCircleActionButton(
+                        icon: Icons.edit_outlined,
+                        color: ColorUtils.warning600,
+                        onPressed: () => _updateStatus(rpp['id'], rpp['status']),
+                      ),
+                    ],
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeacherCard(Map<String, dynamic> teacher, int index) {
+    final avatarColor = ColorUtils.getColorForIndex(index);
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          final delay = (index * 0.05).clamp(0.0, 0.9);
+          final animation = CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(delay, 1.0, curve: Curves.easeOut),
+          );
+          return FadeTransition(
+            opacity: animation,
+            child: Transform.translate(
+              offset: Offset(0, 20 * (1 - animation.value)),
+              child: child,
+            ),
+          );
+        },
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _selectTeacher(teacher),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
               padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: ColorUtils.slate200),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+              ),
               child: Row(
                 children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor().withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        teacher['name'] != null && teacher['name'].isNotEmpty
-                            ? teacher['name'][0].toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          color: _getPrimaryColor(),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: avatarColor.withValues(alpha: 0.15),
+                    child: Text(
+                      teacher['name'] != null &&
+                              (teacher['name'] as String).isNotEmpty
+                          ? (teacher['name'] as String)[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        color: avatarColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -992,28 +943,36 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                         Text(
                           teacher['name'] ?? 'Unknown',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: ColorUtils.slate900,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: 3),
                         Text(
                           teacher['employee_number'] != null
                               ? 'NIP: ${teacher['employee_number']}'
                               : 'No NIP',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: ColorUtils.slate500,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey[400],
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: ColorUtils.slate100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: ColorUtils.slate400,
+                    ),
                   ),
                 ],
               ),
@@ -1070,7 +1029,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
         }).toList();
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.slate50,
           body: Column(
             children: [
               // Header
@@ -1086,7 +1045,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                   gradient: _getCardGradient(),
                   boxShadow: [
                     BoxShadow(
-                      color: _getPrimaryColor().withOpacity(0.3),
+                      color: _getPrimaryColor().withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),
@@ -1115,7 +1074,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -1166,7 +1125,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                         }),
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                 ),
                             ],
@@ -1188,7 +1147,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -1240,7 +1199,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1249,7 +1208,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                   child: TextField(
                                     controller: _searchController,
                                     onSubmitted: (_) => _handleSearch(),
-                                    style: TextStyle(color: Colors.black87),
+                                    style: TextStyle(color: ColorUtils.slate800),
                                     decoration: InputDecoration(
                                       hintText: _showTeacherList
                                           ? languageProvider.getTranslatedText({
@@ -1260,10 +1219,10 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                               'en': 'Search RPP...',
                                               'id': 'Cari RPP...',
                                             }),
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      hintStyle: TextStyle(color: ColorUtils.slate400),
                                       prefixIcon: Icon(
                                         Icons.search,
-                                        color: Colors.grey,
+                                        color: ColorUtils.slate400,
                                       ),
                                       border: InputBorder.none,
                                       contentPadding: EdgeInsets.symmetric(
@@ -1294,10 +1253,10 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                             decoration: BoxDecoration(
                               color: _hasActiveFilter
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.2),
+                                  : Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Stack(
@@ -1322,7 +1281,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                     child: Container(
                                       padding: EdgeInsets.all(4),
                                       decoration: BoxDecoration(
-                                        color: Colors.red,
+                                        color: ColorUtils.error600,
                                         shape: BoxShape.circle,
                                       ),
                                       constraints: BoxConstraints(
@@ -1355,10 +1314,10 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: Colors.white.withOpacity(0.5),
+                                        color: Colors.white.withValues(alpha: 0.5),
                                       ),
                                     ),
                                     child: Row(
@@ -1561,8 +1520,33 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
     }
   }
 
+  Color _getPrimaryColor() => ColorUtils.getRoleColor('admin');
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Approved':
+        return ColorUtils.success600;
+      case 'Rejected':
+        return ColorUtils.error600;
+      case 'Pending':
+      default:
+        return ColorUtils.warning600;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'Approved':
+        return Icons.check_circle_outline;
+      case 'Rejected':
+        return Icons.cancel_outlined;
+      case 'Pending':
+      default:
+        return Icons.access_time_rounded;
+    }
+  }
+
   Future<void> _updateStatus() async {
-    // Check if either status or note has changed
     bool statusChanged = _selectedStatus != widget.currentStatus;
     bool noteChanged = _catatanController.text != (widget.currentNote ?? '');
 
@@ -1586,90 +1570,286 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
       if (mounted) {
         Navigator.pop(context);
         widget.onStatusUpdated();
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Status RPP berhasil diupdate')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Status RPP berhasil diupdate'),
+            backgroundColor: ColorUtils.success600,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengupdate: $e'),
+            backgroundColor: ColorUtils.error600,
+          ),
+        );
       }
     } finally {
-      setState(() {
-        _isUpdating = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isUpdating = false;
+        });
+      }
     }
+  }
+
+  Widget _buildStatusOption(String value, String label, Color color) {
+    final isSelected = _selectedStatus == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedStatus = value),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? color.withValues(alpha: 0.12)
+                : ColorUtils.slate50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? color : ColorUtils.slate200,
+              width: isSelected ? 1.5 : 1.0,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? color.withValues(alpha: 0.15)
+                      : ColorUtils.slate100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _getStatusIcon(value),
+                  size: 16,
+                  color: isSelected ? color : ColorUtils.slate400,
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? color : ColorUtils.slate500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Update Status RPP'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField(
-              initialValue: _selectedStatus,
-              decoration: InputDecoration(
-                labelText: 'Status',
-                border: OutlineInputBorder(),
+    final primaryColor = _getPrimaryColor();
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Gradient Header
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
               ),
-              items:
-                  [
-                    {'value': 'Pending', 'label': 'Menunggu'},
-                    {'value': 'Approved', 'label': 'Disetujui'},
-                    {'value': 'Rejected', 'label': 'Ditolak'},
-                  ].map((status) {
-                    return DropdownMenuItem(
-                      value: status['value'],
-                      child: Text(status['label']!),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedStatus = value!;
-                });
-              },
             ),
-            SizedBox(height: 16),
-            TextFormField(
-              controller: _catatanController,
-              decoration: InputDecoration(
-                labelText: 'Catatan (Opsional)',
-                border: OutlineInputBorder(),
-                hintText: 'Berikan catatan untuk guru...',
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isUpdating ? null : () => Navigator.pop(context),
-          child: Text('Batal'),
-        ),
-        ElevatedButton(
-          onPressed: _isUpdating ? null : _updateStatus,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: ColorUtils.primaryColor,
-          ),
-          child: _isUpdating
-              ? SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                )
-              : Text('Update', style: TextStyle(color: Colors.white)),
-        ),
-      ],
+                  child: Icon(
+                    Icons.swap_horiz_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Update Status RPP',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Ubah status persetujuan RPP',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Form Content
+          Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Status label
+                Text(
+                  'Status Persetujuan',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate700,
+                  ),
+                ),
+                SizedBox(height: 10),
+                // Status option chips
+                Row(
+                  children: [
+                    _buildStatusOption(
+                      'Pending',
+                      'Menunggu',
+                      ColorUtils.warning600,
+                    ),
+                    SizedBox(width: 8),
+                    _buildStatusOption(
+                      'Approved',
+                      'Disetujui',
+                      ColorUtils.success600,
+                    ),
+                    SizedBox(width: 8),
+                    _buildStatusOption(
+                      'Rejected',
+                      'Ditolak',
+                      ColorUtils.error600,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                // Catatan label
+                Text(
+                  'Catatan (Opsional)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate700,
+                  ),
+                ),
+                SizedBox(height: 8),
+                // Styled text field
+                Container(
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ColorUtils.slate200),
+                  ),
+                  child: TextField(
+                    controller: _catatanController,
+                    maxLines: 3,
+                    style: TextStyle(
+                      color: ColorUtils.slate900,
+                      fontSize: 14,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(14),
+                      hintText: 'Berikan catatan untuk guru...',
+                      hintStyle: TextStyle(
+                        color: ColorUtils.slate400,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Footer Buttons
+          Container(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: ColorUtils.slate100)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed:
+                        _isUpdating ? null : () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: ColorUtils.slate300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Batal',
+                      style: TextStyle(color: ColorUtils.slate600),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isUpdating ? null : _updateStatus,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: _isUpdating
+                        ? SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Update Status',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1685,117 +1865,203 @@ class RppAdminDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = _getStatusColor(rpp['status'] ?? '');
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: Text(
-          'Detail RPP',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: _getPrimaryColor(),
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.black),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          PopupMenuButton(
-            onSelected: (value) {
-              if (value == 'approve') {
-                _showUpdateStatusDialog(context, 'Disetujui');
-              } else if (value == 'reject') {
-                _showUpdateStatusDialog(context, 'Ditolak');
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'approve',
-                child: Row(
-                  children: [
-                    Icon(Icons.check, color: Colors.green, size: 20),
-                    SizedBox(width: 8),
-                    Text('Setujui RPP'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'reject',
-                child: Row(
-                  children: [
-                    Icon(Icons.close, color: Colors.red, size: 20),
-                    SizedBox(width: 8),
-                    Text('Tolak RPP'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Container(height: 1, color: Colors.grey.shade300),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header dengan status
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        children: [
+          // Pattern #7 Inline Gradient Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 16,
+              right: 16,
+              bottom: 20,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _getPrimaryColor(),
+                  _getPrimaryColor().withValues(alpha: 0.85),
                 ],
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: _getPrimaryColor().withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Detail RPP',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      if ((rpp['judul'] ?? rpp['title'] ?? '').isNotEmpty) ...[
+                        SizedBox(height: 2),
+                        Text(
+                          rpp['judul'] ?? rpp['title'] ?? '',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                PopupMenuButton(
+                  onSelected: (value) {
+                    if (value == 'approve') {
+                      _showUpdateStatusDialog(context, 'Disetujui');
+                    } else if (value == 'reject') {
+                      _showUpdateStatusDialog(context, 'Ditolak');
+                    }
+                  },
+                  icon: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.more_vert, color: Colors.white, size: 20),
+                  ),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'approve',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: ColorUtils.success600,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Setujui RPP'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'reject',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.cancel_outlined,
+                            color: ColorUtils.error600,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Tolak RPP'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Scrollable Body
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    rpp['title'] ?? '-',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
+                  // Status card
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(rpp['status']),
-                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ColorUtils.slate200),
+                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
-                    child: Text(
-                      rpp['status'] == 'Pending' || rpp['status'] == 'Menunggu'
-                          ? 'Menunggu'
-                          : rpp['status'] == 'Approved' ||
-                                rpp['status'] == 'Disetujui'
-                          ? 'Disetujui'
-                          : rpp['status'] == 'draft' || rpp['status'] == 'Draft'
-                          ? 'Draft'
-                          : 'Ditolak',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          rpp['judul'] ?? rpp['title'] ?? '-',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate900,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: statusColor.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                _getStatusLabelDetail(rpp['status']),
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
 
             SizedBox(height: 16),
 
@@ -1805,14 +2071,9 @@ class RppAdminDetailPage extends StatelessWidget {
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ColorUtils.slate200),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1822,7 +2083,7 @@ class RppAdminDetailPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                      color: ColorUtils.slate600,
                     ),
                   ),
                   SizedBox(height: 12),
@@ -1860,7 +2121,7 @@ class RppAdminDetailPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[700],
+                        color: ColorUtils.slate600,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -1868,7 +2129,7 @@ class RppAdminDetailPage extends StatelessWidget {
                       rpp['catatan_admin']!,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: ColorUtils.slate600,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -1885,14 +2146,9 @@ class RppAdminDetailPage extends StatelessWidget {
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ColorUtils.slate200),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1902,7 +2158,7 @@ class RppAdminDetailPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                      color: ColorUtils.slate600,
                     ),
                   ),
                   SizedBox(height: 12),
@@ -1946,14 +2202,9 @@ class RppAdminDetailPage extends StatelessWidget {
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: ColorUtils.slate200),
+                  boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1963,7 +2214,7 @@ class RppAdminDetailPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[700],
+                        color: ColorUtils.slate600,
                       ),
                     ),
                     SizedBox(height: 12),
@@ -1980,11 +2231,33 @@ class RppAdminDetailPage extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
-          ],
+                ],
+              ],
+            ),
+          ),
         ),
-      ),
-    );
+      ],
+    ),
+  );
+  }
+
+  String _getStatusLabelDetail(String? status) {
+    switch (status) {
+      case 'Approved':
+      case 'Disetujui':
+        return 'Disetujui';
+      case 'Pending':
+      case 'Menunggu':
+        return 'Menunggu';
+      case 'Draft':
+      case 'draft':
+        return 'Draft';
+      case 'Rejected':
+      case 'Ditolak':
+        return 'Ditolak';
+      default:
+        return status ?? '-';
+    }
   }
 
   void _showUpdateStatusDialog(BuildContext context, String status) {
@@ -2013,13 +2286,13 @@ class RppAdminDetailPage extends StatelessWidget {
               '$label:',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
+                color: ColorUtils.slate600,
               ),
             ),
           ),
           SizedBox(width: 8),
           Expanded(
-            child: Text(value, style: TextStyle(color: Colors.grey[800])),
+            child: Text(value, style: TextStyle(color: ColorUtils.slate700)),
           ),
         ],
       ),
@@ -2037,7 +2310,7 @@ class RppAdminDetailPage extends StatelessWidget {
             title,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: ColorUtils.slate800,
               fontSize: 14,
             ),
           ),
@@ -2046,13 +2319,13 @@ class RppAdminDetailPage extends StatelessWidget {
             width: double.infinity,
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+              color: ColorUtils.slate50,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: ColorUtils.slate200),
             ),
             child: Text(
               content,
-              style: TextStyle(color: Colors.black87, height: 1.5),
+              style: TextStyle(color: ColorUtils.slate800, height: 1.5),
             ),
           ),
         ],
@@ -2120,18 +2393,18 @@ class RppAdminDetailPage extends StatelessWidget {
     switch (status) {
       case 'Approved':
       case 'Disetujui':
-        return Colors.green;
+        return ColorUtils.success600;
       case 'Pending':
       case 'Menunggu':
-        return Colors.orange;
+        return ColorUtils.warning600;
       case 'Rejected':
       case 'Ditolak':
-        return Colors.red;
+        return ColorUtils.error600;
       case 'Draft':
       case 'draft':
-        return Colors.blue;
+        return ColorUtils.info600;
       default:
-        return Colors.grey;
+        return ColorUtils.slate400;
     }
   }
 }
