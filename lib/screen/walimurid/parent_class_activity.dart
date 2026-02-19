@@ -5,9 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
+import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ParentClassActivityScreen extends StatefulWidget {
@@ -229,7 +231,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
           ),
         );
       }
@@ -242,18 +244,30 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         margin: EdgeInsets.all(16),
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.orange.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.shade200),
+          color: ColorUtils.warning600.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            Icon(Icons.warning, color: Colors.orange),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: ColorUtils.warning600.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.warning_amber_rounded, color: ColorUtils.warning600, size: 20),
+            ),
             SizedBox(width: 12),
             Expanded(
               child: Text(
                 AppLocalizations.noChildrenLinked.tr,
-                style: TextStyle(color: Colors.orange.shade800),
+                style: TextStyle(
+                  color: ColorUtils.slate700,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -268,66 +282,65 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 8, bottom: 8),
+            padding: EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               AppLocalizations.selectChild.tr,
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: ColorUtils.slate700,
               ),
             ),
           ),
-          Material(
-            elevation: 2,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: DropdownButton<String>(
-                value: _selectedStudentId,
-                isExpanded: true,
-                underline: SizedBox(), // Hapus garis bawah default
-                items: _studentList.map((student) {
-                  return DropdownMenuItem<String>(
-                    value: student['id'],
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            student['name'] ??
-                                AppLocalizations.nameNotAvailable.tr,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 14),
+            child: DropdownButton<String>(
+              value: _selectedStudentId,
+              isExpanded: true,
+              underline: SizedBox(),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+              items: _studentList.map((student) {
+                return DropdownMenuItem<String>(
+                  value: student['id'],
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          student['name'] ??
+                              AppLocalizations.nameNotAvailable.tr,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: ColorUtils.slate900,
                           ),
-                          Text(
-                            '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                            ),
+                        ),
+                        Text(
+                          '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate500,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedStudentId = value;
-                  });
-                  _loadActivities();
-                },
-              ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedStudentId = value;
+                });
+                _loadActivities();
+              },
             ),
           ),
         ],
@@ -336,221 +349,195 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   void _showActivityDetail(Map<String, dynamic> activity) {
+    final languageProvider = context.read<LanguageProvider>();
+    final primaryColor = _getPrimaryColor();
+    final isAssignment = activity['jenis'] == 'tugas';
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header dengan gradient
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        activity['jenis'] == 'tugas'
-                            ? Icons.assignment
-                            : Icons.menu_book,
-                        size: 30,
-                        color: _getPrimaryColor(),
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      activity['title'] ??
-                          activity['judul'] ??
-                          AppLocalizations.activityTitle.tr,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      '${activity['subject_name'] ?? activity['mata_pelajaran_nama'] ?? '-'} • ${activity['class_name'] ?? activity['kelas_nama'] ?? '-'}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Gradient header
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [primaryColor, primaryColor.withValues(alpha: 0.75)],
                 ),
               ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isAssignment
+                          ? Icons.assignment_rounded
+                          : Icons.menu_book_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isAssignment
+                              ? languageProvider.getTranslatedText({'en': 'Assignment', 'id': 'Tugas'})
+                              : languageProvider.getTranslatedText({'en': 'Material', 'id': 'Materi'}),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          activity['title'] ??
+                              activity['judul'] ??
+                              AppLocalizations.activityTitle.tr,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-              // Content
-              Padding(
+            // Content
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: 400),
+              child: SingleChildScrollView(
                 padding: EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDetailItem(
-                      icon: Icons.person,
-                      label: 'Guru Pengajar',
-                      value:
-                          activity['teacher_name'] ??
+                    _buildDetailRow(
+                      Icons.person_rounded,
+                      languageProvider.getTranslatedText({'en': 'Teacher', 'id': 'Guru Pengajar'}),
+                      activity['teacher_name'] ??
                           activity['guru_nama'] ??
                           AppLocalizations.unknown.tr,
                     ),
-                    _buildDetailItem(
-                      icon: Icons.calendar_today,
-                      label: AppLocalizations.day.tr,
-                      value: activity['day'] ?? activity['hari'] ?? '-',
+                    _buildDetailRow(
+                      Icons.menu_book_rounded,
+                      languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'}),
+                      activity['subject_name'] ??
+                          activity['mata_pelajaran_nama'] ?? '-',
                     ),
-                    _buildDetailItem(
-                      icon: Icons.date_range,
-                      label: AppLocalizations.date.tr,
-                      value: _formatDate(
-                        activity['date'] ?? activity['tanggal'],
-                      ),
+                    _buildDetailRow(
+                      Icons.calendar_today_rounded,
+                      languageProvider.getTranslatedText({'en': 'Date', 'id': 'Tanggal'}),
+                      '${activity['day'] ?? activity['hari'] ?? '-'} • ${_formatDate(activity['date'] ?? activity['tanggal'])}',
                     ),
-                    if (activity['jenis'] == 'tugas')
-                      _buildDetailItem(
-                        icon: Icons.access_time,
-                        label: AppLocalizations.deadline.tr,
-                        value: _formatDate(
-                          activity['deadline'] ?? activity['batas_waktu'],
-                        ),
+                    if (isAssignment &&
+                        (activity['deadline'] ?? activity['batas_waktu']) != null)
+                      _buildDetailRow(
+                        Icons.access_time_rounded,
+                        AppLocalizations.deadline.tr,
+                        _formatDate(activity['deadline'] ?? activity['batas_waktu']),
+                        iconColor: ColorUtils.error600,
                       ),
-
                     if (activity['deskripsi'] != null &&
                         activity['deskripsi'].toString().isNotEmpty &&
-                        activity['deskripsi'] != 'null') ...[
-                      SizedBox(height: 16),
-                      Text(
+                        activity['deskripsi'] != 'null')
+                      _buildDetailRow(
+                        Icons.description_rounded,
                         AppLocalizations.description.tr,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade700,
-                        ),
+                        activity['deskripsi'].toString(),
                       ),
-                      SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Text(
-                          activity['deskripsi'],
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
+                    if (activity['judul_bab'] != null)
+                      _buildDetailRow(
+                        Icons.auto_stories_rounded,
+                        languageProvider.getTranslatedText({'en': 'Chapter', 'id': 'Materi'}),
+                        '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? '\n• ${activity['judul_sub_bab']}' : ''}',
                       ),
-                    ],
-
-                    if (activity['judul_bab'] != null ||
-                        activity['judul_sub_bab'] != null) ...[
-                      SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.chapterInfo.tr,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      if (activity['judul_bab'] != null)
-                        _buildDetailItem(
-                          icon: Icons.menu_book,
-                          label: AppLocalizations.chapter.tr,
-                          value: activity['judul_bab'],
-                        ),
-                      if (activity['judul_sub_bab'] != null)
-                        _buildDetailItem(
-                          icon: Icons.bookmark,
-                          label: AppLocalizations.mainSubChapter.tr,
-                          value: activity['judul_sub_bab'],
-                        ),
-                      if (activity['additional_material'] != null &&
-                          activity['additional_material'] is List &&
-                          (activity['additional_material'] as List)
-                              .isNotEmpty) ...[
-                        SizedBox(height: 8),
-                        ...(activity['additional_material'] as List)
-                            .map<Widget>((item) {
-                              return _buildDetailItem(
-                                icon: Icons.bookmark_add,
-                                label: AppLocalizations.additionalSubChapter.tr,
-                                value:
-                                    item['sub_chapter_title'] ??
-                                    AppLocalizations.unknown.tr,
-                              );
-                            }),
-                      ],
-                    ],
+                    if (activity['additional_material'] != null &&
+                        activity['additional_material'] is List &&
+                        (activity['additional_material'] as List).isNotEmpty)
+                      ...(activity['additional_material'] as List)
+                          .map<Widget>((item) {
+                            return _buildDetailRow(
+                              Icons.bookmark_add_rounded,
+                              AppLocalizations.additionalSubChapter.tr,
+                              item['sub_chapter_title'] ??
+                                  AppLocalizations.unknown.tr,
+                            );
+                          }),
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getPrimaryColor(),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
+            ),
+
+            // Footer
+            Container(
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: ColorUtils.slate100)),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(color: ColorUtils.slate300),
+                    foregroundColor: ColorUtils.slate700,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      AppLocalizations.close.tr,
-                      style: TextStyle(color: Colors.white),
-                    ),
+                  ),
+                  child: Text(
+                    AppLocalizations.close.tr,
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailItem({
-    required IconData icon,
-    required String label,
-    required String value,
+  Widget _buildDetailRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? iconColor,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+    final c = iconColor ?? _getPrimaryColor();
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.all(8),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: _getPrimaryColor().withOpacity(0.1),
+              color: c.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 16, color: _getPrimaryColor()),
+            child: Icon(icon, size: 18, color: c),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -559,7 +546,11 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: ColorUtils.slate500,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 SizedBox(height: 2),
                 Text(
@@ -567,7 +558,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade800,
+                    color: ColorUtils.slate800,
                   ),
                 ),
               ],
@@ -578,7 +569,43 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     );
   }
 
+  // Pattern #8 info tag chip
+  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
+    final c = tagColor ?? ColorUtils.slate600;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: tagColor != null
+            ? tagColor.withValues(alpha: 0.08)
+            : ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: tagColor != null
+              ? tagColor.withValues(alpha: 0.3)
+              : ColorUtils.slate200,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: c),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              color: c,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActivityList() {
+    final languageProvider = context.read<LanguageProvider>();
+
     if (_selectedStudentId == null) {
       return _buildEmptyState(AppLocalizations.selectChildToViewActivity.tr);
     }
@@ -592,7 +619,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _activityList.length,
       itemBuilder: (context, index) {
         final activity = _activityList[index];
@@ -604,363 +631,173 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
             activity['is_read'] == 1 ||
             activity['is_read'] == '1';
 
+        final accentColor = isAssignment
+            ? ColorUtils.warning600
+            : ColorUtils.success600;
+
         return Builder(
           builder: (context) {
             _onItemVisible(activity);
             return Container(
-              margin: EdgeInsets.symmetric(vertical: 6, horizontal: 0),
+              margin: EdgeInsets.symmetric(vertical: 5),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => _showActivityDetail(activity),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                   child: Container(
+                    padding: EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: isRead
-                          ? Colors.white
-                          : Colors.red.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.3),
-                          blurRadius: 5,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ColorUtils.slate200),
+                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
-                    child: Stack(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Strip berwarna di pinggir kiri
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 6,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor(),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                              ),
+                        // Icon container
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: accentColor.withValues(alpha: 0.25),
                             ),
                           ),
-                        ),
-
-                        // Background pattern effect (Indicator)
-                        Positioned(
-                          right: -8,
-                          top: -8,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: isRead
-                                  ? Colors.transparent
-                                  : Colors.red.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: isRead
-                                      ? Colors.transparent
-                                      : Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
+                          child: Icon(
+                            isAssignment
+                                ? Icons.assignment_outlined
+                                : Icons.menu_book_outlined,
+                            color: accentColor,
+                            size: 22,
                           ),
                         ),
-
-                        // Badge
-                        Positioned(
-                          top: 12,
-                          right: 12,
+                        SizedBox(width: 12),
+                        // Content
+                        Expanded(
                           child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isAssignment
-                                      ? Colors.orange
-                                      : Colors.blue,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  isAssignment
-                                      ? AppLocalizations.assignment.tr
-                                      : AppLocalizations.material.tr,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              if (isSpecificTarget && isForThisStudent) ...[
-                                SizedBox(height: 4),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.purple,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    'KHUSUS',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              // Activity Header
                               Row(
                                 children: [
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: _getPrimaryColor(),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      isAssignment
-                                          ? Icons.assignment
-                                          : Icons.menu_book,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
                                   Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          activity['judul'] ??
-                                              AppLocalizations.activityTitle.tr,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          '${activity['mata_pelajaran_nama']} • ${activity['kelas_nama']}',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                          ),
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          '${activity['hari']} • ${_formatDate(activity['tanggal'])}',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
+                                    child: Text(
+                                      activity['judul'] ??
+                                          AppLocalizations.activityTitle.tr,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                        color: ColorUtils.slate900,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
+                                  // Unread dot
+                                  if (!isRead) ...[
+                                    SizedBox(width: 8),
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: ColorUtils.error600,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
-
-                              SizedBox(height: 8),
-
-                              // Activity Details
-                              if (activity['deskripsi'] != null &&
-                                  activity['deskripsi'].isNotEmpty)
-                                Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    activity['deskripsi'],
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 14,
-                                    ),
-                                  ),
+                              SizedBox(height: 3),
+                              Text(
+                                '${activity['mata_pelajaran_nama'] ?? '-'} • ${activity['kelas_nama'] ?? '-'}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: ColorUtils.slate600,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
 
+                              // Description preview
+                              if (activity['deskripsi'] != null &&
+                                  activity['deskripsi'].toString().isNotEmpty &&
+                                  activity['deskripsi'] != 'null') ...[
+                                SizedBox(height: 6),
+                                Text(
+                                  activity['deskripsi'].toString(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: ColorUtils.slate500,
+                                    height: 1.4,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+
+                              // Chapter info
                               if (activity['judul_bab'] != null) ...[
-                                SizedBox(height: 8),
-                                Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.check_circle,
-                                            size: 14,
-                                            color: Colors.green,
-                                          ),
-                                          SizedBox(width: 6),
-                                          Expanded(
-                                            child: Text(
-                                              '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? ' • ${activity['judul_sub_bab']}' : ''}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey.shade700,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Icon(Icons.auto_stories_rounded, size: 12, color: ColorUtils.info600),
+                                    SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? ' • ${activity['judul_sub_bab']}' : ''}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: ColorUtils.slate600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      if (activity['additional_material'] !=
-                                              null &&
-                                          activity['additional_material']
-                                              is List &&
-                                          (activity['additional_material']
-                                                  as List)
-                                              .isNotEmpty) ...[
-                                        SizedBox(height: 4),
-                                        ...(activity['additional_material']
-                                                as List)
-                                            .map<Widget>((item) {
-                                              return Padding(
-                                                padding: const EdgeInsets.only(
-                                                  top: 4.0,
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.add_circle_outline,
-                                                      size: 14,
-                                                      color: Colors.blue,
-                                                    ),
-                                                    SizedBox(width: 6),
-                                                    Expanded(
-                                                      child: Text(
-                                                        item['sub_chapter_title'] ??
-                                                            AppLocalizations
-                                                                .unknown
-                                                                .tr,
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          color: Colors
-                                                              .grey
-                                                              .shade700,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            }),
-                                      ],
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ],
 
                               SizedBox(height: 8),
-                              Row(
+
+                              // Info tags
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
                                 children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isSpecificTarget
-                                          ? Colors.purple.shade50
-                                          : Colors.green.shade50,
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: isSpecificTarget
-                                            ? Colors.purple
-                                            : Colors.green,
-                                        width: 0.5,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          isSpecificTarget
-                                              ? Icons.person
-                                              : Icons.group,
-                                          size: 12,
-                                          color: isSpecificTarget
-                                              ? Colors.purple
-                                              : Colors.green,
-                                        ),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          isSpecificTarget
-                                              ? 'Khusus Siswa'
-                                              : 'Semua Siswa',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: isSpecificTarget
-                                                ? Colors.purple
-                                                : Colors.green,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  _buildInfoTag(
+                                    isAssignment ? Icons.assignment_outlined : Icons.menu_book_outlined,
+                                    isAssignment
+                                        ? AppLocalizations.assignment.tr
+                                        : AppLocalizations.material.tr,
+                                    tagColor: accentColor,
                                   ),
-                                  Spacer(),
-                                  if (isAssignment &&
-                                      activity['batas_waktu'] != null)
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red.shade50,
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(
-                                          color: Colors.red.shade300,
-                                          width: 0.5,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'Batas: ${_formatDate(activity['batas_waktu'])}',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.red.shade700,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                  _buildInfoTag(
+                                    Icons.calendar_today_outlined,
+                                    '${activity['hari'] ?? '-'} • ${_formatDate(activity['tanggal'])}',
+                                  ),
+                                  _buildInfoTag(
+                                    isSpecificTarget ? Icons.person_outlined : Icons.group_outlined,
+                                    isSpecificTarget
+                                        ? languageProvider.getTranslatedText({'en': 'Specific', 'id': 'Khusus'})
+                                        : languageProvider.getTranslatedText({'en': 'All Students', 'id': 'Semua'}),
+                                    tagColor: isSpecificTarget
+                                        ? ColorUtils.info600
+                                        : ColorUtils.success600,
+                                  ),
+                                  if (isAssignment && activity['batas_waktu'] != null)
+                                    _buildInfoTag(
+                                      Icons.access_time_rounded,
+                                      '${languageProvider.getTranslatedText({'en': 'Due', 'id': 'Batas'})}: ${_formatDate(activity['batas_waktu'])}',
+                                      tagColor: ColorUtils.error600,
+                                    ),
+                                  if (isSpecificTarget && isForThisStudent)
+                                    _buildInfoTag(
+                                      Icons.star_outline_rounded,
+                                      languageProvider.getTranslatedText({'en': 'For this child', 'id': 'Untuk anak ini'}),
+                                      tagColor: ColorUtils.corporateBlue600,
                                     ),
                                 ],
                               ),
@@ -986,13 +823,25 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_note, size: 80, color: Colors.grey.shade300),
-            SizedBox(height: 20),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: ColorUtils.slate100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.event_note_outlined,
+                size: 36,
+                color: ColorUtils.slate400,
+              ),
+            ),
+            SizedBox(height: 16),
             Text(
               message,
               style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
+                fontSize: 14,
+                color: ColorUtils.slate500,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -1004,17 +853,21 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Widget _buildLoadingState() {
+    final languageProvider = context.read<LanguageProvider>();
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4F46E5)),
+            valueColor: AlwaysStoppedAnimation<Color>(_getPrimaryColor()),
           ),
           SizedBox(height: 16),
           Text(
-            'Memuat aktivitas...',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+            languageProvider.getTranslatedText({
+              'en': 'Loading activities...',
+              'id': 'Memuat aktivitas...',
+            }),
+            style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
           ),
         ],
       ),
@@ -1027,7 +880,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Color _getPrimaryColor() {
-    return Color(0xFF9333EA); // Warna purple untuk wali murid
+    return ColorUtils.getRoleColor('wali');
   }
 
   LinearGradient _getCardGradient() {
@@ -1035,11 +888,12 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withOpacity(0.7)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
     );
   }
 
   Widget _buildHeader() {
+    final languageProvider = context.read<LanguageProvider>();
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
@@ -1052,7 +906,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         gradient: _getCardGradient(),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.3),
+            color: _getPrimaryColor().withValues(alpha: 0.3),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -1069,7 +923,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -1093,16 +947,23 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                       AppLocalizations.monitorChildActivity.tr,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: Icon(Icons.refresh, color: Colors.white),
-                onPressed: _loadActivities,
-                tooltip: 'Refresh',
+              GestureDetector(
+                onTap: _loadActivities,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.refresh, color: Colors.white, size: 20),
+                ),
               ),
             ],
           ),
@@ -1110,13 +971,24 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.family_restroom, color: Colors.white, size: 16),
-                SizedBox(width: 8),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.family_restroom, color: Colors.white, size: 18),
+                ),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1124,17 +996,17 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                       Text(
                         _parentName,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                       SizedBox(height: 2),
                       Text(
-                        '${_studentList.length} Anak',
+                        '${_studentList.length} ${languageProvider.getTranslatedText({'en': 'Children', 'id': 'Anak'})}',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -1151,7 +1023,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
           _buildHeader(),
