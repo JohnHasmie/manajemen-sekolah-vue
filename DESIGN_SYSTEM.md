@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.12
+**Version:** 2.13
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity, Wali Murid Grade
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity, Wali Murid Grade, Wali Murid Billing
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2674,6 +2674,24 @@ Container(
   - **Removed unused `_parentName`**: Field was set but never displayed; cleaned up along with unused `provider` import
   - **Zero raw colors**: All `Colors.grey.shade*`, `Colors.red`, `Color(0xFFF8F9FA)`, hardcoded hex colors, `withOpacity()` fully eliminated
 
+✅ **Wali Murid Billing** (`lib/screen/walimurid/parent_billing.dart`) - Full redesign (v2.13):
+  - **`_getPrimaryColor()`**: `ColorUtils.getRoleColor('wali')` replacing hardcoded `Color(0xFF9333EA)`
+  - **`_getCardGradient()`**: `withValues(alpha: 0.85)` replacing `withOpacity(0.7)`
+  - **`_getStatusColor()`**: `success600/warning600/error600/slate400` replacing `Colors.green/orange/red/grey`
+  - **Header** (#7): Gradient with flat bottom; 40×40 semi-transparent back/filter buttons; inline student picker with `_showStudentPicker()` bottom sheet; semi-transparent search bar (`white*0.15`); 44×44 filter toggle with active state
+  - **`_showStudentPicker()`**: Bottom sheet with drag handle `slate300`, title `slate900 w700 fontSize:18`; cards with `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`; 48×48 CircleAvatar `corporateBlue600.withValues(alpha:0.15)`; selected indicator `primaryColor` check icon; close button `slate50` bg + `slate300` border
+  - **Filter sheet** (#11): Gradient header with icon+title+reset; `_buildSectionHeader()` with 32×32 icon container `slate100` bg; `FilterChip` with `primaryColor.withValues(alpha:0.15)` selected bg + `primaryColor` border; footer Cancel `slate300` side + Apply `primaryColor` elevated
+  - **Billing cards** (#8): `Material > InkWell > Container` — `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`; 54×54 status icon container `statusColor.withValues(alpha:0.1)` bg + `0.25` border; `Wrap(_buildInfoTag)` chips for status (colored), student, class, due date; 8×8 unread dot `error600`; rejected notes container `error600.withValues(alpha:0.04)` bg + `0.15` border; pay now button with shadow; no Stack/accent strip/decorative circle
+  - **`_buildInfoTag`**: Pill chip `px:6 py:3`, icon(10)+text(10), optional `tagColor`, alpha `0.08` bg + `0.3` border
+  - **Upload dialog** (#10): `Dialog(clipBehavior: Clip.antiAlias)`; gradient header with 44×44 icon container `white*0.2` bg; `_buildDetailRow` for bill info; `DropdownButtonFormField` with `slate50` fill + `slate200` border; file upload area with 48×48 icon container `primaryColor/success600.withValues(alpha:0.1)` bg + status-dependent colors; footer `slate50` bg + `slate200` top border — Cancel `slate300` side + Upload `primaryColor` elevated
+  - **Payment detail dialog** (#10): `Dialog(clipBehavior: Clip.antiAlias)`; gradient header with 44×44 icon container; `_buildDetailRow` for status/method/date/amount; payment receipt image with `slate100` error fallback container + `slate400` broken_image icon; footer `slate50` bg + `slate200` top border — `OutlinedButton` close `slate300` side
+  - **`_buildDetailRow`**: 36×36 icon container `color.withValues(alpha:0.1)` bg + `borderRadius:10`; label `slate500 fontSize:12`; value `slate800 fontSize:14 w600`; optional `iconColor` param
+  - **`_buildDialogTextField`**: `slate50` fill + `slate200` border + `slate600` label style; `primaryColor` prefix icon
+  - **Filter chips row**: `primaryColor.withValues(alpha:0.3)` chip border; clear all button `error600.withValues(alpha:0.1/0.3)` replacing `Colors.red.withOpacity`
+  - **Snackbars**: `ColorUtils.success600/error600` replacing `Colors.green.shade400/red.shade400/red` with `SnackBarBehavior.floating`
+  - **Scaffold**: `ColorUtils.slate50` replacing `Color(0xFFF8F9FA)`
+  - **Zero raw colors**: All `Colors.grey.shade*`, `Colors.red`, `Colors.green`, hardcoded hex colors, `withOpacity()` fully eliminated
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2695,6 +2713,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.12
+**Design System Version:** 2.13
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
