@@ -3,7 +3,7 @@
 **Last Updated:** 2026-02-18
 **Version:** 1.9
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2496,6 +2496,20 @@ Container(
   - **Scaffold**: `ColorUtils.slate50` background replacing `Color(0xFFF8F9FA)`
   - **Zero raw colors**: `Colors.grey`, `withOpacity`, `Colors.orange/purple/green/red`, left accent strips fully eliminated
 
+✅ **Admin Presence Report** - Full redesign (v2.0 final):
+  - **Header** (#7): Both `AdminPresenceReportScreen` and `AdminAbsensiDetailPage` — `_getCardGradient()` fixed to `[primaryColor, primaryColor.withValues(alpha:0.85)]`; `AdminAbsensiDetailPage` AppBar replaced with inline Pattern #7 gradient header (back button, title/subject/date, edit/check/popup actions); old "Header Info Card" Container removed
+  - **Filter sheet** (#11): Gradient header with Icon+Title; section headers using `Row(Icon+Text)` with `ColorUtils.slate700`; FilterChips with `Colors.white` background + `selectedColor: primaryColor.withValues(alpha:0.2)` + `checkmarkColor: primaryColor`; Cancel + Apply footer with border+shadow, `BorderRadius.circular(12)` buttons
+  - **Class list** (`_buildClassList`, #8): `Material > InkWell > Container` — `corporateShadow(elevation:1.0)`, 44×44 colored icon container with `getColorForIndex(index)`, class name + grade `_buildInfoTag`, slate100 chevron container on right
+  - **Summary cards** (`_buildSummaryCard`, #8): Clean white card with `corporateShadow(elevation:1.5)`, slate200 border, 44×44 book icon container, attendance `_buildInfoTag` chips (present/absent/total), `LinearProgressIndicator` with `success600`/`warning600`/`error600` based on percentage, detail button; no accent strip or decorative circle
+  - **`_buildInfoTag`**: Reusable pill chip `px:6 py:3`, icon(10)+text(10), optional `tagColor` — same pattern as Announcement/Class Activity
+  - **Student cards** (`_buildStudentCard`, AdminAbsensiDetailPage): `CircleAvatar(radius:22)` with `getColorForIndex(index)` + 0.15 alpha bg, name + NIS row, status badge chip, edit-mode quick-status buttons; no Stack/Positioned, no accent strip
+  - **Stat cards** (`_buildStatCard`): Flat style `color.withValues(alpha:0.1)` background + `color.withValues(alpha:0.2)` border, 36×36 circle icon, count text in `color`, label text in `color.withValues(alpha:0.8)`; uses `success600`/`warning600`/`error600`/`info600`/`Color(0xFF7C3AED)` for semantic meaning
+  - **Delete dialog** (#14): Pattern #14 danger dialog with `error600` gradient header, Cancel + Delete buttons
+  - **AttendanceDataSource**: `CircleAvatar` uses `corporateBlue600`; grid cell borders use `slate200`; `_getStatusColor`/`_getStatusTextColor` use `success600`/`warning600`/`info600`/`error600`
+  - **Snackbars**: `success600`/`warning600`/`error600` replacing raw green/orange/red
+  - **Scaffold**: `slate50` background
+  - **Zero raw colors**: All `Colors.grey`, `withOpacity()`, `Colors.red/green/blue/orange/purple` fully eliminated
+
 ✅ **Grade (Nilai) Page** - Four classes redesigned:
   - `GradePage`: Gradient header (#7) with search embedded, class/subject selection cards (#8) with color-coded avatar + `_buildInfoTag`
   - `GradeBookPage`: Gradient header (#7) with inline export + filter action buttons (40×40 semi-transparent), filter bottom sheet (#11) with toggle chips, styled assessment detail dialog (#10), danger confirm dialog (#14) for delete
@@ -2523,6 +2537,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 1.9
+**Design System Version:** 2.0
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team

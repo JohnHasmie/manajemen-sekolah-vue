@@ -210,7 +210,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
             content: Text(
               'Gagal memuat data filter: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
           ),
         );
       }
@@ -488,7 +488,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
             content: Text(
               'Gagal memuat data laporan: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
           ),
         );
       }
@@ -503,7 +503,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor()],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
     );
   }
 
@@ -528,7 +528,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -560,7 +560,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                     ),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: _getPrimaryColor().withOpacity(0.1),
+                        backgroundColor: _getPrimaryColor().withValues(alpha: 0.1),
                         child: Text(
                           (teacher['name'] ?? 'G')[0].toUpperCase(),
                           style: TextStyle(color: _getPrimaryColor()),
@@ -619,24 +619,37 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
             children: [
               // Header
               Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Filter',
-                        'id': 'Filter',
-                      }),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.tune, color: Colors.white, size: 22),
+                        SizedBox(width: 10),
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Filter',
+                            'id': 'Filter',
+                          }),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                     TextButton(
                       onPressed: () {
@@ -653,7 +666,10 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                           'en': 'Reset',
                           'id': 'Reset',
                         }),
-                        style: TextStyle(color: _getPrimaryColor()),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -667,15 +683,22 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Date Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Date Range',
-                          'id': 'Rentang Tanggal',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.date_range, size: 16, color: ColorUtils.slate700),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Date Range',
+                              'id': 'Rentang Tanggal',
+                            }),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: ColorUtils.slate900,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 12),
                       Wrap(
@@ -705,13 +728,13 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                 tempSelectedDate = selected ? period : null;
                               });
                             },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
+                            backgroundColor: Colors.white,
+                            selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
                             checkmarkColor: _getPrimaryColor(),
                             labelStyle: TextStyle(
                               color: isSelected
                                   ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
+                                  : ColorUtils.slate600,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -722,15 +745,22 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                       SizedBox(height: 24),
 
                       // Subject Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Subject',
-                          'id': 'Mata Pelajaran',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.book_outlined, size: 16, color: ColorUtils.slate700),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Subject',
+                              'id': 'Mata Pelajaran',
+                            }),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: ColorUtils.slate900,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 12),
                       Wrap(
@@ -754,13 +784,13 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                 }
                               });
                             },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
+                            backgroundColor: Colors.white,
+                            selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
                             checkmarkColor: _getPrimaryColor(),
                             labelStyle: TextStyle(
                               color: isSelected
                                   ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
+                                  : ColorUtils.slate600,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -771,15 +801,22 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                       SizedBox(height: 24),
 
                       // Day Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Day',
-                          'id': 'Hari',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today_outlined, size: 16, color: ColorUtils.slate700),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Day',
+                              'id': 'Hari',
+                            }),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: ColorUtils.slate900,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 12),
                       Wrap(
@@ -813,15 +850,13 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                     }
                                   });
                                 },
-                                backgroundColor: Colors.grey.shade100,
-                                selectedColor: _getPrimaryColor().withOpacity(
-                                  0.2,
-                                ),
+                                backgroundColor: Colors.white,
+                                selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
                                 checkmarkColor: _getPrimaryColor(),
                                 labelStyle: TextStyle(
                                   color: isSelected
                                       ? _getPrimaryColor()
-                                      : Colors.grey.shade700,
+                                      : ColorUtils.slate600,
                                   fontWeight: isSelected
                                       ? FontWeight.bold
                                       : FontWeight.normal,
@@ -832,15 +867,22 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                       SizedBox(height: 24),
 
                       // Lesson Hour Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Lesson Hour',
-                          'id': 'Jam Pelajaran',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time_outlined, size: 16, color: ColorUtils.slate700),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Lesson Hour',
+                              'id': 'Jam Pelajaran',
+                            }),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: ColorUtils.slate900,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 12),
                       Wrap(
@@ -864,13 +906,13 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                 }
                               });
                             },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
+                            backgroundColor: Colors.white,
+                            selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
                             checkmarkColor: _getPrimaryColor(),
                             labelStyle: TextStyle(
                               color: isSelected
                                   ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
+                                  : ColorUtils.slate600,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -881,15 +923,22 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                       SizedBox(height: 24),
 
                       // Class Filter
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Class',
-                          'id': 'Kelas',
-                        }),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.class_outlined, size: 16, color: ColorUtils.slate700),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Class',
+                              'id': 'Kelas',
+                            }),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: ColorUtils.slate900,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 12),
                       Wrap(
@@ -913,13 +962,13 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                 }
                               });
                             },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: _getPrimaryColor().withOpacity(0.2),
+                            backgroundColor: Colors.white,
+                            selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
                             checkmarkColor: _getPrimaryColor(),
                             labelStyle: TextStyle(
                               color: isSelected
                                   ? _getPrimaryColor()
-                                  : Colors.grey.shade700,
+                                  : ColorUtils.slate600,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -934,21 +983,35 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
               // Apply Button
               Container(
                 padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: ColorUtils.slate900.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: Offset(0, -2),
+                    ),
+                  ],
+                ),
                 child: Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: _getPrimaryColor()),
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(color: ColorUtils.slate300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: Text(
                           languageProvider.getTranslatedText({
                             'en': 'Cancel',
                             'id': 'Batal',
                           }),
-                          style: TextStyle(color: _getPrimaryColor()),
+                          style: TextStyle(color: ColorUtils.slate700),
                         ),
                       ),
                     ),
@@ -968,8 +1031,11 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                           _loadData(); // Reload data with new filters
                         },
                         style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          padding: EdgeInsets.symmetric(vertical: 14),
                           backgroundColor: _getPrimaryColor(),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: Text(
                           languageProvider.getTranslatedText({
@@ -1010,7 +1076,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
             'en': 'No classes found',
             'id': 'Tidak ada data kelas',
           }),
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: ColorUtils.slate400),
         ),
       );
     }
@@ -1041,38 +1107,9 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                 ),
               );
             },
-            child: Card(
-              elevation: 2,
-              margin: EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                leading: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _getPrimaryColor().withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.class_, color: _getPrimaryColor()),
-                ),
-                title: Text(
-                  kelas['name'] ?? 'Unknown Class',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                subtitle: Text(
-                  '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${kelas['grade_level'] ?? '-'}',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Colors.grey,
-                ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
                 onTap: () {
                   setState(() {
                     _selectedClassData = kelas;
@@ -1081,6 +1118,53 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                     _animationController.forward(from: 0.0);
                   });
                 },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: ColorUtils.slate200),
+                    boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: _getPrimaryColor().withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.15)),
+                        ),
+                        child: Icon(Icons.class_, color: _getPrimaryColor(), size: 22),
+                      ),
+                      SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              kelas['name'] ?? 'Unknown Class',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: ColorUtils.slate900,
+                              ),
+                            ),
+                            SizedBox(height: 3),
+                            Text(
+                              '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${kelas['grade_level'] ?? '-'}',
+                              style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios, size: 14, color: ColorUtils.slate400),
+                    ],
+                  ),
+                ),
               ),
             ),
           );
@@ -1103,7 +1187,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
               'id': 'Mohon pilih kelas terlebih dahulu',
             }),
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: ColorUtils.error600,
         ),
       );
       setState(() => _showTableView = false);
@@ -1277,14 +1361,14 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.class_outlined, size: 64, color: Colors.grey),
+            Icon(Icons.class_outlined, size: 64, color: ColorUtils.slate400),
             SizedBox(height: 16),
             Text(
               languageProvider.getTranslatedText({
                 'en': 'Please select a class to view the table',
                 'id': 'Silakan pilih kelas untuk melihat tabel',
               }),
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: ColorUtils.slate600),
             ),
           ],
         ),
@@ -1329,7 +1413,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: ColorUtils.slate100,
             blurRadius: 10,
             spreadRadius: 2,
             offset: Offset(0, 4),
@@ -1351,7 +1435,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                 cells: [
                   StackedHeaderCell(
                     child: Container(
-                      color: _getPrimaryColor().withOpacity(0.05),
+                      color: _getPrimaryColor().withValues(alpha: 0.05),
                     ),
                     columnNames: ['student_info'],
                   ),
@@ -1387,7 +1471,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
               cells: [
                 StackedHeaderCell(
                   child: Container(
-                    color: _getPrimaryColor().withOpacity(0.05),
+                    color: _getPrimaryColor().withValues(alpha: 0.05),
                     alignment: Alignment.centerLeft,
                     padding: EdgeInsets.only(left: 16),
                     child: Text(
@@ -1415,7 +1499,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
 
                   return StackedHeaderCell(
                     child: Container(
-                      color: _getPrimaryColor().withOpacity(0.1),
+                      color: _getPrimaryColor().withValues(alpha: 0.1),
                       alignment: Alignment.center,
                       child: Text(
                         dayLabel,
@@ -1438,7 +1522,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
             GridColumn(
               columnName: 'student_info',
               width: 250,
-              label: Container(color: _getPrimaryColor().withOpacity(0.05)),
+              label: Container(color: _getPrimaryColor().withValues(alpha: 0.05)),
             ),
             ..._uniqueDates.expand((date) {
               return _uniqueSubjectIds.map((sId) {
@@ -1453,7 +1537,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                     decoration: BoxDecoration(
                       border: Border(
                         right: BorderSide(
-                          color: Colors.grey.withOpacity(0.2),
+                          color: ColorUtils.slate200,
                           width: 0.5,
                         ),
                       ),
@@ -1466,7 +1550,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
+                        color: ColorUtils.slate600,
                       ),
                     ),
                   ),
@@ -1511,264 +1595,166 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
           onTap: () => _navigateToDetailAbsensi(summary),
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 5,
-                  offset: Offset(0, 4),
-                ),
-              ],
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
             ),
-            child: Stack(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Strip biru di pinggir kiri
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 6,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor(),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
+                // Header row: subject name + student count badge + delete button
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Subject icon
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _getPrimaryColor().withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.15)),
+                      ),
+                      child: Icon(Icons.book_outlined, color: _getPrimaryColor(), size: 20),
+                    ),
+                    SizedBox(width: 12),
+                    // Subject + class + date info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            summary.subjectName,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate900,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(Icons.class_outlined, size: 12, color: _getPrimaryColor()),
+                              SizedBox(width: 4),
+                              Text(
+                                summary.className,
+                                style: TextStyle(fontSize: 12, color: _getPrimaryColor(), fontWeight: FontWeight.w500),
+                              ),
+                              if (summary.lessonHourName != null && summary.lessonHourName!.isNotEmpty) ...[
+                                Text(' • ', style: TextStyle(color: ColorUtils.slate400, fontSize: 12)),
+                                Text(
+                                  summary.lessonHourName!,
+                                  style: TextStyle(fontSize: 12, color: ColorUtils.slate600, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ],
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(summary.date),
+                            style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ),
-
-                // Background pattern effect
-                Positioned(
-                  right: -8,
-                  top: -8,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      shape: BoxShape.circle,
+                    SizedBox(width: 8),
+                    // Delete button
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _deleteAbsensi(summary, languageProvider),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: ColorUtils.error600.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: ColorUtils.error600.withValues(alpha: 0.2)),
+                          ),
+                          child: Icon(Icons.delete_outline, size: 16, color: ColorUtils.error600),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
 
-                // Delete button
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => _deleteAbsensi(summary, languageProvider),
-                      borderRadius: BorderRadius.circular(20),
+                SizedBox(height: 12),
+                Divider(color: ColorUtils.slate100, height: 1),
+                SizedBox(height: 10),
+
+                // Attendance info row
+                Row(
+                  children: [
+                    _buildInfoTag(
+                      icon: Icons.check_circle_outline,
+                      label: '${summary.present} Hadir',
+                      tagColor: ColorUtils.success600,
+                    ),
+                    SizedBox(width: 8),
+                    _buildInfoTag(
+                      icon: Icons.cancel_outlined,
+                      label: '${summary.absent} Absen',
+                      tagColor: ColorUtils.error600,
+                    ),
+                    SizedBox(width: 8),
+                    _buildInfoTag(
+                      icon: Icons.people_outline,
+                      label: '${summary.totalStudents} Siswa',
+                      tagColor: _getPrimaryColor(),
+                    ),
+                    Spacer(),
+                    // Detail button
+                    GestureDetector(
+                      onTap: () => _navigateToDetailAbsensi(summary),
                       child: Container(
-                        padding: EdgeInsets.all(6),
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          shape: BoxShape.circle,
+                          color: _getPrimaryColor().withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.2)),
                         ),
-                        child: Icon(
-                          Icons.delete_outline,
-                          size: 18,
-                          color: Colors.red.shade700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header dengan mata pelajaran, kelas, dan tanggal
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  summary.subjectName,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  summary.className, // Tampilkan nama kelas
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: _getPrimaryColor(),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (summary.lessonHourName != null &&
-                                    summary.lessonHourName!.isNotEmpty) ...[
-                                  SizedBox(height: 2),
-                                  Text(
-                                    summary.lessonHourName!,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[700],
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                                SizedBox(height: 2),
-                                Text(
-                                  DateFormat(
-                                    'EEEE, dd MMMM yyyy',
-                                    'id_ID',
-                                  ).format(summary.date),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey[600],
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: _getPrimaryColor().withOpacity(0.3),
-                              ),
-                            ),
-                            child: Text(
-                              '${summary.totalStudents} Siswa',
-                              style: TextStyle(
-                                color: _getPrimaryColor(),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 12),
-
-                      // Informasi kehadiran
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.people,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Kehadiran',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  '${summary.present} Hadir • ${summary.absent} Tidak Hadir',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 8),
-
-                      // Progress bar
-                      Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Stack(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                return Container(
-                                  width:
-                                      constraints.maxWidth *
-                                      (summary.totalStudents > 0
-                                          ? summary.present /
-                                                summary.totalStudents
-                                          : 0),
-                                  decoration: BoxDecoration(
-                                    color: presentaseHadir >= 80
-                                        ? Colors.green
-                                        : presentaseHadir >= 60
-                                        ? Colors.orange
-                                        : Colors.red,
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                );
-                              },
+                            Icon(Icons.visibility_outlined, size: 12, color: _getPrimaryColor()),
+                            SizedBox(width: 4),
+                            Text(
+                              'Detail',
+                              style: TextStyle(fontSize: 11, color: _getPrimaryColor(), fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
                       ),
+                    ),
+                  ],
+                ),
 
-                      SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          _buildActionButton(
-                            icon: Icons.visibility,
-                            label: 'Detail',
-                            color: _getPrimaryColor(),
-                            onPressed: () => _navigateToDetailAbsensi(summary),
-                          ),
-                        ],
-                      ),
-                    ],
+                SizedBox(height: 10),
+
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: summary.totalStudents > 0 ? summary.present / summary.totalStudents : 0,
+                    minHeight: 6,
+                    backgroundColor: ColorUtils.slate200,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      presentaseHadir >= 80 ? ColorUtils.success600 : presentaseHadir >= 60 ? ColorUtils.warning600 : ColorUtils.error600,
+                    ),
                   ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
+                  style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                 ),
               ],
             ),
@@ -1838,7 +1824,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                         'en': 'Select month(s) to export:',
                         'id': 'Pilih bulan yang akan diexport:',
                       }),
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(fontSize: 12, color: ColorUtils.slate400),
                     ),
                     SizedBox(height: 8),
                     Expanded(
@@ -1933,7 +1919,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                 'id': 'Berhasil mengexport $successCount file',
               }),
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: ColorUtils.success600,
           ),
         );
       }
@@ -1943,7 +1929,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Export failed: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
           ),
         );
       }
@@ -2040,36 +2026,29 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
     );
   }
 
-  Widget _buildActionButton({
+  Widget _buildInfoTag({
     required IconData icon,
     required String label,
-    required Color color,
-    required VoidCallback onPressed,
+    Color? tagColor,
   }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: color),
-            SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+    final color = tagColor ?? ColorUtils.slate600;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500),
+          ),
+        ],
       ),
     );
   }
@@ -2146,40 +2125,85 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Delete Attendance',
-            'id': 'Hapus Absensi',
-          }),
-        ),
-        content: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Are you sure you want to delete this attendance record?',
-            'id': 'Apakah Anda yakin ingin menghapus data absensi ini?',
-          }),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Cancel',
-                'id': 'Batal',
-              }),
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Gradient danger header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [ColorUtils.error600, ColorUtils.error600.withValues(alpha: 0.85)],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.white, size: 24),
+                  SizedBox(width: 10),
+                  Text(
+                    languageProvider.getTranslatedText({'en': 'Delete Attendance', 'id': 'Hapus Absensi'}),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ],
+              ),
             ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Delete',
-                'id': 'Hapus',
-              }),
-              style: TextStyle(color: Colors.red),
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Are you sure you want to delete this attendance record?',
+                      'id': 'Apakah Anda yakin ingin menghapus data absensi ini?',
+                    }),
+                    style: TextStyle(fontSize: 14, color: ColorUtils.slate700),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: ColorUtils.slate300),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: Text(languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
+                              style: TextStyle(color: ColorUtils.slate700)),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            backgroundColor: ColorUtils.error600,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: Text(languageProvider.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
 
@@ -2204,7 +2228,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                 'id': 'Absensi berhasil dihapus',
               }),
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: ColorUtils.success600,
           ),
         );
 
@@ -2218,7 +2242,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
             content: Text(
               'Gagal menghapus absensi: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
           ),
         );
       }
@@ -2258,7 +2282,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
         final filteredSummaries = _getFilteredSummaries();
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.slate50,
           floatingActionButton: FloatingActionButton(
             onPressed: _showTeacherSelectionDialog,
             backgroundColor: _getPrimaryColor(),
@@ -2283,7 +2307,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                   gradient: _getCardGradient(),
                   boxShadow: [
                     BoxShadow(
-                      color: _getPrimaryColor().withOpacity(0.3),
+                      color: _getPrimaryColor().withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),
@@ -2311,7 +2335,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -2345,7 +2369,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                 }),
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -2365,7 +2389,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -2412,7 +2436,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -2465,7 +2489,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -2474,17 +2498,17 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                   child: TextField(
                                     controller: _searchController,
                                     onSubmitted: (_) => setState(() {}),
-                                    style: TextStyle(color: Colors.black87),
+                                    style: TextStyle(color: ColorUtils.slate800),
                                     decoration: InputDecoration(
                                       hintText: languageProvider
                                           .getTranslatedText({
                                             'en': 'Search attendance...',
                                             'id': 'Cari absensi...',
                                           }),
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      hintStyle: TextStyle(color: ColorUtils.slate400),
                                       prefixIcon: Icon(
                                         Icons.search,
-                                        color: Colors.grey,
+                                        color: ColorUtils.slate400,
                                       ),
                                       border: InputBorder.none,
                                       contentPadding: EdgeInsets.symmetric(
@@ -2514,10 +2538,10 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                           decoration: BoxDecoration(
                             color: _hasActiveFilter
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.2),
+                                : Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Stack(
@@ -2542,7 +2566,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                   child: Container(
                                     padding: EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: Colors.red,
+                                      color: ColorUtils.error600,
                                       shape: BoxShape.circle,
                                     ),
                                     constraints: BoxConstraints(
@@ -2578,20 +2602,19 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                                           filter['label'],
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: _getPrimaryColor(),
+                                            color: Colors.white,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                         deleteIcon: Icon(
                                           Icons.close,
                                           size: 16,
-                                          color: Colors.red,
+                                          color: Colors.white.withValues(alpha: 0.8),
                                         ),
                                         onDeleted: filter['onRemove'],
-                                        backgroundColor: Colors.white
-                                            .withOpacity(0.2),
+                                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                                         side: BorderSide(
-                                          color: Colors.white.withOpacity(0.3),
+                                          color: Colors.white.withValues(alpha: 0.4),
                                           width: 1,
                                         ),
                                         shape: RoundedRectangleBorder(
@@ -2617,7 +2640,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen>
                               child: Container(
                                 padding: EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.red,
+                                  color: ColorUtils.error600,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
@@ -2820,7 +2843,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Tidak ada data kegiatan untuk diexport'),
-          backgroundColor: Colors.orange,
+          backgroundColor: ColorUtils.warning600,
         ),
       );
       return;
@@ -2852,7 +2875,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor()],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
     );
   }
 
@@ -2907,7 +2930,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: Guru ID tidak ditemukan'),
-          backgroundColor: Colors.red,
+          backgroundColor: ColorUtils.error600,
         ),
       );
       return;
@@ -2952,7 +2975,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                 'id': 'Absensi berhasil diperbarui ($successCount siswa)',
               }),
             ),
-            backgroundColor: errorCount > 0 ? Colors.orange : Colors.green,
+            backgroundColor: errorCount > 0 ? ColorUtils.warning600 : ColorUtils.success600,
           ),
         );
 
@@ -2971,7 +2994,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
           content: Text(
             'Gagal menyimpan perubahan: ${ErrorUtils.getFriendlyMessage(e)}',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: ColorUtils.error600,
         ),
       );
     }
@@ -2985,207 +3008,109 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
     final status = _getStudentStatus(siswa.id);
     final Color statusColor = _getStatusColor(status);
     final String statusText = _getStatusText(status, languageProvider);
+    final avatarColor = ColorUtils.getColorForIndex(index);
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          final delay = index * 0.1;
-          final animation = CurvedAnimation(
-            parent: _animationController,
-            curve: Interval(delay, 1.0, curve: Curves.easeOut),
-          );
-
-          return FadeTransition(
-            opacity: animation,
-            child: Transform.translate(
-              offset: Offset(0, 50 * (1 - animation.value)),
-              child: child,
-            ),
-          );
-        },
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    blurRadius: 5,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final delay = index * 0.1;
+        final animation = CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(delay, 1.0, curve: Curves.easeOut),
+        );
+        return FadeTransition(
+          opacity: animation,
+          child: Transform.translate(
+            offset: Offset(0, 50 * (1 - animation.value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: ColorUtils.slate200),
+          boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  // Strip biru di pinggir kiri
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 6,
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor(),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: avatarColor.withValues(alpha: 0.15),
+                    child: Text(
+                      siswa.name.isNotEmpty ? siswa.name[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        color: avatarColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
-
-                  // Background pattern effect
-                  Positioned(
-                    right: -8,
-                    top: -8,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: EdgeInsets.all(16),
+                  SizedBox(width: 12),
+                  Expanded(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            // Avatar
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  siswa.name.isNotEmpty
-                                      ? siswa.name[0].toUpperCase()
-                                      : '?',
-                                  style: TextStyle(
-                                    color: _getPrimaryColor(),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-
-                            // Student Info
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    siswa.name,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'NIS: ${siswa.nis}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Status Badge
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: statusColor.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                statusText,
-                                style: TextStyle(
-                                  color: statusColor,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Edit mode status selector
-                        if (_isEditing) ...[
-                          SizedBox(height: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 4,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildQuickStatusButton(
-                                  'hadir',
-                                  'H',
-                                  Colors.green,
-                                  siswa.id,
-                                ),
-                                _buildQuickStatusButton(
-                                  'sakit',
-                                  'S',
-                                  Colors.orange,
-                                  siswa.id,
-                                ),
-                                _buildQuickStatusButton(
-                                  'izin',
-                                  'I',
-                                  Colors.blue,
-                                  siswa.id,
-                                ),
-                                _buildQuickStatusButton(
-                                  'alpha',
-                                  'A',
-                                  Colors.red,
-                                  siswa.id,
-                                ),
-                              ],
-                            ),
+                        Text(
+                          siswa.name,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate900,
                           ),
-                        ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'NIS: ${siswa.nis}',
+                          style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
+                        ),
                       ],
                     ),
                   ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w600),
+                    ),
+                  ),
                 ],
               ),
-            ),
+              if (_isEditing) ...[
+                SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ColorUtils.slate200),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildQuickStatusButton('hadir', 'H', ColorUtils.success600, siswa.id),
+                      _buildQuickStatusButton('sakit', 'S', ColorUtils.warning600, siswa.id),
+                      _buildQuickStatusButton('izin', 'I', ColorUtils.info600, siswa.id),
+                      _buildQuickStatusButton('alpha', 'A', ColorUtils.error600, siswa.id),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -3197,22 +3122,22 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
     switch (status.toLowerCase()) {
       case 'hadir':
       case 'present':
-        return Colors.green;
+        return ColorUtils.success600;
       case 'izin':
       case 'excused':
       case 'permission':
-        return Colors.blue;
+        return ColorUtils.info600;
       case 'sakit':
       case 'sick':
-        return Colors.orange;
+        return ColorUtils.warning600;
       case 'alpha':
       case 'absent':
-        return Colors.red;
+        return ColorUtils.error600;
       case 'terlambat':
       case 'late':
-        return Colors.purple;
+        return Color(0xFF7C3AED);
       default:
-        return Colors.grey;
+        return ColorUtils.slate400;
     }
   }
 
@@ -3305,54 +3230,42 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
   Widget _buildStatCard(String label, int count, Color color, IconData icon) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            width: 100,
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [color.withOpacity(0.8), color.withOpacity(0.6)],
+      child: Container(
+        width: 90,
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
-              ],
+              child: Icon(icon, color: color, size: 18),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: Colors.white, size: 24),
-                SizedBox(height: 8),
-                Text(
-                  count.toString(),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.white.withOpacity(0.9),
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            SizedBox(height: 8),
+            Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
             ),
-          ),
+            SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
@@ -3375,7 +3288,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: isSelected ? color : color.withOpacity(0.1),
+          color: isSelected ? color : color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
           border: Border.all(color: color, width: 1.5),
         ),
@@ -3401,111 +3314,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
         final totalTidakHadir = stats['alpha']!;
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
-          appBar: AppBar(
-            title: Text(
-              _isEditing
-                  ? languageProvider.getTranslatedText({
-                      'en': 'Edit Attendance',
-                      'id': 'Edit Absensi',
-                    })
-                  : languageProvider.getTranslatedText({
-                      'en': 'Attendance Details',
-                      'id': 'Detail Absensi',
-                    }),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            backgroundColor: _getPrimaryColor(),
-            elevation: 0,
-            centerTitle: true,
-            iconTheme: IconThemeData(color: Colors.white),
-            leading: IconButton(
-              icon: Icon(
-                _isEditing ? Icons.close : Icons.arrow_back,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                if (_isEditing) {
-                  setState(() {
-                    _isEditing = false;
-                    // Reset temp status
-                    for (var s in _siswaList) {
-                      _tempAbsensiStatus[s.id] = _getStudentStatus(s.id);
-                    }
-                  });
-                } else {
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  _isEditing ? Icons.check : Icons.edit,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  if (_isEditing) {
-                    _saveChanges();
-                  } else {
-                    setState(() {
-                      _isEditing = true;
-                    });
-                  }
-                },
-              ),
-              if (!_isEditing)
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Colors.white),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'refresh':
-                        _loadData();
-                        break;
-                      case 'export':
-                        exportDetail();
-                        break;
-                    }
-                  },
-                  itemBuilder: (BuildContext context) => [
-                    PopupMenuItem<String>(
-                      value: 'export',
-                      child: Row(
-                        children: [
-                          Icon(Icons.file_download, color: _getPrimaryColor()),
-                          SizedBox(width: 8),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Export to Excel',
-                              'id': 'Export ke Excel',
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'refresh',
-                      child: Row(
-                        children: [
-                          Icon(Icons.refresh, color: _getPrimaryColor()),
-                          SizedBox(width: 8),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Refresh',
-                              'id': 'Refresh',
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-            ],
-          ),
+          backgroundColor: ColorUtils.slate50,
           bottomNavigationBar: _isEditing
               ? SafeArea(
                   child: Container(
@@ -3514,7 +3323,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black12,
+                          color: ColorUtils.slate900.withValues(alpha: 0.12),
                           blurRadius: 10,
                           offset: Offset(0, -4),
                         ),
@@ -3555,78 +3364,149 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                 )
               : Column(
                   children: [
-                    // Header Info Card
+                    // Pattern #7 Inline Gradient Header
                     Container(
-                      margin: EdgeInsets.all(16),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: _getCardGradient(),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _getPrimaryColor().withOpacity(0.2),
-                                  blurRadius: 12,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            padding: EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                Text(
-                                  widget.subjectName,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  DateFormat(
-                                    'EEEE, dd MMMM yyyy',
-                                    'id_ID',
-                                  ).format(widget.date),
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                if (widget.lessonHourName != null &&
-                                    widget.lessonHourName!.isNotEmpty) ...[
-                                  SizedBox(height: 4),
-                                  Text(
-                                    widget.lessonHourName!,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                                SizedBox(height: 8),
-                                Text(
-                                  '${stats['total']} ${languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'})}',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      width: double.infinity,
+                      padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 12,
+                        left: 16,
+                        right: 16,
+                        bottom: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: _getCardGradient(),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _getPrimaryColor().withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
                           ),
-                        ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  if (_isEditing) {
+                                    setState(() {
+                                      _isEditing = false;
+                                      for (var s in _siswaList) {
+                                        _tempAbsensiStatus[s.id] = _getStudentStatus(s.id);
+                                      }
+                                    });
+                                  } else {
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    _isEditing ? Icons.close : Icons.arrow_back,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _isEditing
+                                          ? languageProvider.getTranslatedText({'en': 'Edit Attendance', 'id': 'Edit Absensi'})
+                                          : languageProvider.getTranslatedText({'en': 'Attendance Details', 'id': 'Detail Absensi'}),
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                    ),
+                                    Text(
+                                      widget.subjectName,
+                                      style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  if (_isEditing) {
+                                    _saveChanges();
+                                  } else {
+                                    setState(() => _isEditing = true);
+                                  }
+                                },
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    _isEditing ? Icons.check : Icons.edit,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              if (!_isEditing)
+                                PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'refresh') _loadData();
+                                    if (value == 'export') exportDetail();
+                                  },
+                                  icon: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(Icons.more_vert, color: Colors.white, size: 20),
+                                  ),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'export',
+                                      child: Row(children: [Icon(Icons.file_download, size: 20), SizedBox(width: 8), Text(languageProvider.getTranslatedText({'en': 'Export to Excel', 'id': 'Export ke Excel'}))]),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'refresh',
+                                      child: Row(children: [Icon(Icons.refresh, size: 20), SizedBox(width: 8), Text(languageProvider.getTranslatedText({'en': 'Refresh', 'id': 'Refresh'}))]),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+                              SizedBox(width: 6),
+                              Text(
+                                DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(widget.date),
+                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)),
+                              ),
+                              if (widget.lessonHourName != null && widget.lessonHourName!.isNotEmpty) ...[
+                                Text(' • ', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+                                Text(widget.lessonHourName!, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600)),
+                              ],
+                            ],
+                          ),
+                        ],
                       ),
                     ),
 
                     // Statistics Cards
+                    SizedBox(height: 16),
                     SizedBox(
                       height: 120,
                       child: ListView(
@@ -3639,7 +3519,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                               'id': 'Hadir',
                             }),
                             stats['hadir']!,
-                            Colors.green,
+                            ColorUtils.success600,
                             Icons.check_circle,
                           ),
                           _buildStatCard(
@@ -3648,7 +3528,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                               'id': 'Terlambat',
                             }),
                             stats['terlambat']!,
-                            Colors.orange,
+                            ColorUtils.warning600,
                             Icons.access_time,
                           ),
                           _buildStatCard(
@@ -3657,7 +3537,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                               'id': 'Tidak Hadir',
                             }),
                             totalTidakHadir,
-                            Colors.red,
+                            ColorUtils.error600,
                             Icons.cancel,
                           ),
                           if (stats['izin']! > 0)
@@ -3667,7 +3547,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                                 'id': 'Izin',
                               }),
                               stats['izin']!,
-                              Colors.blue,
+                              ColorUtils.info600,
                               Icons.event_note,
                             ),
                           if (stats['sakit']! > 0)
@@ -3677,7 +3557,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                                 'id': 'Sakit',
                               }),
                               stats['sakit']!,
-                              Colors.purple,
+                              Color(0xFF7C3AED),
                               Icons.medical_services,
                             ),
                         ],
@@ -3700,7 +3580,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade700,
+                              color: ColorUtils.slate600,
                             ),
                           ),
                           Spacer(),
@@ -3708,7 +3588,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage>
                             '${_siswaList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: ColorUtils.slate600,
                             ),
                           ),
                         ],
@@ -3797,11 +3677,11 @@ class AttendanceDataSource extends DataGridSource {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  backgroundColor: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
                   child: Text(
                     data.name.isNotEmpty ? data.name[0].toUpperCase() : '?',
                     style: TextStyle(
-                      color: Colors.blue,
+                      color: ColorUtils.corporateBlue600,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -3818,7 +3698,7 @@ class AttendanceDataSource extends DataGridSource {
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color: Colors.black87,
+                          color: ColorUtils.slate800,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -3826,7 +3706,7 @@ class AttendanceDataSource extends DataGridSource {
                       SizedBox(height: 2),
                       Text(
                         data.nis,
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 11, color: ColorUtils.slate600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -3840,7 +3720,7 @@ class AttendanceDataSource extends DataGridSource {
 
         final status = dataGridCell.value.toString();
         Color bgColor = Colors.transparent;
-        Color textColor = Colors.black;
+        Color textColor = ColorUtils.slate900;
         String text = '';
 
         if (status != '-') {
@@ -3854,13 +3734,13 @@ class AttendanceDataSource extends DataGridSource {
           decoration: BoxDecoration(
             border: Border(
               right: BorderSide(
-                color: Colors.grey.withOpacity(0.1),
+                color: ColorUtils.slate200,
                 width: 0.5,
               ),
             ),
           ),
           child: status == '-'
-              ? Text('-', style: TextStyle(color: Colors.grey[300]))
+              ? Text('-', style: TextStyle(color: ColorUtils.slate300))
               : Container(
                   width: 32,
                   height: 32,
@@ -3885,20 +3765,20 @@ class AttendanceDataSource extends DataGridSource {
 
   Color _getStatusColor(String status) {
     final s = status.toLowerCase();
-    if (s == 'hadir' || s == 'present') return Colors.green.withOpacity(0.15);
-    if (s == 'sakit' || s == 'sick') return Colors.orange.withOpacity(0.15);
-    if (s == 'izin' || s == 'permit') return Colors.blue.withOpacity(0.15);
-    if (s == 'alpa' || s == 'absent') return Colors.red.withOpacity(0.15);
+    if (s == 'hadir' || s == 'present') return ColorUtils.success600.withValues(alpha: 0.15);
+    if (s == 'sakit' || s == 'sick') return ColorUtils.warning600.withValues(alpha: 0.15);
+    if (s == 'izin' || s == 'permit') return ColorUtils.info600.withValues(alpha: 0.15);
+    if (s == 'alpa' || s == 'absent') return ColorUtils.error600.withValues(alpha: 0.15);
     return Colors.transparent;
   }
 
   Color _getStatusTextColor(String status) {
     final s = status.toLowerCase();
-    if (s == 'hadir' || s == 'present') return Colors.green[800]!;
-    if (s == 'sakit' || s == 'sick') return Colors.orange[800]!;
-    if (s == 'izin' || s == 'permit') return Colors.blue[800]!;
-    if (s == 'alpa' || s == 'absent') return Colors.red[800]!;
-    return Colors.black;
+    if (s == 'hadir' || s == 'present') return ColorUtils.success600;
+    if (s == 'sakit' || s == 'sick') return ColorUtils.warning600;
+    if (s == 'izin' || s == 'permit') return ColorUtils.info600;
+    if (s == 'alpa' || s == 'absent') return ColorUtils.error600;
+    return ColorUtils.slate900;
   }
 
   String _getStatusAbbreviation(String status) {
