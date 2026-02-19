@@ -709,18 +709,6 @@ class MateriPageState extends State<MateriPage> {
     );
   }
 
-  Color _getCardColor(int index) {
-    final colors = [
-      Color(0xFF6366F1),
-      Color(0xFF10B981),
-      Color(0xFFF59E0B),
-      Color(0xFFEF4444),
-      Color(0xFF8B5CF6),
-      Color(0xFF06B6D4),
-    ];
-    return colors[index % colors.length];
-  }
-
   List<dynamic> _getFilteredBabMateri() {
     final searchTerm = _searchController.text.toLowerCase();
 
@@ -757,7 +745,7 @@ class MateriPageState extends State<MateriPage> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withOpacity(0.7)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
     );
   }
 
@@ -774,7 +762,7 @@ class MateriPageState extends State<MateriPage> {
         gradient: _getCardGradient(),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.3),
+            color: _getPrimaryColor().withValues(alpha: 0.3),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -791,7 +779,7 @@ class MateriPageState extends State<MateriPage> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -818,27 +806,36 @@ class MateriPageState extends State<MateriPage> {
                       AppLocalizations.selectAndOrganizeMaterials.tr,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: Icon(Icons.auto_awesome, color: Colors.white),
-                onPressed: _navigateToGenerateRPP,
-                tooltip: languageProvider.getTranslatedText({
-                  'en': 'Generate RPP',
-                  'id': 'Generate RPP',
-                }),
+              GestureDetector(
+                onTap: _navigateToGenerateRPP,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+                ),
               ),
-              IconButton(
-                icon: Icon(Icons.refresh, color: Colors.white),
-                onPressed: _loadData,
-                tooltip: languageProvider.getTranslatedText({
-                  'en': 'Refresh',
-                  'id': 'Muat Ulang',
-                }),
+              SizedBox(width: 8),
+              GestureDetector(
+                onTap: _loadData,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                ),
               ),
             ],
           ),
@@ -852,7 +849,7 @@ class MateriPageState extends State<MateriPage> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.slate50,
           body: Column(
             children: [
               // Header dengan gradient seperti presence_teacher
@@ -918,7 +915,7 @@ class MateriPageState extends State<MateriPage> {
                     children: [
                       Text(
                         '${_getFilteredBabMateri().length} ${languageProvider.getTranslatedText({'en': 'materials found', 'id': 'materi ditemukan'})}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: TextStyle(color: ColorUtils.slate500, fontSize: 14),
                       ),
                     ],
                   ),
@@ -973,26 +970,38 @@ class MateriPageState extends State<MateriPage> {
     );
   }
 
-  // Update Filter Section untuk tambah info dan tombol
   Widget _buildFilterSection(LanguageProvider languageProvider) {
     final totalChecked = _getCheckedCount();
+    final primaryColor = _getPrimaryColor();
 
     return Container(
       padding: EdgeInsets.all(16),
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: ColorUtils.slate200, width: 1)),
+      ),
       child: Column(
         children: [
           // Info Filter Aktif
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
+              color: primaryColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
             ),
             child: Row(
               children: [
-                Icon(Icons.filter_alt, size: 16, color: Colors.blue),
-                SizedBox(width: 8),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.filter_alt_rounded, size: 16, color: primaryColor),
+                ),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     _subjectList.isEmpty
@@ -1001,15 +1010,22 @@ class MateriPageState extends State<MateriPage> {
                             'id': 'Tidak ada mata pelajaran',
                           })
                         : '${_babMateriList.length} ${languageProvider.getTranslatedText({'en': 'materials', 'id': 'bab materi'})} • ${_getSelectedSubjectName()}',
-                    style: TextStyle(fontSize: 12, color: Colors.blue.shade800),
+                    style: TextStyle(fontSize: 12, color: ColorUtils.slate700),
                   ),
                 ),
-                Text(
-                  '$totalChecked ${languageProvider.getTranslatedText({'en': 'checked', 'id': 'dicentang'})}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.blue.shade800,
-                    fontWeight: FontWeight.bold,
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$totalChecked ${languageProvider.getTranslatedText({'en': 'checked', 'id': 'dicentang'})}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: primaryColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -1019,20 +1035,23 @@ class MateriPageState extends State<MateriPage> {
 
           // Tombol Generate RPP jika ada yang dicentang
           if (totalChecked > 0 && _getCheckedNotGeneratedCount() > 0) ...[
-            // Tombol Generate (untuk yang baru / belum di-generate)
-            ElevatedButton.icon(
-              onPressed: _navigateToGenerateRPP,
-              icon: Icon(Icons.auto_awesome, size: 18),
-              label: Text(
-                'Generate RPP (${_getCheckedNotGeneratedCount()})',
-                style: TextStyle(fontSize: 14),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF10B981),
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _navigateToGenerateRPP,
+                icon: Icon(Icons.auto_awesome_rounded, size: 18),
+                label: Text(
+                  'Generate RPP (${_getCheckedNotGeneratedCount()})',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ColorUtils.success600,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
                 ),
               ),
             ),
@@ -1056,20 +1075,20 @@ class MateriPageState extends State<MateriPage> {
       children: [
         Text(
           languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            color: ColorUtils.slate50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _selectedClassId,
               isExpanded: true,
-              icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+              icon: Icon(Icons.arrow_drop_down, color: ColorUtils.slate500),
               items: _classList.map((c) {
                 return DropdownMenuItem<String>(
                   value: c['id'],
@@ -1078,13 +1097,16 @@ class MateriPageState extends State<MateriPage> {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.class_,
+                          Icons.class_rounded,
                           size: 16,
-                          color: Colors.grey.shade600,
+                          color: ColorUtils.slate500,
                         ),
                         SizedBox(width: 8),
                         Expanded(
-                          child: Text(c['name'] ?? c['nama'] ?? 'Unknown'),
+                          child: Text(
+                            c['name'] ?? c['nama'] ?? 'Unknown',
+                            style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+                          ),
                         ),
                       ],
                     ),
@@ -1125,20 +1147,20 @@ class MateriPageState extends State<MateriPage> {
             'en': 'Subject',
             'id': 'Mata Pelajaran',
           }),
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            color: ColorUtils.slate50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _selectedSubject,
               isExpanded: true,
-              icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+              icon: Icon(Icons.arrow_drop_down, color: ColorUtils.slate500),
               items: _subjectList.map((mp) {
                 return DropdownMenuItem<String>(
                   value: mp['id'],
@@ -1147,13 +1169,16 @@ class MateriPageState extends State<MateriPage> {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.subject,
+                          Icons.menu_book_rounded,
                           size: 16,
-                          color: Colors.grey.shade600,
+                          color: ColorUtils.slate500,
                         ),
                         SizedBox(width: 8),
                         Expanded(
-                          child: Text(mp['name'] ?? mp['nama'] ?? 'Unknown'),
+                          child: Text(
+                            mp['name'] ?? mp['nama'] ?? 'Unknown',
+                            style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+                          ),
                         ),
                       ],
                     ),
@@ -1190,6 +1215,18 @@ class MateriPageState extends State<MateriPage> {
     );
   }
 
+  Color _getCheckboxColor(String id, {bool isSubBab = false}) {
+    if (isSubBab) {
+      if (_usedSubBab[id] == true) return ColorUtils.info600;
+      if (_generatedSubBab[id] == true) return Color(0xFF8B5CF6);
+      return ColorUtils.success600;
+    } else {
+      if (_usedBab[id] == true) return ColorUtils.info600;
+      if (_generatedBab[id] == true) return Color(0xFF8B5CF6);
+      return ColorUtils.success600;
+    }
+  }
+
   Widget _buildMateriList() {
     final filteredBabMateri = _getFilteredBabMateri();
 
@@ -1198,16 +1235,16 @@ class MateriPageState extends State<MateriPage> {
       itemCount: filteredBabMateri.length,
       itemBuilder: (context, index) {
         final bab = filteredBabMateri[index];
-        final cardColor = _getCardColor(index);
+        final cardColor = ColorUtils.getColorForIndex(index);
         final babIdStr = bab['id'].toString();
         final isExpanded = _expandedBab[babIdStr] ?? false;
 
         return Container(
-          margin: EdgeInsets.symmetric(vertical: 6, horizontal: 0),
+          margin: EdgeInsets.only(bottom: 10),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
               onTap: () {
                 setState(() {
                   _expandedBab[babIdStr] = !isExpanded;
@@ -1216,129 +1253,93 @@ class MateriPageState extends State<MateriPage> {
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      blurRadius: 5,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: ColorUtils.slate200),
+                  boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
                 ),
-                child: Stack(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Strip berwarna di pinggir kiri
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 6,
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Background pattern effect
-                    Positioned(
-                      right: -8,
-                      top: -8,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header Bab
-                        Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: cardColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: cardColor.withValues(alpha: 0.25)),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${bab['urutan']}',
+                                style: TextStyle(
                                   color: cardColor,
-                                  borderRadius: BorderRadius.circular(8),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    '${bab['urutan']}',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  bab['judul_bab'] ?? 'Judul Bab',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: ColorUtils.slate900,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Bab ${bab['urutan']}',
+                                  style: TextStyle(
+                                    color: ColorUtils.slate500,
+                                    fontSize: 13,
                                   ),
                                 ),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      bab['judul_bab'] ?? 'Judul Bab',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Bab ${bab['urutan']}',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Checkbox(
-                                value:
-                                    _checkedBab[bab['id'].toString()] ?? false,
-                                onChanged: (value) {
-                                  _handleBabCheck(bab['id'].toString(), value);
-                                },
-                                activeColor:
-                                    _usedBab[bab['id'].toString()] == true
-                                    ? Colors.blue
-                                    : _generatedBab[bab['id'].toString()] ==
-                                          true
-                                    ? Color(0xFF8B5CF6)
-                                    : Color(0xFF10B981),
-                              ),
-                              Icon(
-                                isExpanded
-                                    ? Icons.expand_less
-                                    : Icons.expand_more,
-                                color: Colors.grey.shade600,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-
-                        // Sub Bab List (Expandable)
-                        if (isExpanded) ...[
-                          Divider(height: 1),
-                          _buildSubBabList(bab),
+                          Checkbox(
+                            value: _checkedBab[babIdStr] ?? false,
+                            onChanged: (value) {
+                              _handleBabCheck(babIdStr, value);
+                            },
+                            activeColor: _getCheckboxColor(babIdStr),
+                          ),
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: ColorUtils.slate100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              isExpanded
+                                  ? Icons.expand_less_rounded
+                                  : Icons.expand_more_rounded,
+                              color: ColorUtils.slate500,
+                              size: 20,
+                            ),
+                          ),
                         ],
-                      ],
+                      ),
                     ),
+
+                    // Sub Bab List (Expandable)
+                    if (isExpanded) ...[
+                      Divider(height: 1, color: ColorUtils.slate200),
+                      _buildSubBabList(bab),
+                    ],
                   ],
                 ),
               ),
@@ -1350,78 +1351,88 @@ class MateriPageState extends State<MateriPage> {
   }
 
   Widget _buildSubBabList(Map<String, dynamic> bab) {
-    if (_subBabMateriList.isEmpty) {
+    final subBabsForBab = _subBabMateriList
+        .where((subBab) => subBab['bab_id'].toString() == bab['id'].toString())
+        .toList();
+
+    if (subBabsForBab.isEmpty) {
       return Padding(
         padding: EdgeInsets.all(16),
         child: Text(
           'Tidak ada sub-bab',
-          style: TextStyle(color: Colors.grey.shade500),
+          style: TextStyle(color: ColorUtils.slate400),
           textAlign: TextAlign.center,
         ),
       );
     }
 
     return Column(
-      children: _subBabMateriList
-          .where(
-            (subBab) => subBab['bab_id'].toString() == bab['id'].toString(),
-          )
-          .map((subBab) {
-            return Padding(
+      children: subBabsForBab.map((subBab) {
+        final subBabIdStr = subBab['id'].toString();
+        final subBabColor = ColorUtils.getColorForIndex(
+          int.parse(subBab['urutan']?.toString() ?? '0'),
+        );
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _navigateToSubBabDetail(subBab, bab),
+            child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ListTile(
-                  leading: Container(
-                    width: 32,
-                    height: 32,
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: _getCardColor(
-                        int.parse(subBab['urutan']?.toString() ?? '0'),
-                      ),
-                      borderRadius: BorderRadius.circular(6),
+                      color: subBabColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: subBabColor.withValues(alpha: 0.2)),
                     ),
                     child: Center(
                       child: Text(
                         '${subBab['urutan']}',
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          color: subBabColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
                   ),
-                  title: Text(
-                    subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: ColorUtils.slate800,
+                      ),
+                    ),
                   ),
-                  trailing: Checkbox(
-                    value: _checkedSubBab[subBab['id'].toString()] ?? false,
+                  Checkbox(
+                    value: _checkedSubBab[subBabIdStr] ?? false,
                     onChanged: (value) {
                       _handleSubBabCheck(
-                        subBab['id'].toString(),
+                        subBabIdStr,
                         bab['id'].toString(),
                         value,
                       );
                     },
-                    activeColor: _usedSubBab[subBab['id'].toString()] == true
-                        ? Colors.blue
-                        : _generatedSubBab[subBab['id'].toString()] == true
-                        ? Color(0xFF8B5CF6)
-                        : Color(0xFF10B981),
+                    activeColor: _getCheckboxColor(subBabIdStr, isSubBab: true),
                   ),
-                  onTap: () {
-                    _navigateToSubBabDetail(subBab, bab);
-                  },
-                ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: ColorUtils.slate400,
+                  ),
+                ],
               ),
-            );
-          })
-          .toList(),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1514,18 +1525,6 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
     }
   }
 
-  Color _getCardColor(int index) {
-    final colors = [
-      Color(0xFF6366F1),
-      Color(0xFF10B981),
-      Color(0xFFF59E0B),
-      Color(0xFFEF4444),
-      Color(0xFF8B5CF6),
-      Color(0xFF06B6D4),
-    ];
-    return colors[index % colors.length];
-  }
-
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('guru');
   }
@@ -1535,7 +1534,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withOpacity(0.7)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
     );
   }
 
@@ -1552,7 +1551,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
         gradient: _getCardGradient(),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.3),
+            color: _getPrimaryColor().withValues(alpha: 0.3),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -1569,7 +1568,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -1583,8 +1582,8 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                     Text(
                       'BAB ${widget.bab['urutan']}',
                       style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                     SizedBox(height: 2),
@@ -1601,29 +1600,47 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                   ],
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.only(right: 8),
-                child: Row(
-                  children: [
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Done',
-                        'id': 'Selesai',
-                      }),
-                      style: TextStyle(fontSize: 14, color: Colors.white),
+              GestureDetector(
+                onTap: () {
+                  final newValue = !_isChecked;
+                  setState(() {
+                    _isChecked = newValue;
+                  });
+                  widget.onCheckChanged(newValue);
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _isChecked
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
-                    Checkbox(
-                      value: _isChecked,
-                      onChanged: (value) {
-                        setState(() {
-                          _isChecked = value ?? false;
-                        });
-                        widget.onCheckChanged(value);
-                      },
-                      fillColor: WidgetStateProperty.all(Colors.white),
-                      checkColor: _getPrimaryColor(),
-                    ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isChecked ? Icons.check_circle_rounded : Icons.circle_outlined,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Done',
+                          'id': 'Selesai',
+                        }),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1632,13 +1649,22 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
-                Icon(Icons.description, color: Colors.white, size: 16),
-                SizedBox(width: 8),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.description_rounded, color: Colors.white, size: 16),
+                ),
+                SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1646,8 +1672,8 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                       Text(
                         'Sub Bab ${widget.subBab['urutan']}',
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                       SizedBox(height: 2),
@@ -1655,7 +1681,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                         widget.subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
                         maxLines: 1,
@@ -1677,7 +1703,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.slate50,
           body: Column(
             children: [
               // Header dengan gradient
@@ -1723,89 +1749,71 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
       itemCount: _contentMateriList.length,
       itemBuilder: (context, index) {
         final content = _contentMateriList[index];
-        final cardColor = _getCardColor(index);
+        final cardColor = ColorUtils.getColorForIndex(index);
 
         return Container(
-          margin: EdgeInsets.only(bottom: 12),
+          margin: EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 4,
-                offset: Offset(0, 2),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: ColorUtils.slate200),
+            boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
-          child: IntrinsicHeight(
+          child: Padding(
+            padding: EdgeInsets.all(16),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Number Section dengan background warna
                 Container(
-                  width: 60,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
-                    ),
+                    color: cardColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: cardColor.withValues(alpha: 0.25)),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${index + 1}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: cardColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Konten',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-
-                // Content Section
+                SizedBox(width: 12),
                 Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          content['judul_konten'] ??
-                              content['title'] ??
-                              'Judul Konten',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        content['judul_konten'] ??
+                            content['title'] ??
+                            'Judul Konten',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: ColorUtils.slate900,
                         ),
-                        SizedBox(height: 8),
-                        Text(
-                          content['isi_konten'] ??
-                              content['description'] ??
-                              'Isi konten tidak tersedia',
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                            fontSize: 14,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        content['isi_konten'] ??
+                            content['description'] ??
+                            'Isi konten tidak tersedia',
+                        style: TextStyle(
+                          color: ColorUtils.slate600,
+                          fontSize: 13,
+                          height: 1.5,
                         ),
-                      ],
-                    ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],

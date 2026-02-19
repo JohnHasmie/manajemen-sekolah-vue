@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.6
+**Version:** 2.7
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru)
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran)
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2581,6 +2581,20 @@ Container(
   - **Animations**: `TickerProviderStateMixin` for dual controllers (`TabController` + `_listAnimationController`); animation triggered on `_loadInitialData` and `_loadAbsensiSummary`
   - **Zero raw colors**: All `Colors.grey`, `Colors.green`, `Colors.blue`, `Colors.orange`, `Colors.red`, `Colors.purple`, `withOpacity()` fully eliminated
 
+✅ **Teacher Learning Materials (Materi Pembelajaran)** (`lib/screen/guru/materi_screen.dart`) - Full redesign (v2.6):
+  - **`MateriPage` header** (#7): `_getCardGradient()` with `[primaryColor, primaryColor.withValues(alpha:0.85)]`; 40×40 semi-transparent back/generate/refresh buttons (`Colors.white.withValues(alpha:0.2)`, `borderRadius:10`); title + subtitle; rounded icon variants (`auto_awesome_rounded`, `refresh_rounded`)
+  - **Filter section**: `primaryColor.withValues(alpha:0.08)` info bar with `0.15` border + 32×32 icon container; pill badge `primaryColor.withValues(alpha:0.15)` for checked count; full-width Generate RPP button `success600` + `borderRadius:12` + `elevation:0`; bottom border `slate200`
+  - **Dropdowns** (`_buildKelasDropdown`, `_buildMataPelajaranDropdown`): `slate50` bg + `slate200` border + `borderRadius:10`; labels `slate600 w600 fontSize:12`; icons `slate500`; text `slate800 fontSize:14`; `arrow_drop_down` in `slate500`
+  - **Material cards** (`_buildMateriList`, #8): `Material > InkWell > Container` — `corporateShadow(elevation:1.5)` + `slate200` border + `borderRadius:14`; 44×44 colored number container `getColorForIndex(index).withValues(alpha:0.15)` bg + `0.25` border + `borderRadius:10`; title `w700 fontSize:15 slate900`; subtitle `slate500 fontSize:13`; 32×32 expand/collapse container `slate100` bg; no Stack/accent strip/decorative circle
+  - **Sub-chapter list** (`_buildSubBabList`): Custom `Row` replacing `ListTile`; 36×36 colored number containers `alpha:0.12` bg + `0.2` border + `borderRadius:8`; text `w600 fontSize:14 slate800`; `arrow_forward_ios_rounded` chevron `slate400 size:14`; `Material > InkWell` for tap
+  - **`_getCheckboxColor`**: Helper method — `info600` (used/blue), `Color(0xFF8B5CF6)` (generated/purple), `success600` (checked/green); applies to both bab and sub-bab checkboxes
+  - **Search results**: `slate500` text color
+  - **`SubBabDetailPage` header** (#7): Same gradient pattern; custom done/undone toggle button (pill with `check_circle_rounded`/`circle_outlined` icon + text, `alpha:0.3/0.15` bg toggle); sub-bab info card with 32×32 icon container `alpha:0.2` bg + `borderRadius:8`, `borderRadius:10` card with `alpha:0.15` bg + `0.2` border
+  - **Content cards** (`_buildContentList`, #8): Flat card `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`; 44×44 colored number container `alpha:0.15` bg + `0.25` border; title `w700 fontSize:15 slate900`; description `slate600 fontSize:13 height:1.5`; no colored left side panel
+  - **Scaffold**: `ColorUtils.slate50` background (both pages)
+  - **`_dayColorMap`**: Hardcoded hex colors retained for day-specific semantic meaning (same as Teaching Schedule)
+  - **Zero raw colors**: All `Colors.grey`, `Colors.blue`, `Colors.black12`, `withOpacity()` fully eliminated
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2602,6 +2616,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.6
+**Design System Version:** 2.7
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
