@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.8
+**Version:** 2.9
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP)
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2611,6 +2611,18 @@ Container(
   - **Scaffold**: `Color(0xFFF8F9FA)` for list screen, `ColorUtils.slate50` for detail page
   - **Zero raw colors**: All `Colors.grey`, `Colors.red/green/blue/orange/black`, `withOpacity()` fully eliminated; only pre-existing `print()` statements remain (guarded by `kDebugMode` where applicable)
 
+✅ **Wali Murid Announcement** (`lib/screen/walimurid/announcement_screen.dart`) - Full redesign (v2.9):
+  - **Header** (#7): `_getCardGradient()` with `[primaryColor, primaryColor.withValues(alpha:0.85)]`; 40×40 semi-transparent back/announcement buttons (`Colors.white.withValues(alpha:0.2)`, `borderRadius:10`); title + subtitle; search bar with `Colors.white.withValues(alpha:0.9)` bg, `ColorUtils.slate400` hint/prefix icon, `ColorUtils.slate900` text
+  - **Announcement cards** (`_buildAnnouncementCard`, #8): `Material > InkWell > Container` — `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`; 44×44 colored icon container `accentColor.withValues(alpha:0.1)` bg + `accentColor.withValues(alpha:0.25)` border — `campaign_rounded` for important, `announcement_outlined` for normal; title `slate900 w700 fontSize:14` + content preview `slate600 fontSize:12 height:1.4`; `Wrap(_buildInfoTag)` chips for time, creator, target, importance; unread dot 8×8 `error600` circle; `accentColor = isImportant ? warning600 : primaryColor`; no Stack/accent strip/decorative circle
+  - **`_buildInfoTag`**: Pill chip `px:6 py:3`, icon(10)+text(10), optional `tagColor`, alpha `0.08` bg + `0.3` border — matches admin announcement pattern exactly
+  - **Detail dialog** (#10): Gradient header with 40×40 icon container `white*0.2`; priority badge using `warning600.withValues(alpha:0.1)` bg + `0.4` border (replacing raw `Colors.orange`); content `slate800` fontSize:16 height:1.6; attachment section `slate50` bg + `slate200` border + icon container `white` bg `slate200` border; metadata section `slate50` bg with `_buildDetailRow`; close button `ElevatedButton` with `primaryColor` bg
+  - **`_buildDetailRow`**: Icon(16) `_getPrimaryColor()` + label `slate500` fontSize:12 + value `slate800 w600` fontSize:14
+  - **Snackbars**: `ColorUtils.error600` replacing raw `Colors.red`
+  - **Scaffold**: `ColorUtils.slate50` replacing raw `Color(0xFFF8F9FA)`
+  - **Search bar**: `ColorUtils.slate400` hints/icons replacing raw `Colors.grey`, `ColorUtils.slate900` text replacing `Colors.black87`
+  - **Zero raw colors**: All `Colors.grey.shade*`, `Colors.black`, `Colors.black87`, `Colors.red`, `Colors.orange`, `withOpacity()` fully eliminated
+  - **Note**: Read-only screen (no add/edit/delete features) — matched to admin announcement card/detail patterns without admin-only features (filter sheet, FAB, form dialog, delete dialog, pagination)
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2632,6 +2644,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.7
+**Design System Version:** 2.9
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team

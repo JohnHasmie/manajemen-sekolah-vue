@@ -39,8 +39,6 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
   @override
   void dispose() {
-    // Assuming _searchDebounce might be defined elsewhere if needed
-    // _searchDebounce?.cancel();
     _markReadDebounce?.cancel(); // Cancel visibility debounce
     if (_pendingReadIds.isNotEmpty) {
       _flushMarkReadSilently(List.from(_pendingReadIds));
@@ -101,8 +99,6 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       await ApiService.markAnnouncementRead(ids);
     } catch (e) {
       if (kDebugMode) print("Error auto-marking read: $e");
-      // On error, maybe remove from _processedIds to retry?
-      // For now, silent fail is safer to avoid endless retry loops.
     }
   }
 
@@ -157,11 +153,6 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
           '📊 Data berhasil dimuat: ${_announcementList.length} pengumuman',
         );
       }
-
-      // Removed: Eagerly marking all as read. Now handled by visibility check.
-      // if (_announcementList.isNotEmpty) {
-      //   _markAnnouncementsAsRead(_announcementList);
-      // }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error loading announcements: $e');
@@ -203,7 +194,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withValues(alpha: 0.7)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
     );
   }
 
@@ -239,6 +230,40 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     } else {
       return roleTarget.toUpperCase();
     }
+  }
+
+  // Pattern #8 info tag chip
+  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
+    final c = tagColor ?? ColorUtils.slate600;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: tagColor != null
+            ? tagColor.withValues(alpha: 0.08)
+            : ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: tagColor != null
+              ? tagColor.withValues(alpha: 0.3)
+              : ColorUtils.slate200,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: c),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              color: c,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAnnouncementDetail(Map<String, dynamic> announcementData) {
@@ -314,22 +339,28 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Priority badge
-                    if (announcementData['priority'] == 'important' ||
-                        announcementData['priority'] == 'penting')
+                    if (['penting', 'important']
+                        .contains(announcementData['priority']))
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.1),
+                          color: ColorUtils.warning600.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.orange),
+                          border: Border.all(
+                            color: ColorUtils.warning600.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.warning, size: 14, color: Colors.orange),
+                            Icon(
+                              Icons.warning,
+                              size: 14,
+                              color: ColorUtils.warning600,
+                            ),
                             SizedBox(width: 6),
                             Text(
                               languageProvider.getTranslatedText({
@@ -337,7 +368,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                 'id': 'Pengumuman Penting',
                               }),
                               style: TextStyle(
-                                color: Colors.orange,
+                                color: ColorUtils.warning600,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
@@ -354,7 +385,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         height: 1.6,
-                        color: Colors.grey.shade800,
+                        color: ColorUtils.slate800,
                       ),
                     ),
 
@@ -370,7 +401,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade600,
+                          color: ColorUtils.slate600,
                         ),
                       ),
                       SizedBox(height: 8),
@@ -383,9 +414,9 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                         child: Container(
                           padding: EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
+                            color: ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade200),
+                            border: Border.all(color: ColorUtils.slate200),
                           ),
                           child: Row(
                             children: [
@@ -394,9 +425,8 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.grey.shade200,
-                                  ),
+                                  border:
+                                      Border.all(color: ColorUtils.slate200),
                                 ),
                                 child: Icon(
                                   Icons.attach_file,
@@ -418,7 +448,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade800,
+                                        color: ColorUtils.slate800,
                                       ),
                                     ),
                                     Text(
@@ -428,7 +458,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                       }),
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey.shade500,
+                                        color: ColorUtils.slate500,
                                       ),
                                     ),
                                   ],
@@ -436,7 +466,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                               ),
                               Icon(
                                 Icons.download_rounded,
-                                color: Colors.grey.shade400,
+                                color: ColorUtils.slate400,
                                 size: 20,
                               ),
                             ],
@@ -450,7 +480,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
+                        color: ColorUtils.slate50,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -510,30 +540,28 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
               // Close button
               Container(
                 padding: EdgeInsets.all(16),
-                child: SafeArea(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _getPrimaryColor(),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Close',
-                              'id': 'Tutup',
-                            }),
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Close',
+                            'id': 'Tutup',
+                          }),
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -570,7 +598,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Could not open file: ${result.message}'),
-                backgroundColor: Colors.red,
+                backgroundColor: ColorUtils.error600,
               ),
             );
           }
@@ -583,7 +611,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error opening file: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
           ),
         );
       }
@@ -605,7 +633,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
               ),
               SizedBox(height: 2),
               Text(
@@ -613,7 +641,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
+                  color: ColorUtils.slate800,
                 ),
               ),
             ],
@@ -623,327 +651,133 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     );
   }
 
+  // Pattern #8: Material > InkWell > Container with corporateShadow
   Widget _buildAnnouncementCard(
     Map<String, dynamic> announcementData,
     int index,
   ) {
     final languageProvider = context.read<LanguageProvider>();
+    final primaryColor = _getPrimaryColor();
+    final isUnread = !(announcementData['is_read'] == true ||
+        announcementData['is_read'] == 1 ||
+        announcementData['is_read'] == '1');
+    final isImportant = ['penting', 'important']
+        .contains(announcementData['priority']);
+    final accentColor = isImportant ? ColorUtils.warning600 : primaryColor;
 
-    return GestureDetector(
-      onTap: () {
-        _showAnnouncementDetail(announcementData);
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _showAnnouncementDetail(announcementData),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white, // Background putih
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.3),
-                    blurRadius: 5,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Strip berwarna di pinggir kiri - menyesuaikan role
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 6,
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor(), // Warna sesuai role user
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
-                      ),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showAnnouncementDetail(announcementData),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200, width: 1),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left: colored icon container (Pattern #8 avatar)
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: accentColor.withValues(alpha: 0.25),
                     ),
                   ),
+                  child: Icon(
+                    isImportant
+                        ? Icons.campaign_rounded
+                        : Icons.announcement_outlined,
+                    color: accentColor,
+                    size: 22,
+                  ),
+                ),
+                SizedBox(width: 12),
 
-                  // Background pattern effect (Indicator)
-                  Positioned(
-                    right: -8,
-                    top: -8,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color:
-                            (announcementData['is_read'] == true ||
-                                announcementData['is_read'] == 1 ||
-                                announcementData['is_read'] == '1')
-                            ? Colors
-                                  .transparent // Read: Completely hidden
-                            : Colors.red.withValues(
-                                alpha: 0.1,
-                              ), // Unread: Red tint
-                        shape: BoxShape.circle,
+                // Middle: title + preview + info chips
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        announcementData['title'] ?? 'No Title',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      child: Center(
-                        child: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color:
-                                (announcementData['is_read'] == true ||
-                                    announcementData['is_read'] == 1 ||
-                                    announcementData['is_read'] == '1')
-                                ? Colors.transparent
-                                : Colors.red, // Unread: Red Dot
-                            shape: BoxShape.circle,
+                      SizedBox(height: 3),
+                      // Content preview
+                      Text(
+                        announcementData['content'] ?? '',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate600,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 8),
+                      // Info chips row
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 4,
+                        children: [
+                          _buildInfoTag(
+                            Icons.access_time_outlined,
+                            _formatDate(announcementData['created_at']),
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Priority badge
-                  if (announcementData['priority'] == 'important' ||
-                      announcementData['priority'] == 'penting')
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.warning, size: 12, color: Colors.white),
-                            SizedBox(width: 4),
-                            Text(
+                          _buildInfoTag(
+                            Icons.person_outline,
+                            announcementData['pembuat_nama'] ?? 'Unknown',
+                          ),
+                          _buildInfoTag(
+                            Icons.people_outline,
+                            _getTargetText(announcementData, languageProvider),
+                          ),
+                          if (isImportant)
+                            _buildInfoTag(
+                              Icons.warning_amber_rounded,
                               languageProvider.getTranslatedText({
-                                'en': 'IMPORTANT',
-                                'id': 'PENTING',
+                                'en': 'Important',
+                                'id': 'Penting',
                               }),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              tagColor: ColorUtils.warning600,
                             ),
-                          ],
-                        ),
+                        ],
                       ),
-                    ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8),
 
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header dengan judul
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    announcementData['title'] ?? 'No Title',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    _formatDate(announcementData['created_at']),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Konten preview
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.description,
-                                color: _getPrimaryColor(),
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Content',
-                                      'id': 'Konten',
-                                    }),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    announcementData['content'] ?? '',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Informasi pembuat
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.person,
-                                color: _getPrimaryColor(),
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Created by',
-                                      'id': 'Dibuat oleh',
-                                    }),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    announcementData['pembuat_nama'] ??
-                                        'Unknown',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Target informasi
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.people,
-                                color: _getPrimaryColor(),
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Target Audience',
-                                      'id': 'Target Pengguna',
-                                    }),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    _getTargetText(
-                                      announcementData,
-                                      languageProvider,
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                // Right: unread dot
+                if (isUnread)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: EdgeInsets.only(top: 4),
+                    decoration: BoxDecoration(
+                      color: ColorUtils.error600,
+                      shape: BoxShape.circle,
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
@@ -956,10 +790,10 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.slate50,
           body: Column(
             children: [
-              // Header - menggunakan gradient sesuai role
+              // Header - Pattern #7 gradient header
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.only(
@@ -1049,7 +883,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                     // Search Bar
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -1057,16 +891,17 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                           Expanded(
                             child: TextField(
                               controller: _searchController,
-                              style: TextStyle(color: Colors.black87),
+                              style: TextStyle(color: ColorUtils.slate900),
                               decoration: InputDecoration(
                                 hintText: languageProvider.getTranslatedText({
                                   'en': 'Search announcements...',
                                   'id': 'Cari pengumuman...',
                                 }),
-                                hintStyle: TextStyle(color: Colors.grey),
+                                hintStyle:
+                                    TextStyle(color: ColorUtils.slate400),
                                 prefixIcon: Icon(
                                   Icons.search,
-                                  color: Colors.grey,
+                                  color: ColorUtils.slate400,
                                 ),
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.symmetric(
@@ -1135,7 +970,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                       )
                     : RefreshIndicator(
                         onRefresh: _loadData,
-                        color: _getPrimaryColor(), // Warna sesuai role
+                        color: _getPrimaryColor(),
                         backgroundColor: Colors.white,
                         child: ListView.builder(
                           padding: EdgeInsets.only(top: 8, bottom: 16),
