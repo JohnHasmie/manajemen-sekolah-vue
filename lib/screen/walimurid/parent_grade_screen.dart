@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
+import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -23,7 +24,6 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   List<dynamic> _gradeList = [];
   List<dynamic> _studentList = [];
   String? _selectedStudentId;
-  String _parentName = '';
   bool _isLoading = true;
 
   // Visibility Tracking
@@ -97,10 +97,10 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   }
 
   final Map<String, Color> _gradeTypeColorMap = {
-    'tugas': Color(0xFF6366F1),
-    'uh': Color(0xFF10B981),
-    'uts': Color(0xFFF59E0B),
-    'uas': Color(0xFFEF4444),
+    'tugas': ColorUtils.corporateBlue600,
+    'uh': ColorUtils.success600,
+    'uts': ColorUtils.warning600,
+    'uas': ColorUtils.error600,
   };
 
   @override
@@ -111,13 +111,6 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userData = json.decode(prefs.getString('user') ?? '{}');
-
-      setState(() {
-        _parentName = userData['name']?.toString() ?? 'Wali Murid';
-      });
-
       await _loadStudentsForParent();
     } catch (e) {
       if (kDebugMode) {
@@ -209,7 +202,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
+            backgroundColor: ColorUtils.error600,
           ),
         );
       }
@@ -217,7 +210,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   }
 
   Color _getPrimaryColor() {
-    return Color(0xFF9333EA); // Warna purple untuk wali murid
+    return ColorUtils.getRoleColor('wali');
   }
 
   LinearGradient _getCardGradient() {
@@ -225,7 +218,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withOpacity(0.7)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
     );
   }
 
@@ -235,18 +228,30 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         margin: EdgeInsets.all(16),
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.orange.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.shade200),
+          color: ColorUtils.warning600.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            Icon(Icons.warning, color: Colors.orange),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: ColorUtils.warning600.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.warning_amber_rounded, color: ColorUtils.warning600, size: 20),
+            ),
             SizedBox(width: 12),
             Expanded(
               child: Text(
                 AppLocalizations.noChildrenLinked.tr,
-                style: TextStyle(color: Colors.orange.shade800),
+                style: TextStyle(
+                  color: ColorUtils.slate700,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -261,66 +266,65 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 8, bottom: 8),
+            padding: EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               AppLocalizations.selectChild.tr,
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: ColorUtils.slate700,
               ),
             ),
           ),
-          Material(
-            elevation: 2,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: DropdownButton<String>(
-                value: _selectedStudentId,
-                isExpanded: true,
-                underline: SizedBox(), // Hapus garis bawah default
-                items: _studentList.map((student) {
-                  return DropdownMenuItem<String>(
-                    value: student['id'],
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            student['name'] ??
-                                AppLocalizations.nameNotAvailable.tr,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 14),
+            child: DropdownButton<String>(
+              value: _selectedStudentId,
+              isExpanded: true,
+              underline: SizedBox(),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+              items: _studentList.map((student) {
+                return DropdownMenuItem<String>(
+                  value: student['id'],
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          student['name'] ??
+                              AppLocalizations.nameNotAvailable.tr,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: ColorUtils.slate900,
                           ),
-                          Text(
-                            '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                            ),
+                        ),
+                        Text(
+                          '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate500,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedStudentId = value;
-                  });
-                  _loadGrades();
-                },
-              ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedStudentId = value;
+                });
+                _loadGrades();
+              },
             ),
           ),
         ],
@@ -329,181 +333,185 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   }
 
   void _showGradeDetail(Map<String, dynamic> grade) {
+    final primaryColor = _getPrimaryColor();
+    final type = grade['type']?.toString().toLowerCase() ?? 'tugas';
+    final typeColor = _gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header dengan gradient
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          grade['score']?.toString() ?? '0',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: _getPrimaryColor(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      grade['subject_name'] ??
-                          grade['mata_pelajaran'] ??
-                          AppLocalizations.subject.tr,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 4),
-                    if (grade['title'] != null &&
-                        grade['title'].toString().isNotEmpty)
-                      Padding(
-                        padding: EdgeInsets.only(top: 4),
-                        child: Text(
-                          grade['title'],
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withOpacity(0.95),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    SizedBox(height: 4),
-                    Text(
-                      grade['type']?.toString().toUpperCase() ??
-                          AppLocalizations.grades.tr.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Gradient header
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [primaryColor, primaryColor.withValues(alpha: 0.75)],
                 ),
               ),
+              child: Row(
+                children: [
+                  // Score badge
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        grade['score']?.toString() ?? '0',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          type.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          grade['subject_name'] ??
+                              grade['mata_pelajaran'] ??
+                              AppLocalizations.subject.tr,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (grade['title'] != null &&
+                            grade['title'].toString().isNotEmpty) ...[
+                          SizedBox(height: 2),
+                          Text(
+                            grade['title'],
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-              // Content
-              Padding(
+            // Content
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: 350),
+              child: SingleChildScrollView(
                 padding: EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDetailItem(
-                      icon: Icons.person,
-                      label: AppLocalizations.teacher.tr,
-                      value:
-                          grade['teacher_name'] ?? AppLocalizations.unknown.tr,
+                    _buildDetailRow(
+                      Icons.person_rounded,
+                      AppLocalizations.teacher.tr,
+                      grade['teacher_name'] ?? AppLocalizations.unknown.tr,
                     ),
-                    _buildDetailItem(
-                      icon: Icons.calendar_today,
-                      label: AppLocalizations.assessmentDate.tr,
-                      value: _formatDate(grade['date']),
+                    _buildDetailRow(
+                      Icons.calendar_today_rounded,
+                      AppLocalizations.assessmentDate.tr,
+                      _formatDate(grade['date']),
+                    ),
+                    _buildDetailRow(
+                      Icons.category_rounded,
+                      AppLocalizations.grades.tr,
+                      type.toUpperCase(),
+                      iconColor: typeColor,
                     ),
                     if (grade['notes'] != null &&
                         grade['notes'].toString().isNotEmpty &&
-                        grade['notes'] != 'null') ...[
-                      SizedBox(height: 16),
-                      Text(
+                        grade['notes'] != 'null')
+                      _buildDetailRow(
+                        Icons.notes_rounded,
                         AppLocalizations.teacherNotes.tr,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade700,
-                        ),
+                        grade['notes'].toString(),
                       ),
-                      SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Text(
-                          grade['notes'],
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getPrimaryColor(),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
+            ),
+
+            // Footer
+            Container(
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: ColorUtils.slate100)),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(color: ColorUtils.slate300),
+                    foregroundColor: ColorUtils.slate700,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      AppLocalizations.close.tr,
-                      style: TextStyle(color: Colors.white),
-                    ),
+                  ),
+                  child: Text(
+                    AppLocalizations.close.tr,
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailItem({
-    required IconData icon,
-    required String label,
-    required String value,
+  Widget _buildDetailRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? iconColor,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+    final c = iconColor ?? _getPrimaryColor();
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.all(8),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: _getPrimaryColor().withOpacity(0.1),
+              color: c.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 16, color: _getPrimaryColor()),
+            child: Icon(icon, size: 18, color: c),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -512,7 +520,11 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: ColorUtils.slate500,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 SizedBox(height: 2),
                 Text(
@@ -520,7 +532,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade800,
+                    color: ColorUtils.slate800,
                   ),
                 ),
               ],
@@ -548,15 +560,27 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.assignment_outlined,
-            size: 64,
-            color: Colors.grey.shade300,
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: ColorUtils.slate100,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.assignment_outlined,
+              size: 36,
+              color: ColorUtils.slate400,
+            ),
           ),
           SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+            style: TextStyle(
+              color: ColorUtils.slate500,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -566,10 +590,73 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
   Widget _buildLoadingState() {
     return Center(
-      child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(_getPrimaryColor()),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(_getPrimaryColor()),
+          ),
+          SizedBox(height: 16),
+          Text(
+            AppLocalizations.loading.tr,
+            style: TextStyle(
+              color: ColorUtils.slate600,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  // Pattern #8 info tag chip
+  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
+    final c = tagColor ?? ColorUtils.slate600;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: tagColor != null
+            ? tagColor.withValues(alpha: 0.08)
+            : ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: tagColor != null
+              ? tagColor.withValues(alpha: 0.3)
+              : ColorUtils.slate200,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: c),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              color: c,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getGradeTypeLabel(String type) {
+    switch (type) {
+      case 'tugas':
+        return AppLocalizations.assignment.tr;
+      case 'uh':
+        return 'UH';
+      case 'uts':
+        return 'UTS';
+      case 'uas':
+        return 'UAS';
+      default:
+        return type.toUpperCase();
+    }
   }
 
   Widget _buildGradeList() {
@@ -586,12 +673,12 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _gradeList.length,
       itemBuilder: (context, index) {
         final grade = _gradeList[index];
         final type = grade['type']?.toString().toLowerCase() ?? 'tugas';
-        final typeColor = _gradeTypeColorMap[type] ?? Colors.blue;
+        final typeColor = _gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
         final score = double.tryParse(grade['score']?.toString() ?? '0') ?? 0;
         final assessmentTitle = grade['title']?.toString();
         final isRead =
@@ -603,180 +690,119 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
           builder: (context) {
             _onItemVisible(grade);
             return Container(
-              margin: EdgeInsets.symmetric(vertical: 6, horizontal: 0),
+              margin: EdgeInsets.symmetric(vertical: 5),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => _showGradeDetail(grade),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                   child: Container(
+                    padding: EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: isRead
-                          ? Colors.white
-                          : Colors.red.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withValues(
-                            alpha: isRead ? 0.3 : 0.4,
-                          ),
-                          blurRadius: 5,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ColorUtils.slate200),
+                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
-                    child: Stack(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Strip berwarna di pinggir kiri
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 6,
-                            decoration: BoxDecoration(
-                              color: typeColor,
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                              ),
+                        // Score container
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            color: typeColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: typeColor.withValues(alpha: 0.25),
                             ),
                           ),
-                        ),
-
-                        // Badge Score
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: Container(
-                            width: 54, // Diperlebar agar muat 100.0
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: typeColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: typeColor.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
                                 score.toStringAsFixed(0) == score.toString()
                                     ? score.toStringAsFixed(0)
                                     : score.toString(),
                                 style: TextStyle(
                                   color: typeColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
                                 ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
-
-                        // Indikator unread (red dot)
-                        if (!isRead)
-                          Positioned(
-                            right: -8,
-                            top: -8,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.red.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            22,
-                            16,
-                            70,
-                            16,
-                          ), // Right padding ditambah
+                        SizedBox(width: 12),
+                        // Content
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: typeColor,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  type.toUpperCase(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      grade['subject_name'] ??
+                                          grade['mata_pelajaran'] ??
+                                          AppLocalizations.subject.tr,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                        color: ColorUtils.slate900,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                grade['subject_name'] ??
-                                    grade['mata_pelajaran'] ??
-                                    AppLocalizations.subject.tr,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                  // Unread dot
+                                  if (!isRead) ...[
+                                    SizedBox(width: 8),
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: ColorUtils.error600,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                               if (assessmentTitle != null &&
                                   assessmentTitle.isNotEmpty) ...[
-                                SizedBox(height: 4),
+                                SizedBox(height: 3),
                                 Text(
                                   assessmentTitle,
                                   style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
-                                    color: Colors.black87,
+                                    fontSize: 12,
+                                    color: ColorUtils.slate600,
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
-                              SizedBox(height: 4),
-                              Row(
+                              SizedBox(height: 8),
+                              // Info tags
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
                                 children: [
-                                  Icon(
-                                    Icons.calendar_today,
-                                    size: 12,
-                                    color: Colors.grey.shade500,
+                                  _buildInfoTag(
+                                    Icons.category_outlined,
+                                    _getGradeTypeLabel(type),
+                                    tagColor: typeColor,
                                   ),
-                                  SizedBox(width: 4),
-                                  Text(
+                                  _buildInfoTag(
+                                    Icons.calendar_today_outlined,
                                     _formatDate(grade['date']),
-                                    style: TextStyle(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 12,
-                                    ),
                                   ),
+                                  if (grade['teacher_name'] != null)
+                                    _buildInfoTag(
+                                      Icons.person_outlined,
+                                      grade['teacher_name'],
+                                    ),
                                 ],
                               ),
                             ],
@@ -807,7 +833,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         gradient: _getCardGradient(),
         boxShadow: [
           BoxShadow(
-            color: _getPrimaryColor().withOpacity(0.3),
+            color: _getPrimaryColor().withValues(alpha: 0.3),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -824,7 +850,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -848,10 +874,22 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                       AppLocalizations.monitorChildGrades.tr,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
+                ),
+              ),
+              GestureDetector(
+                onTap: _loadGrades,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.refresh, color: Colors.white, size: 20),
                 ),
               ),
             ],
@@ -864,7 +902,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA), // Slate 50 equivalent
+      backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
           _buildHeader(),

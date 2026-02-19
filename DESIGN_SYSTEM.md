@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.11
+**Version:** 2.12
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity, Wali Murid Grade
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2656,6 +2656,24 @@ Container(
   - **Scaffold**: `ColorUtils.slate50` replacing raw `Color(0xFFF8F9FA)`
   - **Zero raw colors**: All `Colors.grey.shade*`, `Colors.red`, `Colors.orange`, `Colors.blue`, `Colors.purple`, `Colors.green`, `Color(0xFF4F46E5)`, `Color(0xFF9333EA)`, `withOpacity()` fully eliminated
 
+✅ **Wali Murid Grade** (`lib/screen/walimurid/parent_grade_screen.dart`) - Full redesign (v2.12):
+  - **Header** (#7): `_getCardGradient()` with `[primaryColor, primaryColor.withValues(alpha:0.85)]`; flat bottom; 40×40 semi-transparent back/refresh buttons (`Colors.white.withValues(alpha:0.2)`, `borderRadius:10`); title + subtitle
+  - **`_getPrimaryColor()`**: `ColorUtils.getRoleColor('wali')` replacing hardcoded `Color(0xFF9333EA)`
+  - **`_getCardGradient()`**: alpha `0.85` replacing `0.7`, `withValues(alpha:)` replacing `withOpacity()`
+  - **`_gradeTypeColorMap`**: `corporateBlue600` (tugas), `success600` (uh), `warning600` (uts), `error600` (uas) replacing hardcoded hex colors
+  - **Student selector**: Warning state: `warning600.withValues(alpha:0.08)` bg + `0.3` border + 40×40 icon container; dropdown: `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`, `slate900` name text + `slate500` class/NIS text, `slate500` dropdown icon
+  - **Grade cards** (`_buildGradeList`, #8): `Material > InkWell > Container` — `corporateShadow(elevation:1.0)` + `slate200` border + `borderRadius:14`; 54×54 score container `typeColor.withValues(alpha:0.1)` bg + `0.25` border + score `typeColor w800 fontSize:18`; title `slate900 w700 fontSize:14` + assessment title `slate600 fontSize:12`; `Wrap(_buildInfoTag)` chips for type (colored), date, teacher; 8×8 unread dot `error600`; no Stack/accent strip/decorative circle
+  - **`_buildInfoTag`**: Pill chip `px:6 py:3`, icon(10)+text(10), optional `tagColor`, alpha `0.08` bg + `0.3` border — matches design system standard
+  - **`_getGradeTypeLabel`**: Translates type codes (tugas→assignment, uh→UH, uts→UTS, uas→UAS) via AppLocalizations
+  - **Detail dialog** (#10): `Dialog(clipBehavior: Clip.antiAlias)`; gradient header `LinearGradient([primaryColor, primaryColor.withValues(alpha:0.75)])` with 56×56 score badge `white*0.2` bg + `white*0.3` border + score `white w800 fontSize:22`; type subtitle `white*0.8` + subject `white w700 fontSize:16` + optional title `white*0.9 fontSize:13`; `ConstrainedBox(maxHeight:350)` scrollable content with `_buildDetailRow` items (teacher, date, type with typeColor, notes); footer with `slate100` top border — `OutlinedButton` close (`slate300` side, `slate700` foreground, `borderRadius:10`)
+  - **`_buildDetailRow`**: 36×36 icon container with `color.withValues(alpha:0.1)` bg + `borderRadius:8`; label `slate500 fontSize:12 w500`; value `slate800 fontSize:14 w600`; optional `iconColor` param (used for type with typeColor)
+  - **Empty state**: 72×72 container `slate100` bg + `borderRadius:20` + `Icons.assignment_outlined` `slate400`; message `slate500 fontSize:14 w500`
+  - **Loading state**: `CircularProgressIndicator` with `primaryColor`, text `slate600 fontSize:14` with translation
+  - **Snackbars**: `ColorUtils.error600` replacing raw `Colors.red`
+  - **Scaffold**: `ColorUtils.slate50` replacing raw `Color(0xFFF8F9FA)`
+  - **Removed unused `_parentName`**: Field was set but never displayed; cleaned up along with unused `provider` import
+  - **Zero raw colors**: All `Colors.grey.shade*`, `Colors.red`, `Color(0xFFF8F9FA)`, hardcoded hex colors, `withOpacity()` fully eliminated
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2677,6 +2695,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.11
+**Design System Version:** 2.12
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
