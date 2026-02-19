@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
-import 'package:manajemensekolah/components/filter_sheet.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
@@ -506,7 +505,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               ),
             }),
           ),
-          backgroundColor: Colors.red.shade400,
+          backgroundColor: ColorUtils.error600,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -614,16 +613,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final primary = _getPrimaryColor();
 
-    // Temporary values for filter
-    String? tempSelectedSemester = _selectedFilterSemester;
-    String? tempSelectedClassId = _selectedClassId;
-
-    // Helper for localized day display
     String getLocalizedDay(String dayRaw) {
       final dayMap = {
         'senin': {'en': 'Monday', 'id': 'Senin'},
@@ -641,89 +633,314 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           : dayRaw;
     }
 
+    List<String> tempDayIds = List.from(_selectedDayIds);
+    String? tempClassId = _selectedClassId;
+    String? tempSemester = _selectedFilterSemester ?? _selectedSemester;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => FilterSheet(
-        primaryColor: _getPrimaryColor(),
-        config: FilterConfig(
-          sections: [
-            FilterSection(
-              key: 'dayIds',
-              title: languageProvider.getTranslatedText({
-                'en': 'Day',
-                'id': 'Hari',
-              }),
-              options: _dayOptions.where((day) => day != 'Semua Hari').map((
-                day,
-              ) {
-                return FilterOption(
-                  label: getLocalizedDay(day),
-                  value: _dayIdMap[day] ?? '',
-                );
-              }).toList(),
-              multiSelect: true,
-            ),
-            FilterSection(
-              key: 'classId',
-              title: languageProvider.getTranslatedText({
-                'en': 'Class',
-                'id': 'Kelas',
-              }),
-              options: _availableClasses.map((cls) {
-                return FilterOption(label: cls['name']!, value: cls['id']!);
-              }).toList(),
-              multiSelect: false,
-            ),
-            FilterSection(
-              key: 'semester',
-              title: languageProvider.getTranslatedText({
-                'en': 'Semester',
-                'id': 'Semester',
-              }),
-              options: _semesterList.map((semester) {
-                return FilterOption(
-                  label: semester['name'] ?? semester['nama'] ?? 'Semester',
-                  value: semester['id'].toString(),
-                );
-              }).toList(),
-              multiSelect: false,
-            ),
-          ],
-        ),
-        initialFilters: {
-          'dayIds': _selectedDayIds,
-          'classId': tempSelectedClassId,
-          'semester': tempSelectedSemester ?? _selectedSemester,
-        },
-        onApplyFilters: (filters) {
-          // Check if semester changed - need to reload data
-          bool needsReload = false;
-
-          final newSemester = filters['semester'];
-
-          if (newSemester != null && newSemester != _selectedSemester) {
-            needsReload = true;
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          Widget buildSectionHeader(String title, IconData icon) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, size: 15, color: primary),
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate900,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
-          setState(() {
-            _selectedDayIds = List<String>.from(filters['dayIds'] ?? []);
-            _selectedClassId = filters['classId'];
-            _selectedFilterSemester = newSemester;
-
-            // Update main semester if filtered
-            if (newSemester != null) {
-              _selectedSemester = newSemester;
-            }
-
-            _checkActiveFilter();
-          });
-
-          // Reload data if semester changed
-          if (needsReload) {
-            _loadJadwal();
+          Widget buildChip(String label, bool selected, VoidCallback onTap) {
+            return GestureDetector(
+              onTap: onTap,
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: selected ? primary.withValues(alpha: 0.12) : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: selected ? primary : ColorUtils.slate300,
+                    width: selected ? 1.5 : 1,
+                  ),
+                ),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: selected ? primary : ColorUtils.slate600,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ),
+            );
           }
+
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                Center(
+                  child: Container(
+                    margin: EdgeInsets.only(top: 12, bottom: 4),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: ColorUtils.slate300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.fromLTRB(20, 12, 16, 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [primary, primary.withValues(alpha: 0.85)],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.tune_rounded, color: Colors.white, size: 18),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Filter Schedule',
+                            'id': 'Filter Jadwal',
+                          }),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setSheetState(() {
+                            tempDayIds.clear();
+                            tempClassId = null;
+                            tempSemester = _selectedSemester;
+                          });
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        ),
+                        child: Text(
+                          'Reset',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        buildSectionHeader(
+                          languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'}),
+                          Icons.calendar_today_rounded,
+                        ),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _dayOptions
+                              .where((d) => d != 'Semua Hari')
+                              .map((day) {
+                                final dayId = _dayIdMap[day] ?? '';
+                                final selected = tempDayIds.contains(dayId);
+                                return buildChip(
+                                  getLocalizedDay(day),
+                                  selected,
+                                  () => setSheetState(() {
+                                    if (selected) {
+                                      tempDayIds.remove(dayId);
+                                    } else {
+                                      tempDayIds.add(dayId);
+                                    }
+                                  }),
+                                );
+                              })
+                              .toList(),
+                        ),
+                        if (_availableClasses.isNotEmpty) ...[
+                          SizedBox(height: 20),
+                          buildSectionHeader(
+                            languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+                            Icons.class_rounded,
+                          ),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _availableClasses.map((cls) {
+                              final selected = tempClassId == cls['id'];
+                              return buildChip(
+                                cls['name']!,
+                                selected,
+                                () => setSheetState(() {
+                                  tempClassId = selected ? null : cls['id'];
+                                }),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        if (_semesterList.isNotEmpty) ...[
+                          SizedBox(height: 20),
+                          buildSectionHeader(
+                            languageProvider.getTranslatedText({
+                              'en': 'Semester',
+                              'id': 'Semester',
+                            }),
+                            Icons.school_rounded,
+                          ),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _semesterList.map((sem) {
+                              final semId = sem['id'].toString();
+                              final label = sem['name'] ?? sem['nama'] ?? 'Semester';
+                              final selected = tempSemester == semId;
+                              return buildChip(
+                                label,
+                                selected,
+                                () => setSheetState(() {
+                                  tempSemester = selected ? null : semId;
+                                }),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ColorUtils.slate900.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              side: BorderSide(color: ColorUtils.slate300),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Batal',
+                              style: TextStyle(
+                                color: ColorUtils.slate600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              final needsReload = tempSemester != _selectedSemester;
+                              setState(() {
+                                _selectedDayIds = List<String>.from(tempDayIds);
+                                _selectedClassId = tempClassId;
+                                _selectedFilterSemester = tempSemester;
+                                if (tempSemester != null) {
+                                  _selectedSemester = tempSemester!;
+                                }
+                                _checkActiveFilter();
+                              });
+                              if (needsReload) _loadJadwal();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primary,
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Apply',
+                                'id': 'Terapkan',
+                              }),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
         },
       ),
     );
@@ -745,7 +962,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withOpacity(0.8)],
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
     );
   }
 
@@ -982,7 +1199,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         final filteredSchedules = _getFilteredSchedules();
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.slate50,
           body: Column(
             children: [
               // Header dengan gradient
@@ -998,7 +1215,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                   gradient: _getCardGradient(),
                   boxShadow: [
                     BoxShadow(
-                      color: _getPrimaryColor().withOpacity(0.3),
+                      color: _getPrimaryColor().withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),
@@ -1015,7 +1232,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -1057,7 +1274,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                 }),
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -1070,7 +1287,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -1085,7 +1302,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -1102,7 +1319,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                     Container(
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -1111,7 +1328,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -1141,7 +1358,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                     }),
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.white.withOpacity(0.8),
+                                      color: Colors.white.withValues(alpha: 0.8),
                                     ),
                                   )
                                 else
@@ -1200,7 +1417,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                             decoration:
                                                 TextDecoration.underline,
                                             decorationColor: Colors.white
-                                                .withOpacity(0.5),
+                                                .withValues(alpha: 0.5),
                                           ),
                                         ),
                                         SizedBox(width: 6),
@@ -1228,7 +1445,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.95),
+                              color: Colors.white.withValues(alpha: 0.95),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1236,7 +1453,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                 Expanded(
                                   child: TextField(
                                     controller: _searchController,
-                                    style: TextStyle(color: Colors.black87),
+                                    style: TextStyle(color: ColorUtils.slate800),
                                     decoration: InputDecoration(
                                       hintText: languageProvider
                                           .getTranslatedText({
@@ -1244,11 +1461,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                             'id': 'Cari jadwal...',
                                           }),
                                       hintStyle: TextStyle(
-                                        color: Colors.grey.shade500,
+                                        color: ColorUtils.slate400,
                                       ),
                                       prefixIcon: Icon(
                                         Icons.search,
-                                        color: Colors.grey.shade600,
+                                        color: ColorUtils.slate500,
                                       ),
                                       border: InputBorder.none,
                                       contentPadding: EdgeInsets.symmetric(
@@ -1283,10 +1500,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                           decoration: BoxDecoration(
                             color: _hasActiveFilter
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.2),
+                                : Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Stack(
@@ -1306,17 +1523,15 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               ),
                               if (_hasActiveFilter)
                                 Positioned(
-                                  right: 8,
-                                  top: 8,
+                                  right: 6,
+                                  top: 6,
                                   child: Container(
-                                    padding: EdgeInsets.all(4),
+                                    width: 8,
+                                    height: 8,
                                     decoration: BoxDecoration(
-                                      color: Colors.red,
+                                      color: ColorUtils.error600,
                                       shape: BoxShape.circle,
-                                    ),
-                                    constraints: BoxConstraints(
-                                      minWidth: 8,
-                                      minHeight: 8,
+                                      border: Border.all(color: Colors.white, width: 1.5),
                                     ),
                                   ),
                                 ),
@@ -1358,9 +1573,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                         ),
                                         onDeleted: filter['onRemove'],
                                         backgroundColor: Colors.white
-                                            .withOpacity(0.2),
+                                            .withValues(alpha: 0.2),
                                         side: BorderSide(
-                                          color: Colors.white.withOpacity(0.3),
+                                          color: Colors.white.withValues(alpha: 0.3),
                                           width: 1,
                                         ),
                                         shape: RoundedRectangleBorder(
@@ -1388,10 +1603,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.2),
+                                  color: Colors.red.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: Colors.red.withOpacity(0.3),
+                                    color: Colors.red.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -1436,7 +1651,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                 Text(
                                   '${filteredSchedules.length} ${languageProvider.getTranslatedText({'en': 'schedules found', 'id': 'jadwal ditemukan'})}',
                                   style: TextStyle(
-                                    color: Colors.grey[600],
+                                    color: ColorUtils.slate500,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -1606,7 +1821,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               // Table
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
+                  border: Border.all(color: ColorUtils.slate300),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -1614,9 +1829,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                     // Header Row 1 - Hari
                     Container(
                       decoration: BoxDecoration(
-                        color: _getPrimaryColor().withOpacity(0.1),
+                        color: _getPrimaryColor().withValues(alpha: 0.1),
                         border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade400),
+                          bottom: BorderSide(color: ColorUtils.slate300),
                         ),
                       ),
                       child: Row(
@@ -1628,7 +1843,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               border: Border(
-                                right: BorderSide(color: Colors.grey.shade400),
+                                right: BorderSide(color: ColorUtils.slate300),
                               ),
                             ),
                             child: Text(
@@ -1642,7 +1857,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               border: Border(
-                                right: BorderSide(color: Colors.grey.shade400),
+                                right: BorderSide(color: ColorUtils.slate300),
                               ),
                             ),
                             child: Text(
@@ -1663,7 +1878,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                     right: BorderSide(
                                       color: availableDays.last == day
                                           ? Colors.transparent
-                                          : Colors.grey.shade400,
+                                          : ColorUtils.slate300,
                                     ),
                                   ),
                                 ),
@@ -1685,9 +1900,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                     // Header Row 2 - Kelas
                     Container(
                       decoration: BoxDecoration(
-                        color: _getPrimaryColor().withOpacity(0.05),
+                        color: _getPrimaryColor().withValues(alpha: 0.05),
                         border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade400),
+                          bottom: BorderSide(color: ColorUtils.slate300),
                         ),
                       ),
                       child: Row(
@@ -1699,7 +1914,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               border: Border(
-                                right: BorderSide(color: Colors.grey.shade400),
+                                right: BorderSide(color: ColorUtils.slate300),
                               ),
                             ),
                           ),
@@ -1709,7 +1924,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               border: Border(
-                                right: BorderSide(color: Colors.grey.shade400),
+                                right: BorderSide(color: ColorUtils.slate300),
                               ),
                             ),
                           ),
@@ -1729,7 +1944,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                   border: Border(
                                     right: BorderSide(
                                       color: (isLastInDay && !isLastDay)
-                                          ? Colors.grey.shade400
+                                          ? ColorUtils.slate300
                                           : Colors.transparent,
                                     ),
                                   ),
@@ -1738,7 +1953,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                   classEntry.value,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade700,
+                                    color: ColorUtils.slate600,
                                   ),
                                 ),
                               );
@@ -1756,7 +1971,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             bottom: BorderSide(
                               color: session == allSessions.last
                                   ? Colors.transparent
-                                  : Colors.grey.shade300,
+                                  : ColorUtils.slate300,
                             ),
                           ),
                         ),
@@ -1770,7 +1985,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               decoration: BoxDecoration(
                                 border: Border(
                                   right: BorderSide(
-                                    color: Colors.grey.shade400,
+                                    color: ColorUtils.slate300,
                                   ),
                                 ),
                               ),
@@ -1788,7 +2003,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               decoration: BoxDecoration(
                                 border: Border(
                                   right: BorderSide(
-                                    color: Colors.grey.shade400,
+                                    color: ColorUtils.slate300,
                                   ),
                                 ),
                               ),
@@ -1816,7 +2031,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                         color:
                                             classes.last == kelas &&
                                                 availableDays.last != day
-                                            ? Colors.grey.shade400
+                                            ? ColorUtils.slate300
                                             : Colors.transparent,
                                       ),
                                     ),
@@ -1827,14 +2042,14 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                           decoration: BoxDecoration(
                                             color: _getDayColor(
                                               day,
-                                            ).withOpacity(0.1),
+                                            ).withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(
                                               4,
                                             ),
                                             border: Border.all(
                                               color: _getDayColor(
                                                 day,
-                                              ).withOpacity(0.3),
+                                              ).withValues(alpha: 0.3),
                                             ),
                                           ),
                                           child: Column(
@@ -1859,7 +2074,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                                   scheduleForCell['guru_nama']!,
                                                   style: TextStyle(
                                                     fontSize: 8,
-                                                    color: Colors.grey.shade600,
+                                                    color: ColorUtils.slate500,
                                                   ),
                                                   textAlign: TextAlign.center,
                                                   maxLines: 1,
@@ -1886,9 +2101,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: ColorUtils.slate50,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: ColorUtils.slate300),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1897,7 +2112,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                       'Keterangan:',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade700,
+                        color: ColorUtils.slate600,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -1950,7 +2165,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
     return Text(
       '--:--\n--:--',
-      style: TextStyle(fontSize: 10, color: Colors.grey),
+      style: TextStyle(fontSize: 10, color: ColorUtils.slate400),
       textAlign: TextAlign.center,
     );
   }
@@ -1981,7 +2196,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     List<dynamic> schedules,
   ) {
     return ListView.builder(
-      padding: EdgeInsets.only(top: 8, bottom: 16),
+      padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
       itemCount: schedules.length,
       itemBuilder: (context, index) {
         return _buildJadwalCard(schedules[index], languageProvider, index);
@@ -2007,17 +2222,13 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         .where((n) => n != 'Unknown' && n.isNotEmpty)
         .join(', ');
 
-    // Fallback display if ID mapping failed
     if (dayNames.isEmpty) {
-      final rawDayName = (jadwal['hari_nama'] ?? jadwal['day_name'] ?? '')
-          .toString();
-      if (rawDayName.isNotEmpty) {
-        dayNames = _normalizeDayName(rawDayName);
-      }
+      final rawDayName =
+          (jadwal['hari_nama'] ?? jadwal['day_name'] ?? '').toString();
+      if (rawDayName.isNotEmpty) dayNames = _normalizeDayName(rawDayName);
     }
 
     final day = dayNames.isNotEmpty ? dayNames : 'Unknown';
-    // Use first day color for simplicity, or mixing colors? First day is fine.
     final firstDayName = daysIds.isNotEmpty
         ? _dayIdMap.entries
               .firstWhere(
@@ -2027,14 +2238,14 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               .key
         : 'Senin';
     final dayColor = _getDayColor(firstDayName);
+    final primary = _getPrimaryColor();
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+      margin: EdgeInsets.only(bottom: 12),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Navigate to Presence Page with schedule data
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -2067,392 +2278,268 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 5,
-                  offset: Offset(0, 4),
-                ),
-              ],
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
             ),
-            child: Stack(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Strip berwarna di pinggir kiri sesuai hari
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 6,
-                    decoration: BoxDecoration(
-                      color: dayColor,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: dayColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: dayColor.withValues(alpha: 0.2)),
+                      ),
+                      child: Icon(Icons.schedule_rounded, color: dayColor, size: 24),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            jadwal['mata_pelajaran_nama'] ??
+                                languageProvider.getTranslatedText({
+                                  'en': 'Subject',
+                                  'id': 'Mata Pelajaran',
+                                }),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate900,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            jadwal['tahun_ajaran_nama'] ?? _selectedAcademicYear,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: ColorUtils.slate500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ),
-
-                // Background pattern effect
-                Positioned(
-                  right: -8,
-                  top: -8,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      shape: BoxShape.circle,
+                    SizedBox(width: 8),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: dayColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: dayColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        day,
+                        style: TextStyle(
+                          color: dayColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header dengan mata pelajaran dan tahun ajaran - DIUBAH
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  jadwal['mata_pelajaran_nama'] ??
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Subject',
-                                        'id': 'Mata Pelajaran',
-                                      }),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 2),
-                                // DIUBAH: Tahun ajaran di bawah mata pelajaran dengan ukuran kecil
-                                Text(
-                                  jadwal['tahun_ajaran_nama'] ??
-                                      _selectedAcademicYear,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // DIUBAH: Hari diperbesar
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: dayColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: dayColor.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              day,
-                              style: TextStyle(
-                                color: dayColor,
-                                fontSize: 14, // DIUBAH: diperbesar dari 12
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
+                SizedBox(height: 12),
+                Divider(height: 1, color: ColorUtils.slate100),
+                SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _buildScheduleInfoTag(
+                      Icons.access_time_rounded,
+                      '${_formatTime(jadwal["jam_mulai"])} – ${_formatTime(jadwal["jam_selesai"])}',
+                      primary,
+                    ),
+                    _buildScheduleInfoTag(
+                      Icons.class_rounded,
+                      jadwal['kelas_nama'] ?? '-',
+                      primary,
+                    ),
+                    _buildScheduleInfoTag(
+                      Icons.format_list_numbered_rounded,
+                      'Jam ke-${jadwal["jam_ke"] ?? "-"}',
+                      dayColor,
+                    ),
+                    if (jadwal['semester_nama'] != null)
+                      _buildScheduleInfoTag(
+                        Icons.calendar_month_rounded,
+                        jadwal['semester_nama'],
+                        ColorUtils.slate500,
                       ),
-
-                      SizedBox(height: 12),
-
-                      // Informasi waktu
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
+                  ],
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MateriPage(
+                                teacher: {
+                                  'id': _teacherId,
+                                  'nama': _teacherNama,
+                                },
+                                initialSubjectId:
+                                    (jadwal['subject_id'] ??
+                                            jadwal['mata_pelajaran_id'])
+                                        ?.toString(),
+                                initialSubjectName:
+                                    (jadwal['subject_name'] ??
+                                            jadwal['mata_pelajaran_nama'])
+                                        ?.toString(),
+                                initialClassId:
+                                    (jadwal['class_id'] ??
+                                            jadwal['kelas_id'])
+                                        ?.toString(),
+                                initialClassName:
+                                    (jadwal['class_name'] ??
+                                            jadwal['kelas_nama'])
+                                        ?.toString(),
+                              ),
                             ),
-                            child: Icon(
-                              Icons.access_time,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
+                          );
+                        },
+                        icon: Icon(Icons.library_books_rounded, size: 15),
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Material',
+                            'id': 'Materi',
+                          }),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Time',
-                                    'id': 'Waktu',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  '${_formatTime(jadwal['jam_mulai'])} - ${_formatTime(jadwal['jam_selesai'])}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: primary,
+                          side: BorderSide(
+                            color: primary.withValues(alpha: 0.6),
+                            width: 1.5,
                           ),
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.format_list_numbered,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Session',
-                                    'id': 'Sesi',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  '${languageProvider.getTranslatedText({'en': 'Hour', 'id': 'Jam'})} ${jadwal['jam_ke'] ?? ''}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          backgroundColor: primary.withValues(alpha: 0.05),
+                        ),
                       ),
-
-                      SizedBox(height: 12),
-
-                      // Informasi kelas dan semester - DIUBAH: menghapus tahun ajaran dari sini
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          final now = DateTime.now();
+                          final scheduleDay = _dayIdMap.entries
+                              .firstWhere(
+                                (entry) =>
+                                    entry.value.toString() ==
+                                    (jadwal['day_id'] ?? jadwal['hari_id'])
+                                        ?.toString(),
+                                orElse: () => MapEntry('Senin', '1'),
+                              )
+                              .key;
+                          final scheduleDayIndex =
+                              _dayOptions.indexOf(scheduleDay);
+                          final todayIndex = now.weekday;
+                          int daysUntilSchedule = scheduleDayIndex - todayIndex;
+                          if (daysUntilSchedule < 0) daysUntilSchedule += 7;
+                          final scheduleDate =
+                              now.add(Duration(days: daysUntilSchedule));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ClassActifityScreen(
+                                initialDate: scheduleDate,
+                                initialSubjectId:
+                                    (jadwal['subject_id'] ??
+                                            jadwal['mata_pelajaran_id'])
+                                        ?.toString(),
+                                initialSubjectName:
+                                    (jadwal['subject_name'] ??
+                                            jadwal['mata_pelajaran_nama'])
+                                        ?.toString(),
+                                initialClassId:
+                                    (jadwal['class_id'] ??
+                                            jadwal['kelas_id'])
+                                        ?.toString(),
+                                initialClassName:
+                                    (jadwal['class_name'] ??
+                                            jadwal['kelas_nama'])
+                                        ?.toString(),
+                                autoShowActivityDialog: true,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.school,
-                              color: _getPrimaryColor(),
-                              size: 16,
-                            ),
+                          );
+                        },
+                        icon: Icon(Icons.assignment_rounded, size: 15),
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Activity',
+                            'id': 'Aktivitas',
+                          }),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Class & Semester',
-                                    'id': 'Kelas & Semester',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  '${jadwal['kelas_nama'] ?? '-'} • ${jadwal['semester_nama'] ?? 'Semester'}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        ],
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          elevation: 0,
+                        ),
                       ),
-
-                      SizedBox(height: 16),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => MateriPage(
-                                      teacher: {
-                                        'id': _teacherId,
-                                        'nama': _teacherNama,
-                                      },
-                                      initialSubjectId:
-                                          (jadwal['subject_id'] ??
-                                                  jadwal['mata_pelajaran_id'])
-                                              ?.toString(),
-                                      initialSubjectName:
-                                          (jadwal['subject_name'] ??
-                                                  jadwal['mata_pelajaran_nama'])
-                                              ?.toString(),
-                                      initialClassId:
-                                          (jadwal['class_id'] ??
-                                                  jadwal['kelas_id'])
-                                              ?.toString(),
-                                      initialClassName:
-                                          (jadwal['class_name'] ??
-                                                  jadwal['kelas_nama'])
-                                              ?.toString(),
-                                    ),
-                                  ),
-                                );
-                              },
-                              icon: Icon(Icons.library_books, size: 16),
-                              label: Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Material',
-                                  'id': 'Materi',
-                                }),
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: _getPrimaryColor(),
-                                side: BorderSide(color: _getPrimaryColor()),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                // Calculate next occurrence date for this schedule
-                                final now = DateTime.now();
-                                final scheduleDay = _dayIdMap.entries
-                                    .firstWhere(
-                                      (entry) =>
-                                          entry.value.toString() ==
-                                          (jadwal['day_id'] ??
-                                                  jadwal['hari_id'])
-                                              ?.toString(),
-                                      orElse: () => MapEntry('Senin', '1'),
-                                    )
-                                    .key;
-                                final scheduleDayIndex = _dayOptions.indexOf(
-                                  scheduleDay,
-                                );
-                                final todayIndex = now.weekday;
-                                int daysUntilSchedule =
-                                    scheduleDayIndex - todayIndex;
-                                if (daysUntilSchedule < 0) {
-                                  daysUntilSchedule += 7;
-                                }
-                                final scheduleDate = now.add(
-                                  Duration(days: daysUntilSchedule),
-                                );
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ClassActifityScreen(
-                                      initialDate: scheduleDate,
-                                      initialSubjectId:
-                                          (jadwal['subject_id'] ??
-                                                  jadwal['mata_pelajaran_id'])
-                                              ?.toString(),
-                                      initialSubjectName:
-                                          (jadwal['subject_name'] ??
-                                                  jadwal['mata_pelajaran_nama'])
-                                              ?.toString(),
-                                      initialClassId:
-                                          (jadwal['class_id'] ??
-                                                  jadwal['kelas_id'])
-                                              ?.toString(),
-                                      initialClassName:
-                                          (jadwal['class_name'] ??
-                                                  jadwal['kelas_nama'])
-                                              ?.toString(),
-                                      autoShowActivityDialog: true,
-                                    ),
-                                  ),
-                                );
-                              },
-                              icon: Icon(Icons.assignment, size: 16),
-                              label: Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Activity',
-                                  'id': 'Aktivitas',
-                                }),
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _getPrimaryColor(),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildScheduleInfoTag(IconData icon, String label, Color color) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

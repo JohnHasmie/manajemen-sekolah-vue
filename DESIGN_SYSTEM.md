@@ -1,9 +1,9 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.4
+**Version:** 2.5
 **Reference:** Kamil Edu Dashboard Design
-**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List
+**Applied To:** Dashboard, Student Management, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule
 
 This document outlines the complete design system used for the professional dashboard redesign. Use these patterns and rules when redesigning other pages to maintain visual consistency.
 
@@ -2528,6 +2528,26 @@ Container(
   - `GradeInputForm`: Gradient header (#7) showing student name as subtitle, info summary card with `_buildDetailItem` rows, Pattern #9 styled form fields (`slate50` bg + `slate200` border + role-color focus ring)
   - `GradeInputFormNew`: Gradient header (#7), same styled configuration panel and form fields; progress counter badge using `success600`/`slate` semantic colors
 
+✅ **Teacher Teaching Schedule** (`lib/screen/guru/teaching_schedule.dart`) - Full color & component redesign (v2.5):
+  - **Scaffold**: `Color(0xFFF8F9FA)` → `ColorUtils.slate50`
+  - **Gradient header** (#7): `_getCardGradient()` uses `withValues(alpha: 0.8)` instead of deprecated `withOpacity`; search bar hint `slate400`, prefix icon `slate500`; filter button 40×40 `Colors.white.withValues(alpha: 0.2)` bg; active-filter dot 8×8 `error600` with white border `1.5px`
+  - **Filter chips** (active, horizontal ListView): pill style `Colors.white.withValues(alpha: 0.2)` bg + `0.3` border; "Hapus Semua" button `error600.withValues(alpha: 0.2)` bg + `0.3` border
+  - **Count bar**: `slate500` text (was `Colors.grey[600]`); current view label in `_getPrimaryColor()`
+  - **`_buildJadwalCard`** - Structural redesign:
+    - Old: `Stack` with `Positioned(left strip)` + `Positioned(decorative circle)` + `Padding`
+    - New: `ClipRRect > IntrinsicHeight > Row` — 5px wide left accent strip `Container(color: dayColor)` + `Expanded(Padding(...))`
+    - Shadow: `BoxShadow(Colors.grey.withOpacity(0.3))` → `ColorUtils.corporateShadow(elevation: 1.5)`
+    - Border: added `Border.all(color: ColorUtils.slate200)` for definition
+    - Subject text: `Colors.black` → `ColorUtils.slate900 w700`; academic year text `slate500`
+    - Day badge: `color: dayColor.withValues(alpha: 0.12)`, border `0.3`, radius `10`, text `w700 fontSize:13`
+    - Icon containers: 32×32 → **36×36**, `borderRadius: 8`, added `border: Border.all(alpha: 0.15)`
+    - Class/time/session info labels: `slate500`; values `slate900 w600`
+    - Action buttons: `OutlinedButton` Materi — `borderRadius: 10`, `elevation: 0`, `backgroundColor: primary.withValues(alpha:0.05)`, border `primary.withValues(alpha:0.6) w:1.5`; `ElevatedButton` Aktivitas — `borderRadius: 10`, `elevation: 0`, `shadowColor: transparent`; both use `Icons.*_rounded` variants + `fontSize:12 w600`
+  - **`_buildTableView`**: All `Colors.grey.*` borders → `ColorUtils.slate*`; table cell fill `dayColor.withValues(alpha:0.1)` + border `0.3`; legend container `slate50` bg + `slate200` border; `_buildTimeForSession` fallback text `slate400`
+  - **`_showErrorSnackBar`**: `Colors.red.shade400` → `ColorUtils.error600` + `SnackBarBehavior.floating`
+  - **`_dayColorMap`**: Hardcoded hex colors retained for day-specific semantic meaning (not semantic color system)
+  - **Zero raw colors**: All `withOpacity`, `Colors.grey.*`, `Colors.black`, `Colors.red` fully eliminated
+
 ✅ **Notification List** (`lib/screen/common/notification_list.dart`) - Full redesign (v2.4):
   - **AppBar**: Gradient `corporateBlue600` with `flexibleSpace LinearGradient`; white title + dynamic subtitle `"$unreadCount belum dibaca"` (visible only when > 0); "Tandai semua dibaca" action button only rendered when `_hasUnread` — 36×36 frosted glass container (`Colors.white.withValues(alpha:0.2)`, `BorderRadius.circular(10)`) with `Icons.done_all_rounded`
   - **`_buildNotificationCard`** (#8): `Dismissible > GestureDetector > Container` — `corporateShadow(elevation: isRead ? 0.5 : 1.2)`; border `isRead ? slate200 w:1.0 : color.withValues(alpha:0.35) w:1.5`; `ClipRRect(borderRadius:14) > IntrinsicHeight > Row` — **left accent bar** 4px wide with type color (only on unread), then `Expanded(Padding)` with icon + text content
@@ -2566,6 +2586,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.4
+**Design System Version:** 2.5
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
