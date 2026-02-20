@@ -454,7 +454,7 @@ class ApiScheduleService {
   }) async {
     try {
       String url = '$baseUrl/teaching-schedule/filtered?';
-      url += 'teacher_id=$teacherId&';
+      url += 'teacher_id=$teacherId&limit=100&';
 
       if (day != null && day != 'Semua Hari') {
         url += 'day=$day&';
@@ -474,6 +474,11 @@ class ApiScheduleService {
       );
 
       final result = _handleResponse(response);
+
+      if (result is Map<String, dynamic> && result.containsKey('data')) {
+        return result['data'] is List ? result['data'] : [];
+      }
+
       return result is List ? result : [];
     } catch (e) {
       if (kDebugMode) {
