@@ -35,6 +35,7 @@ import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:manajemensekolah/widgets/dashboard/category_section.dart';
 import 'package:manajemensekolah/widgets/dashboard/menu_item_card.dart';
@@ -88,6 +89,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   // Finance Badge State
   int _unverifiedPaymentCount = 0;
+
+  // Skeleton loading state
+  bool _isStatsLoaded = false;
 
   // Stats Pagination state
 
@@ -172,6 +176,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   void _onYearChanged() {
+    setState(() => _isStatsLoaded = false);
     _loadStats();
     _loadUserData();
   }
@@ -376,6 +381,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         if (!mounted) return;
 
         setState(() {
+          _isStatsLoaded = true;
           _todaysScheduleList = todaysClassesList;
           _stats = {
             'total_siswa': totalStudentsTaught,
@@ -423,6 +429,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         if (!mounted) return;
         setState(() {
+          _isStatsLoaded = true;
           _stats = {
             'total_siswa': studentStats['total'] ?? 0,
             'total_guru': teacherStats['total'] ?? 0,
@@ -460,6 +467,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         if (!mounted) return;
         setState(() {
+          _isStatsLoaded = true;
           _stats = {
             'anak_terdaftar': studentsData.length,
             'pengumuman_terbaru': announcements.length,
@@ -481,6 +489,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       }
       if (!mounted) return;
       setState(() {
+        _isStatsLoaded = true;
         if (_effectiveRole == 'guru') {
           _stats = {
             'total_siswa': 24,
@@ -1059,6 +1068,130 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
+  // ==================== SKELETON SHIMMER HELPERS ====================
+
+  Widget _buildShimmerBox({
+    double width = double.infinity,
+    double height = 16,
+    double borderRadius = 8,
+  }) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+    );
+  }
+
+  Widget _buildHeroStatSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.white.withValues(alpha: 0.15),
+      highlightColor: Colors.white.withValues(alpha: 0.35),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 35,
+            height: 35,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          SizedBox(height: 6),
+          Container(
+            width: 28,
+            height: 17,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          SizedBox(height: 4),
+          Container(
+            width: 36,
+            height: 9,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewCardSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: ColorUtils.shimmerBaseColor,
+      highlightColor: ColorUtils.shimmerHighlightColor,
+      child: Container(
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ColorUtils.slate200, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildShimmerBox(width: 36, height: 36, borderRadius: 10),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildShimmerBox(width: 40, height: 20, borderRadius: 4),
+                      SizedBox(height: 4),
+                      _buildShimmerBox(width: 70, height: 11, borderRadius: 4),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            _buildShimmerBox(width: 100, height: 10, borderRadius: 4),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: ColorUtils.shimmerBaseColor,
+      highlightColor: ColorUtils.shimmerHighlightColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 65,
+            height: 54,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          SizedBox(height: 6),
+          Container(
+            width: 50,
+            height: 11,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ==================== NEW MODERN UI COMPONENTS ====================
 
   Widget _buildModernAppBar(
@@ -1367,9 +1500,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
                   // 4-Column Stats Grid
                   Row(
-                    children: _buildFourColumnStats()
-                        .map((stat) => Expanded(child: stat))
-                        .toList(),
+                    children: _isStatsLoaded
+                        ? _buildFourColumnStats()
+                            .map((stat) => Expanded(child: stat))
+                            .toList()
+                        : List.generate(
+                            4,
+                            (_) => Expanded(child: _buildHeroStatSkeleton()),
+                          ),
                   ),
                 ],
               ),
@@ -1552,7 +1690,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   Widget _buildQuickActions() {
     List<Widget> actions = _getQuickActions();
 
-    if (actions.isEmpty) {
+    if (actions.isEmpty && _isStatsLoaded) {
       return SizedBox.shrink();
     }
 
@@ -1577,16 +1715,24 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             ],
           ),
           SizedBox(height: 12),
-          // Action buttons
+          // Action buttons or skeleton
           SizedBox(
             height: 85,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: BouncingScrollPhysics(),
-              itemCount: actions.length,
-              separatorBuilder: (context, index) => SizedBox(width: 10),
-              itemBuilder: (context, index) => actions[index],
-            ),
+            child: _isStatsLoaded
+                ? ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: BouncingScrollPhysics(),
+                    itemCount: actions.length,
+                    separatorBuilder: (context, index) => SizedBox(width: 10),
+                    itemBuilder: (context, index) => actions[index],
+                  )
+                : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: 4,
+                    separatorBuilder: (context, index) => SizedBox(width: 10),
+                    itemBuilder: (context, index) => _buildQuickActionSkeleton(),
+                  ),
           ),
         ],
       ),
@@ -1616,7 +1762,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
             childAspectRatio: 1.4,
-            children: _getTodaysOverviewCards(),
+            children: _isStatsLoaded
+                ? _getTodaysOverviewCards()
+                : List.generate(4, (_) => _buildOverviewCardSkeleton()),
           ),
         ],
       ),
