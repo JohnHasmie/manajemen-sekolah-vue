@@ -28,8 +28,7 @@ class TeacherAdminScreen extends StatefulWidget {
   TeacherAdminScreenState createState() => TeacherAdminScreenState();
 }
 
-class TeacherAdminScreenState extends State<TeacherAdminScreen>
-    with SingleTickerProviderStateMixin {
+class TeacherAdminScreenState extends State<TeacherAdminScreen> {
   final ApiTeacherService _teacherService = ApiTeacherService();
   final ApiSubjectService _subjectService = ApiSubjectService();
   List<dynamic> _teachers = [];
@@ -37,10 +36,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
   List<dynamic> _classes = [];
   bool _isLoading = true;
   String? _errorMessage;
-
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
 
   final ScrollController _scrollController = ScrollController();
 
@@ -72,19 +67,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
   @override
   void initState() {
     super.initState();
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
 
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
@@ -120,7 +102,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
   @override
   void dispose() {
     FCMService().syncTrigger.removeListener(_onSyncTriggered);
-    _animationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     // _searchController.removeListener(_onSearchChanged); // Removed auto-search listener
@@ -342,7 +323,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [ColorUtils.corporateBlue600, ColorUtils.corporateBlue600.withValues(alpha: 0.8)],
+                        colors: [
+                          ColorUtils.corporateBlue600,
+                          ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+                        ],
                       ),
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(24),
@@ -352,14 +336,27 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(children: [
-                          Icon(Icons.filter_list_rounded, color: Colors.white, size: 22),
-                          SizedBox(width: 12),
-                          Text(
-                            languageProvider.getTranslatedText({'en': 'Filter Teachers', 'id': 'Filter Guru'}),
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                          ),
-                        ]),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.filter_list_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Filter Teachers',
+                                'id': 'Filter Guru',
+                              }),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                         TextButton(
                           onPressed: () {
                             setModalState(() {
@@ -371,8 +368,14 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                             });
                           },
                           child: Text(
-                            languageProvider.getTranslatedText({'en': 'Reset', 'id': 'Reset'}),
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            languageProvider.getTranslatedText({
+                              'en': 'Reset',
+                              'id': 'Reset',
+                            }),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -388,7 +391,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                         children: [
                           // Show All Teachers Toggle
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: ColorUtils.slate50,
                               borderRadius: BorderRadius.circular(10),
@@ -398,16 +404,32 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        languageProvider.getTranslatedText({'en': 'Show All Teachers', 'id': 'Tampilkan Semua Guru'}),
-                                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: ColorUtils.slate800),
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Show All Teachers',
+                                          'id': 'Tampilkan Semua Guru',
+                                        }),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13,
+                                          color: ColorUtils.slate800,
+                                        ),
                                       ),
                                       SizedBox(height: 2),
                                       Text(
-                                        languageProvider.getTranslatedText({'en': 'Include inactive (ignores academic year)', 'id': 'Termasuk tidak aktif (abaikan tahun ajaran)'}),
-                                        style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
+                                        languageProvider.getTranslatedText({
+                                          'en':
+                                              'Include inactive (ignores academic year)',
+                                          'id':
+                                              'Termasuk tidak aktif (abaikan tahun ajaran)',
+                                        }),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: ColorUtils.slate500,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -415,9 +437,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                 Switch(
                                   value: _showAllTeachers,
                                   activeThumbColor: ColorUtils.corporateBlue600,
-                                activeTrackColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                                  activeTrackColor: ColorUtils.corporateBlue600
+                                      .withValues(alpha: 0.4),
                                   onChanged: (bool value) {
-                                    setModalState(() { _showAllTeachers = value; });
+                                    setModalState(() {
+                                      _showAllTeachers = value;
+                                    });
                                   },
                                 ),
                               ],
@@ -426,14 +451,27 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                           SizedBox(height: 20),
 
                           // Gender Section
-                          Row(children: [
-                            Icon(Icons.transgender_rounded, size: 16, color: ColorUtils.slate600),
-                            SizedBox(width: 8),
-                            Text(
-                              languageProvider.getTranslatedText({'en': 'Gender', 'id': 'Jenis Kelamin'}),
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                            ),
-                          ]),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.transgender_rounded,
+                                size: 16,
+                                color: ColorUtils.slate600,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Gender',
+                                  'id': 'Jenis Kelamin',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorUtils.slate800,
+                                ),
+                              ),
+                            ],
+                          ),
                           SizedBox(height: 10),
                           Wrap(
                             spacing: 8,
@@ -470,14 +508,27 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                           SizedBox(height: 20),
 
                           // Employment Status Section
-                          Row(children: [
-                            Icon(Icons.work_outline_rounded, size: 16, color: ColorUtils.slate600),
-                            SizedBox(width: 8),
-                            Text(
-                              languageProvider.getTranslatedText({'en': 'Employment Status', 'id': 'Status Kepegawaian'}),
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                            ),
-                          ]),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.work_outline_rounded,
+                                size: 16,
+                                color: ColorUtils.slate600,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Employment Status',
+                                  'id': 'Status Kepegawaian',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorUtils.slate800,
+                                ),
+                              ),
+                            ],
+                          ),
                           SizedBox(height: 10),
                           Wrap(
                             spacing: 8,
@@ -514,14 +565,27 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                           SizedBox(height: 20),
 
                           // Teaching Class Section
-                          Row(children: [
-                            Icon(Icons.school_outlined, size: 16, color: ColorUtils.slate600),
-                            SizedBox(width: 8),
-                            Text(
-                              languageProvider.getTranslatedText({'en': 'Teaching Class', 'id': 'Kelas Ajar'}),
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                            ),
-                          ]),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.school_outlined,
+                                size: 16,
+                                color: ColorUtils.slate600,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Teaching Class',
+                                  'id': 'Kelas Ajar',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorUtils.slate800,
+                                ),
+                              ),
+                            ],
+                          ),
                           SizedBox(height: 10),
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 12),
@@ -568,14 +632,27 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                           SizedBox(height: 20),
 
                           // Homeroom Status Section
-                          Row(children: [
-                            Icon(Icons.groups_outlined, size: 16, color: ColorUtils.slate600),
-                            SizedBox(width: 8),
-                            Text(
-                              languageProvider.getTranslatedText({'en': 'Homeroom Teacher Status', 'id': 'Status Wali Kelas'}),
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                            ),
-                          ]),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.groups_outlined,
+                                size: 16,
+                                color: ColorUtils.slate600,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Homeroom Teacher Status',
+                                  'id': 'Status Wali Kelas',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorUtils.slate800,
+                                ),
+                              ),
+                            ],
+                          ),
                           SizedBox(height: 10),
                           Wrap(
                             spacing: 8,
@@ -632,7 +709,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                      border: Border(
+                        top: BorderSide(color: ColorUtils.slate200),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: ColorUtils.slate900.withValues(alpha: 0.05),
@@ -649,11 +728,19 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: ColorUtils.slate300),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             child: Text(
-                              languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
-                              style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600),
+                              languageProvider.getTranslatedText({
+                                'en': 'Cancel',
+                                'id': 'Batal',
+                              }),
+                              style: TextStyle(
+                                color: ColorUtils.slate700,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -664,8 +751,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                               setState(() {
                                 _selectedHomeroomFilter = tempSelectedHomeroom;
                                 _selectedGender = tempSelectedGender;
-                                _selectedEmploymentStatus = tempSelectedEmploymentStatus;
-                                _selectedTeachingClassId = tempSelectedTeachingClass;
+                                _selectedEmploymentStatus =
+                                    tempSelectedEmploymentStatus;
+                                _selectedTeachingClassId =
+                                    tempSelectedTeachingClass;
                               });
                               _checkActiveFilter();
                               Navigator.pop(context);
@@ -675,11 +764,19 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                               backgroundColor: ColorUtils.corporateBlue600,
                               padding: EdgeInsets.symmetric(vertical: 14),
                               elevation: 2,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             child: Text(
-                              languageProvider.getTranslatedText({'en': 'Apply Filter', 'id': 'Terapkan Filter'}),
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                              languageProvider.getTranslatedText({
+                                'en': 'Apply Filter',
+                                'id': 'Terapkan Filter',
+                              }),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -778,8 +875,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
       });
-
-      _animationController.forward();
     } catch (e) {
       if (kDebugMode) print('Load teachers error: $e');
       if (!mounted) return;
@@ -1288,10 +1383,14 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
                                 ),
                                 child: Icon(
-                                  teacher == null ? Icons.person_add_rounded : Icons.edit_rounded,
+                                  teacher == null
+                                      ? Icons.person_add_rounded
+                                      : Icons.edit_rounded,
                                   color: Colors.white,
                                   size: 22,
                                 ),
@@ -1303,16 +1402,39 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                   children: [
                                     Text(
                                       teacher == null
-                                          ? languageProvider.getTranslatedText({'en': 'Add Teacher', 'id': 'Tambah Guru'})
-                                          : languageProvider.getTranslatedText({'en': 'Edit Teacher', 'id': 'Edit Guru'}),
-                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                          ? languageProvider.getTranslatedText({
+                                              'en': 'Add Teacher',
+                                              'id': 'Tambah Guru',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Edit Teacher',
+                                              'id': 'Edit Guru',
+                                            }),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     SizedBox(height: 2),
                                     Text(
                                       teacher == null
-                                          ? languageProvider.getTranslatedText({'en': 'Fill in teacher information', 'id': 'Isi data guru baru'})
-                                          : languageProvider.getTranslatedText({'en': 'Update teacher information', 'id': 'Perbarui data guru'}),
-                                      style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                                          ? languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Fill in teacher information',
+                                              'id': 'Isi data guru baru',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Update teacher information',
+                                              'id': 'Perbarui data guru',
+                                            }),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1326,7 +1448,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                     color: Colors.white.withValues(alpha: 0.2),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                                  child: Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
                                 ),
                               ),
                             ],
@@ -1339,233 +1465,237 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                              buildDialogTextField(
-                                controller: nameController,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Teacher Name',
-                                  'id': 'Nama Guru',
-                                }),
-                                icon: Icons.person,
-                              ),
-                              SizedBox(height: 12),
-                              buildDialogTextField(
-                                controller: emailController,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Email',
-                                  'id': 'Email',
-                                }),
-                                icon: Icons.email,
-                                keyboardType: TextInputType.emailAddress,
-                              ),
-                              SizedBox(height: 12),
-                              buildDialogTextField(
-                                controller: nipController,
-                                label: 'NIP',
-                                icon: Icons.badge,
-                              ),
-                              SizedBox(height: 12),
-
-                              // Gender Dropdown (REQUIRED)
-                              buildDialogDropdown(
-                                value: selectedGender,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Gender*',
-                                  'id': 'Jenis Kelamin*',
-                                }),
-                                icon: Icons.person_outline,
-                                items: [
-                                  DropdownMenuItem(
-                                    value: 'L',
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Male',
-                                        'id': 'Laki-laki',
-                                      }),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'P',
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Female',
-                                        'id': 'Perempuan',
-                                      }),
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (value) {
-                                  setState(() => selectedGender = value);
-                                },
-                              ),
-                              SizedBox(height: 16),
-
-                              // Subjects Section
-                              Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.grey.shade200,
-                                  ),
+                                buildDialogTextField(
+                                  controller: nameController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Teacher Name',
+                                    'id': 'Nama Guru',
+                                  }),
+                                  icon: Icons.person,
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Subjects:',
-                                        'id': 'Mata Pelajaran:',
-                                      }),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade700,
+                                SizedBox(height: 12),
+                                buildDialogTextField(
+                                  controller: emailController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Email',
+                                    'id': 'Email',
+                                  }),
+                                  icon: Icons.email,
+                                  keyboardType: TextInputType.emailAddress,
+                                ),
+                                SizedBox(height: 12),
+                                buildDialogTextField(
+                                  controller: nipController,
+                                  label: 'NIP',
+                                  icon: Icons.badge,
+                                ),
+                                SizedBox(height: 12),
+
+                                // Gender Dropdown (REQUIRED)
+                                buildDialogDropdown(
+                                  value: selectedGender,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Gender*',
+                                    'id': 'Jenis Kelamin*',
+                                  }),
+                                  icon: Icons.person_outline,
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: 'L',
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Male',
+                                          'id': 'Laki-laki',
+                                        }),
                                       ),
                                     ),
-                                    SizedBox(height: 8),
-                                    ..._subjects
-                                        .where(
-                                          (subject) =>
-                                              subject['id'] != null &&
-                                              subject['name'] != null,
-                                        )
-                                        .map(
-                                          (subject) => CheckboxListTile(
-                                            contentPadding: EdgeInsets.zero,
-                                            title: Text(
-                                              subject['name']?.toString() ??
-                                                  'Unknown Subject',
-                                              style: TextStyle(fontSize: 14),
-                                            ),
-                                            value: selectedSubjectIds.contains(
-                                              subject['id']?.toString(),
-                                            ),
-                                            onChanged: (value) {
-                                              final subjectId = subject['id']
-                                                  ?.toString();
-                                              if (subjectId == null) return;
+                                    DropdownMenuItem(
+                                      value: 'P',
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Female',
+                                          'id': 'Perempuan',
+                                        }),
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() => selectedGender = value);
+                                  },
+                                ),
+                                SizedBox(height: 16),
 
-                                              setState(() {
-                                                if (value == true) {
-                                                  selectedSubjectIds.add(
-                                                    subjectId,
-                                                  );
-                                                } else {
-                                                  selectedSubjectIds.remove(
-                                                    subjectId,
-                                                  );
-                                                }
-                                              });
-                                            },
-                                            controlAffinity:
-                                                ListTileControlAffinity.leading,
+                                // Subjects Section
+                                Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.grey.shade200,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Subjects:',
+                                          'id': 'Mata Pelajaran:',
+                                        }),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      ..._subjects
+                                          .where(
+                                            (subject) =>
+                                                subject['id'] != null &&
+                                                subject['name'] != null,
+                                          )
+                                          .map(
+                                            (subject) => CheckboxListTile(
+                                              contentPadding: EdgeInsets.zero,
+                                              title: Text(
+                                                subject['name']?.toString() ??
+                                                    'Unknown Subject',
+                                                style: TextStyle(fontSize: 14),
+                                              ),
+                                              value: selectedSubjectIds
+                                                  .contains(
+                                                    subject['id']?.toString(),
+                                                  ),
+                                              onChanged: (value) {
+                                                final subjectId = subject['id']
+                                                    ?.toString();
+                                                if (subjectId == null) return;
+
+                                                setState(() {
+                                                  if (value == true) {
+                                                    selectedSubjectIds.add(
+                                                      subjectId,
+                                                    );
+                                                  } else {
+                                                    selectedSubjectIds.remove(
+                                                      subjectId,
+                                                    );
+                                                  }
+                                                });
+                                              },
+                                              controlAffinity:
+                                                  ListTileControlAffinity
+                                                      .leading,
+                                            ),
+                                          ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+
+                                // Homeroom Class Dropdown (Optional)
+                                buildDialogDropdown(
+                                  value: selectedWaliKelasId,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Homeroom Class (Optional)',
+                                    'id': 'Wali Kelas (Opsional)',
+                                  }),
+                                  icon: Icons.class_,
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: null,
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'None',
+                                          'id': 'Tidak ada',
+                                        }),
+                                      ),
+                                    ),
+                                    ..._classes
+                                        .where(
+                                          (classItem) =>
+                                              classItem['id'] != null &&
+                                              classItem['name'] != null,
+                                        )
+                                        .fold<
+                                          Map<String, Map<String, dynamic>>
+                                        >({}, (map, item) {
+                                          map[item['id'].toString()] = item;
+                                          return map;
+                                        })
+                                        .values
+                                        .map(
+                                          (
+                                            classItem,
+                                          ) => DropdownMenuItem<String>(
+                                            value: classItem['id'].toString(),
+                                            child: Text(
+                                              classItem['name']?.toString() ??
+                                                  'Unknown Class',
+                                            ),
                                           ),
                                         ),
                                   ],
+                                  onChanged: (value) {
+                                    setState(() => selectedWaliKelasId = value);
+                                  },
                                 ),
-                              ),
-                              SizedBox(height: 12),
+                                SizedBox(height: 12),
 
-                              // Homeroom Class Dropdown (Optional)
-                              buildDialogDropdown(
-                                value: selectedWaliKelasId,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Homeroom Class (Optional)',
-                                  'id': 'Wali Kelas (Opsional)',
-                                }),
-                                icon: Icons.class_,
-                                items: [
-                                  DropdownMenuItem(
-                                    value: null,
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'None',
-                                        'id': 'Tidak ada',
-                                      }),
-                                    ),
-                                  ),
-                                  ..._classes
-                                      .where(
-                                        (classItem) =>
-                                            classItem['id'] != null &&
-                                            classItem['name'] != null,
-                                      )
-                                      .fold<Map<String, Map<String, dynamic>>>(
-                                        {},
-                                        (map, item) {
-                                          map[item['id'].toString()] = item;
-                                          return map;
-                                        },
-                                      )
-                                      .values
-                                      .map(
-                                        (classItem) => DropdownMenuItem<String>(
-                                          value: classItem['id'].toString(),
-                                          child: Text(
-                                            classItem['name']?.toString() ??
-                                                'Unknown Class',
-                                          ),
-                                        ),
+                                // Employment Status Dropdown (Optional)
+                                buildDialogDropdown(
+                                  value: selectedStatus,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Employment Status (Optional)',
+                                    'id': 'Status Kepegawaian (Opsional)',
+                                  }),
+                                  icon: Icons.work_outline,
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: null,
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'None',
+                                          'id': 'Tidak ada',
+                                        }),
                                       ),
-                                ],
-                                onChanged: (value) {
-                                  setState(() => selectedWaliKelasId = value);
-                                },
-                              ),
-                              SizedBox(height: 12),
-
-                              // Employment Status Dropdown (Optional)
-                              buildDialogDropdown(
-                                value: selectedStatus,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Employment Status (Optional)',
-                                  'id': 'Status Kepegawaian (Opsional)',
-                                }),
-                                icon: Icons.work_outline,
-                                items: [
-                                  DropdownMenuItem(
-                                    value: null,
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'None',
-                                        'id': 'Tidak ada',
-                                      }),
                                     ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'permanent',
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Permanent',
-                                        'id': 'Tetap',
-                                      }),
+                                    DropdownMenuItem(
+                                      value: 'permanent',
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Permanent',
+                                          'id': 'Tetap',
+                                        }),
+                                      ),
                                     ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'contract',
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Contract',
-                                        'id': 'Kontrak',
-                                      }),
+                                    DropdownMenuItem(
+                                      value: 'contract',
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Contract',
+                                          'id': 'Kontrak',
+                                        }),
+                                      ),
                                     ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'temporary',
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Temporary/Honorary',
-                                        'id': 'Honor',
-                                      }),
+                                    DropdownMenuItem(
+                                      value: 'temporary',
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Temporary/Honorary',
+                                          'id': 'Honor',
+                                        }),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                                onChanged: (value) {
-                                  setState(() => selectedStatus = value);
-                                },
-                              ),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() => selectedStatus = value);
+                                  },
+                                ),
                               ],
                             ),
                           ),
@@ -1575,7 +1705,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                         Container(
                           padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
                           decoration: BoxDecoration(
-                            border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                            border: Border(
+                              top: BorderSide(color: ColorUtils.slate100),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -1587,11 +1719,17 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     padding: EdgeInsets.symmetric(vertical: 13),
-                                    side: BorderSide(color: ColorUtils.slate300),
+                                    side: BorderSide(
+                                      color: ColorUtils.slate300,
+                                    ),
                                   ),
                                   child: Text(
                                     AppLocalizations.cancel.tr,
-                                    style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600, fontSize: 14),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate700,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1730,17 +1868,23 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: ColorUtils.corporateBlue600,
+                                    backgroundColor:
+                                        ColorUtils.corporateBlue600,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     padding: EdgeInsets.symmetric(vertical: 13),
                                     elevation: 2,
-                                    shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                                    shadowColor: ColorUtils.corporateBlue600
+                                        .withValues(alpha: 0.4),
                                   ),
                                   child: Text(
                                     AppLocalizations.save.tr,
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1784,7 +1928,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+            borderSide: BorderSide(
+              color: ColorUtils.corporateBlue600,
+              width: 1.5,
+            ),
           ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
@@ -1816,7 +1963,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+            borderSide: BorderSide(
+              color: ColorUtils.corporateBlue600,
+              width: 1.5,
+            ),
           ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12),
         ),
@@ -1825,7 +1975,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+        icon: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: ColorUtils.slate500,
+        ),
       ),
     );
   }
@@ -1910,7 +2063,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         : (teacher['homeroom_class_name'] ?? '-');
     final email = teacher['user']?['email'] ?? teacher['email'] ?? '-';
     final avatarColor = ColorUtils.getColorForIndex(index);
-    final isReadOnly = Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
+    final isReadOnly = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    ).isReadOnly;
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
@@ -1935,7 +2091,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                   backgroundColor: avatarColor.withValues(alpha: 0.15),
                   child: Text(
                     (teacher['name'] ?? 'N')[0].toUpperCase(),
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: avatarColor),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: avatarColor,
+                    ),
                   ),
                 ),
                 SizedBox(width: 12),
@@ -1946,7 +2106,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                     children: [
                       Text(
                         teacher['name'] ?? 'No Name',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate900),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1966,71 +2130,127 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                   children: [
                     if (isHomeroomTeacher)
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: ColorUtils.corporateBlue600.withValues(alpha: 0.3)),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
                         ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          Container(
-                            width: 5, height: 5,
-                            decoration: BoxDecoration(color: ColorUtils.corporateBlue600, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: ColorUtils.corporateBlue600.withValues(
+                            alpha: 0.1,
                           ),
-                          SizedBox(width: 4),
-                          Text(
-                            languageProvider.getTranslatedText({'en': 'Homeroom', 'id': 'Wali Kelas'}),
-                            style: TextStyle(color: ColorUtils.corporateBlue600, fontSize: 10, fontWeight: FontWeight.w600),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: ColorUtils.corporateBlue600.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
-                        ]),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: ColorUtils.corporateBlue600,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Homeroom',
+                                'id': 'Wali Kelas',
+                              }),
+                              style: TextStyle(
+                                color: ColorUtils.corporateBlue600,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     else
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: ColorUtils.success600.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: ColorUtils.success600.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: ColorUtils.success600.withValues(alpha: 0.3),
+                          ),
                         ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          Container(
-                            width: 5, height: 5,
-                            decoration: BoxDecoration(color: ColorUtils.success600, shape: BoxShape.circle),
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            languageProvider.getTranslatedText({'en': 'Active', 'id': 'Aktif'}),
-                            style: TextStyle(color: ColorUtils.success600, fontSize: 10, fontWeight: FontWeight.w600),
-                          ),
-                        ]),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: ColorUtils.success600,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Active',
+                                'id': 'Aktif',
+                              }),
+                              style: TextStyle(
+                                color: ColorUtils.success600,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     if (!isReadOnly) ...[
                       SizedBox(height: 8),
-                      Row(children: [
-                        InkWell(
-                          onTap: () => showAddEditDialog(teacher: teacher),
-                          child: Container(
-                            padding: EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                      Row(
+                        children: [
+                          InkWell(
+                            onTap: () => showAddEditDialog(teacher: teacher),
+                            child: Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: ColorUtils.corporateBlue600.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.edit_outlined,
+                                size: 16,
+                                color: ColorUtils.corporateBlue600,
+                              ),
                             ),
-                            child: Icon(Icons.edit_outlined, size: 16, color: ColorUtils.corporateBlue600),
                           ),
-                        ),
-                        SizedBox(width: 6),
-                        InkWell(
-                          onTap: () => deleteTeacher(teacher),
-                          child: Container(
-                            padding: EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: ColorUtils.error600.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                          SizedBox(width: 6),
+                          InkWell(
+                            onTap: () => deleteTeacher(teacher),
+                            child: Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: ColorUtils.error600.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.delete_outline,
+                                size: 16,
+                                color: ColorUtils.error600,
+                              ),
                             ),
-                            child: Icon(Icons.delete_outline, size: 16, color: ColorUtils.error600),
                           ),
-                        ),
-                      ]),
+                        ],
+                      ),
                     ],
                   ],
                 ),
@@ -2050,16 +2270,23 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: ColorUtils.slate200),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 11, color: ColorUtils.slate600),
-        SizedBox(width: 3),
-        Text(
-          text,
-          style: TextStyle(fontSize: 11, color: ColorUtils.slate700, fontWeight: FontWeight.w500),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: ColorUtils.slate600),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -2399,7 +2626,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                                         backgroundColor: getPrimaryColor()
                                             .withValues(alpha: 0.1),
                                         side: BorderSide(
-                                          color: getPrimaryColor().withValues(alpha: 0.3),
+                                          color: getPrimaryColor().withValues(
+                                            alpha: 0.3,
+                                          ),
                                           width: 1,
                                         ),
                                         shape: RoundedRectangleBorder(
@@ -2486,32 +2715,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
                             }
 
                             final teacher = displayedTeachers[index];
-                            return AnimatedBuilder(
-                              animation: _animationController,
-                              builder: (context, child) {
-                                final delay = index * 0.1;
-                                final animation = CurvedAnimation(
-                                  parent: _animationController,
-                                  curve: Interval(
-                                    delay,
-                                    1.0,
-                                    curve: Curves.easeOut,
-                                  ),
-                                );
-
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: Transform.translate(
-                                    offset: Offset(
-                                      0,
-                                      50 * (1 - animation.value),
-                                    ),
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: buildTeacherCard(teacher, index),
-                            );
+                            return buildTeacherCard(teacher, index);
                           },
                         ),
                       ),
