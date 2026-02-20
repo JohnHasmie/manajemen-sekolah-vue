@@ -2718,15 +2718,17 @@ class GradeBookPageState extends State<GradeBookPage> {
             padding: EdgeInsets.all(12),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
-              color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
-              border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
+              color: _getPrimaryColor(),
+              border: Border(
+                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+              ),
             ),
             child: Text(
               languageProvider.getTranslatedText({'en': 'Name', 'id': 'Nama'}),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
-                color: ColorUtils.slate700,
+                color: Colors.white,
               ),
             ),
           ),
@@ -2788,8 +2790,12 @@ class GradeBookPageState extends State<GradeBookPage> {
             Container(
               height: 70,
               decoration: BoxDecoration(
-                color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
-                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
+                color: _getPrimaryColor(),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
+                ),
               ),
               child: Row(
                 children: _filteredJenisNilaiList.expand((jenis) {
@@ -2830,7 +2836,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 10,
-                                  color: ColorUtils.slate700,
+                                  color: Colors.white,
                                 ),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
@@ -2840,7 +2846,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                                 displayDate,
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: ColorUtils.slate500,
+                                  color: Colors.white.withValues(alpha: 0.8),
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -2873,7 +2879,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
-                                color: ColorUtils.slate600,
+                                color: Colors.white,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -2883,7 +2889,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                               child: Icon(
                                 Icons.add_circle_outline,
                                 size: 20,
-                                color: _getPrimaryColor(),
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -3379,9 +3385,28 @@ class GradeBookPageState extends State<GradeBookPage> {
                                           }),
                                     icon: Icons.people_outline,
                                   )
-                                : SingleChildScrollView(
-                                    scrollDirection: Axis.vertical,
-                                    child: _buildGradeTable(languageProvider),
+                                : Container(
+                                    margin: const EdgeInsets.fromLTRB(
+                                      16,
+                                      0,
+                                      16,
+                                      16,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: ColorUtils.slate200,
+                                      ),
+                                      boxShadow: ColorUtils.corporateShadow(
+                                        elevation: 1.0,
+                                      ),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.vertical,
+                                      child: _buildGradeTable(languageProvider),
+                                    ),
                                   ),
                           ),
                         ],
