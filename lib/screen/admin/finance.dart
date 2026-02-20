@@ -2417,215 +2417,276 @@ class FinanceScreenState extends State<FinanceScreen>
                 });
           }
 
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                Icon(Icons.auto_awesome, color: ColorUtils.corporateBlue600),
-                SizedBox(width: 8),
-                Text(
-                  'Generate Tagihan',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-              ],
-            ),
-            content: SizedBox(
+          return Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            clipBehavior: Clip.antiAlias,
+            child: SizedBox(
               width: MediaQuery.of(context).size.width * 0.9,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Pilih periode untuk "${jenisPembayaran['name']}":',
-                    style: TextStyle(color: ColorUtils.slate600, fontSize: 13),
-                  ),
-                  SizedBox(height: 20),
-
-                  // Academic Year Selection
-                  if (isLoadingYears)
-                    Center(child: CircularProgressIndicator())
-                  else
-                    Container(
-                      decoration: BoxDecoration(
-                        color: ColorUtils.slate100,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: selectedAcademicYearId,
-                          decoration: InputDecoration(
-                            labelText: 'Tahun Ajaran',
-                            labelStyle: TextStyle(color: ColorUtils.slate600),
-                            border: InputBorder.none,
+                  // Gradient Header (Pattern #10)
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(gradient: _getCardGradient()),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          items: academicYears.map((y) {
-                            return DropdownMenuItem<String>(
-                              value: y['id'].toString(),
-                              child: Text(
-                                y['year'] ?? 'Unknown',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setDialogState(() {
-                                selectedAcademicYearId = val;
-                                isLoadingGenerated = true;
-                                generatedMonths = [];
-                              });
-                              ApiService.getGeneratedMonths(
-                                paymentTypeId: jenisPembayaran['id'].toString(),
-                                academicYearId: val,
-                              ).then((genMonths) {
-                                if (context.mounted) {
-                                  setDialogState(() {
-                                    generatedMonths = genMonths;
-                                    isLoadingGenerated = false;
-                                  });
-                                }
-                              });
-                            }
-                          },
+                          child: Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
                         ),
-                      ),
-                    ),
-
-                  SizedBox(height: 24),
-
-                  // Month Grid
-                  Text(
-                    'Pilih Bulan',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                  SizedBox(height: 12),
-                  if (isLoadingGenerated)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  else
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 2.2,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                      ),
-                      itemCount: months.length,
-                      itemBuilder: (context, index) {
-                        final month = months[index];
-                        final isGenerated = generatedMonths.contains(month);
-                        final isSelected = selectedMonth == month;
-
-                        return InkWell(
-                          onTap: isGenerated
-                              ? null
-                              : () {
-                                  setDialogState(() => selectedMonth = month);
-                                },
-                          child: Container(
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: isGenerated
-                                  ? ColorUtils.slate200
-                                  : isSelected
-                                  ? ColorUtils.corporateBlue600
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: isSelected
-                                    ? ColorUtils.corporateBlue600
-                                    : ColorUtils.slate300,
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Generate Tagihan',
+                                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
-                                        blurRadius: 4,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ]
-                                  : null,
+                              Text(
+                                jenisPembayaran['name'] ?? '',
+                                style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Content
+                  Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Academic Year Selection
+                        Row(
+                          children: [
+                            Icon(Icons.school_rounded, size: 15, color: ColorUtils.slate600),
+                            SizedBox(width: 6),
+                            Text(
+                              'Tahun Ajaran',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate800),
                             ),
-                            child: Stack(
-                              children: [
-                                Center(
-                                  child: Text(
-                                    month,
-                                    style: TextStyle(
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                        if (isLoadingYears)
+                          Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16),
+                              child: CircularProgressIndicator(color: _getPrimaryColor()),
+                            ),
+                          )
+                        else
+                          Container(
+                            decoration: BoxDecoration(
+                              color: ColorUtils.slate50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: ColorUtils.slate200),
+                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButtonFormField<String>(
+                                initialValue: selectedAcademicYearId,
+                                decoration: InputDecoration(
+                                  prefixIcon: Icon(Icons.calendar_today_rounded, color: _getPrimaryColor(), size: 18),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                style: TextStyle(fontWeight: FontWeight.w600, color: ColorUtils.slate900, fontSize: 14),
+                                items: academicYears.map((y) {
+                                  return DropdownMenuItem<String>(
+                                    value: y['id'].toString(),
+                                    child: Text(y['year'] ?? 'Unknown'),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setDialogState(() {
+                                      selectedAcademicYearId = val;
+                                      isLoadingGenerated = true;
+                                      generatedMonths = [];
+                                    });
+                                    ApiService.getGeneratedMonths(
+                                      paymentTypeId: jenisPembayaran['id'].toString(),
+                                      academicYearId: val,
+                                    ).then((genMonths) {
+                                      if (context.mounted) {
+                                        setDialogState(() {
+                                          generatedMonths = genMonths;
+                                          isLoadingGenerated = false;
+                                        });
+                                      }
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+
+                        SizedBox(height: 20),
+
+                        // Month Grid
+                        Row(
+                          children: [
+                            Icon(Icons.date_range_rounded, size: 15, color: ColorUtils.slate600),
+                            SizedBox(width: 6),
+                            Text(
+                              'Pilih Bulan',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate800),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                        if (isLoadingGenerated)
+                          Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: CircularProgressIndicator(color: _getPrimaryColor()),
+                            ),
+                          )
+                        else
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              childAspectRatio: 2.2,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
+                            ),
+                            itemCount: months.length,
+                            itemBuilder: (context, index) {
+                              final month = months[index];
+                              final isGenerated = generatedMonths.contains(month);
+                              final isSelected = selectedMonth == month;
+
+                              return Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: isGenerated
+                                      ? null
+                                      : () => setDialogState(() => selectedMonth = month),
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
                                       color: isGenerated
-                                          ? ColorUtils.slate500
+                                          ? ColorUtils.slate100
                                           : isSelected
-                                          ? Colors.white
-                                          : ColorUtils.slate800,
-                                      fontSize: 12,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                              ? _getPrimaryColor()
+                                              : Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isGenerated
+                                            ? ColorUtils.slate200
+                                            : isSelected
+                                                ? _getPrimaryColor()
+                                                : ColorUtils.slate200,
+                                      ),
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: _getPrimaryColor().withValues(alpha: 0.3),
+                                                blurRadius: 4,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ]
+                                          : null,
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        Center(
+                                          child: Text(
+                                            month,
+                                            style: TextStyle(
+                                              color: isGenerated
+                                                  ? ColorUtils.slate400
+                                                  : isSelected
+                                                      ? Colors.white
+                                                      : ColorUtils.slate700,
+                                              fontSize: 12,
+                                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                        if (isGenerated)
+                                          Positioned(
+                                            right: 3,
+                                            top: 3,
+                                            child: Icon(Icons.check_circle_rounded, size: 12, color: ColorUtils.success600),
+                                          ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                                if (isGenerated)
-                                  Positioned(
-                                    right: 2,
-                                    top: 2,
-                                    child: Icon(
-                                      Icons.check_circle,
-                                      size: 10,
-                                      color: ColorUtils.success600,
-                                    ),
-                                  ),
-                              ],
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // Footer
+                  Container(
+                    padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              side: BorderSide(color: ColorUtils.slate300),
+                            ),
+                            child: Text('Batal', style: TextStyle(color: ColorUtils.slate600)),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: (selectedAcademicYearId == null || generatedMonths.contains(selectedMonth))
+                                ? null
+                                : () {
+                                    Navigator.pop(context, {
+                                      'month': selectedMonth,
+                                      'academicYearId': selectedAcademicYearId!,
+                                    });
+                                  },
+                            icon: Icon(Icons.auto_awesome_rounded, size: 16, color: Colors.white),
+                            label: Text(
+                              'Generate',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getPrimaryColor(),
+                              disabledBackgroundColor: ColorUtils.slate300,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              elevation: 0,
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Batal',
-                  style: TextStyle(color: ColorUtils.slate600),
-                ),
-              ),
-              ElevatedButton(
-                onPressed:
-                    (selectedAcademicYearId == null ||
-                        generatedMonths.contains(selectedMonth))
-                    ? null
-                    : () {
-                        Navigator.pop(context, {
-                          'month': selectedMonth,
-                          'academicYearId': selectedAcademicYearId!,
-                        });
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getPrimaryColor(),
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: Text(
-                  'Generate Now',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
           );
         },
       ),
@@ -2952,14 +3013,31 @@ class FinanceScreenState extends State<FinanceScreen>
 
   Widget _buildInfoItem(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 5),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$label: ',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: ColorUtils.slate500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          Expanded(child: Text(value, style: TextStyle(fontSize: 12))),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                color: ColorUtils.slate900,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -3256,75 +3334,95 @@ class FinanceScreenState extends State<FinanceScreen>
   }
 
   Widget _buildDashboardStats() {
+    return Padding(
+      padding: EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildStatCard(
+              icon: Icons.receipt_long_rounded,
+              value: '${_dashboardData['tagihan_belum_dibayar'] ?? 0}',
+              label: languageProvider.getTranslatedText(AppLocalizations.unpaid),
+              color: ColorUtils.warning600,
+            ),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: _buildStatCard(
+              icon: Icons.verified_rounded,
+              value: '${_dashboardData['tagihan_terverifikasi'] ?? 0}',
+              label: languageProvider.getTranslatedText(AppLocalizations.verified),
+              color: ColorUtils.success600,
+            ),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: _buildStatCard(
+              icon: Icons.pending_actions_rounded,
+              value: '$_totalPembayaranPending',
+              label: languageProvider.getTranslatedText({
+                'en': 'Pending',
+                'id': 'Menunggu',
+              }),
+              color: ColorUtils.corporateBlue600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
     return Container(
-      margin: EdgeInsets.all(16),
+      padding: EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          // Statistik Secondary (Keeping these as they weren't in the "drawn part")
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.warning600.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.15)),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(Icons.receipt, color: ColorUtils.warning600, size: 20),
-                      SizedBox(height: 4),
-                      Text(
-                        '${_dashboardData['tagihan_belum_dibayar'] ?? 0}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: ColorUtils.warning600,
-                        ),
-                      ),
-                      Text(
-                        languageProvider.getTranslatedText(
-                          AppLocalizations.unpaid,
-                        ),
-                        style: TextStyle(fontSize: 10, color: ColorUtils.warning600),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.success600.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: ColorUtils.success600.withValues(alpha: 0.15)),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(Icons.verified, color: ColorUtils.success600, size: 20),
-                      SizedBox(height: 4),
-                      Text(
-                        '${_dashboardData['tagihan_terverifikasi'] ?? 0}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: ColorUtils.success600,
-                        ),
-                      ),
-                      Text(
-                        languageProvider.getTranslatedText(
-                          AppLocalizations.verified,
-                        ),
-                        style: TextStyle(fontSize: 10, color: ColorUtils.success600),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+          SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: ColorUtils.slate500,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -3342,16 +3440,12 @@ class FinanceScreenState extends State<FinanceScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            'Tagihan yang sedang berjalan',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: ColorUtils.slate800,
-            ),
-          ),
+        _buildSectionHeader(
+          languageProvider.getTranslatedText({
+            'en': 'Active Bills',
+            'id': 'Tagihan Berjalan',
+          }),
+          Icons.receipt_long_rounded,
         ),
         if (generatedBatches.isEmpty)
           Padding(
@@ -3385,51 +3479,92 @@ class FinanceScreenState extends State<FinanceScreen>
     final count = item['count'] ?? 0;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(16),
-        leading: Container(
-          padding: EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: _getPrimaryColor().withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.receipt_long, color: _getPrimaryColor()),
-        ),
-        title: Text(
-          '$name - $formattedMonth',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 4),
-            Text(amount, style: TextStyle(color: ColorUtils.slate700)),
-            SizedBox(height: 2),
-            Text(
-              '$count Tagihan Dibuat',
-              style: TextStyle(
-                color: ColorUtils.corporateBlue600,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: _getPrimaryColor().withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.15)),
             ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: Icon(Icons.delete_outline, color: ColorUtils.error600),
-          onPressed: () => _deleteGeneratedBills(item),
-        ),
-        onTap: () {
-          // Switch to Tagihan tab and show bills for this type and month?
-          // Future improvement.
-        },
+            child: Icon(Icons.receipt_long_rounded, color: _getPrimaryColor(), size: 22),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: ColorUtils.slate900,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 2),
+                Text(
+                  formattedMonth,
+                  style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
+                ),
+                SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _getPrimaryColor().withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        amount,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _getPrimaryColor(),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.info600.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$count Tagihan',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: ColorUtils.info600,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          _buildCircleActionButton(
+            icon: Icons.delete_outline_rounded,
+            color: ColorUtils.error600,
+            onPressed: () => _deleteGeneratedBills(item),
+            tooltip: 'Hapus',
+          ),
+        ],
       ),
     );
   }
@@ -3539,112 +3674,101 @@ class FinanceScreenState extends State<FinanceScreen>
 
         final filteredJenisPembayaran = _getFilteredJenisPembayaran();
 
-        return DefaultTabController(
-          length: 4,
-          initialIndex: _currentTabIndex,
-          child: Scaffold(
-            backgroundColor: ColorUtils.slate50,
-            appBar: AppBar(
-              title: Text(
-                languageProvider.getTranslatedText(
-                  AppLocalizations.financialManagement,
-                ),
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+        return Scaffold(
+          backgroundColor: ColorUtils.slate50,
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            toolbarHeight: 70,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: _getCardGradient(),
               ),
-              backgroundColor: _getPrimaryColor(),
-              elevation: 0,
-              centerTitle: true,
-              iconTheme: IconThemeData(color: Colors.white),
-              bottom: PreferredSize(
-                preferredSize: Size.fromHeight(48.0),
-                child: Container(
-                  color: _getPrimaryColor(),
-                  child: TabBar(
-                    isScrollable: true, // INI YANG DITAMBAHKAN
-                    indicatorColor: Colors.white,
-                    labelStyle: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                    unselectedLabelStyle: TextStyle(
-                      fontWeight: FontWeight.normal,
-                      color: Colors.white,
-                    ),
-                    onTap: (index) {
-                      setState(() {
-                        _currentTabIndex = index;
-                      });
-                    },
-                    tabs: [
-                      Tab(
-                        text: languageProvider.getTranslatedText(
-                          AppLocalizations.dashboard,
+            ),
+            title: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        languageProvider.getTranslatedText(
+                          AppLocalizations.financialManagement,
+                        ),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
-                      Tab(
-                        text: languageProvider.getTranslatedText(
-                          AppLocalizations.paymentTypes,
-                        ),
-                      ),
-                      Tab(
-                        text:
-                            '${languageProvider.getTranslatedText(AppLocalizations.verification)} (${_totalPembayaranPending > 99 ? '99+' : _totalPembayaranPending})',
-                      ),
-                      Tab(
-                        text: languageProvider.getTranslatedText(
-                          AppLocalizations.classReport,
+                      Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Manage payments & bills',
+                          'id': 'Kelola pembayaran & tagihan',
+                        }),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              actions: [
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Colors.white),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'refresh':
-                        _loadData();
-                        break;
-                    }
-                  },
-                  itemBuilder: (BuildContext context) => [
-                    PopupMenuItem<String>(
-                      value: 'refresh',
-                      child: Row(
-                        children: [
-                          Icon(Icons.refresh, color: _getPrimaryColor()),
-                          SizedBox(width: 8),
-                          Text('Refresh'),
-                        ],
-                      ),
-                    ),
-                  ],
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                    onPressed: _loadData,
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
               ],
             ),
-            body: TabBarView(
-              children: [
-                // Tab Dashboard
-                Column(
+            titleSpacing: 16,
+            centerTitle: false,
+          ),
+          body: Column(
+            children: [
+              _buildNavigationBar(languageProvider),
+              Expanded(
+                child: IndexedStack(
+                  index: _currentTabIndex,
                   children: [
-                    _buildDashboardStats(),
-                    Expanded(
-                      child: ListView(
-                        children: [
-                          if (_pembayaranPendingList.isNotEmpty)
-                            _buildPendingSection(),
-                          _buildGeneratedPaymentTypesSection(),
-                        ],
-                      ),
-                    ),
-                  ],
+                // Tab Dashboard
+                RefreshIndicator(
+                  onRefresh: _loadData,
+                  color: _getPrimaryColor(),
+                  child: ListView(
+                    padding: EdgeInsets.only(bottom: 20),
+                    children: [
+                      _buildDashboardStats(),
+                      if (_pembayaranPendingList.isNotEmpty)
+                        _buildPendingSection(),
+                      _buildGeneratedPaymentTypesSection(),
+                      SizedBox(height: 16),
+                    ],
+                  ),
                 ),
 
                 // Tab Jenis Pembayaran
@@ -3893,72 +4017,270 @@ class FinanceScreenState extends State<FinanceScreen>
                         },
                       ),
                 _buildLaporanKelasTab(),
-              ],
-            ),
-            floatingActionButton: _getFloatingActionButton(),
+                  ],
+                ),
+              ),
+            ],
           ),
+          floatingActionButton: _getFloatingActionButton(),
         );
       },
     );
   }
 
+  Widget _buildNavigationBar(LanguageProvider languageProvider) {
+    final items = [
+      {
+        'icon': Icons.dashboard_rounded,
+        'label': languageProvider.getTranslatedText(AppLocalizations.dashboard),
+        'index': 0,
+      },
+      {
+        'icon': Icons.payment_rounded,
+        'label': languageProvider.getTranslatedText(AppLocalizations.paymentTypes),
+        'index': 1,
+      },
+      {
+        'icon': Icons.verified_rounded,
+        'label': languageProvider.getTranslatedText(AppLocalizations.verification),
+        'index': 2,
+        'badge': _totalPembayaranPending,
+      },
+      {
+        'icon': Icons.school_rounded,
+        'label': languageProvider.getTranslatedText(AppLocalizations.classReport),
+        'index': 3,
+      },
+    ];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: items.map((item) {
+          final index = item['index'] as int;
+          final isSelected = _currentTabIndex == index;
+          final badge = item['badge'] as int? ?? 0;
+
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _currentTabIndex = index),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                margin: EdgeInsets.symmetric(horizontal: 3),
+                padding: EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? _getPrimaryColor().withValues(alpha: 0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? _getPrimaryColor().withValues(alpha: 0.2)
+                        : Colors.transparent,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 22,
+                          color: isSelected
+                              ? _getPrimaryColor()
+                              : ColorUtils.slate400,
+                        ),
+                        if (badge > 0)
+                          Positioned(
+                            right: -8,
+                            top: -4,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: badge > 9 ? 4 : 5,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: ColorUtils.error600,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                badge > 99 ? '99+' : '$badge',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      item['label'] as String,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isSelected
+                            ? _getPrimaryColor()
+                            : ColorUtils.slate500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, {Color? color}) {
+    final sectionColor = color ?? _getPrimaryColor();
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: ColorUtils.slate50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border(left: BorderSide(color: sectionColor, width: 3)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: sectionColor),
+            SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: ColorUtils.slate800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPendingSection() {
     return Container(
-      margin: EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorUtils.warning600.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.15)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.warning600.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.pending_actions, color: ColorUtils.warning600, size: 20),
-              SizedBox(width: 8),
-              Text(
-                languageProvider.getTranslatedText(
-                  AppLocalizations.paymentsPendingVerification,
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: ColorUtils.warning600.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: ColorUtils.warning600,
+                child: Icon(Icons.pending_actions_rounded, color: ColorUtils.warning600, size: 20),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      languageProvider.getTranslatedText(
+                        AppLocalizations.paymentsPendingVerification,
+                      ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: ColorUtils.slate900,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      '${_pembayaranPendingList.length} ${languageProvider.getTranslatedText({'en': 'payments need verification', 'id': 'pembayaran perlu diverifikasi'})}',
+                      style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: ColorUtils.warning600.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_pembayaranPendingList.length}',
+                  style: TextStyle(
+                    color: ColorUtils.warning600,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 8),
-          Text(
-            'Ada ${_pembayaranPendingList.length} pembayaran yang perlu diverifikasi',
-            style: TextStyle(color: ColorUtils.warning600, fontSize: 12),
-          ),
-          SizedBox(height: 8),
-          SizedBox(height: 8),
-          if (!Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).isReadOnly)
+          if (!Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly) ...[
+            SizedBox(height: 14),
             Builder(
               builder: (context) {
-                return ElevatedButton(
-                  onPressed: () {
-                    DefaultTabController.of(context).animateTo(2);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorUtils.warning600,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                return SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() => _currentTabIndex = 2);
+                    },
+                    icon: Icon(Icons.verified_rounded, size: 16, color: Colors.white),
+                    label: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Verify Now',
+                        'id': 'Verifikasi Sekarang',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
                     ),
-                  ),
-                  child: Text(
-                    'Verifikasi Sekarang',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorUtils.warning600,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: EdgeInsets.symmetric(vertical: 11),
+                    ),
                   ),
                 );
               },
             ),
+          ],
         ],
       ),
     );
@@ -4430,24 +4752,31 @@ class FinanceScreenState extends State<FinanceScreen>
   }
 
   Widget _buildInfoRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            label,
-            style: TextStyle(color: ColorUtils.slate600, fontSize: 12),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
+            ),
           ),
-        ),
-        Text(': ', style: TextStyle(color: ColorUtils.slate600, fontSize: 12)),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+          Text(': ', style: TextStyle(color: ColorUtils.slate400, fontSize: 12)),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: ColorUtils.slate800,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

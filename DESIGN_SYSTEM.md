@@ -1,7 +1,7 @@
 # 🎨 Design System Guide - Kamil Edu Professional Style
 
 **Last Updated:** 2026-02-19
-**Version:** 2.15
+**Version:** 2.16
 **Reference:** Kamil Edu Dashboard Design
 **Applied To:** Dashboard, Student Management, Student Detail Screen, Teacher Management, Class Management, Subject Management, Teaching Schedule Management, Grade (Nilai) Page, Admin Announcement, Admin Class Activity, Admin Presence Report, Admin RPP, Finance, Class Finance Report, User Profile (Settings), School Settings, Notification List, Teacher Teaching Schedule, Teacher Presence (Absensi Guru), Teacher Learning Materials (Materi Pembelajaran), Teacher RPP (Guru RPP), Wali Murid Announcement, Wali Murid Presence, Wali Murid Class Activity, Wali Murid Grade, Wali Murid Billing, Class Promotion Wizard
 
@@ -2730,6 +2730,19 @@ Container(
   - **Snackbars**: `success600` (success) / `error600` (errors) / `warning600` (validation) with `SnackBarBehavior.floating`
   - **Zero raw colors**: All `Colors.red`, `Colors.green`, `Colors.orange`, `Colors.blue.shade*`, `Colors.grey.*`, `Colors.black.withOpacity`, `withOpacity()` fully eliminated
 
+✅ **Finance Screen** (`lib/screen/admin/finance.dart`) - UI/UX flow redesign (v2.16):
+  - **Header**: Pattern #7 gradient header via AppBar `flexibleSpace` with gradient Container, 40×40 semi-transparent back/refresh buttons, title + subtitle, `automaticallyImplyLeading: false`, `toolbarHeight: 70`
+  - **Navigation Bar**: Custom icon-pill nav (`_buildNavigationBar`) replacing scrollable TabBar — Row of `Expanded` items with icon(22) + label(10), selected: `primaryColor.withValues(alpha:0.1)` bg + `0.2` border, unselected: transparent + `slate400`/`slate500`, badge pill `error600`, `AnimatedContainer(200ms)`, white bg + subtle shadow, `IndexedStack` content switching
+  - **Dashboard stats**: Three stat cards in a Row (`_buildStatCard`) — icon container 40×40 `color.withValues(alpha:0.1)` + bold value + label, white bg + colored border + subtle colored shadow
+  - **Pending section**: White card with icon container + title/subtitle + count badge (rounded pill `warning600`) + full-width `ElevatedButton.icon`
+  - **Section headers**: `_buildSectionHeader` — 3px left border `primaryColor` + `slate50` bg + icon(16) + title `slate800 w700 fontSize:13`
+  - **Generated batch items**: Custom Row layout replacing ListTile — 44×44 icon container + name/month/amount tags + circle action button
+  - **Generate Bills dialog**: Pattern #10 gradient header (was AlertDialog), styled academic year dropdown with `slate50` bg, month grid with `Material > InkWell`, proper outlined/elevated footer buttons
+  - **Verification dialog**: Already had gradient header, improved `_buildInfoItem` with 100px label column `slate500` + value `slate900 w600`
+  - **Payment proof dialog**: Gradient header, improved `_buildInfoRow` with `slate500`/`slate800` colors
+  - **Dashboard tab**: `RefreshIndicator` wrapping `ListView` for pull-to-refresh
+  - **Scaffold**: `ColorUtils.slate50` background
+
 ### When Applying to New Pages
 1. **Read this guide first**
 2. **Identify page sections** (hero, stats, lists, actions)
@@ -2751,6 +2764,6 @@ For questions about this design system or when creating new patterns:
 3. Follow the established principles
 4. Maintain consistency with existing components
 
-**Design System Version:** 2.14
+**Design System Version:** 2.16
 **Compatible with:** Flutter 3.x
 **Maintained by:** Development Team
