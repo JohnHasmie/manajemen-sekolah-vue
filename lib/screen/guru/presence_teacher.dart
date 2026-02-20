@@ -84,9 +84,7 @@ class PresencePageState extends State<PresencePage>
   // Data untuk mode Input Absensi
   DateTime _selectedDate = DateTime.now();
   String? _selectedSubjectId;
-  String? _selectedSubjectName;
   String? _selectedClassId;
-  String? _selectedClassName;
   List<dynamic> _subjectTeacher = [];
   List<dynamic> _classList = [];
   List<Siswa> _studentList = [];
@@ -96,7 +94,6 @@ class PresencePageState extends State<PresencePage>
   bool _isSubmitting = false;
   bool _hasActiveFilter = false;
   bool _showSearch = false;
-  final bool _showQuickActions = false;
 
   // Lesson Hour State
   List<dynamic> _lessonHours = [];
@@ -104,8 +101,6 @@ class PresencePageState extends State<PresencePage>
 
   // Filter untuk Results Mode
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _filterOptions = ['All', 'Today', 'This Week'];
-  final String _selectedFilter = 'All';
   String? _selectedDateFilter;
   List<String> _selectedSubjectIds = [];
   List<String> _selectedDayIds = [];
@@ -114,10 +109,6 @@ class PresencePageState extends State<PresencePage>
   // Filter untuk Input Mode
   final TextEditingController _searchControllerInput = TextEditingController();
   String? _selectedStatusFilter;
-  bool _hasActiveFilterInput = false;
-
-  // State untuk auto-detection schedule
-  Map<String, dynamic>? _currentSchedule;
 
   @override
   void initState() {
@@ -129,11 +120,9 @@ class PresencePageState extends State<PresencePage>
     }
     if (widget.initialSubjectId != null) {
       _selectedSubjectId = widget.initialSubjectId;
-      _selectedSubjectName = widget.initialSubjectName;
     }
     if (widget.initialclassId != null) {
       _selectedClassId = widget.initialclassId;
-      _selectedClassName = widget.initialClassName;
     }
 
     _tabController = TabController(length: 2, vsync: this);
@@ -248,19 +237,10 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
-  Future<void> _loadSubjectsByClass(
-    String? classId, {
-    StateSetter? setModalState,
-  }) async {
-    if (setModalState != null) {
-      setModalState(() {
-        _isLoadingInput = true;
-      });
-    } else {
-      setState(() {
-        _isLoadingInput = true;
-      });
-    }
+  Future<void> _loadSubjectsByClass(String? classId) async {
+    setState(() {
+      _isLoadingInput = true;
+    });
 
     try {
       final result = await _getSubjectByTeacher(
@@ -268,7 +248,7 @@ class PresencePageState extends State<PresencePage>
         classId: classId,
       );
 
-      void updateState() {
+      setState(() {
         _subjectTeacher = result;
         _isLoadingInput = false;
 
@@ -276,26 +256,13 @@ class PresencePageState extends State<PresencePage>
         if (_selectedSubjectId != null &&
             !_subjectTeacher.any((s) => s['id'] == _selectedSubjectId)) {
           _selectedSubjectId = null;
-          _selectedSubjectName = null;
         }
-      }
-
-      if (setModalState != null) {
-        setModalState(updateState);
-      } else {
-        setState(updateState);
-      }
+      });
     } catch (e) {
       print('Error loading subjects by class: $e');
-      void updateErrorState() {
+      setState(() {
         _isLoadingInput = false;
-      }
-
-      if (setModalState != null) {
-        setModalState(updateErrorState);
-      } else {
-        setState(updateErrorState);
-      }
+      });
     }
   }
 
@@ -398,26 +365,15 @@ class PresencePageState extends State<PresencePage>
           }
 
           if (currentSchedule != null) {
-            _currentSchedule = currentSchedule;
             _selectedSubjectId = currentSchedule['mata_pelajaran_id']
                 ?.toString();
-            _selectedSubjectName = currentSchedule['mata_pelajaran_nama']
-                ?.toString();
             _selectedClassId = currentSchedule['kelas_id']?.toString();
-            _selectedClassName = currentSchedule['kelas_nama']?.toString();
             _filterStudentsByClass(_selectedClassId);
-          } else {
-            _currentSchedule = null;
           }
-        } else {
-          _currentSchedule = null;
         }
       });
     } catch (e) {
       print('Error detecting current schedule: $e');
-      setState(() {
-        _currentSchedule = null;
-      });
     }
   }
 
@@ -493,57 +449,6 @@ class PresencePageState extends State<PresencePage>
           _isLoadingSummary = false;
         });
       }
-    }
-  }
-
-  String _getSubjectName(String subjectId) {
-    try {
-      final subject = _subjectTeacher.firstWhere(
-        (mp) => mp['id'] == subjectId,
-        orElse: () => {'nama': 'Unknown'},
-      );
-      return subject['nama'] ?? subject['name'] ?? 'Unknown';
-    } catch (e) {
-      return 'Unknown';
-    }
-  }
-
-  String _getSubjectSelectedName() {
-    if (_selectedSubjectId == null) return '-';
-    try {
-      final subject = _subjectTeacher.firstWhere(
-        (mp) => mp['id'] == _selectedSubjectId,
-        orElse: () => {'nama': 'Unknown'},
-      );
-      return subject['nama'] ?? subject['name'] ?? 'Unknown';
-    } catch (e) {
-      return 'Unknown';
-    }
-  }
-
-  String _getClassNameWithCount(String classId) {
-    // Use provided kelas name if available
-    if (_selectedClassName != null) {
-      final count = _filteredStudentList
-          .where((s) => s.classId == classId)
-          .length;
-      return '$_selectedClassName - $count siswa';
-    }
-
-    // Fallback to finding from list
-    try {
-      final classList = _classList.firstWhere(
-        (k) => k['id'].toString() == classId,
-        orElse: () => {'nama': 'Unknown Class'},
-      );
-      final className =
-          classList['nama'] ?? classList['name'] ?? 'Unknown Class';
-      final count = _filteredStudentList
-          .where((s) => s.classId == classId)
-          .length;
-      return '$className - $count siswa';
-    } catch (e) {
-      return 'Unknown Class';
     }
   }
 
@@ -661,508 +566,6 @@ class PresencePageState extends State<PresencePage>
       default:
         return Icons.help;
     }
-  }
-
-  // ========== SHOW EDIT BOTTOM SHEET ==========
-  void _showEditBottomSheet(LanguageProvider languageProvider) {
-    // Refresh subjects for the selected class before opening
-    _loadSubjectsByClass(_selectedClassId);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.85,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Gradient header (Pattern #11)
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          _getPrimaryColor(),
-                          _getPrimaryColor().withValues(alpha: 0.8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                    ),
-                    padding: EdgeInsets.fromLTRB(20, 16, 16, 20),
-                    child: Column(
-                      children: [
-                        // Handle bar
-                        Center(
-                          child: Container(
-                            width: 36,
-                            height: 4,
-                            margin: EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.edit_calendar,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Edit Schedule',
-                                      'id': 'Edit Jadwal',
-                                    }),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en':
-                                          'Manually select date, class, and subject',
-                                      'id':
-                                          'Pilih tanggal, kelas, dan mata pelajaran',
-                                    }),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.85,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            InkWell(
-                              onTap: () => Navigator.pop(context),
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Form Content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Date Picker
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Date',
-                              'id': 'Tanggal',
-                            }),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: ColorUtils.slate700,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          InkWell(
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: _selectedDate,
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime(2030),
-                              );
-                              if (picked != null) {
-                                setState(() {
-                                  _selectedDate = picked;
-                                });
-                                setModalState(() {});
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 14,
-                              ),
-                              decoration: BoxDecoration(
-                                color: ColorUtils.slate50,
-                                border: Border.all(color: ColorUtils.slate200),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    DateFormat(
-                                      'EEEE, dd MMMM yyyy',
-                                      'id_ID',
-                                    ).format(_selectedDate),
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: ColorUtils.slate800,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.calendar_today,
-                                    color: _getPrimaryColor(),
-                                    size: 20,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-
-                          // Lesson Hour Dropdown
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Lesson Hour',
-                              'id': 'Jam Pelajaran',
-                            }),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: ColorUtils.slate700,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ColorUtils.slate50,
-                              border: Border.all(color: ColorUtils.slate200),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DropdownButton<String>(
-                              value: _selectedLessonHourId,
-                              isExpanded: true,
-                              underline: Container(),
-                              icon: Icon(
-                                Icons.arrow_drop_down,
-                                color: ColorUtils.slate600,
-                              ),
-                              style: TextStyle(
-                                color: ColorUtils.slate800,
-                                fontSize: 15,
-                              ),
-                              items: [
-                                DropdownMenuItem(
-                                  value: null,
-                                  child: Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Select Lesson Hour',
-                                      'id': 'Pilih Jam Pelajaran',
-                                    }),
-                                    style: TextStyle(
-                                      color: ColorUtils.slate500,
-                                    ),
-                                  ),
-                                ),
-                                ..._lessonHours.map(
-                                  (lh) => DropdownMenuItem(
-                                    value: lh['id']?.toString(),
-                                    child: Text(
-                                      '${lh['name']} (${lh['start_time']} - ${lh['end_time']})',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedLessonHourId = value;
-                                });
-                                setModalState(() {});
-                              },
-                            ),
-                          ),
-                          SizedBox(height: 20),
-
-                          // Class Dropdown
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Class',
-                              'id': 'Kelas',
-                            }),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: ColorUtils.slate700,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ColorUtils.slate50,
-                              border: Border.all(color: ColorUtils.slate200),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DropdownButton<String>(
-                              value: _selectedClassId,
-                              isExpanded: true,
-                              underline: Container(),
-                              icon: Icon(
-                                Icons.arrow_drop_down,
-                                color: ColorUtils.slate600,
-                              ),
-                              style: TextStyle(
-                                color: ColorUtils.slate800,
-                                fontSize: 15,
-                              ),
-                              items: [
-                                DropdownMenuItem(
-                                  value: null,
-                                  child: Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'All Classes',
-                                      'id': 'Semua Kelas',
-                                    }),
-                                    style: TextStyle(
-                                      color: ColorUtils.slate500,
-                                    ),
-                                  ),
-                                ),
-                                ..._classList.map(
-                                  (classItem) => DropdownMenuItem(
-                                    value: classItem['id'],
-                                    child: Text(classItem['name']),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedClassId = value;
-                                  _filterStudentsByClass(value);
-                                });
-                                _loadSubjectsByClass(
-                                  value,
-                                  setModalState: setModalState,
-                                );
-                              },
-                            ),
-                          ),
-                          SizedBox(height: 20),
-
-                          // Subject Dropdown
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Subject',
-                              'id': 'Mata Pelajaran',
-                            }),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: ColorUtils.slate700,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ColorUtils.slate50,
-                              border: Border.all(color: ColorUtils.slate200),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DropdownButton<String>(
-                              value: _selectedSubjectId,
-                              isExpanded: true,
-                              underline: Container(),
-                              icon: Icon(
-                                Icons.arrow_drop_down,
-                                color: ColorUtils.slate600,
-                              ),
-                              style: TextStyle(
-                                color: ColorUtils.slate800,
-                                fontSize: 15,
-                              ),
-                              items: [
-                                DropdownMenuItem(
-                                  value: null,
-                                  child: Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Select Subject',
-                                      'id': 'Pilih Mata Pelajaran',
-                                    }),
-                                    style: TextStyle(
-                                      color: ColorUtils.slate500,
-                                    ),
-                                  ),
-                                ),
-                                ..._subjectTeacher.map(
-                                  (mp) => DropdownMenuItem(
-                                    value: mp['id'],
-                                    child: Text(
-                                      mp['nama'] ??
-                                          mp['name'] ??
-                                          mp['mata_pelajaran_nama'] ??
-                                          'Unknown',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedSubjectId = value;
-                                  final selected = _subjectTeacher.firstWhere(
-                                    (mp) => mp['id'] == value,
-                                    orElse: () => {},
-                                  );
-                                  _selectedSubjectName =
-                                      selected['nama'] ??
-                                      selected['mata_pelajaran_nama'];
-                                });
-                                setModalState(() {});
-                              },
-                            ),
-                          ),
-
-                          // Warning jika tidak ada mata pelajaran
-                          if (_subjectTeacher.isEmpty)
-                            Container(
-                              margin: EdgeInsets.only(top: 12),
-                              padding: EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: Colors.orange.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.warning_amber_rounded,
-                                    color: Colors.orange,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en':
-                                            'You are not assigned to any subjects.',
-                                        'id':
-                                            'Anda tidak mengampu mata pelajaran apapun.',
-                                      }),
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.orange.withValues(
-                                          alpha: 0.9,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Footer Apply Button
-                  Container(
-                    padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        top: BorderSide(color: ColorUtils.slate200),
-                      ),
-                    ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _detectCurrentSchedule();
-                          });
-                          Navigator.pop(context);
-                        },
-                        icon: Icon(Icons.check, size: 20),
-                        label: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Apply',
-                            'id': 'Terapkan',
-                          }),
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _getPrimaryColor(),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   // ========== FILTER UNTUK INPUT MODE ==========
@@ -1420,7 +823,6 @@ class PresencePageState extends State<PresencePage>
                           onPressed: () {
                             setState(() {
                               _selectedStatusFilter = tempStatus;
-                              _checkActiveFilterInput();
                               _filterStudents();
                             });
                             Navigator.pop(context);
@@ -1454,17 +856,10 @@ class PresencePageState extends State<PresencePage>
     );
   }
 
-  void _checkActiveFilterInput() {
-    setState(() {
-      _hasActiveFilterInput = _selectedStatusFilter != null;
-    });
-  }
-
   void _clearAllFiltersInput() {
     setState(() {
       _selectedStatusFilter = null;
       _searchControllerInput.clear();
-      _hasActiveFilterInput = false;
       _filterStudents();
     });
   }
@@ -1485,7 +880,6 @@ class PresencePageState extends State<PresencePage>
         'onRemove': () {
           setState(() {
             _selectedStatusFilter = null;
-            _checkActiveFilterInput();
             _filterStudents();
           });
         },
@@ -1572,7 +966,6 @@ class PresencePageState extends State<PresencePage>
               onTap: () {
                 setState(() {
                   _selectedClassId = classData['id'];
-                  _selectedClassName = classData['nama'] ?? classData['name'];
                 });
                 _loadSubjectsByClass(classData['id']);
                 if (_tabController.index == 0) {
@@ -1598,7 +991,9 @@ class PresencePageState extends State<PresencePage>
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: accentColor.withValues(alpha: 0.15)),
+                        border: Border.all(
+                          color: accentColor.withValues(alpha: 0.15),
+                        ),
                       ),
                       child: Icon(
                         isHomeroom
@@ -1659,10 +1054,9 @@ class PresencePageState extends State<PresencePage>
                               ],
                             ],
                           ),
-                          if ([
-                            classData['tingkat'],
-                            classData['jurusan'],
-                          ].any((e) => e != null && e.toString().isNotEmpty)) ...[
+                          if ([classData['tingkat'], classData['jurusan']].any(
+                            (e) => e != null && e.toString().isNotEmpty,
+                          )) ...[
                             SizedBox(height: 3),
                             Text(
                               [classData['tingkat'], classData['jurusan']]
@@ -1690,7 +1084,11 @@ class PresencePageState extends State<PresencePage>
                         ],
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios, size: 14, color: ColorUtils.slate400),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: ColorUtils.slate400,
+                    ),
                   ],
                 ),
               ),
@@ -1852,7 +1250,11 @@ class PresencePageState extends State<PresencePage>
                       itemCount: filteredSummaries.length,
                       itemBuilder: (context, index) {
                         final summary = filteredSummaries[index];
-                        return _buildSummaryCard(summary, languageProvider, index);
+                        return _buildSummaryCard(
+                          summary,
+                          languageProvider,
+                          index,
+                        );
                       },
                     ),
             ),
@@ -1958,7 +1360,6 @@ class PresencePageState extends State<PresencePage>
                   if (_selectedClassId != null) {
                     setState(() {
                       _selectedClassId = null;
-                      _selectedClassName = null;
                       _studentList = [];
                     });
                   } else {
@@ -2312,15 +1713,23 @@ class PresencePageState extends State<PresencePage>
                                   selected: isSelected,
                                   onSelected: (selected) {
                                     setSheetState(() {
-                                      tempDateFilter = selected ? item['val'] : null;
+                                      tempDateFilter = selected
+                                          ? item['val']
+                                          : null;
                                     });
                                   },
                                   backgroundColor: Colors.white,
-                                  selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                                  selectedColor: _getPrimaryColor().withValues(
+                                    alpha: 0.2,
+                                  ),
                                   checkmarkColor: _getPrimaryColor(),
                                   labelStyle: TextStyle(
-                                    color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? _getPrimaryColor()
+                                        : ColorUtils.slate600,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                 );
                               }).toList(),
@@ -2362,11 +1771,17 @@ class PresencePageState extends State<PresencePage>
                                   });
                                 },
                                 backgroundColor: Colors.white,
-                                selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                                selectedColor: _getPrimaryColor().withValues(
+                                  alpha: 0.2,
+                                ),
                                 checkmarkColor: _getPrimaryColor(),
                                 labelStyle: TextStyle(
-                                  color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : ColorUtils.slate600,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               );
                             }).toList(),
@@ -2405,11 +1820,17 @@ class PresencePageState extends State<PresencePage>
                                 });
                               },
                               backgroundColor: Colors.white,
-                              selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                              selectedColor: _getPrimaryColor().withValues(
+                                alpha: 0.2,
+                              ),
                               checkmarkColor: _getPrimaryColor(),
                               labelStyle: TextStyle(
-                                color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected
+                                    ? _getPrimaryColor()
+                                    : ColorUtils.slate600,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             );
                           }).toList(),
@@ -2446,11 +1867,17 @@ class PresencePageState extends State<PresencePage>
                                   });
                                 },
                                 backgroundColor: Colors.white,
-                                selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                                selectedColor: _getPrimaryColor().withValues(
+                                  alpha: 0.2,
+                                ),
                                 checkmarkColor: _getPrimaryColor(),
                                 labelStyle: TextStyle(
-                                  color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : ColorUtils.slate600,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               );
                             }).toList(),
@@ -2662,175 +2089,227 @@ class PresencePageState extends State<PresencePage>
         );
       },
       child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _navigateToDetailAbsensi(summary),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: ColorUtils.slate200),
-            boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row: subject name + delete button
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Subject icon
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor().withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.15)),
-                    ),
-                    child: Icon(Icons.book_outlined, color: _getPrimaryColor(), size: 20),
-                  ),
-                  SizedBox(width: 12),
-                  // Subject + class + date info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          summary.subjectName,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(Icons.class_outlined, size: 12, color: _getPrimaryColor()),
-                            SizedBox(width: 4),
-                            Text(
-                              summary.className ?? 'Kelas',
-                              style: TextStyle(fontSize: 12, color: _getPrimaryColor(), fontWeight: FontWeight.w500),
-                            ),
-                            if (summary.lessonHourName != null && summary.lessonHourName!.isNotEmpty) ...[
-                              Text(' • ', style: TextStyle(color: ColorUtils.slate400, fontSize: 12)),
-                              Text(
-                                summary.lessonHourName!,
-                                style: TextStyle(fontSize: 12, color: ColorUtils.slate600, fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ],
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(summary.date),
-                          style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  // Delete button
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => _deleteAbsensi(summary, languageProvider),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.error600.withValues(alpha: 0.08),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: ColorUtils.error600.withValues(alpha: 0.2)),
-                        ),
-                        child: Icon(Icons.delete_outline, size: 16, color: ColorUtils.error600),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 12),
-              Divider(color: ColorUtils.slate100, height: 1),
-              SizedBox(height: 10),
-
-              // Attendance info row with info tags
-              Row(
-                children: [
-                  _buildInfoTag(
-                    icon: Icons.check_circle_outline,
-                    label: '${summary.present} Hadir',
-                    tagColor: ColorUtils.success600,
-                  ),
-                  SizedBox(width: 8),
-                  _buildInfoTag(
-                    icon: Icons.cancel_outlined,
-                    label: '${summary.absent} Absen',
-                    tagColor: ColorUtils.error600,
-                  ),
-                  SizedBox(width: 8),
-                  _buildInfoTag(
-                    icon: Icons.people_outline,
-                    label: '${summary.totalStudent} Siswa',
-                    tagColor: _getPrimaryColor(),
-                  ),
-                  Spacer(),
-                  // Detail button
-                  GestureDetector(
-                    onTap: () => _navigateToDetailAbsensi(summary),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToDetailAbsensi(summary),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row: subject name + delete button
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Subject icon
+                    Container(
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: _getPrimaryColor().withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.2)),
+                        color: _getPrimaryColor().withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _getPrimaryColor().withValues(alpha: 0.15),
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Icon(
+                        Icons.book_outlined,
+                        color: _getPrimaryColor(),
+                        size: 20,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    // Subject + class + date info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.visibility_outlined, size: 12, color: _getPrimaryColor()),
-                          SizedBox(width: 4),
                           Text(
-                            'Detail',
-                            style: TextStyle(fontSize: 11, color: _getPrimaryColor(), fontWeight: FontWeight.w600),
+                            summary.subjectName,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate900,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.class_outlined,
+                                size: 12,
+                                color: _getPrimaryColor(),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                summary.className ?? 'Kelas',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: _getPrimaryColor(),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (summary.lessonHourName != null &&
+                                  summary.lessonHourName!.isNotEmpty) ...[
+                                Text(
+                                  ' • ',
+                                  style: TextStyle(
+                                    color: ColorUtils.slate400,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  summary.lessonHourName!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: ColorUtils.slate600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            DateFormat(
+                              'EEEE, dd MMMM yyyy',
+                              'id_ID',
+                            ).format(summary.date),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: ColorUtils.slate500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 10),
-
-              // Progress bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: summary.totalStudent > 0 ? summary.present / summary.totalStudent : 0,
-                  minHeight: 6,
-                  backgroundColor: ColorUtils.slate200,
-                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                    SizedBox(width: 8),
+                    // Delete button
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _deleteAbsensi(summary, languageProvider),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: ColorUtils.error600.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: ColorUtils.error600.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.delete_outline,
+                            size: 16,
+                            color: ColorUtils.error600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
-                style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
-              ),
-            ],
+
+                SizedBox(height: 12),
+                Divider(color: ColorUtils.slate100, height: 1),
+                SizedBox(height: 10),
+
+                // Attendance info row with info tags
+                Row(
+                  children: [
+                    _buildInfoTag(
+                      icon: Icons.check_circle_outline,
+                      label: '${summary.present} Hadir',
+                      tagColor: ColorUtils.success600,
+                    ),
+                    SizedBox(width: 8),
+                    _buildInfoTag(
+                      icon: Icons.cancel_outlined,
+                      label: '${summary.absent} Absen',
+                      tagColor: ColorUtils.error600,
+                    ),
+                    SizedBox(width: 8),
+                    _buildInfoTag(
+                      icon: Icons.people_outline,
+                      label: '${summary.totalStudent} Siswa',
+                      tagColor: _getPrimaryColor(),
+                    ),
+                    Spacer(),
+                    // Detail button
+                    GestureDetector(
+                      onTap: () => _navigateToDetailAbsensi(summary),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getPrimaryColor().withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _getPrimaryColor().withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 12,
+                              color: _getPrimaryColor(),
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Detail',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: _getPrimaryColor(),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 10),
+
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: summary.totalStudent > 0
+                        ? summary.present / summary.totalStudent
+                        : 0,
+                    minHeight: 6,
+                    backgroundColor: ColorUtils.slate200,
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
+                  style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -2888,7 +2367,7 @@ class PresencePageState extends State<PresencePage>
     );
   }
 
-  // ========== MODE 1: INPUT ABSENSI ==========
+  // ========== MODE 2: INPUT ABSENSI (REDESIGNED) ==========
   Widget _buildInputMode() {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
@@ -2903,319 +2382,391 @@ class PresencePageState extends State<PresencePage>
 
         return Column(
           children: [
-            // Header Info - Always show (whether schedule detected or not)
+            // 1. Form Section (Date, Hour, Class, Subject)
             Container(
               margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: ColorUtils.slate200),
                 boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Row 1: Date & Lesson Hour
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Date Picker
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Subject and Class Info or No Schedule Message
-                            if (_selectedSubjectId != null) ...[
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      _selectedSubjectName ??
-                                          _getSubjectSelectedName(),
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: ColorUtils.slate900,
-                                      ),
-                                    ),
-                                  ),
-                                  if (_currentSchedule != null) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: ColorUtils.success600.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(
-                                          color: ColorUtils.success600
-                                              .withValues(alpha: 0.3),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.schedule,
-                                            size: 12,
-                                            color: Colors.green,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            languageProvider.getTranslatedText({
-                                              'en': 'Auto',
-                                              'id': 'Auto',
-                                            }),
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: ColorUtils.successDark,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  if (_selectedClassId != null)
-                                    Text(
-                                      _getClassNameWithCount(_selectedClassId!),
-                                      style: TextStyle(
-                                        color: _getPrimaryColor(),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  if (_selectedLessonHourId != null) ...[
-                                    if (_selectedClassId != null)
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                        ),
-                                        child: Text(
-                                          '|',
-                                          style: TextStyle(
-                                            color: ColorUtils.slate300,
-                                          ),
-                                        ),
-                                      ),
-                                    Text(
-                                      _lessonHours.firstWhere(
-                                        (lh) =>
-                                            lh['id']?.toString() ==
-                                            _selectedLessonHourId,
-                                        orElse: () => {'name': ''},
-                                      )['name'],
-                                      style: TextStyle(
-                                        color: ColorUtils.slate700,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ] else ...[
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.schedule_outlined,
-                                    color: Colors.orange,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Flexible(
-                                    child: Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'No Schedule Now',
-                                        'id': 'Tidak Ada Jadwal Sekarang',
-                                      }),
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: ColorUtils.slate900,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                            const SizedBox(height: 4),
-                            Text(
-                              DateFormat(
-                                'EEEE, dd MMMM yyyy',
-                                'id_ID',
-                              ).format(_selectedDate),
-                              style: TextStyle(
-                                color: ColorUtils.slate500,
-                                fontSize: 12,
-                              ),
+                        child: InkWell(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _selectedDate,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _selectedDate = picked;
+                                _detectCurrentSchedule();
+                              });
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
                             ),
-                          ],
+                            decoration: BoxDecoration(
+                              color: ColorUtils.slate50,
+                              border: Border.all(color: ColorUtils.slate200),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: _getPrimaryColor(),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    DateFormat(
+                                      'EEE, dd MMM yyyy',
+                                      'id_ID',
+                                    ).format(_selectedDate),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: ColorUtils.slate800,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Icon Search
-                          Container(
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: IconButton(
-                              onPressed: () {
+                      const SizedBox(width: 12),
+                      // Lesson Hour Dropdown
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: ColorUtils.slate50,
+                            border: Border.all(color: ColorUtils.slate200),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedLessonHourId,
+                              isExpanded: true,
+                              hint: Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Hour',
+                                  'id': 'Jam',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: ColorUtils.slate500,
+                                ),
+                              ),
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: ColorUtils.slate600,
+                              ),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: ColorUtils.slate800,
+                              ),
+                              items: [
+                                DropdownMenuItem(
+                                  value: null,
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Select Hour',
+                                      'id': 'Pilih Jam',
+                                    }),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate500,
+                                    ),
+                                  ),
+                                ),
+                                ..._lessonHours.map(
+                                  (lh) => DropdownMenuItem(
+                                    value: lh['id']?.toString(),
+                                    child: Text(
+                                      '${lh['name']} (${lh['start_time']} - ${lh['end_time']})',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
                                 setState(() {
-                                  _showSearch = !_showSearch;
-                                  if (!_showSearch) {
-                                    _searchControllerInput.clear();
-                                    _filterStudents();
-                                  }
+                                  _selectedLessonHourId = value;
                                 });
                               },
-                              icon: Icon(
-                                _showSearch ? Icons.search_off : Icons.search,
-                                color: _getPrimaryColor(),
-                                size: 20,
-                              ),
-                              iconSize: 20,
-                              padding: EdgeInsets.all(8),
-                              constraints: BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
-                              tooltip: languageProvider.getTranslatedText({
-                                'en': _showSearch
-                                    ? 'Hide search'
-                                    : 'Search students',
-                                'id': _showSearch
-                                    ? 'Sembunyikan pencarian'
-                                    : 'Cari siswa',
-                              }),
                             ),
                           ),
-                          SizedBox(height: 8),
-                          // Icon untuk Quick Actions
-                          Container(
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: IconButton(
-                              onPressed: () {
-                                _showQuickActionsSheet(languageProvider);
-                              },
-                              icon: Icon(
-                                Icons.checklist_rtl,
-                                color: _getPrimaryColor(),
-                                size: 20,
-                              ),
-                              iconSize: 20,
-                              padding: EdgeInsets.all(8),
-                              constraints: BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
-                              tooltip: languageProvider.getTranslatedText({
-                                'en': 'Quick attendance',
-                                'id': 'Presensi cepat',
-                              }),
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          // Icon Edit
-                          Container(
-                            decoration: BoxDecoration(
-                              color: _getPrimaryColor().withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: IconButton(
-                              onPressed: () {
-                                _showEditBottomSheet(languageProvider);
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                color: _getPrimaryColor(),
-                                size: 20,
-                              ),
-                              iconSize: 20,
-                              padding: EdgeInsets.all(8),
-                              constraints: BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
-                              tooltip: languageProvider.getTranslatedText({
-                                'en': 'Edit selection',
-                                'id': 'Edit pilihan',
-                              }),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Row 2: Class & Subject
+                  Row(
+                    children: [
+                      // Class Dropdown
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: ColorUtils.slate50,
+                            border: Border.all(color: ColorUtils.slate200),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedClassId,
+                              isExpanded: true,
+                              hint: Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Class',
+                                  'id': 'Kelas',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: ColorUtils.slate500,
+                                ),
+                              ),
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: ColorUtils.slate600,
+                              ),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: ColorUtils.slate800,
+                              ),
+                              items: [
+                                DropdownMenuItem(
+                                  value: null,
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Select Class',
+                                      'id': 'Pilih Kelas',
+                                    }),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate500,
+                                    ),
+                                  ),
+                                ),
+                                ..._classList.map(
+                                  (classItem) => DropdownMenuItem(
+                                    value: classItem['id'],
+                                    child: Text(classItem['name']),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedClassId = value;
+                                  _filterStudentsByClass(value);
+                                });
+                                _loadSubjectsByClass(value);
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Subject Dropdown
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: ColorUtils.slate50,
+                            border: Border.all(color: ColorUtils.slate200),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedSubjectId,
+                              isExpanded: true,
+                              hint: Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Subject',
+                                  'id': 'Mapel',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: ColorUtils.slate500,
+                                ),
+                              ),
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: ColorUtils.slate600,
+                              ),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: ColorUtils.slate800,
+                              ),
+                              items: [
+                                DropdownMenuItem(
+                                  value: null,
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Select Subject',
+                                      'id': 'Pilih Mapel',
+                                    }),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate500,
+                                    ),
+                                  ),
+                                ),
+                                ..._subjectTeacher.map(
+                                  (mp) => DropdownMenuItem(
+                                    value: mp['id'],
+                                    child: Text(
+                                      mp['nama'] ??
+                                          mp['name'] ??
+                                          mp['mata_pelajaran_nama'] ??
+                                          'Unknown',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedSubjectId = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Warning if no subjects
+                  if (_subjectTeacher.isEmpty && _selectedClassId != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'No subjects assigned for this class.',
+                          'id': 'Tidak ada mata pelajaran untuk kelas ini.',
+                        }),
+                        style: const TextStyle(
+                          color: Colors.orange,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 12),
+
+                  // Quick Actions Row (Search & Quick Attendance)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (_showSearch)
+                        Expanded(
+                          child: SizedBox(
+                            height: 36,
+                            child: TextField(
+                              controller: _searchControllerInput,
+                              onChanged: (value) => _filterStudents(),
+                              style: const TextStyle(fontSize: 13),
+                              decoration: InputDecoration(
+                                hintText: languageProvider.getTranslatedText({
+                                  'en': 'Search name/NIS...',
+                                  'id': 'Cari nama/NIS...',
+                                }),
+                                prefixIcon: const Icon(Icons.search, size: 16),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: ColorUtils.slate300,
+                                  ),
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.close, size: 16),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showSearch = false;
+                                      _searchControllerInput.clear();
+                                      _filterStudents();
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        IconButton(
+                          icon: Icon(Icons.search, color: ColorUtils.slate600),
+                          onPressed: () {
+                            setState(() {
+                              _showSearch = true;
+                            });
+                          },
+                          tooltip: languageProvider.getTranslatedText({
+                            'en': 'Search Student',
+                            'id': 'Cari Siswa',
+                          }),
+                        ),
+
+                      if (!_showSearch) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: _getPrimaryColor().withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.checklist_rtl,
+                              color: _getPrimaryColor(),
+                            ),
+                            onPressed: () {
+                              _showQuickActionsSheet(languageProvider);
+                            },
+                            tooltip: languageProvider.getTranslatedText({
+                              'en': 'Quick Attendance',
+                              'id': 'Presensi Cepat',
+                            }),
+                            constraints: const BoxConstraints(
+                              minWidth: 36,
+                              minHeight: 36,
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            iconSize: 20,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
               ),
             ),
 
-            // Search Bar untuk Input Mode - hanya muncul jika _showSearch = true dan ada schedule
-            if (_showSearch && _selectedSubjectId != null) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorUtils.slate900.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchControllerInput,
-                    onChanged: (value) => _filterStudents(),
-                    decoration: InputDecoration(
-                      hintText: languageProvider.getTranslatedText({
-                        'en': 'Search by name or NIS...',
-                        'id': 'Cari berdasarkan nama atau NIS...',
-                      }),
-                      prefixIcon: Icon(Icons.search, color: _getPrimaryColor()),
-                      suffixIcon: _searchControllerInput.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Icons.clear),
-                              onPressed: () {
-                                _searchControllerInput.clear();
-                                _filterStudents();
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: ColorUtils.slate50,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 12),
-            ],
-
-            // Student List or Empty State
+            // 2. Student List Area
             Expanded(
               child: _selectedSubjectId == null
                   ? Center(
@@ -3225,15 +2776,16 @@ class PresencePageState extends State<PresencePage>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.edit_calendar_outlined,
-                              size: 80,
+                              Icons.touch_app_outlined,
+                              size: 64,
                               color: ColorUtils.slate300,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               languageProvider.getTranslatedText({
-                                'en': 'No schedule at this time',
-                                'id': 'Tidak ada jadwal pada jam ini',
+                                'en': 'Please select Class and Subject first',
+                                'id':
+                                    'Silakan pilih Kelas dan Mapel terlebih dahulu',
                               }),
                               style: TextStyle(
                                 fontSize: 16,
@@ -3246,13 +2798,13 @@ class PresencePageState extends State<PresencePage>
                             Text(
                               languageProvider.getTranslatedText({
                                 'en':
-                                    'Click edit icon to input attendance manually',
+                                    'Or ensure you have a schedule for the selected date',
                                 'id':
-                                    'Klik ikon edit untuk input absensi secara manual',
+                                    'Atau pastikan anda memiliki jadwal pada tanggal yang dipilih',
                               }),
                               style: TextStyle(
-                                fontSize: 14,
-                                color: ColorUtils.slate500,
+                                fontSize: 13,
+                                color: ColorUtils.slate400,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -3273,7 +2825,7 @@ class PresencePageState extends State<PresencePage>
                       icon: Icons.people_outline,
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.only(top: 8, bottom: 80),
                       itemCount: _filteredStudentList.length,
                       itemBuilder: (context, index) => _buildStudentItem(
                         _filteredStudentList[index],
@@ -3282,10 +2834,20 @@ class PresencePageState extends State<PresencePage>
                     ),
             ),
 
-            // Submit Button
-            if (_selectedSubjectId != null)
-              Padding(
+            // 3. Submit Button
+            if (_selectedSubjectId != null && _filteredStudentList.isNotEmpty)
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
                 child: SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -3302,7 +2864,7 @@ class PresencePageState extends State<PresencePage>
                               ),
                             ),
                           )
-                        : const Icon(Icons.save, size: 20),
+                        : const Icon(Icons.save_outlined, size: 20),
                     label: Text(
                       _isSubmitting
                           ? languageProvider.getTranslatedText({
@@ -3319,12 +2881,12 @@ class PresencePageState extends State<PresencePage>
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorUtils.success600,
+                      backgroundColor: _getPrimaryColor(),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      elevation: 2,
+                      elevation: 0,
                     ),
                   ),
                 ),
@@ -3339,187 +2901,165 @@ class PresencePageState extends State<PresencePage>
   Widget _buildStudentItem(Siswa siswa, LanguageProvider languageProvider) {
     final status = _absensiStatus[siswa.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
-    final Color avatarColor = _getAvatarColor(siswa.name);
-    final String initial = siswa.name.isNotEmpty
-        ? siswa.name[0].toUpperCase()
-        : '?';
-
-    // Warna background berdasarkan status
-    Color backgroundColor = Colors.white;
-    switch (status) {
-      case 'hadir':
-        backgroundColor = ColorUtils.success600.withValues(alpha: 0.05);
-        break;
-      case 'terlambat':
-        backgroundColor = Colors.purple.withValues(alpha: 0.05);
-        break;
-      case 'izin':
-        backgroundColor = Colors.blue.withValues(alpha: 0.05);
-        break;
-      case 'sakit':
-        backgroundColor = Colors.orange.withValues(alpha: 0.05);
-        break;
-      case 'alpha':
-        backgroundColor = ColorUtils.error600.withValues(alpha: 0.05);
-        break;
-    }
+    final String statusText = _getStatusText(status, languageProvider);
+    final avatarColor = _getAvatarColor(siswa.name);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-          BoxShadow(
-            color: statusColor.withValues(alpha: 0.1),
-            blurRadius: 2,
-            spreadRadius: 1,
-          ),
-        ],
-        border: Border.all(color: statusColor.withValues(alpha: 0.3), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
-      child: Column(
-        children: [
-          // Student Info Row
-          Row(
-            children: [
-              // Avatar
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: avatarColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    initial,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Student Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      siswa.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: ColorUtils.slate900,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${languageProvider.getTranslatedText({'en': 'NIS:', 'id': 'NIS:'})} ${siswa.nis}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ColorUtils.slate500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Status Badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  _getStatusText(status, languageProvider),
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Status Options
-          SizedBox(
-            height: 36,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                _buildStatusOption('hadir', languageProvider, status, siswa.id),
-                const SizedBox(width: 8),
-                _buildStatusOption(
-                  'terlambat',
-                  languageProvider,
-                  status,
-                  siswa.id,
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: avatarColor.withValues(alpha: 0.15),
+                  child: Text(
+                    siswa.name.isNotEmpty ? siswa.name[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      color: avatarColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                _buildStatusOption('izin', languageProvider, status, siswa.id),
-                const SizedBox(width: 8),
-                _buildStatusOption('sakit', languageProvider, status, siswa.id),
-                const SizedBox(width: 8),
-                _buildStatusOption('alpha', languageProvider, status, siswa.id),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        siswa.name,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'NIS: ${siswa.nis}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: ColorUtils.slate50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: ColorUtils.slate200),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildQuickStatusButton(
+                    'hadir',
+                    'H',
+                    ColorUtils.success600,
+                    siswa.id,
+                  ),
+                  _buildQuickStatusButton(
+                    'terlambat',
+                    'T',
+                    const Color(0xFF7C3AED),
+                    siswa.id,
+                  ),
+                  _buildQuickStatusButton(
+                    'sakit',
+                    'S',
+                    ColorUtils.warning600,
+                    siswa.id,
+                  ),
+                  _buildQuickStatusButton(
+                    'izin',
+                    'I',
+                    ColorUtils.info600,
+                    siswa.id,
+                  ),
+                  _buildQuickStatusButton(
+                    'alpha',
+                    'A',
+                    ColorUtils.error600,
+                    siswa.id,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildStatusOption(
-    String statusValue,
-    LanguageProvider languageProvider,
-    String currentStatus,
-    String siswaId,
+  Widget _buildQuickStatusButton(
+    String status,
+    String label,
+    Color color,
+    String studentId,
   ) {
-    final bool isSelected = currentStatus == statusValue;
-    final Color statusColor = _getStatusColor(statusValue);
-
+    final isSelected =
+        _absensiStatus[studentId]?.toLowerCase() == status.toLowerCase();
     return GestureDetector(
       onTap: () {
         setState(() {
-          _absensiStatus[siswaId] = statusValue;
+          _absensiStatus[studentId] = status;
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
-          color: isSelected ? statusColor : statusColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? statusColor
-                : statusColor.withValues(alpha: 0.3),
-          ),
+          color: isSelected ? color : color.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 1.5),
         ),
-        child: Text(
-          _getStatusText(statusValue, languageProvider),
-          style: TextStyle(
-            color: isSelected ? Colors.white : statusColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
           ),
         ),
       ),
@@ -3760,7 +3300,6 @@ class PresencePageState extends State<PresencePage>
       _selectedClassId = null;
       _selectedStatusFilter = null;
       _searchControllerInput.clear();
-      _hasActiveFilterInput = false;
       _filterStudents();
     });
 
@@ -4051,144 +3590,201 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   Widget _buildStudentItem(Siswa siswa, LanguageProvider languageProvider) {
     final status = _absensiStatus[siswa.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
+    final String statusText = _mapStatusToDisplay(status, languageProvider);
+    final avatarColor = _getAvatarColor(siswa.name);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: _getAvatarColor(siswa.name),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                siswa.name.isNotEmpty ? siswa.name[0].toUpperCase() : '?',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: avatarColor.withValues(alpha: 0.15),
+                  child: Text(
+                    siswa.name.isNotEmpty ? siswa.name[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      color: avatarColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        siswa.name,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'NIS: ${siswa.nis}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: ColorUtils.slate50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: ColorUtils.slate200),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildQuickStatusButton(
+                    'hadir',
+                    'H',
+                    ColorUtils.success600,
+                    siswa.id,
+                  ),
+                  _buildQuickStatusButton(
+                    'terlambat',
+                    'T',
+                    const Color(0xFF7C3AED),
+                    siswa.id,
+                  ),
+                  _buildQuickStatusButton(
+                    'sakit',
+                    'S',
+                    ColorUtils.warning600,
+                    siswa.id,
+                  ),
+                  _buildQuickStatusButton(
+                    'izin',
+                    'I',
+                    ColorUtils.info600,
+                    siswa.id,
+                  ),
+                  _buildQuickStatusButton(
+                    'alpha',
+                    'A',
+                    ColorUtils.error600,
+                    siswa.id,
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-
-          // Student Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  siswa.name,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  '${languageProvider.getTranslatedText({'en': 'NIS:', 'id': 'NIS:'})} ${siswa.nis}',
-                  style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
-                ),
-              ],
-            ),
-          ),
-
-          // Status Dropdown
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButton<String>(
-                  value: status,
-                  items: [
-                    DropdownMenuItem(
-                      value: 'hadir',
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Present',
-                          'id': 'Hadir',
-                        }),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'terlambat',
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Late',
-                          'id': 'Terlambat',
-                        }),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'izin',
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Permission',
-                          'id': 'Izin',
-                        }),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'sakit',
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Sick',
-                          'id': 'Sakit',
-                        }),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'alpha',
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Absent',
-                          'id': 'Alpha',
-                        }),
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _absensiStatus[siswa.id] = value!;
-                    });
-                  },
-                  underline: Container(),
-                  icon: Icon(
-                    Icons.arrow_drop_down,
-                    color: statusColor,
-                    size: 16,
-                  ),
-                  dropdownColor: Colors.white,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  Widget _buildQuickStatusButton(
+    String status,
+    String label,
+    Color color,
+    String studentId,
+  ) {
+    final isSelected =
+        _absensiStatus[studentId]?.toLowerCase() == status.toLowerCase();
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _absensiStatus[studentId] = status;
+        });
+      },
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: isSelected ? color : color.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 1.5),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _mapStatusToDisplay(String status, LanguageProvider languageProvider) {
+    switch (status.toLowerCase()) {
+      case 'hadir':
+        return languageProvider.getTranslatedText({
+          'en': 'Present',
+          'id': 'Hadir',
+        });
+      case 'terlambat':
+        return languageProvider.getTranslatedText({
+          'en': 'Late',
+          'id': 'Terlambat',
+        });
+      case 'izin':
+        return languageProvider.getTranslatedText({
+          'en': 'Permission',
+          'id': 'Izin',
+        });
+      case 'sakit':
+        return languageProvider.getTranslatedText({
+          'en': 'Sick',
+          'id': 'Sakit',
+        });
+      case 'alpha':
+        return languageProvider.getTranslatedText({
+          'en': 'Absent',
+          'id': 'Alpha',
+        });
+      default:
+        return status;
+    }
   }
 
   Future<void> _updateAbsensi() async {
@@ -4482,7 +4078,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                                     'id': 'Mengupdate...',
                                   })
                                 : languageProvider.getTranslatedText({
-                                    'en': 'Update Attendance',
+                                    'en': 'Update Absensi',
                                     'id': 'Update Absensi',
                                   }),
                             style: const TextStyle(
@@ -4919,7 +4515,10 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                         SizedBox(height: 2),
                         Text(
                           'NIS: ${siswa.nis}',
-                          style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate600,
+                          ),
                         ),
                       ],
                     ),
@@ -4929,11 +4528,17 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
                       statusText,
-                      style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -4950,10 +4555,36 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildQuickStatusButton('hadir', 'H', ColorUtils.success600, siswa.id),
-                      _buildQuickStatusButton('sakit', 'S', ColorUtils.warning600, siswa.id),
-                      _buildQuickStatusButton('izin', 'I', ColorUtils.info600, siswa.id),
-                      _buildQuickStatusButton('alpha', 'A', ColorUtils.error600, siswa.id),
+                      _buildQuickStatusButton(
+                        'hadir',
+                        'H',
+                        ColorUtils.success600,
+                        siswa.id,
+                      ),
+                      _buildQuickStatusButton(
+                        'terlambat',
+                        'T',
+                        const Color(0xFF7C3AED),
+                        siswa.id,
+                      ),
+                      _buildQuickStatusButton(
+                        'sakit',
+                        'S',
+                        ColorUtils.warning600,
+                        siswa.id,
+                      ),
+                      _buildQuickStatusButton(
+                        'izin',
+                        'I',
+                        ColorUtils.info600,
+                        siswa.id,
+                      ),
+                      _buildQuickStatusButton(
+                        'alpha',
+                        'A',
+                        ColorUtils.error600,
+                        siswa.id,
+                      ),
                     ],
                   ),
                 ),
@@ -5145,7 +4776,11 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
             SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withValues(alpha: 0.8),
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -5227,8 +4862,14 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                             children: [
                               Text(
                                 _isEditing
-                                    ? languageProvider.getTranslatedText({'en': 'Edit Attendance', 'id': 'Edit Absensi'})
-                                    : languageProvider.getTranslatedText({'en': 'Attendance Details', 'id': 'Detail Absensi'}),
+                                    ? languageProvider.getTranslatedText({
+                                        'en': 'Edit Attendance',
+                                        'id': 'Edit Absensi',
+                                      })
+                                    : languageProvider.getTranslatedText({
+                                        'en': 'Attendance Details',
+                                        'id': 'Detail Absensi',
+                                      }),
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -5237,7 +4878,10 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                               ),
                               Text(
                                 widget.subjectName,
-                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -5267,7 +4911,10 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                                       padding: EdgeInsets.all(10),
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
                                       ),
                                     )
                                   : Icon(
@@ -5282,15 +4929,38 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                     SizedBox(height: 12),
                     Row(
                       children: [
-                        Icon(Icons.calendar_today, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+                        Icon(
+                          Icons.calendar_today,
+                          size: 14,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
                         SizedBox(width: 6),
                         Text(
-                          DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(widget.date),
-                          style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)),
+                          DateFormat(
+                            'EEEE, dd MMMM yyyy',
+                            'id_ID',
+                          ).format(widget.date),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
-                        if (widget.lessonHourName != null && widget.lessonHourName!.isNotEmpty) ...[
-                          Text(' • ', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
-                          Text(widget.lessonHourName!, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600)),
+                        if (widget.lessonHourName != null &&
+                            widget.lessonHourName!.isNotEmpty) ...[
+                          Text(
+                            ' • ',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Text(
+                            widget.lessonHourName!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -5303,8 +4973,12 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                   ? Expanded(
                       child: LoadingScreen(
                         message: languageProvider.getTranslatedText({
-                          'en': _isSaving ? 'Saving changes...' : 'Loading attendance details...',
-                          'id': _isSaving ? 'Menyimpan perubahan...' : 'Memuat detail absensi...',
+                          'en': _isSaving
+                              ? 'Saving changes...'
+                              : 'Loading attendance details...',
+                          'id': _isSaving
+                              ? 'Menyimpan perubahan...'
+                              : 'Memuat detail absensi...',
                         }),
                       ),
                     )
@@ -5314,12 +4988,17 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                           // Info Card (Pattern #8 flat)
                           Container(
                             margin: EdgeInsets.fromLTRB(16, 12, 16, 8),
-                            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: ColorUtils.slate200),
-                              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                              boxShadow: ColorUtils.corporateShadow(
+                                elevation: 1.0,
+                              ),
                             ),
                             child: Row(
                               children: [
@@ -5327,10 +5006,14 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: _getPrimaryColor().withValues(alpha: 0.1),
+                                    color: _getPrimaryColor().withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: _getPrimaryColor().withValues(alpha: 0.25),
+                                      color: _getPrimaryColor().withValues(
+                                        alpha: 0.25,
+                                      ),
                                     ),
                                   ),
                                   child: Icon(
@@ -5342,7 +5025,8 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                                 SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         widget.subjectName,
@@ -5366,10 +5050,14 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                                           ),
                                           _buildInfoChip(
                                             Icons.calendar_today,
-                                            DateFormat('dd MMM yyyy', 'id_ID').format(widget.date),
+                                            DateFormat(
+                                              'dd MMM yyyy',
+                                              'id_ID',
+                                            ).format(widget.date),
                                             null,
                                           ),
-                                          if (widget.lessonHourName != null && widget.lessonHourName!.isNotEmpty)
+                                          if (widget.lessonHourName != null &&
+                                              widget.lessonHourName!.isNotEmpty)
                                             _buildInfoChip(
                                               Icons.access_time,
                                               widget.lessonHourName!,
@@ -5381,11 +5069,20 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                                   ),
                                 ),
                                 Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: _getPrimaryColor().withValues(alpha: 0.1),
+                                    color: _getPrimaryColor().withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: _getPrimaryColor().withValues(alpha: 0.25)),
+                                    border: Border.all(
+                                      color: _getPrimaryColor().withValues(
+                                        alpha: 0.25,
+                                      ),
+                                    ),
                                   ),
                                   child: Column(
                                     children: [
@@ -5424,33 +5121,50 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               children: [
                                 _buildStatCard(
-                                  languageProvider.getTranslatedText({'en': 'Present', 'id': 'Hadir'}),
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Present',
+                                    'id': 'Hadir',
+                                  }),
                                   stats['hadir']!,
                                   ColorUtils.success600,
                                   Icons.check_circle,
                                 ),
                                 _buildStatCard(
-                                  languageProvider.getTranslatedText({'en': 'Late', 'id': 'Terlambat'}),
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Late',
+                                    'id': 'Terlambat',
+                                  }),
                                   stats['terlambat']!,
                                   ColorUtils.warning600,
                                   Icons.access_time,
                                 ),
                                 _buildStatCard(
-                                  languageProvider.getTranslatedText({'en': 'Absent', 'id': 'Tidak Hadir'}),
-                                  stats['alpha']! + stats['izin']! + stats['sakit']!,
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Absent',
+                                    'id': 'Tidak Hadir',
+                                  }),
+                                  stats['alpha']! +
+                                      stats['izin']! +
+                                      stats['sakit']!,
                                   ColorUtils.error600,
                                   Icons.cancel,
                                 ),
                                 if (stats['izin']! > 0)
                                   _buildStatCard(
-                                    languageProvider.getTranslatedText({'en': 'Permission', 'id': 'Izin'}),
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Permission',
+                                      'id': 'Izin',
+                                    }),
                                     stats['izin']!,
                                     ColorUtils.info600,
                                     Icons.event_note,
                                   ),
                                 if (stats['sakit']! > 0)
                                   _buildStatCard(
-                                    languageProvider.getTranslatedText({'en': 'Sick', 'id': 'Sakit'}),
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Sick',
+                                      'id': 'Sakit',
+                                    }),
                                     stats['sakit']!,
                                     Color(0xFF7C3AED),
                                     Icons.medical_services,
@@ -5488,7 +5202,10 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                                 ),
                                 Spacer(),
                                 Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: ColorUtils.slate100,
                                     borderRadius: BorderRadius.circular(8),
@@ -5511,9 +5228,14 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                             child: _siswaList.isEmpty
                                 ? Center(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.people_outline, size: 64, color: ColorUtils.slate300),
+                                        Icon(
+                                          Icons.people_outline,
+                                          size: 64,
+                                          color: ColorUtils.slate300,
+                                        ),
                                         SizedBox(height: 12),
                                         Text(
                                           languageProvider.getTranslatedText({
@@ -5531,11 +5253,12 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
                                 : ListView.builder(
                                     padding: EdgeInsets.only(bottom: 16),
                                     itemCount: _siswaList.length,
-                                    itemBuilder: (context, index) => _buildStudentCard(
-                                      _siswaList[index],
-                                      languageProvider,
-                                      index,
-                                    ),
+                                    itemBuilder: (context, index) =>
+                                        _buildStudentCard(
+                                          _siswaList[index],
+                                          languageProvider,
+                                          index,
+                                        ),
                                   ),
                           ),
                         ],
@@ -5552,10 +5275,14 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color != null ? color.withValues(alpha: 0.1) : ColorUtils.slate50,
+        color: color != null
+            ? color.withValues(alpha: 0.1)
+            : ColorUtils.slate50,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: color != null ? color.withValues(alpha: 0.2) : ColorUtils.slate200,
+          color: color != null
+              ? color.withValues(alpha: 0.2)
+              : ColorUtils.slate200,
         ),
       ),
       child: Row(
