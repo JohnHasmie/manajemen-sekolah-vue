@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/class_promotion_wizard.dart';
 import 'package:manajemensekolah/screen/admin/student_management.dart';
@@ -29,15 +30,11 @@ class AdminClassManagementScreen extends StatefulWidget {
 }
 
 class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   List<dynamic> _classes = [];
   List<dynamic> _teachers = [];
   bool _isLoading = true;
   String? _errorMessage;
-
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
 
   // FAB Animation
   late AnimationController _fabAnimationController;
@@ -72,19 +69,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   void initState() {
     super.initState();
 
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
     // FAB Init
     _fabAnimationController = AnimationController(
       vsync: this,
@@ -114,7 +98,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   @override
   void dispose() {
     FCMService().syncTrigger.removeListener(_onSyncTriggered);
-    _animationController.dispose();
     _fabAnimationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
@@ -324,14 +307,27 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(children: [
-                      Icon(Icons.filter_list_rounded, color: Colors.white, size: 22),
-                      SizedBox(width: 12),
-                      Text(
-                        languageProvider.getTranslatedText({'en': 'Filter Classes', 'id': 'Filter Kelas'}),
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ]),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.filter_list_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Filter Classes',
+                            'id': 'Filter Kelas',
+                          }),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                     TextButton(
                       onPressed: () {
                         setModalState(() {
@@ -340,8 +336,14 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                         });
                       },
                       child: Text(
-                        languageProvider.getTranslatedText({'en': 'Reset', 'id': 'Reset'}),
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        languageProvider.getTranslatedText({
+                          'en': 'Reset',
+                          'id': 'Reset',
+                        }),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -355,14 +357,27 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Grade filter section
-                      Row(children: [
-                        Icon(Icons.layers_outlined, size: 16, color: ColorUtils.slate600),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({'en': 'Grade Level', 'id': 'Tingkat Kelas'}),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                        ),
-                      ]),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.layers_outlined,
+                            size: 16,
+                            color: ColorUtils.slate600,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Grade Level',
+                              'id': 'Tingkat Kelas',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
@@ -374,23 +389,35 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                             selected: isSelected,
                             onSelected: (selected) {
                               setModalState(() {
-                                tempSelectedClass = selected ? gradeLevel : null;
+                                tempSelectedClass = selected
+                                    ? gradeLevel
+                                    : null;
                               });
                             },
                             backgroundColor: Colors.white,
-                            selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
+                            selectedColor: ColorUtils.corporateBlue600
+                                .withValues(alpha: 0.15),
                             checkmarkColor: ColorUtils.corporateBlue600,
                             labelStyle: TextStyle(
-                              color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
+                              color: isSelected
+                                  ? ColorUtils.corporateBlue600
+                                  : ColorUtils.slate700,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
                             side: BorderSide(
-                              color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
+                              color: isSelected
+                                  ? ColorUtils.corporateBlue600
+                                  : ColorUtils.slate300,
                               width: 1,
                             ),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           );
                         }).toList(),
                       ),
@@ -398,48 +425,91 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                       SizedBox(height: 24),
 
                       // Homeroom teacher status section
-                      Row(children: [
-                        Icon(Icons.person_outline, size: 16, color: ColorUtils.slate600),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({'en': 'Homeroom Teacher', 'id': 'Status Wali Kelas'}),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                        ),
-                      ]),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            size: 16,
+                            color: ColorUtils.slate600,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Homeroom Teacher',
+                              'id': 'Status Wali Kelas',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: [
-                          {'value': null, 'label': languageProvider.getTranslatedText({'en': 'All', 'id': 'Semua'})},
-                          {'value': 'true', 'label': languageProvider.getTranslatedText({'en': 'Assigned', 'id': 'Sudah Ada'})},
-                          {'value': 'false', 'label': languageProvider.getTranslatedText({'en': 'Unassigned', 'id': 'Belum Ada'})},
-                        ].map((item) {
-                          final isSelected = tempSelectedHomeroom == item['value'];
-                          return FilterChip(
-                            label: Text(item['label']!),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                tempSelectedHomeroom = item['value'];
-                              });
-                            },
-                            backgroundColor: Colors.white,
-                            selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
-                            checkmarkColor: ColorUtils.corporateBlue600,
-                            labelStyle: TextStyle(
-                              color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate700,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            side: BorderSide(
-                              color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
-                              width: 1,
-                            ),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          );
-                        }).toList(),
+                        children:
+                            [
+                              {
+                                'value': null,
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'All',
+                                  'id': 'Semua',
+                                }),
+                              },
+                              {
+                                'value': 'true',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Assigned',
+                                  'id': 'Sudah Ada',
+                                }),
+                              },
+                              {
+                                'value': 'false',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Unassigned',
+                                  'id': 'Belum Ada',
+                                }),
+                              },
+                            ].map((item) {
+                              final isSelected =
+                                  tempSelectedHomeroom == item['value'];
+                              return FilterChip(
+                                label: Text(item['label']!),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setModalState(() {
+                                    tempSelectedHomeroom = item['value'];
+                                  });
+                                },
+                                backgroundColor: Colors.white,
+                                selectedColor: ColorUtils.corporateBlue600
+                                    .withValues(alpha: 0.15),
+                                checkmarkColor: ColorUtils.corporateBlue600,
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? ColorUtils.corporateBlue600
+                                      : ColorUtils.slate700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? ColorUtils.corporateBlue600
+                                      : ColorUtils.slate300,
+                                  width: 1,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              );
+                            }).toList(),
                       ),
                     ],
                   ),
@@ -459,46 +529,64 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                     ),
                   ],
                 ),
-                child: Row(children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(color: ColorUtils.slate300),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
-                        style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedGradeFilter = tempSelectedClass;
-                          _selectedHomeroomFilter = tempSelectedHomeroom;
-                        });
-                        _checkActiveFilter();
-                        Navigator.pop(context);
-                        _loadData();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorUtils.corporateBlue600,
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({'en': 'Apply Filter', 'id': 'Terapkan Filter'}),
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(color: ColorUtils.slate300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Cancel',
+                            'id': 'Batal',
+                          }),
+                          style: TextStyle(
+                            color: ColorUtils.slate700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ]),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedGradeFilter = tempSelectedClass;
+                            _selectedHomeroomFilter = tempSelectedHomeroom;
+                          });
+                          _checkActiveFilter();
+                          Navigator.pop(context);
+                          _loadData();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorUtils.corporateBlue600,
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Apply Filter',
+                            'id': 'Terapkan Filter',
+                          }),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -546,8 +634,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
       });
-
-      _animationController.forward();
     } catch (e) {
       if (!mounted) return;
 
@@ -794,7 +880,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                             end: Alignment.bottomRight,
                             colors: [
                               ColorUtils.corporateBlue600,
-                              ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+                              ColorUtils.corporateBlue600.withValues(
+                                alpha: 0.8,
+                              ),
                             ],
                           ),
                           borderRadius: BorderRadius.only(
@@ -805,15 +893,19 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                         child: Row(
                           children: [
                             Container(
-                              width: 44, height: 44,
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
                               ),
                               child: Icon(
                                 isEdit ? Icons.edit_rounded : Icons.add_rounded,
-                                color: Colors.white, size: 22,
+                                color: Colors.white,
+                                size: 22,
                               ),
                             ),
                             SizedBox(width: 14),
@@ -823,16 +915,37 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                 children: [
                                   Text(
                                     isEdit
-                                        ? languageProvider.getTranslatedText({'en': 'Edit Class', 'id': 'Edit Kelas'})
-                                        : languageProvider.getTranslatedText({'en': 'Add Class', 'id': 'Tambah Kelas'}),
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Edit Class',
+                                            'id': 'Edit Kelas',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'Add Class',
+                                            'id': 'Tambah Kelas',
+                                          }),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                   SizedBox(height: 2),
                                   Text(
                                     isEdit
-                                        ? languageProvider.getTranslatedText({'en': 'Update class information', 'id': 'Perbarui informasi kelas'})
-                                        : languageProvider.getTranslatedText({'en': 'Fill in class information', 'id': 'Isi informasi kelas'}),
-                                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Update class information',
+                                            'id': 'Perbarui informasi kelas',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'Fill in class information',
+                                            'id': 'Isi informasi kelas',
+                                          }),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -840,12 +953,17 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                             GestureDetector(
                               onTap: () => Navigator.pop(context),
                               child: Container(
-                                width: 32, height: 32,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ),
                             ),
                           ],
@@ -858,34 +976,34 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                            _buildDialogTextField(
-                              controller: nameController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Class Name',
-                                'id': 'Nama Kelas',
-                              }),
-                              icon: Icons.school,
-                            ),
-                            SizedBox(height: 12),
-                            _buildGradeLevelDropdown(
-                              value: selectedGradeLevel,
-                              onChanged: (value) {
-                                setDialogState(() {
-                                  selectedGradeLevel = value;
-                                });
-                              },
-                              languageProvider: languageProvider,
-                            ),
-                            SizedBox(height: 12),
-                            _buildHomeroomTeacherDropdown(
-                              value: selectedHomeroomTeacherId,
-                              onChanged: (value) {
-                                setDialogState(() {
-                                  selectedHomeroomTeacherId = value;
-                                });
-                              },
-                              languageProvider: languageProvider,
-                            ),
+                              _buildDialogTextField(
+                                controller: nameController,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Class Name',
+                                  'id': 'Nama Kelas',
+                                }),
+                                icon: Icons.school,
+                              ),
+                              SizedBox(height: 12),
+                              _buildGradeLevelDropdown(
+                                value: selectedGradeLevel,
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    selectedGradeLevel = value;
+                                  });
+                                },
+                                languageProvider: languageProvider,
+                              ),
+                              SizedBox(height: 12),
+                              _buildHomeroomTeacherDropdown(
+                                value: selectedHomeroomTeacherId,
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    selectedHomeroomTeacherId = value;
+                                  });
+                                },
+                                languageProvider: languageProvider,
+                              ),
                             ],
                           ),
                         ),
@@ -895,7 +1013,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                       Container(
                         padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
                         decoration: BoxDecoration(
-                          border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                          border: Border(
+                            top: BorderSide(color: ColorUtils.slate100),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -911,7 +1031,11 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                 ),
                                 child: Text(
                                   AppLocalizations.cancel.tr,
-                                  style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600, fontSize: 14),
+                                  style: TextStyle(
+                                    color: ColorUtils.slate700,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1030,16 +1154,24 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                   backgroundColor: ColorUtils.corporateBlue600,
                                   padding: EdgeInsets.symmetric(vertical: 13),
                                   elevation: 2,
-                                  shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
+                                  shadowColor: ColorUtils.corporateBlue600
+                                      .withValues(alpha: 0.4),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 child: Text(
                                   isEdit
-                                      ? languageProvider.getTranslatedText({'en': 'Update', 'id': 'Perbarui'})
+                                      ? languageProvider.getTranslatedText({
+                                          'en': 'Update',
+                                          'id': 'Perbarui',
+                                        })
                                       : AppLocalizations.save.tr,
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1077,7 +1209,10 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+            borderSide: BorderSide(
+              color: ColorUtils.corporateBlue600,
+              width: 1.5,
+            ),
           ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
@@ -1100,13 +1235,23 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       child: DropdownButtonFormField<String>(
         initialValue: value,
         decoration: InputDecoration(
-          labelText: languageProvider.getTranslatedText({'en': 'Grade Level', 'id': 'Tingkat Kelas'}),
+          labelText: languageProvider.getTranslatedText({
+            'en': 'Grade Level',
+            'id': 'Tingkat Kelas',
+          }),
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          prefixIcon: Icon(Icons.layers_outlined, color: ColorUtils.corporateBlue600, size: 18),
+          prefixIcon: Icon(
+            Icons.layers_outlined,
+            color: ColorUtils.corporateBlue600,
+            size: 18,
+          ),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+            borderSide: BorderSide(
+              color: ColorUtils.corporateBlue600,
+              width: 1.5,
+            ),
           ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12),
         ),
@@ -1120,13 +1265,19 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           } else {
             gradeText = 'Kelas $grade SMA';
           }
-          return DropdownMenuItem<String>(value: gradeStr, child: Text(gradeText));
+          return DropdownMenuItem<String>(
+            value: gradeStr,
+            child: Text(gradeText),
+          );
         }).toList(),
         onChanged: onChanged,
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+        icon: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: ColorUtils.slate500,
+        ),
       ),
     );
   }
@@ -1160,25 +1311,42 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         isExpanded: true,
         initialValue: validValue,
         decoration: InputDecoration(
-          labelText: languageProvider.getTranslatedText({'en': 'Homeroom Teacher', 'id': 'Wali Kelas'}),
+          labelText: languageProvider.getTranslatedText({
+            'en': 'Homeroom Teacher',
+            'id': 'Wali Kelas',
+          }),
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          prefixIcon: Icon(Icons.person_outline, color: ColorUtils.corporateBlue600, size: 18),
+          prefixIcon: Icon(
+            Icons.person_outline,
+            color: ColorUtils.corporateBlue600,
+            size: 18,
+          ),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+            borderSide: BorderSide(
+              color: ColorUtils.corporateBlue600,
+              width: 1.5,
+            ),
           ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
         items: [
           DropdownMenuItem<String>(
             value: null,
-            child: Text(languageProvider.getTranslatedText({'en': 'No Homeroom Teacher', 'id': 'Tidak ada wali kelas'})),
+            child: Text(
+              languageProvider.getTranslatedText({
+                'en': 'No Homeroom Teacher',
+                'id': 'Tidak ada wali kelas',
+              }),
+            ),
           ),
           ...uniqueTeachers.values.map((teacher) {
             final teacherName = teacher['name'] ?? 'Unknown';
             final teacherNip = teacher['nip']?.toString() ?? '';
-            final displayText = teacherNip.isNotEmpty ? '$teacherName (NIP: $teacherNip)' : teacherName;
+            final displayText = teacherNip.isNotEmpty
+                ? '$teacherName (NIP: $teacherNip)'
+                : teacherName;
             return DropdownMenuItem<String>(
               value: teacher['id'].toString(),
               child: Text(displayText, overflow: TextOverflow.ellipsis),
@@ -1189,7 +1357,10 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+        icon: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: ColorUtils.slate500,
+        ),
       ),
     );
   }
@@ -1250,106 +1421,101 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     final languageProvider = context.read<LanguageProvider>();
     final avatarColor = ColorUtils.getColorForIndex(index);
     final className = classData['name'] ?? 'Class';
-    final gradeText = _getGradeLevelText(classData['grade_level'], languageProvider);
+    final gradeText = _getGradeLevelText(
+      classData['grade_level'],
+      languageProvider,
+    );
     final studentCount = classData['student_count'] ?? 0;
-    final teacherName = (classData['homeroom_teacher'] is List &&
+    final teacherName =
+        (classData['homeroom_teacher'] is List &&
             (classData['homeroom_teacher'] as List).isNotEmpty)
         ? classData['homeroom_teacher'][0]['name']
         : (classData['homeroom_teacher'] is Map
-            ? classData['homeroom_teacher']['name']
-            : classData['homeroom_teacher_name'] ??
-                  classData['wali_kelas_nama'] ??
-                  languageProvider.getTranslatedText({
-                    'en': 'Not Assigned',
-                    'id': 'Belum Ditugaskan',
-                  }));
+              ? classData['homeroom_teacher']['name']
+              : classData['homeroom_teacher_name'] ??
+                    classData['wali_kelas_nama'] ??
+                    languageProvider.getTranslatedText({
+                      'en': 'Not Assigned',
+                      'id': 'Belum Ditugaskan',
+                    }));
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final delay = index * 0.1;
-        final animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(delay, 1.0, curve: Curves.easeOut),
-        );
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _showClassDetail(classData),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ColorUtils.slate200, width: 1),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: Row(
-                children: [
-                  // Colored initial avatar
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: avatarColor.withValues(alpha: 0.15),
-                    child: Text(
-                      className.isNotEmpty ? className[0].toUpperCase() : 'C',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: avatarColor,
-                      ),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showClassDetail(classData),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200, width: 1),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            child: Row(
+              children: [
+                // Colored initial avatar
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: avatarColor.withValues(alpha: 0.15),
+                  child: Text(
+                    className.isNotEmpty ? className[0].toUpperCase() : 'C',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: avatarColor,
                     ),
                   ),
-                  SizedBox(width: 12),
-                  // Name + info tags
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          className,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 4),
-                        _buildInfoTag(Icons.layers_outlined, gradeText),
-                        SizedBox(height: 4),
-                        _buildInfoTag(Icons.person_outline, teacherName),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  // Student count chip + action buttons
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                ),
+                SizedBox(width: 12),
+                // Name + info tags
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
+                      Text(
+                        className,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4),
+                      _buildInfoTag(Icons.layers_outlined, gradeText),
+                      SizedBox(height: 4),
+                      _buildInfoTag(Icons.person_outline, teacherName),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8),
+                // Student count chip + action buttons
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.corporateBlue600.withValues(
+                          alpha: 0.1,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: ColorUtils.corporateBlue600.withValues(
+                            alpha: 0.3,
                           ),
                         ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Container(
-                            width: 5, height: 5,
+                            width: 5,
+                            height: 5,
                             decoration: BoxDecoration(
                               color: ColorUtils.corporateBlue600,
                               shape: BoxShape.circle,
@@ -1364,47 +1530,64 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ]),
+                        ],
                       ),
-                      Consumer<AcademicYearProvider>(
-                        builder: (context, academicYearProvider, child) {
-                          if (academicYearProvider.isReadOnly) return SizedBox.shrink();
-                          return Column(children: [
+                    ),
+                    Consumer<AcademicYearProvider>(
+                      builder: (context, academicYearProvider, child) {
+                        if (academicYearProvider.isReadOnly)
+                          return SizedBox.shrink();
+                        return Column(
+                          children: [
                             SizedBox(height: 8),
-                            Row(children: [
-                              InkWell(
-                                onTap: () => _showAddEditDialog(classData: classData),
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
+                            Row(
+                              children: [
+                                InkWell(
+                                  onTap: () =>
+                                      _showAddEditDialog(classData: classData),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: ColorUtils.corporateBlue600
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.edit_outlined,
+                                      size: 16,
+                                      color: ColorUtils.corporateBlue600,
+                                    ),
                                   ),
-                                  child: Icon(Icons.edit_outlined, size: 16, color: ColorUtils.corporateBlue600),
                                 ),
-                              ),
-                              SizedBox(width: 6),
-                              InkWell(
-                                onTap: () => _deleteClass(classData),
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: ColorUtils.error600.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
+                                SizedBox(width: 6),
+                                InkWell(
+                                  onTap: () => _deleteClass(classData),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: ColorUtils.error600.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.delete_outline,
+                                      size: 16,
+                                      color: ColorUtils.error600,
+                                    ),
                                   ),
-                                  child: Icon(Icons.delete_outline, size: 16, color: ColorUtils.error600),
                                 ),
-                              ),
-                            ]),
-                          ]);
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -1420,16 +1603,23 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: ColorUtils.slate200),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 11, color: ColorUtils.slate600),
-        SizedBox(width: 3),
-        Text(
-          text,
-          style: TextStyle(fontSize: 11, color: ColorUtils.slate700, fontWeight: FontWeight.w500),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: ColorUtils.slate600),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -1446,90 +1636,143 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header: colored avatar + grade badge + X close (Pattern #10)
-              Builder(builder: (context) {
-                final name = classData['name'] ?? 'C';
-                final nameHash = name.codeUnits.fold(0, (sum, c) => sum + c);
-                final avatarColor = ColorUtils.getColorForIndex(nameHash);
-                final gradeText = _getGradeLevelText(classData['grade_level'], languageProvider);
-                return Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [ColorUtils.corporateBlue600, ColorUtils.corporateBlue600.withValues(alpha: 0.8)],
-                    ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      Column(
-                        children: [
-                          Container(
-                            width: 72, height: 72,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: avatarColor,
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 3),
-                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: Offset(0, 4))],
-                            ),
-                            child: Center(
-                              child: Text(
-                                name.isNotEmpty ? name[0].toUpperCase() : 'C',
-                                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            name,
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                                ),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(Icons.layers_outlined, size: 12, color: Colors.white),
-                                  SizedBox(width: 4),
-                                  Text(gradeText, style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
-                                ]),
-                              ),
-                            ],
-                          ),
+              Builder(
+                builder: (context) {
+                  final name = classData['name'] ?? 'C';
+                  final nameHash = name.codeUnits.fold(0, (sum, c) => sum + c);
+                  final avatarColor = ColorUtils.getColorForIndex(nameHash);
+                  final gradeText = _getGradeLevelText(
+                    classData['grade_level'],
+                    languageProvider,
+                  );
+                  return Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          ColorUtils.corporateBlue600,
+                          ColorUtils.corporateBlue600.withValues(alpha: 0.8),
                         ],
                       ),
-                      Positioned(
-                        top: 0, right: 0,
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        Column(
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: avatarColor,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  name.isNotEmpty ? name[0].toUpperCase() : 'C',
+                                  style: TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
-                            child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                            SizedBox(height: 12),
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.layers_outlined,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        gradeText,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.close_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+                      ],
+                    ),
+                  );
+                },
+              ),
 
               // Content
               Padding(
@@ -1609,47 +1852,77 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                     Container(
                       padding: EdgeInsets.only(top: 12),
                       decoration: BoxDecoration(
-                        border: Border(top: BorderSide(color: ColorUtils.slate100)),
-                      ),
-                      child: Row(children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 13),
-                              side: BorderSide(color: ColorUtils.slate300),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({'en': 'Close', 'id': 'Tutup'}),
-                              style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600, fontSize: 14),
-                            ),
-                          ),
+                        border: Border(
+                          top: BorderSide(color: ColorUtils.slate100),
                         ),
-                        if (!Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly) ...[
-                          SizedBox(width: 12),
+                      ),
+                      child: Row(
+                        children: [
                           Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _showAddEditDialog(classData: classData);
-                              },
-                              icon: Icon(Icons.edit_rounded, size: 16, color: Colors.white),
-                              label: Text(
-                                languageProvider.getTranslatedText({'en': 'Edit', 'id': 'Edit'}),
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: ColorUtils.corporateBlue600,
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
                                 padding: EdgeInsets.symmetric(vertical: 13),
-                                elevation: 2,
-                                shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                side: BorderSide(color: ColorUtils.slate300),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Close',
+                                  'id': 'Tutup',
+                                }),
+                                style: TextStyle(
+                                  color: ColorUtils.slate700,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ),
+                          if (!Provider.of<AcademicYearProvider>(
+                            context,
+                            listen: false,
+                          ).isReadOnly) ...[
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _showAddEditDialog(classData: classData);
+                                },
+                                icon: Icon(
+                                  Icons.edit_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                                label: Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Edit',
+                                    'id': 'Edit',
+                                  }),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: ColorUtils.corporateBlue600,
+                                  padding: EdgeInsets.symmetric(vertical: 13),
+                                  elevation: 2,
+                                  shadowColor: ColorUtils.corporateBlue600
+                                      .withValues(alpha: 0.4),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ]),
+                      ),
                     ),
                   ],
                 ),
@@ -1677,11 +1950,14 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       child: Row(
         children: [
           Container(
-            width: 36, height: 36,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: ColorUtils.corporateBlue600.withValues(alpha: 0.15)),
+              border: Border.all(
+                color: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
+              ),
             ),
             child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
           ),
@@ -1690,9 +1966,26 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500, letterSpacing: 0.3)),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: ColorUtils.slate500,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                  ),
+                ),
                 SizedBox(height: 3),
-                Text(value, style: TextStyle(fontSize: 14, color: ColorUtils.slate800, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: ColorUtils.slate800,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
@@ -2095,7 +2388,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
               Expanded(
                 child: _isLoading && _classes.isEmpty
-                    ? Center(child: CircularProgressIndicator())
+                    ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
                     : filteredClasses.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({

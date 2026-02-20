@@ -35,7 +35,6 @@ import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:manajemensekolah/widgets/dashboard/category_section.dart';
 import 'package:manajemensekolah/widgets/dashboard/menu_item_card.dart';
@@ -44,6 +43,7 @@ import 'package:manajemensekolah/widgets/dashboard/quick_action_button.dart';
 import 'package:manajemensekolah/widgets/dashboard/schedule_slider_card.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 
 class Dashboard extends StatefulWidget {
   final String role;
@@ -176,6 +176,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   void _onYearChanged() {
+    if (!mounted) return;
     setState(() => _isStatsLoaded = false);
     _loadStats();
     _loadUserData();
@@ -992,6 +993,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   void dispose() {
     FCMService().syncTrigger.removeListener(_handleSyncTrigger);
     _animationController.dispose();
+    try {
+      Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      ).removeListener(_onYearChanged);
+    } catch (e) {
+      if (kDebugMode) print('Error removing AcademicYearProvider listener: $e');
+    }
     super.dispose();
   }
 
@@ -1502,8 +1511,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   Row(
                     children: _isStatsLoaded
                         ? _buildFourColumnStats()
-                            .map((stat) => Expanded(child: stat))
-                            .toList()
+                              .map((stat) => Expanded(child: stat))
+                              .toList()
                         : List.generate(
                             4,
                             (_) => Expanded(child: _buildHeroStatSkeleton()),
@@ -1731,7 +1740,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     physics: NeverScrollableScrollPhysics(),
                     itemCount: 4,
                     separatorBuilder: (context, index) => SizedBox(width: 10),
-                    itemBuilder: (context, index) => _buildQuickActionSkeleton(),
+                    itemBuilder: (context, index) =>
+                        _buildQuickActionSkeleton(),
                   ),
           ),
         ],
