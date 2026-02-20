@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
@@ -2344,7 +2345,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
               Expanded(
                 child: _isLoading
-                    ? Center(child: CircularProgressIndicator())
+                    ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
                     : filteredStudents.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({

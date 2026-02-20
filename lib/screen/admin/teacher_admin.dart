@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/teacher_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
@@ -2445,7 +2446,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen>
               SizedBox(height: 8),
               Expanded(
                 child: _isLoading && _teachers.isEmpty
-                    ? Center(child: CircularProgressIndicator())
+                    ? SkeletonListLoading(itemCount: 6, infoTagCount: 2)
                     : displayedTeachers.isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({
