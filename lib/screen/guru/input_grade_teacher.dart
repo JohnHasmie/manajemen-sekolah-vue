@@ -952,14 +952,10 @@ class GradePageState extends State<GradePage> {
         top: MediaQuery.of(context).padding.top + 16,
         left: 16,
         right: 16,
-        bottom: 24,
+        bottom: 16,
       ),
       decoration: BoxDecoration(
         gradient: _getCardGradient(),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
         boxShadow: [
           BoxShadow(
             color: _getPrimaryColor().withValues(alpha: 0.3),
@@ -3069,7 +3065,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                   top: MediaQuery.of(context).padding.top + 16,
                   left: 16,
                   right: 16,
-                  bottom: 20,
+                  bottom: 16,
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
