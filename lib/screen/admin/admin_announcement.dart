@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_announcement_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -25,17 +25,12 @@ class AdminAnnouncementScreen extends StatefulWidget {
   AdminAnnouncementScreenState createState() => AdminAnnouncementScreenState();
 }
 
-class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
-    with SingleTickerProviderStateMixin {
+class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   final ApiService _apiService = ApiService();
   File? _selectedFile;
   List<dynamic> _announcements = [];
   bool _isLoading = true;
   String? _errorMessage;
-
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
 
   // Scroll Controller for Infinite Scroll
   final ScrollController _scrollController = ScrollController();
@@ -69,19 +64,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
   void initState() {
     super.initState();
 
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
 
@@ -98,7 +80,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
 
   @override
   void dispose() {
-    _animationController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.removeListener(_onSearchChanged);
@@ -306,7 +287,10 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+                    colors: [
+                      _getPrimaryColor(),
+                      _getPrimaryColor().withValues(alpha: 0.8),
+                    ],
                   ),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(24),
@@ -316,14 +300,27 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(children: [
-                      Icon(Icons.filter_list_rounded, color: Colors.white, size: 22),
-                      SizedBox(width: 12),
-                      Text(
-                        languageProvider.getTranslatedText({'en': 'Filter', 'id': 'Filter'}),
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ]),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.filter_list_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Filter',
+                            'id': 'Filter',
+                          }),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                     TextButton(
                       onPressed: () {
                         setModalState(() {
@@ -333,8 +330,14 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                         });
                       },
                       child: Text(
-                        languageProvider.getTranslatedText({'en': 'Reset', 'id': 'Reset'}),
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        languageProvider.getTranslatedText({
+                          'en': 'Reset',
+                          'id': 'Reset',
+                        }),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -349,14 +352,27 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Priority Filter
-                      Row(children: [
-                        Icon(Icons.priority_high, size: 16, color: ColorUtils.slate600),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({'en': 'Priority', 'id': 'Prioritas'}),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                        ),
-                      ]),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.priority_high,
+                            size: 16,
+                            color: ColorUtils.slate600,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Priority',
+                              'id': 'Prioritas',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
@@ -367,22 +383,37 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                             label: Text(prioritas),
                             selected: isSelected,
                             onSelected: (selected) {
-                              setModalState(() { tempSelectedPrioritas = selected ? prioritas : null; });
+                              setModalState(() {
+                                tempSelectedPrioritas = selected
+                                    ? prioritas
+                                    : null;
+                              });
                             },
                             backgroundColor: Colors.white,
-                            selectedColor: _getPrimaryColor().withValues(alpha: 0.15),
+                            selectedColor: _getPrimaryColor().withValues(
+                              alpha: 0.15,
+                            ),
                             checkmarkColor: _getPrimaryColor(),
                             labelStyle: TextStyle(
-                              color: isSelected ? _getPrimaryColor() : ColorUtils.slate700,
+                              color: isSelected
+                                  ? _getPrimaryColor()
+                                  : ColorUtils.slate700,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
                             side: BorderSide(
-                              color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
+                              color: isSelected
+                                  ? _getPrimaryColor()
+                                  : ColorUtils.slate300,
                               width: 1,
                             ),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           );
                         }).toList(),
                       ),
@@ -390,92 +421,194 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                       SizedBox(height: 20),
 
                       // Target Filter
-                      Row(children: [
-                        Icon(Icons.people_outline, size: 16, color: ColorUtils.slate600),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({'en': 'Target', 'id': 'Target'}),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                        ),
-                      ]),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 16,
+                            color: ColorUtils.slate600,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Target',
+                              'id': 'Target',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: [
-                          {'value': 'Semua', 'label': languageProvider.getTranslatedText({'en': 'All', 'id': 'Semua'})},
-                          {'value': 'Guru', 'label': languageProvider.getTranslatedText({'en': 'Teachers', 'id': 'Guru'})},
-                          {'value': 'Siswa', 'label': languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'})},
-                          {'value': 'Orang Tua', 'label': languageProvider.getTranslatedText({'en': 'Parents', 'id': 'Orang Tua'})},
-                        ].map((item) {
-                          final isSelected = tempSelectedTarget == item['value'];
-                          return FilterChip(
-                            label: Text(item['label']!),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() { tempSelectedTarget = selected ? item['value'] : null; });
-                            },
-                            backgroundColor: Colors.white,
-                            selectedColor: _getPrimaryColor().withValues(alpha: 0.15),
-                            checkmarkColor: _getPrimaryColor(),
-                            labelStyle: TextStyle(
-                              color: isSelected ? _getPrimaryColor() : ColorUtils.slate700,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            side: BorderSide(
-                              color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
-                              width: 1,
-                            ),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          );
-                        }).toList(),
+                        children:
+                            [
+                              {
+                                'value': 'Semua',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'All',
+                                  'id': 'Semua',
+                                }),
+                              },
+                              {
+                                'value': 'Guru',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Teachers',
+                                  'id': 'Guru',
+                                }),
+                              },
+                              {
+                                'value': 'Siswa',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Students',
+                                  'id': 'Siswa',
+                                }),
+                              },
+                              {
+                                'value': 'Orang Tua',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Parents',
+                                  'id': 'Orang Tua',
+                                }),
+                              },
+                            ].map((item) {
+                              final isSelected =
+                                  tempSelectedTarget == item['value'];
+                              return FilterChip(
+                                label: Text(item['label']!),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setModalState(() {
+                                    tempSelectedTarget = selected
+                                        ? item['value']
+                                        : null;
+                                  });
+                                },
+                                backgroundColor: Colors.white,
+                                selectedColor: _getPrimaryColor().withValues(
+                                  alpha: 0.15,
+                                ),
+                                checkmarkColor: _getPrimaryColor(),
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : ColorUtils.slate700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : ColorUtils.slate300,
+                                  width: 1,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              );
+                            }).toList(),
                       ),
 
                       SizedBox(height: 20),
 
                       // Status Filter
-                      Row(children: [
-                        Icon(Icons.info_outline, size: 16, color: ColorUtils.slate600),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({'en': 'Status', 'id': 'Status'}),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                        ),
-                      ]),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: ColorUtils.slate600,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Status',
+                              'id': 'Status',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: [
-                          {'value': 'Aktif', 'label': languageProvider.getTranslatedText({'en': 'Active', 'id': 'Aktif'})},
-                          {'value': 'Terjadwal', 'label': languageProvider.getTranslatedText({'en': 'Scheduled', 'id': 'Terjadwal'})},
-                          {'value': 'Kedaluwarsa', 'label': languageProvider.getTranslatedText({'en': 'Expired', 'id': 'Kedaluwarsa'})},
-                        ].map((item) {
-                          final isSelected = tempSelectedStatus == item['value'];
-                          return FilterChip(
-                            label: Text(item['label']!),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() { tempSelectedStatus = selected ? item['value'] : null; });
-                            },
-                            backgroundColor: Colors.white,
-                            selectedColor: _getPrimaryColor().withValues(alpha: 0.15),
-                            checkmarkColor: _getPrimaryColor(),
-                            labelStyle: TextStyle(
-                              color: isSelected ? _getPrimaryColor() : ColorUtils.slate700,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            side: BorderSide(
-                              color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
-                              width: 1,
-                            ),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          );
-                        }).toList(),
+                        children:
+                            [
+                              {
+                                'value': 'Aktif',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Active',
+                                  'id': 'Aktif',
+                                }),
+                              },
+                              {
+                                'value': 'Terjadwal',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Scheduled',
+                                  'id': 'Terjadwal',
+                                }),
+                              },
+                              {
+                                'value': 'Kedaluwarsa',
+                                'label': languageProvider.getTranslatedText({
+                                  'en': 'Expired',
+                                  'id': 'Kedaluwarsa',
+                                }),
+                              },
+                            ].map((item) {
+                              final isSelected =
+                                  tempSelectedStatus == item['value'];
+                              return FilterChip(
+                                label: Text(item['label']!),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setModalState(() {
+                                    tempSelectedStatus = selected
+                                        ? item['value']
+                                        : null;
+                                  });
+                                },
+                                backgroundColor: Colors.white,
+                                selectedColor: _getPrimaryColor().withValues(
+                                  alpha: 0.15,
+                                ),
+                                checkmarkColor: _getPrimaryColor(),
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : ColorUtils.slate700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? _getPrimaryColor()
+                                      : ColorUtils.slate300,
+                                  width: 1,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              );
+                            }).toList(),
                       ),
                     ],
                   ),
@@ -488,49 +621,73 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(top: BorderSide(color: ColorUtils.slate200)),
-                  boxShadow: [BoxShadow(color: ColorUtils.slate900.withValues(alpha: 0.05), blurRadius: 8, offset: Offset(0, -2))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: ColorUtils.slate900.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: Offset(0, -2),
+                    ),
+                  ],
                 ),
-                child: Row(children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(color: ColorUtils.slate300),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
-                        style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedPriorityFilter = tempSelectedPrioritas;
-                          _selectedTargetFilter = tempSelectedTarget;
-                          _selectedStatusFilter = tempSelectedStatus;
-                        });
-                        _checkActiveFilter();
-                        Navigator.pop(context);
-                        _loadData();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _getPrimaryColor(),
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({'en': 'Apply Filter', 'id': 'Terapkan Filter'}),
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(color: ColorUtils.slate300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Cancel',
+                            'id': 'Batal',
+                          }),
+                          style: TextStyle(
+                            color: ColorUtils.slate700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ]),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedPriorityFilter = tempSelectedPrioritas;
+                            _selectedTargetFilter = tempSelectedTarget;
+                            _selectedStatusFilter = tempSelectedStatus;
+                          });
+                          _checkActiveFilter();
+                          Navigator.pop(context);
+                          _loadData();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Apply Filter',
+                            'id': 'Terapkan Filter',
+                          }),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -655,8 +812,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
           _errorMessage = 'Unexpected response structure';
         });
       }
-
-      _animationController.forward();
     } catch (e) {
       if (!mounted) return;
 
@@ -849,7 +1004,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
                 child: Container(
                   height: MediaQuery.of(context).size.height * 0.92,
                   decoration: BoxDecoration(
@@ -869,7 +1026,10 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
+                            colors: [
+                              _getPrimaryColor(),
+                              _getPrimaryColor().withValues(alpha: 0.8),
+                            ],
                           ),
                           borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(24),
@@ -879,15 +1039,21 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                         child: Row(
                           children: [
                             Container(
-                              width: 44, height: 44,
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
                               ),
                               child: Icon(
-                                isEdit ? Icons.edit_rounded : Icons.announcement_rounded,
-                                color: Colors.white, size: 22,
+                                isEdit
+                                    ? Icons.edit_rounded
+                                    : Icons.announcement_rounded,
+                                color: Colors.white,
+                                size: 22,
                               ),
                             ),
                             SizedBox(width: 14),
@@ -897,16 +1063,40 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                 children: [
                                   Text(
                                     isEdit
-                                        ? languageProvider.getTranslatedText({'en': 'Edit Announcement', 'id': 'Edit Pengumuman'})
-                                        : languageProvider.getTranslatedText({'en': 'Add Announcement', 'id': 'Tambah Pengumuman'}),
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Edit Announcement',
+                                            'id': 'Edit Pengumuman',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'Add Announcement',
+                                            'id': 'Tambah Pengumuman',
+                                          }),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                   SizedBox(height: 2),
                                   Text(
                                     isEdit
-                                        ? languageProvider.getTranslatedText({'en': 'Update announcement information', 'id': 'Perbarui informasi pengumuman'})
-                                        : languageProvider.getTranslatedText({'en': 'Fill in announcement details', 'id': 'Isi detail pengumuman'}),
-                                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                                        ? languageProvider.getTranslatedText({
+                                            'en':
+                                                'Update announcement information',
+                                            'id':
+                                                'Perbarui informasi pengumuman',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en':
+                                                'Fill in announcement details',
+                                            'id': 'Isi detail pengumuman',
+                                          }),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -914,12 +1104,17 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                             GestureDetector(
                               onTap: () => Navigator.pop(context),
                               child: Container(
-                                width: 32, height: 32,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ),
                             ),
                           ],
@@ -933,53 +1128,90 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                            _buildDialogTextField(
-                              controller: judulController,
-                              label: languageProvider.getTranslatedText({'en': 'Title', 'id': 'Judul'}),
-                              icon: Icons.title,
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogTextField(
-                              controller: kontenController,
-                              label: languageProvider.getTranslatedText({'en': 'Content', 'id': 'Konten'}),
-                              icon: Icons.description,
-                              maxLines: 4,
-                            ),
-                            SizedBox(height: 12),
-                            _buildPrioritasDropdown(
-                              value: selectedPrioritas,
-                              onChanged: (value) { setDialogState(() { selectedPrioritas = value; }); },
-                              languageProvider: languageProvider,
-                            ),
-                            SizedBox(height: 12),
-                            _buildRoleTargetDropdown(
-                              value: selectedRole,
-                              onChanged: (value) { setDialogState(() { selectedRole = value; }); },
-                              languageProvider: languageProvider,
-                            ),
-                            SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildDateField(
-                                    label: languageProvider.getTranslatedText({'en': 'Start Date', 'id': 'Tanggal Mulai'}),
-                                    value: tanggalAwal,
-                                    onTap: () => _selectDate(context, true, (date) { setDialogState(() { tanggalAwal = date; }); }),
+                              _buildDialogTextField(
+                                controller: judulController,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Title',
+                                  'id': 'Judul',
+                                }),
+                                icon: Icons.title,
+                              ),
+                              SizedBox(height: 12),
+                              _buildDialogTextField(
+                                controller: kontenController,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Content',
+                                  'id': 'Konten',
+                                }),
+                                icon: Icons.description,
+                                maxLines: 4,
+                              ),
+                              SizedBox(height: 12),
+                              _buildPrioritasDropdown(
+                                value: selectedPrioritas,
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    selectedPrioritas = value;
+                                  });
+                                },
+                                languageProvider: languageProvider,
+                              ),
+                              SizedBox(height: 12),
+                              _buildRoleTargetDropdown(
+                                value: selectedRole,
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    selectedRole = value;
+                                  });
+                                },
+                                languageProvider: languageProvider,
+                              ),
+                              SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildDateField(
+                                      label: languageProvider.getTranslatedText(
+                                        {
+                                          'en': 'Start Date',
+                                          'id': 'Tanggal Mulai',
+                                        },
+                                      ),
+                                      value: tanggalAwal,
+                                      onTap: () =>
+                                          _selectDate(context, true, (date) {
+                                            setDialogState(() {
+                                              tanggalAwal = date;
+                                            });
+                                          }),
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildDateField(
-                                    label: languageProvider.getTranslatedText({'en': 'End Date', 'id': 'Tanggal Berakhir'}),
-                                    value: tanggalAkhir,
-                                    onTap: () => _selectDate(context, false, (date) { setDialogState(() { tanggalAkhir = date; }); }),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: _buildDateField(
+                                      label: languageProvider.getTranslatedText(
+                                        {
+                                          'en': 'End Date',
+                                          'id': 'Tanggal Berakhir',
+                                        },
+                                      ),
+                                      value: tanggalAkhir,
+                                      onTap: () =>
+                                          _selectDate(context, false, (date) {
+                                            setDialogState(() {
+                                              tanggalAkhir = date;
+                                            });
+                                          }),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 12),
-                            _buildFilePicker(setDialogState, languageProvider),
-                          ],
+                                ],
+                              ),
+                              SizedBox(height: 12),
+                              _buildFilePicker(
+                                setDialogState,
+                                languageProvider,
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -988,7 +1220,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                       Container(
                         padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
                         decoration: BoxDecoration(
-                          border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                          border: Border(
+                            top: BorderSide(color: ColorUtils.slate100),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -996,13 +1230,22 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                               child: OutlinedButton(
                                 onPressed: () => Navigator.pop(context),
                                 style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   padding: EdgeInsets.symmetric(vertical: 13),
                                   side: BorderSide(color: ColorUtils.slate300),
                                 ),
                                 child: Text(
-                                  languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
-                                  style: TextStyle(color: ColorUtils.slate700, fontWeight: FontWeight.w600, fontSize: 14),
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Cancel',
+                                    'id': 'Batal',
+                                  }),
+                                  style: TextStyle(
+                                    color: ColorUtils.slate700,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1070,7 +1313,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                                     'Pengumuman berhasil diperbarui',
                                               }),
                                             ),
-                                            backgroundColor: ColorUtils.success600,
+                                            backgroundColor:
+                                                ColorUtils.success600,
                                           ),
                                         );
                                         Navigator.pop(context);
@@ -1093,7 +1337,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                                     'Pengumuman berhasil ditambahkan',
                                               }),
                                             ),
-                                            backgroundColor: ColorUtils.success600,
+                                            backgroundColor:
+                                                ColorUtils.success600,
                                           ),
                                         );
                                         Navigator.pop(context);
@@ -1122,16 +1367,30 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _getPrimaryColor(),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   padding: EdgeInsets.symmetric(vertical: 13),
                                   elevation: 2,
-                                  shadowColor: _getPrimaryColor().withValues(alpha: 0.4),
+                                  shadowColor: _getPrimaryColor().withValues(
+                                    alpha: 0.4,
+                                  ),
                                 ),
                                 child: Text(
                                   isEdit
-                                      ? languageProvider.getTranslatedText({'en': 'Update', 'id': 'Perbarui'})
-                                      : languageProvider.getTranslatedText({'en': 'Save', 'id': 'Simpan'}),
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                                      ? languageProvider.getTranslatedText({
+                                          'en': 'Update',
+                                          'id': 'Perbarui',
+                                        })
+                                      : languageProvider.getTranslatedText({
+                                          'en': 'Save',
+                                          'id': 'Simpan',
+                                        }),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1313,7 +1572,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                     ? '${value.day}/${value.month}/${value.year}'
                     : label,
                 style: TextStyle(
-                  color: value != null ? ColorUtils.slate800 : ColorUtils.slate500,
+                  color: value != null
+                      ? ColorUtils.slate800
+                      : ColorUtils.slate500,
                 ),
               ),
             ),
@@ -1378,7 +1639,11 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.delete_outline, color: Colors.white, size: 22),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                   SizedBox(width: 14),
                   Expanded(
@@ -1417,8 +1682,10 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
               padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
               child: Text(
                 languageProvider.getTranslatedText({
-                  'en': 'Are you sure you want to delete this announcement? All related data will be permanently removed.',
-                  'id': 'Yakin ingin menghapus pengumuman ini? Semua data terkait akan dihapus secara permanen.',
+                  'en':
+                      'Are you sure you want to delete this announcement? All related data will be permanently removed.',
+                  'id':
+                      'Yakin ingin menghapus pengumuman ini? Semua data terkait akan dihapus secara permanen.',
                 }),
                 style: TextStyle(
                   fontSize: 14,
@@ -1525,181 +1792,167 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
   ) {
     final languageProvider = context.read<LanguageProvider>();
     final primaryColor = _getPrimaryColor();
-    final isUnread = !(announcementData['is_read'] == true ||
-        announcementData['is_read'] == 1 ||
-        announcementData['is_read'] == '1');
-    final isImportant = ['penting', 'important']
-        .contains(announcementData['priority']);
+    final isUnread =
+        !(announcementData['is_read'] == true ||
+            announcementData['is_read'] == 1 ||
+            announcementData['is_read'] == '1');
+    final isImportant = [
+      'penting',
+      'important',
+    ].contains(announcementData['priority']);
     final accentColor = isImportant ? Colors.orange : primaryColor;
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final delay = index * 0.1;
-        final animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(delay, 1.0, curve: Curves.easeOut),
-        );
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _showAnnouncementDetail(announcementData),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ColorUtils.slate200, width: 1),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left: colored icon container (like Pattern #8 avatar)
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: accentColor.withValues(alpha: 0.25),
-                      ),
-                    ),
-                    child: Icon(
-                      isImportant
-                          ? Icons.campaign_rounded
-                          : Icons.announcement_outlined,
-                      color: accentColor,
-                      size: 22,
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showAnnouncementDetail(announcementData),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200, width: 1),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left: colored icon container (like Pattern #8 avatar)
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: accentColor.withValues(alpha: 0.25),
                     ),
                   ),
-                  SizedBox(width: 12),
-
-                  // Middle: title + preview + info chips
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
-                        Text(
-                          announcementData['title'] ?? 'No Title',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 3),
-                        // Content preview
-                        Text(
-                          announcementData['content'] ?? '',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.slate600,
-                            height: 1.4,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 8),
-                        // Info chips row
-                        Wrap(
-                          spacing: 5,
-                          runSpacing: 4,
-                          children: [
-                            _buildInfoTag(
-                              Icons.access_time_outlined,
-                              _formatDate(announcementData['created_at']),
-                            ),
-                            _buildInfoTag(
-                              Icons.people_outline,
-                              _getTargetText(announcementData, languageProvider),
-                            ),
-                            if (isImportant)
-                              _buildInfoTag(
-                                Icons.warning_amber_rounded,
-                                languageProvider.getTranslatedText({
-                                  'en': 'Important',
-                                  'id': 'Penting',
-                                }),
-                                tagColor: Colors.orange,
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
+                  child: Icon(
+                    isImportant
+                        ? Icons.campaign_rounded
+                        : Icons.announcement_outlined,
+                    color: accentColor,
+                    size: 22,
                   ),
-                  SizedBox(width: 8),
+                ),
+                SizedBox(width: 12),
 
-                  // Right: unread dot + icon action buttons
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                // Middle: title + preview + info chips
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (isUnread)
-                        Container(
-                          width: 8,
-                          height: 8,
-                          margin: EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: ColorUtils.error600,
-                            shape: BoxShape.circle,
-                          ),
+                      // Title
+                      Text(
+                        announcementData['title'] ?? 'No Title',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
                         ),
-                      // Edit icon button
-                      InkWell(
-                        onTap: () => _showAddEditDialog(
-                          announcementData: announcementData,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.edit_outlined,
-                            size: 16,
-                            color: primaryColor,
-                          ),
-                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 6),
-                      // Delete icon button
-                      InkWell(
-                        onTap: () => _deleteAnnouncement(announcementData),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: ColorUtils.error600.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 16,
-                            color: ColorUtils.error600,
-                          ),
+                      SizedBox(height: 3),
+                      // Content preview
+                      Text(
+                        announcementData['content'] ?? '',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate600,
+                          height: 1.4,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 8),
+                      // Info chips row
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 4,
+                        children: [
+                          _buildInfoTag(
+                            Icons.access_time_outlined,
+                            _formatDate(announcementData['created_at']),
+                          ),
+                          _buildInfoTag(
+                            Icons.people_outline,
+                            _getTargetText(announcementData, languageProvider),
+                          ),
+                          if (isImportant)
+                            _buildInfoTag(
+                              Icons.warning_amber_rounded,
+                              languageProvider.getTranslatedText({
+                                'en': 'Important',
+                                'id': 'Penting',
+                              }),
+                              tagColor: Colors.orange,
+                            ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                SizedBox(width: 8),
+
+                // Right: unread dot + icon action buttons
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (isUnread)
+                      Container(
+                        width: 8,
+                        height: 8,
+                        margin: EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: ColorUtils.error600,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    // Edit icon button
+                    InkWell(
+                      onTap: () => _showAddEditDialog(
+                        announcementData: announcementData,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.edit_outlined,
+                          size: 16,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    // Delete icon button
+                    InkWell(
+                      onTap: () => _deleteAnnouncement(announcementData),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: ColorUtils.error600.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.delete_outline,
+                          size: 16,
+                          color: ColorUtils.error600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -1712,10 +1965,14 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: tagColor != null ? tagColor.withValues(alpha: 0.08) : ColorUtils.slate50,
+        color: tagColor != null
+            ? tagColor.withValues(alpha: 0.08)
+            : ColorUtils.slate50,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: tagColor != null ? tagColor.withValues(alpha: 0.3) : ColorUtils.slate200,
+          color: tagColor != null
+              ? tagColor.withValues(alpha: 0.3)
+              : ColorUtils.slate200,
         ),
       ),
       child: Row(
@@ -1891,7 +2148,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: ColorUtils.slate200),
+                                  border: Border.all(
+                                    color: ColorUtils.slate200,
+                                  ),
                                 ),
                                 child: Icon(
                                   Icons.attach_file,
@@ -2207,7 +2466,11 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, color: ColorUtils.error600, size: 20),
+                    icon: Icon(
+                      Icons.close,
+                      color: ColorUtils.error600,
+                      size: 20,
+                    ),
                     onPressed: () {
                       setDialogState(() {
                         _selectedFile = null;
@@ -2399,14 +2662,18 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                   child: TextField(
                                     controller: _searchController,
                                     // onChanged: (value) => setState(() {}), // Disabling this to prevent excessive rebuilds
-                                    style: TextStyle(color: ColorUtils.slate800),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate800,
+                                    ),
                                     decoration: InputDecoration(
                                       hintText: languageProvider
                                           .getTranslatedText({
                                             'en': 'Search announcements...',
                                             'id': 'Cari pengumuman...',
                                           }),
-                                      hintStyle: TextStyle(color: ColorUtils.slate400),
+                                      hintStyle: TextStyle(
+                                        color: ColorUtils.slate400,
+                                      ),
                                       prefixIcon: Icon(
                                         Icons.search,
                                         color: ColorUtils.slate400,
@@ -2496,14 +2763,20 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Icon(Icons.filter_alt, size: 16, color: Colors.white),
+                              child: Icon(
+                                Icons.filter_alt,
+                                size: 16,
+                                color: Colors.white,
+                              ),
                             ),
                             SizedBox(width: 8),
                             Expanded(
                               child: ListView(
                                 scrollDirection: Axis.horizontal,
                                 children: [
-                                  ..._buildFilterChips(languageProvider).map((filter) {
+                                  ..._buildFilterChips(languageProvider).map((
+                                    filter,
+                                  ) {
                                     return Container(
                                       margin: EdgeInsets.only(right: 6),
                                       child: Chip(
@@ -2515,14 +2788,32 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        deleteIcon: Icon(Icons.close, size: 14, color: Colors.white70),
+                                        deleteIcon: Icon(
+                                          Icons.close,
+                                          size: 14,
+                                          color: Colors.white70,
+                                        ),
                                         onDeleted: filter['onRemove'],
-                                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                                        side: BorderSide(color: Colors.white.withValues(alpha: 0.4), width: 1),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                                        backgroundColor: Colors.white
+                                            .withValues(alpha: 0.2),
+                                        side: BorderSide(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                          width: 1,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 0,
+                                        ),
                                         labelPadding: EdgeInsets.only(left: 2),
-                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
                                         visualDensity: VisualDensity.compact,
                                       ),
                                     );
@@ -2540,7 +2831,11 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
                                   color: ColorUtils.error600,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Icon(Icons.clear_all, size: 16, color: Colors.white),
+                                child: Icon(
+                                  Icons.clear_all,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ],
@@ -2554,11 +2849,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen>
               // Content
               Expanded(
                 child: _isLoading
-                    ? LoadingScreen(
-                        message: languageProvider.getTranslatedText({
-                          'en': 'Loading announcements...',
-                          'id': 'Memuat pengumuman...',
-                        }),
+                    ? SkeletonListLoading(
+                        padding: EdgeInsets.only(top: 8, bottom: 80),
                       )
                     : _errorMessage != null
                     ? ErrorScreen(
