@@ -48,8 +48,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     try {
       await _apiService.markAsRead(id);
       setState(() {
-        final index = _notifications.indexWhere((n) => n['id'].toString() == id);
-        if (index != -1) _notifications[index]['is_read'] = 1;
+        _notifications.removeWhere((n) => n['id'].toString() == id);
       });
     } catch (e) {
       if (kDebugMode) print('Error marking as read: $e');
@@ -59,7 +58,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   Future<void> _deleteNotification(String id) async {
     try {
       await _apiService.deleteNotification(id);
-      setState(() => _notifications.removeWhere((n) => n['id'].toString() == id));
+      setState(
+        () => _notifications.removeWhere((n) => n['id'].toString() == id),
+      );
     } catch (e) {
       if (kDebugMode) print('Error deleting notification: $e');
     }
@@ -69,9 +70,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     try {
       await _apiService.markAllRead();
       setState(() {
-        for (var n in _notifications) {
-          n['is_read'] = 1;
-        }
+        _notifications.clear();
       });
     } catch (e) {
       if (kDebugMode) print('Error marking all read: $e');
@@ -137,21 +136,33 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
     if (widget.role == 'wali' || widget.role == 'parent') {
       if (type == 'bill') {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => ParentBillingScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ParentBillingScreen()),
+        );
         return;
       } else if (type == 'class_activity') {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => ParentClassActivityScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ParentClassActivityScreen()),
+        );
         return;
       }
     } else if (widget.role == 'guru' || widget.role == 'teacher') {
       if (type == 'class_activity') {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => ClassActifityScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ClassActifityScreen()),
+        );
         return;
       }
     }
 
     if (type == 'announcement' || type == 'pengumuman') {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => AnnouncementScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => AnnouncementScreen()),
+      );
     } else if (type == 'grade' || type == 'nilai' || type == 'exam_score') {
       _showDetailDialog(notif);
     }
@@ -246,12 +257,17 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: color,
                       padding: EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                     ),
                     child: Text(
                       'Tutup',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -333,7 +349,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.done_all_rounded, color: Colors.white, size: 18),
+                child: Icon(
+                  Icons.done_all_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
               tooltip: 'Tandai semua dibaca',
             ),
@@ -341,14 +361,21 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: ColorUtils.corporateBlue600))
+          ? Center(
+              child: CircularProgressIndicator(
+                color: ColorUtils.corporateBlue600,
+              ),
+            )
           : RefreshIndicator(
               onRefresh: _loadData,
               color: ColorUtils.corporateBlue600,
               child: _notifications.isEmpty
                   ? _buildEmptyState()
                   : ListView.builder(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                       itemCount: _notifications.length,
                       itemBuilder: (context, index) =>
                           _buildNotificationCard(_notifications[index]),
@@ -442,10 +469,14 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isRead ? ColorUtils.slate200 : color.withValues(alpha: 0.35),
+              color: isRead
+                  ? ColorUtils.slate200
+                  : color.withValues(alpha: 0.35),
               width: isRead ? 1.0 : 1.5,
             ),
-            boxShadow: ColorUtils.corporateShadow(elevation: isRead ? 0.5 : 1.2),
+            boxShadow: ColorUtils.corporateShadow(
+              elevation: isRead ? 0.5 : 1.2,
+            ),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
@@ -468,7 +499,12 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   // Content
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(isRead ? 14 : 12, 14, 14, 14),
+                      padding: EdgeInsets.fromLTRB(
+                        isRead ? 14 : 12,
+                        14,
+                        14,
+                        14,
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -479,7 +515,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: color.withValues(alpha: 0.2)),
+                              border: Border.all(
+                                color: color.withValues(alpha: 0.2),
+                              ),
                             ),
                             child: Icon(_getIcon(type), color: color, size: 22),
                           ),
@@ -497,8 +535,12 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                                         notif['title'] ?? '-',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
-                                          color: isRead ? ColorUtils.slate600 : ColorUtils.slate900,
+                                          fontWeight: isRead
+                                              ? FontWeight.w500
+                                              : FontWeight.w700,
+                                          color: isRead
+                                              ? ColorUtils.slate600
+                                              : ColorUtils.slate900,
                                         ),
                                       ),
                                     ),
@@ -521,7 +563,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                                   notif['body'] ?? '-',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isRead ? ColorUtils.slate400 : ColorUtils.slate600,
+                                    color: isRead
+                                        ? ColorUtils.slate400
+                                        : ColorUtils.slate600,
                                     height: 1.4,
                                   ),
                                   maxLines: 2,
