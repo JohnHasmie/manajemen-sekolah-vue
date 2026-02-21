@@ -1,12 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_billing.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
 import 'package:manajemensekolah/services/api_notification_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
 
 class NotificationListScreen extends StatefulWidget {
   final String role; // 'guru', 'admin', 'wali'
@@ -21,6 +24,21 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   final ApiNotificationService _apiService = ApiNotificationService();
   List<dynamic> _notifications = [];
   bool _isLoading = true;
+
+  Color _getPrimaryColor() {
+    switch (widget.role) {
+      case 'guru':
+      case 'teacher':
+        return ColorUtils.corporateBlue600;
+      case 'admin':
+        return ColorUtils.corporateBlue700;
+      case 'wali':
+      case 'parent':
+        return ColorUtils.success600;
+      default:
+        return ColorUtils.corporateBlue600;
+    }
+  }
 
   @override
   void initState() {
@@ -297,90 +315,146 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final unread = _unreadCount;
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        final unread = _unreadCount;
+        final primaryColor = _getPrimaryColor();
 
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: ColorUtils.corporateBlue600,
-        iconTheme: IconThemeData(color: Colors.white),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Notifikasi',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
+        return Scaffold(
+          backgroundColor: ColorUtils.slate50,
+          body: Column(
+            children: [
+              _buildHeader(context, languageProvider, primaryColor, unread),
+              Expanded(
+                child: _isLoading
+                    ? SkeletonListLoading(itemCount: 8, infoTagCount: 1)
+                    : RefreshIndicator(
+                        onRefresh: _loadData,
+                        color: primaryColor,
+                        child: _notifications.isEmpty
+                            ? _buildEmptyState()
+                            : ListView.builder(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                                itemCount: _notifications.length,
+                                itemBuilder: (context, index) =>
+                                    _buildNotificationCard(
+                                      _notifications[index],
+                                    ),
+                              ),
+                      ),
               ),
-            ),
-            if (unread > 0)
-              Text(
-                '$unread belum dibaca',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 11,
-                ),
-              ),
-          ],
-        ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                ColorUtils.corporateBlue600,
-                ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-              ],
-            ),
+            ],
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(
+    BuildContext context,
+    LanguageProvider languageProvider,
+    Color primaryColor,
+    int unread,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
         ),
-        actions: [
-          if (_hasUnread)
-            IconButton(
-              onPressed: _markAllRead,
-              icon: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.done_all_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-              tooltip: 'Tandai semua dibaca',
-            ),
-          SizedBox(width: 8),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: ColorUtils.corporateBlue600,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Back button
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                ),
               ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              color: ColorUtils.corporateBlue600,
-              child: _notifications.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
+              SizedBox(width: 12),
+              // Title and subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Notifications',
+                        'id': 'Notifikasi',
+                      }),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
-                      itemCount: _notifications.length,
-                      itemBuilder: (context, index) =>
-                          _buildNotificationCard(_notifications[index]),
                     ),
-            ),
+                    if (unread > 0) ...[
+                      SizedBox(height: 2),
+                      Text(
+                        '$unread ${languageProvider.getTranslatedText({'en': 'unread', 'id': 'belum dibaca'})}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // Action: Mark all read
+              if (_hasUnread)
+                IconButton(
+                  onPressed: _markAllRead,
+                  icon: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.done_all_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  tooltip: languageProvider.getTranslatedText({
+                    'en': 'Mark all as read',
+                    'id': 'Tandai semua dibaca',
+                  }),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -574,18 +648,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                                 SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    Icon(
+                                    _buildInfoTag(
                                       Icons.access_time_rounded,
-                                      size: 11,
-                                      color: ColorUtils.slate400,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
                                       _formatDate(notif['created_at']),
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: ColorUtils.slate400,
-                                      ),
                                     ),
                                   ],
                                 ),
@@ -601,6 +666,32 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTag(IconData icon, String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: ColorUtils.slate500),
+          SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              color: ColorUtils.slate600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
