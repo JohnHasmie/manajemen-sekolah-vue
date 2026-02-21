@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
@@ -27,8 +27,7 @@ class AdminRppScreen extends StatefulWidget {
   State<AdminRppScreen> createState() => _AdminRppScreenState();
 }
 
-class _AdminRppScreenState extends State<AdminRppScreen>
-    with SingleTickerProviderStateMixin {
+class _AdminRppScreenState extends State<AdminRppScreen> {
   List<dynamic> _rppList = [];
   List<dynamic> _teacherList = [];
   bool _showTeacherList = true;
@@ -52,17 +51,9 @@ class _AdminRppScreenState extends State<AdminRppScreen>
   _selectedStatusFilter; // 'Pending', 'Approved', 'Rejected', or null for all
   bool _hasActiveFilter = false;
 
-  late AnimationController _animationController;
-  // animations: only controller is needed; per-card animations are created locally
-
   @override
   void initState() {
     super.initState();
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
@@ -92,7 +83,6 @@ class _AdminRppScreenState extends State<AdminRppScreen>
 
   @override
   void dispose() {
-    _animationController.dispose();
     _searchController.dispose();
     _scrollController.dispose();
     _searchDebounce?.cancel();
@@ -169,7 +159,11 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                          Icon(
+                            Icons.tune_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
                           SizedBox(width: 10),
                           Text(
                             languageProvider.getTranslatedText({
@@ -301,9 +295,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border(
-                      top: BorderSide(color: ColorUtils.slate200),
-                    ),
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
                     boxShadow: [
                       BoxShadow(
                         color: ColorUtils.slate900.withValues(alpha: 0.05),
@@ -478,7 +470,6 @@ class _AdminRppScreenState extends State<AdminRppScreen>
             _isLoading = false;
             _isLoadingMore = false;
           });
-          _animationController.forward();
         }
       } else {
         if (mounted) {
@@ -551,8 +542,6 @@ class _AdminRppScreenState extends State<AdminRppScreen>
           _isLoading = false;
           _isLoadingMore = false;
         });
-
-        _animationController.forward();
       } else {
         setState(() {
           _isLoading = false;
@@ -675,11 +664,15 @@ class _AdminRppScreenState extends State<AdminRppScreen>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
     );
   }
 
-  Widget _buildInfoTag({required IconData icon, required String label, Color? tagColor}) {
+  Widget _buildInfoTag({
+    required IconData icon,
+    required String label,
+    Color? tagColor,
+  }) {
     final color = tagColor ?? ColorUtils.slate500;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -695,7 +688,11 @@ class _AdminRppScreenState extends State<AdminRppScreen>
           SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -730,153 +727,131 @@ class _AdminRppScreenState extends State<AdminRppScreen>
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          final delay = (index * 0.1).clamp(0.0, 0.9);
-          final animation = CurvedAnimation(
-            parent: _animationController,
-            curve: Interval(delay, 1.0, curve: Curves.easeOut),
-          );
-          return FadeTransition(
-            opacity: animation,
-            child: Transform.translate(
-              offset: Offset(0, 30 * (1 - animation.value)),
-              child: child,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _viewRppDetail(rpp),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
             ),
-          );
-        },
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _viewRppDetail(rpp),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: ColorUtils.slate200),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header: icon + title/subject + status badge
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.description_rounded,
-                          color: accentColor,
-                          size: 22,
-                        ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header: icon + title/subject + status badge
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              rpp['judul'] ?? rpp['title'] ?? 'No Title',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: ColorUtils.slate900,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                      child: Icon(
+                        Icons.description_rounded,
+                        color: accentColor,
+                        size: 22,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            rpp['judul'] ?? rpp['title'] ?? 'No Title',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: ColorUtils.slate900,
                             ),
-                            SizedBox(height: 3),
-                            Text(
-                              rpp['mata_pelajaran_nama'] ??
-                                  rpp['subject_name'] ??
-                                  'No Subject',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: ColorUtils.slate500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            rpp['mata_pelajaran_nama'] ??
+                                rpp['subject_name'] ??
+                                'No Subject',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: ColorUtils.slate500,
                             ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: statusColor.withValues(alpha: 0.3),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.3),
                         ),
-                        child: Text(
-                          _getStatusLabel(rpp['status']),
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      ),
+                      child: Text(
+                        _getStatusLabel(rpp['status']),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  Divider(color: ColorUtils.slate100, height: 1),
-                  SizedBox(height: 10),
-                  // Info tags: class + teacher
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      _buildInfoTag(
-                        icon: Icons.class_,
-                        label:
-                            rpp['kelas_nama'] ??
-                            rpp['class_name'] ??
-                            'No Class',
-                      ),
-                      _buildInfoTag(
-                        icon: Icons.person_outline,
-                        label:
-                            rpp['teacher_name'] ??
-                            rpp['guru_nama'] ??
-                            'No Teacher',
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  // Action buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildCircleActionButton(
-                        icon: Icons.visibility_outlined,
-                        color: _getPrimaryColor(),
-                        onPressed: () => _viewRppDetail(rpp),
-                      ),
-                      SizedBox(width: 8),
-                      _buildCircleActionButton(
-                        icon: Icons.edit_outlined,
-                        color: ColorUtils.warning600,
-                        onPressed: () => _updateStatus(rpp['id'], rpp['status']),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                Divider(color: ColorUtils.slate100, height: 1),
+                SizedBox(height: 10),
+                // Info tags: class + teacher
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _buildInfoTag(
+                      icon: Icons.class_,
+                      label:
+                          rpp['kelas_nama'] ?? rpp['class_name'] ?? 'No Class',
+                    ),
+                    _buildInfoTag(
+                      icon: Icons.person_outline,
+                      label:
+                          rpp['teacher_name'] ??
+                          rpp['guru_nama'] ??
+                          'No Teacher',
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                // Action buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildCircleActionButton(
+                      icon: Icons.visibility_outlined,
+                      color: _getPrimaryColor(),
+                      onPressed: () => _viewRppDetail(rpp),
+                    ),
+                    SizedBox(width: 8),
+                    _buildCircleActionButton(
+                      icon: Icons.edit_outlined,
+                      color: ColorUtils.warning600,
+                      onPressed: () => _updateStatus(rpp['id'], rpp['status']),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -889,93 +864,76 @@ class _AdminRppScreenState extends State<AdminRppScreen>
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          final delay = (index * 0.05).clamp(0.0, 0.9);
-          final animation = CurvedAnimation(
-            parent: _animationController,
-            curve: Interval(delay, 1.0, curve: Curves.easeOut),
-          );
-          return FadeTransition(
-            opacity: animation,
-            child: Transform.translate(
-              offset: Offset(0, 20 * (1 - animation.value)),
-              child: child,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _selectTeacher(teacher),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
-          );
-        },
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _selectTeacher(teacher),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: ColorUtils.slate200),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: avatarColor.withValues(alpha: 0.15),
-                    child: Text(
-                      teacher['name'] != null &&
-                              (teacher['name'] as String).isNotEmpty
-                          ? (teacher['name'] as String)[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        color: avatarColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: avatarColor.withValues(alpha: 0.15),
+                  child: Text(
+                    teacher['name'] != null &&
+                            (teacher['name'] as String).isNotEmpty
+                        ? (teacher['name'] as String)[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      color: avatarColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        teacher['name'] ?? 'Unknown',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: ColorUtils.slate900,
+                        ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          teacher['name'] ?? 'Unknown',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate900,
-                          ),
+                      SizedBox(height: 3),
+                      Text(
+                        teacher['employee_number'] != null
+                            ? 'NIP: ${teacher['employee_number']}'
+                            : 'No NIP',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate500,
                         ),
-                        SizedBox(height: 3),
-                        Text(
-                          teacher['employee_number'] != null
-                              ? 'NIP: ${teacher['employee_number']}'
-                              : 'No NIP',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.slate500,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: ColorUtils.slate100,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14,
-                      color: ColorUtils.slate400,
-                    ),
+                ),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate100,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                ],
-              ),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: ColorUtils.slate400,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -987,15 +945,6 @@ class _AdminRppScreenState extends State<AdminRppScreen>
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        if (_isLoading) {
-          return LoadingScreen(
-            message: languageProvider.getTranslatedText({
-              'en': 'Loading data...',
-              'id': 'Memuat data...',
-            }),
-          );
-        }
-
         if (_errorMessage != null) {
           return ErrorScreen(
             errorMessage: _errorMessage!,
@@ -1208,7 +1157,9 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                   child: TextField(
                                     controller: _searchController,
                                     onSubmitted: (_) => _handleSearch(),
-                                    style: TextStyle(color: ColorUtils.slate800),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate800,
+                                    ),
                                     decoration: InputDecoration(
                                       hintText: _showTeacherList
                                           ? languageProvider.getTranslatedText({
@@ -1219,7 +1170,9 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                               'en': 'Search RPP...',
                                               'id': 'Cari RPP...',
                                             }),
-                                      hintStyle: TextStyle(color: ColorUtils.slate400),
+                                      hintStyle: TextStyle(
+                                        color: ColorUtils.slate400,
+                                      ),
                                       prefixIcon: Icon(
                                         Icons.search,
                                         color: ColorUtils.slate400,
@@ -1314,10 +1267,14 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.5),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                     ),
                                     child: Row(
@@ -1353,7 +1310,9 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                 ),
               ),
               Expanded(
-                child: _showTeacherList
+                child: _isLoading
+                    ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
+                    : _showTeacherList
                     ? (() {
                         final searchTerm = _searchController.text.toLowerCase();
                         final filteredTeachers = _teacherList.where((teacher) {
@@ -1433,12 +1392,7 @@ class _AdminRppScreenState extends State<AdminRppScreen>
                               onRefresh: _loadRppByTeacher,
                               child: ListView.builder(
                                 controller: _scrollController,
-                                padding: EdgeInsets.only(
-                                  top: 16,
-                                  bottom: 16,
-                                  left: 5,
-                                  right: 5,
-                                ),
+                                padding: EdgeInsets.only(top: 16, bottom: 16),
                                 itemCount:
                                     filteredRpp.length +
                                     (_isLoadingMore ? 1 : 0),
@@ -1636,8 +1590,7 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight:
-                      isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected ? color : ColorUtils.slate500,
                 ),
               ),
@@ -1771,10 +1724,7 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                   child: TextField(
                     controller: _catatanController,
                     maxLines: 3,
-                    style: TextStyle(
-                      color: ColorUtils.slate900,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: ColorUtils.slate900, fontSize: 14),
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.all(14),
@@ -1800,8 +1750,9 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed:
-                        _isUpdating ? null : () => Navigator.pop(context),
+                    onPressed: _isUpdating
+                        ? null
+                        : () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
@@ -2063,182 +2014,187 @@ class RppAdminDetailPage extends StatelessWidget {
                     ),
                   ),
 
-            SizedBox(height: 16),
+                  SizedBox(height: 16),
 
-            // Informasi Detail
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ColorUtils.slate200),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Informasi RPP',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: ColorUtils.slate600,
+                  // Informasi Detail
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ColorUtils.slate200),
+                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Informasi RPP',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate600,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        _buildDetailItem(
+                          'Guru Pengajar',
+                          rpp['teacher_name'] ?? rpp['teacher']?['name'] ?? '-',
+                        ),
+                        _buildDetailItem(
+                          'Mata Pelajaran',
+                          rpp['subject_name'] ??
+                              rpp['mata_pelajaran_nama'] ??
+                              '-',
+                        ),
+                        _buildDetailItem(
+                          'Kelas',
+                          rpp['class_name'] ?? rpp['kelas_nama'] ?? '-',
+                        ),
+                        _buildDetailItem(
+                          'Tahun Ajaran',
+                          '${rpp['academic_year'] ?? rpp['tahun_ajaran'] ?? '-'}',
+                        ),
+                        _buildDetailItem('Semester', rpp['semester'] ?? '-'),
+                        _buildDetailItem(
+                          'Tanggal Dibuat',
+                          rpp['created_at']?.toString().substring(0, 10) ?? '-',
+                        ),
+                        if (rpp['catatan'] != null &&
+                            rpp['catatan'].toString().isNotEmpty)
+                          _buildDetailItem('Catatan', rpp['catatan']),
+
+                        if (rpp['catatan_admin'] != null) ...[
+                          SizedBox(height: 8),
+                          Divider(),
+                          SizedBox(height: 8),
+                          Text(
+                            'Catatan Admin',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: ColorUtils.slate600,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            rpp['catatan_admin']!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: ColorUtils.slate600,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  SizedBox(height: 12),
-                  _buildDetailItem(
-                    'Guru Pengajar',
-                    rpp['teacher_name'] ?? rpp['teacher']?['name'] ?? '-',
-                  ),
-                  _buildDetailItem(
-                    'Mata Pelajaran',
-                    rpp['subject_name'] ?? rpp['mata_pelajaran_nama'] ?? '-',
-                  ),
-                  _buildDetailItem(
-                    'Kelas',
-                    rpp['class_name'] ?? rpp['kelas_nama'] ?? '-',
-                  ),
-                  _buildDetailItem(
-                    'Tahun Ajaran',
-                    '${rpp['academic_year'] ?? rpp['tahun_ajaran'] ?? '-'}',
-                  ),
-                  _buildDetailItem('Semester', rpp['semester'] ?? '-'),
-                  _buildDetailItem(
-                    'Tanggal Dibuat',
-                    rpp['created_at']?.toString().substring(0, 10) ?? '-',
-                  ),
-                  if (rpp['catatan'] != null &&
-                      rpp['catatan'].toString().isNotEmpty)
-                    _buildDetailItem('Catatan', rpp['catatan']),
 
-                  if (rpp['catatan_admin'] != null) ...[
-                    SizedBox(height: 8),
-                    Divider(),
-                    SizedBox(height: 8),
-                    Text(
-                      'Catatan Admin',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate600,
+                  SizedBox(height: 16),
+
+                  // Isi RPP
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ColorUtils.slate200),
+                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Isi RPP',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate600,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        _buildContentSection(
+                          'Kompetensi Inti',
+                          rpp['core_competence'],
+                        ),
+                        _buildContentSection(
+                          'Kompetensi Dasar',
+                          rpp['basic_competence'],
+                        ),
+                        _buildContentSection('Indikator', rpp['indicator']),
+                        _buildContentSection(
+                          'Tujuan Pembelajaran',
+                          rpp['learning_objective'],
+                        ),
+                        _buildContentSection(
+                          'Materi Pokok',
+                          rpp['main_material'],
+                        ),
+                        _buildContentSection(
+                          'Metode Pembelajaran',
+                          rpp['learning_method'],
+                        ),
+                        _buildContentSection('Media/Alat', rpp['media_tools']),
+                        _buildContentSection(
+                          'Sumber Belajar',
+                          rpp['learning_source'],
+                        ),
+                        _buildContentSection(
+                          'Langkah-langkah Pembelajaran',
+                          rpp['learning_activities'],
+                        ),
+                        _buildContentSection('Penilaian', rpp['assessment']),
+                      ],
+                    ),
+                  ),
+
+                  // File Attachment
+                  if (rpp['file_path'] != null) ...[
+                    SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: ColorUtils.slate200),
+                        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      rpp['catatan_admin']!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: ColorUtils.slate600,
-                        fontStyle: FontStyle.italic,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Lampiran',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: ColorUtils.slate600,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: () =>
+                                _downloadAndOpenFile(context, rpp['file_path']),
+                            icon: Icon(Icons.download),
+                            label: Text('Download RPP'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorUtils.primaryColor,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ],
               ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Isi RPP
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ColorUtils.slate200),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Isi RPP',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: ColorUtils.slate600,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  _buildContentSection(
-                    'Kompetensi Inti',
-                    rpp['core_competence'],
-                  ),
-                  _buildContentSection(
-                    'Kompetensi Dasar',
-                    rpp['basic_competence'],
-                  ),
-                  _buildContentSection('Indikator', rpp['indicator']),
-                  _buildContentSection(
-                    'Tujuan Pembelajaran',
-                    rpp['learning_objective'],
-                  ),
-                  _buildContentSection('Materi Pokok', rpp['main_material']),
-                  _buildContentSection(
-                    'Metode Pembelajaran',
-                    rpp['learning_method'],
-                  ),
-                  _buildContentSection('Media/Alat', rpp['media_tools']),
-                  _buildContentSection(
-                    'Sumber Belajar',
-                    rpp['learning_source'],
-                  ),
-                  _buildContentSection(
-                    'Langkah-langkah Pembelajaran',
-                    rpp['learning_activities'],
-                  ),
-                  _buildContentSection('Penilaian', rpp['assessment']),
-                ],
-              ),
-            ),
-
-            // File Attachment
-            if (rpp['file_path'] != null) ...[
-              SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: ColorUtils.slate200),
-                  boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Lampiran',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate600,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () =>
-                          _downloadAndOpenFile(context, rpp['file_path']),
-                      icon: Icon(Icons.download),
-                      label: Text('Download RPP'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorUtils.primaryColor,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-                ],
-              ],
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
   }
 
   String _getStatusLabelDetail(String? status) {
