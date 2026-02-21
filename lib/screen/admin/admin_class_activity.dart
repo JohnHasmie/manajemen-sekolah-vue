@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
@@ -22,8 +22,7 @@ class AdminClassActivityScreen extends StatefulWidget {
       AdminClassActivityScreenState();
 }
 
-class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
-    with SingleTickerProviderStateMixin {
+class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
   List<dynamic> _teacherList = [];
   List<dynamic> _subjectList = [];
   List<dynamic> _activityList = [];
@@ -39,35 +38,15 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
   // Search
   final TextEditingController _searchController = TextEditingController();
 
-  // Animations
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-
   @override
   void initState() {
     super.initState();
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
     _loadTeachers();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -85,8 +64,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
         _teacherList = teachers;
         _isLoading = false;
       });
-
-      _animationController.forward();
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -158,8 +135,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
         _subjectList = response['data'] ?? [];
         _isLoading = false;
       });
-
-      _animationController.forward(from: 0);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -199,8 +174,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
         _activityList = response['data'] ?? [];
         _isLoading = false;
       });
-
-      _animationController.forward(from: 0);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -232,7 +205,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
       _selectedSubjectName = null;
       _searchController.clear();
     });
-    _animationController.forward(from: 0);
   }
 
   void _backToSubjectList() {
@@ -243,7 +215,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
       _selectedSubjectName = null;
       _searchController.clear();
     });
-    _animationController.forward(from: 0);
   }
 
   List<dynamic> _getFilteredTeachers() {
@@ -293,107 +264,87 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
     final teacherNip = teacher['nip']?.toString() ?? '';
     final avatarColor = ColorUtils.getColorForIndex(index);
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final delay = index * 0.1;
-        final animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
-        );
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () =>
-                _loadSubjectsByTeacher(teacher['id'].toString(), teacherName),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ColorUtils.slate200, width: 1),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: Row(
-                children: [
-                  // CircleAvatar with first letter
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: avatarColor.withValues(alpha: 0.15),
-                    child: Text(
-                      teacherName[0].toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: avatarColor,
-                      ),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () =>
+              _loadSubjectsByTeacher(teacher['id'].toString(), teacherName),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200, width: 1),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            child: Row(
+              children: [
+                // CircleAvatar with first letter
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: avatarColor.withValues(alpha: 0.15),
+                  child: Text(
+                    teacherName[0].toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: avatarColor,
                     ),
                   ),
-                  SizedBox(width: 12),
-                  // Teacher info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          teacherName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(width: 12),
+                // Teacher info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        teacherName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
                         ),
-                        if (teacherEmail.isNotEmpty || teacherNip.isNotEmpty) ...[
-                          SizedBox(height: 5),
-                          Wrap(
-                            spacing: 5,
-                            runSpacing: 4,
-                            children: [
-                              if (teacherEmail.isNotEmpty)
-                                _buildInfoTag(
-                                  Icons.email_outlined,
-                                  teacherEmail,
-                                ),
-                              if (teacherNip.isNotEmpty)
-                                _buildInfoTag(
-                                  Icons.badge_outlined,
-                                  'NIP: $teacherNip',
-                                ),
-                            ],
-                          ),
-                        ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (teacherEmail.isNotEmpty || teacherNip.isNotEmpty) ...[
+                        SizedBox(height: 5),
+                        Wrap(
+                          spacing: 5,
+                          runSpacing: 4,
+                          children: [
+                            if (teacherEmail.isNotEmpty)
+                              _buildInfoTag(Icons.email_outlined, teacherEmail),
+                            if (teacherNip.isNotEmpty)
+                              _buildInfoTag(
+                                Icons.badge_outlined,
+                                'NIP: $teacherNip',
+                              ),
+                          ],
+                        ),
                       ],
-                    ),
+                    ],
                   ),
-                  SizedBox(width: 8),
-                  // Chevron
-                  Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.slate100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.chevron_right,
-                      color: ColorUtils.slate500,
-                      size: 18,
-                    ),
+                ),
+                SizedBox(width: 8),
+                // Chevron
+                Container(
+                  padding: EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-              ),
+                  child: Icon(
+                    Icons.chevron_right,
+                    color: ColorUtils.slate500,
+                    size: 18,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -406,99 +357,82 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
     final subjectName = subject['name']?.toString() ?? 'Mata Pelajaran';
     final subjectColor = ColorUtils.getColorForIndex(index);
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final delay = index * 0.1;
-        final animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
-        );
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () =>
-                _loadActivitiesBySubject(subject['id'].toString(), subjectName),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ColorUtils.slate200, width: 1),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: Row(
-                children: [
-                  // Colored icon container
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: subjectColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: subjectColor.withValues(alpha: 0.25),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () =>
+              _loadActivitiesBySubject(subject['id'].toString(), subjectName),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200, width: 1),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            child: Row(
+              children: [
+                // Colored icon container
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: subjectColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: subjectColor.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.menu_book_rounded,
+                    color: subjectColor,
+                    size: 22,
+                  ),
+                ),
+                SizedBox(width: 12),
+                // Subject name + hint
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        subjectName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    child: Icon(
-                      Icons.menu_book_rounded,
-                      color: subjectColor,
-                      size: 22,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  // Subject name + hint
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          subjectName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      SizedBox(height: 4),
+                      Text(
+                        'Ketuk untuk melihat kegiatan',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate500,
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Ketuk untuk melihat kegiatan',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.slate500,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 8),
-                  Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.slate100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.chevron_right,
-                      color: ColorUtils.slate500,
-                      size: 18,
-                    ),
+                ),
+                SizedBox(width: 8),
+                Container(
+                  padding: EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-              ),
+                  child: Icon(
+                    Icons.chevron_right,
+                    color: ColorUtils.slate500,
+                    size: 18,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -510,133 +444,117 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
   Widget _buildActivityCard(Map<String, dynamic> activity, int index) {
     final isAssignment = activity['type'] == 'assignment';
     final isSpecificTarget = activity['target'] == 'specific';
-    final accentColor =
-        isAssignment ? ColorUtils.corporateBlue600 : ColorUtils.success600;
+    final accentColor = isAssignment
+        ? ColorUtils.corporateBlue600
+        : ColorUtils.success600;
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final delay = index * 0.1;
-        final animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(delay > 1 ? 1 : delay, 1.0, curve: Curves.easeOut),
-        );
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _showActivityDetail(activity),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ColorUtils.slate200, width: 1),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Icon container (tugas vs materi)
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: accentColor.withValues(alpha: 0.25),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showActivityDetail(activity),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200, width: 1),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon container (tugas vs materi)
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: accentColor.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Icon(
+                    isAssignment
+                        ? Icons.assignment_outlined
+                        : Icons.menu_book_outlined,
+                    color: accentColor,
+                    size: 22,
+                  ),
+                ),
+                SizedBox(width: 12),
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activity['title'] ?? 'Judul Kegiatan',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    child: Icon(
-                      isAssignment
-                          ? Icons.assignment_outlined
-                          : Icons.menu_book_outlined,
-                      color: accentColor,
-                      size: 22,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  // Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          activity['title'] ?? 'Judul Kegiatan',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
+                      SizedBox(height: 3),
+                      Text(
+                        '${activity['subject_name'] ?? '-'} • ${activity['class_name'] ?? '-'}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 8),
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 4,
+                        children: [
+                          _buildInfoTag(
+                            Icons.calendar_today_outlined,
+                            '${activity['day'] ?? '-'} • ${_formatDate(activity['date'])}',
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 3),
-                        Text(
-                          '${activity['subject_name'] ?? '-'} • ${activity['class_name'] ?? '-'}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.slate600,
+                          _buildInfoTag(
+                            isAssignment
+                                ? Icons.assignment_outlined
+                                : Icons.menu_book_outlined,
+                            isAssignment ? 'Tugas' : 'Materi',
+                            tagColor: accentColor,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 8),
-                        Wrap(
-                          spacing: 5,
-                          runSpacing: 4,
-                          children: [
-                            _buildInfoTag(
-                              Icons.calendar_today_outlined,
-                              '${activity['day'] ?? '-'} • ${_formatDate(activity['date'])}',
-                            ),
-                            _buildInfoTag(
-                              isAssignment
-                                  ? Icons.assignment_outlined
-                                  : Icons.menu_book_outlined,
-                              isAssignment ? 'Tugas' : 'Materi',
-                              tagColor: accentColor,
-                            ),
-                            _buildInfoTag(
-                              isSpecificTarget
-                                  ? Icons.person_outline
-                                  : Icons.group_outlined,
-                              isSpecificTarget ? 'Khusus' : 'Semua',
-                              tagColor: isSpecificTarget
-                                  ? ColorUtils.corporateBlue600
-                                  : ColorUtils.success600,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          _buildInfoTag(
+                            isSpecificTarget
+                                ? Icons.person_outline
+                                : Icons.group_outlined,
+                            isSpecificTarget ? 'Khusus' : 'Semua',
+                            tagColor: isSpecificTarget
+                                ? ColorUtils.corporateBlue600
+                                : ColorUtils.success600,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 8),
-                  Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.slate100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.chevron_right,
-                      color: ColorUtils.slate500,
-                      size: 18,
-                    ),
+                ),
+                SizedBox(width: 8),
+                Container(
+                  padding: EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-              ),
+                  child: Icon(
+                    Icons.chevron_right,
+                    color: ColorUtils.slate500,
+                    size: 18,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -785,8 +703,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                     _buildDetailItem(
                       icon: Icons.group,
                       label: 'Target Siswa',
-                      value:
-                          isSpecificTarget ? 'Khusus Siswa' : 'Semua Siswa',
+                      value: isSpecificTarget ? 'Khusus Siswa' : 'Semua Siswa',
                     ),
 
                     if (activity['deskripsi'] != null &&
@@ -850,12 +767,12 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                         SizedBox(height: 4),
                         ...(activity['additional_material'] as List)
                             .map<Widget>((item) {
-                          return _buildDetailItem(
-                            icon: Icons.bookmark_add,
-                            label: 'Sub Bab (Tambahan)',
-                            value: item['sub_chapter_title'] ?? 'Unknown',
-                          );
-                        }),
+                              return _buildDetailItem(
+                                icon: Icons.bookmark_add,
+                                label: 'Sub Bab (Tambahan)',
+                                value: item['sub_chapter_title'] ?? 'Unknown',
+                              );
+                            }),
                       ],
                     ],
 
@@ -967,25 +884,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        if (_isLoading) {
-          return LoadingScreen(
-            message: _showTeacherList
-                ? languageProvider.getTranslatedText({
-                    'en': 'Loading teacher data...',
-                    'id': 'Memuat data guru...',
-                  })
-                : (_showSubjectList
-                      ? languageProvider.getTranslatedText({
-                          'en': 'Loading subjects...',
-                          'id': 'Memuat mata pelajaran...',
-                        })
-                      : languageProvider.getTranslatedText({
-                          'en': 'Loading activities...',
-                          'id': 'Memuat kegiatan...',
-                        })),
-          );
-        }
-
         if (_errorMessage != null) {
           return ErrorScreen(
             errorMessage: _errorMessage!,
@@ -1166,8 +1064,9 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
                                               'en': 'Search activities...',
                                               'id': 'Cari kegiatan...',
                                             })),
-                                hintStyle:
-                                    TextStyle(color: ColorUtils.slate400),
+                                hintStyle: TextStyle(
+                                  color: ColorUtils.slate400,
+                                ),
                                 prefixIcon: Icon(
                                   Icons.search,
                                   color: ColorUtils.slate400,
@@ -1200,7 +1099,13 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen>
 
               // ─── Content ─────────────────────────────────────────────────
               Expanded(
-                child: filteredItems.isEmpty
+                child: _isLoading
+                    ? SkeletonListLoading(
+                        itemCount: 8,
+                        infoTagCount: _showTeacherList ? 1 : 2,
+                        showActions: false,
+                      )
+                    : filteredItems.isEmpty
                     ? EmptyState(
                         title: _showTeacherList
                             ? languageProvider.getTranslatedText({
