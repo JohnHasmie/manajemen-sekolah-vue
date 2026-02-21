@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -376,7 +376,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   if (student['student_number'] != null)
                     Text(
                       student['student_number'],
-                      style: TextStyle(color: ColorUtils.slate400, fontSize: 11),
+                      style: TextStyle(
+                        color: ColorUtils.slate400,
+                        fontSize: 11,
+                      ),
                     ),
                 ],
               ),
@@ -780,9 +783,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: _getCardGradient(),
-                    ),
+                    decoration: BoxDecoration(gradient: _getCardGradient()),
                     child: Row(
                       children: [
                         Container(
@@ -998,7 +999,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                      border: Border(
+                        top: BorderSide(color: ColorUtils.slate100),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: ColorUtils.slate900.withValues(alpha: 0.05),
@@ -1126,7 +1129,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     } catch (e) {
       if (mounted) Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal: $e'), backgroundColor: ColorUtils.error600),
+        SnackBar(
+          content: Text('Gagal: $e'),
+          backgroundColor: ColorUtils.error600,
+        ),
       );
     }
   }
@@ -1137,7 +1143,76 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const LoadingScreen();
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: ColorUtils.slate50,
+        body: Column(
+          children: [
+            // Keep the gradient header visible during loading
+            Container(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 16,
+                left: 16,
+                right: 16,
+                bottom: 16,
+              ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _getPrimaryColor(),
+                    _getPrimaryColor().withValues(alpha: 0.8),
+                  ],
+                ),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.className,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Laporan Keuangan',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: SkeletonListLoading(itemCount: 6, infoTagCount: 1)),
+          ],
+        ),
+      );
+    }
     if (_errorMessage?.isNotEmpty == true) {
       return ErrorScreen(errorMessage: _errorMessage!, onRetry: _loadData);
     }
@@ -1234,7 +1309,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           decoration: InputDecoration(
                             hintText: 'Cari siswa...',
                             hintStyle: TextStyle(color: ColorUtils.slate400),
-                            prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: ColorUtils.slate400,
+                            ),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 16,
@@ -1429,9 +1507,15 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<T>(
                   isExpanded: true,
-                  hint: Text(hint, style: TextStyle(color: ColorUtils.slate400, fontSize: 14)),
+                  hint: Text(
+                    hint,
+                    style: TextStyle(color: ColorUtils.slate400, fontSize: 14),
+                  ),
                   value: value,
-                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+                  icon: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: ColorUtils.slate500,
+                  ),
                   items: items,
                   onChanged: onChanged,
                 ),
@@ -1463,7 +1547,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   padding: EdgeInsets.fromLTRB(20, 14, 12, 18),
                   decoration: BoxDecoration(
                     gradient: _getCardGradient(),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -1474,7 +1560,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.filter_list_rounded, color: Colors.white, size: 20),
+                        child: Icon(
+                          Icons.filter_list_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                       SizedBox(width: 12),
                       Expanded(
@@ -1502,12 +1592,21 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         },
                         style: TextButton.styleFrom(
                           backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                         ),
                         child: Text(
                           'Reset',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -1522,58 +1621,84 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Status Filter
-                        buildSectionHeader('Status Pembayaran', Icons.circle_outlined),
+                        buildSectionHeader(
+                          'Status Pembayaran',
+                          Icons.circle_outlined,
+                        ),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: [
-                            'Semua',
-                            'Lunas',
-                            'Belum Dibayar',
-                            'Belum Diverifikasi',
-                          ].map((statusOpt) {
-                            final isSelected = _selectedStatus == statusOpt;
-                            return GestureDetector(
-                              onTap: () {
-                                setModalState(() => _selectedStatus = statusOpt);
-                                setState(() => _selectedStatus = statusOpt);
-                              },
-                              child: AnimatedContainer(
-                                duration: Duration(milliseconds: 180),
-                                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? _getPrimaryColor().withValues(alpha: 0.12)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isSelected ? _getPrimaryColor() : ColorUtils.slate200,
-                                    width: isSelected ? 1.5 : 1,
+                          children:
+                              [
+                                'Semua',
+                                'Lunas',
+                                'Belum Dibayar',
+                                'Belum Diverifikasi',
+                              ].map((statusOpt) {
+                                final isSelected = _selectedStatus == statusOpt;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setModalState(
+                                      () => _selectedStatus = statusOpt,
+                                    );
+                                    setState(() => _selectedStatus = statusOpt);
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: Duration(milliseconds: 180),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 9,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? _getPrimaryColor().withValues(
+                                              alpha: 0.12,
+                                            )
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? _getPrimaryColor()
+                                            : ColorUtils.slate200,
+                                        width: isSelected ? 1.5 : 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      statusOpt,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? _getPrimaryColor()
+                                            : ColorUtils.slate600,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                child: Text(
-                                  statusOpt,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                                );
+                              }).toList(),
                         ),
 
                         SizedBox(height: 24),
                         // Month Filter
-                        buildSectionHeader('Bulan', Icons.calendar_month_rounded),
+                        buildSectionHeader(
+                          'Bulan',
+                          Icons.calendar_month_rounded,
+                        ),
                         buildStyledDropdown<String?>(
                           value: _selectedMonthKey,
                           hint: 'Semua Bulan',
                           items: [
-                            DropdownMenuItem(value: null, child: Text('Semua Bulan')),
+                            DropdownMenuItem(
+                              value: null,
+                              child: Text('Semua Bulan'),
+                            ),
                             ...months.map(
-                              (m) => DropdownMenuItem(value: m['key'], child: Text(m['name']!)),
+                              (m) => DropdownMenuItem(
+                                value: m['key'],
+                                child: Text(m['name']!),
+                              ),
                             ),
                           ],
                           onChanged: (val) {
@@ -1584,14 +1709,23 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
 
                         SizedBox(height: 24),
                         // Payment Type Filter
-                        buildSectionHeader('Jenis Pembayaran', Icons.receipt_long_rounded),
+                        buildSectionHeader(
+                          'Jenis Pembayaran',
+                          Icons.receipt_long_rounded,
+                        ),
                         buildStyledDropdown<String?>(
                           value: _selectedPaymentTypeId,
                           hint: 'Semua Jenis',
                           items: [
-                            DropdownMenuItem(value: null, child: Text('Semua Jenis')),
+                            DropdownMenuItem(
+                              value: null,
+                              child: Text('Semua Jenis'),
+                            ),
                             ...uniqueTypes.entries.map(
-                              (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                              (e) => DropdownMenuItem(
+                                value: e.key,
+                                child: Text(e.value),
+                              ),
                             ),
                           ],
                           onChanged: (val) {
@@ -1626,9 +1760,14 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: ColorUtils.slate300),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          child: Text('Batal', style: TextStyle(color: ColorUtils.slate600)),
+                          child: Text(
+                            'Batal',
+                            style: TextStyle(color: ColorUtils.slate600),
+                          ),
                         ),
                       ),
                       SizedBox(width: 12),
@@ -1638,12 +1777,17 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _getPrimaryColor(),
                             padding: EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             elevation: 0,
                           ),
                           child: Text(
                             'Terapkan',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -1735,7 +1879,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       builder: (context) {
         final String currentStatus = bill['status'] ?? 'pending';
         final bool isPaid = currentStatus == 'verified';
-        final statusColor = isPaid ? ColorUtils.success600 : ColorUtils.error600;
+        final statusColor = isPaid
+            ? ColorUtils.success600
+            : ColorUtils.error600;
 
         Widget buildOptionTile({
           required IconData icon,
@@ -1791,7 +1937,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, color: ColorUtils.slate400, size: 20),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: ColorUtils.slate400,
+                    size: 20,
+                  ),
                 ],
               ),
             ),
@@ -1833,7 +1983,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.payment_rounded, color: Colors.white, size: 22),
+                      child: Icon(
+                        Icons.payment_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                     SizedBox(width: 14),
                     Expanded(
@@ -1861,7 +2015,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               ),
                               SizedBox(width: 6),
                               Text(
-                                isPaid ? 'Status: Lunas' : 'Status: Belum Lunas',
+                                isPaid
+                                    ? 'Status: Lunas'
+                                    : 'Status: Belum Lunas',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.white.withValues(alpha: 0.85),
@@ -2016,7 +2172,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     } catch (e) {
       if (mounted) Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal: $e'), backgroundColor: ColorUtils.error600),
+        SnackBar(
+          content: Text('Gagal: $e'),
+          backgroundColor: ColorUtils.error600,
+        ),
       );
     }
   }
