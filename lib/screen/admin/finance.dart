@@ -1744,10 +1744,12 @@ class FinanceScreenState extends State<FinanceScreen> {
         ? 'aktif'
         : (jenisPembayaran?['status'] == 'inactive' ? 'non-aktif' : 'aktif');
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
+        builder: (context, setModalState) {
           String selectedPeriode = periodeController.text.isEmpty
               ? 'bulanan'
               : periodeController.text;
@@ -1758,7 +1760,7 @@ class FinanceScreenState extends State<FinanceScreen> {
             final isSelected = selectedPeriode == value;
             return GestureDetector(
               onTap: () {
-                setDialogState(() {
+                setModalState(() {
                   selectedPeriode = value;
                   periodeController.text = value;
                 });
@@ -1815,7 +1817,7 @@ class FinanceScreenState extends State<FinanceScreen> {
           ) {
             final isSelected = (status ?? 'aktif') == value;
             return GestureDetector(
-              onTap: () => setDialogState(() => status = value),
+              onTap: () => setModalState(() => status = value),
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1854,464 +1856,508 @@ class FinanceScreenState extends State<FinanceScreen> {
             );
           }
 
-          return Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.9,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
             clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Gradient Header (Pattern #10)
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(gradient: _getCardGradient()),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            isEdit ? Icons.edit_rounded : Icons.add_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
+            child: Column(
+              children: [
+                // Header Grid (Pattern #10 style adopted to BottomSheet)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _getPrimaryColor(),
+                        _getPrimaryColor().withValues(alpha: 0.85),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isEdit
-                                    ? languageProvider.getTranslatedText(
-                                        AppLocalizations.editPaymentType,
-                                      )
-                                    : languageProvider.getTranslatedText(
-                                        AppLocalizations.addPaymentType,
-                                      ),
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                        child: Icon(
+                          isEdit ? Icons.edit_rounded : Icons.add_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                      SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isEdit
+                                  ? languageProvider.getTranslatedText(
+                                      AppLocalizations.editPaymentType,
+                                    )
+                                  : languageProvider.getTranslatedText(
+                                      AppLocalizations.addPaymentType,
+                                    ),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
+                            ),
+                            Text(
+                              isEdit
+                                  ? 'Ubah data jenis pembayaran'
+                                  : 'Tambah jenis pembayaran baru',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Form Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Nama
+                          _buildDialogTextField(
+                            controller: namaController,
+                            label: 'Nama Pembayaran',
+                            icon: Icons.payment_rounded,
+                          ),
+                          SizedBox(height: 12),
+                          // Deskripsi
+                          _buildDialogTextField(
+                            controller: deskripsiController,
+                            label: 'Deskripsi (Opsional)',
+                            icon: Icons.description_rounded,
+                            maxLines: 2,
+                          ),
+                          SizedBox(height: 12),
+                          // Jumlah
+                          _buildDialogTextField(
+                            controller: jumlahController,
+                            label: 'Jumlah (Rp)',
+                            icon: Icons.attach_money_rounded,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [CurrencyInputFormatter()],
+                          ),
+
+                          SizedBox(height: 16),
+                          // Periode section
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.schedule_rounded,
+                                size: 15,
+                                color: ColorUtils.slate600,
+                              ),
+                              SizedBox(width: 6),
                               Text(
-                                isEdit
-                                    ? 'Ubah data jenis pembayaran'
-                                    : 'Tambah jenis pembayaran baru',
+                                'Periode Pembayaran',
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: ColorUtils.slate800,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
+                          SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: buildPeriodeChip(
+                                  'sekali bayar',
+                                  'Sekali Bayar',
+                                  Icons.looks_one_rounded,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: buildPeriodeChip(
+                                  'bulanan',
+                                  'Bulanan',
+                                  Icons.calendar_view_month_rounded,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: buildPeriodeChip(
+                                  'semester',
+                                  'Semester',
+                                  Icons.date_range_rounded,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: buildPeriodeChip(
+                                  'tahunan',
+                                  'Tahunan',
+                                  Icons.calendar_today_rounded,
+                                ),
+                              ),
+                            ],
+                          ),
 
-                  // Form Content
-                  Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Nama
-                        _buildDialogTextField(
-                          controller: namaController,
-                          label: 'Nama Pembayaran',
-                          icon: Icons.payment_rounded,
-                        ),
-                        SizedBox(height: 12),
-                        // Deskripsi
-                        _buildDialogTextField(
-                          controller: deskripsiController,
-                          label: 'Deskripsi (Opsional)',
-                          icon: Icons.description_rounded,
-                          maxLines: 2,
-                        ),
-                        SizedBox(height: 12),
-                        // Jumlah
-                        _buildDialogTextField(
-                          controller: jumlahController,
-                          label: 'Jumlah (Rp)',
-                          icon: Icons.attach_money_rounded,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [CurrencyInputFormatter()],
-                        ),
-
-                        SizedBox(height: 16),
-                        // Periode section
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: 15,
-                              color: ColorUtils.slate600,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Periode Pembayaran',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: ColorUtils.slate800,
+                          SizedBox(height: 16),
+                          // Tujuan Pembayaran
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.groups_rounded,
+                                size: 15,
+                                color: ColorUtils.slate600,
                               ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: buildPeriodeChip(
-                                'sekali bayar',
-                                'Sekali Bayar',
-                                Icons.looks_one_rounded,
+                              SizedBox(width: 6),
+                              Text(
+                                'Tujuan Pembayaran',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: ColorUtils.slate800,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 6),
-                            Expanded(
-                              child: buildPeriodeChip(
-                                'bulanan',
-                                'Bulanan',
-                                Icons.calendar_view_month_rounded,
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          InkWell(
+                            onTap: () {
+                              _showPemilihanTujuanModal(
+                                jenisPembayaran: jenisPembayaran,
+                                onSave: (tujuan) {
+                                  setModalState(() => tujuanData = tujuan);
+                                },
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
                               ),
-                            ),
-                            SizedBox(width: 6),
-                            Expanded(
-                              child: buildPeriodeChip(
-                                'semester',
-                                'Semester',
-                                Icons.date_range_rounded,
-                              ),
-                            ),
-                            SizedBox(width: 6),
-                            Expanded(
-                              child: buildPeriodeChip(
-                                'tahunan',
-                                'Tahunan',
-                                Icons.calendar_today_rounded,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 16),
-                        // Tujuan Pembayaran
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.groups_rounded,
-                              size: 15,
-                              color: ColorUtils.slate600,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Tujuan Pembayaran',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: ColorUtils.slate800,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        InkWell(
-                          onTap: () {
-                            _showPemilihanTujuanModal(
-                              jenisPembayaran: jenisPembayaran,
-                              onSave: (tujuan) {
-                                setDialogState(() => tujuanData = tujuan);
-                              },
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  tujuanData != null && tujuanData!.isNotEmpty
-                                  ? ColorUtils.success600.withValues(
-                                      alpha: 0.06,
-                                    )
-                                  : ColorUtils.slate50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
+                              decoration: BoxDecoration(
                                 color:
                                     tujuanData != null && tujuanData!.isNotEmpty
                                     ? ColorUtils.success600.withValues(
-                                        alpha: 0.4,
+                                        alpha: 0.06,
                                       )
-                                    : ColorUtils.slate200,
+                                    : ColorUtils.slate50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      tujuanData != null &&
+                                          tujuanData!.isNotEmpty
+                                      ? ColorUtils.success600.withValues(
+                                          alpha: 0.4,
+                                        )
+                                      : ColorUtils.slate200,
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        (tujuanData != null &&
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          (tujuanData != null &&
+                                                      tujuanData!.isNotEmpty
+                                                  ? ColorUtils.success600
+                                                  : ColorUtils.corporateBlue600)
+                                              .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(
+                                      tujuanData != null &&
+                                              tujuanData!.isNotEmpty
+                                          ? Icons.check_circle_rounded
+                                          : Icons.groups_rounded,
+                                      size: 18,
+                                      color:
+                                          tujuanData != null &&
+                                              tujuanData!.isNotEmpty
+                                          ? ColorUtils.success600
+                                          : ColorUtils.corporateBlue600,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          tujuanData != null &&
+                                                  tujuanData!.isNotEmpty
+                                              ? 'Tujuan Dipilih'
+                                              : 'Belum ada tujuan',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                tujuanData != null &&
                                                     tujuanData!.isNotEmpty
                                                 ? ColorUtils.success600
-                                                : ColorUtils.corporateBlue600)
-                                            .withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(10),
+                                                : ColorUtils.slate600,
+                                          ),
+                                        ),
+                                        Text(
+                                          _getTujuanDescription(tujuanData),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: ColorUtils.slate500,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  child: Icon(
-                                    tujuanData != null && tujuanData!.isNotEmpty
-                                        ? Icons.check_circle_rounded
-                                        : Icons.groups_rounded,
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: ColorUtils.slate400,
                                     size: 18,
-                                    color:
-                                        tujuanData != null &&
-                                            tujuanData!.isNotEmpty
-                                        ? ColorUtils.success600
-                                        : ColorUtils.corporateBlue600,
                                   ),
-                                ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        tujuanData != null &&
-                                                tujuanData!.isNotEmpty
-                                            ? 'Tujuan Dipilih'
-                                            : 'Belum ada tujuan',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color:
-                                              tujuanData != null &&
-                                                  tujuanData!.isNotEmpty
-                                              ? ColorUtils.success600
-                                              : ColorUtils.slate600,
-                                        ),
-                                      ),
-                                      Text(
-                                        _getTujuanDescription(tujuanData),
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: ColorUtils.slate500,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.chevron_right_rounded,
-                                  color: ColorUtils.slate400,
-                                  size: 18,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 16),
-                        // Status section
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.toggle_on_rounded,
-                              size: 15,
-                              color: ColorUtils.slate600,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Status',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: ColorUtils.slate800,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: buildStatusChip(
-                                'aktif',
-                                'Aktif',
-                                ColorUtils.success600,
-                                Icons.check_circle_rounded,
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: buildStatusChip(
-                                'non-aktif',
-                                'Non-Aktif',
-                                ColorUtils.error600,
-                                Icons.cancel_rounded,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Footer Actions
-                  Container(
-                    padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        top: BorderSide(color: ColorUtils.slate100),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: EdgeInsets.symmetric(vertical: 13),
-                                side: BorderSide(color: ColorUtils.slate300),
-                              ),
-                              child: Text(
-                                'Batal',
-                                style: TextStyle(color: ColorUtils.slate600),
+                                ],
                               ),
                             ),
                           ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                if (namaController.text.isEmpty ||
-                                    jumlahController.text.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Nama dan jumlah harus diisi',
-                                      ),
-                                      backgroundColor: ColorUtils.error600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                  return;
-                                }
 
-                                if (tujuanData == null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Tujuan pembayaran harus dipilih',
-                                      ),
-                                      backgroundColor: ColorUtils.error600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                try {
-                                  final data = {
-                                    'name': namaController.text,
-                                    'description': deskripsiController.text,
-                                    'amount':
-                                        CurrencyInputFormatter.parseCurrency(
-                                          jumlahController.text,
-                                        ),
-                                    'periode': periodeController.text,
-                                    'status': status == 'aktif'
-                                        ? 'active'
-                                        : 'inactive',
-                                    'goal': tujuanData,
-                                  };
-
-                                  if (jenisPembayaran == null) {
-                                    await _apiService.post(
-                                      '/payment-types',
-                                      data,
-                                    );
-                                  } else {
-                                    await _apiService.put(
-                                      '/payment-types/${jenisPembayaran['id']}',
-                                      data,
-                                    );
-                                  }
-
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
-                                  }
-                                  _loadData();
-
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Data berhasil disimpan'),
-                                        backgroundColor: ColorUtils.success600,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                } catch (error) {
-                                  if (kDebugMode)
-                                    print('Error saving payment type: $error');
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Gagal menyimpan jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
-                                        ),
-                                        backgroundColor: ColorUtils.error600,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _getPrimaryColor(),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                          SizedBox(height: 16),
+                          // Status section
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.toggle_on_rounded,
+                                size: 15,
+                                color: ColorUtils.slate600,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Status',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: ColorUtils.slate800,
                                 ),
-                                padding: EdgeInsets.symmetric(vertical: 12),
                               ),
-                              child: Text(
-                                'Simpan',
-                                style: TextStyle(color: Colors.white),
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: buildStatusChip(
+                                  'aktif',
+                                  'Aktif',
+                                  ColorUtils.success600,
+                                  Icons.check_circle_rounded,
+                                ),
                               ),
-                            ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: buildStatusChip(
+                                  'non-aktif',
+                                  'Non-Aktif',
+                                  ColorUtils.error600,
+                                  Icons.cancel_rounded,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // Enhanced Footer Actions
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ColorUtils.slate900.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: ColorUtils.slate300),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Cancel',
+                                'id': 'Batal',
+                              }),
+                              style: TextStyle(
+                                color: ColorUtils.slate700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (namaController.text.isEmpty ||
+                                  jumlahController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Nama dan jumlah harus diisi',
+                                    ),
+                                    backgroundColor: ColorUtils.error600,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              if (tujuanData == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Tujuan pembayaran harus dipilih',
+                                    ),
+                                    backgroundColor: ColorUtils.error600,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              try {
+                                final data = {
+                                  'name': namaController.text,
+                                  'description': deskripsiController.text,
+                                  'amount':
+                                      CurrencyInputFormatter.parseCurrency(
+                                        jumlahController.text,
+                                      ),
+                                  'periode': periodeController.text,
+                                  'status': status == 'aktif'
+                                      ? 'active'
+                                      : 'inactive',
+                                  'goal': tujuanData,
+                                };
+
+                                if (jenisPembayaran == null) {
+                                  await _apiService.post(
+                                    '/payment-types',
+                                    data,
+                                  );
+                                } else {
+                                  await _apiService.put(
+                                    '/payment-types/${jenisPembayaran['id']}',
+                                    data,
+                                  );
+                                }
+
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                }
+                                _loadData();
+
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Data berhasil disimpan'),
+                                      backgroundColor: ColorUtils.success600,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              } catch (error) {
+                                if (kDebugMode) {
+                                  print('Error saving payment type: $error');
+                                }
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Gagal menyimpan jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
+                                      ),
+                                      backgroundColor: ColorUtils.error600,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getPrimaryColor(),
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Save',
+                                'id': 'Simpan',
+                              }),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -3156,8 +3202,9 @@ class FinanceScreenState extends State<FinanceScreen> {
                                   );
                                 }
                               } catch (error) {
-                                if (kDebugMode)
+                                if (kDebugMode) {
                                   print('Error verifying payment: $error');
+                                }
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
