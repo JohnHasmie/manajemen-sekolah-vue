@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -27,8 +28,7 @@ class RppScreen extends StatefulWidget {
   RppScreenState createState() => RppScreenState();
 }
 
-class RppScreenState extends State<RppScreen>
-    with SingleTickerProviderStateMixin {
+class RppScreenState extends State<RppScreen> {
   List<dynamic> _rppList = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -38,33 +38,14 @@ class RppScreenState extends State<RppScreen>
   String? _selectedStatusFilter;
   bool _hasActiveFilter = false;
 
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-
   @override
   void initState() {
     super.initState();
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
     _loadRpp();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -119,7 +100,7 @@ class RppScreenState extends State<RppScreen>
               children: [
                 // Header (Pattern #11 gradient)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -129,54 +110,76 @@ class RppScreenState extends State<RppScreen>
                         _getPrimaryColor().withValues(alpha: 0.85),
                       ],
                     ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
                     children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        margin: EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.tune_rounded, color: Colors.white, size: 22),
-                          SizedBox(width: 10),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Filter',
-                              'id': 'Filter',
-                            }),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.tune_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Filter',
+                                  'id': 'Filter',
+                                }),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setModalState(() {
+                                tempSelectedStatus = null;
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Reset',
+                                'id': 'Reset',
+                              }),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setModalState(() {
-                            tempSelectedStatus = null;
-                          });
-                        },
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Reset',
-                            'id': 'Reset',
-                          }),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                       ),
                     ],
                   ),
@@ -266,14 +269,11 @@ class RppScreenState extends State<RppScreen>
                   ),
                 ),
 
-                // Bottom Action Buttons
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border(
-                      top: BorderSide(color: ColorUtils.slate200),
-                    ),
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
                     boxShadow: [
                       BoxShadow(
                         color: ColorUtils.slate900.withValues(alpha: 0.05),
@@ -282,59 +282,62 @@ class RppScreenState extends State<RppScreen>
                       ),
                     ],
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(color: ColorUtils.slate300),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: ColorUtils.slate300),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Cancel',
-                              'id': 'Batal',
-                            }),
-                            style: TextStyle(color: ColorUtils.slate600),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedStatusFilter = tempSelectedStatus;
-                            });
-                            _checkActiveFilter();
-                            Navigator.pop(context);
-                            _loadRpp();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _getPrimaryColor(),
-                            padding: EdgeInsets.symmetric(vertical: 14),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Apply Filter',
-                              'id': 'Terapkan Filter',
-                            }),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Cancel',
+                                'id': 'Batal',
+                              }),
+                              style: TextStyle(color: ColorUtils.slate600),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedStatusFilter = tempSelectedStatus;
+                              });
+                              _checkActiveFilter();
+                              Navigator.pop(context);
+                              _loadRpp();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getPrimaryColor(),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Apply Filter',
+                                'id': 'Terapkan Filter',
+                              }),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -393,8 +396,6 @@ class RppScreenState extends State<RppScreen>
         _rppList = rppData;
         _isLoading = false;
       });
-
-      _animationController.forward();
     } catch (e) {
       if (kDebugMode) print('Load RPP error: $e');
       if (mounted) {
@@ -564,7 +565,11 @@ class RppScreenState extends State<RppScreen>
     );
   }
 
-  Widget _buildInfoTag({required IconData icon, required String label, Color? tagColor}) {
+  Widget _buildInfoTag({
+    required IconData icon,
+    required String label,
+    Color? tagColor,
+  }) {
     final color = tagColor ?? ColorUtils.slate500;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -580,7 +585,11 @@ class RppScreenState extends State<RppScreen>
           SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -615,148 +624,127 @@ class RppScreenState extends State<RppScreen>
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          final delay = (index * 0.1).clamp(0.0, 0.9);
-          final animation = CurvedAnimation(
-            parent: _animationController,
-            curve: Interval(delay, 1.0, curve: Curves.easeOut),
-          );
-
-          return FadeTransition(
-            opacity: animation,
-            child: Transform.translate(
-              offset: Offset(0, 30 * (1 - animation.value)),
-              child: child,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _lihatDetailRpp(rpp),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
             ),
-          );
-        },
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _lihatDetailRpp(rpp),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: ColorUtils.slate200),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header: icon + title/subject + status badge
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.description_rounded,
-                          color: accentColor,
-                          size: 22,
-                        ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header: icon + title/subject + status badge
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              rpp['judul'] ?? 'No Title',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: ColorUtils.slate900,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                      child: Icon(
+                        Icons.description_rounded,
+                        color: accentColor,
+                        size: 22,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            rpp['judul'] ?? 'No Title',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: ColorUtils.slate900,
                             ),
-                            SizedBox(height: 3),
-                            Text(
-                              rpp['mata_pelajaran_nama'] ?? 'No Subject',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: ColorUtils.slate500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            rpp['mata_pelajaran_nama'] ?? 'No Subject',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: ColorUtils.slate50,
                             ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: statusColor.withValues(alpha: 0.3),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.3),
                         ),
-                        child: Text(
-                          _getStatusLabel(rpp['status']),
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      ),
+                      child: Text(
+                        _getStatusLabel(rpp['status']),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  Divider(color: ColorUtils.slate100, height: 1),
-                  SizedBox(height: 10),
-                  // Info tags: class
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      _buildInfoTag(
-                        icon: Icons.class_,
-                        label: rpp['kelas_nama'] ?? 'No Class',
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  // Action buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildCircleActionButton(
-                        icon: Icons.visibility_outlined,
-                        color: _getPrimaryColor(),
-                        onPressed: () => _lihatDetailRpp(rpp),
-                      ),
-                      SizedBox(width: 8),
-                      _buildCircleActionButton(
-                        icon: Icons.edit_outlined,
-                        color: ColorUtils.warning600,
-                        onPressed: () => _editRpp(rpp),
-                      ),
-                      SizedBox(width: 8),
-                      _buildCircleActionButton(
-                        icon: Icons.delete_outlined,
-                        color: ColorUtils.error600,
-                        onPressed: () => _deleteRpp(rpp),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                Divider(color: ColorUtils.slate100, height: 1),
+                SizedBox(height: 10),
+                // Info tags: class
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _buildInfoTag(
+                      icon: Icons.class_,
+                      label: rpp['kelas_nama'] ?? 'No Class',
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                // Action buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildCircleActionButton(
+                      icon: Icons.visibility_outlined,
+                      color: _getPrimaryColor(),
+                      onPressed: () => _lihatDetailRpp(rpp),
+                    ),
+                    SizedBox(width: 8),
+                    _buildCircleActionButton(
+                      icon: Icons.edit_outlined,
+                      color: ColorUtils.warning600,
+                      onPressed: () => _editRpp(rpp),
+                    ),
+                    SizedBox(width: 8),
+                    _buildCircleActionButton(
+                      icon: Icons.delete_outlined,
+                      color: ColorUtils.error600,
+                      onPressed: () => _deleteRpp(rpp),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -776,7 +764,11 @@ class RppScreenState extends State<RppScreen>
               color: ColorUtils.slate100,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(Icons.description_outlined, size: 36, color: ColorUtils.slate400),
+            child: Icon(
+              Icons.description_outlined,
+              size: 36,
+              color: ColorUtils.slate400,
+            ),
           ),
           SizedBox(height: 20),
           Text(
@@ -790,10 +782,7 @@ class RppScreenState extends State<RppScreen>
           SizedBox(height: 8),
           Text(
             AppLocalizations.clickPlusToCreate.tr,
-            style: TextStyle(
-              fontSize: 13,
-              color: ColorUtils.slate500,
-            ),
+            style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
           ),
         ],
       ),
@@ -814,7 +803,11 @@ class RppScreenState extends State<RppScreen>
                 color: ColorUtils.error600.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(Icons.error_outline_rounded, size: 36, color: ColorUtils.error600),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 36,
+                color: ColorUtils.error600,
+              ),
             ),
             SizedBox(height: 20),
             Text(
@@ -853,298 +846,285 @@ class RppScreenState extends State<RppScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
-        if (_isLoading) {
-          return Scaffold(
-            backgroundColor: ColorUtils.slate50,
-            body: Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(_getPrimaryColor()),
-              ),
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final filteredRpp = _rppList;
+
+    return Scaffold(
+      backgroundColor: Color(0xFFF8F9FA),
+      body: Column(
+        children: [
+          // Header dengan gradient
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
             ),
-          );
-        }
-
-        final filteredRpp = _rppList;
-
-        return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
-          body: Column(
-            children: [
-              // Header dengan gradient
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
+            decoration: BoxDecoration(
+              gradient: _getCardGradient(),
+              boxShadow: [
+                BoxShadow(
+                  color: _getPrimaryColor().withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _getPrimaryColor().withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.rppList.tr,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            AppLocalizations.viewAndManageRpp.tr,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _loadRpp,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.refresh_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                SizedBox(height: 16),
+
+                // Search Bar with Filter Button
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AppLocalizations.rppList.tr,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                AppLocalizations.viewAndManageRpp.tr,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: _loadRpp,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.refresh_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-
-                    // Search Bar with Filter Button
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _searchController,
-                                    style: TextStyle(color: ColorUtils.slate800),
-                                    decoration: InputDecoration(
-                                      hintText: languageProvider
-                                          .getTranslatedText({
-                                            'en': 'Search RPP...',
-                                            'id': 'Cari RPP...',
-                                          }),
-                                      hintStyle: TextStyle(color: ColorUtils.slate400),
-                                      prefixIcon: Icon(
-                                        Icons.search,
-                                        color: ColorUtils.slate400,
-                                      ),
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                    onSubmitted: (_) {
-                                      _loadRpp();
-                                    },
-                                  ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.only(right: 4),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.search,
-                                      color: _getPrimaryColor(),
-                                    ),
-                                    onPressed: _loadRpp,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        // Filter Button
-                        Container(
-                          decoration: BoxDecoration(
-                            color: _hasActiveFilter
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              IconButton(
-                                onPressed: _showFilterSheet,
-                                icon: Icon(
-                                  Icons.tune,
-                                  color: _hasActiveFilter
-                                      ? _getPrimaryColor()
-                                      : Colors.white,
-                                ),
-                                tooltip: languageProvider.getTranslatedText({
-                                  'en': 'Filter',
-                                  'id': 'Filter',
-                                }),
-                              ),
-                              if (_hasActiveFilter)
-                                Positioned(
-                                  right: 8,
-                                  top: 8,
-                                  child: Container(
-                                    padding: EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: ColorUtils.error600,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    constraints: BoxConstraints(
-                                      minWidth: 8,
-                                      minHeight: 8,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Filter Chips
-                    if (_hasActiveFilter) ...[
-                      SizedBox(height: 12),
-                      SizedBox(
-                        height: 32,
                         child: Row(
                           children: [
                             Expanded(
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.5),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          _buildFilterSummary(languageProvider),
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        SizedBox(width: 8),
-                                        GestureDetector(
-                                          onTap: _clearAllFilters,
-                                          child: Icon(
-                                            Icons.close,
-                                            size: 16,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              child: TextField(
+                                controller: _searchController,
+                                style: TextStyle(color: ColorUtils.slate800),
+                                decoration: InputDecoration(
+                                  hintText: languageProvider.getTranslatedText({
+                                    'en': 'Search RPP...',
+                                    'id': 'Cari RPP...',
+                                  }),
+                                  hintStyle: TextStyle(
+                                    color: ColorUtils.slate400,
                                   ),
-                                ],
+                                  prefixIcon: Icon(
+                                    Icons.search,
+                                    color: ColorUtils.slate400,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onSubmitted: (_) {
+                                  _loadRpp();
+                                },
+                              ),
+                            ),
+                            Container(
+                              margin: EdgeInsets.only(right: 4),
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.search,
+                                  color: _getPrimaryColor(),
+                                ),
+                                onPressed: _loadRpp,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ],
-                ),
-              ),
-              Expanded(
-                child: _errorMessage != null
-                    ? _buildErrorState()
-                    : filteredRpp.isEmpty
-                    ? _buildEmptyState(languageProvider)
-                    : RefreshIndicator(
-                        onRefresh: _loadRpp,
-                        child: ListView.builder(
-                          padding: EdgeInsets.only(
-                            top: 16,
-                            bottom: 16,
-                            left: 5,
-                            right: 5,
-                          ),
-                          itemCount: filteredRpp.length,
-                          itemBuilder: (context, index) {
-                            final rpp = filteredRpp[index];
-                            return _buildRppCard(rpp, index);
-                          },
+                    ),
+                    SizedBox(width: 8),
+                    // Filter Button
+                    Container(
+                      decoration: BoxDecoration(
+                        color: _hasActiveFilter
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
-              ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: _tambahRpp,
-            backgroundColor: _getPrimaryColor(),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+                      child: Stack(
+                        children: [
+                          IconButton(
+                            onPressed: _showFilterSheet,
+                            icon: Icon(
+                              Icons.tune,
+                              color: _hasActiveFilter
+                                  ? _getPrimaryColor()
+                                  : Colors.white,
+                            ),
+                            tooltip: languageProvider.getTranslatedText({
+                              'en': 'Filter',
+                              'id': 'Filter',
+                            }),
+                          ),
+                          if (_hasActiveFilter)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: ColorUtils.error600,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: BoxConstraints(
+                                  minWidth: 8,
+                                  minHeight: 8,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Filter Chips
+                if (_hasActiveFilter) ...[
+                  SizedBox(height: 12),
+                  SizedBox(
+                    height: 32,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _buildFilterSummary(languageProvider),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: _clearAllFilters,
+                                      child: Icon(
+                                        Icons.close,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
-            child: Icon(Icons.add, color: Colors.white),
           ),
-        );
-      },
+          Expanded(
+            child: _isLoading
+                ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
+                : _errorMessage != null
+                ? _buildErrorState()
+                : filteredRpp.isEmpty
+                ? _buildEmptyState(languageProvider)
+                : RefreshIndicator(
+                    onRefresh: _loadRpp,
+                    child: ListView.builder(
+                      padding: EdgeInsets.only(
+                        top: 16,
+                        bottom: 16,
+                        left: 5,
+                        right: 5,
+                      ),
+                      itemCount: filteredRpp.length,
+                      itemBuilder: (context, index) {
+                        final rpp = filteredRpp[index];
+                        return _buildRppCard(rpp, index);
+                      },
+                    ),
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _tambahRpp,
+        backgroundColor: _getPrimaryColor(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }
@@ -1338,11 +1318,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
     }
   }
 
-  void _setSelectedFile(String fileName) {
-    setState(() {
-      _selectedFileName = fileName;
-    });
-  }
+  // File Upload Logic Removed - Using simplified version
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
@@ -1435,15 +1411,6 @@ class _RppFormDialogState extends State<RppFormDialog> {
 
   Color _getPrimaryColor() => ColorUtils.getRoleColor('guru');
 
-  LinearGradient _getDialogGradient() {
-    final color = _getPrimaryColor();
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [color, color.withValues(alpha: 0.85)],
-    );
-  }
-
   Widget _buildDialogTextField({
     required TextEditingController controller,
     required String label,
@@ -1451,6 +1418,8 @@ class _RppFormDialogState extends State<RppFormDialog> {
     TextInputType? keyboardType,
     int maxLines = 1,
     String? hintText,
+    VoidCallback? onTap,
+    bool readOnly = false,
     String? Function(String?)? validator,
   }) {
     return Container(
@@ -1461,37 +1430,27 @@ class _RppFormDialogState extends State<RppFormDialog> {
       ),
       child: TextFormField(
         controller: controller,
+        onTap: onTap,
+        readOnly: readOnly,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        validator: validator,
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
           hintText: hintText,
           hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
-          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
+          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
           border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.error600),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.error600, width: 1.5),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        validator: validator,
       ),
     );
   }
 
   Widget _buildDialogDropdown({
-    required String? value,
+    required dynamic value,
     required String label,
     required IconData icon,
     required List<DropdownMenuItem<dynamic>> items,
@@ -1504,27 +1463,19 @@ class _RppFormDialogState extends State<RppFormDialog> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: ColorUtils.slate200),
       ),
-      child: DropdownButtonFormField(
+      child: DropdownButtonFormField<dynamic>(
         initialValue: value,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
-          border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: ColorUtils.error600),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         items: items,
         onChanged: onChanged,
         validator: validator,
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
       ),
     );
   }
@@ -1545,79 +1496,101 @@ class _RppFormDialogState extends State<RppFormDialog> {
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Gradient Header
+          // Header (Pattern #10 gradient)
           Container(
-            width: double.infinity,
-            padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+            padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
             decoration: BoxDecoration(
-              gradient: _getDialogGradient(),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
+              gradient: ColorUtils.heroGradient(primaryColor: primaryColor),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            child: Row(
+            child: Column(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Icon(
-                    isEditMode ? Icons.edit_note_rounded : Icons.note_add_rounded,
-                    color: Colors.white,
-                    size: 22,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isEditMode
-                            ? languageProvider.getTranslatedText({
-                                'en': 'Edit RPP',
-                                'id': 'Edit RPP',
-                              })
-                            : AppLocalizations.createRpp.tr,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Icon(
+                        isEditMode ? Icons.edit_note : Icons.add_task,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isEditMode
+                                ? languageProvider.getTranslatedText({
+                                    'en': 'Edit RPP',
+                                    'id': 'Edit RPP',
+                                  })
+                                : languageProvider.getTranslatedText({
+                                    'en': 'Add New RPP',
+                                    'id': 'Tambah RPP Baru',
+                                  }),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            isEditMode
+                                ? languageProvider.getTranslatedText({
+                                    'en': 'Update RPP details',
+                                    'id': 'Perbarui detail RPP',
+                                  })
+                                : languageProvider.getTranslatedText({
+                                    'en': 'Create a new RPP document',
+                                    'id': 'Buat dokumen RPP baru',
+                                  }),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
                           color: Colors.white,
+                          size: 20,
                         ),
                       ),
-                      SizedBox(height: 2),
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Fill in the RPP details',
-                          'id': 'Lengkapi detail RPP',
-                        }),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -1820,10 +1793,14 @@ class _RppFormDialogState extends State<RppFormDialog> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: ColorUtils.info600.withValues(alpha: 0.1),
+                                  color: ColorUtils.info600.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                    color: ColorUtils.info600.withValues(alpha: 0.25),
+                                    color: ColorUtils.info600.withValues(
+                                      alpha: 0.25,
+                                    ),
                                   ),
                                 ),
                                 child: Icon(
@@ -1870,72 +1847,84 @@ class _RppFormDialogState extends State<RppFormDialog> {
             ),
           ),
 
-          // Footer Buttons
+          // Footer Buttons (Enhanced Pattern)
           Container(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: ColorUtils.slate100)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _isUploading ? null : () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 13),
-                      side: BorderSide(color: ColorUtils.slate300),
-                    ),
-                    child: Text(
-                      AppLocalizations.cancel.tr,
-                      style: TextStyle(
-                        color: ColorUtils.slate700,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isUploading ? null : _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorUtils.corporateBlue600,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 13),
-                      elevation: 2,
-                      shadowColor: ColorUtils.corporateBlue600.withValues(alpha: 0.4),
-                    ),
-                    child: _isUploading
-                        ? SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            isEditMode
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'Update',
-                                    'id': 'Perbarui',
-                                  })
-                                : AppLocalizations.save.tr,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                  ),
+              color: Colors.white,
+              border: Border(top: BorderSide(color: ColorUtils.slate200)),
+              boxShadow: [
+                BoxShadow(
+                  color: ColorUtils.slate900.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
                 ),
               ],
+            ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isUploading
+                          ? null
+                          : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: ColorUtils.slate300),
+                      ),
+                      child: Text(
+                        AppLocalizations.cancel.tr,
+                        style: TextStyle(
+                          color: ColorUtils.slate700,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isUploading ? null : _submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        elevation: 2,
+                        shadowColor: primaryColor.withValues(alpha: 0.4),
+                      ),
+                      child: _isUploading
+                          ? SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              isEditMode
+                                  ? languageProvider.getTranslatedText({
+                                      'en': 'Update',
+                                      'id': 'Perbarui',
+                                    })
+                                  : AppLocalizations.save.tr,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -2288,7 +2277,9 @@ class RppDetailPage extends StatelessWidget {
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: ColorUtils.info600.withValues(alpha: 0.1),
+                                    color: ColorUtils.info600.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
@@ -2300,7 +2291,8 @@ class RppDetailPage extends StatelessWidget {
                                 SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         languageProvider.getTranslatedText({
@@ -2325,7 +2317,10 @@ class RppDetailPage extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                Icon(Icons.download_rounded, color: ColorUtils.slate400),
+                                Icon(
+                                  Icons.download_rounded,
+                                  color: ColorUtils.slate400,
+                                ),
                               ],
                             ),
                           ),
