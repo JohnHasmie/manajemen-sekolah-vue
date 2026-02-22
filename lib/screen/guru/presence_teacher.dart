@@ -2837,56 +2837,63 @@ class PresencePageState extends State<PresencePage>
             // 3. Submit Button
             if (_selectedSubjectId != null && _filteredStudentList.isNotEmpty)
               Container(
-                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
+                  border: Border(top: BorderSide(color: ColorUtils.slate200)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
+                      color: ColorUtils.slate900.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, -2),
                     ),
                   ],
                 ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _isSubmitting ? null : _submitAbsensi,
-                    icon: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : const Icon(Icons.save_outlined, size: 20),
-                    label: Text(
-                      _isSubmitting
-                          ? languageProvider.getTranslatedText({
-                              'en': 'Saving...',
-                              'id': 'Menyimpan...',
-                            })
-                          : languageProvider.getTranslatedText({
-                              'en': 'Save Attendance',
-                              'id': 'Simpan Absensi',
-                            }),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSubmitting ? null : _submitAbsensi,
+                        icon: _isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.save_outlined, size: 20),
+                        label: Text(
+                          _isSubmitting
+                              ? languageProvider.getTranslatedText({
+                                  'en': 'Saving...',
+                                  'id': 'Menyimpan...',
+                                })
+                              : languageProvider.getTranslatedText({
+                                  'en': 'Save Attendance',
+                                  'id': 'Simpan Absensi',
+                                }),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getPrimaryColor(),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getPrimaryColor(),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
                     ),
                   ),
                 ),
