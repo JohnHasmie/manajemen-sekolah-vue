@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -120,7 +120,9 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       final userData = prefs.getString('user');
       if (userData != null) {
         final user = json.decode(userData);
-        _userRole = user['role'] ?? 'wali';
+        setState(() {
+          _userRole = user['role'] ?? 'wali';
+        });
       }
 
       if (kDebugMode) {
@@ -339,8 +341,10 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Priority badge
-                    if (['penting', 'important']
-                        .contains(announcementData['priority']))
+                    if ([
+                      'penting',
+                      'important',
+                    ].contains(announcementData['priority']))
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -425,8 +429,9 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
-                                  border:
-                                      Border.all(color: ColorUtils.slate200),
+                                  border: Border.all(
+                                    color: ColorUtils.slate200,
+                                  ),
                                 ),
                                 child: Icon(
                                   Icons.attach_file,
@@ -658,11 +663,14 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
   ) {
     final languageProvider = context.read<LanguageProvider>();
     final primaryColor = _getPrimaryColor();
-    final isUnread = !(announcementData['is_read'] == true ||
-        announcementData['is_read'] == 1 ||
-        announcementData['is_read'] == '1');
-    final isImportant = ['penting', 'important']
-        .contains(announcementData['priority']);
+    final isUnread =
+        !(announcementData['is_read'] == true ||
+            announcementData['is_read'] == 1 ||
+            announcementData['is_read'] == '1');
+    final isImportant = [
+      'penting',
+      'important',
+    ].contains(announcementData['priority']);
     final accentColor = isImportant ? ColorUtils.warning600 : primaryColor;
 
     return Container(
@@ -897,8 +905,9 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                                   'en': 'Search announcements...',
                                   'id': 'Cari pengumuman...',
                                 }),
-                                hintStyle:
-                                    TextStyle(color: ColorUtils.slate400),
+                                hintStyle: TextStyle(
+                                  color: ColorUtils.slate400,
+                                ),
                                 prefixIcon: Icon(
                                   Icons.search,
                                   color: ColorUtils.slate400,
@@ -936,11 +945,13 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
               // Content
               Expanded(
                 child: _isLoading
-                    ? LoadingScreen(
-                        message: languageProvider.getTranslatedText({
-                          'en': 'Loading announcements...',
-                          'id': 'Memuat pengumuman...',
-                        }),
+                    ? SkeletonListLoading(
+                        itemCount: 6,
+                        infoTagCount: 3,
+                        baseColor: _getPrimaryColor().withValues(alpha: 0.15),
+                        highlightColor: _getPrimaryColor().withValues(
+                          alpha: 0.05,
+                        ),
                       )
                     : _errorMessage != null
                     ? ErrorScreen(

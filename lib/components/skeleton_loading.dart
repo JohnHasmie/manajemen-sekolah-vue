@@ -11,10 +11,18 @@ class SkeletonListCard extends StatelessWidget {
   /// Whether to show action button placeholders on the right
   final bool showActions;
 
+  /// Custom base color for shimmer
+  final Color? baseColor;
+
+  /// Custom highlight color for shimmer
+  final Color? highlightColor;
+
   const SkeletonListCard({
     super.key,
     this.infoTagCount = 1,
     this.showActions = true,
+    this.baseColor,
+    this.highlightColor,
   });
 
   @override
@@ -29,15 +37,12 @@ class SkeletonListCard extends StatelessWidget {
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
       child: Shimmer.fromColors(
-        baseColor: ColorUtils.shimmerBaseColor,
-        highlightColor: ColorUtils.shimmerHighlightColor,
+        baseColor: baseColor ?? ColorUtils.shimmerBaseColor,
+        highlightColor: highlightColor ?? ColorUtils.shimmerHighlightColor,
         child: Row(
           children: [
             // Avatar placeholder
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: Colors.white,
-            ),
+            CircleAvatar(radius: 22, backgroundColor: Colors.white),
             SizedBox(width: 12),
 
             // Content placeholder
@@ -56,16 +61,21 @@ class SkeletonListCard extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   // Info tags
-                  ...List.generate(infoTagCount, (index) => Padding(
-                    padding: EdgeInsets.only(bottom: index < infoTagCount - 1 ? 6 : 0),
-                    child: Row(
-                      children: [
-                        _buildTagPlaceholder(60),
-                        SizedBox(width: 6),
-                        if (index == 0) _buildTagPlaceholder(50),
-                      ],
+                  ...List.generate(
+                    infoTagCount,
+                    (index) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index < infoTagCount - 1 ? 6 : 0,
+                      ),
+                      child: Row(
+                        children: [
+                          _buildTagPlaceholder(60),
+                          SizedBox(width: 6),
+                          if (index == 0) _buildTagPlaceholder(50),
+                        ],
+                      ),
                     ),
-                  )),
+                  ),
                 ],
               ),
             ),
@@ -143,12 +153,20 @@ class SkeletonListLoading extends StatelessWidget {
   /// Padding around the list
   final EdgeInsets padding;
 
+  /// Custom base color for shimmer
+  final Color? baseColor;
+
+  /// Custom highlight color for shimmer
+  final Color? highlightColor;
+
   const SkeletonListLoading({
     super.key,
     this.itemCount = 6,
     this.infoTagCount = 1,
     this.showActions = true,
     this.padding = const EdgeInsets.only(top: 8, bottom: 16),
+    this.baseColor,
+    this.highlightColor,
   });
 
   @override
@@ -160,6 +178,8 @@ class SkeletonListLoading extends StatelessWidget {
       itemBuilder: (context, index) => SkeletonListCard(
         infoTagCount: infoTagCount,
         showActions: showActions,
+        baseColor: baseColor,
+        highlightColor: highlightColor,
       ),
     );
   }
