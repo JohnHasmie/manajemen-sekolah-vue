@@ -1016,337 +1016,257 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                       topRight: Radius.circular(24),
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      // --- Pattern #13 Gradient Header ---
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              _getPrimaryColor(),
-                              _getPrimaryColor().withValues(alpha: 0.8),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(24),
-                            topRight: Radius.circular(24),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Icon(
-                                isEdit
-                                    ? Icons.edit_rounded
-                                    : Icons.announcement_rounded,
-                                color: Colors.white,
-                                size: 22,
-                              ),
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        // --- Pattern #13 Gradient Header ---
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                _getPrimaryColor(),
+                                _getPrimaryColor().withValues(alpha: 0.8),
+                              ],
                             ),
-                            SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    isEdit
-                                        ? languageProvider.getTranslatedText({
-                                            'en': 'Edit Announcement',
-                                            'id': 'Edit Pengumuman',
-                                          })
-                                        : languageProvider.getTranslatedText({
-                                            'en': 'Add Announcement',
-                                            'id': 'Tambah Pengumuman',
-                                          }),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    isEdit
-                                        ? languageProvider.getTranslatedText({
-                                            'en':
-                                                'Update announcement information',
-                                            'id':
-                                                'Perbarui informasi pengumuman',
-                                          })
-                                        : languageProvider.getTranslatedText({
-                                            'en':
-                                                'Fill in announcement details',
-                                            'id': 'Isi detail pengumuman',
-                                          }),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
                             ),
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 32,
-                                height: 32,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
-                                  shape: BoxShape.circle,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
                                 ),
                                 child: Icon(
-                                  Icons.close_rounded,
+                                  isEdit
+                                      ? Icons.edit_rounded
+                                      : Icons.announcement_rounded,
                                   color: Colors.white,
-                                  size: 18,
+                                  size: 22,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // --- Scrollable Form Body ---
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildDialogTextField(
-                                controller: judulController,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Title',
-                                  'id': 'Judul',
-                                }),
-                                icon: Icons.title,
-                              ),
-                              SizedBox(height: 12),
-                              _buildDialogTextField(
-                                controller: kontenController,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Content',
-                                  'id': 'Konten',
-                                }),
-                                icon: Icons.description,
-                                maxLines: 4,
-                              ),
-                              SizedBox(height: 12),
-                              _buildPrioritasDropdown(
-                                value: selectedPrioritas,
-                                onChanged: (value) {
-                                  setDialogState(() {
-                                    selectedPrioritas = value;
-                                  });
-                                },
-                                languageProvider: languageProvider,
-                              ),
-                              SizedBox(height: 12),
-                              _buildRoleTargetDropdown(
-                                value: selectedRole,
-                                onChanged: (value) {
-                                  setDialogState(() {
-                                    selectedRole = value;
-                                  });
-                                },
-                                languageProvider: languageProvider,
-                              ),
-                              SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildDateField(
-                                      label: languageProvider.getTranslatedText(
-                                        {
-                                          'en': 'Start Date',
-                                          'id': 'Tanggal Mulai',
-                                        },
+                              SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isEdit
+                                          ? languageProvider.getTranslatedText({
+                                              'en': 'Edit Announcement',
+                                              'id': 'Edit Pengumuman',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Add Announcement',
+                                              'id': 'Tambah Pengumuman',
+                                            }),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
-                                      value: tanggalAwal,
-                                      onTap: () =>
-                                          _selectDate(context, true, (date) {
-                                            setDialogState(() {
-                                              tanggalAwal = date;
-                                            });
-                                          }),
                                     ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildDateField(
-                                      label: languageProvider.getTranslatedText(
-                                        {
-                                          'en': 'End Date',
-                                          'id': 'Tanggal Berakhir',
-                                        },
+                                    SizedBox(height: 2),
+                                    Text(
+                                      isEdit
+                                          ? languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Update announcement information',
+                                              'id':
+                                                  'Perbarui informasi pengumuman',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Fill in announcement details',
+                                              'id': 'Isi detail pengumuman',
+                                            }),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
                                       ),
-                                      value: tanggalAkhir,
-                                      onTap: () =>
-                                          _selectDate(context, false, (date) {
-                                            setDialogState(() {
-                                              tanggalAkhir = date;
-                                            });
-                                          }),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                              SizedBox(height: 12),
-                              _buildFilePicker(
-                                setDialogState,
-                                languageProvider,
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
 
-                      // --- Footer Buttons ---
-                      Container(
-                        padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(color: ColorUtils.slate100),
+                        // --- Scrollable Form Body ---
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildDialogTextField(
+                                  controller: judulController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Title',
+                                    'id': 'Judul',
+                                  }),
+                                  icon: Icons.title,
+                                ),
+                                SizedBox(height: 12),
+                                _buildDialogTextField(
+                                  controller: kontenController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Content',
+                                    'id': 'Konten',
+                                  }),
+                                  icon: Icons.description,
+                                  maxLines: 4,
+                                ),
+                                SizedBox(height: 12),
+                                _buildPrioritasDropdown(
+                                  value: selectedPrioritas,
+                                  onChanged: (value) {
+                                    setDialogState(() {
+                                      selectedPrioritas = value;
+                                    });
+                                  },
+                                  languageProvider: languageProvider,
+                                ),
+                                SizedBox(height: 12),
+                                _buildRoleTargetDropdown(
+                                  value: selectedRole,
+                                  onChanged: (value) {
+                                    setDialogState(() {
+                                      selectedRole = value;
+                                    });
+                                  },
+                                  languageProvider: languageProvider,
+                                ),
+                                SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildDateField(
+                                        label: languageProvider
+                                            .getTranslatedText({
+                                              'en': 'Start Date',
+                                              'id': 'Tanggal Mulai',
+                                            }),
+                                        value: tanggalAwal,
+                                        onTap: () =>
+                                            _selectDate(context, true, (date) {
+                                              setDialogState(() {
+                                                tanggalAwal = date;
+                                              });
+                                            }),
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: _buildDateField(
+                                        label: languageProvider
+                                            .getTranslatedText({
+                                              'en': 'End Date',
+                                              'id': 'Tanggal Berakhir',
+                                            }),
+                                        value: tanggalAkhir,
+                                        onTap: () =>
+                                            _selectDate(context, false, (date) {
+                                              setDialogState(() {
+                                                tanggalAkhir = date;
+                                              });
+                                            }),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 12),
+                                _buildFilePicker(
+                                  setDialogState,
+                                  languageProvider,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: EdgeInsets.symmetric(vertical: 13),
-                                  side: BorderSide(color: ColorUtils.slate300),
+
+                        // --- Enhanced Footer ---
+                        Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              top: BorderSide(color: ColorUtils.slate200),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: ColorUtils.slate900.withValues(
+                                  alpha: 0.05,
                                 ),
-                                child: Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Cancel',
-                                    'id': 'Batal',
-                                  }),
-                                  style: TextStyle(
-                                    color: ColorUtils.slate700,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                                blurRadius: 8,
+                                offset: Offset(0, -2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    side: BorderSide(
+                                      color: ColorUtils.slate300,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Cancel',
+                                      'id': 'Batal',
+                                    }),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  final judul = judulController.text.trim();
-                                  final konten = kontenController.text.trim();
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    final judul = judulController.text.trim();
+                                    final konten = kontenController.text.trim();
 
-                                  if (judul.isEmpty || konten.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          languageProvider.getTranslatedText({
-                                            'en':
-                                                'Title and content must be filled',
-                                            'id':
-                                                'Judul dan konten harus diisi',
-                                          }),
-                                        ),
-                                        backgroundColor: Colors.orange,
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  try {
-                                    final Map<String, String> data = {
-                                      'title': judulController.text,
-                                      'content': kontenController.text,
-                                      'role_target': selectedRole ?? 'all',
-                                      'priority': selectedPrioritas ?? 'normal',
-                                      'type': 'general',
-                                    };
-
-                                    if (selectedClassId != null) {
-                                      data['class_id'] = selectedClassId;
-                                    }
-                                    if (tanggalAwal != null) {
-                                      data['start_date'] = tanggalAwal!
-                                          .toIso8601String();
-                                    }
-                                    if (tanggalAkhir != null) {
-                                      data['end_date'] = tanggalAkhir!
-                                          .toIso8601String();
-                                    }
-
-                                    if (isEdit) {
-                                      await ApiAnnouncementService.updateAnnouncement(
-                                        announcementData['id'],
-                                        data,
-                                        _selectedFile,
-                                      );
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              languageProvider.getTranslatedText({
-                                                'en':
-                                                    'Announcement successfully updated',
-                                                'id':
-                                                    'Pengumuman berhasil diperbarui',
-                                              }),
-                                            ),
-                                            backgroundColor:
-                                                ColorUtils.success600,
-                                          ),
-                                        );
-                                        Navigator.pop(context);
-                                      }
-                                    } else {
-                                      await ApiAnnouncementService.createAnnouncement(
-                                        data,
-                                        _selectedFile,
-                                      );
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              languageProvider.getTranslatedText({
-                                                'en':
-                                                    'Announcement successfully added',
-                                                'id':
-                                                    'Pengumuman berhasil ditambahkan',
-                                              }),
-                                            ),
-                                            backgroundColor:
-                                                ColorUtils.success600,
-                                          ),
-                                        );
-                                        Navigator.pop(context);
-                                      }
-                                    }
-                                    _loadData();
-                                  } catch (e) {
-                                    if (context.mounted) {
+                                    if (judul.isEmpty || konten.isEmpty) {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
@@ -1354,50 +1274,144 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                                           content: Text(
                                             languageProvider.getTranslatedText({
                                               'en':
-                                                  'Failed to save announcement: $e',
+                                                  'Title and content must be filled',
                                               'id':
-                                                  'Gagal menyimpan pengumuman: $e',
+                                                  'Judul dan konten harus diisi',
                                             }),
                                           ),
-                                          backgroundColor: ColorUtils.error600,
+                                          backgroundColor: Colors.orange,
                                         ),
                                       );
+                                      return;
                                     }
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _getPrimaryColor(),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+
+                                    try {
+                                      final Map<String, String> data = {
+                                        'title': judulController.text,
+                                        'content': kontenController.text,
+                                        'role_target': selectedRole ?? 'all',
+                                        'priority':
+                                            selectedPrioritas ?? 'normal',
+                                        'type': 'general',
+                                      };
+
+                                      if (selectedClassId != null) {
+                                        data['class_id'] = selectedClassId;
+                                      }
+                                      if (tanggalAwal != null) {
+                                        data['start_date'] = tanggalAwal!
+                                            .toIso8601String();
+                                      }
+                                      if (tanggalAkhir != null) {
+                                        data['end_date'] = tanggalAkhir!
+                                            .toIso8601String();
+                                      }
+
+                                      if (isEdit) {
+                                        await ApiAnnouncementService.updateAnnouncement(
+                                          announcementData['id'],
+                                          data,
+                                          _selectedFile,
+                                        );
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                languageProvider.getTranslatedText({
+                                                  'en':
+                                                      'Announcement successfully updated',
+                                                  'id':
+                                                      'Pengumuman berhasil diperbarui',
+                                                }),
+                                              ),
+                                              backgroundColor:
+                                                  ColorUtils.success600,
+                                            ),
+                                          );
+                                          Navigator.pop(context);
+                                        }
+                                      } else {
+                                        await ApiAnnouncementService.createAnnouncement(
+                                          data,
+                                          _selectedFile,
+                                        );
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                languageProvider.getTranslatedText({
+                                                  'en':
+                                                      'Announcement successfully added',
+                                                  'id':
+                                                      'Pengumuman berhasil ditambahkan',
+                                                }),
+                                              ),
+                                              backgroundColor:
+                                                  ColorUtils.success600,
+                                            ),
+                                          );
+                                          Navigator.pop(context);
+                                        }
+                                      }
+                                      _loadData();
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              languageProvider.getTranslatedText({
+                                                'en':
+                                                    'Failed to save announcement: $e',
+                                                'id':
+                                                    'Gagal menyimpan pengumuman: $e',
+                                              }),
+                                            ),
+                                            backgroundColor:
+                                                ColorUtils.error600,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _getPrimaryColor(),
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    elevation: 2,
+                                    shadowColor: _getPrimaryColor().withValues(
+                                      alpha: 0.4,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                  padding: EdgeInsets.symmetric(vertical: 13),
-                                  elevation: 2,
-                                  shadowColor: _getPrimaryColor().withValues(
-                                    alpha: 0.4,
-                                  ),
-                                ),
-                                child: Text(
-                                  isEdit
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Update',
-                                          'id': 'Perbarui',
-                                        })
-                                      : languageProvider.getTranslatedText({
-                                          'en': 'Save',
-                                          'id': 'Simpan',
-                                        }),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                                  child: Text(
+                                    isEdit
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Update',
+                                            'id': 'Perbarui',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'Save',
+                                            'id': 'Simpan',
+                                          }),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );

@@ -416,196 +416,226 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                 topRight: Radius.circular(24),
               ),
             ),
-            child: Column(
-              children: [
-              // ── Pattern #9 Header ──
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      _getPrimaryColor(),
-                      _getPrimaryColor().withValues(alpha: 0.82),
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // 44×44 icon container
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(
-                        isEdit ? Icons.edit_calendar_outlined : Icons.add_chart,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // ── Pattern #9 Header ──
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          _getPrimaryColor(),
+                          _getPrimaryColor().withValues(alpha: 0.82),
                         ],
                       ),
-                    ),
-                    // 32×32 circle X close button
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // ── Form body ──
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
                       children: [
-                        _buildTeacherDropdown(
-                          uniqueTeacherList,
-                          languageProvider,
+                        // 44×44 icon container
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            isEdit
+                                ? Icons.edit_calendar_outlined
+                                : Icons.add_chart,
+                            color: Colors.white,
+                            size: 22,
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        _buildSubjectDropdown(
-                          uniqueSubjectList,
-                          languageProvider,
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                subtitle,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        _buildClassDropdown(uniqueClassList, languageProvider),
-                        const SizedBox(height: 12),
-                        _buildDayMultiSelect(uniqueHariList, languageProvider),
-                        const SizedBox(height: 12),
-                        _buildAcademicYearDropdown(
-                          widget.academicYearList,
-                          languageProvider,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSemesterDropdown(
-                          uniqueSemesterList,
-                          languageProvider,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTeachingHourDropdown(
-                          uniqueJamPelajaranList,
-                          languageProvider,
+                        // 32×32 circle X close button
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ),
 
-              // ── Pattern #9 Footer ──
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: ColorUtils.slate100, width: 1),
+                  // ── Form body ──
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildTeacherDropdown(
+                              uniqueTeacherList,
+                              languageProvider,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSubjectDropdown(
+                              uniqueSubjectList,
+                              languageProvider,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildClassDropdown(
+                              uniqueClassList,
+                              languageProvider,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildDayMultiSelect(
+                              uniqueHariList,
+                              languageProvider,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildAcademicYearDropdown(
+                              widget.academicYearList,
+                              languageProvider,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSemesterDropdown(
+                              uniqueSemesterList,
+                              languageProvider,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTeachingHourDropdown(
+                              uniqueJamPelajaranList,
+                              languageProvider,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          side: BorderSide(color: ColorUtils.slate300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Cancel',
-                            'id': 'Batal',
-                          }),
-                          style: TextStyle(color: ColorUtils.slate600),
-                        ),
+
+                  // ── Enhanced Footer ──
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(
+                        top: BorderSide(color: ColorUtils.slate200),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorUtils.slate900.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, -2),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _saveSchedule,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _getPrimaryColor(),
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: ColorUtils.slate300),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Cancel',
+                                'id': 'Batal',
+                              }),
+                              style: TextStyle(
+                                color: ColorUtils.slate700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Save',
-                            'id': 'Simpan',
-                          }),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _saveSchedule,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getPrimaryColor(),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Save',
+                                'id': 'Simpan',
+                              }),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
         );
       },
     );
+  }
+
+  String? _getSafeValue(String currentValue, List<dynamic> list) {
+    if (currentValue.isEmpty) return null;
+    final exists = list.any(
+      (item) => (item['id']?.toString() ?? '') == currentValue,
+    );
+    if (!exists) return null;
+    return currentValue;
   }
 
   Widget _buildTeacherDropdown(
@@ -632,7 +662,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-            initialValue: _selectedTeacher.isNotEmpty ? _selectedTeacher : null,
+            initialValue: _getSafeValue(_selectedTeacher, teachers),
             items: [
               DropdownMenuItem(
                 value: '',
@@ -645,17 +675,19 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              ...teachers.map<DropdownMenuItem<String>>((teacher) {
-                return DropdownMenuItem<String>(
-                  value: teacher['id'] as String,
-                  child: Text(
-                    teacher['nama'] ?? teacher['name'] ?? 'Unknown',
-                    style: TextStyle(fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                );
-              }),
+              ...teachers
+                  .where((t) => (t['id']?.toString() ?? '').isNotEmpty)
+                  .map<DropdownMenuItem<String>>((teacher) {
+                    return DropdownMenuItem<String>(
+                      value: teacher['id'] as String,
+                      child: Text(
+                        teacher['nama'] ?? teacher['name'] ?? 'Unknown',
+                        style: TextStyle(fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    );
+                  }),
             ],
             onChanged: (value) {
               setState(() {
@@ -725,7 +757,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-            initialValue: _selectedSubject.isNotEmpty ? _selectedSubject : null,
+            initialValue: _getSafeValue(_selectedSubject, subjects),
             items: [
               DropdownMenuItem(
                 value: '',
@@ -738,17 +770,19 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              ...subjects.map<DropdownMenuItem<String>>((subject) {
-                return DropdownMenuItem<String>(
-                  value: subject['id'] as String,
-                  child: Text(
-                    subject['name'] ?? subject['nama'] ?? 'Unknown',
-                    style: TextStyle(fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                );
-              }),
+              ...subjects
+                  .where((s) => (s['id']?.toString() ?? '').isNotEmpty)
+                  .map<DropdownMenuItem<String>>((subject) {
+                    return DropdownMenuItem<String>(
+                      value: subject['id'] as String,
+                      child: Text(
+                        subject['name'] ?? subject['nama'] ?? 'Unknown',
+                        style: TextStyle(fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    );
+                  }),
             ],
             onChanged: _isLoadingSubjects
                 ? null
@@ -814,7 +848,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-            initialValue: _selectedClass.isNotEmpty ? _selectedClass : null,
+            initialValue: _getSafeValue(_selectedClass, classes),
             items: [
               DropdownMenuItem(
                 value: '',
@@ -827,17 +861,19 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              ...classes.map((classItem) {
-                return DropdownMenuItem<String>(
-                  value: classItem['id']?.toString() ?? '',
-                  child: Text(
-                    classItem['name'] ?? classItem['nama'] ?? 'Unknown',
-                    style: TextStyle(fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                );
-              }),
+              ...classes
+                  .where((c) => (c['id']?.toString() ?? '').isNotEmpty)
+                  .map((classItem) {
+                    return DropdownMenuItem<String>(
+                      value: classItem['id']?.toString() ?? '',
+                      child: Text(
+                        classItem['name'] ?? classItem['nama'] ?? 'Unknown',
+                        style: TextStyle(fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    );
+                  }),
             ],
             onChanged: (value) {
               setState(() {
@@ -932,17 +968,26 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                     checkmarkColor: _getPrimaryColor(),
                     labelStyle: TextStyle(
                       fontSize: 13,
-                      color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color: isSelected
+                          ? _getPrimaryColor()
+                          : ColorUtils.slate600,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                     side: BorderSide(
-                      color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
+                      color: isSelected
+                          ? _getPrimaryColor()
+                          : ColorUtils.slate300,
                       width: 1,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                   );
                 }).toList(),
               ),
@@ -1000,9 +1045,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-            initialValue: _selectedAcademicYear.isNotEmpty
-                ? _selectedAcademicYear
-                : null,
+            initialValue: _getSafeValue(_selectedAcademicYear, items),
             items: items.map<DropdownMenuItem<String>>((year) {
               return DropdownMenuItem<String>(
                 value: year['id']?.toString() ?? '',
@@ -1078,9 +1121,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-            initialValue: _selectedSemester.isNotEmpty
-                ? _selectedSemester
-                : null,
+            initialValue: _getSafeValue(_selectedSemester, semesters),
             items: [
               DropdownMenuItem(
                 value: '',
@@ -1093,17 +1134,19 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              ...semesters.map<DropdownMenuItem<String>>((semester) {
-                return DropdownMenuItem<String>(
-                  value: semester['id']?.toString() ?? '',
-                  child: Text(
-                    semester['name'] ?? semester['nama'] ?? 'Unknown',
-                    style: TextStyle(fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                );
-              }),
+              ...semesters
+                  .where((sm) => (sm['id']?.toString() ?? '').isNotEmpty)
+                  .map<DropdownMenuItem<String>>((semester) {
+                    return DropdownMenuItem<String>(
+                      value: semester['id']?.toString() ?? '',
+                      child: Text(
+                        semester['name'] ?? semester['nama'] ?? 'Unknown',
+                        style: TextStyle(fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    );
+                  }),
             ],
             onChanged: (value) {
               setState(() {
@@ -1167,6 +1210,10 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
+            initialValue: _getSafeValue(
+              _selectedJamPelajaran,
+              teachingHours.toList(),
+            ),
             items: [
               DropdownMenuItem(
                 value: '',
@@ -1260,15 +1307,6 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
                       _selectedJamPelajaran = value ?? '';
                     });
                   },
-            initialValue:
-                _selectedJamPelajaran.isNotEmpty &&
-                    teachingHours.any(
-                      (jam) =>
-                          (jam['id']?.toString() ?? '') ==
-                          _selectedJamPelajaran,
-                    )
-                ? _selectedJamPelajaran
-                : null,
             decoration: InputDecoration(
               prefixIcon: Icon(
                 Icons.access_time,
