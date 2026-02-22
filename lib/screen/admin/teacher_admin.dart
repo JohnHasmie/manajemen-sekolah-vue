@@ -1362,536 +1362,562 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                         topRight: Radius.circular(24),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        // Header dengan gradient (Pattern #9)
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
-                          decoration: BoxDecoration(
-                            gradient: getCardGradient(),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              topRight: Radius.circular(24),
+                    child: SafeArea(
+                      child: Column(
+                        children: [
+                          // Header dengan gradient (Pattern #9)
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+                            decoration: BoxDecoration(
+                              gradient: getCardGradient(),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                topRight: Radius.circular(24),
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                child: Icon(
-                                  teacher == null
-                                      ? Icons.person_add_rounded
-                                      : Icons.edit_rounded,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                              ),
-                              SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      teacher == null
-                                          ? languageProvider.getTranslatedText({
-                                              'en': 'Add Teacher',
-                                              'id': 'Tambah Guru',
-                                            })
-                                          : languageProvider.getTranslatedText({
-                                              'en': 'Edit Teacher',
-                                              'id': 'Edit Guru',
-                                            }),
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      teacher == null
-                                          ? languageProvider.getTranslatedText({
-                                              'en':
-                                                  'Fill in teacher information',
-                                              'id': 'Isi data guru baru',
-                                            })
-                                          : languageProvider.getTranslatedText({
-                                              'en':
-                                                  'Update teacher information',
-                                              'id': 'Perbarui data guru',
-                                            }),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white.withValues(
-                                          alpha: 0.8,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.close_rounded,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                buildDialogTextField(
-                                  controller: nameController,
-                                  label: languageProvider.getTranslatedText({
-                                    'en': 'Teacher Name',
-                                    'id': 'Nama Guru',
-                                  }),
-                                  icon: Icons.person,
-                                ),
-                                SizedBox(height: 12),
-                                buildDialogTextField(
-                                  controller: emailController,
-                                  label: languageProvider.getTranslatedText({
-                                    'en': 'Email',
-                                    'id': 'Email',
-                                  }),
-                                  icon: Icons.email,
-                                  keyboardType: TextInputType.emailAddress,
-                                ),
-                                SizedBox(height: 12),
-                                buildDialogTextField(
-                                  controller: nipController,
-                                  label: 'NIP',
-                                  icon: Icons.badge,
-                                ),
-                                SizedBox(height: 12),
-
-                                // Gender Dropdown (REQUIRED)
-                                buildDialogDropdown(
-                                  value: selectedGender,
-                                  label: languageProvider.getTranslatedText({
-                                    'en': 'Gender*',
-                                    'id': 'Jenis Kelamin*',
-                                  }),
-                                  icon: Icons.person_outline,
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: 'L',
-                                      child: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Male',
-                                          'id': 'Laki-laki',
-                                        }),
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'P',
-                                      child: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Female',
-                                          'id': 'Perempuan',
-                                        }),
-                                      ),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    setState(() => selectedGender = value);
-                                  },
-                                ),
-                                SizedBox(height: 16),
-
-                                // Subjects Section
-                                Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: Colors.grey.shade200,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
                                     ),
                                   ),
+                                  child: Icon(
+                                    teacher == null
+                                        ? Icons.person_add_rounded
+                                        : Icons.edit_rounded,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                ),
+                                SizedBox(width: 14),
+                                Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Subjects:',
-                                          'id': 'Mata Pelajaran:',
-                                        }),
+                                        teacher == null
+                                            ? languageProvider
+                                                  .getTranslatedText({
+                                                    'en': 'Add Teacher',
+                                                    'id': 'Tambah Guru',
+                                                  })
+                                            : languageProvider
+                                                  .getTranslatedText({
+                                                    'en': 'Edit Teacher',
+                                                    'id': 'Edit Guru',
+                                                  }),
                                         style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.grey.shade700,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
                                       ),
-                                      SizedBox(height: 8),
-                                      ..._subjects
-                                          .where(
-                                            (subject) =>
-                                                subject['id'] != null &&
-                                                subject['name'] != null,
-                                          )
-                                          .map(
-                                            (subject) => CheckboxListTile(
-                                              contentPadding: EdgeInsets.zero,
-                                              title: Text(
-                                                subject['name']?.toString() ??
-                                                    'Unknown Subject',
-                                                style: TextStyle(fontSize: 14),
-                                              ),
-                                              value: selectedSubjectIds
-                                                  .contains(
-                                                    subject['id']?.toString(),
-                                                  ),
-                                              onChanged: (value) {
-                                                final subjectId = subject['id']
-                                                    ?.toString();
-                                                if (subjectId == null) return;
-
-                                                setState(() {
-                                                  if (value == true) {
-                                                    selectedSubjectIds.add(
-                                                      subjectId,
-                                                    );
-                                                  } else {
-                                                    selectedSubjectIds.remove(
-                                                      subjectId,
-                                                    );
-                                                  }
-                                                });
-                                              },
-                                              controlAffinity:
-                                                  ListTileControlAffinity
-                                                      .leading,
-                                            ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        teacher == null
+                                            ? languageProvider.getTranslatedText({
+                                                'en':
+                                                    'Fill in teacher information',
+                                                'id': 'Isi data guru baru',
+                                              })
+                                            : languageProvider.getTranslatedText({
+                                                'en':
+                                                    'Update teacher information',
+                                                'id': 'Perbarui data guru',
+                                              }),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.8,
                                           ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: 12),
-
-                                // Homeroom Class Dropdown (Optional)
-                                buildDialogDropdown(
-                                  value: selectedWaliKelasId,
-                                  label: languageProvider.getTranslatedText({
-                                    'en': 'Homeroom Class (Optional)',
-                                    'id': 'Wali Kelas (Opsional)',
-                                  }),
-                                  icon: Icons.class_,
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: null,
-                                      child: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'None',
-                                          'id': 'Tidak ada',
-                                        }),
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.2,
                                       ),
+                                      shape: BoxShape.circle,
                                     ),
-                                    ..._classes
-                                        .where(
-                                          (classItem) =>
-                                              classItem['id'] != null &&
-                                              classItem['name'] != null,
-                                        )
-                                        .fold<
-                                          Map<String, Map<String, dynamic>>
-                                        >({}, (map, item) {
-                                          map[item['id'].toString()] = item;
-                                          return map;
-                                        })
-                                        .values
-                                        .map(
-                                          (
-                                            classItem,
-                                          ) => DropdownMenuItem<String>(
-                                            value: classItem['id'].toString(),
-                                            child: Text(
-                                              classItem['name']?.toString() ??
-                                                  'Unknown Class',
-                                            ),
-                                          ),
-                                        ),
-                                  ],
-                                  onChanged: (value) {
-                                    setState(() => selectedWaliKelasId = value);
-                                  },
-                                ),
-                                SizedBox(height: 12),
-
-                                // Employment Status Dropdown (Optional)
-                                buildDialogDropdown(
-                                  value: selectedStatus,
-                                  label: languageProvider.getTranslatedText({
-                                    'en': 'Employment Status (Optional)',
-                                    'id': 'Status Kepegawaian (Opsional)',
-                                  }),
-                                  icon: Icons.work_outline,
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: null,
-                                      child: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'None',
-                                          'id': 'Tidak ada',
-                                        }),
-                                      ),
+                                    child: Icon(
+                                      Icons.close_rounded,
+                                      color: Colors.white,
+                                      size: 18,
                                     ),
-                                    DropdownMenuItem(
-                                      value: 'permanent',
-                                      child: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Permanent',
-                                          'id': 'Tetap',
-                                        }),
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'contract',
-                                      child: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Contract',
-                                          'id': 'Kontrak',
-                                        }),
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'temporary',
-                                      child: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Temporary/Honorary',
-                                          'id': 'Honor',
-                                        }),
-                                      ),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    setState(() => selectedStatus = value);
-                                  },
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
 
-                        // Actions
-                        Container(
-                          padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(color: ColorUtils.slate100),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  style: OutlinedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  buildDialogTextField(
+                                    controller: nameController,
+                                    label: languageProvider.getTranslatedText({
+                                      'en': 'Teacher Name',
+                                      'id': 'Nama Guru',
+                                    }),
+                                    icon: Icons.person,
+                                  ),
+                                  SizedBox(height: 12),
+                                  buildDialogTextField(
+                                    controller: emailController,
+                                    label: languageProvider.getTranslatedText({
+                                      'en': 'Email',
+                                      'id': 'Email',
+                                    }),
+                                    icon: Icons.email,
+                                    keyboardType: TextInputType.emailAddress,
+                                  ),
+                                  SizedBox(height: 12),
+                                  buildDialogTextField(
+                                    controller: nipController,
+                                    label: 'NIP',
+                                    icon: Icons.badge,
+                                  ),
+                                  SizedBox(height: 12),
+
+                                  // Gender Dropdown (REQUIRED)
+                                  buildDialogDropdown(
+                                    value: selectedGender,
+                                    label: languageProvider.getTranslatedText({
+                                      'en': 'Gender*',
+                                      'id': 'Jenis Kelamin*',
+                                    }),
+                                    icon: Icons.person_outline,
+                                    items: [
+                                      DropdownMenuItem(
+                                        value: 'L',
+                                        child: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Male',
+                                            'id': 'Laki-laki',
+                                          }),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'P',
+                                        child: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Female',
+                                            'id': 'Perempuan',
+                                          }),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() => selectedGender = value);
+                                    },
+                                  ),
+                                  SizedBox(height: 16),
+
+                                  // Subjects Section
+                                  Container(
+                                    width: double.infinity,
+                                    padding: EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade50,
                                       borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.grey.shade200,
+                                      ),
                                     ),
-                                    padding: EdgeInsets.symmetric(vertical: 13),
-                                    side: BorderSide(
-                                      color: ColorUtils.slate300,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Subjects:',
+                                            'id': 'Mata Pelajaran:',
+                                          }),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        ..._subjects
+                                            .where(
+                                              (subject) =>
+                                                  subject['id'] != null &&
+                                                  subject['name'] != null,
+                                            )
+                                            .map(
+                                              (subject) => CheckboxListTile(
+                                                contentPadding: EdgeInsets.zero,
+                                                title: Text(
+                                                  subject['name']?.toString() ??
+                                                      'Unknown Subject',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                value: selectedSubjectIds
+                                                    .contains(
+                                                      subject['id']?.toString(),
+                                                    ),
+                                                onChanged: (value) {
+                                                  final subjectId =
+                                                      subject['id']?.toString();
+                                                  if (subjectId == null) return;
+
+                                                  setState(() {
+                                                    if (value == true) {
+                                                      selectedSubjectIds.add(
+                                                        subjectId,
+                                                      );
+                                                    } else {
+                                                      selectedSubjectIds.remove(
+                                                        subjectId,
+                                                      );
+                                                    }
+                                                  });
+                                                },
+                                                controlAffinity:
+                                                    ListTileControlAffinity
+                                                        .leading,
+                                              ),
+                                            ),
+                                      ],
                                     ),
                                   ),
-                                  child: Text(
-                                    AppLocalizations.cancel.tr,
-                                    style: TextStyle(
-                                      color: ColorUtils.slate700,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
+                                  SizedBox(height: 12),
+
+                                  // Homeroom Class Dropdown (Optional)
+                                  buildDialogDropdown(
+                                    value: selectedWaliKelasId,
+                                    label: languageProvider.getTranslatedText({
+                                      'en': 'Homeroom Class (Optional)',
+                                      'id': 'Wali Kelas (Opsional)',
+                                    }),
+                                    icon: Icons.class_,
+                                    items: [
+                                      DropdownMenuItem(
+                                        value: null,
+                                        child: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'None',
+                                            'id': 'Tidak ada',
+                                          }),
+                                        ),
+                                      ),
+                                      ..._classes
+                                          .where(
+                                            (classItem) =>
+                                                classItem['id'] != null &&
+                                                classItem['name'] != null,
+                                          )
+                                          .fold<
+                                            Map<String, Map<String, dynamic>>
+                                          >({}, (map, item) {
+                                            map[item['id'].toString()] = item;
+                                            return map;
+                                          })
+                                          .values
+                                          .map(
+                                            (
+                                              classItem,
+                                            ) => DropdownMenuItem<String>(
+                                              value: classItem['id'].toString(),
+                                              child: Text(
+                                                classItem['name']?.toString() ??
+                                                    'Unknown Class',
+                                              ),
+                                            ),
+                                          ),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(
+                                        () => selectedWaliKelasId = value,
+                                      );
+                                    },
+                                  ),
+                                  SizedBox(height: 12),
+
+                                  // Employment Status Dropdown (Optional)
+                                  buildDialogDropdown(
+                                    value: selectedStatus,
+                                    label: languageProvider.getTranslatedText({
+                                      'en': 'Employment Status (Optional)',
+                                      'id': 'Status Kepegawaian (Opsional)',
+                                    }),
+                                    icon: Icons.work_outline,
+                                    items: [
+                                      DropdownMenuItem(
+                                        value: null,
+                                        child: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'None',
+                                            'id': 'Tidak ada',
+                                          }),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'permanent',
+                                        child: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Permanent',
+                                            'id': 'Tetap',
+                                          }),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'contract',
+                                        child: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Contract',
+                                            'id': 'Kontrak',
+                                          }),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'temporary',
+                                        child: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Temporary/Honorary',
+                                            'id': 'Honor',
+                                          }),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() => selectedStatus = value);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // Enhanced Footer
+                          Container(
+                            padding: EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border(
+                                top: BorderSide(color: ColorUtils.slate200),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: ColorUtils.slate900.withValues(
+                                    alpha: 0.05,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: Offset(0, -2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 14,
+                                      ),
+                                      side: BorderSide(
+                                        color: ColorUtils.slate300,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      AppLocalizations.cancel.tr,
+                                      style: TextStyle(
+                                        color: ColorUtils.slate700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    final name = nameController.text.trim();
-                                    final email = emailController.text.trim();
-                                    // final nip = nipController.text.trim(); // Removed unused variable
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      final name = nameController.text.trim();
+                                      final email = emailController.text.trim();
+                                      // final nip = nipController.text.trim(); // Removed unused variable
 
-                                    // Validate required fields
-                                    if (name.isEmpty ||
-                                        email.isEmpty ||
-                                        selectedGender == null) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            languageProvider.getTranslatedText({
-                                              'en':
-                                                  'Name, email, and gender are required',
-                                              'id':
-                                                  'Nama, email, dan jenis kelamin wajib diisi',
-                                            }),
-                                          ),
-                                          backgroundColor: Colors.orange,
-                                        ),
-                                      );
-                                      return;
-                                    }
-
-                                    try {
-                                      final academicYearProvider =
-                                          Provider.of<AcademicYearProvider>(
-                                            context,
-                                            listen: false,
-                                          );
-                                      final selectedYearId =
-                                          academicYearProvider
-                                              .selectedAcademicYear?['id']
-                                              ?.toString();
-
-                                      // Prepare data with new structure
-                                      final data = {
-                                        'name': nameController.text,
-                                        'email': emailController.text,
-                                        'employee_number':
-                                            nipController.text.isNotEmpty
-                                            ? nipController.text
-                                            : null,
-                                        'gender': selectedGender,
-                                        'homeroom_class_id':
-                                            selectedWaliKelasId,
-                                        'employment_status': selectedStatus,
-                                        'subject_ids': selectedSubjectIds,
-                                        'class_ids': selectedClassIds,
-                                        'academic_year_id': selectedYearId,
-                                      };
-
-                                      String teacherId;
-                                      if (teacher == null) {
-                                        final result = await _teacherService
-                                            .addTeacher(data);
-                                        teacherId =
-                                            result['id']?.toString() ?? '';
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                languageProvider.getTranslatedText({
-                                                  'en':
-                                                      'Teacher added successfully. Default password: password123',
-                                                  'id':
-                                                      'Guru berhasil ditambahkan. Password default: password123',
-                                                }),
-                                              ),
-                                              backgroundColor: Colors.green,
-                                              duration: Duration(seconds: 5),
-                                            ),
-                                          );
-                                        }
-                                      } else {
-                                        teacherId =
-                                            teacher['id']?.toString() ?? '';
-                                        await _teacherService.updateTeacher(
-                                          teacherId,
-                                          data,
-                                        );
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                languageProvider.getTranslatedText({
-                                                  'en':
-                                                      'Teacher updated successfully',
-                                                  'id':
-                                                      'Guru berhasil diupdate',
-                                                }),
-                                              ),
-                                              backgroundColor: Colors.green,
-                                            ),
-                                          );
-                                        }
-                                      }
-
-                                      // No need to manage subjects separately anymore
-                                      // Backend handles it in POST/PUT
-
-                                      if (context.mounted) {
-                                        Navigator.pop(context);
-                                      }
-                                      _loadData();
-                                    } catch (error) {
-                                      if (kDebugMode)
-                                        print(
-                                          'Save/Update teacher error: $error',
-                                        );
-                                      if (context.mounted) {
+                                      // Validate required fields
+                                      if (name.isEmpty ||
+                                          email.isEmpty ||
+                                          selectedGender == null) {
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                              '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
+                                              languageProvider.getTranslatedText({
+                                                'en':
+                                                    'Name, email, and gender are required',
+                                                'id':
+                                                    'Nama, email, dan jenis kelamin wajib diisi',
+                                              }),
                                             ),
-                                            backgroundColor: Colors.red,
+                                            backgroundColor: Colors.orange,
                                           ),
                                         );
+                                        return;
                                       }
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        ColorUtils.corporateBlue600,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+
+                                      try {
+                                        final academicYearProvider =
+                                            Provider.of<AcademicYearProvider>(
+                                              context,
+                                              listen: false,
+                                            );
+                                        final selectedYearId =
+                                            academicYearProvider
+                                                .selectedAcademicYear?['id']
+                                                ?.toString();
+
+                                        // Prepare data with new structure
+                                        final data = {
+                                          'name': nameController.text,
+                                          'email': emailController.text,
+                                          'employee_number':
+                                              nipController.text.isNotEmpty
+                                              ? nipController.text
+                                              : null,
+                                          'gender': selectedGender,
+                                          'homeroom_class_id':
+                                              selectedWaliKelasId,
+                                          'employment_status': selectedStatus,
+                                          'subject_ids': selectedSubjectIds,
+                                          'class_ids': selectedClassIds,
+                                          'academic_year_id': selectedYearId,
+                                        };
+
+                                        String teacherId;
+                                        if (teacher == null) {
+                                          final result = await _teacherService
+                                              .addTeacher(data);
+                                          teacherId =
+                                              result['id']?.toString() ?? '';
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  languageProvider.getTranslatedText({
+                                                    'en':
+                                                        'Teacher added successfully. Default password: password123',
+                                                    'id':
+                                                        'Guru berhasil ditambahkan. Password default: password123',
+                                                  }),
+                                                ),
+                                                backgroundColor: Colors.green,
+                                                duration: Duration(seconds: 5),
+                                              ),
+                                            );
+                                          }
+                                        } else {
+                                          teacherId =
+                                              teacher['id']?.toString() ?? '';
+                                          await _teacherService.updateTeacher(
+                                            teacherId,
+                                            data,
+                                          );
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  languageProvider.getTranslatedText({
+                                                    'en':
+                                                        'Teacher updated successfully',
+                                                    'id':
+                                                        'Guru berhasil diupdate',
+                                                  }),
+                                                ),
+                                                backgroundColor: Colors.green,
+                                              ),
+                                            );
+                                          }
+                                        }
+
+                                        // No need to manage subjects separately anymore
+                                        // Backend handles it in POST/PUT
+
+                                        if (context.mounted) {
+                                          Navigator.pop(context);
+                                        }
+                                        _loadData();
+                                      } catch (error) {
+                                        if (kDebugMode)
+                                          print(
+                                            'Save/Update teacher error: $error',
+                                          );
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
+                                              ),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          ColorUtils.corporateBlue600,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 13,
+                                      ),
+                                      elevation: 2,
+                                      shadowColor: ColorUtils.corporateBlue600
+                                          .withValues(alpha: 0.4),
                                     ),
-                                    padding: EdgeInsets.symmetric(vertical: 13),
-                                    elevation: 2,
-                                    shadowColor: ColorUtils.corporateBlue600
-                                        .withValues(alpha: 0.4),
-                                  ),
-                                  child: Text(
-                                    AppLocalizations.save.tr,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
+                                    child: Text(
+                                      AppLocalizations.save.tr,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );

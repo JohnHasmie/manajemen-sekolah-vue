@@ -868,270 +868,199 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                       topRight: Radius.circular(24),
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      // Header gradient (Pattern #9)
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              ColorUtils.corporateBlue600,
-                              ColorUtils.corporateBlue600.withValues(
-                                alpha: 0.8,
-                              ),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(24),
-                            topRight: Radius.circular(24),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        // Header gradient (Pattern #9)
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                ColorUtils.corporateBlue600,
+                                ColorUtils.corporateBlue600.withValues(
+                                  alpha: 0.8,
                                 ),
-                              ),
-                              child: Icon(
-                                isEdit ? Icons.edit_rounded : Icons.add_rounded,
-                                color: Colors.white,
-                                size: 22,
-                              ),
+                              ],
                             ),
-                            SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    isEdit
-                                        ? languageProvider.getTranslatedText({
-                                            'en': 'Edit Class',
-                                            'id': 'Edit Kelas',
-                                          })
-                                        : languageProvider.getTranslatedText({
-                                            'en': 'Add Class',
-                                            'id': 'Tambah Kelas',
-                                          }),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    isEdit
-                                        ? languageProvider.getTranslatedText({
-                                            'en': 'Update class information',
-                                            'id': 'Perbarui informasi kelas',
-                                          })
-                                        : languageProvider.getTranslatedText({
-                                            'en': 'Fill in class information',
-                                            'id': 'Isi informasi kelas',
-                                          }),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
                             ),
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 32,
-                                height: 32,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
-                                  shape: BoxShape.circle,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
                                 ),
                                 child: Icon(
-                                  Icons.close_rounded,
+                                  isEdit
+                                      ? Icons.edit_rounded
+                                      : Icons.add_rounded,
                                   color: Colors.white,
-                                  size: 18,
+                                  size: 22,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildDialogTextField(
-                                controller: nameController,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Class Name',
-                                  'id': 'Nama Kelas',
-                                }),
-                                icon: Icons.school,
+                              SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isEdit
+                                          ? languageProvider.getTranslatedText({
+                                              'en': 'Edit Class',
+                                              'id': 'Edit Kelas',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Add Class',
+                                              'id': 'Tambah Kelas',
+                                            }),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      isEdit
+                                          ? languageProvider.getTranslatedText({
+                                              'en': 'Update class information',
+                                              'id': 'Perbarui informasi kelas',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Fill in class information',
+                                              'id': 'Isi informasi kelas',
+                                            }),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              SizedBox(height: 12),
-                              _buildGradeLevelDropdown(
-                                value: selectedGradeLevel,
-                                onChanged: (value) {
-                                  setDialogState(() {
-                                    selectedGradeLevel = value;
-                                  });
-                                },
-                                languageProvider: languageProvider,
-                              ),
-                              SizedBox(height: 12),
-                              _buildHomeroomTeacherDropdown(
-                                value: selectedHomeroomTeacherId,
-                                onChanged: (value) {
-                                  setDialogState(() {
-                                    selectedHomeroomTeacherId = value;
-                                  });
-                                },
-                                languageProvider: languageProvider,
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
 
-                      // Footer buttons (Pattern #9)
-                      Container(
-                        padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(color: ColorUtils.slate100),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildDialogTextField(
+                                  controller: nameController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Class Name',
+                                    'id': 'Nama Kelas',
+                                  }),
+                                  icon: Icons.school,
+                                ),
+                                SizedBox(height: 12),
+                                _buildGradeLevelDropdown(
+                                  value: selectedGradeLevel,
+                                  onChanged: (value) {
+                                    setDialogState(() {
+                                      selectedGradeLevel = value;
+                                    });
+                                  },
+                                  languageProvider: languageProvider,
+                                ),
+                                SizedBox(height: 12),
+                                _buildHomeroomTeacherDropdown(
+                                  value: selectedHomeroomTeacherId,
+                                  onChanged: (value) {
+                                    setDialogState(() {
+                                      selectedHomeroomTeacherId = value;
+                                    });
+                                  },
+                                  languageProvider: languageProvider,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: OutlinedButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(vertical: 13),
-                                  side: BorderSide(color: ColorUtils.slate300),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+
+                        // Enhanced Footer
+                        Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              top: BorderSide(color: ColorUtils.slate200),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: ColorUtils.slate900.withValues(
+                                  alpha: 0.05,
                                 ),
-                                child: Text(
-                                  AppLocalizations.cancel.tr,
-                                  style: TextStyle(
-                                    color: ColorUtils.slate700,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                                blurRadius: 8,
+                                offset: Offset(0, -2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    side: BorderSide(
+                                      color: ColorUtils.slate300,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    AppLocalizations.cancel.tr,
+                                    style: TextStyle(
+                                      color: ColorUtils.slate700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  final nama = nameController.text.trim();
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    final nama = nameController.text.trim();
 
-                                  if (nama.isEmpty ||
-                                      selectedGradeLevel == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          languageProvider.getTranslatedText({
-                                            'en':
-                                                'Class name and grade level must be filled',
-                                            'id':
-                                                'Nama kelas dan grade level harus diisi',
-                                          }),
-                                        ),
-                                        backgroundColor: Colors.orange,
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  try {
-                                    final academicYearProvider =
-                                        Provider.of<AcademicYearProvider>(
-                                          context,
-                                          listen: false,
-                                        );
-                                    final selectedYearId = academicYearProvider
-                                        .selectedAcademicYear?['id']
-                                        ?.toString();
-
-                                    if (isEdit) {
-                                      await ApiClassService.updateClass(
-                                        classData!['id'].toString(),
-                                        {
-                                          'name': nameController.text,
-                                          'grade_level': selectedGradeLevel,
-                                          'homeroom_teacher_id':
-                                              selectedHomeroomTeacherId,
-                                          'academic_year_id': selectedYearId,
-                                        },
-                                      );
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              languageProvider.getTranslatedText({
-                                                'en':
-                                                    'Class successfully updated',
-                                                'id':
-                                                    'Kelas berhasil diperbarui',
-                                              }),
-                                            ),
-                                            backgroundColor: Colors.green,
-                                          ),
-                                        );
-                                        Navigator.pop(context);
-                                      }
-                                    } else {
-                                      await ApiClassService.addClass({
-                                        'name': nameController.text,
-                                        'grade_level': selectedGradeLevel,
-                                        'homeroom_teacher_id':
-                                            selectedHomeroomTeacherId,
-                                        'academic_year_id': selectedYearId,
-                                      });
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              languageProvider.getTranslatedText({
-                                                'en':
-                                                    'Class successfully added',
-                                                'id':
-                                                    'Kelas berhasil ditambahkan',
-                                              }),
-                                            ),
-                                            backgroundColor: Colors.green,
-                                          ),
-                                        );
-                                        Navigator.pop(context);
-                                      }
-                                    }
-                                    _loadData();
-                                  } catch (e) {
-                                    if (context.mounted) {
+                                    if (nama.isEmpty ||
+                                        selectedGradeLevel == null) {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
@@ -1139,46 +1068,136 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                           content: Text(
                                             languageProvider.getTranslatedText({
                                               'en':
-                                                  'Failed to save class: ${ErrorUtils.getFriendlyMessage(e)}',
+                                                  'Class name and grade level must be filled',
                                               'id':
-                                                  'Gagal menyimpan kelas: ${ErrorUtils.getFriendlyMessage(e)}',
+                                                  'Nama kelas dan grade level harus diisi',
                                             }),
                                           ),
-                                          backgroundColor: Colors.red,
+                                          backgroundColor: Colors.orange,
                                         ),
                                       );
+                                      return;
                                     }
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: ColorUtils.corporateBlue600,
-                                  padding: EdgeInsets.symmetric(vertical: 13),
-                                  elevation: 2,
-                                  shadowColor: ColorUtils.corporateBlue600
-                                      .withValues(alpha: 0.4),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+
+                                    try {
+                                      final academicYearProvider =
+                                          Provider.of<AcademicYearProvider>(
+                                            context,
+                                            listen: false,
+                                          );
+                                      final selectedYearId =
+                                          academicYearProvider
+                                              .selectedAcademicYear?['id']
+                                              ?.toString();
+
+                                      if (isEdit) {
+                                        await ApiClassService.updateClass(
+                                          classData!['id'].toString(),
+                                          {
+                                            'name': nameController.text,
+                                            'grade_level': selectedGradeLevel,
+                                            'homeroom_teacher_id':
+                                                selectedHomeroomTeacherId,
+                                            'academic_year_id': selectedYearId,
+                                          },
+                                        );
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                languageProvider.getTranslatedText({
+                                                  'en':
+                                                      'Class successfully updated',
+                                                  'id':
+                                                      'Kelas berhasil diperbarui',
+                                                }),
+                                              ),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                          Navigator.pop(context);
+                                        }
+                                      } else {
+                                        await ApiClassService.addClass({
+                                          'name': nameController.text,
+                                          'grade_level': selectedGradeLevel,
+                                          'homeroom_teacher_id':
+                                              selectedHomeroomTeacherId,
+                                          'academic_year_id': selectedYearId,
+                                        });
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                languageProvider.getTranslatedText({
+                                                  'en':
+                                                      'Class successfully added',
+                                                  'id':
+                                                      'Kelas berhasil ditambahkan',
+                                                }),
+                                              ),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                          Navigator.pop(context);
+                                        }
+                                      }
+                                      _loadData();
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              languageProvider.getTranslatedText({
+                                                'en':
+                                                    'Failed to save class: ${ErrorUtils.getFriendlyMessage(e)}',
+                                                'id':
+                                                    'Gagal menyimpan kelas: ${ErrorUtils.getFriendlyMessage(e)}',
+                                              }),
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        ColorUtils.corporateBlue600,
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    elevation: 2,
+                                    shadowColor: ColorUtils.corporateBlue600
+                                        .withValues(alpha: 0.4),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                ),
-                                child: Text(
-                                  isEdit
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Update',
-                                          'id': 'Perbarui',
-                                        })
-                                      : AppLocalizations.save.tr,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                                  child: Text(
+                                    isEdit
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Update',
+                                            'id': 'Perbarui',
+                                          })
+                                        : AppLocalizations.save.tr,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );

@@ -1001,419 +1001,450 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                     topRight: Radius.circular(24),
                   ),
                 ),
-                child: Column(
-                  children: [
-                    // Header
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.fromLTRB(20, 20, 16, 20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            ColorUtils.corporateBlue600,
-                            ColorUtils.corporateBlue600.withValues(alpha: 0.85),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(24),
-                          topRight: Radius.circular(24),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      // Header
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.fromLTRB(20, 20, 16, 20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              ColorUtils.corporateBlue600,
+                              ColorUtils.corporateBlue600.withValues(
+                                alpha: 0.85,
                               ),
-                            ),
-                            child: Icon(
-                              subject == null
-                                  ? Icons.add_rounded
-                                  : Icons.edit_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
+                            ],
                           ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  subject == null
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Add Subject',
-                                          'id': 'Tambah Mata Pelajaran',
-                                        })
-                                      : languageProvider.getTranslatedText({
-                                          'en': 'Edit Subject',
-                                          'id': 'Edit Mata Pelajaran',
-                                        }),
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  subject == null
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Fill in subject details',
-                                          'id': 'Isi detail mata pelajaran',
-                                        })
-                                      : languageProvider.getTranslatedText({
-                                          'en': 'Update subject information',
-                                          'id':
-                                              'Perbarui informasi mata pelajaran',
-                                        }),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                                ),
-                              ],
-                            ),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(24),
+                            topRight: Radius.circular(24),
                           ),
-                          InkWell(
-                            onTap: () => Navigator.pop(context),
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              width: 32,
-                              height: 32,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
                               ),
                               child: Icon(
-                                Icons.close,
+                                subject == null
+                                    ? Icons.add_rounded
+                                    : Icons.edit_rounded,
                                 color: Colors.white,
-                                size: 18,
+                                size: 22,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildDialogTextField(
-                              controller: codeController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Code',
-                                'id': 'Kode',
-                              }),
-                              icon: Icons.code,
-                            ),
-                            SizedBox(height: 12),
-                            // Select Master Subject (Autocomplete)
-                            Autocomplete<Map<String, dynamic>>(
-                              initialValue: TextEditingValue(
-                                text: () {
-                                  if (selectedMasterSubjectId != null) {
-                                    final master = _availableMasterSubjects
-                                        .firstWhere(
-                                          (m) =>
-                                              m['id'] ==
-                                              selectedMasterSubjectId,
-                                          orElse: () => {},
-                                        );
-                                    if (master.isNotEmpty) {
-                                      return master['name'];
-                                    }
-                                  }
-                                  return nameController.text;
-                                }(),
-                              ),
-                              optionsBuilder:
-                                  (TextEditingValue textEditingValue) {
-                                    if (textEditingValue.text == '') {
-                                      return const Iterable<
-                                        Map<String, dynamic>
-                                      >.empty();
-                                    }
-                                    return _availableMasterSubjects
-                                        .cast<Map<String, dynamic>>()
-                                        .where((Map<String, dynamic> option) {
-                                          return option['name']
-                                              .toString()
-                                              .toLowerCase()
-                                              .contains(
-                                                textEditingValue.text
-                                                    .toLowerCase(),
-                                              );
-                                        });
-                                  },
-                              displayStringForOption:
-                                  (Map<String, dynamic> option) =>
-                                      option['name'],
-                              onSelected: (Map<String, dynamic> selection) {
-                                // Use setDialogState if updating visual state inside dialog,
-                                // but here we just update controllers which is fine.
-                                // Actually we need to update selectedMasterSubjectId which is local.
-                                setDialogState(() {
-                                  // Auto-format name: "SubjectName Grade"
-                                  nameController.text =
-                                      '${selection['name']} ${selection['grade']}';
-                                  selectedMasterSubjectId = selection['id'];
-                                });
-                              },
-                              fieldViewBuilder:
-                                  (
-                                    context,
-                                    fieldController,
-                                    fieldFocusNode,
-                                    onFieldSubmitted,
-                                  ) {
-                                    return _buildDialogTextField(
-                                      controller: fieldController,
-                                      focusNode: fieldFocusNode,
-                                      label: languageProvider
-                                          .getTranslatedText({
-                                            'en': 'Select Subject',
-                                            'id': 'Pilih Mata Pelajaran',
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    subject == null
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Add Subject',
+                                            'id': 'Tambah Mata Pelajaran',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'Edit Subject',
+                                            'id': 'Edit Mata Pelajaran',
                                           }),
-                                      icon: Icons.search,
-                                    );
-                                  },
-                              optionsViewBuilder: (context, onSelected, options) {
-                                return Align(
-                                  alignment: Alignment.topLeft,
-                                  child: Material(
-                                    elevation: 4.0,
-                                    child: SizedBox(
-                                      height: 200.0,
-                                      width: 300.0,
-                                      child: ListView.builder(
-                                        padding: const EdgeInsets.all(8.0),
-                                        itemCount: options.length,
-                                        itemBuilder:
-                                            (BuildContext context, int index) {
-                                              final Map<String, dynamic>
-                                              option = options.elementAt(index);
-                                              return GestureDetector(
-                                                onTap: () {
-                                                  onSelected(option);
-                                                },
-                                                child: ListTile(
-                                                  title: Text(option['name']),
-                                                  subtitle: Text(
-                                                    'Kelas ${option['grade']}',
-                                                  ),
-                                                ),
-                                              );
-                                            },
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    subject == null
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Fill in subject details',
+                                            'id': 'Isi detail mata pelajaran',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'Update subject information',
+                                            'id':
+                                                'Perbarui informasi mata pelajaran',
+                                          }),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
                                       ),
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                            SizedBox(height: 12),
-
-                            // Subject Name (Standard TextField)
-                            _buildDialogTextField(
-                              controller: nameController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Subject Name',
-                                'id': 'Nama Mata Pelajaran',
-                              }),
-                              icon: Icons.menu_book,
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogTextField(
-                              controller: descriptionController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Description',
-                                'id': 'Deskripsi',
-                              }),
-                              icon: Icons.description,
-                              maxLines: 3,
-                            ),
-                            SizedBox(height: 12),
-                            // Active Status Switch
-                            Container(
-                              decoration: BoxDecoration(
-                                color: ColorUtils.slate50,
-                                border: Border.all(color: ColorUtils.slate200),
-                                borderRadius: BorderRadius.circular(12),
+                                ],
                               ),
-                              child: SwitchListTile(
-                                title: Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Active Status',
-                                    'id': 'Status Aktif',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: ColorUtils.slate700,
-                                  ),
+                            ),
+                            InkWell(
+                              onTap: () => Navigator.pop(context),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
                                 ),
-                                value: isActive,
-                                activeThumbColor: ColorUtils.corporateBlue600,
-                                activeTrackColor: ColorUtils.corporateBlue600
-                                    .withValues(alpha: 0.3),
-                                onChanged: (bool value) {
-                                  setDialogState(() {
-                                    isActive = value;
-                                  });
-                                },
-                                secondary: Icon(
-                                  Icons.check_circle_outline,
-                                  color: isActive
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate400,
+                                child: Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 18,
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
 
-                    // Actions footer
-                    Container(
-                      padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          top: BorderSide(color: ColorUtils.slate100),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildDialogTextField(
+                                controller: codeController,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Code',
+                                  'id': 'Kode',
+                                }),
+                                icon: Icons.code,
+                              ),
+                              SizedBox(height: 12),
+                              // Select Master Subject (Autocomplete)
+                              Autocomplete<Map<String, dynamic>>(
+                                initialValue: TextEditingValue(
+                                  text: () {
+                                    if (selectedMasterSubjectId != null) {
+                                      final master = _availableMasterSubjects
+                                          .firstWhere(
+                                            (m) =>
+                                                m['id'] ==
+                                                selectedMasterSubjectId,
+                                            orElse: () => {},
+                                          );
+                                      if (master.isNotEmpty) {
+                                        return master['name'];
+                                      }
+                                    }
+                                    return nameController.text;
+                                  }(),
+                                ),
+                                optionsBuilder:
+                                    (TextEditingValue textEditingValue) {
+                                      if (textEditingValue.text == '') {
+                                        return const Iterable<
+                                          Map<String, dynamic>
+                                        >.empty();
+                                      }
+                                      return _availableMasterSubjects
+                                          .cast<Map<String, dynamic>>()
+                                          .where((Map<String, dynamic> option) {
+                                            return option['name']
+                                                .toString()
+                                                .toLowerCase()
+                                                .contains(
+                                                  textEditingValue.text
+                                                      .toLowerCase(),
+                                                );
+                                          });
+                                    },
+                                displayStringForOption:
+                                    (Map<String, dynamic> option) =>
+                                        option['name'],
+                                onSelected: (Map<String, dynamic> selection) {
+                                  // Use setDialogState if updating visual state inside dialog,
+                                  // but here we just update controllers which is fine.
+                                  // Actually we need to update selectedMasterSubjectId which is local.
+                                  setDialogState(() {
+                                    // Auto-format name: "SubjectName Grade"
+                                    nameController.text =
+                                        '${selection['name']} ${selection['grade']}';
+                                    selectedMasterSubjectId = selection['id'];
+                                  });
+                                },
+                                fieldViewBuilder:
+                                    (
+                                      context,
+                                      fieldController,
+                                      fieldFocusNode,
+                                      onFieldSubmitted,
+                                    ) {
+                                      return _buildDialogTextField(
+                                        controller: fieldController,
+                                        focusNode: fieldFocusNode,
+                                        label: languageProvider
+                                            .getTranslatedText({
+                                              'en': 'Select Subject',
+                                              'id': 'Pilih Mata Pelajaran',
+                                            }),
+                                        icon: Icons.search,
+                                      );
+                                    },
+                                optionsViewBuilder: (context, onSelected, options) {
+                                  return Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Material(
+                                      elevation: 4.0,
+                                      child: SizedBox(
+                                        height: 200.0,
+                                        width: 300.0,
+                                        child: ListView.builder(
+                                          padding: const EdgeInsets.all(8.0),
+                                          itemCount: options.length,
+                                          itemBuilder:
+                                              (
+                                                BuildContext context,
+                                                int index,
+                                              ) {
+                                                final Map<String, dynamic>
+                                                option = options.elementAt(
+                                                  index,
+                                                );
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    onSelected(option);
+                                                  },
+                                                  child: ListTile(
+                                                    title: Text(option['name']),
+                                                    subtitle: Text(
+                                                      'Kelas ${option['grade']}',
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              SizedBox(height: 12),
+
+                              // Subject Name (Standard TextField)
+                              _buildDialogTextField(
+                                controller: nameController,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Subject Name',
+                                  'id': 'Nama Mata Pelajaran',
+                                }),
+                                icon: Icons.menu_book,
+                              ),
+                              SizedBox(height: 12),
+                              _buildDialogTextField(
+                                controller: descriptionController,
+                                label: languageProvider.getTranslatedText({
+                                  'en': 'Description',
+                                  'id': 'Deskripsi',
+                                }),
+                                icon: Icons.description,
+                                maxLines: 3,
+                              ),
+                              SizedBox(height: 12),
+                              // Active Status Switch
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: ColorUtils.slate50,
+                                  border: Border.all(
+                                    color: ColorUtils.slate200,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                side: BorderSide(color: ColorUtils.slate300),
+                                child: SwitchListTile(
+                                  title: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Active Status',
+                                      'id': 'Status Aktif',
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: ColorUtils.slate700,
+                                    ),
+                                  ),
+                                  value: isActive,
+                                  activeThumbColor: ColorUtils.corporateBlue600,
+                                  activeTrackColor: ColorUtils.corporateBlue600
+                                      .withValues(alpha: 0.3),
+                                  onChanged: (bool value) {
+                                    setDialogState(() {
+                                      isActive = value;
+                                    });
+                                  },
+                                  secondary: Icon(
+                                    Icons.check_circle_outline,
+                                    color: isActive
+                                        ? ColorUtils.corporateBlue600
+                                        : ColorUtils.slate400,
+                                  ),
+                                ),
                               ),
-                              child: Text(
-                                AppLocalizations.cancel.tr,
-                                style: TextStyle(
-                                  color: ColorUtils.slate600,
-                                  fontWeight: FontWeight.w600,
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Enhanced Footer (Matches _showFilterSheet)
+                      Container(
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            top: BorderSide(color: ColorUtils.slate200),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ColorUtils.slate900.withValues(
+                                alpha: 0.05,
+                              ),
+                              blurRadius: 8,
+                              offset: Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 14),
+                                  side: BorderSide(color: ColorUtils.slate300),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  AppLocalizations.cancel.tr,
+                                  style: TextStyle(
+                                    color: ColorUtils.slate700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                if (codeController.text.isEmpty ||
-                                    nameController.text.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Code and name must be filled',
-                                          'id': 'Kode dan nama harus diisi',
-                                        }),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  if (codeController.text.isEmpty ||
+                                      nameController.text.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en':
+                                                'Code and name must be filled',
+                                            'id': 'Kode dan nama harus diisi',
+                                          }),
+                                        ),
+                                        backgroundColor: Colors.red.shade400,
+                                        behavior: SnackBarBehavior.floating,
                                       ),
-                                      backgroundColor: Colors.red.shade400,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                  return;
-                                }
+                                    );
+                                    return;
+                                  }
 
-                                // Validation logic removed to allow custom names
-                                // while keeping the master subject link.
+                                  // Validation logic removed to allow custom names
+                                  // while keeping the master subject link.
 
-                                try {
-                                  if (subject == null) {
-                                    await ApiSubjectService.addSubject({
-                                      'name': nameController.text,
-                                      'code': codeController.text,
-                                      'description': descriptionController.text,
-                                      'subject_id': selectedMasterSubjectId,
-                                      'is_active': isActive,
-                                    });
-                                  } else {
-                                    await ApiSubjectService.updateSubject(
-                                      subject['id'],
-                                      {
+                                  try {
+                                    if (subject == null) {
+                                      await ApiSubjectService.addSubject({
                                         'name': nameController.text,
                                         'code': codeController.text,
                                         'description':
                                             descriptionController.text,
                                         'subject_id': selectedMasterSubjectId,
                                         'is_active': isActive,
-                                      },
-                                    );
-                                  }
-                                  if (mounted) {
-                                    Navigator.pop(context);
-                                    _loadSubjects(); // Reload data
-                                  }
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          languageProvider.getTranslatedText({
-                                            'en': 'Data saved successfully',
-                                            'id': 'Data berhasil disimpan',
-                                          }),
+                                      });
+                                    } else {
+                                      await ApiSubjectService.updateSubject(
+                                        subject['id'],
+                                        {
+                                          'name': nameController.text,
+                                          'code': codeController.text,
+                                          'description':
+                                              descriptionController.text,
+                                          'subject_id': selectedMasterSubjectId,
+                                          'is_active': isActive,
+                                        },
+                                      );
+                                    }
+                                    if (mounted) {
+                                      Navigator.pop(context);
+                                      _loadSubjects(); // Reload data
+                                    }
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            languageProvider.getTranslatedText({
+                                              'en': 'Data saved successfully',
+                                              'id': 'Data berhasil disimpan',
+                                            }),
+                                          ),
+                                          backgroundColor:
+                                              Colors.green.shade400,
+                                          behavior: SnackBarBehavior.floating,
                                         ),
-                                        backgroundColor: Colors.green.shade400,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                } catch (error) {
-                                  if (kDebugMode)
-                                    print('Save/Update subject error: $error');
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
+                                      );
+                                    }
+                                  } catch (error) {
+                                    if (kDebugMode)
+                                      print(
+                                        'Save/Update subject error: $error',
+                                      );
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
+                                          ),
+                                          backgroundColor: Colors.red.shade400,
+                                          behavior: SnackBarBehavior.floating,
                                         ),
-                                        backgroundColor: Colors.red.shade400,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
+                                      );
+                                    }
                                   }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: ColorUtils.corporateBlue600,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: ColorUtils.corporateBlue600,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: EdgeInsets.symmetric(vertical: 14),
+                                  elevation: 2,
                                 ),
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                elevation: 2,
-                              ),
-                              child: Text(
-                                AppLocalizations.save.tr,
-                                style: TextStyle(fontWeight: FontWeight.w600),
+                                child: Text(
+                                  AppLocalizations.save.tr,
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
