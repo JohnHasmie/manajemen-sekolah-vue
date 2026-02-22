@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/materi_screen.dart';
@@ -613,7 +613,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
     final primary = _getPrimaryColor();
 
     String getLocalizedDay(String dayRaw) {
@@ -678,7 +681,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                 duration: Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
-                  color: selected ? primary.withValues(alpha: 0.12) : Colors.white,
+                  color: selected
+                      ? primary.withValues(alpha: 0.12)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: selected ? primary : ColorUtils.slate300,
@@ -698,7 +703,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           }
 
           return Container(
-            height: MediaQuery.of(context).size.height * 0.75,
+            height: MediaQuery.of(context).size.height * 0.55,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
@@ -708,71 +713,90 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             ),
             child: Column(
               children: [
-                Center(
-                  child: Container(
-                    margin: EdgeInsets.only(top: 12, bottom: 4),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: ColorUtils.slate300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
                 Container(
-                  padding: EdgeInsets.fromLTRB(20, 12, 16, 16),
+                  padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [primary, primary.withValues(alpha: 0.85)],
                     ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
+                      // Handle bar
                       Container(
-                        width: 36,
-                        height: 36,
+                        width: 40,
+                        height: 4,
+                        margin: EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(Icons.tune_rounded, color: Colors.white, size: 18),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Filter Schedule',
-                            'id': 'Filter Jadwal',
-                          }),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                          color: Colors.white.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          setSheetState(() {
-                            tempDayIds.clear();
-                            tempClassId = null;
-                            tempSemester = _selectedSemester;
-                          });
-                        },
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        ),
-                        child: Text(
-                          'Reset',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                        ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Filter Schedule',
+                                'id': 'Filter Jadwal',
+                              }),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setSheetState(() {
+                                tempDayIds.clear();
+                                tempClassId = null;
+                                tempSemester = _selectedSemester;
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                            ),
+                            child: Text(
+                              'Reset',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -784,7 +808,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         buildSectionHeader(
-                          languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'}),
+                          languageProvider.getTranslatedText({
+                            'en': 'Day',
+                            'id': 'Hari',
+                          }),
                           Icons.calendar_today_rounded,
                         ),
                         Wrap(
@@ -812,7 +839,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                         if (_availableClasses.isNotEmpty) ...[
                           SizedBox(height: 20),
                           buildSectionHeader(
-                            languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+                            languageProvider.getTranslatedText({
+                              'en': 'Class',
+                              'id': 'Kelas',
+                            }),
                             Icons.class_rounded,
                           ),
                           Wrap(
@@ -844,7 +874,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             runSpacing: 8,
                             children: _semesterList.map((sem) {
                               final semId = sem['id'].toString();
-                              final label = sem['name'] ?? sem['nama'] ?? 'Semester';
+                              final label =
+                                  sem['name'] ?? sem['nama'] ?? 'Semester';
                               final selected = tempSemester == semId;
                               return buildChip(
                                 label,
@@ -902,7 +933,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               Navigator.pop(context);
-                              final needsReload = tempSemester != _selectedSemester;
+                              final needsReload =
+                                  tempSemester != _selectedSemester;
                               setState(() {
                                 _selectedDayIds = List<String>.from(tempDayIds);
                                 _selectedClassId = tempClassId;
@@ -1358,7 +1390,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                     }),
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.white.withValues(alpha: 0.8),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                     ),
                                   )
                                 else
@@ -1453,7 +1487,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                 Expanded(
                                   child: TextField(
                                     controller: _searchController,
-                                    style: TextStyle(color: ColorUtils.slate800),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate800,
+                                    ),
                                     decoration: InputDecoration(
                                       hintText: languageProvider
                                           .getTranslatedText({
@@ -1531,7 +1567,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                     decoration: BoxDecoration(
                                       color: ColorUtils.error600,
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 1.5),
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 1.5,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1575,7 +1614,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                         backgroundColor: Colors.white
                                             .withValues(alpha: 0.2),
                                         side: BorderSide(
-                                          color: Colors.white.withValues(alpha: 0.3),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.3,
+                                          ),
                                           width: 1,
                                         ),
                                         shape: RoundedRectangleBorder(
@@ -1634,12 +1675,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               // Content
               Expanded(
                 child: _isLoading
-                    ? LoadingScreen(
-                        message: languageProvider.getTranslatedText({
-                          'en': 'Loading schedule data...',
-                          'id': 'Memuat data jadwal...',
-                        }),
-                      )
+                    ? SkeletonListLoading(itemCount: 5, infoTagCount: 2)
                     : Column(
                         children: [
                           // View Toggle Info
@@ -1984,9 +2020,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 border: Border(
-                                  right: BorderSide(
-                                    color: ColorUtils.slate300,
-                                  ),
+                                  right: BorderSide(color: ColorUtils.slate300),
                                 ),
                               ),
                               child: Text(
@@ -2002,9 +2036,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 border: Border(
-                                  right: BorderSide(
-                                    color: ColorUtils.slate300,
-                                  ),
+                                  right: BorderSide(color: ColorUtils.slate300),
                                 ),
                               ),
                               child: _buildTimeForSession(session, schedules),
@@ -2223,8 +2255,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         .join(', ');
 
     if (dayNames.isEmpty) {
-      final rawDayName =
-          (jadwal['hari_nama'] ?? jadwal['day_name'] ?? '').toString();
+      final rawDayName = (jadwal['hari_nama'] ?? jadwal['day_name'] ?? '')
+          .toString();
       if (rawDayName.isNotEmpty) dayNames = _normalizeDayName(rawDayName);
     }
 
@@ -2297,9 +2329,15 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                       decoration: BoxDecoration(
                         color: dayColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: dayColor.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: dayColor.withValues(alpha: 0.2),
+                        ),
                       ),
-                      child: Icon(Icons.schedule_rounded, color: dayColor, size: 24),
+                      child: Icon(
+                        Icons.schedule_rounded,
+                        color: dayColor,
+                        size: 24,
+                      ),
                     ),
                     SizedBox(width: 12),
                     Expanded(
@@ -2322,7 +2360,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                           ),
                           SizedBox(height: 3),
                           Text(
-                            jadwal['tahun_ajaran_nama'] ?? _selectedAcademicYear,
+                            jadwal['tahun_ajaran_nama'] ??
+                                _selectedAcademicYear,
                             style: TextStyle(
                               fontSize: 11,
                               color: ColorUtils.slate500,
@@ -2333,11 +2372,16 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                     ),
                     SizedBox(width: 8),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: dayColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: dayColor.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: dayColor.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         day,
@@ -2403,8 +2447,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                             jadwal['mata_pelajaran_nama'])
                                         ?.toString(),
                                 initialClassId:
-                                    (jadwal['class_id'] ??
-                                            jadwal['kelas_id'])
+                                    (jadwal['class_id'] ?? jadwal['kelas_id'])
                                         ?.toString(),
                                 initialClassName:
                                     (jadwal['class_name'] ??
@@ -2453,13 +2496,15 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                 orElse: () => MapEntry('Senin', '1'),
                               )
                               .key;
-                          final scheduleDayIndex =
-                              _dayOptions.indexOf(scheduleDay);
+                          final scheduleDayIndex = _dayOptions.indexOf(
+                            scheduleDay,
+                          );
                           final todayIndex = now.weekday;
                           int daysUntilSchedule = scheduleDayIndex - todayIndex;
                           if (daysUntilSchedule < 0) daysUntilSchedule += 7;
-                          final scheduleDate =
-                              now.add(Duration(days: daysUntilSchedule));
+                          final scheduleDate = now.add(
+                            Duration(days: daysUntilSchedule),
+                          );
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -2474,8 +2519,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                             jadwal['mata_pelajaran_nama'])
                                         ?.toString(),
                                 initialClassId:
-                                    (jadwal['class_id'] ??
-                                            jadwal['kelas_id'])
+                                    (jadwal['class_id'] ?? jadwal['kelas_id'])
                                         ?.toString(),
                                 initialClassName:
                                     (jadwal['class_name'] ??
