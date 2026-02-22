@@ -100,6 +100,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
       }
 
       // Optimistic Update (update local list UI immediately)
+      if (!mounted) return;
       setState(() {
         for (var item in _absensiData) {
           if (ids.contains(item['id'].toString())) {
@@ -144,6 +145,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         academicYearId: widget.academicYearId,
       );
 
+      if (!mounted) return;
       setState(() {
         _student = student;
         _absensiData = absensiData;
@@ -163,6 +165,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
       if (kDebugMode) {
         print('Error loading parent presence data: $e');
       }
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -383,11 +386,17 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                 });
                               },
                               backgroundColor: Colors.white,
-                              selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                              selectedColor: _getPrimaryColor().withValues(
+                                alpha: 0.2,
+                              ),
                               checkmarkColor: _getPrimaryColor(),
                               labelStyle: TextStyle(
-                                color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected
+                                    ? _getPrimaryColor()
+                                    : ColorUtils.slate600,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             );
                           }).toList(),
@@ -421,11 +430,17 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                 });
                               },
                               backgroundColor: Colors.white,
-                              selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
+                              selectedColor: _getPrimaryColor().withValues(
+                                alpha: 0.2,
+                              ),
                               checkmarkColor: _getPrimaryColor(),
                               labelStyle: TextStyle(
-                                color: isSelected ? _getPrimaryColor() : ColorUtils.slate600,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected
+                                    ? _getPrimaryColor()
+                                    : ColorUtils.slate600,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             );
                           }).toList(),
@@ -896,12 +911,13 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         absen['is_read'] == '1';
 
     // Get lesson hour name
-    final lessonHourName = (absen['lesson_hour_name'] ??
-            absen['jam_pelajaran_nama'] ??
-            (absen['lesson_hour'] != null
-                ? absen['lesson_hour']['name']
-                : null))
-        ?.toString();
+    final lessonHourName =
+        (absen['lesson_hour_name'] ??
+                absen['jam_pelajaran_nama'] ??
+                (absen['lesson_hour'] != null
+                    ? absen['lesson_hour']['name']
+                    : null))
+            ?.toString();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -946,9 +962,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                       Text(
                         DateFormat(
                           'MMM',
-                          context
-                                      .watch<LanguageProvider>()
-                                      .currentLanguage ==
+                          context.watch<LanguageProvider>().currentLanguage ==
                                   'id'
                               ? 'id_ID'
                               : 'en_US',
@@ -1328,11 +1342,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                                 ),
                               ),
                               SizedBox(width: 6),
-                              Icon(
-                                Icons.close,
-                                size: 14,
-                                color: Colors.white,
-                              ),
+                              Icon(Icons.close, size: 14, color: Colors.white),
                             ],
                           ),
                         ),
@@ -1343,10 +1353,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                     onTap: _clearAllFilters,
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       child: Text(
                         languageProvider.getTranslatedText({
                           'en': 'Clear All',
@@ -1385,9 +1392,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(
-                          color: _getPrimaryColor(),
-                        ),
+                        CircularProgressIndicator(color: _getPrimaryColor()),
                         SizedBox(height: 16),
                         Text(
                           languageProvider.getTranslatedText({
@@ -1413,9 +1418,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: ColorUtils.slate200),
-                          boxShadow: ColorUtils.corporateShadow(
-                            elevation: 1.0,
-                          ),
+                          boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                         ),
                         child: Row(
                           children: [
