@@ -396,21 +396,24 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       } catch (_) {}
     }
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
+        builder: (context, setModalState) {
           Future<void> pickTime(bool isStart) async {
             final picked = await showTimePicker(
               context: context,
               initialTime: isStart ? startTime : endTime,
             );
             if (picked != null) {
-              setDialogState(() {
-                if (isStart)
+              setModalState(() {
+                if (isStart) {
                   startTime = picked;
-                else
+                } else {
                   endTime = picked;
+                }
               });
             }
           }
@@ -463,10 +466,13 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
             );
           }
 
-          return Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          return Container(
+            margin: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 20,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             clipBehavior: Clip.antiAlias,
             child: Column(
@@ -529,78 +535,96 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   ),
                 ),
                 // Form
-                Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: hourController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Jam Ke-',
-                          prefixIcon: Icon(
-                            Icons.tag_rounded,
-                            color: ColorUtils.corporateBlue600,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: ColorUtils.slate200),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: ColorUtils.slate200),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: ColorUtils.corporateBlue600,
-                              width: 1.5,
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: hourController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Jam Ke-',
+                              prefixIcon: Icon(
+                                Icons.tag_rounded,
+                                color: ColorUtils.corporateBlue600,
+                                size: 20,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: ColorUtils.slate200,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: ColorUtils.slate200,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: ColorUtils.corporateBlue600,
+                                  width: 1.5,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: ColorUtils.slate50,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 14,
+                              ),
                             ),
                           ),
-                          filled: true,
-                          fillColor: ColorUtils.slate50,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 14,
+                          SizedBox(height: 12),
+                          Row(
+                            children: [
+                              buildTimeField('Mulai', startTime, true),
+                              SizedBox(width: 10),
+                              buildTimeField('Selesai', endTime, false),
+                            ],
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Row(
-                        children: [
-                          buildTimeField('Mulai', startTime, true),
-                          SizedBox(width: 10),
-                          buildTimeField('Selesai', endTime, false),
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Enhanced Footer Actions
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ColorUtils.slate900.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: Offset(0, -2),
                       ),
                     ],
                   ),
-                ),
-                // Footer
-                Container(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(top: BorderSide(color: ColorUtils.slate100)),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 16),
+                  child: SafeArea(
+                    top: false,
                     child: Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 13),
-                              side: BorderSide(color: ColorUtils.slate300),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
                               'Batal',
-                              style: TextStyle(color: ColorUtils.slate600),
+                              style: TextStyle(
+                                color: ColorUtils.slate700,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -636,8 +660,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 navigator.pop();
                                 await _refreshSessions();
                               } catch (e) {
-                                if (kDebugMode)
+                                if (kDebugMode) {
                                   print('Save/Update lesson session error: $e');
+                                }
                                 messenger.showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -651,17 +676,18 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorUtils.corporateBlue600,
-                              padding: EdgeInsets.symmetric(vertical: 13),
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              elevation: 0,
+                              elevation: 2,
                             ),
                             child: Text(
                               'Simpan',
                               style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
@@ -1027,20 +1053,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       height: MediaQuery.of(context).size.height * 0.75,
       child: Column(
         children: [
-          // Handle bar
-          Container(
-            margin: EdgeInsets.only(top: 10),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: ColorUtils.slate300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
           // Gradient Header (Pattern #11)
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(20, 14, 12, 18),
+            padding: EdgeInsets.fromLTRB(20, 10, 12, 18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -1052,60 +1068,74 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
               ),
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            child: Row(
+            child: Column(
               children: [
+                // Handle bar
                 Container(
                   width: 40,
-                  height: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.schedule_rounded,
-                    color: Colors.white,
-                    size: 20,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Jadwal $dayName',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.schedule_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Jadwal $dayName',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            '${_sessions.length} jam pelajaran terdaftar',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
                           color: Colors.white,
+                          size: 16,
                         ),
                       ),
-                      SizedBox(height: 2),
-                      Text(
-                        '${_sessions.length} jam pelajaran terdaftar',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.85),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      Icons.close_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -1264,28 +1294,42 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   ),
           ),
 
-          // Footer button
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 20),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _showAddEditSessionDialog(),
-                icon: Icon(Icons.add_rounded, color: Colors.white),
-                label: Text(
-                  'Tambah Jam Pelajaran',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
+          // Enhanced Footer Action
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: ColorUtils.slate200)),
+              boxShadow: [
+                BoxShadow(
+                  color: ColorUtils.slate900.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorUtils.corporateBlue600,
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showAddEditSessionDialog(),
+                  icon: Icon(Icons.add_rounded, color: Colors.white),
+                  label: Text(
+                    'Tambah Jam Pelajaran',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  elevation: 0,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorUtils.corporateBlue600,
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
                 ),
               ),
             ),
