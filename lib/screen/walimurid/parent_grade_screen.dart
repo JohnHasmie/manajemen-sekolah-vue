@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -230,7 +231,9 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         decoration: BoxDecoration(
           color: ColorUtils.warning600.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: ColorUtils.warning600.withValues(alpha: 0.3),
+          ),
         ),
         child: Row(
           children: [
@@ -241,7 +244,11 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
                 color: ColorUtils.warning600.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.warning_amber_rounded, color: ColorUtils.warning600, size: 20),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                color: ColorUtils.warning600,
+                size: 20,
+              ),
             ),
             SizedBox(width: 12),
             Expanded(
@@ -288,7 +295,10 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
               value: _selectedStudentId,
               isExpanded: true,
               underline: SizedBox(),
-              icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+              icon: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: ColorUtils.slate500,
+              ),
               items: _studentList.map((student) {
                 return DropdownMenuItem<String>(
                   value: student['id'],
@@ -589,24 +599,11 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   }
 
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(_getPrimaryColor()),
-          ),
-          SizedBox(height: 16),
-          Text(
-            AppLocalizations.loading.tr,
-            style: TextStyle(
-              color: ColorUtils.slate600,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+    return SkeletonListLoading(
+      itemCount: 6,
+      infoTagCount: 2,
+      baseColor: _getPrimaryColor().withValues(alpha: 0.15),
+      highlightColor: _getPrimaryColor().withValues(alpha: 0.05),
     );
   }
 
@@ -678,7 +675,8 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
       itemBuilder: (context, index) {
         final grade = _gradeList[index];
         final type = grade['type']?.toString().toLowerCase() ?? 'tugas';
-        final typeColor = _gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
+        final typeColor =
+            _gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
         final score = double.tryParse(grade['score']?.toString() ?? '0') ?? 0;
         final assessmentTitle = grade['title']?.toString();
         final isRead =
