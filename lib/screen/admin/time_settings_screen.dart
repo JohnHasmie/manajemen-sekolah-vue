@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -49,7 +50,9 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
         setState(() => _isLoadingTime = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}'),
+            content: Text(
+              'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
             backgroundColor: ColorUtils.error600,
             behavior: SnackBarBehavior.floating,
           ),
@@ -105,7 +108,11 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: color.withValues(alpha: 0.2)),
                 ),
-                child: Icon(Icons.calendar_today_rounded, color: color, size: 20),
+                child: Icon(
+                  Icons.calendar_today_rounded,
+                  color: color,
+                  size: 20,
+                ),
               ),
               SizedBox(width: 14),
               Expanded(
@@ -114,14 +121,22 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   children: [
                     Text(
                       day['name_id'] ?? day['name_en'] ?? 'Hari',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ColorUtils.slate900),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.slate900,
+                      ),
                     ),
                     SizedBox(height: 3),
                     Text(
-                      sessions.isEmpty ? 'Belum ada sesi' : '${sessions.length} Jam Pelajaran',
+                      sessions.isEmpty
+                          ? 'Belum ada sesi'
+                          : '${sessions.length} Jam Pelajaran',
                       style: TextStyle(
                         fontSize: 12,
-                        color: sessions.isEmpty ? ColorUtils.slate400 : ColorUtils.slate500,
+                        color: sessions.isEmpty
+                            ? ColorUtils.slate400
+                            : ColorUtils.slate500,
                       ),
                     ),
                   ],
@@ -134,7 +149,11 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   color: ColorUtils.slate100,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.chevron_right_rounded, color: ColorUtils.slate500, size: 18),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  color: ColorUtils.slate500,
+                  size: 18,
+                ),
               ),
             ],
           ),
@@ -147,74 +166,147 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: ColorUtils.corporateBlue600,
-        iconTheme: IconThemeData(color: Colors.white),
-        title: Text(
-          'Pengaturan Waktu',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
-        ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                ColorUtils.corporateBlue600,
-                ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+      body: Column(
+        children: [
+          // Custom Gradient Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  ColorUtils.corporateBlue600,
+                  ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pengaturan Waktu',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Jadwal & waktu pembelajaran',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      ),
-      body: _isLoadingTime
-          ? Center(child: CircularProgressIndicator(color: ColorUtils.corporateBlue600))
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Section header
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
+          // Body
+          Expanded(
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: _isLoadingTime
+                  ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
+                  : SingleChildScrollView(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: ColorUtils.corporateBlue600
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.calendar_today_outlined,
+                                    color: ColorUtils.corporateBlue600,
+                                    size: 17,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Jam Aktif Harian',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: ColorUtils.slate800,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Pilih hari untuk mengatur jam pelajaran.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: ColorUtils.slate500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Icon(Icons.calendar_today_outlined, color: ColorUtils.corporateBlue600, size: 17),
-                        ),
-                        SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Jam Aktif Harian',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
-                            ),
-                            Text(
-                              'Pilih hari untuk mengatur jam pelajaran.',
-                              style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: _days.length,
+                            itemBuilder: (context, index) =>
+                                _buildDayCard(_days[index], index),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: _days.length,
-                    itemBuilder: (context, index) => _buildDayCard(_days[index], index),
-                  ),
-                ],
-              ),
             ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -238,7 +330,8 @@ class DaySessionManagementSheet extends StatefulWidget {
   });
 
   @override
-  State<DaySessionManagementSheet> createState() => _DaySessionManagementSheetState();
+  State<DaySessionManagementSheet> createState() =>
+      _DaySessionManagementSheetState();
 }
 
 class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
@@ -254,8 +347,12 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
     try {
       final allSettings = await ApiSettingsService.getLessonHourSettings();
       final dayId = widget.day['id'].toString();
-      final updated = allSettings.where((s) => s['day_id'].toString() == dayId).toList();
-      updated.sort((a, b) => (a['hour_number'] as int).compareTo(b['hour_number'] as int));
+      final updated = allSettings
+          .where((s) => s['day_id'].toString() == dayId)
+          .toList();
+      updated.sort(
+        (a, b) => (a['hour_number'] as int).compareTo(b['hour_number'] as int),
+      );
 
       if (mounted) setState(() => _sessions = updated);
       widget.onSave();
@@ -264,7 +361,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memuat ulang sesi: ${ErrorUtils.getFriendlyMessage(e)}'),
+            content: Text(
+              'Gagal memuat ulang sesi: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
             backgroundColor: ColorUtils.error600,
             behavior: SnackBarBehavior.floating,
           ),
@@ -286,8 +385,14 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       try {
         final startParts = session['start_time'].toString().split(':');
         final endParts = session['end_time'].toString().split(':');
-        startTime = TimeOfDay(hour: int.parse(startParts[0]), minute: int.parse(startParts[1]));
-        endTime = TimeOfDay(hour: int.parse(endParts[0]), minute: int.parse(endParts[1]));
+        startTime = TimeOfDay(
+          hour: int.parse(startParts[0]),
+          minute: int.parse(startParts[1]),
+        );
+        endTime = TimeOfDay(
+          hour: int.parse(endParts[0]),
+          minute: int.parse(endParts[1]),
+        );
       } catch (_) {}
     }
 
@@ -302,8 +407,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
             );
             if (picked != null) {
               setDialogState(() {
-                if (isStart) startTime = picked;
-                else endTime = picked;
+                if (isStart)
+                  startTime = picked;
+                else
+                  endTime = picked;
               });
             }
           }
@@ -322,16 +429,30 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time_rounded, size: 16, color: ColorUtils.corporateBlue600),
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 16,
+                        color: ColorUtils.corporateBlue600,
+                      ),
                       SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(label, style: TextStyle(fontSize: 10, color: ColorUtils.slate500)),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: ColorUtils.slate500,
+                            ),
+                          ),
                           SizedBox(height: 1),
                           Text(
                             time.format(context),
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate900),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: ColorUtils.slate900,
+                            ),
                           ),
                         ],
                       ),
@@ -344,7 +465,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
 
           return Dialog(
             backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             clipBehavior: Clip.antiAlias,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -385,12 +508,19 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                           children: [
                             Text(
                               isEdit ? 'Edit Sesi' : 'Tambah Sesi',
-                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                             SizedBox(height: 2),
                             Text(
                               'Atur jam pelajaran untuk hari ini',
-                              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
                             ),
                           ],
                         ),
@@ -408,7 +538,11 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Jam Ke-',
-                          prefixIcon: Icon(Icons.tag_rounded, color: ColorUtils.corporateBlue600, size: 20),
+                          prefixIcon: Icon(
+                            Icons.tag_rounded,
+                            color: ColorUtils.corporateBlue600,
+                            size: 20,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: ColorUtils.slate200),
@@ -419,11 +553,17 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+                            borderSide: BorderSide(
+                              color: ColorUtils.corporateBlue600,
+                              width: 1.5,
+                            ),
                           ),
                           filled: true,
                           fillColor: ColorUtils.slate50,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
                         ),
                       ),
                       SizedBox(height: 12),
@@ -454,9 +594,14 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 13),
                               side: BorderSide(color: ColorUtils.slate300),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            child: Text('Batal', style: TextStyle(color: ColorUtils.slate600)),
+                            child: Text(
+                              'Batal',
+                              style: TextStyle(color: ColorUtils.slate600),
+                            ),
                           ),
                         ),
                         SizedBox(width: 12),
@@ -470,7 +615,8 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                   '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00';
                               final endStr =
                                   '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00';
-                              final hourNum = int.tryParse(hourController.text) ?? 0;
+                              final hourNum =
+                                  int.tryParse(hourController.text) ?? 0;
                               try {
                                 if (isEdit) {
                                   await ApiSettingsService.updateLessonSession(
@@ -490,10 +636,13 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 navigator.pop();
                                 await _refreshSessions();
                               } catch (e) {
-                                if (kDebugMode) print('Save/Update lesson session error: $e');
+                                if (kDebugMode)
+                                  print('Save/Update lesson session error: $e');
                                 messenger.showSnackBar(
                                   SnackBar(
-                                    content: Text('Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}'),
+                                    content: Text(
+                                      'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',
+                                    ),
                                     backgroundColor: ColorUtils.error600,
                                     behavior: SnackBarBehavior.floating,
                                   ),
@@ -503,10 +652,18 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorUtils.corporateBlue600,
                               padding: EdgeInsets.symmetric(vertical: 13),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               elevation: 0,
                             ),
-                            child: Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Simpan',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -559,7 +716,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menyalin: ${ErrorUtils.getFriendlyMessage(e)}'),
+            content: Text(
+              'Gagal menyalin: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
             backgroundColor: ColorUtils.error600,
             behavior: SnackBarBehavior.floating,
           ),
@@ -591,7 +750,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [ColorUtils.corporateBlue600, ColorUtils.corporateBlue600.withValues(alpha: 0.85)],
+                  colors: [
+                    ColorUtils.corporateBlue600,
+                    ColorUtils.corporateBlue600.withValues(alpha: 0.85),
+                  ],
                 ),
               ),
               child: Row(
@@ -603,12 +765,20 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.copy_rounded, color: Colors.white, size: 20),
+                    child: Icon(
+                      Icons.copy_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   SizedBox(width: 12),
                   Text(
                     'Salin Jadwal Dari...',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -618,24 +788,51 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
               child: ListView.separated(
                 padding: EdgeInsets.symmetric(vertical: 8),
                 itemCount: availableDays.length,
-                separatorBuilder: (_, __) => Divider(height: 1, color: ColorUtils.slate100, indent: 16, endIndent: 16),
+                separatorBuilder: (_, __) => Divider(
+                  height: 1,
+                  color: ColorUtils.slate100,
+                  indent: 16,
+                  endIndent: 16,
+                ),
                 itemBuilder: (context, index) {
                   final d = availableDays[index];
-                  final count = widget.allSessionsByDay[d['id'].toString()]?.length ?? 0;
+                  final count =
+                      widget.allSessionsByDay[d['id'].toString()]?.length ?? 0;
                   return ListTile(
                     leading: Container(
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+                        color: ColorUtils.corporateBlue600.withValues(
+                          alpha: 0.1,
+                        ),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.calendar_today_rounded, color: ColorUtils.corporateBlue600, size: 17),
+                      child: Icon(
+                        Icons.calendar_today_rounded,
+                        color: ColorUtils.corporateBlue600,
+                        size: 17,
+                      ),
                     ),
-                    title: Text(d['name_id'] ?? d['name_en'] ?? 'Hari',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate900)),
-                    subtitle: Text('$count Sesi', style: TextStyle(fontSize: 12, color: ColorUtils.slate500)),
-                    trailing: Icon(Icons.chevron_right_rounded, color: ColorUtils.slate400),
+                    title: Text(
+                      d['name_id'] ?? d['name_en'] ?? 'Hari',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: ColorUtils.slate900,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '$count Sesi',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ColorUtils.slate500,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      color: ColorUtils.slate400,
+                    ),
                     onTap: () {
                       Navigator.pop(context);
                       _copySchedule(d);
@@ -653,9 +850,14 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: ColorUtils.slate300),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: Text('Batal', style: TextStyle(color: ColorUtils.slate600)),
+                  child: Text(
+                    'Batal',
+                    style: TextStyle(color: ColorUtils.slate600),
+                  ),
                 ),
               ),
             ),
@@ -682,7 +884,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [ColorUtils.error600, ColorUtils.error600.withValues(alpha: 0.85)],
+                  colors: [
+                    ColorUtils.error600,
+                    ColorUtils.error600.withValues(alpha: 0.85),
+                  ],
                 ),
               ),
               child: Row(
@@ -694,11 +899,21 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.delete_rounded, color: Colors.white, size: 20),
+                    child: Icon(
+                      Icons.delete_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   SizedBox(width: 12),
-                  Text('Hapus Jam Pelajaran',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text(
+                    'Hapus Jam Pelajaran',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -719,9 +934,14 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 13),
                         side: BorderSide(color: ColorUtils.slate300),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: Text('Batal', style: TextStyle(color: ColorUtils.slate600)),
+                      child: Text(
+                        'Batal',
+                        style: TextStyle(color: ColorUtils.slate600),
+                      ),
                     ),
                   ),
                   SizedBox(width: 12),
@@ -731,10 +951,18 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorUtils.error600,
                         padding: EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 0,
                       ),
-                      child: Text('Hapus', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Hapus',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -755,7 +983,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menghapus: ${ErrorUtils.getFriendlyMessage(e)}'),
+            content: Text(
+              'Gagal menghapus: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
             backgroundColor: ColorUtils.error600,
             behavior: SnackBarBehavior.floating,
           ),
@@ -831,7 +1061,11 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.schedule_rounded, color: Colors.white, size: 20),
+                  child: Icon(
+                    Icons.schedule_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
                 SizedBox(width: 12),
                 Expanded(
@@ -840,12 +1074,19 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                     children: [
                       Text(
                         'Jadwal $dayName',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                       SizedBox(height: 2),
                       Text(
                         '${_sessions.length} jam pelajaran terdaftar',
-                        style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
                       ),
                     ],
                   ),
@@ -859,7 +1100,11 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.close_rounded, color: Colors.white, size: 16),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                   ),
                 ),
               ],
@@ -880,14 +1125,29 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                             color: ColorUtils.slate100,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.schedule_outlined, size: 32, color: ColorUtils.slate400),
+                          child: Icon(
+                            Icons.schedule_outlined,
+                            size: 32,
+                            color: ColorUtils.slate400,
+                          ),
                         ),
                         SizedBox(height: 12),
-                        Text('Belum ada jadwal',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: ColorUtils.slate700)),
+                        Text(
+                          'Belum ada jadwal',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: ColorUtils.slate700,
+                          ),
+                        ),
                         SizedBox(height: 4),
-                        Text('Tambah jam pelajaran di bawah',
-                            style: TextStyle(fontSize: 12, color: ColorUtils.slate500)),
+                        Text(
+                          'Tambah jam pelajaran di bawah',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate500,
+                          ),
+                        ),
                         if (widget.allDays.any((d) {
                           final dId = d['id'].toString();
                           return dId != widget.day['id'].toString() &&
@@ -899,9 +1159,13 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                             icon: Icon(Icons.copy_rounded, size: 16),
                             label: Text('Salin dari hari lain'),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: ColorUtils.corporateBlue600),
+                              side: BorderSide(
+                                color: ColorUtils.corporateBlue600,
+                              ),
                               foregroundColor: ColorUtils.corporateBlue600,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                           ),
                         ],
@@ -915,7 +1179,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                     itemBuilder: (context, index) {
                       final session = _sessions[index];
                       return Container(
-                        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
@@ -928,9 +1195,15 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                               width: 38,
                               height: 38,
                               decoration: BoxDecoration(
-                                color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+                                color: ColorUtils.corporateBlue600.withValues(
+                                  alpha: 0.1,
+                                ),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: ColorUtils.corporateBlue600.withValues(alpha: 0.2)),
+                                border: Border.all(
+                                  color: ColorUtils.corporateBlue600.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                ),
                               ),
                               child: Center(
                                 child: Text(
@@ -950,7 +1223,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 children: [
                                   Text(
                                     'Jam ke-${session['hour_number']}',
-                                    style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: ColorUtils.slate500,
+                                    ),
                                   ),
                                   Text(
                                     '${session['start_time']} – ${session['end_time']}',
@@ -968,13 +1244,16 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 _buildActionButton(
                                   icon: Icons.edit_rounded,
                                   color: ColorUtils.corporateBlue600,
-                                  onTap: () => _showAddEditSessionDialog(session: session),
+                                  onTap: () => _showAddEditSessionDialog(
+                                    session: session,
+                                  ),
                                 ),
                                 SizedBox(width: 8),
                                 _buildActionButton(
                                   icon: Icons.delete_rounded,
                                   color: ColorUtils.error600,
-                                  onTap: () => _deleteSession(session['id'].toString()),
+                                  onTap: () =>
+                                      _deleteSession(session['id'].toString()),
                                 ),
                               ],
                             ),
@@ -993,11 +1272,19 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
               child: ElevatedButton.icon(
                 onPressed: () => _showAddEditSessionDialog(),
                 icon: Icon(Icons.add_rounded, color: Colors.white),
-                label: Text('Tambah Jam Pelajaran', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                label: Text(
+                  'Tambah Jam Pelajaran',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ColorUtils.corporateBlue600,
                   padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   elevation: 0,
                 ),
               ),

@@ -1208,7 +1208,13 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                 ],
               ),
             ),
-            Expanded(child: SkeletonListLoading(itemCount: 6, infoTagCount: 1)),
+            Expanded(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: SkeletonListLoading(itemCount: 6, infoTagCount: 1),
+              ),
+            ),
           ],
         ),
       );
@@ -1398,16 +1404,20 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
 
           // Main Table Content
           Expanded(
-            child: _students.isEmpty
-                ? const EmptyState(
-                    title: 'Tidak ada siswa',
-                    subtitle: 'Kelas ini belum memiliki siswa',
-                    icon: Icons.people_outline,
-                  )
-                : SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: _buildCustomTable(),
-                  ),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: _students.isEmpty
+                  ? const EmptyState(
+                      title: 'Tidak ada siswa',
+                      subtitle: 'Kelas ini belum memiliki siswa',
+                      icon: Icons.people_outline,
+                    )
+                  : SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: _buildCustomTable(),
+                    ),
+            ),
           ),
         ],
       ),

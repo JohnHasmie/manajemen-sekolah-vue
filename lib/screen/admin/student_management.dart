@@ -9,6 +9,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/screen/admin/student_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/excel_student_service.dart';
@@ -16,7 +17,6 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
-import 'package:manajemensekolah/screen/admin/student_detail_screen.dart';
 import 'package:provider/provider.dart';
 
 class StudentManagementScreen extends StatefulWidget {
@@ -570,7 +570,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.filter_list, color: Colors.white, size: 24),
+                            Icon(
+                              Icons.filter_list,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                             SizedBox(width: 12),
                             Text(
                               languageProvider.getTranslatedText({
@@ -621,7 +625,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             padding: EdgeInsets.only(bottom: 12),
                             child: Row(
                               children: [
-                                Icon(Icons.family_restroom, size: 18, color: ColorUtils.slate700),
+                                Icon(
+                                  Icons.family_restroom,
+                                  size: 18,
+                                  color: ColorUtils.slate700,
+                                ),
                                 SizedBox(width: 8),
                                 Text(
                                   languageProvider.getTranslatedText({
@@ -721,7 +729,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             padding: EdgeInsets.only(bottom: 12),
                             child: Row(
                               children: [
-                                Icon(Icons.check_circle_outline, size: 18, color: ColorUtils.slate700),
+                                Icon(
+                                  Icons.check_circle_outline,
+                                  size: 18,
+                                  color: ColorUtils.slate700,
+                                ),
                                 SizedBox(width: 8),
                                 Text(
                                   languageProvider.getTranslatedText({
@@ -789,7 +801,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             padding: EdgeInsets.only(bottom: 12),
                             child: Row(
                               children: [
-                                Icon(Icons.class_outlined, size: 18, color: ColorUtils.slate700),
+                                Icon(
+                                  Icons.class_outlined,
+                                  size: 18,
+                                  color: ColorUtils.slate700,
+                                ),
                                 SizedBox(width: 8),
                                 Text(
                                   languageProvider.getTranslatedText({
@@ -827,7 +843,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                   });
                                 },
                                 backgroundColor: Colors.white,
-                                selectedColor: _getPrimaryColor().withValues(alpha: 0.15),
+                                selectedColor: _getPrimaryColor().withValues(
+                                  alpha: 0.15,
+                                ),
                                 checkmarkColor: _getPrimaryColor(),
                                 labelStyle: TextStyle(
                                   color: isSelected
@@ -846,7 +864,10 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               );
                             }).toList(),
                           ),
@@ -858,7 +879,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             padding: EdgeInsets.only(bottom: 12),
                             child: Row(
                               children: [
-                                Icon(Icons.transgender, size: 18, color: ColorUtils.slate700),
+                                Icon(
+                                  Icons.transgender,
+                                  size: 18,
+                                  color: ColorUtils.slate700,
+                                ),
                                 SizedBox(width: 8),
                                 Text(
                                   languageProvider.getTranslatedText({
@@ -928,7 +953,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                      border: Border(
+                        top: BorderSide(color: ColorUtils.slate200),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: ColorUtils.slate900.withValues(alpha: 0.05),
@@ -1127,7 +1154,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             ),
                           ),
                           child: Icon(
-                            isEdit ? Icons.edit_rounded : Icons.person_add_rounded,
+                            isEdit
+                                ? Icons.edit_rounded
+                                : Icons.person_add_rounded,
                             color: Colors.white,
                             size: 22,
                           ),
@@ -1181,7 +1210,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ],
@@ -1194,163 +1227,163 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                        _buildDialogTextField(
-                          controller: nameController,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Name',
-                            'id': 'Nama',
-                          }),
-                          icon: Icons.person,
-                        ),
-                        SizedBox(height: 12),
-                        _buildDialogTextField(
-                          controller: nisController,
-                          label: 'NIS',
-                          icon: Icons.badge,
-                          keyboardType: TextInputType.number,
-                        ),
-                        SizedBox(height: 12),
-                        _buildDialogDropdown(
-                          value: selectedClassId,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Class',
-                            'id': 'Kelas',
-                          }),
-                          icon: Icons.school,
-                          items: _classList
-                              .where((classItem) => classItem['id'] != null)
-                              .map((classItem) {
-                                return DropdownMenuItem<String>(
-                                  value: classItem['id'].toString(),
-                                  child: Text(
-                                    classItem['name'] ?? 'Unknown Class',
-                                  ),
-                                );
-                              })
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedClassId = value;
-                            });
-                          },
-                        ),
-                        SizedBox(height: 12),
-                        _buildDialogTextField(
-                          controller: addressController,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Address',
-                            'id': 'Alamat',
-                          }),
-                          icon: Icons.location_on,
-                          maxLines: 2,
-                        ),
-                        SizedBox(height: 12),
-                        _buildDialogTextField(
-                          controller: birthDateController,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Birth Date',
-                            'id': 'Tanggal Lahir',
-                          }),
-                          icon: Icons.cake,
-                          hintText: 'YYYY-MM-DD',
-                          readOnly: true,
-                          onTap: () async {
-                            final DateTime? picked = await showDatePicker(
-                              context: context,
-                              initialDate:
-                                  student != null &&
-                                      student['date_of_birth'] != null
-                                  ? DateTime.parse(
-                                      student['date_of_birth'].toString(),
-                                    )
-                                  : DateTime.now(),
-                              firstDate: DateTime(1900),
-                              lastDate: DateTime.now(),
-                              builder: (context, child) {
-                                return Theme(
-                                  data: Theme.of(context).copyWith(
-                                    colorScheme: ColorScheme.light(
-                                      primary: _getPrimaryColor(),
-                                      onPrimary: Colors.white,
-                                      onSurface: Colors.black,
+                          _buildDialogTextField(
+                            controller: nameController,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Name',
+                              'id': 'Nama',
+                            }),
+                            icon: Icons.person,
+                          ),
+                          SizedBox(height: 12),
+                          _buildDialogTextField(
+                            controller: nisController,
+                            label: 'NIS',
+                            icon: Icons.badge,
+                            keyboardType: TextInputType.number,
+                          ),
+                          SizedBox(height: 12),
+                          _buildDialogDropdown(
+                            value: selectedClassId,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Class',
+                              'id': 'Kelas',
+                            }),
+                            icon: Icons.school,
+                            items: _classList
+                                .where((classItem) => classItem['id'] != null)
+                                .map((classItem) {
+                                  return DropdownMenuItem<String>(
+                                    value: classItem['id'].toString(),
+                                    child: Text(
+                                      classItem['name'] ?? 'Unknown Class',
                                     ),
-                                  ),
-                                  child: child!,
-                                );
-                              },
-                            );
-                            if (picked != null) {
+                                  );
+                                })
+                                .toList(),
+                            onChanged: (value) {
                               setState(() {
-                                birthDateController.text =
-                                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                                selectedClassId = value;
                               });
-                            }
-                          },
-                        ),
-                        SizedBox(height: 12),
-                        _buildDialogDropdown(
-                          value: selectedGender,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Gender',
-                            'id': 'Jenis Kelamin',
-                          }),
-                          icon: Icons.transgender,
-                          items: [
-                            DropdownMenuItem(
-                              value: 'L',
-                              child: Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Male',
-                                  'id': 'Laki-laki',
-                                }),
+                            },
+                          ),
+                          SizedBox(height: 12),
+                          _buildDialogTextField(
+                            controller: addressController,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Address',
+                              'id': 'Alamat',
+                            }),
+                            icon: Icons.location_on,
+                            maxLines: 2,
+                          ),
+                          SizedBox(height: 12),
+                          _buildDialogTextField(
+                            controller: birthDateController,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Birth Date',
+                              'id': 'Tanggal Lahir',
+                            }),
+                            icon: Icons.cake,
+                            hintText: 'YYYY-MM-DD',
+                            readOnly: true,
+                            onTap: () async {
+                              final DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate:
+                                    student != null &&
+                                        student['date_of_birth'] != null
+                                    ? DateTime.parse(
+                                        student['date_of_birth'].toString(),
+                                      )
+                                    : DateTime.now(),
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime.now(),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: ColorScheme.light(
+                                        primary: _getPrimaryColor(),
+                                        onPrimary: Colors.white,
+                                        onSurface: Colors.black,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  birthDateController.text =
+                                      "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                                });
+                              }
+                            },
+                          ),
+                          SizedBox(height: 12),
+                          _buildDialogDropdown(
+                            value: selectedGender,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Gender',
+                              'id': 'Jenis Kelamin',
+                            }),
+                            icon: Icons.transgender,
+                            items: [
+                              DropdownMenuItem(
+                                value: 'L',
+                                child: Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Male',
+                                    'id': 'Laki-laki',
+                                  }),
+                                ),
                               ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'P',
-                              child: Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Female',
-                                  'id': 'Perempuan',
-                                }),
+                              DropdownMenuItem(
+                                value: 'P',
+                                child: Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Female',
+                                    'id': 'Perempuan',
+                                  }),
+                                ),
                               ),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              selectedGender = value;
-                            });
-                          },
-                        ),
-                        SizedBox(height: 12),
-                        _buildDialogTextField(
-                          controller: parentNameController,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Parent Name',
-                            'id': 'Nama Wali Murid',
-                          }),
-                          icon: Icons.family_restroom,
-                        ),
-                        SizedBox(height: 12),
-                        _buildDialogTextField(
-                          controller: emailParentController,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Parent Email',
-                            'id': 'Email Wali Murid',
-                          }),
-                          icon: Icons.email,
-                          keyboardType: TextInputType.emailAddress,
-                          hintText: 'wali@example.com',
-                        ),
-                        SizedBox(height: 12),
-                        _buildDialogTextField(
-                          controller: phoneController,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Phone Number',
-                            'id': 'No. Telepon',
-                          }),
-                          icon: Icons.phone,
-                          keyboardType: TextInputType.phone,
-                        ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                selectedGender = value;
+                              });
+                            },
+                          ),
+                          SizedBox(height: 12),
+                          _buildDialogTextField(
+                            controller: parentNameController,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Parent Name',
+                              'id': 'Nama Wali Murid',
+                            }),
+                            icon: Icons.family_restroom,
+                          ),
+                          SizedBox(height: 12),
+                          _buildDialogTextField(
+                            controller: emailParentController,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Parent Email',
+                              'id': 'Email Wali Murid',
+                            }),
+                            icon: Icons.email,
+                            keyboardType: TextInputType.emailAddress,
+                            hintText: 'wali@example.com',
+                          ),
+                          SizedBox(height: 12),
+                          _buildDialogTextField(
+                            controller: phoneController,
+                            label: languageProvider.getTranslatedText({
+                              'en': 'Phone Number',
+                              'id': 'No. Telepon',
+                            }),
+                            icon: Icons.phone,
+                            keyboardType: TextInputType.phone,
+                          ),
                         ],
                       ),
                     ),
@@ -1360,7 +1393,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                   Container(
                     padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
                     decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: ColorUtils.slate100)),
+                      border: Border(
+                        top: BorderSide(color: ColorUtils.slate100),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -1515,7 +1550,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               } catch (e) {
                                 if (kDebugMode) {
                                   print('Save/Update student error: $e');
-                              }
+                                }
                                 if (context.mounted) {
                                   showDialog(
                                     context: context,
@@ -1535,7 +1570,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                               'en': 'Error',
                                               'id': 'Gagal',
                                             }),
-                                            style: TextStyle(color: ColorUtils.error600),
+                                            style: TextStyle(
+                                              color: ColorUtils.error600,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -1566,7 +1603,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                               ),
                               padding: EdgeInsets.symmetric(vertical: 13),
                               elevation: 2,
-                              shadowColor: _getPrimaryColor().withValues(alpha: 0.4),
+                              shadowColor: _getPrimaryColor().withValues(
+                                alpha: 0.4,
+                              ),
                             ),
                             child: Text(
                               isEdit
@@ -1669,7 +1708,10 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+        icon: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: ColorUtils.slate500,
+        ),
       ),
     );
   }
@@ -1733,13 +1775,18 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   }
 
   void _navigateToStudentDetail(Map<String, dynamic> student) {
-    final isReadOnly = Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
+    final isReadOnly = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    ).isReadOnly;
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => StudentDetailScreen(
           student: student,
-          onEdit: isReadOnly ? null : () => _showStudentDialog(student: student),
+          onEdit: isReadOnly
+              ? null
+              : () => _showStudentDialog(student: student),
         ),
       ),
     );
@@ -1770,7 +1817,10 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   Widget _buildStudentCard(Map<String, dynamic> student, int index) {
     final languageProvider = context.read<LanguageProvider>();
     final avatarColor = ColorUtils.getColorForIndex(index);
-    final isReadOnly = Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
+    final isReadOnly = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    ).isReadOnly;
     final className = student['class']?['name'] ?? '-';
     final genderText = _getGenderText(student['gender'], languageProvider);
 
@@ -1886,7 +1936,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             child: Container(
                               padding: EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: _getPrimaryColor().withValues(alpha: 0.1),
+                                color: _getPrimaryColor().withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -1904,7 +1956,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                             child: Container(
                               padding: EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: ColorUtils.error600.withValues(alpha: 0.1),
+                                color: ColorUtils.error600.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -1965,7 +2019,10 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     );
   }
 
-  Widget _buildGradientHeader(BuildContext context, LanguageProvider languageProvider) {
+  Widget _buildGradientHeader(
+    BuildContext context,
+    LanguageProvider languageProvider,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
@@ -2006,11 +2063,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
               SizedBox(width: 12),
@@ -2066,11 +2119,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.more_vert,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                 ),
                 itemBuilder: (BuildContext context) => [
                   PopupMenuItem<String>(
@@ -2166,10 +2215,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                       Container(
                         margin: EdgeInsets.only(right: 4),
                         child: IconButton(
-                          icon: Icon(
-                            Icons.search,
-                            color: _getPrimaryColor(),
-                          ),
+                          icon: Icon(Icons.search, color: _getPrimaryColor()),
                           onPressed: () {
                             setState(() {
                               _currentPage = 1;
@@ -2273,7 +2319,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                 color: ColorUtils.error600,
                               ),
                               onDeleted: filter['onRemove'],
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
                               side: BorderSide(
                                 color: Colors.white.withValues(alpha: 0.3),
                                 width: 1,
@@ -2344,51 +2392,56 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
               _buildGradientHeader(context, languageProvider),
 
               Expanded(
-                child: _isLoading
-                    ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
-                    : filteredStudents.isEmpty
-                    ? EmptyState(
-                        title: languageProvider.getTranslatedText({
-                          'en': 'No students',
-                          'id': 'Tidak ada siswa',
-                        }),
-                        subtitle:
-                            _searchController.text.isEmpty && !_hasActiveFilter
-                            ? languageProvider.getTranslatedText({
-                                'en': 'Tap + to add a student',
-                                'id': 'Tap + untuk menambah siswa',
-                              })
-                            : languageProvider.getTranslatedText({
-                                'en': 'No search results found',
-                                'id': 'Tidak ditemukan hasil pencarian',
-                              }),
-                        icon: Icons.people_outline,
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _onRefresh,
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          padding: EdgeInsets.only(top: 8, bottom: 16),
-                          itemCount:
-                              filteredStudents.length +
-                              (_isLoadingMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            // Show loading indicator at bottom
-                            if (index == filteredStudents.length) {
-                              return Container(
-                                padding: EdgeInsets.symmetric(vertical: 16),
-                                alignment: Alignment.center,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              );
-                            }
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: _isLoading
+                      ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
+                      : filteredStudents.isEmpty
+                      ? EmptyState(
+                          title: languageProvider.getTranslatedText({
+                            'en': 'No students',
+                            'id': 'Tidak ada siswa',
+                          }),
+                          subtitle:
+                              _searchController.text.isEmpty &&
+                                  !_hasActiveFilter
+                              ? languageProvider.getTranslatedText({
+                                  'en': 'Tap + to add a student',
+                                  'id': 'Tap + untuk menambah siswa',
+                                })
+                              : languageProvider.getTranslatedText({
+                                  'en': 'No search results found',
+                                  'id': 'Tidak ditemukan hasil pencarian',
+                                }),
+                          icon: Icons.people_outline,
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            padding: EdgeInsets.only(top: 8, bottom: 16),
+                            itemCount:
+                                filteredStudents.length +
+                                (_isLoadingMore ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              // Show loading indicator at bottom
+                              if (index == filteredStudents.length) {
+                                return Container(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  alignment: Alignment.center,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                );
+                              }
 
-                            final student = filteredStudents[index];
-                            return _buildStudentCard(student, index);
-                          },
+                              final student = filteredStudents[index];
+                              return _buildStudentCard(student, index);
+                            },
+                          ),
                         ),
-                      ),
+                ),
               ),
             ],
           ),

@@ -3976,279 +3976,284 @@ class FinanceScreenState extends State<FinanceScreen> {
               ),
               _buildNavigationBar(languageProvider),
               Expanded(
-                child: IndexedStack(
-                  index: _currentTabIndex,
-                  children: [
-                    // Tab Dashboard
-                    RefreshIndicator(
-                      onRefresh: _loadData,
-                      color: _getPrimaryColor(),
-                      child: ListView(
-                        padding: EdgeInsets.only(bottom: 20),
-                        children: [
-                          _buildDashboardStats(),
-                          if (_pembayaranPendingList.isNotEmpty)
-                            _buildPendingSection(),
-                          _buildGeneratedPaymentTypesSection(),
-                          SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-
-                    // Tab Jenis Pembayaran
-                    Column(
-                      children: [
-                        // Search Bar and Filter
-                        Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: ColorUtils.slate200,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller: _searchController,
-                                          onSubmitted: (_) => setState(() {}),
-                                          decoration: InputDecoration(
-                                            hintText:
-                                                'Cari jenis pembayaran...',
-                                            prefixIcon: Icon(
-                                              Icons.search,
-                                              color: ColorUtils.slate400,
-                                            ),
-                                            border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  horizontal: 16,
-                                                  vertical: 12,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        margin: EdgeInsets.only(right: 4),
-                                        child: IconButton(
-                                          icon: Icon(
-                                            Icons.search,
-                                            color: _getPrimaryColor(),
-                                          ),
-                                          onPressed: () => setState(() {}),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              // Filter Button
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: _hasActiveFilter
-                                      ? _getPrimaryColor()
-                                      : ColorUtils.slate50,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _hasActiveFilter
-                                        ? _getPrimaryColor()
-                                        : ColorUtils.slate200,
-                                  ),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    IconButton(
-                                      onPressed: _showFilterSheet,
-                                      icon: Icon(
-                                        Icons.tune,
-                                        color: _hasActiveFilter
-                                            ? Colors.white
-                                            : ColorUtils.slate700,
-                                      ),
-                                      tooltip: 'Filter',
-                                    ),
-                                    if (_hasActiveFilter)
-                                      Positioned(
-                                        right: 8,
-                                        top: 8,
-                                        child: Container(
-                                          padding: EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: ColorUtils.error600,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          constraints: BoxConstraints(
-                                            minWidth: 8,
-                                            minHeight: 8,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: IndexedStack(
+                    index: _currentTabIndex,
+                    children: [
+                      // Tab Dashboard
+                      RefreshIndicator(
+                        onRefresh: _loadData,
+                        color: _getPrimaryColor(),
+                        child: ListView(
+                          padding: EdgeInsets.only(bottom: 20),
+                          children: [
+                            _buildDashboardStats(),
+                            if (_pembayaranPendingList.isNotEmpty)
+                              _buildPendingSection(),
+                            _buildGeneratedPaymentTypesSection(),
+                            SizedBox(height: 16),
+                          ],
                         ),
+                      ),
 
-                        // Filter Chips
-                        if (_hasActiveFilter) ...[
+                      // Tab Jenis Pembayaran
+                      Column(
+                        children: [
+                          // Search Bar and Filter
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: SizedBox(
-                              height: 32,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: ListView(
-                                      scrollDirection: Axis.horizontal,
+                            padding: EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: ColorUtils.slate200,
+                                      ),
+                                    ),
+                                    child: Row(
                                       children: [
-                                        ..._buildFilterChips(
-                                          context.read<LanguageProvider>(),
-                                        ).map((filter) {
-                                          return Container(
-                                            margin: EdgeInsets.only(right: 6),
-                                            child: Chip(
-                                              label: Text(
-                                                filter['label'],
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: _getPrimaryColor(),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                        Expanded(
+                                          child: TextField(
+                                            controller: _searchController,
+                                            onSubmitted: (_) => setState(() {}),
+                                            decoration: InputDecoration(
+                                              hintText:
+                                                  'Cari jenis pembayaran...',
+                                              prefixIcon: Icon(
+                                                Icons.search,
+                                                color: ColorUtils.slate400,
                                               ),
-                                              deleteIcon: Icon(
-                                                Icons.close,
-                                                size: 16,
-                                                color: _getPrimaryColor(),
-                                              ),
-                                              onDeleted: filter['onRemove'],
-                                              backgroundColor:
-                                                  _getPrimaryColor().withValues(
-                                                    alpha: 0.1,
+                                              border: InputBorder.none,
+                                              contentPadding:
+                                                  EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 12,
                                                   ),
-                                              side: BorderSide(
-                                                color: _getPrimaryColor()
-                                                    .withValues(alpha: 0.3),
-                                                width: 1,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              labelPadding: EdgeInsets.only(
-                                                left: 4,
-                                              ),
                                             ),
-                                          );
-                                        }),
+                                          ),
+                                        ),
+                                        Container(
+                                          margin: EdgeInsets.only(right: 4),
+                                          child: IconButton(
+                                            icon: Icon(
+                                              Icons.search,
+                                              color: _getPrimaryColor(),
+                                            ),
+                                            onPressed: () => setState(() {}),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
-                                  SizedBox(width: 8),
-                                  InkWell(
-                                    onTap: _clearAllFilters,
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      padding: EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: ColorUtils.error600,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        Icons.clear_all,
-                                        size: 18,
-                                        color: Colors.white,
-                                      ),
+                                ),
+                                SizedBox(width: 8),
+                                // Filter Button
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: _hasActiveFilter
+                                        ? _getPrimaryColor()
+                                        : ColorUtils.slate50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _hasActiveFilter
+                                          ? _getPrimaryColor()
+                                          : ColorUtils.slate200,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                        ],
-
-                        if (filteredJenisPembayaran.isNotEmpty)
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Row(
-                              children: [
-                                Text(
-                                  '${filteredJenisPembayaran.length} jenis pembayaran ditemukan',
-                                  style: TextStyle(
-                                    color: ColorUtils.slate600,
-                                    fontSize: 12,
+                                  child: Stack(
+                                    children: [
+                                      IconButton(
+                                        onPressed: _showFilterSheet,
+                                        icon: Icon(
+                                          Icons.tune,
+                                          color: _hasActiveFilter
+                                              ? Colors.white
+                                              : ColorUtils.slate700,
+                                        ),
+                                        tooltip: 'Filter',
+                                      ),
+                                      if (_hasActiveFilter)
+                                        Positioned(
+                                          right: 8,
+                                          top: 8,
+                                          child: Container(
+                                            padding: EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: ColorUtils.error600,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            constraints: BoxConstraints(
+                                              minWidth: 8,
+                                              minHeight: 8,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        SizedBox(height: 4),
-                        Expanded(
-                          child: filteredJenisPembayaran.isEmpty
-                              ? EmptyState(
-                                  title: 'Tidak ada jenis pembayaran',
-                                  subtitle:
-                                      _searchController.text.isEmpty &&
-                                          !_hasActiveFilter
-                                      ? 'Tap + untuk menambah jenis pembayaran'
-                                      : 'Tidak ditemukan hasil pencarian',
-                                  icon: Icons.payment,
-                                )
-                              : ListView.builder(
-                                  itemCount: filteredJenisPembayaran.length,
-                                  itemBuilder: (context, index) {
-                                    return _buildJenisPembayaranCard(
-                                      filteredJenisPembayaran[index],
-                                      index,
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
-                    ),
 
-                    // Tab Verifikasi
-                    _pembayaranPendingList.isEmpty
-                        ? EmptyState(
-                            title: 'Tidak ada pembayaran menunggu verifikasi',
-                            subtitle: 'Semua pembayaran telah diverifikasi',
-                            icon: Icons.verified_user,
-                          )
-                        : ListView.builder(
-                            controller: _pendingScrollController,
-                            physics: AlwaysScrollableScrollPhysics(),
-                            itemCount:
-                                _pembayaranPendingList.length +
-                                (_hasMorePending ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index == _pembayaranPendingList.length) {
-                                return Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
+                          // Filter Chips
+                          if (_hasActiveFilter) ...[
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: SizedBox(
+                                height: 32,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: ListView(
+                                        scrollDirection: Axis.horizontal,
+                                        children: [
+                                          ..._buildFilterChips(
+                                            context.read<LanguageProvider>(),
+                                          ).map((filter) {
+                                            return Container(
+                                              margin: EdgeInsets.only(right: 6),
+                                              child: Chip(
+                                                label: Text(
+                                                  filter['label'],
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: _getPrimaryColor(),
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                deleteIcon: Icon(
+                                                  Icons.close,
+                                                  size: 16,
+                                                  color: _getPrimaryColor(),
+                                                ),
+                                                onDeleted: filter['onRemove'],
+                                                backgroundColor:
+                                                    _getPrimaryColor()
+                                                        .withValues(alpha: 0.1),
+                                                side: BorderSide(
+                                                  color: _getPrimaryColor()
+                                                      .withValues(alpha: 0.3),
+                                                  width: 1,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                labelPadding: EdgeInsets.only(
+                                                  left: 4,
+                                                ),
+                                              ),
+                                            );
+                                          }),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    InkWell(
+                                      onTap: _clearAllFilters,
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
+                                        padding: EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: ColorUtils.error600,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.clear_all,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                          ],
+
+                          if (filteredJenisPembayaran.isNotEmpty)
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '${filteredJenisPembayaran.length} jenis pembayaran ditemukan',
+                                    style: TextStyle(
+                                      color: ColorUtils.slate600,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                );
-                              }
-                              return _buildPembayaranPendingCard(
-                                _pembayaranPendingList[index],
-                                index,
-                              );
-                            },
+                                ],
+                              ),
+                            ),
+                          SizedBox(height: 4),
+                          Expanded(
+                            child: filteredJenisPembayaran.isEmpty
+                                ? EmptyState(
+                                    title: 'Tidak ada jenis pembayaran',
+                                    subtitle:
+                                        _searchController.text.isEmpty &&
+                                            !_hasActiveFilter
+                                        ? 'Tap + untuk menambah jenis pembayaran'
+                                        : 'Tidak ditemukan hasil pencarian',
+                                    icon: Icons.payment,
+                                  )
+                                : ListView.builder(
+                                    itemCount: filteredJenisPembayaran.length,
+                                    itemBuilder: (context, index) {
+                                      return _buildJenisPembayaranCard(
+                                        filteredJenisPembayaran[index],
+                                        index,
+                                      );
+                                    },
+                                  ),
                           ),
-                    _buildLaporanKelasTab(),
-                  ],
+                        ],
+                      ),
+
+                      // Tab Verifikasi
+                      _pembayaranPendingList.isEmpty
+                          ? EmptyState(
+                              title: 'Tidak ada pembayaran menunggu verifikasi',
+                              subtitle: 'Semua pembayaran telah diverifikasi',
+                              icon: Icons.verified_user,
+                            )
+                          : ListView.builder(
+                              controller: _pendingScrollController,
+                              physics: AlwaysScrollableScrollPhysics(),
+                              itemCount:
+                                  _pembayaranPendingList.length +
+                                  (_hasMorePending ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index == _pembayaranPendingList.length) {
+                                  return Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                }
+                                return _buildPembayaranPendingCard(
+                                  _pembayaranPendingList[index],
+                                  index,
+                                );
+                              },
+                            ),
+                      _buildLaporanKelasTab(),
+                    ],
+                  ),
                 ),
               ),
             ],

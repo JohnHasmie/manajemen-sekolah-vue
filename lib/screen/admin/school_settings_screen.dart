@@ -42,74 +42,146 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: ColorUtils.corporateBlue600,
-        iconTheme: IconThemeData(color: Colors.white),
-        title: Text(
-          lang.getTranslatedText(AppLocalizations.schoolSettings),
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
-        ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                ColorUtils.corporateBlue600,
-                ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+      body: Column(
+        children: [
+          // Custom Gradient Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  ColorUtils.corporateBlue600,
+                  ColorUtils.corporateBlue600.withValues(alpha: 0.8),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Back button
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lang.getTranslatedText(AppLocalizations.schoolSettings),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Kelola pengaturan sekolah',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Section header
-            Padding(
-              padding: EdgeInsets.only(bottom: 16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.tune_rounded, color: ColorUtils.corporateBlue600, size: 17),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    lang.getTranslatedText(AppLocalizations.settingsMenu),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: ColorUtils.slate800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            // Menu grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.05,
+          // Body content
+          Expanded(
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section header
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: ColorUtils.corporateBlue600.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              color: ColorUtils.corporateBlue600,
+                              size: 17,
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            lang.getTranslatedText(
+                              AppLocalizations.settingsMenu,
+                            ),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Menu grid
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1.05,
+                      ),
+                      itemCount: menuItems.length,
+                      itemBuilder: (context, index) =>
+                          _buildMenuCard(menuItems[index]),
+                    ),
+                  ],
+                ),
               ),
-              itemCount: menuItems.length,
-              itemBuilder: (context, index) => _buildMenuCard(menuItems[index]),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -140,7 +212,9 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
                     decoration: BoxDecoration(
                       color: item.color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: item.color.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: item.color.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Icon(item.icon, color: item.color, size: 24),
                   ),
@@ -151,7 +225,11 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
                       color: ColorUtils.slate100,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.chevron_right_rounded, color: ColorUtils.slate500, size: 18),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      color: ColorUtils.slate500,
+                      size: 18,
+                    ),
                   ),
                 ],
               ),
@@ -169,10 +247,7 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
               SizedBox(height: 3),
               Text(
                 item.subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
