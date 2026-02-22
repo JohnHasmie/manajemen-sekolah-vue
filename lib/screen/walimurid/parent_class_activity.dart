@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -246,7 +247,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         decoration: BoxDecoration(
           color: ColorUtils.warning600.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: ColorUtils.warning600.withValues(alpha: 0.3),
+          ),
         ),
         child: Row(
           children: [
@@ -257,7 +260,11 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                 color: ColorUtils.warning600.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.warning_amber_rounded, color: ColorUtils.warning600, size: 20),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                color: ColorUtils.warning600,
+                size: 20,
+              ),
             ),
             SizedBox(width: 12),
             Expanded(
@@ -304,7 +311,10 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
               value: _selectedStudentId,
               isExpanded: true,
               underline: SizedBox(),
-              icon: Icon(Icons.keyboard_arrow_down_rounded, color: ColorUtils.slate500),
+              icon: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: ColorUtils.slate500,
+              ),
               items: _studentList.map((student) {
                 return DropdownMenuItem<String>(
                   value: student['id'],
@@ -395,8 +405,14 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                       children: [
                         Text(
                           isAssignment
-                              ? languageProvider.getTranslatedText({'en': 'Assignment', 'id': 'Tugas'})
-                              : languageProvider.getTranslatedText({'en': 'Material', 'id': 'Materi'}),
+                              ? languageProvider.getTranslatedText({
+                                  'en': 'Assignment',
+                                  'id': 'Tugas',
+                                })
+                              : languageProvider.getTranslatedText({
+                                  'en': 'Material',
+                                  'id': 'Materi',
+                                }),
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.white.withValues(alpha: 0.8),
@@ -432,28 +448,41 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                   children: [
                     _buildDetailRow(
                       Icons.person_rounded,
-                      languageProvider.getTranslatedText({'en': 'Teacher', 'id': 'Guru Pengajar'}),
+                      languageProvider.getTranslatedText({
+                        'en': 'Teacher',
+                        'id': 'Guru Pengajar',
+                      }),
                       activity['teacher_name'] ??
                           activity['guru_nama'] ??
                           AppLocalizations.unknown.tr,
                     ),
                     _buildDetailRow(
                       Icons.menu_book_rounded,
-                      languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'}),
+                      languageProvider.getTranslatedText({
+                        'en': 'Subject',
+                        'id': 'Mata Pelajaran',
+                      }),
                       activity['subject_name'] ??
-                          activity['mata_pelajaran_nama'] ?? '-',
+                          activity['mata_pelajaran_nama'] ??
+                          '-',
                     ),
                     _buildDetailRow(
                       Icons.calendar_today_rounded,
-                      languageProvider.getTranslatedText({'en': 'Date', 'id': 'Tanggal'}),
+                      languageProvider.getTranslatedText({
+                        'en': 'Date',
+                        'id': 'Tanggal',
+                      }),
                       '${activity['day'] ?? activity['hari'] ?? '-'} • ${_formatDate(activity['date'] ?? activity['tanggal'])}',
                     ),
                     if (isAssignment &&
-                        (activity['deadline'] ?? activity['batas_waktu']) != null)
+                        (activity['deadline'] ?? activity['batas_waktu']) !=
+                            null)
                       _buildDetailRow(
                         Icons.access_time_rounded,
                         AppLocalizations.deadline.tr,
-                        _formatDate(activity['deadline'] ?? activity['batas_waktu']),
+                        _formatDate(
+                          activity['deadline'] ?? activity['batas_waktu'],
+                        ),
                         iconColor: ColorUtils.error600,
                       ),
                     if (activity['deskripsi'] != null &&
@@ -467,21 +496,25 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                     if (activity['judul_bab'] != null)
                       _buildDetailRow(
                         Icons.auto_stories_rounded,
-                        languageProvider.getTranslatedText({'en': 'Chapter', 'id': 'Materi'}),
+                        languageProvider.getTranslatedText({
+                          'en': 'Chapter',
+                          'id': 'Materi',
+                        }),
                         '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? '\n• ${activity['judul_sub_bab']}' : ''}',
                       ),
                     if (activity['additional_material'] != null &&
                         activity['additional_material'] is List &&
                         (activity['additional_material'] as List).isNotEmpty)
-                      ...(activity['additional_material'] as List)
-                          .map<Widget>((item) {
-                            return _buildDetailRow(
-                              Icons.bookmark_add_rounded,
-                              AppLocalizations.additionalSubChapter.tr,
-                              item['sub_chapter_title'] ??
-                                  AppLocalizations.unknown.tr,
-                            );
-                          }),
+                      ...(activity['additional_material'] as List).map<Widget>((
+                        item,
+                      ) {
+                        return _buildDetailRow(
+                          Icons.bookmark_add_rounded,
+                          AppLocalizations.additionalSubChapter.tr,
+                          item['sub_chapter_title'] ??
+                              AppLocalizations.unknown.tr,
+                        );
+                      }),
                   ],
                 ),
               ),
@@ -743,7 +776,11 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                 SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    Icon(Icons.auto_stories_rounded, size: 12, color: ColorUtils.info600),
+                                    Icon(
+                                      Icons.auto_stories_rounded,
+                                      size: 12,
+                                      color: ColorUtils.info600,
+                                    ),
                                     SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
@@ -768,7 +805,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                 runSpacing: 6,
                                 children: [
                                   _buildInfoTag(
-                                    isAssignment ? Icons.assignment_outlined : Icons.menu_book_outlined,
+                                    isAssignment
+                                        ? Icons.assignment_outlined
+                                        : Icons.menu_book_outlined,
                                     isAssignment
                                         ? AppLocalizations.assignment.tr
                                         : AppLocalizations.material.tr,
@@ -779,15 +818,24 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                     '${activity['hari'] ?? '-'} • ${_formatDate(activity['tanggal'])}',
                                   ),
                                   _buildInfoTag(
-                                    isSpecificTarget ? Icons.person_outlined : Icons.group_outlined,
                                     isSpecificTarget
-                                        ? languageProvider.getTranslatedText({'en': 'Specific', 'id': 'Khusus'})
-                                        : languageProvider.getTranslatedText({'en': 'All Students', 'id': 'Semua'}),
+                                        ? Icons.person_outlined
+                                        : Icons.group_outlined,
+                                    isSpecificTarget
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Specific',
+                                            'id': 'Khusus',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'All Students',
+                                            'id': 'Semua',
+                                          }),
                                     tagColor: isSpecificTarget
                                         ? ColorUtils.info600
                                         : ColorUtils.success600,
                                   ),
-                                  if (isAssignment && activity['batas_waktu'] != null)
+                                  if (isAssignment &&
+                                      activity['batas_waktu'] != null)
                                     _buildInfoTag(
                                       Icons.access_time_rounded,
                                       '${languageProvider.getTranslatedText({'en': 'Due', 'id': 'Batas'})}: ${_formatDate(activity['batas_waktu'])}',
@@ -796,7 +844,10 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                                   if (isSpecificTarget && isForThisStudent)
                                     _buildInfoTag(
                                       Icons.star_outline_rounded,
-                                      languageProvider.getTranslatedText({'en': 'For this child', 'id': 'Untuk anak ini'}),
+                                      languageProvider.getTranslatedText({
+                                        'en': 'For this child',
+                                        'id': 'Untuk anak ini',
+                                      }),
                                       tagColor: ColorUtils.corporateBlue600,
                                     ),
                                 ],
@@ -853,24 +904,11 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Widget _buildLoadingState() {
-    final languageProvider = context.read<LanguageProvider>();
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(_getPrimaryColor()),
-          ),
-          SizedBox(height: 16),
-          Text(
-            languageProvider.getTranslatedText({
-              'en': 'Loading activities...',
-              'id': 'Memuat aktivitas...',
-            }),
-            style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
-          ),
-        ],
-      ),
+    return SkeletonListLoading(
+      itemCount: 6,
+      infoTagCount: 3,
+      baseColor: _getPrimaryColor().withValues(alpha: 0.15),
+      highlightColor: _getPrimaryColor().withValues(alpha: 0.05),
     );
   }
 
@@ -973,9 +1011,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -986,7 +1022,11 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.family_restroom, color: Colors.white, size: 18),
+                  child: Icon(
+                    Icons.family_restroom,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
                 SizedBox(width: 12),
                 Expanded(
