@@ -1227,10 +1227,10 @@ class GradeBookPageState extends State<GradeBookPage> {
     });
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool showLoading = true}) async {
     try {
       if (!mounted) return;
-      setState(() => _isLoading = true);
+      if (showLoading) setState(() => _isLoading = true);
 
       // 1. Load siswa berdasarkan kelas
       final siswaData = await ApiStudentService.getStudentByClass(
@@ -1928,7 +1928,7 @@ class GradeBookPageState extends State<GradeBookPage> {
 
       // Update local data in background
       if (reload) {
-        _loadData();
+        _loadData(showLoading: false);
       }
     } catch (e) {
       if (kDebugMode) print('Error saving inline grade: $e');
