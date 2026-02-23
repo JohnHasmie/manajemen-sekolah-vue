@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
@@ -1388,24 +1389,11 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           _buildHeader(),
           Expanded(
             child: _isLoading
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(color: _getPrimaryColor()),
-                        SizedBox(height: 16),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Loading attendance data...',
-                            'id': 'Memuat data absensi...',
-                          }),
-                          style: TextStyle(
-                            color: ColorUtils.slate600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
+                ? SkeletonListLoading(
+                    itemCount: 6,
+                    infoTagCount: 2,
+                    baseColor: _getPrimaryColor().withValues(alpha: 0.15),
+                    highlightColor: _getPrimaryColor().withValues(alpha: 0.05),
                   )
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
