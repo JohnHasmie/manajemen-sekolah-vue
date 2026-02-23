@@ -1937,29 +1937,35 @@ class _RppFormDialogState extends State<RppFormDialog> {
 // Helper to download and open file
 Future<void> _downloadAndOpenFile(BuildContext context, String filePath) async {
   try {
-    // Construct full URL
-    // Remove /uploads prefix or handle correctly if it's relative
-    // If filePath starts with /uploads, append to baseUrl (stripping /api if needed or just use host)
-    // ApiService.baseUrl usually implies /api or just host?
-    // Let's assume ApiService.baseUrl is "http://host:port/api"
-    // And static files are at "http://host:port/uploads/..."
-    // We need to parse baseUrl to get root.
+    // Construct full URL properly
+    // If ApiService.baseUrl is "https://edu-api.kamillabs.com/api"
+    // Static files are usually at "https://edu-api.kamillabs.com/uploads/..."
+    // We stripping the '/api' suffix to get the root.
+    final rootUrl = ApiService.baseUrl.replaceFirst('/api', '');
 
-    final baseUrl = ApiService.baseUrl;
-    final uri = Uri.parse(baseUrl);
-    final rootUrl = '${uri.scheme}://${uri.host}:${uri.port}';
+    // Ensure filePath doesn't double slash and is properly combined
+    String cleanPath = filePath;
+    if (!cleanPath.startsWith('/')) {
+      cleanPath = '/$cleanPath';
+    }
 
-    // Ensure filePath doesn't double slash
-    final cleanPath = filePath.startsWith('/') ? filePath : '/$filePath';
     final fullUrl = '$rootUrl$cleanPath';
 
     if (kDebugMode) {
       print('Downloading file from: $fullUrl');
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Mengunduh file...')));
+    final languageProvider = context.read<LanguageProvider>();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          languageProvider.getTranslatedText({
+            'en': 'Downloading file...',
+            'id': 'Mengunduh file...',
+          }),
+        ),
+      ),
+    );
 
     final response = await http.get(Uri.parse(fullUrl));
 
@@ -1976,18 +1982,27 @@ Future<void> _downloadAndOpenFile(BuildContext context, String filePath) async {
       }
 
       await OpenFile.open(file.path);
+    } else if (response.statusCode == 404) {
+      throw Exception(
+        languageProvider.getTranslatedText({
+          'en': 'File not found on server',
+          'id': 'File tidak ditemukan di server',
+        }),
+      );
     } else {
-      throw Exception('Failed to download file: ${response.statusCode}');
+      throw Exception(
+        '${languageProvider.getTranslatedText({'en': 'Failed to download file', 'id': 'Gagal mengunduh file'})}: ${response.statusCode}',
+      );
     }
   } catch (e) {
     if (kDebugMode) {
       print('Error opening file: $e');
     }
+
+    String message = e.toString().replaceFirst('Exception: ', '');
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Gagal membuka file: $e'),
-        backgroundColor: ColorUtils.error600,
-      ),
+      SnackBar(content: Text(message), backgroundColor: ColorUtils.error600),
     );
   }
 }
