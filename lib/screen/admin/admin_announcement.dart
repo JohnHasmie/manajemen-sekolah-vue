@@ -92,6 +92,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   void _onItemVisible(Map<String, dynamic> announcement) {
     final id = announcement['id'].toString();
     final isRead =
+        announcement['is_read'] == null ||
         announcement['is_read'] == true ||
         announcement['is_read'] == 1 ||
         announcement['is_read'] == '1';
@@ -1807,9 +1808,10 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     final languageProvider = context.read<LanguageProvider>();
     final primaryColor = _getPrimaryColor();
     final isUnread =
-        !(announcementData['is_read'] == true ||
-            announcementData['is_read'] == 1 ||
-            announcementData['is_read'] == '1');
+        announcementData['is_read'] != null &&
+        announcementData['is_read'] != true &&
+        announcementData['is_read'] != 1 &&
+        announcementData['is_read'] != '1';
     final isImportant = [
       'penting',
       'important',
