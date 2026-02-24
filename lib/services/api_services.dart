@@ -1763,12 +1763,14 @@ class ApiService {
     String? academicYearId,
     String? month,
     String? week,
+    String? role,
   }) async {
     try {
       final params = <String, String>{};
       if (academicYearId != null) params['academic_year_id'] = academicYearId;
       if (month != null) params['month'] = month;
       if (week != null) params['week'] = week;
+      if (role != null) params['role'] = role;
 
       final uri = Uri.parse(
         '$baseUrl/attendance/dashboard-chart',

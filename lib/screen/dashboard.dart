@@ -497,6 +497,41 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           print('👶 Data siswa untuk wali: ${studentsData.length}');
         }
 
+        // Fetch Attendance Chart Data for Parent
+        final now = DateTime.now();
+        final currentMonthNames = [
+          'Januari',
+          'Februari',
+          'Maret',
+          'April',
+          'Mei',
+          'Juni',
+          'Juli',
+          'Agustus',
+          'September',
+          'Oktober',
+          'November',
+          'Desember',
+        ];
+        final currentMonthStr = currentMonthNames[now.month - 1];
+        int weekNum = (now.day / 7).ceil();
+        if (weekNum > 5) weekNum = 5;
+        final currentWeekStr = 'Pekan $weekNum';
+
+        final academicYearProvider = Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        );
+        final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
+            ?.toString();
+
+        final attendanceDataList = await ApiService.getAttendanceDashboardChart(
+          academicYearId: selectedYearId,
+          month: currentMonthStr,
+          week: currentWeekStr,
+          role: _effectiveRole,
+        );
+
         // Untuk pengumuman, kita gunakan fallback dulu
         final announcements = await _getAnnouncements();
         final unreadCount = await ApiService.getUnreadAnnouncementCount();
@@ -509,6 +544,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         if (!mounted) return;
         setState(() {
           _isStatsLoaded = true;
+          _attendanceChartData = List<Map<String, dynamic>>.from(
+            attendanceDataList,
+          );
           _stats = {
             'anak_terdaftar': studentsData.length,
             'pengumuman_terbaru': announcements.length,
@@ -1971,16 +2009,39 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             // Navigate to grades
           },
         ),
-        OverviewCard(
-          title: 'Attendance',
-          value: _stats['unread_presence']?.toString() ?? '0',
-          subtitle: 'New records',
-          icon: Icons.calendar_month_outlined,
-          accentColor: ColorUtils.warning600,
-          onTap: () {
-            // Navigate to attendance
-          },
-        ),
+        if (_attendanceChartData.isNotEmpty)
+          AttendanceBarChartCard(
+            title: 'Kehadiran Anak',
+            icon: Icons.ssid_chart_outlined,
+            accentColor: ColorUtils.warning600,
+            classesData: _attendanceChartData,
+            onTap: () {
+              final selectedYearId = Provider.of<AcademicYearProvider>(
+                context,
+                listen: false,
+              ).selectedAcademicYear?['id']?.toString();
+
+              showDialog(
+                context: context,
+                builder: (context) => _AttendancePopupDialog(
+                  semesterLabel: _currentSemesterLabel,
+                  initialData: _attendanceChartData,
+                  academicYearId: selectedYearId,
+                ),
+              );
+            },
+          )
+        else
+          OverviewCard(
+            title: 'Attendance',
+            value: _stats['unread_presence']?.toString() ?? '0',
+            subtitle: 'New records',
+            icon: Icons.calendar_month_outlined,
+            accentColor: ColorUtils.warning600,
+            onTap: () {
+              // Navigate to attendance
+            },
+          ),
         OverviewCard(
           title: 'Announcements',
           value: _stats['pengumuman_terbaru']?.toString() ?? '0',
@@ -4221,9 +4282,9 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
                                       data: chartData,
                                       color: ColorUtils.warning600,
                                       height: 200,
-                                      width: chartData.length * 56.0,
-                                      barWidth: 28.0,
-                                      barSpacing: 28.0,
+                                      width: chartData.length * 44.0,
+                                      barWidth: 22.0,
+                                      barSpacing: 22.0,
                                       cornerRadius: 4.0,
                                       showLabels: true,
                                       labelStyle: TextStyle(
@@ -4240,7 +4301,7 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
                                       chartData.length,
                                       (idx) => Container(
                                         width:
-                                            56.0, // Matching the new total width unit
+                                            44.0, // Matching the new total width unit
                                         alignment: Alignment.center,
                                         child: Text(
                                           _isWeekly

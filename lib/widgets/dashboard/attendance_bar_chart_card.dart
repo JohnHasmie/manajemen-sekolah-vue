@@ -149,9 +149,9 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                                 data: chartData,
                                 color: widget.accentColor,
                                 height: 40,
-                                width: chartData.length * 31.0,
-                                barWidth: 16.0,
-                                barSpacing: 15.0,
+                                width: chartData.length * 24.0,
+                                barWidth: 12.0,
+                                barSpacing: 12.0,
                                 cornerRadius: 2.0,
                               ),
                             ),
@@ -162,7 +162,7 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                               children: List.generate(
                                 chartData.length,
                                 (idx) => Container(
-                                  width: 31.0,
+                                  width: 24.0,
                                   alignment: Alignment.center,
                                   child: Text(
                                     _isWeekly
