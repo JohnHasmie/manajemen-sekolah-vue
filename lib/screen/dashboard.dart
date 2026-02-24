@@ -3856,63 +3856,65 @@ class _FinancePopupDialogState extends State<_FinancePopupDialog> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
+                      // Use an explicit container without ScrollView so PageView catches horizontal swipe gestures
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            alignment: Alignment.center,
+                            height: 200,
+                            child: MiniBarChart(
+                              data: chartData,
+                              color: ColorUtils.success600,
                               height: 200,
-                              child: MiniBarChart(
-                                data: chartData,
-                                color: ColorUtils.success600,
-                                height: 200,
-                                width: chartData.length * 50.0,
-                                barWidth: 32.0,
-                                barSpacing: 18.0,
-                                cornerRadius: 4.0,
-                                showLabels: true,
-                                labelStyle: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorUtils.slate700,
-                                ),
+                              width:
+                                  chartData.length *
+                                  44.0, // Reduced from 50 to 44 to better fit small screens without scrolling
+                              barWidth: 28.0,
+                              barSpacing: 16.0,
+                              cornerRadius: 4.0,
+                              showLabels: true,
+                              labelStyle: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate700,
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: List.generate(
-                                chartData.length,
-                                (idx) => Container(
-                                  width: 50.0,
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    [
-                                      'Jan',
-                                      'Feb',
-                                      'Mar',
-                                      'Apr',
-                                      'Mei',
-                                      'Jun',
-                                      'Jul',
-                                      'Ags',
-                                      'Sep',
-                                      'Okt',
-                                      'Nov',
-                                      'Des',
-                                    ][isGenap ? idx : (idx + 6)],
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: ColorUtils.slate600,
-                                    ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              chartData.length,
+                              (idx) => Container(
+                                width:
+                                    44.0, // Matching the new total width unit
+                                alignment: Alignment.center,
+                                child: Text(
+                                  [
+                                    'Jan',
+                                    'Feb',
+                                    'Mar',
+                                    'Apr',
+                                    'Mei',
+                                    'Jun',
+                                    'Jul',
+                                    'Ags',
+                                    'Sep',
+                                    'Okt',
+                                    'Nov',
+                                    'Des',
+                                  ][isGenap ? idx : (idx + 6)],
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: ColorUtils.slate600,
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   );
