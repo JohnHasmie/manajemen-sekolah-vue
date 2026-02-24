@@ -37,7 +37,9 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:manajemensekolah/widgets/dashboard/category_section.dart';
+import 'package:manajemensekolah/widgets/dashboard/finance_bar_chart_card.dart';
 import 'package:manajemensekolah/widgets/dashboard/menu_item_card.dart';
+import 'package:manajemensekolah/widgets/dashboard/mini_bar_chart.dart';
 import 'package:manajemensekolah/widgets/dashboard/overview_card.dart';
 import 'package:manajemensekolah/widgets/dashboard/quick_action_button.dart';
 import 'package:manajemensekolah/widgets/dashboard/schedule_slider_card.dart';
@@ -1794,14 +1796,107 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   List<Widget> _getTodaysOverviewCards() {
     if (_effectiveRole == 'admin') {
       return [
-        OverviewCard(
-          title: "Today's Classes",
-          value: _stats['kelas_hari_ini']?.toString() ?? '0',
-          subtitle: 'Scheduled for today',
-          icon: Icons.calendar_today_outlined,
-          accentColor: ColorUtils.corporateBlue600,
+        FinanceBarChartCard(
+          title: 'Keuangan',
+          subtitle: 'Pembayaran 6 bulan',
+          icon: Icons.account_balance_wallet_outlined,
+          accentColor: ColorUtils.success600,
+          chartData: const [
+            8.0,
+            7.5,
+            9.0,
+            3.0,
+            11.0,
+            5.0,
+          ], // Default dummy representation
           onTap: () {
-            // Navigate to schedule
+            showDialog(
+              context: context,
+              builder: (context) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Detail Pembayaran 6 Bulan',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate800,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          height: 200,
+                          child: MiniBarChart(
+                            data: const [8.0, 7.5, 9.0, 3.0, 11.0, 5.0],
+                            color: ColorUtils.success600,
+                            height: 200,
+                            width: double.infinity,
+                            barWidth: 28.0,
+                            barSpacing: 14.0,
+                            cornerRadius: 4.0,
+                            showLabels: true,
+                            labelStyle: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: ColorUtils.slate700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            6,
+                            (index) => Container(
+                              width: 42, // barWidth (28) + barSpacing (14)
+                              alignment: Alignment.center,
+                              child: Text(
+                                [
+                                  'Jul',
+                                  'Ags',
+                                  'Sep',
+                                  'Okt',
+                                  'Nov',
+                                  'Des',
+                                ][index],
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: ColorUtils.slate600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ColorUtils.success600,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
+                          child: const Text('Tutup'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
           },
         ),
         OverviewCard(
