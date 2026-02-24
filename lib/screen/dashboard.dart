@@ -36,6 +36,7 @@ import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:manajemensekolah/widgets/dashboard/attendance_bar_chart_card.dart';
 import 'package:manajemensekolah/widgets/dashboard/category_section.dart';
 import 'package:manajemensekolah/widgets/dashboard/finance_bar_chart_card.dart';
 import 'package:manajemensekolah/widgets/dashboard/menu_item_card.dart';
@@ -1817,14 +1818,29 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             );
           },
         ),
-        OverviewCard(
-          title: 'Pending Tasks',
-          value: (_stats['unread_announcements'] ?? 0).toString(),
-          subtitle: 'Requires attention',
-          icon: Icons.task_alt_outlined,
+        AttendanceBarChartCard(
+          title: 'Absensi',
+          icon: Icons.ssid_chart_outlined,
           accentColor: ColorUtils.warning600,
+          classesData: const [
+            {
+              'subtitle': 'Kelas 7A',
+              'data': [95.0, 92.0, 98.0, 90.0],
+            },
+            {
+              'subtitle': 'Kelas 7B',
+              'data': [85.0, 88.0, 90.0, 92.0],
+            },
+            {
+              'subtitle': 'Kelas 8A',
+              'data': [98.0, 99.0, 95.0, 97.0],
+            },
+          ],
           onTap: () {
-            // Navigate to tasks
+            showDialog(
+              context: context,
+              builder: (context) => const _AttendancePopupDialog(),
+            );
           },
         ),
         OverviewCard(
@@ -3931,6 +3947,156 @@ class _FinancePopupDialogState extends State<_FinancePopupDialog> {
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ColorUtils.success600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Tutup'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AttendancePopupDialog extends StatefulWidget {
+  const _AttendancePopupDialog();
+
+  @override
+  State<_AttendancePopupDialog> createState() => _AttendancePopupDialogState();
+}
+
+class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
+  final PageController _pageController = PageController();
+
+  final List<Map<String, dynamic>> _classesData = [
+    {
+      'title': 'Detail Absensi Kelas 7A',
+      'data': [95.0, 92.0, 98.0, 90.0],
+    },
+    {
+      'title': 'Detail Absensi Kelas 7B',
+      'data': [85.0, 88.0, 90.0, 92.0],
+    },
+    {
+      'title': 'Detail Absensi Kelas 8A',
+      'data': [98.0, 99.0, 95.0, 97.0],
+    },
+  ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 380, // Fixed height for page view
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: _classesData.length,
+                itemBuilder: (context, index) {
+                  final item = _classesData[index];
+                  final title = item['title'] as String;
+                  final chartData = item['data'] as List<double>;
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: ColorUtils.slate800,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Geser ke kiri/kanan untuk berpindah kelas',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate500,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            alignment: Alignment.center,
+                            height: 200,
+                            child: MiniBarChart(
+                              data: chartData,
+                              color: ColorUtils.warning600,
+                              height: 200,
+                              width:
+                                  chartData.length *
+                                  60.0, // Increased width to fit 'Pekan 1' text
+                              barWidth: 28.0,
+                              barSpacing: 32.0,
+                              cornerRadius: 4.0,
+                              showLabels: true,
+                              labelStyle: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              chartData.length,
+                              (idx) => Container(
+                                width:
+                                    60.0, // Matching the new total width unit
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Pekan ${idx + 1}', // Pekan 1, Pekan 2, ...
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: ColorUtils.slate600,
+                                  ),
+                                  maxLines: 1, // Prevent wrapping
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            SmoothPageIndicator(
+              controller: _pageController,
+              count: _classesData.length,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorUtils.warning600,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
