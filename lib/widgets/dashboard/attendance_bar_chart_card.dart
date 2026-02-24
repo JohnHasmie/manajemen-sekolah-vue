@@ -26,6 +26,7 @@ class AttendanceBarChartCard extends StatefulWidget {
 
 class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
   final PageController _pageController = PageController();
+  bool _isWeekly = true;
 
   @override
   void dispose() {
@@ -51,7 +52,9 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
             itemBuilder: (context, index) {
               final classItem = widget.classesData[index];
               final subtitle = classItem['subtitle'] as String;
-              final chartData = classItem['data'] as List<double>;
+              final weeklyData = classItem['weekly_data'] as List<double>;
+              final dailyData = classItem['daily_data'] as List<double>;
+              final chartData = _isWeekly ? weeklyData : dailyData;
 
               return InkWell(
                 onTap: widget.onTap,
@@ -102,6 +105,11 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                               ],
                             ),
                           ),
+                          // Dropdowns and Toggle
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [_buildTypeDropdown()],
+                          ),
                         ],
                       ),
                       const Spacer(),
@@ -118,9 +126,9 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                               height: 40,
                               width:
                                   chartData.length *
-                                  36.0, // (barWidth 18 + barSpacing 18)
-                              barWidth: 18.0,
-                              barSpacing: 18.0,
+                                  31.0, // (barWidth 16 + barSpacing 15) to fit 5 items
+                              barWidth: 16.0,
+                              barSpacing: 15.0,
                               cornerRadius: 2.0,
                             ),
                           ),
@@ -132,10 +140,19 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                               chartData.length,
                               (idx) => Container(
                                 width:
-                                    36.0, // Exact barWidth(18) + barSpacing(18)
+                                    31.0, // Exact barWidth(16) + barSpacing(15)
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'P${idx + 1}', // P1, P2, P3, P4
+                                  _isWeekly
+                                      ? 'P${idx + 1}'
+                                      : [
+                                          'Sen',
+                                          'Sel',
+                                          'Rab',
+                                          'Kam',
+                                          'Jum',
+                                          'Sab',
+                                        ][idx],
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: ColorUtils.slate400,
@@ -177,4 +194,44 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
   }
 
   int min(int a, int b) => a < b ? a : b;
+
+  Widget _buildTypeDropdown() {
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: ColorUtils.slate200),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _isWeekly ? 'Pekanan' : 'Harian',
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 14,
+            color: ColorUtils.slate500,
+          ),
+          isDense: true,
+          style: TextStyle(
+            fontSize: 10,
+            color: ColorUtils.slate700,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _isWeekly = newValue == 'Pekanan';
+              });
+            }
+          },
+          items: ['Harian', 'Pekanan'].map<DropdownMenuItem<String>>((
+            String value,
+          ) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
+        ),
+      ),
+    );
+  }
 }

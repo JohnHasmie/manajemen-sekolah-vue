@@ -1825,21 +1825,25 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           classesData: const [
             {
               'subtitle': 'Kelas 7A',
-              'data': [95.0, 92.0, 98.0, 90.0],
+              'daily_data': [98.0, 95.0, 100.0, 92.0, 96.0],
+              'weekly_data': [95.0, 92.0, 98.0, 90.0],
             },
             {
               'subtitle': 'Kelas 7B',
-              'data': [85.0, 88.0, 90.0, 92.0],
+              'daily_data': [90.0, 85.0, 92.0, 88.0, 90.0],
+              'weekly_data': [85.0, 88.0, 90.0, 92.0],
             },
             {
               'subtitle': 'Kelas 8A',
-              'data': [98.0, 99.0, 95.0, 97.0],
+              'daily_data': [100.0, 98.0, 97.0, 96.0, 99.0],
+              'weekly_data': [98.0, 99.0, 95.0, 97.0],
             },
           ],
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) => const _AttendancePopupDialog(),
+              builder: (context) =>
+                  _AttendancePopupDialog(semesterLabel: _currentSemesterLabel),
             );
           },
         ),
@@ -3966,7 +3970,9 @@ class _FinancePopupDialogState extends State<_FinancePopupDialog> {
 }
 
 class _AttendancePopupDialog extends StatefulWidget {
-  const _AttendancePopupDialog();
+  final String? semesterLabel;
+
+  const _AttendancePopupDialog({super.key, this.semesterLabel});
 
   @override
   State<_AttendancePopupDialog> createState() => _AttendancePopupDialogState();
@@ -3975,18 +3981,57 @@ class _AttendancePopupDialog extends StatefulWidget {
 class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
   final PageController _pageController = PageController();
 
+  bool _isWeekly = true;
+  late String _selectedMonth;
+  String _selectedWeek = 'Pekan 1';
+
+  late List<String> _months;
+  @override
+  void initState() {
+    super.initState();
+    // Default to Ganjil (Juli-Desember) if semester isn't identified
+    final isGenap =
+        widget.semesterLabel?.toLowerCase().contains('genap') ?? false;
+
+    if (isGenap) {
+      _months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni'];
+    } else {
+      _months = [
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+    }
+
+    _selectedMonth = _months.first;
+  }
+
+  final List<String> _weeks = [
+    'Pekan 1',
+    'Pekan 2',
+    'Pekan 3',
+    'Pekan 4',
+    'Pekan 5',
+  ];
+
   final List<Map<String, dynamic>> _classesData = [
     {
       'title': 'Detail Absensi Kelas 7A',
-      'data': [95.0, 92.0, 98.0, 90.0],
+      'daily_data': [98.0, 95.0, 100.0, 92.0, 96.0],
+      'weekly_data': [95.0, 92.0, 98.0, 90.0],
     },
     {
       'title': 'Detail Absensi Kelas 7B',
-      'data': [85.0, 88.0, 90.0, 92.0],
+      'daily_data': [90.0, 85.0, 92.0, 88.0, 90.0],
+      'weekly_data': [85.0, 88.0, 90.0, 92.0],
     },
     {
       'title': 'Detail Absensi Kelas 8A',
-      'data': [98.0, 99.0, 95.0, 97.0],
+      'daily_data': [100.0, 98.0, 97.0, 96.0, 99.0],
+      'weekly_data': [98.0, 99.0, 95.0, 97.0],
     },
   ];
 
@@ -4013,25 +4058,64 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
                 itemBuilder: (context, index) {
                   final item = _classesData[index];
                   final title = item['title'] as String;
-                  final chartData = item['data'] as List<double>;
+                  final List<double> baseWeeklyData =
+                      item['weekly_data'] as List<double>;
+                  final List<double> baseDailyData =
+                      item['daily_data'] as List<double>;
+
+                  // Add subtle variation based on selected period
+                  final double dataOffset = _isWeekly
+                      ? (_months.indexOf(_selectedMonth) * -2.0)
+                      : (_weeks.indexOf(_selectedWeek) * -1.5);
+
+                  final List<double> rawChartData = _isWeekly
+                      ? baseWeeklyData
+                      : baseDailyData;
+                  // Ensure data stays within reasonable bounds (max 100)
+                  final List<double> chartData = rawChartData.map((val) {
+                    double adjusted = val + dataOffset;
+                    if (adjusted > 100.0) adjusted = 100.0;
+                    if (adjusted < 0.0) adjusted = 0.0;
+                    return adjusted;
+                  }).toList();
 
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: ColorUtils.slate800,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate800,
+                              ),
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              _buildTypeDropdown(),
+                              const SizedBox(height: 8),
+                              _isWeekly
+                                  ? _buildMonthDropdown()
+                                  : _buildWeekDropdown(),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        'Geser ke kiri/kanan untuk berpindah kelas',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate500,
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Geser ke kiri/kanan untuk berpindah kelas',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate500,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -4047,9 +4131,9 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
                               height: 200,
                               width:
                                   chartData.length *
-                                  60.0, // Increased width to fit 'Pekan 1' text
+                                  56.0, // Reduced from 60 to 56 to balance 5 items horizontally
                               barWidth: 28.0,
-                              barSpacing: 32.0,
+                              barSpacing: 28.0,
                               cornerRadius: 4.0,
                               showLabels: true,
                               labelStyle: TextStyle(
@@ -4066,10 +4150,19 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
                               chartData.length,
                               (idx) => Container(
                                 width:
-                                    60.0, // Matching the new total width unit
+                                    56.0, // Matching the new total width unit
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'Pekan ${idx + 1}', // Pekan 1, Pekan 2, ...
+                                  _isWeekly
+                                      ? 'Pekan ${idx + 1}'
+                                      : [
+                                          'Sen',
+                                          'Sel',
+                                          'Rab',
+                                          'Kam',
+                                          'Jum',
+                                          'Sab',
+                                        ][idx],
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -4109,6 +4202,122 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
               child: const Text('Tutup'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeDropdown() {
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: ColorUtils.slate200),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _isWeekly ? 'Pekanan' : 'Harian',
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 16,
+            color: ColorUtils.slate500,
+          ),
+          isDense: true,
+          style: TextStyle(
+            fontSize: 12,
+            color: ColorUtils.slate700,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _isWeekly = newValue == 'Pekanan';
+              });
+            }
+          },
+          items: ['Harian', 'Pekanan'].map<DropdownMenuItem<String>>((
+            String value,
+          ) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMonthDropdown() {
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: ColorUtils.slate200),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedMonth,
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 16,
+            color: ColorUtils.slate500,
+          ),
+          isDense: true,
+          style: TextStyle(
+            fontSize: 12,
+            color: ColorUtils.slate700,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedMonth = newValue;
+              });
+            }
+          },
+          items: _months.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeekDropdown() {
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: ColorUtils.slate200),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedWeek,
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 16,
+            color: ColorUtils.slate500,
+          ),
+          isDense: true,
+          style: TextStyle(
+            fontSize: 12,
+            color: ColorUtils.slate700,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedWeek = newValue;
+              });
+            }
+          },
+          items: _weeks.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
         ),
       ),
     );
