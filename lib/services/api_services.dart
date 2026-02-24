@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:manajemensekolah/main.dart';
@@ -1782,6 +1781,28 @@ class ApiService {
       return [];
     } catch (e) {
       if (kDebugMode) print('Error fetching attendance dashboard chart: $e');
+      return [];
+    }
+  }
+
+  static Future<List<dynamic>> getFinanceDashboardChart({
+    String? academicYearId,
+  }) async {
+    try {
+      final params = <String, String>{};
+      if (academicYearId != null) params['academic_year_id'] = academicYearId;
+
+      final uri = Uri.parse(
+        '$baseUrl/finance/dashboard-chart',
+      ).replace(queryParameters: params);
+
+      final response = await http.get(uri, headers: await _getHeaders());
+      final result = _handleResponse(response);
+
+      if (result is List) return result;
+      return [];
+    } catch (e) {
+      if (kDebugMode) print('Error fetching finance dashboard chart: $e');
       return [];
     }
   }

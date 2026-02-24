@@ -51,7 +51,9 @@ class _FinanceBarChartCardState extends State<FinanceBarChartCard> {
             itemBuilder: (context, index) {
               final semester = widget.semestersData[index];
               final subtitle = semester['subtitle'] as String;
-              final chartData = semester['data'] as List<double>;
+              final chartData = List<double>.from(
+                (semester['data'] as List).map((e) => (e as num).toDouble()),
+              );
 
               return InkWell(
                 onTap: widget.onTap,

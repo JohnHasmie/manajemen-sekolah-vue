@@ -71,6 +71,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   List<dynamic> _availableRoles = [];
   bool _isLoadingRoles = false;
   List<Map<String, dynamic>> _attendanceChartData = [];
+  List<Map<String, dynamic>> _financeChartData = [];
 
   String? _currentSemesterLabel;
 
@@ -459,12 +460,17 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           week: currentWeekStr,
         );
 
+        final financeDataList = await ApiService.getFinanceDashboardChart(
+          academicYearId: selectedYearId,
+        );
+
         if (!mounted) return;
         setState(() {
           _isStatsLoaded = true;
           _attendanceChartData = List<Map<String, dynamic>>.from(
             attendanceDataList,
           );
+          _financeChartData = List<Map<String, dynamic>>.from(financeDataList);
           _stats = {
             'total_siswa': studentStats['total'] ?? 0,
             'total_guru': teacherStats['total'] ?? 0,
@@ -1825,27 +1831,20 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   List<Widget> _getTodaysOverviewCards() {
     if (_effectiveRole == 'admin') {
       return [
-        FinanceBarChartCard(
-          title: 'Keuangan',
-          icon: Icons.account_balance_wallet_outlined,
-          accentColor: ColorUtils.success600,
-          semestersData: const [
-            {
-              'subtitle': 'Semester Genap',
-              'data': [8.0, 7.5, 9.0, 3.0, 11.0, 5.0],
+        if (_financeChartData.isNotEmpty)
+          FinanceBarChartCard(
+            title: 'Keuangan',
+            icon: Icons.account_balance_wallet_outlined,
+            accentColor: ColorUtils.success600,
+            semestersData: _financeChartData,
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) =>
+                    _FinancePopupDialog(semestersData: _financeChartData),
+              );
             },
-            {
-              'subtitle': 'Semester Ganjil',
-              'data': [6.0, 8.0, 10.0, 7.0, 5.0, 9.0],
-            },
-          ],
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) => const _FinancePopupDialog(),
-            );
-          },
-        ),
+          ),
         if (_attendanceChartData.isNotEmpty)
           AttendanceBarChartCard(
             title: 'Absensi',
@@ -3832,7 +3831,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 }
 
 class _FinancePopupDialog extends StatefulWidget {
-  const _FinancePopupDialog();
+  final List<Map<String, dynamic>> semestersData;
+
+  const _FinancePopupDialog({required this.semestersData});
 
   @override
   State<_FinancePopupDialog> createState() => _FinancePopupDialogState();
@@ -3840,17 +3841,6 @@ class _FinancePopupDialog extends StatefulWidget {
 
 class _FinancePopupDialogState extends State<_FinancePopupDialog> {
   final PageController _pageController = PageController();
-
-  final List<Map<String, dynamic>> _semestersData = [
-    {
-      'title': 'Detail Semester Genap',
-      'data': [8.0, 7.5, 9.0, 3.0, 11.0, 5.0],
-    },
-    {
-      'title': 'Detail Semester Ganjil',
-      'data': [6.0, 8.0, 10.0, 7.0, 5.0, 9.0],
-    },
-  ];
 
   @override
   void dispose() {
@@ -3871,12 +3861,15 @@ class _FinancePopupDialogState extends State<_FinancePopupDialog> {
               height: 380, // Fixed height for page view
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _semestersData.length,
+                itemCount: widget.semestersData.length,
                 itemBuilder: (context, index) {
-                  final item = _semestersData[index];
-                  final title = item['title'] as String;
-                  final chartData = item['data'] as List<double>;
-                  final isGenap = title.toLowerCase().contains('genap');
+                  final item = widget.semestersData[index];
+                  final subtitle = item['subtitle'] as String;
+                  final title = 'Detail $subtitle';
+                  final chartData = List<double>.from(
+                    (item['data'] as List).map((e) => (e as num).toDouble()),
+                  );
+                  final isGenap = subtitle.toLowerCase().contains('genap');
 
                   return Column(
                     mainAxisSize: MainAxisSize.min,
@@ -3966,7 +3959,7 @@ class _FinancePopupDialogState extends State<_FinancePopupDialog> {
             const SizedBox(height: 16),
             SmoothPageIndicator(
               controller: _pageController,
-              count: _semestersData.length,
+              count: widget.semestersData.length,
             ),
             const SizedBox(height: 24),
             ElevatedButton(
