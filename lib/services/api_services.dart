@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:manajemensekolah/main.dart';
@@ -22,35 +23,35 @@ class ApiService {
   static late final String baseUrl;
 
   static Future<void> init() async {
-    final envBaseUrl = dotenv.env['API_BASE_URL'];
+    // final envBaseUrl = dotenv.env['API_BASE_URL'];
 
-    if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
-      baseUrl = envBaseUrl;
-      if (kDebugMode) {
-        print('📡 API Base URL from .env: $baseUrl');
-      }
-      return;
-    }
+    // if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
+    //   baseUrl = envBaseUrl;
+    //   if (kDebugMode) {
+    //     print('📡 API Base URL from .env: $baseUrl');
+    //   }
+    //   return;
+    // }
 
     // Fallback if .env is missing or API_BASE_URL is empty
-    // if (kIsWeb) {
-    //   // web pakai localhost
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // } else if (Platform.isAndroid) {
-    //   // pakai IP LAN server
-    //   // PENTING: Ganti IP ini jika Mac Anda pindah jaringan
-    //   // Cek IP Mac dengan: ifconfig | grep "inet " | grep -v 127.0.0.1
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    //   if (kDebugMode) {
-    //     print('📡 API Base URL (Android): $baseUrl');
-    //     print('💡 Pastikan Android dan Mac di  Wi-Fi yang sama!');
-    //   }
-    // } else {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    //   if (kDebugMode) {
-    //     print('📡 API Base URL (iOS/Other): $baseUrl');
-    //   }
-    // }
+    if (kIsWeb) {
+      // web pakai localhost
+      baseUrl = 'http://127.0.0.1:8000/api';
+    } else if (Platform.isAndroid) {
+      // pakai IP LAN server
+      // PENTING: Ganti IP ini jika Mac Anda pindah jaringan
+      // Cek IP Mac dengan: ifconfig | grep "inet " | grep -v 127.0.0.1
+      baseUrl = 'http://127.0.0.1:8000/api';
+      if (kDebugMode) {
+        print('📡 API Base URL (Android): $baseUrl');
+        print('💡 Pastikan Android dan Mac di  Wi-Fi yang sama!');
+      }
+    } else {
+      baseUrl = 'http://127.0.0.1:8000/api';
+      if (kDebugMode) {
+        print('📡 API Base URL (iOS/Other): $baseUrl');
+      }
+    }
   }
 
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
@@ -1756,6 +1757,32 @@ class ApiService {
       );
     } catch (e) {
       if (kDebugMode) print('Error marking presence as read: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getAttendanceDashboardChart({
+    String? academicYearId,
+    String? month,
+    String? week,
+  }) async {
+    try {
+      final params = <String, String>{};
+      if (academicYearId != null) params['academic_year_id'] = academicYearId;
+      if (month != null) params['month'] = month;
+      if (week != null) params['week'] = week;
+
+      final uri = Uri.parse(
+        '$baseUrl/attendance/dashboard-chart',
+      ).replace(queryParameters: params);
+
+      final response = await http.get(uri, headers: await _getHeaders());
+      final result = _handleResponse(response);
+
+      if (result is List) return result;
+      return [];
+    } catch (e) {
+      if (kDebugMode) print('Error fetching attendance dashboard chart: $e');
+      return [];
     }
   }
 }

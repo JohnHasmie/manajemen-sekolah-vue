@@ -48,12 +48,21 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
         children: [
           PageView.builder(
             controller: _pageController,
+            physics: const BouncingScrollPhysics(),
             itemCount: widget.classesData.length,
             itemBuilder: (context, index) {
               final classItem = widget.classesData[index];
               final subtitle = classItem['subtitle'] as String;
-              final weeklyData = classItem['weekly_data'] as List<double>;
-              final dailyData = classItem['daily_data'] as List<double>;
+              final weeklyData = List<double>.from(
+                (classItem['weekly_data'] as List).map(
+                  (e) => (e as num).toDouble(),
+                ),
+              );
+              final dailyData = List<double>.from(
+                (classItem['daily_data'] as List).map(
+                  (e) => (e as num).toDouble(),
+                ),
+              );
               final chartData = _isWeekly ? weeklyData : dailyData;
 
               return InkWell(
@@ -113,58 +122,71 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                         ],
                       ),
                       const Spacer(),
-                      // Main Visual: Bar Chart (Not Scrollable, fit to block)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          SizedBox(
-                            height: 40,
-                            child: MiniBarChart(
-                              data: chartData,
-                              color: widget.accentColor,
-                              height: 40,
-                              width:
-                                  chartData.length *
-                                  31.0, // (barWidth 16 + barSpacing 15) to fit 5 items
-                              barWidth: 16.0,
-                              barSpacing: 15.0,
-                              cornerRadius: 2.0,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          // X-axis labels
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(
-                              chartData.length,
-                              (idx) => Container(
-                                width:
-                                    31.0, // Exact barWidth(16) + barSpacing(15)
-                                alignment: Alignment.center,
-                                child: Text(
-                                  _isWeekly
-                                      ? 'P${idx + 1}'
-                                      : [
-                                          'Sen',
-                                          'Sel',
-                                          'Rab',
-                                          'Kam',
-                                          'Jum',
-                                          'Sab',
-                                        ][idx],
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    color: ColorUtils.slate400,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
+                      // Main Visual: Bar Chart or Empty State
+                      if (classItem['title'] == 'Absensi Belum Ada Data' ||
+                          chartData.every((val) => val == 0.0))
+                        SizedBox(
+                          height: 60,
+                          child: Center(
+                            child: Text(
+                              'Belum ada data kehadiran siswa',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: ColorUtils.slate400,
+                                fontStyle: FontStyle.italic,
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        )
+                      else
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SizedBox(
+                              height: 40,
+                              child: MiniBarChart(
+                                data: chartData,
+                                color: widget.accentColor,
+                                height: 40,
+                                width: chartData.length * 31.0,
+                                barWidth: 16.0,
+                                barSpacing: 15.0,
+                                cornerRadius: 2.0,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // X-axis labels
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: List.generate(
+                                chartData.length,
+                                (idx) => Container(
+                                  width: 31.0,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    _isWeekly
+                                        ? 'P${idx + 1}'
+                                        : [
+                                            'Sen',
+                                            'Sel',
+                                            'Rab',
+                                            'Kam',
+                                            'Jum',
+                                            'Sab',
+                                          ][idx],
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: ColorUtils.slate400,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: 8), // Padding for page indicator
                     ],
                   ),

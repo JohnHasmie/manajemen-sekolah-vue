@@ -70,6 +70,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   bool _isLoadingSchools = false;
   List<dynamic> _availableRoles = [];
   bool _isLoadingRoles = false;
+  List<Map<String, dynamic>> _attendanceChartData = [];
 
   String? _currentSemesterLabel;
 
@@ -431,9 +432,39 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final unreadActivityCount =
             await ApiClassActivityService.getUnreadCount();
 
+        final now = DateTime.now();
+        final currentMonthNames = [
+          'Januari',
+          'Februari',
+          'Maret',
+          'April',
+          'Mei',
+          'Juni',
+          'Juli',
+          'Agustus',
+          'September',
+          'Oktober',
+          'November',
+          'Desember',
+        ];
+        final currentMonthStr = currentMonthNames[now.month - 1];
+        int weekNum = (now.day / 7).ceil();
+        if (weekNum > 5) weekNum = 5; // Cap at 5 weeks
+        final currentWeekStr = 'Pekan $weekNum';
+
+        // Fetch Attendance Chart Data
+        final attendanceDataList = await ApiService.getAttendanceDashboardChart(
+          academicYearId: selectedYearId,
+          month: currentMonthStr,
+          week: currentWeekStr,
+        );
+
         if (!mounted) return;
         setState(() {
           _isStatsLoaded = true;
+          _attendanceChartData = List<Map<String, dynamic>>.from(
+            attendanceDataList,
+          );
           _stats = {
             'total_siswa': studentStats['total'] ?? 0,
             'total_guru': teacherStats['total'] ?? 0,
@@ -1099,8 +1130,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Widget _buildHeroStatSkeleton() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.15),
-      highlightColor: Colors.white.withValues(alpha: 0.35),
+      baseColor: Colors.white.withOpacity(0.15),
+      highlightColor: Colors.white.withOpacity(0.35),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1108,7 +1139,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             width: 35,
             height: 35,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -1117,7 +1148,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             width: 28,
             height: 17,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -1126,7 +1157,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             width: 36,
             height: 9,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -1359,7 +1390,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withValues(alpha: 0.3),
+            color: primaryColor.withOpacity(0.3),
             blurRadius: 16,
             offset: Offset(0, 6),
           ),
@@ -1378,7 +1409,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.white.withOpacity(0.08),
                 ),
               ),
             ),
@@ -1391,7 +1422,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: Colors.white.withOpacity(0.06),
                 ),
               ),
             ),
@@ -1404,7 +1435,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 height: 6,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: Colors.white.withOpacity(0.3),
                 ),
               ),
             ),
@@ -1421,10 +1452,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: Colors.white.withOpacity(0.1),
                         width: 1,
                       ),
                     ),
@@ -1434,13 +1465,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         Container(
                           padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
+                            color: Colors.white.withOpacity(0.15),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.calendar_today_outlined,
                             size: 12,
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                           ),
                         ),
                         SizedBox(width: 8),
@@ -1467,7 +1498,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   semester,
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withOpacity(0.8),
                                     fontWeight: FontWeight.w500,
                                     height: 1.1,
                                   ),
@@ -1497,7 +1528,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         _getGreeting(),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: Colors.white.withOpacity(0.85),
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.3,
                         ),
@@ -1673,12 +1704,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         Container(
           padding: EdgeInsets.all(9),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
+            color: Colors.white.withOpacity(0.15),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
           ),
           child: Icon(icon, color: Colors.white, size: 17),
         ),
@@ -1697,7 +1725,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withValues(alpha: 0.85),
+            color: Colors.white.withOpacity(0.85),
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
@@ -1818,35 +1846,29 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             );
           },
         ),
-        AttendanceBarChartCard(
-          title: 'Absensi',
-          icon: Icons.ssid_chart_outlined,
-          accentColor: ColorUtils.warning600,
-          classesData: const [
-            {
-              'subtitle': 'Kelas 7A',
-              'daily_data': [98.0, 95.0, 100.0, 92.0, 96.0],
-              'weekly_data': [95.0, 92.0, 98.0, 90.0],
+        if (_attendanceChartData.isNotEmpty)
+          AttendanceBarChartCard(
+            title: 'Absensi',
+            icon: Icons.ssid_chart_outlined,
+            accentColor: ColorUtils.warning600,
+            classesData: _attendanceChartData,
+            onTap: () {
+              // Extract the selected academic year right before showing dialog
+              final selectedYearId = Provider.of<AcademicYearProvider>(
+                context,
+                listen: false,
+              ).selectedAcademicYear?['id']?.toString();
+
+              showDialog(
+                context: context,
+                builder: (context) => _AttendancePopupDialog(
+                  semesterLabel: _currentSemesterLabel,
+                  initialData: _attendanceChartData,
+                  academicYearId: selectedYearId,
+                ),
+              );
             },
-            {
-              'subtitle': 'Kelas 7B',
-              'daily_data': [90.0, 85.0, 92.0, 88.0, 90.0],
-              'weekly_data': [85.0, 88.0, 90.0, 92.0],
-            },
-            {
-              'subtitle': 'Kelas 8A',
-              'daily_data': [100.0, 98.0, 97.0, 96.0, 99.0],
-              'weekly_data': [98.0, 99.0, 95.0, 97.0],
-            },
-          ],
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) =>
-                  _AttendancePopupDialog(semesterLabel: _currentSemesterLabel),
-            );
-          },
-        ),
+          ),
         OverviewCard(
           title: 'Active Teachers',
           value: _stats['total_guru']?.toString() ?? '0',
@@ -3971,8 +3993,14 @@ class _FinancePopupDialogState extends State<_FinancePopupDialog> {
 
 class _AttendancePopupDialog extends StatefulWidget {
   final String? semesterLabel;
+  final List<Map<String, dynamic>>? initialData;
+  final String? academicYearId;
 
-  const _AttendancePopupDialog({super.key, this.semesterLabel});
+  const _AttendancePopupDialog({
+    this.semesterLabel,
+    this.initialData,
+    this.academicYearId,
+  });
 
   @override
   State<_AttendancePopupDialog> createState() => _AttendancePopupDialogState();
@@ -3986,6 +4014,17 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
   String _selectedWeek = 'Pekan 1';
 
   late List<String> _months;
+  final List<String> _weeks = [
+    'Pekan 1',
+    'Pekan 2',
+    'Pekan 3',
+    'Pekan 4',
+    'Pekan 5',
+  ];
+
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _classesData = [];
+
   @override
   void initState() {
     super.initState();
@@ -4006,34 +4045,69 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
       ];
     }
 
-    _selectedMonth = _months.first;
+    final now = DateTime.now();
+    final allMonths = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    final currentMonthName = allMonths[now.month - 1];
+
+    // Check if the current month is applicable for the chosen semester
+    if (_months.contains(currentMonthName)) {
+      _selectedMonth = currentMonthName;
+    } else {
+      _selectedMonth = _months.first;
+    }
+
+    int currentWeek = (now.day / 7).ceil();
+    if (currentWeek > 5) currentWeek = 5;
+    _selectedWeek = 'Pekan $currentWeek';
+
+    // Load initial data if available, or fetch fresh
+    if (widget.initialData != null && widget.initialData!.isNotEmpty) {
+      _classesData = List.from(widget.initialData!);
+    } else {
+      _fetchData();
+    }
   }
 
-  final List<String> _weeks = [
-    'Pekan 1',
-    'Pekan 2',
-    'Pekan 3',
-    'Pekan 4',
-    'Pekan 5',
-  ];
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-  final List<Map<String, dynamic>> _classesData = [
-    {
-      'title': 'Detail Absensi Kelas 7A',
-      'daily_data': [98.0, 95.0, 100.0, 92.0, 96.0],
-      'weekly_data': [95.0, 92.0, 98.0, 90.0],
-    },
-    {
-      'title': 'Detail Absensi Kelas 7B',
-      'daily_data': [90.0, 85.0, 92.0, 88.0, 90.0],
-      'weekly_data': [85.0, 88.0, 90.0, 92.0],
-    },
-    {
-      'title': 'Detail Absensi Kelas 8A',
-      'daily_data': [100.0, 98.0, 97.0, 96.0, 99.0],
-      'weekly_data': [98.0, 99.0, 95.0, 97.0],
-    },
-  ];
+    try {
+      final fetchedData = await ApiService.getAttendanceDashboardChart(
+        academicYearId: widget.academicYearId,
+        month: _selectedMonth,
+        week: _selectedWeek,
+      );
+
+      if (mounted) {
+        setState(() {
+          _classesData = List<Map<String, dynamic>>.from(fetchedData);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // You could show a snackbar here
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -4050,136 +4124,159 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              height: 380, // Fixed height for page view
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _classesData.length,
-                itemBuilder: (context, index) {
-                  final item = _classesData[index];
-                  final title = item['title'] as String;
-                  final List<double> baseWeeklyData =
-                      item['weekly_data'] as List<double>;
-                  final List<double> baseDailyData =
-                      item['daily_data'] as List<double>;
-
-                  // Add subtle variation based on selected period
-                  final double dataOffset = _isWeekly
-                      ? (_months.indexOf(_selectedMonth) * -2.0)
-                      : (_weeks.indexOf(_selectedWeek) * -1.5);
-
-                  final List<double> rawChartData = _isWeekly
-                      ? baseWeeklyData
-                      : baseDailyData;
-                  // Ensure data stays within reasonable bounds (max 100)
-                  final List<double> chartData = rawChartData.map((val) {
-                    double adjusted = val + dataOffset;
-                    if (adjusted > 100.0) adjusted = 100.0;
-                    if (adjusted < 0.0) adjusted = 0.0;
-                    return adjusted;
-                  }).toList();
-
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: ColorUtils.slate800,
-                              ),
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              _buildTypeDropdown(),
-                              const SizedBox(height: 8),
-                              _isWeekly
-                                  ? _buildMonthDropdown()
-                                  : _buildWeekDropdown(),
-                            ],
-                          ),
-                        ],
+            _isLoading
+                ? SizedBox(
+                    height: 380,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: ColorUtils.warning600,
                       ),
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Geser ke kiri/kanan untuk berpindah kelas',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.slate500,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            alignment: Alignment.center,
-                            height: 200,
-                            child: MiniBarChart(
-                              data: chartData,
-                              color: ColorUtils.warning600,
-                              height: 200,
-                              width:
-                                  chartData.length *
-                                  56.0, // Reduced from 60 to 56 to balance 5 items horizontally
-                              barWidth: 28.0,
-                              barSpacing: 28.0,
-                              cornerRadius: 4.0,
-                              showLabels: true,
-                              labelStyle: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: ColorUtils.slate700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              chartData.length,
-                              (idx) => Container(
-                                width:
-                                    56.0, // Matching the new total width unit
-                                alignment: Alignment.center,
-                                child: Text(
-                                  _isWeekly
-                                      ? 'Pekan ${idx + 1}'
-                                      : [
-                                          'Sen',
-                                          'Sel',
-                                          'Rab',
-                                          'Kam',
-                                          'Jum',
-                                          'Sab',
-                                        ][idx],
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: ColorUtils.slate600,
+                    ),
+                  )
+                : _classesData.isEmpty
+                ? const SizedBox(
+                    height: 380,
+                    child: Center(
+                      child: Text('Tidak ada data absensi untuk periode ini'),
+                    ),
+                  )
+                : SizedBox(
+                    height: 380, // Fixed height for page view
+                    child: PageView.builder(
+                      controller: _pageController,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: _classesData.length,
+                      itemBuilder: (context, index) {
+                        final item = _classesData[index];
+                        final title = item['title'] as String;
+                        final List<double> chartData = _isWeekly
+                            ? List<double>.from(
+                                (item['weekly_data'] as List).map(
+                                  (e) => (e as num).toDouble(),
+                                ),
+                              )
+                            : List<double>.from(
+                                (item['daily_data'] as List).map(
+                                  (e) => (e as num).toDouble(),
+                                ),
+                              );
+
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    title,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: ColorUtils.slate800,
+                                    ),
                                   ),
-                                  maxLines: 1, // Prevent wrapping
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    _buildTypeDropdown(),
+                                    const SizedBox(height: 8),
+                                    _isWeekly
+                                        ? _buildMonthDropdown()
+                                        : _buildWeekDropdown(),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Geser ke kiri/kanan untuk berpindah kelas',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: ColorUtils.slate500,
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
+                            const SizedBox(height: 24),
+                            if (title == 'Absensi Belum Ada Data' ||
+                                chartData.every((val) => val == 0.0))
+                              SizedBox(
+                                height:
+                                    212, // match the height of 200 MiniBarChart + 12 spaces
+                                child: Center(
+                                  child: Text(
+                                    'Belum ada data kehadiran siswa pada periode ini',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: ColorUtils.slate400,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    alignment: Alignment.center,
+                                    height: 200,
+                                    child: MiniBarChart(
+                                      data: chartData,
+                                      color: ColorUtils.warning600,
+                                      height: 200,
+                                      width: chartData.length * 56.0,
+                                      barWidth: 28.0,
+                                      barSpacing: 28.0,
+                                      cornerRadius: 4.0,
+                                      showLabels: true,
+                                      labelStyle: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: ColorUtils.slate700,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      chartData.length,
+                                      (idx) => Container(
+                                        width:
+                                            56.0, // Matching the new total width unit
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          _isWeekly
+                                              ? 'Pekan ${idx + 1}'
+                                              : [
+                                                  'Sen',
+                                                  'Sel',
+                                                  'Rab',
+                                                  'Kam',
+                                                  'Jum',
+                                                  'Sab',
+                                                ][idx],
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: ColorUtils.slate600,
+                                          ),
+                                          maxLines: 1, // Prevent wrapping
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
             const SizedBox(height: 16),
             SmoothPageIndicator(
               controller: _pageController,
@@ -4261,20 +4358,21 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
           value: _selectedMonth,
           icon: Icon(
             Icons.keyboard_arrow_down,
-            size: 16,
+            size: 14,
             color: ColorUtils.slate500,
           ),
           isDense: true,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 10,
             color: ColorUtils.slate700,
             fontWeight: FontWeight.w500,
           ),
           onChanged: (String? newValue) {
-            if (newValue != null) {
+            if (newValue != null && newValue != _selectedMonth) {
               setState(() {
                 _selectedMonth = newValue;
               });
+              _fetchData();
             }
           },
           items: _months.map<DropdownMenuItem<String>>((String value) {
@@ -4299,20 +4397,21 @@ class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
           value: _selectedWeek,
           icon: Icon(
             Icons.keyboard_arrow_down,
-            size: 16,
+            size: 14,
             color: ColorUtils.slate500,
           ),
           isDense: true,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 10,
             color: ColorUtils.slate700,
             fontWeight: FontWeight.w500,
           ),
           onChanged: (String? newValue) {
-            if (newValue != null) {
+            if (newValue != null && newValue != _selectedWeek) {
               setState(() {
                 _selectedWeek = newValue;
               });
+              _fetchData();
             }
           },
           items: _weeks.map<DropdownMenuItem<String>>((String value) {
