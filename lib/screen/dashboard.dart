@@ -1798,104 +1798,22 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       return [
         FinanceBarChartCard(
           title: 'Keuangan',
-          subtitle: 'Pembayaran 6 bulan',
           icon: Icons.account_balance_wallet_outlined,
           accentColor: ColorUtils.success600,
-          chartData: const [
-            8.0,
-            7.5,
-            9.0,
-            3.0,
-            11.0,
-            5.0,
-          ], // Default dummy representation
+          semestersData: const [
+            {
+              'subtitle': 'Semester Genap',
+              'data': [8.0, 7.5, 9.0, 3.0, 11.0, 5.0],
+            },
+            {
+              'subtitle': 'Semester Ganjil',
+              'data': [6.0, 8.0, 10.0, 7.0, 5.0, 9.0],
+            },
+          ],
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) {
-                return Dialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Detail Pembayaran 6 Bulan',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate800,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          height: 200,
-                          child: MiniBarChart(
-                            data: const [8.0, 7.5, 9.0, 3.0, 11.0, 5.0],
-                            color: ColorUtils.success600,
-                            height: 200,
-                            width: double.infinity,
-                            barWidth: 28.0,
-                            barSpacing: 14.0,
-                            cornerRadius: 4.0,
-                            showLabels: true,
-                            labelStyle: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: ColorUtils.slate700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            6,
-                            (index) => Container(
-                              width: 42, // barWidth (28) + barSpacing (14)
-                              alignment: Alignment.center,
-                              child: Text(
-                                [
-                                  'Jul',
-                                  'Ags',
-                                  'Sep',
-                                  'Okt',
-                                  'Nov',
-                                  'Des',
-                                ][index],
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: ColorUtils.slate600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: ColorUtils.success600,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                          ),
-                          child: const Text('Tutup'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+              builder: (context) => const _FinancePopupDialog(),
             );
           },
         ),
@@ -3866,6 +3784,164 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             child: Text('OK'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FinancePopupDialog extends StatefulWidget {
+  const _FinancePopupDialog();
+
+  @override
+  State<_FinancePopupDialog> createState() => _FinancePopupDialogState();
+}
+
+class _FinancePopupDialogState extends State<_FinancePopupDialog> {
+  final PageController _pageController = PageController();
+
+  final List<Map<String, dynamic>> _semestersData = [
+    {
+      'title': 'Detail Semester Genap',
+      'data': [8.0, 7.5, 9.0, 3.0, 11.0, 5.0],
+    },
+    {
+      'title': 'Detail Semester Ganjil',
+      'data': [6.0, 8.0, 10.0, 7.0, 5.0, 9.0],
+    },
+  ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 380, // Fixed height for page view
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: _semestersData.length,
+                itemBuilder: (context, index) {
+                  final item = _semestersData[index];
+                  final title = item['title'] as String;
+                  final chartData = item['data'] as List<double>;
+                  final isGenap = title.toLowerCase().contains('genap');
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: ColorUtils.slate800,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Geser ke kiri/kanan untuk melihat riwayat',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate500,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: 200,
+                              child: MiniBarChart(
+                                data: chartData,
+                                color: ColorUtils.success600,
+                                height: 200,
+                                width: chartData.length * 50.0,
+                                barWidth: 32.0,
+                                barSpacing: 18.0,
+                                cornerRadius: 4.0,
+                                showLabels: true,
+                                labelStyle: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorUtils.slate700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: List.generate(
+                                chartData.length,
+                                (idx) => Container(
+                                  width: 50.0,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    [
+                                      'Jan',
+                                      'Feb',
+                                      'Mar',
+                                      'Apr',
+                                      'Mei',
+                                      'Jun',
+                                      'Jul',
+                                      'Ags',
+                                      'Sep',
+                                      'Okt',
+                                      'Nov',
+                                      'Des',
+                                    ][isGenap ? idx : (idx + 6)],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: ColorUtils.slate600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            SmoothPageIndicator(
+              controller: _pageController,
+              count: _semestersData.length,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorUtils.success600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Tutup'),
+            ),
+          ],
+        ),
       ),
     );
   }
