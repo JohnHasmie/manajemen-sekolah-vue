@@ -1259,12 +1259,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     color: ColorUtils.slate600,
                   ),
                   iconSize: 20,
-                  padding: EdgeInsets.all(8),
-                  constraints: BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  splashRadius: 18,
                   onPressed: () =>
                       _showLanguageDialog(context, languageProvider),
                 ),
-                SizedBox(width: 4),
                 Stack(
                   children: [
                     IconButton(
@@ -1274,8 +1277,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         color: ColorUtils.slate600,
                       ),
                       iconSize: 20,
-                      padding: EdgeInsets.all(8),
-                      constraints: BoxConstraints(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      splashRadius: 18,
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -1290,7 +1297,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         _stats['unread_announcements'] > 0)
                       Positioned(
                         right: 4,
-                        top: 4,
+                        top: 2,
                         child: Container(
                           padding: EdgeInsets.all(3),
                           decoration: BoxDecoration(
@@ -1316,7 +1323,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       ),
                   ],
                 ),
-                SizedBox(width: 4),
                 IconButton(
                   icon: Icon(
                     Icons.account_circle,
@@ -1324,8 +1330,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     color: ColorUtils.slate600,
                   ),
                   iconSize: 20,
-                  padding: EdgeInsets.all(8),
-                  constraints: BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  splashRadius: 18,
                   onPressed: () => _showAccountBottomSheet(context),
                 ),
               ],
