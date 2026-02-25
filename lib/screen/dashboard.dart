@@ -2015,6 +2015,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             icon: Icons.ssid_chart_outlined,
             accentColor: ColorUtils.warning600,
             classesData: _attendanceChartData,
+            hideSubtitle:
+                true, // Requested by user to hide the child's name on the card
             onTap: () {
               final selectedYearId = Provider.of<AcademicYearProvider>(
                 context,

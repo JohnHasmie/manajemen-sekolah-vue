@@ -9,6 +9,7 @@ class AttendanceBarChartCard extends StatefulWidget {
   final IconData icon;
   final Color accentColor;
   final List<Map<String, dynamic>> classesData;
+  final bool hideSubtitle;
   final VoidCallback? onTap;
 
   const AttendanceBarChartCard({
@@ -17,6 +18,7 @@ class AttendanceBarChartCard extends StatefulWidget {
     required this.icon,
     required this.accentColor,
     required this.classesData,
+    this.hideSubtitle = false,
     this.onTap,
   });
 
@@ -69,12 +71,13 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
                             width: 32,
@@ -102,23 +105,44 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                if (subtitle.isNotEmpty)
-                                  Text(
-                                    subtitle,
-                                    style: DashboardTypography.statSubtitle(
-                                      color: ColorUtils.slate500,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                const SizedBox(height: 2),
+                                _buildTypeDropdown(),
                               ],
                             ),
                           ),
-                          // Dropdowns and Toggle
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [_buildTypeDropdown()],
-                          ),
+                          // Subtitle (Class Name or Child Name) on the top right
+                          if (!widget.hideSubtitle && subtitle.isNotEmpty)
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.only(top: 2, left: 8),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: widget.accentColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        subtitle,
+                                        style: DashboardTypography.statSubtitle(
+                                          color: ColorUtils.slate600,
+                                        ).copyWith(fontWeight: FontWeight.w600),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                       const Spacer(),
@@ -187,7 +211,7 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                             ),
                           ],
                         ),
-                      const SizedBox(height: 8), // Padding for page indicator
+                      const SizedBox(height: 4), // Padding for page indicator
                     ],
                   ),
                 ),
@@ -218,40 +242,44 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
   int min(int a, int b) => a < b ? a : b;
 
   Widget _buildTypeDropdown() {
-    return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: ColorUtils.slate200),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _isWeekly ? 'Pekanan' : 'Harian',
-          icon: Icon(
-            Icons.keyboard_arrow_down,
-            size: 14,
-            color: ColorUtils.slate500,
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Container(
+        height: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: ColorUtils.slate200),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _isWeekly ? 'Pekanan' : 'Harian',
+            icon: Icon(
+              Icons.keyboard_arrow_down,
+              size: 14,
+              color: ColorUtils.slate500,
+            ),
+            isDense: true,
+            style: TextStyle(
+              fontSize: 10,
+              color: ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
+            ),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _isWeekly = newValue == 'Pekanan';
+                });
+              }
+            },
+            items: ['Harian', 'Pekanan'].map<DropdownMenuItem<String>>((
+              String value,
+            ) {
+              return DropdownMenuItem<String>(value: value, child: Text(value));
+            }).toList(),
           ),
-          isDense: true,
-          style: TextStyle(
-            fontSize: 10,
-            color: ColorUtils.slate700,
-            fontWeight: FontWeight.w500,
-          ),
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                _isWeekly = newValue == 'Pekanan';
-              });
-            }
-          },
-          items: ['Harian', 'Pekanan'].map<DropdownMenuItem<String>>((
-            String value,
-          ) {
-            return DropdownMenuItem<String>(value: value, child: Text(value));
-          }).toList(),
         ),
       ),
     );
