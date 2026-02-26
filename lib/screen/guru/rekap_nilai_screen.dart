@@ -252,10 +252,42 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         academicYearId: academicYearId,
       );
 
+      // Restore Chapters from saved Recap (Expand list if needed)
+      if (recaps.isNotEmpty) {
+        List<String> longestBabNames = [];
+        for (var r in recaps) {
+          if (r['bab_names'] != null && r['bab_names'] is List) {
+            final names = List<String>.from(r['bab_names']);
+            if (names.length > longestBabNames.length) {
+              longestBabNames = names;
+            }
+          }
+        }
+
+        if (longestBabNames.isNotEmpty) {
+          while (_chapters.length < longestBabNames.length) {
+            _chapters.add({
+              'judul_bab': 'Bab ${_chapters.length + 1}',
+              'judul': 'Bab ${_chapters.length + 1}',
+              'title': 'Bab ${_chapters.length + 1}',
+            });
+          }
+
+          for (int i = 0; i < longestBabNames.length; i++) {
+            if (i < _chapters.length) {
+              _chapters[i]['judul_bab'] = longestBabNames[i];
+              _chapters[i]['judul'] = longestBabNames[i];
+              _chapters[i]['title'] = longestBabNames[i];
+            }
+          }
+        }
+      }
+
       setState(() {
         _rawGrades = rawGrades;
         _students = students;
         _recaps = recaps;
+        _allAvailableChapters = List.from(chapters);
       });
 
       _processTableData(students, _chapters, rawGrades, recaps);
@@ -357,45 +389,65 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         orElse: () => null,
       );
 
-      double? utsScore = utsGrade != null
-          ? double.tryParse(
-              (utsGrade['score'] ?? utsGrade['nilai'] ?? '0').toString(),
-            )
-          : null;
-      double? uasScore = uasGrade != null
-          ? double.tryParse(
-              (uasGrade['score'] ?? uasGrade['nilai'] ?? '0').toString(),
-            )
-          : null;
-
-      // Calculate Final Score
-      double finalScore = 0;
-      int componentCount = 0;
-
-      for (var score in babScores) {
-        if (score != null) {
-          finalScore += score;
-          componentCount++;
-        }
-      }
-      if (utsScore != null) {
-        finalScore += utsScore;
-        componentCount++;
-      }
-      if (uasScore != null) {
-        finalScore += uasScore;
-        componentCount++;
-      }
-
-      double finalAverage = componentCount > 0
-          ? (finalScore / componentCount)
-          : 0;
-
       // Check existing Recap
       var existingRecap = recaps.firstWhere(
         (r) => r['student_class_id']?.toString() == studentClassId,
         orElse: () => null,
       );
+
+      double? utsScore;
+      double? uasScore;
+      List<double?> finalBabScores = [];
+
+      if (existingRecap != null && existingRecap['bab_scores'] != null) {
+        // LOAD FROM SAVED RECAP
+        final savedBabScores = List<dynamic>.from(existingRecap['bab_scores']);
+        finalBabScores = savedBabScores
+            .map((s) => s != null ? double.tryParse(s.toString()) : null)
+            .toList();
+        utsScore = existingRecap['uts_score'] != null
+            ? double.tryParse(existingRecap['uts_score'].toString())
+            : null;
+        uasScore = existingRecap['uas_score'] != null
+            ? double.tryParse(existingRecap['uas_score'].toString())
+            : null;
+      } else {
+        // CALCULATE FROM RAW GRADES
+        utsScore = utsGrade != null
+            ? double.tryParse(
+                (utsGrade['score'] ?? utsGrade['nilai'] ?? '0').toString(),
+              )
+            : null;
+        uasScore = uasGrade != null
+            ? double.tryParse(
+                (uasGrade['score'] ?? uasGrade['nilai'] ?? '0').toString(),
+              )
+            : null;
+        finalBabScores = babScores;
+      }
+
+      // Calculate Final Score
+      double finalScoreValue = 0;
+      int componentCount = 0;
+
+      for (var score in finalBabScores) {
+        if (score != null) {
+          finalScoreValue += score;
+          componentCount++;
+        }
+      }
+      if (utsScore != null) {
+        finalScoreValue += utsScore;
+        componentCount++;
+      }
+      if (uasScore != null) {
+        finalScoreValue += uasScore;
+        componentCount++;
+      }
+
+      double finalAverage = componentCount > 0
+          ? (finalScoreValue / componentCount)
+          : 0;
 
       String currentPredikat = existingRecap != null
           ? (existingRecap['predikat'] ?? '')
@@ -415,7 +467,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       for (int i = 0; i < numChapters; i++) {
         final key = '$studentClassId|bab|$i';
         _scoreControllers[key] = TextEditingController(
-          text: babScores[i]?.toStringAsFixed(1) ?? '',
+          text: finalBabScores[i]?.toStringAsFixed(1) ?? '',
         );
       }
       _scoreControllers['$studentClassId|uts|null'] = TextEditingController(
@@ -429,7 +481,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         'student_class_id': studentClassId,
         'nis': (student['student_number'] ?? student['nis'] ?? '-').toString(),
         'nama': (student['name'] ?? student['nama'] ?? '-').toString(),
-        'bab_scores': babScores,
+        'bab_scores': finalBabScores,
         'uts': utsScore,
         'uas': uasScore,
         'final_score': finalAverage,
@@ -707,12 +759,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                                               'title': val,
                                             };
                                           });
-                                          _processTableData(
-                                            _students,
-                                            _chapters,
-                                            _rawGrades,
-                                            _recaps,
-                                          );
+                                          _updateAllDescriptions();
                                           Navigator.pop(context);
                                         }
                                       },
@@ -736,12 +783,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                                             setState(() {
                                               _chapters[babIndex!] = c;
                                             });
-                                            _processTableData(
-                                              _students,
-                                              _chapters,
-                                              _rawGrades,
-                                              _recaps,
-                                            );
+                                            _updateAllDescriptions();
                                             Navigator.pop(context);
                                           },
                                         );
@@ -904,6 +946,36 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     });
   }
 
+  void _addChapter() {
+    setState(() {
+      final newIndex = _chapters.length;
+      final newChapterName = 'Bab ${newIndex + 1}';
+
+      _chapters.add({
+        'judul_bab': newChapterName,
+        'judul': newChapterName,
+        'title': newChapterName,
+      });
+
+      for (var row in _tableData) {
+        final studentClassId = row['student_class_id'];
+
+        // Expand score list
+        if (row['bab_scores'] is List) {
+          row['bab_scores'].add(null);
+        }
+
+        // Initialize Controller for the new Bab
+        final key = '$studentClassId|bab|$newIndex';
+        _scoreControllers[key] = TextEditingController(text: '');
+
+        _recalculateRow(row);
+      }
+    });
+
+    _updateAllDescriptions();
+  }
+
   void _applyBulkGrades(
     String type,
     List<Map<String, dynamic>> selectedAssessments, [
@@ -1043,6 +1115,12 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
           'academic_year_id': academicYearId,
           'predikat': _predikatControllers[studentClassId]?.text,
           'deskripsi': _deskripsiControllers[studentClassId]?.text,
+          'bab_scores': row['bab_scores'],
+          'bab_names': _chapters
+              .map((c) => c['judul_bab'] ?? c['judul'] ?? c['title'] ?? 'Bab')
+              .toList(),
+          'uts_score': row['uts'],
+          'uas_score': row['uas'],
           'final_score': row['final_score'],
         });
       }
@@ -1304,6 +1382,14 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
               ),
 
             DataColumn(
+              label: IconButton(
+                onPressed: _addChapter,
+                icon: Icon(Icons.add_circle, color: ColorUtils.primary),
+                tooltip: 'Tambah Bab',
+              ),
+            ),
+
+            DataColumn(
               label: InkWell(
                 onTap: () => _showBulkSelectionDialog('uts'),
                 child: Row(
@@ -1356,6 +1442,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                 // Bab cells
                 for (int i = 0; i < numChapters; i++)
                   DataCell(_buildEditableGradeCell(studentClassId, 'bab', i)),
+
+                DataCell(SizedBox.shrink()), // Placeholder for "Add" column
 
                 DataCell(_buildEditableGradeCell(studentClassId, 'uts', null)),
                 DataCell(_buildEditableGradeCell(studentClassId, 'uas', null)),
