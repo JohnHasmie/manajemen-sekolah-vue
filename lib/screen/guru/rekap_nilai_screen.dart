@@ -6,6 +6,7 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_grade_recap_services.dart';
+import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
@@ -36,8 +37,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   List<dynamic> _subjectList = [];
   List<dynamic> _chapters = [];
   List<dynamic> _allAvailableChapters = [];
-  List<dynamic> _students = [];
-  List<dynamic> _recaps = [];
+  List<dynamic> _todaySchedules = [];
+  Map<String, String> _dayIdMap = {};
 
   // Computed Table Data
   List<Map<String, dynamic>> _tableData = [];
@@ -66,7 +67,9 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _searchController.addListener(_onSearchChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadTodaySchedules();
       _loadClasses();
     });
   }
@@ -94,6 +97,148 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         _loadMoreClasses();
       }
     }
+  }
+
+  void _onSearchChanged() {
+    // Manual search triggered by button
+  }
+
+  // ==================== PRIORITY LOGIC ====================
+
+  Future<void> _loadTodaySchedules() async {
+    try {
+      final days = await ApiScheduleService.getHari();
+      final Map<String, String> dayIdMap = {};
+      for (var day in days) {
+        dayIdMap[day['nama'] ?? day['name'] ?? ''] = day['id'].toString();
+      }
+
+      final now = DateTime.now();
+      final dayNamesISO = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
+      final currentDayISO = dayNamesISO[now.weekday - 1];
+      final currentDayIndo = _normalizeDayName(currentDayISO);
+
+      String? currentDayId;
+      dayIdMap.forEach((key, value) {
+        if (_normalizeDayName(key) == currentDayIndo) {
+          currentDayId = value;
+        }
+      });
+
+      if (!mounted) return;
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+
+      final schedules = await ApiScheduleService.getSchedulesPaginated(
+        limit: 100,
+        guruId: widget.teacher['id'],
+        tahunAjaran: academicYearId,
+      );
+
+      final List<dynamic> allSchedules = schedules['data'] ?? [];
+
+      if (mounted) {
+        setState(() {
+          _dayIdMap = dayIdMap;
+          _todaySchedules = allSchedules.where((s) {
+            final ids = _extractDayIds(s);
+            if (currentDayId != null && ids.contains(currentDayId)) return true;
+            return ids.any((id) {
+              final entry = _dayIdMap.entries.firstWhere(
+                (e) => e.value == id,
+                orElse: () => const MapEntry('', ''),
+              );
+              return entry.key.isNotEmpty &&
+                  _normalizeDayName(entry.key) == currentDayIndo;
+            });
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading today schedules: $e');
+    }
+  }
+
+  String _normalizeDayName(String name) {
+    name = name.trim().toLowerCase();
+    if (name.contains('senin') || name.contains('monday')) return 'Senin';
+    if (name.contains('selasa') || name.contains('tuesday')) return 'Selasa';
+    if (name.contains('rabu') || name.contains('wednesday')) return 'Rabu';
+    if (name.contains('kamis') || name.contains('thursday')) return 'Kamis';
+    if (name.contains('jumat') || name.contains('friday')) return 'Jumat';
+    if (name.contains('sabtu') || name.contains('saturday')) return 'Sabtu';
+    if (name.contains('minggu') || name.contains('sunday')) return 'Minggu';
+    return name;
+  }
+
+  List<String> _extractDayIds(dynamic schedule) {
+    if (schedule == null) return [];
+    final rawIds = schedule['days_ids'] ?? schedule['day_id'];
+    if (rawIds == null) return [];
+
+    if (rawIds is List) {
+      return rawIds.map((e) => e.toString()).toList();
+    }
+    if (rawIds is String) {
+      if (rawIds.contains('[')) {
+        try {
+          final parsed = json.decode(rawIds);
+          if (parsed is List) return parsed.map((e) => e.toString()).toList();
+        } catch (_) {}
+      }
+      return rawIds
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    return [rawIds.toString()];
+  }
+
+  // ==================== HELPER METHODS ====================
+
+  Color _getPrimaryColor() {
+    return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
+  }
+
+  Widget _buildInfoTag(IconData icon, String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: ColorUtils.slate600),
+          SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: ColorUtils.slate700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
   }
 
   // ==================== LOAD DATA ====================
@@ -173,7 +318,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     try {
       final response = await http.get(
         Uri.parse(
-          '${ApiService.baseUrl}/class/${_selectedClass!['id']}/subjects',
+          '${ApiService.baseUrl}/class/${_selectedClass!['id']}/subjects?teacher_id=${widget.teacher['id']}',
         ),
         headers: await ApiService.getHeaders(),
       );
@@ -285,8 +430,6 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
       setState(() {
         _rawGrades = rawGrades;
-        _students = students;
-        _recaps = recaps;
         _allAvailableChapters = List.from(chapters);
       });
 
@@ -1149,103 +1292,210 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        return Scaffold(
+          backgroundColor: ColorUtils.slate50,
+          body: Column(
+            children: [
+              // Pattern #7 Gradient Header
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 20,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      _getPrimaryColor(),
+                      _getPrimaryColor().withValues(alpha: 0.8),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _getPrimaryColor().withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        if (_currentStep > 0) {
+                          setState(() {
+                            _currentStep--;
+                            _searchController.clear();
+                          });
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Grade Recap',
+                              'id': 'Rekap Nilai',
+                            }),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            _currentStep == 0
+                                ? languageProvider.getTranslatedText({
+                                    'en': 'Select Class',
+                                    'id': 'Pilih Kelas',
+                                  })
+                                : _currentStep == 1
+                                ? (_selectedClass?['nama'] ??
+                                      _selectedClass?['name'] ??
+                                      '')
+                                : (_selectedSubject?['nama'] ??
+                                      _selectedSubject?['name'] ??
+                                      ''),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_currentStep == 2)
+                      GestureDetector(
+                        onTap: _isSaving ? null : _saveRecaps,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: _isSaving
+                              ? SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Row(
+                                  children: [
+                                    Icon(
+                                      Icons.save,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      languageProvider.getTranslatedText({
+                                        'en': 'Save',
+                                        'id': 'Simpan',
+                                      }),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
 
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      appBar: AppBar(
-        title: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Grade Recap',
-            'id': 'Rekap Nilai',
-          }),
-          style: TextStyle(
-            color: ColorUtils.slate900,
-            fontWeight: FontWeight.bold,
+              // Step indicator or search bar
+              if (_currentStep < 2) _buildTopControls(languageProvider),
+
+              Expanded(child: _buildBody(languageProvider)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTopControls(LanguageProvider languageProvider) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, 10, 16, 10),
+      color: Colors.white,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: ColorUtils.slate200),
+          boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: (_) => setState(() {}),
+          style: TextStyle(color: ColorUtils.slate900),
+          decoration: InputDecoration(
+            hintText: languageProvider.getTranslatedText({
+              'en': _currentStep == 0
+                  ? 'Search classes...'
+                  : 'Search subjects...',
+              'id': _currentStep == 0
+                  ? 'Cari kelas...'
+                  : 'Cari mata pelajaran...',
+            }),
+            hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 14),
+            prefixIcon: Icon(
+              Icons.search,
+              color: ColorUtils.slate400,
+              size: 20,
+            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      size: 18,
+                      color: ColorUtils.slate400,
+                    ),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {});
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: ColorUtils.slate900),
-          onPressed: () {
-            if (_currentStep > 0) {
-              setState(() {
-                _currentStep--;
-                _searchController.clear();
-              });
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        actions: [
-          if (_currentStep == 2)
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : _saveRecaps,
-                icon: _isSaving
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Icon(Icons.save, size: 18),
-                label: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Save',
-                    'id': 'Simpan',
-                  }),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorUtils.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Breadcrumb / Header info
-          if (_currentStep > 0)
-            Container(
-              padding: EdgeInsets.all(16),
-              color: Colors.white,
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_selectedClass != null)
-                    Text(
-                      'Kelas: ${_selectedClass!['nama'] ?? _selectedClass!['name']}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  if (_selectedSubject != null)
-                    Text(
-                      'Mata Pelajaran: ${_selectedSubject!['nama'] ?? _selectedSubject!['name']}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: ColorUtils.slate500,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-          Expanded(child: _buildBody(languageProvider)),
-        ],
       ),
     );
   }
@@ -1259,77 +1509,284 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   Widget _buildClassList(LanguageProvider languageProvider) {
     if (_isLoading) return SkeletonListLoading();
 
+    final query = _searchController.text.toLowerCase();
+    final filteredList = _classList.where((item) {
+      final name = (item['nama'] ?? item['name'] ?? '')
+          .toString()
+          .toLowerCase();
+      final level = (item['grade_level'] ?? '').toString().toLowerCase();
+      return name.contains(query) || level.contains(query);
+    }).toList();
+
+    if (filteredList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: ColorUtils.slate300),
+            SizedBox(height: 16),
+            Text(
+              languageProvider.getTranslatedText({
+                'en': 'No classes found',
+                'id': 'Kelas tidak ditemukan',
+              }),
+              style: TextStyle(color: ColorUtils.slate500, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.all(16),
-      itemCount: _classList.length + (_isLoadingMore ? 1 : 0),
+      padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
+      itemCount: filteredList.length + (_isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == _classList.length)
-          return Center(child: CircularProgressIndicator());
-
-        final item = _classList[index];
-        return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: ColorUtils.slate200),
-          ),
-          margin: EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            contentPadding: EdgeInsets.all(16),
-            leading: CircleAvatar(
-              backgroundColor: ColorUtils.primary.withValues(alpha: 0.1),
-              child: Icon(Icons.class_, color: ColorUtils.primary),
+        if (index == filteredList.length) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
             ),
-            title: Text(item['nama'] ?? item['name'] ?? '-'),
-            subtitle: Text('${item['grade_level'] ?? ''}'),
-            trailing: Icon(Icons.chevron_right),
-            onTap: () {
-              setState(() {
-                _selectedClass = item;
-                _currentStep = 1;
-              });
-              _loadSubjects();
-            },
-          ),
-        );
+          );
+        }
+
+        final item = filteredList[index];
+        return _buildClassCard(item, languageProvider);
       },
+    );
+  }
+
+  Widget _buildClassCard(dynamic item, LanguageProvider languageProvider) {
+    final classId = item['id']?.toString();
+    final isToday = _todaySchedules.any(
+      (s) => s['class_id']?.toString() == classId,
+    );
+    final ht = item['homeroom_teacher'];
+    final wk = item['wali_kelas'];
+
+    String waliKelas = '-';
+    if (ht is Map) {
+      waliKelas = ht['name']?.toString() ?? '-';
+    } else if (ht is List && ht.isNotEmpty && ht[0] is Map) {
+      waliKelas = ht[0]['name']?.toString() ?? '-';
+    } else if (wk is Map) {
+      waliKelas = wk['nama']?.toString() ?? wk['name']?.toString() ?? '-';
+    } else if (wk is List && wk.isNotEmpty && wk[0] is Map) {
+      waliKelas = wk[0]['nama']?.toString() ?? wk[0]['name']?.toString() ?? '-';
+    } else {
+      waliKelas =
+          item['wali_kelas_name']?.toString() ??
+          item['homeroom_teacher_name']?.toString() ??
+          '-';
+    }
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedClass = item;
+          _currentStep = 1;
+          _searchController.clear();
+        });
+        _loadSubjects();
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: ColorUtils.corporateShadow(),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: _getPrimaryColor().withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.class_outlined,
+                    color: _getPrimaryColor(),
+                    size: 26,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item['nama'] ?? item['name'] ?? '-',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: ColorUtils.slate900,
+                            ),
+                          ),
+                        ),
+                        if (isToday)
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: ColorUtils.success600.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'TODAY',
+                                'id': 'HARI INI',
+                              }),
+                              style: TextStyle(
+                                color: ColorUtils.success600,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        _buildInfoTag(
+                          Icons.layers_outlined,
+                          '${item['grade_level'] ?? '-'}',
+                        ),
+                        _buildInfoTag(Icons.person_outline, waliKelas),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: ColorUtils.slate300),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildSubjectList(LanguageProvider languageProvider) {
     if (_isLoading) return SkeletonListLoading();
 
-    return ListView.builder(
-      padding: EdgeInsets.all(16),
-      itemCount: _subjectList.length,
-      itemBuilder: (context, index) {
-        final item = _subjectList[index];
-        return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: ColorUtils.slate200),
-          ),
-          margin: EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            contentPadding: EdgeInsets.all(16),
-            leading: CircleAvatar(
-              backgroundColor: ColorUtils.warningLight,
-              child: Icon(Icons.book, color: ColorUtils.warning600),
+    final query = _searchController.text.toLowerCase();
+    final filteredList = _subjectList.where((item) {
+      final name = (item['nama'] ?? item['name'] ?? '')
+          .toString()
+          .toLowerCase();
+      return name.contains(query);
+    }).toList();
+
+    if (filteredList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: ColorUtils.slate300),
+            SizedBox(height: 16),
+            Text(
+              languageProvider.getTranslatedText({
+                'en': 'No subjects found',
+                'id': 'Mata pelajaran tidak ditemukan',
+              }),
+              style: TextStyle(color: ColorUtils.slate500, fontSize: 16),
             ),
-            title: Text(item['nama'] ?? item['name'] ?? '-'),
-            trailing: Icon(Icons.chevron_right),
-            onTap: () {
-              setState(() {
-                _selectedSubject = item;
-                _currentStep = 2;
-              });
-              _loadRecapData();
-            },
-          ),
-        );
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
+      itemCount: filteredList.length,
+      itemBuilder: (context, index) {
+        final item = filteredList[index];
+        return _buildSubjectCard(item, languageProvider);
       },
+    );
+  }
+
+  Widget _buildSubjectCard(dynamic item, LanguageProvider languageProvider) {
+    // Highlighting current class/subject combo is usually overkill for rekap,
+    // but we can check if it's the same category.
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedSubject = item;
+          _currentStep = 2;
+          _searchController.clear();
+        });
+        _loadRecapData();
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: ColorUtils.corporateShadow(),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: ColorUtils.warning600.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.book_outlined,
+                    color: ColorUtils.warning600,
+                    size: 26,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['nama'] ?? item['name'] ?? '-',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: ColorUtils.slate900,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildInfoTag(
+                      Icons.history_edu_outlined,
+                      item['subject_code'] ?? 'Mata Pelajaran',
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: ColorUtils.slate300),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1338,155 +1795,344 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
     int numChapters = _chapters.isNotEmpty ? _chapters.length : 1;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.resolveWith(
-            (states) => ColorUtils.slate50,
-          ),
-          dataRowMinHeight: 60,
-          dataRowMaxHeight: 60,
-          columns: [
-            DataColumn(
-              label: Text('NIS', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            DataColumn(
-              label: Text(
-                'Nama Siswa',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            // Dynamic Bab Columns
-            for (int i = 0; i < numChapters; i++)
-              DataColumn(
-                label: InkWell(
-                  onTap: () => _showBulkSelectionDialog('bab', i),
-                  child: Row(
-                    children: [
-                      Text(
-                        _chapters.length > i
-                            ? (_chapters[i]['judul_bab'] ??
-                                  _chapters[i]['judul'] ??
-                                  _chapters[i]['title'] ??
-                                  'Bab ${i + 1}')
-                            : 'Bab ${i + 1}',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.edit, size: 12, color: ColorUtils.slate400),
-                    ],
-                  ),
+    return Column(
+      children: [
+        // Action Bar for Table
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          color: Colors.white,
+          child: Row(
+            children: [
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Grade Data',
+                  'id': 'Data Nilai',
+                }),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: ColorUtils.slate700,
                 ),
               ),
-
-            DataColumn(
-              label: IconButton(
+              Spacer(),
+              OutlinedButton.icon(
                 onPressed: _addChapter,
-                icon: Icon(Icons.add_circle, color: ColorUtils.primary),
-                tooltip: 'Tambah Bab',
-              ),
-            ),
-
-            DataColumn(
-              label: InkWell(
-                onTap: () => _showBulkSelectionDialog('uts'),
-                child: Row(
-                  children: [
-                    Text('UTS', style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(width: 4),
-                    Icon(Icons.edit, size: 12, color: ColorUtils.slate400),
-                  ],
+                icon: Icon(Icons.add, size: 16),
+                label: Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Add Bab',
+                    'id': 'Tambah Bab',
+                  }),
+                  style: TextStyle(fontSize: 12),
                 ),
-              ),
-            ),
-            DataColumn(
-              label: InkWell(
-                onTap: () => _showBulkSelectionDialog('uas'),
-                child: Row(
-                  children: [
-                    Text('UAS', style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(width: 4),
-                    Icon(Icons.edit, size: 12, color: ColorUtils.slate400),
-                  ],
-                ),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Nilai Akhir',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Predikat',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Deskripsi',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-          rows: _tableData.map((row) {
-            String studentClassId = row['student_class_id'];
-            return DataRow(
-              cells: [
-                DataCell(Text(row['nis'])),
-                DataCell(Text(row['nama'])),
-
-                // Bab cells
-                for (int i = 0; i < numChapters; i++)
-                  DataCell(_buildEditableGradeCell(studentClassId, 'bab', i)),
-
-                DataCell(SizedBox.shrink()), // Placeholder for "Add" column
-
-                DataCell(_buildEditableGradeCell(studentClassId, 'uts', null)),
-                DataCell(_buildEditableGradeCell(studentClassId, 'uas', null)),
-                DataCell(Text(row['final_score']?.toStringAsFixed(1) ?? '0.0')),
-
-                DataCell(
-                  SizedBox(
-                    width: 80,
-                    child: TextField(
-                      controller: _predikatControllers[studentClassId],
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 8,
-                        ),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _getPrimaryColor(),
+                  side: BorderSide(color: _getPrimaryColor()),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                 ),
-                DataCell(
-                  SizedBox(
-                    width: 300,
-                    child: TextField(
-                      controller: _deskripsiControllers[studentClassId],
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 8,
-                        ),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }).toList(),
+              ),
+            ],
+          ),
         ),
-      ),
+
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            padding: EdgeInsets.all(16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: ColorUtils.corporateShadow(),
+                border: Border.all(color: ColorUtils.slate200),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowColor: WidgetStateProperty.resolveWith(
+                      (states) => ColorUtils.slate50,
+                    ),
+                    dataRowMinHeight: 65,
+                    dataRowMaxHeight: 65,
+                    columnSpacing: 24,
+                    horizontalMargin: 20,
+                    columns: [
+                      DataColumn(
+                        label: Text(
+                          'NIS',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Student Name',
+                            'id': 'Nama Siswa',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      // Dynamic Bab Columns
+                      for (int i = 0; i < numChapters; i++)
+                        DataColumn(
+                          label: InkWell(
+                            onTap: () => _showBulkSelectionDialog('bab', i),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _chapters.length > i
+                                      ? (_chapters[i]['judul_bab'] ??
+                                            _chapters[i]['judul'] ??
+                                            _chapters[i]['title'] ??
+                                            'Bab ${i + 1}')
+                                      : 'Bab ${i + 1}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: ColorUtils.slate700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(
+                                  Icons.edit_outlined,
+                                  size: 12,
+                                  color: ColorUtils.slate400,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      DataColumn(
+                        label: InkWell(
+                          onTap: () => _showBulkSelectionDialog('uts'),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'UTS',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorUtils.slate700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 12,
+                                color: ColorUtils.slate400,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: InkWell(
+                          onTap: () => _showBulkSelectionDialog('uas'),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'UAS',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorUtils.slate700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 12,
+                                color: ColorUtils.slate400,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Final',
+                            'id': 'Akhir',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Grade',
+                            'id': 'Pred',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Description',
+                            'id': 'Deskripsi',
+                          }),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: ColorUtils.slate700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                    rows: _tableData.map((row) {
+                      String studentClassId = row['student_class_id'];
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              row['nis'],
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: ColorUtils.slate600,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: 150),
+                              child: Text(
+                                row['nama'],
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: ColorUtils.slate800,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+
+                          // Bab cells
+                          for (int i = 0; i < numChapters; i++)
+                            DataCell(
+                              _buildEditableGradeCell(studentClassId, 'bab', i),
+                            ),
+
+                          DataCell(
+                            _buildEditableGradeCell(
+                              studentClassId,
+                              'uts',
+                              null,
+                            ),
+                          ),
+                          DataCell(
+                            _buildEditableGradeCell(
+                              studentClassId,
+                              'uas',
+                              null,
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              row['final_score']?.toStringAsFixed(1) ?? '0.0',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _getPrimaryColor(),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+
+                          DataCell(
+                            SizedBox(
+                              width: 60,
+                              child: TextField(
+                                controller:
+                                    _predikatControllers[studentClassId],
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 8,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: ColorUtils.slate200,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: ColorUtils.slate200,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            SizedBox(
+                              width: 250,
+                              child: TextField(
+                                controller:
+                                    _deskripsiControllers[studentClassId],
+                                maxLines: 2,
+                                style: TextStyle(fontSize: 11),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.all(8),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: ColorUtils.slate200,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: ColorUtils.slate200,
+                                    ),
+                                  ),
+                                  fillColor: ColorUtils.slate50,
+                                  filled: true,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
