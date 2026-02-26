@@ -50,6 +50,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   // Controllers for editable fields
   final Map<String, TextEditingController> _predikatControllers = {};
   final Map<String, TextEditingController> _deskripsiControllers = {};
+  final Map<String, TextEditingController> _scoreControllers = {};
 
   // Loading & Pagination
   bool _isLoading = false;
@@ -78,6 +79,9 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       c.dispose();
     }
     for (var c in _deskripsiControllers.values) {
+      c.dispose();
+    }
+    for (var c in _scoreControllers.values) {
       c.dispose();
     }
     super.dispose();
@@ -274,6 +278,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     List<Map<String, dynamic>> tableData = [];
     _predikatControllers.clear();
     _deskripsiControllers.clear();
+    _scoreControllers.clear();
 
     String autoDeskripsi =
         "Telah memahami materi ${chapters.map((c) => c['judul_bab'] ?? c['judul'] ?? c['title'] ?? 'Bab').join(', ')} dengan cukup baik.";
@@ -404,6 +409,20 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       );
       _deskripsiControllers[studentClassId] = TextEditingController(
         text: currentDeskripsi,
+      );
+
+      // Initialize Score Controllers
+      for (int i = 0; i < numChapters; i++) {
+        final key = '$studentClassId|bab|$i';
+        _scoreControllers[key] = TextEditingController(
+          text: babScores[i]?.toStringAsFixed(1) ?? '',
+        );
+      }
+      _scoreControllers['$studentClassId|uts|null'] = TextEditingController(
+        text: utsScore?.toStringAsFixed(1) ?? '',
+      );
+      _scoreControllers['$studentClassId|uas|null'] = TextEditingController(
+        text: uasScore?.toStringAsFixed(1) ?? '',
       );
 
       tableData.add({
@@ -578,6 +597,13 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       );
       if (index != -1) {
         final row = _tableData[index];
+
+        // Update Controller
+        final key = '$studentClassId|$type|${babIndex ?? 'null'}';
+        if (_scoreControllers.containsKey(key)) {
+          _scoreControllers[key]!.text = newValue.toStringAsFixed(1);
+        }
+
         if (type == 'bab' && babIndex != null) {
           row['bab_scores'][babIndex] = newValue;
         } else if (type == 'uts') {
@@ -585,25 +611,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         } else if (type == 'uas') {
           row['uas'] = newValue;
         }
-
-        // Recalculate Final Score
-        double sum = 0;
-        int count = 0;
-        for (var s in row['bab_scores']) {
-          if (s != null) {
-            sum += s;
-            count++;
-          }
-        }
-        if (row['uts'] != null) {
-          sum += row['uts'];
-          count++;
-        }
-        if (row['uas'] != null) {
-          sum += row['uas'];
-          count++;
-        }
-        row['final_score'] = count > 0 ? sum / count : 0.0;
+        _recalculateRow(row);
       }
     });
   }
@@ -678,32 +686,69 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                           children: [
                             // Tab 1: Material Selection (Only for Bab)
                             if (type == 'bab')
-                              ListView.builder(
-                                padding: EdgeInsets.all(8.0),
-                                itemCount: _allAvailableChapters.length,
-                                itemBuilder: (context, i) {
-                                  final c = _allAvailableChapters[i];
-                                  final title =
-                                      c['judul_bab'] ??
-                                      c['judul'] ??
-                                      c['title'] ??
-                                      'Bab';
-                                  return ListTile(
-                                    title: Text(title),
-                                    onTap: () {
-                                      setState(() {
-                                        _chapters[babIndex!] = c;
-                                      });
-                                      _processTableData(
-                                        _students,
-                                        _chapters,
-                                        _rawGrades,
-                                        _recaps,
-                                      );
-                                      Navigator.pop(context);
-                                    },
-                                  );
-                                },
+                              Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: TextField(
+                                      decoration: InputDecoration(
+                                        labelText: 'Nama Materi Manual',
+                                        hintText:
+                                            'Ketik nama materi di sini...',
+                                        border: OutlineInputBorder(),
+                                        suffixIcon: Icon(Icons.edit),
+                                      ),
+                                      onSubmitted: (val) {
+                                        if (val.isNotEmpty) {
+                                          setState(() {
+                                            _chapters[babIndex!] = {
+                                              'judul_bab': val,
+                                              'judul': val,
+                                              'title': val,
+                                            };
+                                          });
+                                          _processTableData(
+                                            _students,
+                                            _chapters,
+                                            _rawGrades,
+                                            _recaps,
+                                          );
+                                          Navigator.pop(context);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  Divider(),
+                                  Expanded(
+                                    child: ListView.builder(
+                                      padding: EdgeInsets.all(8.0),
+                                      itemCount: _allAvailableChapters.length,
+                                      itemBuilder: (context, i) {
+                                        final c = _allAvailableChapters[i];
+                                        final title =
+                                            c['judul_bab'] ??
+                                            c['judul'] ??
+                                            c['title'] ??
+                                            'Bab';
+                                        return ListTile(
+                                          title: Text(title),
+                                          onTap: () {
+                                            setState(() {
+                                              _chapters[babIndex!] = c;
+                                            });
+                                            _processTableData(
+                                              _students,
+                                              _chapters,
+                                              _rawGrades,
+                                              _recaps,
+                                            );
+                                            Navigator.pop(context);
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             // Tab 2: Bulk Fill from History (Multi-select)
                             Column(
@@ -799,6 +844,66 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     );
   }
 
+  Widget _buildEditableGradeCell(
+    String studentClassId,
+    String type,
+    int? babIndex,
+  ) {
+    final key = '$studentClassId|$type|${babIndex ?? 'null'}';
+    final controller = _scoreControllers[key];
+
+    if (controller == null) return Text('-');
+
+    return SizedBox(
+      width: 100,
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.numberWithOptions(decimal: true),
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 13),
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          border: OutlineInputBorder(),
+          suffixIcon: InkWell(
+            onTap: () =>
+                _showGradeSelectionDialog(studentClassId, type, babIndex),
+            child: Icon(Icons.history, size: 14, color: ColorUtils.slate400),
+          ),
+          suffixIconConstraints: BoxConstraints(minWidth: 24, minHeight: 24),
+        ),
+        onChanged: (val) {
+          final newValue = double.tryParse(val) ?? 0.0;
+          _updateTableValueSilently(studentClassId, type, babIndex, newValue);
+        },
+      ),
+    );
+  }
+
+  void _updateTableValueSilently(
+    String studentClassId,
+    String type,
+    int? babIndex,
+    double newValue,
+  ) {
+    setState(() {
+      final index = _tableData.indexWhere(
+        (row) => row['student_class_id'] == studentClassId,
+      );
+      if (index != -1) {
+        final row = _tableData[index];
+        if (type == 'bab' && babIndex != null) {
+          row['bab_scores'][babIndex] = newValue;
+        } else if (type == 'uts') {
+          row['uts'] = newValue;
+        } else if (type == 'uas') {
+          row['uas'] = newValue;
+        }
+        _recalculateRow(row);
+      }
+    });
+  }
+
   void _applyBulkGrades(
     String type,
     List<Map<String, dynamic>> selectedAssessments, [
@@ -847,6 +952,13 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
         if (count > 0) {
           final finalBulkScore = totalScore / count;
+
+          // Update Controller
+          final key = '$studentClassId|$type|${babIndex ?? 'null'}';
+          if (_scoreControllers.containsKey(key)) {
+            _scoreControllers[key]!.text = finalBulkScore.toStringAsFixed(1);
+          }
+
           if (type == 'bab') {
             row['bab_scores'][babIndex!] = finalBulkScore;
           } else if (type == 'uts') {
@@ -1243,22 +1355,10 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
                 // Bab cells
                 for (int i = 0; i < numChapters; i++)
-                  DataCell(
-                    Text(row['bab_scores'][i]?.toStringAsFixed(1) ?? '-'),
-                    onTap: () =>
-                        _showGradeSelectionDialog(studentClassId, 'bab', i),
-                  ),
+                  DataCell(_buildEditableGradeCell(studentClassId, 'bab', i)),
 
-                DataCell(
-                  Text(row['uts']?.toStringAsFixed(1) ?? '-'),
-                  onTap: () =>
-                      _showGradeSelectionDialog(studentClassId, 'uts', null),
-                ),
-                DataCell(
-                  Text(row['uas']?.toStringAsFixed(1) ?? '-'),
-                  onTap: () =>
-                      _showGradeSelectionDialog(studentClassId, 'uas', null),
-                ),
+                DataCell(_buildEditableGradeCell(studentClassId, 'uts', null)),
+                DataCell(_buildEditableGradeCell(studentClassId, 'uas', null)),
                 DataCell(Text(row['final_score']?.toStringAsFixed(1) ?? '0.0')),
 
                 DataCell(
