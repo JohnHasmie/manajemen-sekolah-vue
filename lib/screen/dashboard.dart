@@ -17,6 +17,7 @@ import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/input_grade_teacher.dart';
 import 'package:manajemensekolah/screen/guru/materi_screen.dart';
 import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
+import 'package:manajemensekolah/screen/guru/rekap_nilai_screen.dart';
 import 'package:manajemensekolah/screen/guru/rpp_screen.dart';
 import 'package:manajemensekolah/screen/guru/teaching_schedule.dart';
 import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
@@ -2499,6 +2500,38 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             context,
             MaterialPageRoute(
               builder: (context) => GradePage(teacher: teacherData),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: languageProvider.getTranslatedText({
+          'en': 'Grade Recap',
+          'id': 'Rekap Nilai',
+        }),
+        icon: Icons.assessment_outlined,
+        onTap: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          final teacherData = {
+            'id': userData['id'] ?? '',
+            'nama': userData['nama'] ?? 'Teacher',
+            'email': userData['email'] ?? '',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RekapNilaiPage(teacher: teacherData),
             ),
           );
         },
