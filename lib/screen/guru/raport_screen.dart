@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/raport_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
@@ -126,30 +127,105 @@ class RaportScreenState extends State<RaportScreen> {
     }
   }
 
+  Color _getPrimaryColor() {
+    return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          _languageProvider.getTranslatedText({
-            'en': 'Report Cards (Raport)',
-            'id': 'Raport Siswa',
-          }),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: ColorUtils.slate800,
-        elevation: 0,
-        iconTheme: IconThemeData(color: ColorUtils.slate800),
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        children: [
+          // Pattern #7 Gradient Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 20,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _getPrimaryColor(),
+                  _getPrimaryColor().withValues(alpha: 0.8),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _getPrimaryColor().withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _languageProvider.getTranslatedText({
+                          'en': 'Report Cards',
+                          'id': 'Raport Siswa',
+                        }),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _languageProvider.getTranslatedText({
+                          'en': 'Manage student report cards',
+                          'id': 'Kelola nilai raport siswa',
+                        }),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Body Content
+          Expanded(child: _buildBody()),
+        ],
       ),
-      body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonListLoading();
     }
 
     if (_errorMessage.isNotEmpty) {
@@ -172,7 +248,7 @@ class RaportScreenState extends State<RaportScreen> {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Coba Lagi'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorUtils.corporateBlue600,
+                  backgroundColor: _getPrimaryColor(),
                 ),
               ),
             ],
@@ -186,7 +262,7 @@ class RaportScreenState extends State<RaportScreen> {
         _buildClassSelector(),
         Expanded(
           child: _isLoadingStudents
-              ? const Center(child: CircularProgressIndicator())
+              ? const SkeletonListLoading()
               : _buildStudentList(),
         ),
       ],
@@ -195,22 +271,25 @@ class RaportScreenState extends State<RaportScreen> {
 
   Widget _buildClassSelector() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: ColorUtils.corporateShadow(),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: ColorUtils.corporateBlue50,
-              borderRadius: BorderRadius.circular(8),
+              color: ColorUtils.slate50,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               Icons.class_outlined,
-              color: ColorUtils.corporateBlue600,
+              color: ColorUtils.slate600,
+              size: 20,
             ),
           ),
           const SizedBox(width: 16),
@@ -225,7 +304,7 @@ class RaportScreenState extends State<RaportScreen> {
                   }),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: ColorUtils.slate500,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -234,11 +313,14 @@ class RaportScreenState extends State<RaportScreen> {
                     child: DropdownButton<Map<String, dynamic>>(
                       isExpanded: true,
                       value: _selectedClass,
-                      icon: const Icon(Icons.keyboard_arrow_down),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                      icon: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: ColorUtils.slate400,
+                      ),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: ColorUtils.slate800,
                       ),
                       onChanged: (newValue) {
                         if (newValue != null) {
@@ -262,10 +344,10 @@ class RaportScreenState extends State<RaportScreen> {
                       'en': 'No classes available',
                       'id': 'Tidak ada kelas',
                     }),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: ColorUtils.slate800,
                     ),
                   ),
               ],
@@ -301,68 +383,72 @@ class RaportScreenState extends State<RaportScreen> {
         final bool hasRaport = student['has_raport'] ?? false;
         final String status = student['raport_status'] ?? 'Belum ada';
 
-        return Card(
+        return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade200),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: ColorUtils.corporateShadow(),
           ),
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RaportDetailScreen(
-                    studentClassId: student['student_class_id'].toString(),
-                    studentName: student['student_name'] ?? 'Siswa',
-                    className: _selectedClass?['name'] ?? '',
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RaportDetailScreen(
+                      studentClassId: student['student_class_id'].toString(),
+                      studentName: student['student_name'] ?? 'Siswa',
+                      className: _selectedClass?['name'] ?? '',
+                    ),
                   ),
-                ),
-              ).then((_) => _loadStudentsForClass());
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: ColorUtils.corporateBlue50,
-                    child: Text(
-                      (student['student_name'] ?? '?')[0].toUpperCase(),
-                      style: TextStyle(
-                        color: ColorUtils.corporateBlue600,
-                        fontWeight: FontWeight.bold,
+                ).then((_) => _loadStudentsForClass());
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: ColorUtils.slate50,
+                      child: Text(
+                        (student['student_name'] ?? '?')[0].toUpperCase(),
+                        style: TextStyle(
+                          color: ColorUtils.slate600,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          student['student_name'] ?? 'Unknown',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            student['student_name'] ?? 'Unknown',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: ColorUtils.slate800,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'NIS: ${student['student_number'] ?? '-'}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
+                          const SizedBox(height: 4),
+                          Text(
+                            'NIS: ${student['student_number'] ?? '-'}',
+                            style: TextStyle(
+                              color: ColorUtils.slate500,
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  _buildStatusBadge(hasRaport, status),
-                  const SizedBox(width: 8),
-                  Icon(Icons.chevron_right, color: Colors.grey[400]),
-                ],
+                    _buildStatusBadge(hasRaport, status),
+                    const SizedBox(width: 8),
+                    Icon(Icons.chevron_right, color: ColorUtils.slate400),
+                  ],
+                ),
               ),
             ),
           ),

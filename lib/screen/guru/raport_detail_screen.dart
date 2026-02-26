@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/raport_print_screen.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -305,77 +306,163 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Isi Raport',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        children: [
+          // Pattern #7 Gradient Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 20,
             ),
-            Text(
-              '${widget.studentName} - ${widget.className}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: ColorUtils.slate800,
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: ColorUtils.corporateBlue600,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: ColorUtils.corporateBlue600,
-          isScrollable: true,
-          tabs: const [
-            Tab(text: 'Sikap'),
-            Tab(text: 'Nilai Akademik'),
-            Tab(text: 'Tambahan'),
-            Tab(text: 'Info & Keputusan'),
-          ],
-        ),
-        actions: [
-          if (_existingRaport != null && _existingRaport!['status'] == 'final')
-            IconButton(
-              icon: Icon(Icons.print, color: ColorUtils.corporateBlue600),
-              tooltip: 'Cetak Raport',
-              onPressed: () {
-                if (_existingRaport != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RaportPrintScreen(
-                        raportData: _existingRaport!,
-                        studentName: widget.studentName,
-                        className: widget.className,
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-          ? Center(
-              child: Text(
-                _errorMessage,
-                style: const TextStyle(color: Colors.red),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  ColorUtils.getRoleColor('guru'),
+                  ColorUtils.getRoleColor('guru').withValues(alpha: 0.8),
+                ],
               ),
-            )
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildSikapTab(),
-                _buildNilaiTab(),
-                _buildTambahanTab(),
-                _buildInfoTab(),
+              boxShadow: [
+                BoxShadow(
+                  color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
               ],
             ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Isi Raport',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${widget.studentName} - ${widget.className}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_existingRaport != null &&
+                    _existingRaport!['status'] == 'final')
+                  GestureDetector(
+                    onTap: () {
+                      if (_existingRaport != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RaportPrintScreen(
+                              raportData: _existingRaport!,
+                              studentName: widget.studentName,
+                              className: widget.className,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.print,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // TabBar Container
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: ColorUtils.corporateBlue600,
+              unselectedLabelColor: ColorUtils.slate500,
+              indicatorColor: ColorUtils.corporateBlue600,
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+              isScrollable: true,
+              tabs: const [
+                Tab(text: 'Sikap'),
+                Tab(text: 'Nilai Akademik'),
+                Tab(text: 'Tambahan'),
+                Tab(text: 'Info & Keputusan'),
+              ],
+            ),
+          ),
+
+          // Body Content
+          Expanded(
+            child: _isLoading
+                ? const SkeletonListLoading()
+                : _errorMessage.isNotEmpty
+                ? Center(
+                    child: Text(
+                      _errorMessage,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  )
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildSikapTab(),
+                      _buildNilaiTab(),
+                      _buildTambahanTab(),
+                      _buildInfoTab(),
+                    ],
+                  ),
+          ),
+        ],
+      ),
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -498,12 +585,15 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       itemCount: _subjects.length,
       itemBuilder: (context, index) {
         final subject = _subjects[index];
-        return Card(
-          elevation: 0,
+        return Container(
           margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade300),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
+            ),
+            boxShadow: [...ColorUtils.corporateShadow()],
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -512,9 +602,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
               children: [
                 Text(
                   subject['subject_name'] ?? 'Mapel',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    color: ColorUtils.slate800,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -663,16 +754,18 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
 
   Widget _buildExtraItem(int index) {
     final extra = _extras[index];
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      color: Colors.grey.shade50,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
+        ),
+        boxShadow: [...ColorUtils.corporateShadow()],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
@@ -714,16 +807,18 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
 
   Widget _buildAchievementItem(int index) {
     final ach = _achievements[index];
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      color: Colors.grey.shade50,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
+        ),
+        boxShadow: [...ColorUtils.corporateShadow()],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
@@ -850,7 +945,24 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           decoration: InputDecoration(
             isDense: true,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: ColorUtils.getRoleColor('guru')),
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 12,
@@ -874,8 +986,26 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
         isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: ColorUtils.getRoleColor('guru')),
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -899,8 +1029,11 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade400),
+            border: Border.all(
+              color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
+            ),
             borderRadius: BorderRadius.circular(8),
+            color: Colors.grey.shade50,
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
