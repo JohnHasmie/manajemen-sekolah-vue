@@ -56,6 +56,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   // Loading & Pagination
   bool _isLoading = false;
   bool _isSaving = false;
+  double _studentInfoWidth = 160.0; // Default width for frozen column
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   int _currentPage = 1;
@@ -1795,6 +1796,425 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
     int numChapters = _chapters.isNotEmpty ? _chapters.length : 1;
 
+    // Frozen column width (Combined Name & NIS) using dynamic state
+    final double leftWidth = _studentInfoWidth;
+
+    const double gradeCellWidth = 110; // Bab, UTS, UAS
+    const double finalScoreWidth = 80;
+    const double predikatWidth = 80;
+    const double deskripsiWidth = 280;
+
+    double rightSideWidth =
+        (numChapters * gradeCellWidth) +
+        (gradeCellWidth * 2) + // UTS + UAS
+        finalScoreWidth +
+        predikatWidth +
+        deskripsiWidth +
+        40; // Horizontal margin
+
+    // Left Side: Frozen column (Combined Name & NIS)
+    final leftSide = Container(
+      width: leftWidth,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(right: BorderSide(color: ColorUtils.slate200, width: 2)),
+      ),
+      child: Column(
+        children: [
+          // Header with Resize Handle
+          Stack(
+            children: [
+              Container(
+                height: 60,
+                width: leftWidth,
+                padding: EdgeInsets.only(left: 16, right: 8),
+                alignment: Alignment.centerLeft,
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate50,
+                  border: Border(
+                    bottom: BorderSide(color: ColorUtils.slate200),
+                  ),
+                ),
+                child: Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'STUDENT INFO',
+                    'id': 'INFO SISWA',
+                  }),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: ColorUtils.slate700,
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Resize Handle
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onHorizontalDragUpdate: (details) {
+                    setState(() {
+                      _studentInfoWidth += details.delta.dx;
+                      // Constraints: min 100, max 350
+                      if (_studentInfoWidth < 100) _studentInfoWidth = 100;
+                      if (_studentInfoWidth > 350) _studentInfoWidth = 350;
+                    });
+                  },
+                  child: Container(
+                    width: 10,
+                    color: Colors.transparent,
+                    child: Center(
+                      child: Container(
+                        width: 2,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: ColorUtils.slate300,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Student Rows
+          ..._tableData.map((row) {
+            return Container(
+              height: 75,
+              width: leftWidth,
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.centerLeft,
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    row['nama'] ?? '-',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: ColorUtils.slate800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'NIS: ${row['nis'] ?? '-'}',
+                    style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+
+    // Right Side: Scrollable columns
+    final rightSide = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(
+        width: rightSideWidth,
+        child: Column(
+          children: [
+            // Header Row
+            Container(
+              height: 60,
+              decoration: BoxDecoration(
+                color: ColorUtils.slate50,
+                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
+              ),
+              child: Row(
+                children: [
+                  // Dynamic Bab Columns
+                  for (int i = 0; i < numChapters; i++)
+                    Container(
+                      width: gradeCellWidth,
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      alignment: Alignment.center,
+                      child: InkWell(
+                        onTap: () => _showBulkSelectionDialog('bab', i),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                _chapters.length > i
+                                    ? (_chapters[i]['judul_bab'] ??
+                                          _chapters[i]['judul'] ??
+                                          _chapters[i]['title'] ??
+                                          'Bab ${i + 1}')
+                                    : 'Bab ${i + 1}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorUtils.slate700,
+                                  fontSize: 11,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 12,
+                              color: ColorUtils.slate400,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // UTS Header
+                  Container(
+                    width: gradeCellWidth,
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    alignment: Alignment.center,
+                    child: InkWell(
+                      onTap: () => _showBulkSelectionDialog('uts'),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'UTS',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: ColorUtils.slate700,
+                              fontSize: 12,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 12,
+                            color: ColorUtils.slate400,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // UAS Header
+                  Container(
+                    width: gradeCellWidth,
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    alignment: Alignment.center,
+                    child: InkWell(
+                      onTap: () => _showBulkSelectionDialog('uas'),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'UAS',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: ColorUtils.slate700,
+                              fontSize: 12,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 12,
+                            color: ColorUtils.slate400,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Final Header
+                  Container(
+                    width: finalScoreWidth,
+                    alignment: Alignment.center,
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Final',
+                        'id': 'Akhir',
+                      }),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: ColorUtils.slate700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+
+                  // Pred Header
+                  Container(
+                    width: predikatWidth,
+                    alignment: Alignment.center,
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Grade',
+                        'id': 'Pred',
+                      }),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: ColorUtils.slate700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+
+                  // Deskripsi Header
+                  Container(
+                    width: deskripsiWidth,
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Description',
+                        'id': 'Deskripsi',
+                      }),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: ColorUtils.slate700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Data Rows
+            ..._tableData.map((row) {
+              String studentClassId = row['student_class_id'];
+              return Container(
+                height: 75,
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: ColorUtils.slate200),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Bab cells
+                    for (int i = 0; i < numChapters; i++)
+                      Container(
+                        width: gradeCellWidth,
+                        alignment: Alignment.center,
+                        child: _buildEditableGradeCell(
+                          studentClassId,
+                          'bab',
+                          i,
+                        ),
+                      ),
+
+                    // UTS cell
+                    Container(
+                      width: gradeCellWidth,
+                      alignment: Alignment.center,
+                      child: _buildEditableGradeCell(
+                        studentClassId,
+                        'uts',
+                        null,
+                      ),
+                    ),
+
+                    // UAS cell
+                    Container(
+                      width: gradeCellWidth,
+                      alignment: Alignment.center,
+                      child: _buildEditableGradeCell(
+                        studentClassId,
+                        'uas',
+                        null,
+                      ),
+                    ),
+
+                    // Final Score
+                    Container(
+                      width: finalScoreWidth,
+                      alignment: Alignment.center,
+                      child: Text(
+                        row['final_score']?.toStringAsFixed(1) ?? '0.0',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _getPrimaryColor(),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+
+                    // Predikat
+                    Container(
+                      width: predikatWidth,
+                      alignment: Alignment.center,
+                      child: SizedBox(
+                        width: 60,
+                        child: TextField(
+                          controller: _predikatControllers[studentClassId],
+                          style: TextStyle(fontSize: 13),
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: ColorUtils.slate200,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: ColorUtils.slate200,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Deskripsi
+                    Container(
+                      width: deskripsiWidth,
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      alignment: Alignment.centerLeft,
+                      child: TextField(
+                        controller: _deskripsiControllers[studentClassId],
+                        maxLines: 2,
+                        style: TextStyle(fontSize: 12),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.all(10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: ColorUtils.slate200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: ColorUtils.slate200),
+                          ),
+                          fillColor: ColorUtils.slate50,
+                          filled: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+
     return Column(
       children: [
         // Action Bar for Table
@@ -1850,282 +2270,13 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    headingRowColor: WidgetStateProperty.resolveWith(
-                      (states) => ColorUtils.slate50,
-                    ),
-                    dataRowMinHeight: 65,
-                    dataRowMaxHeight: 65,
-                    columnSpacing: 24,
-                    horizontalMargin: 20,
-                    columns: [
-                      DataColumn(
-                        label: Text(
-                          'NIS',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Student Name',
-                            'id': 'Nama Siswa',
-                          }),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      // Dynamic Bab Columns
-                      for (int i = 0; i < numChapters; i++)
-                        DataColumn(
-                          label: InkWell(
-                            onTap: () => _showBulkSelectionDialog('bab', i),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _chapters.length > i
-                                      ? (_chapters[i]['judul_bab'] ??
-                                            _chapters[i]['judul'] ??
-                                            _chapters[i]['title'] ??
-                                            'Bab ${i + 1}')
-                                      : 'Bab ${i + 1}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: ColorUtils.slate700,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                SizedBox(width: 4),
-                                Icon(
-                                  Icons.edit_outlined,
-                                  size: 12,
-                                  color: ColorUtils.slate400,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                      DataColumn(
-                        label: InkWell(
-                          onTap: () => _showBulkSelectionDialog('uts'),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'UTS',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorUtils.slate700,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.edit_outlined,
-                                size: 12,
-                                color: ColorUtils.slate400,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: InkWell(
-                          onTap: () => _showBulkSelectionDialog('uas'),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'UAS',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorUtils.slate700,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.edit_outlined,
-                                size: 12,
-                                color: ColorUtils.slate400,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Final',
-                            'id': 'Akhir',
-                          }),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Grade',
-                            'id': 'Pred',
-                          }),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Description',
-                            'id': 'Deskripsi',
-                          }),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      leftSide,
+                      Expanded(child: rightSide),
                     ],
-                    rows: _tableData.map((row) {
-                      String studentClassId = row['student_class_id'];
-                      return DataRow(
-                        cells: [
-                          DataCell(
-                            Text(
-                              row['nis'],
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: ColorUtils.slate600,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: 150),
-                              child: Text(
-                                row['nama'],
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: ColorUtils.slate800,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-
-                          // Bab cells
-                          for (int i = 0; i < numChapters; i++)
-                            DataCell(
-                              _buildEditableGradeCell(studentClassId, 'bab', i),
-                            ),
-
-                          DataCell(
-                            _buildEditableGradeCell(
-                              studentClassId,
-                              'uts',
-                              null,
-                            ),
-                          ),
-                          DataCell(
-                            _buildEditableGradeCell(
-                              studentClassId,
-                              'uas',
-                              null,
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              row['final_score']?.toStringAsFixed(1) ?? '0.0',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _getPrimaryColor(),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-
-                          DataCell(
-                            SizedBox(
-                              width: 60,
-                              child: TextField(
-                                controller:
-                                    _predikatControllers[studentClassId],
-                                style: TextStyle(fontSize: 12),
-                                textAlign: TextAlign.center,
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                    vertical: 8,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: BorderSide(
-                                      color: ColorUtils.slate200,
-                                    ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: BorderSide(
-                                      color: ColorUtils.slate200,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            SizedBox(
-                              width: 250,
-                              child: TextField(
-                                controller:
-                                    _deskripsiControllers[studentClassId],
-                                maxLines: 2,
-                                style: TextStyle(fontSize: 11),
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.all(8),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: BorderSide(
-                                      color: ColorUtils.slate200,
-                                    ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: BorderSide(
-                                      color: ColorUtils.slate200,
-                                    ),
-                                  ),
-                                  fillColor: ColorUtils.slate50,
-                                  filled: true,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
                   ),
                 ),
               ),
