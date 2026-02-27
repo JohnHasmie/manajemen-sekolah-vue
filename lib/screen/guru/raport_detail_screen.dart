@@ -511,7 +511,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                             builder: (context) => AlertDialog(
                               title: const Text('Selesaikan Raport?'),
                               content: const Text(
-                                'Raport yang diselesaikan dapat dilihat oleh murid/wali murid. Pastikan data sudah benar.',
+                                'Raport akan disimpan secara final. Pengiriman ke wali murid akan dilakukan oleh Admin nantinya.',
                               ),
                               actions: [
                                 TextButton(
