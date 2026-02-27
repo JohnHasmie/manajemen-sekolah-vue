@@ -10,6 +10,7 @@ import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/excel_rekap_nilai_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -63,6 +64,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   final int _perPage = 20;
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -1289,6 +1291,36 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     }
   }
 
+  Future<void> _exportToExcel() async {
+    setState(() => _isExporting = true);
+    try {
+      final className =
+          _selectedClass?['nama'] ?? _selectedClass?['name'] ?? 'Kelas';
+      final subjectName =
+          _selectedSubject?['nama'] ??
+          _selectedSubject?['name'] ??
+          'Mata_Pelajaran';
+
+      await ExcelRekapNilaiService.exportRekapNilaiToExcel(
+        tableData: _tableData,
+        chapters: _chapters,
+        className: className,
+        subjectName: subjectName,
+        context: context,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
   // ==================== BUILDERS ====================
 
   @override
@@ -1392,48 +1424,93 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                       ),
                     ),
                     if (_currentStep == 2)
-                      GestureDetector(
-                        onTap: _isSaving ? null : _saveRecaps,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: _isSaving
-                              ? SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Row(
-                                  children: [
-                                    Icon(
-                                      Icons.save,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Save',
-                                        'id': 'Simpan',
-                                      }),
-                                      style: TextStyle(
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: _isExporting ? null : _exportToExcel,
+                            child: Container(
+                              margin: EdgeInsets.only(right: 8),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: _isExporting
+                                  ? SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
                                         color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
                                       ),
+                                    )
+                                  : Row(
+                                      children: [
+                                        Icon(
+                                          Icons.table_view,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Excel',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                        ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: _isSaving ? null : _saveRecaps,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: _isSaving
+                                  ? SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Row(
+                                      children: [
+                                        Icon(
+                                          Icons.save,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          languageProvider.getTranslatedText({
+                                            'en': 'Save',
+                                            'id': 'Simpan',
+                                          }),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                        ],
                       ),
                   ],
                 ),
