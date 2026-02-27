@@ -3,7 +3,9 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/raport_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
+import 'package:manajemensekolah/services/excel_raport_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -23,6 +25,7 @@ class RaportScreenState extends State<RaportScreen> {
 
   bool _isLoading = true;
   bool _isLoadingStudents = false;
+  bool _isExporting = false;
   String _errorMessage = '';
 
   List<dynamic> _classes = [];
@@ -127,6 +130,43 @@ class RaportScreenState extends State<RaportScreen> {
     }
   }
 
+  Future<void> _exportToExcel() async {
+    if (_selectedClass == null) return;
+
+    setState(() => _isExporting = true);
+    try {
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
+          ?.toString();
+      final semesterId = '1';
+
+      if (academicYearId == null) {
+        throw Exception("Tahun ajaran tidak valid.");
+      }
+
+      await ExcelRaportService.exportRaportToExcel(
+        classId: _selectedClass!['id'].toString(),
+        academicYearId: academicYearId,
+        semesterId: semesterId,
+        className: _selectedClass!['name'] ?? 'Kelas',
+        context: context,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
   }
@@ -212,6 +252,50 @@ class RaportScreenState extends State<RaportScreen> {
                     ],
                   ),
                 ),
+                if (_selectedClass != null && !_isLoading)
+                  GestureDetector(
+                    onTap: _isExporting ? null : _exportToExcel,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: _isExporting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Row(
+                              children: [
+                                const Icon(
+                                  Icons.file_download,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _languageProvider.getTranslatedText({
+                                    'en': 'Export',
+                                    'id': 'Export',
+                                  }),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
               ],
             ),
           ),
