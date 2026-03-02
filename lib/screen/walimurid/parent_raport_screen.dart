@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_raport_detail_screen.dart';
+import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -47,6 +48,12 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
         throw Exception(
           "Sesi wali murid tidak ditemukan. Silakan login kembali.",
         );
+      }
+
+      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      if (dateBasedSemester.containsKey('semester') &&
+          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+        _selectedSemesterId = '2';
       }
 
       await _fetchParentRaports();

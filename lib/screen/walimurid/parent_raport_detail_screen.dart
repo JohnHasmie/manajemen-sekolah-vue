@@ -7,16 +7,18 @@ class ParentRaportDetailScreen extends StatelessWidget {
   final Map<String, dynamic> raportData;
   final String studentName;
   final Map<String, dynamic> studentData;
+  final String userRole;
 
   const ParentRaportDetailScreen({
     super.key,
     required this.raportData,
     required this.studentName,
     required this.studentData,
+    this.userRole = 'wali', // Default to wali
   });
 
   Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('wali');
+    return ColorUtils.getRoleColor(userRole);
   }
 
   LinearGradient _getCardGradient() {
