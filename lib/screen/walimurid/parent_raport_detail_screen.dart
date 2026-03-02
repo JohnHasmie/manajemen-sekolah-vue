@@ -164,13 +164,23 @@ class ParentRaportDetailScreen extends StatelessWidget {
     );
 
     try {
-      await ExcelRaportService.exportSingleRaportPdf(
-        studentClassId: raportData['student_class_id'].toString(),
-        academicYearId: raportData['academic_year_id'].toString(),
-        semesterId: raportData['semester_id'].toString(),
-        studentName: studentName,
-        context: context,
-      );
+      if (userRole == 'wali') {
+        await ExcelRaportService.exportCertificateRaportPdf(
+          studentClassId: raportData['student_class_id'].toString(),
+          academicYearId: raportData['academic_year_id'].toString(),
+          semesterId: raportData['semester_id'].toString(),
+          studentName: studentName,
+          context: context,
+        );
+      } else {
+        await ExcelRaportService.exportSingleRaportPdf(
+          studentClassId: raportData['student_class_id'].toString(),
+          academicYearId: raportData['academic_year_id'].toString(),
+          semesterId: raportData['semester_id'].toString(),
+          studentName: studentName,
+          context: context,
+        );
+      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

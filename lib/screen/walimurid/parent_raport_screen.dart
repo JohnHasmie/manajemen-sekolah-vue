@@ -319,6 +319,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
                                         studentName:
                                             student['student']['name'] ??
                                             'Siswa',
+                                        userRole: 'wali',
                                         studentData: student['student'],
                                       ),
                                 ),
