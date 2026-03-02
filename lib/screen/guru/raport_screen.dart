@@ -171,6 +171,54 @@ class RaportScreenState extends State<RaportScreen> {
     return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
   }
 
+  Future<void> _downloadStudentPdf(Map<String, dynamic> student) async {
+    final status = student['raport_status'] ?? 'Belum ada';
+    if (status.toLowerCase() != 'final' &&
+        status.toLowerCase() != 'published') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Raport belum final, tidak dapat dicetak.'),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Menyiapkan file PDF untuk ${student['student_name']}...',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    try {
+      final academicYearProvider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      final academicYearId =
+          academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
+
+      await ExcelRaportService.exportSingleRaportPdf(
+        studentClassId: student['student_class_id'].toString(),
+        academicYearId: academicYearId,
+        semesterId: '1',
+        studentName: student['student_name'] ?? 'Unknown',
+        context: context,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -530,6 +578,19 @@ class RaportScreenState extends State<RaportScreen> {
                     ),
                     _buildStatusBadge(hasRaport, status),
                     const SizedBox(width: 8),
+                    if (status.toLowerCase() == 'final' ||
+                        status.toLowerCase() == 'published')
+                      IconButton(
+                        icon: const Icon(
+                          Icons.picture_as_pdf,
+                          color: Colors.red,
+                        ),
+                        tooltip: 'Cetak PDF',
+                        onPressed: () => _downloadStudentPdf(student),
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                      ),
+                    const SizedBox(width: 4),
                     Icon(Icons.chevron_right, color: ColorUtils.slate400),
                   ],
                 ),

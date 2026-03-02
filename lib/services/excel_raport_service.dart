@@ -86,4 +86,79 @@ class ExcelRaportService {
       );
     }
   }
+
+  static Future<void> exportSingleRaportPdf({
+    required String studentClassId,
+    required String academicYearId,
+    required String semesterId,
+    required String studentName,
+    required BuildContext context,
+  }) async {
+    final languageProvider = context.read<LanguageProvider>();
+
+    try {
+      final headers = await ApiService.getHeaders();
+
+      final url = Uri.parse('$baseUrl/raports/export-pdf').replace(
+        queryParameters: {
+          'student_class_id': studentClassId,
+          'academic_year_id': academicYearId,
+          'semester_id': semesterId,
+        },
+      );
+
+      final response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        // Get directory
+        final Directory directory = await getApplicationDocumentsDirectory();
+
+        String formattedName = studentName.replaceAll(
+          RegExp(r'[^a-zA-Z0-9]'),
+          '_',
+        );
+        final String filePath =
+            '${directory.path}/Raport_${formattedName}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+
+        // Save file
+        final File file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Open the file
+        await OpenFile.open(filePath);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              languageProvider.getTranslatedText({
+                'en': 'PDF downloaded successfully',
+                'id': 'PDF berhasil diunduh',
+              }),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        String errorMessage = 'Failed to download PDF';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage =
+              errorData['message'] ?? errorData['error'] ?? errorMessage;
+        } catch (_) {}
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Failed to download PDF: $e',
+              'id': 'Gagal mengunduh PDF: $e',
+            }),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 }

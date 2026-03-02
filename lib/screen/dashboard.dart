@@ -7,6 +7,7 @@ import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
 import 'package:manajemensekolah/screen/admin/admin_class_activity.dart';
 import 'package:manajemensekolah/screen/admin/admin_data_management.dart';
 import 'package:manajemensekolah/screen/admin/admin_presence_report.dart';
+import 'package:manajemensekolah/screen/admin/admin_raport_screen.dart';
 import 'package:manajemensekolah/screen/admin/admin_rpp_screen.dart';
 import 'package:manajemensekolah/screen/admin/finance.dart';
 import 'package:manajemensekolah/screen/admin/school_settings_screen.dart';
@@ -25,6 +26,7 @@ import 'package:manajemensekolah/screen/walimurid/announcement_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_billing.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_grade_screen.dart';
+import 'package:manajemensekolah/screen/walimurid/parent_raport_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/presence_parent.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
@@ -2366,6 +2368,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           MaterialPageRoute(builder: (context) => AdminRppScreen()),
         ),
       ),
+      MenuItem(
+        title: 'Raport Siswa',
+        icon: Icons.assignment_turned_in_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminRaportScreen()),
+        ),
+      ),
     ];
   }
 
@@ -2728,6 +2738,24 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             MaterialPageRoute(builder: (context) => ParentBillingScreen()),
           );
           _loadStats();
+        },
+      ),
+      MenuItem(
+        title: 'E-Raport',
+        icon: Icons.assignment_turned_in_outlined,
+        onTap: () async {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ParentRaportScreen(academicYearId: academicYearId),
+            ),
+          );
         },
       ),
     ];
