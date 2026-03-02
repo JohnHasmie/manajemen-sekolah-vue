@@ -67,8 +67,19 @@ class ExcelRaportService {
         String errorMessage = 'Failed to export data';
         try {
           final errorData = jsonDecode(response.body);
-          errorMessage =
-              errorData['message'] ?? errorData['error'] ?? errorMessage;
+          if (errorData['message'] != null) {
+            errorMessage = errorData['message'];
+          } else if (errorData['error'] != null) {
+            final err = errorData['error'];
+            if (err is Map) {
+              errorMessage = err.values.first.toString();
+              if (err.values.first is List) {
+                errorMessage = err.values.first[0].toString();
+              }
+            } else {
+              errorMessage = err.toString();
+            }
+          }
         } catch (_) {}
         throw Exception(errorMessage);
       }
@@ -142,8 +153,19 @@ class ExcelRaportService {
         String errorMessage = 'Failed to download PDF';
         try {
           final errorData = jsonDecode(response.body);
-          errorMessage =
-              errorData['message'] ?? errorData['error'] ?? errorMessage;
+          if (errorData['message'] != null) {
+            errorMessage = errorData['message'];
+          } else if (errorData['error'] != null) {
+            final err = errorData['error'];
+            if (err is Map) {
+              errorMessage = err.values.first.toString();
+              if (err.values.first is List) {
+                errorMessage = err.values.first[0].toString();
+              }
+            } else {
+              errorMessage = err.toString();
+            }
+          }
         } catch (_) {}
         throw Exception(errorMessage);
       }
