@@ -1141,6 +1141,76 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     });
 
     _updateAllDescriptions();
+
+    // Automatically open the naming/bulk-fill dialog
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showBulkSelectionDialog('bab', _chapters.length - 1);
+    });
+  }
+
+  void _deleteChapter(int babIndex) {
+    if (_chapters.length <= 1) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Minimal harus ada 1 materi')));
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Hapus Materi'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus kolom materi ini beserta semua nilainya?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _chapters.removeAt(babIndex);
+
+                for (var row in _tableData) {
+                  final studentClassId = row['student_class_id'];
+
+                  if (row['bab_scores'] is List &&
+                      row['bab_scores'].length > babIndex) {
+                    row['bab_scores'].removeAt(babIndex);
+                  }
+
+                  // Clear old bab controllers
+                  _scoreControllers.removeWhere(
+                    (k, v) => k.startsWith('$studentClassId|bab|'),
+                  );
+
+                  // Recreate new ones with updated indices
+                  for (int i = 0; i < _chapters.length; i++) {
+                    final key = '$studentClassId|bab|$i';
+                    _scoreControllers[key] = TextEditingController(
+                      text: row['bab_scores'][i] != null
+                          ? row['bab_scores'][i].toStringAsFixed(1)
+                          : '',
+                    );
+                  }
+
+                  _recalculateRow(row);
+                }
+              });
+              _updateAllDescriptions();
+            },
+            child: Text('Hapus'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _applyBulkGrades(
@@ -2058,36 +2128,55 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                       width: gradeCellWidth,
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       alignment: Alignment.center,
-                      child: InkWell(
-                        onTap: () => _showBulkSelectionDialog('bab', i),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                _chapters.length > i
-                                    ? (_chapters[i]['judul_bab'] ??
-                                          _chapters[i]['judul'] ??
-                                          _chapters[i]['title'] ??
-                                          'Bab ${i + 1}')
-                                    : 'Bab ${i + 1}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorUtils.slate700,
-                                  fontSize: 11,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => _showBulkSelectionDialog('bab', i),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      _chapters.length > i
+                                          ? (_chapters[i]['judul_bab'] ??
+                                                _chapters[i]['judul'] ??
+                                                _chapters[i]['title'] ??
+                                                'Bab ${i + 1}')
+                                          : 'Bab ${i + 1}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: ColorUtils.slate700,
+                                        fontSize: 11,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Icon(
+                                    Icons.edit_outlined,
+                                    size: 12,
+                                    color: ColorUtils.slate400,
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(width: 4),
-                            Icon(
-                              Icons.edit_outlined,
-                              size: 12,
-                              color: ColorUtils.slate400,
+                          ),
+                          InkWell(
+                            onTap: () => _deleteChapter(i),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 4.0),
+                              child: Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.red.withValues(alpha: 0.7),
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
 
