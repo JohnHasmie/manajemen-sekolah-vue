@@ -15,57 +15,133 @@ class ParentRaportDetailScreen extends StatelessWidget {
     required this.studentData,
   });
 
+  Color _getPrimaryColor() {
+    return ColorUtils.getRoleColor('wali');
+  }
+
+  LinearGradient _getCardGradient() {
+    final primaryColor = _getPrimaryColor();
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          'Raport: $studentName',
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-        ),
-        backgroundColor: ColorUtils.corporateBlue600,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Student Info Card
-            _buildInfoCard(),
-            const SizedBox(height: 16),
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        children: [
+          // Header - Pattern #7 gradient header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 20,
+            ),
+            decoration: BoxDecoration(
+              gradient: _getCardGradient(),
+              boxShadow: [
+                BoxShadow(
+                  color: _getPrimaryColor().withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Raport: $studentName',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Detail E-Raport Siswa',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Student Info Card
+                  _buildInfoCard(),
+                  const SizedBox(height: 16),
 
-            // Sikap (Attitude) Card
-            _buildSikapCard(),
-            const SizedBox(height: 16),
+                  // Sikap (Attitude) Card
+                  _buildSikapCard(),
+                  const SizedBox(height: 16),
 
-            // Pengetahuan & Keterampilan (Grades)
-            _buildGradesCard(),
-            const SizedBox(height: 16),
+                  // Pengetahuan & Keterampilan (Grades)
+                  _buildGradesCard(),
+                  const SizedBox(height: 16),
 
-            // Ekstrakurikuler
-            _buildExtracurricularCard(),
-            const SizedBox(height: 16),
+                  // Ekstrakurikuler
+                  _buildExtracurricularCard(),
+                  const SizedBox(height: 16),
 
-            // Prestasi
-            _buildAchievementCard(),
-            const SizedBox(height: 16),
+                  // Prestasi
+                  _buildAchievementCard(),
+                  const SizedBox(height: 16),
 
-            // Kehadiran (Attendance)
-            _buildAttendanceCard(),
-            const SizedBox(height: 16),
+                  // Kehadiran (Attendance)
+                  _buildAttendanceCard(),
+                  const SizedBox(height: 16),
 
-            // Catatan Wali Kelas
-            _buildCatatanCard(),
-            const SizedBox(height: 16),
+                  // Catatan Wali Kelas
+                  _buildCatatanCard(),
+                  const SizedBox(height: 16),
 
-            // Keputusan
-            _buildDecisionCard(),
-            const SizedBox(height: 32),
-          ],
-        ),
+                  // Keputusan
+                  _buildDecisionCard(),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _downloadPdf(context),
