@@ -595,6 +595,12 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
           ? (finalScoreValue / componentCount)
           : 0;
 
+      double currentSkillScore =
+          (existingRecap != null && existingRecap['skill_score'] != null)
+          ? (double.tryParse(existingRecap['skill_score'].toString()) ??
+                finalAverage)
+          : finalAverage;
+
       String currentPredikat = existingRecap != null
           ? (existingRecap['predikat'] ?? '')
           : '';
@@ -622,6 +628,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       _scoreControllers['$studentClassId|uas|null'] = TextEditingController(
         text: uasScore?.toStringAsFixed(1) ?? '',
       );
+      _scoreControllers['$studentClassId|skill_score|null'] =
+          TextEditingController(text: currentSkillScore.toStringAsFixed(1));
 
       tableData.add({
         'student_class_id': studentClassId,
@@ -631,6 +639,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         'uts': utsScore,
         'uas': uasScore,
         'final_score': finalAverage,
+        'skill_score': currentSkillScore,
         'predikat': currentPredikat,
         'deskripsi': currentDeskripsi,
       });
@@ -808,6 +817,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
           row['uts'] = newValue;
         } else if (type == 'uas') {
           row['uas'] = newValue;
+        } else if (type == 'skill_score') {
+          row['skill_score'] = newValue;
         }
         _recalculateRow(row);
       }
@@ -1086,6 +1097,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
           row['uts'] = newValue;
         } else if (type == 'uas') {
           row['uas'] = newValue;
+        } else if (type == 'skill_score') {
+          row['skill_score'] = newValue;
         }
         _recalculateRow(row);
       }
@@ -1097,7 +1110,15 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       final newIndex = _chapters.length;
       final newChapterName = 'Bab ${newIndex + 1}';
 
+      // Create a fresh map for the new chapter and add it
       _chapters.add({
+        'judul_bab': newChapterName,
+        'judul': newChapterName,
+        'title': newChapterName,
+      });
+
+      // Keep _allAvailableChapters in sync if needed
+      _allAvailableChapters.add({
         'judul_bab': newChapterName,
         'judul': newChapterName,
         'title': newChapterName,
@@ -1106,9 +1127,9 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       for (var row in _tableData) {
         final studentClassId = row['student_class_id'];
 
-        // Expand score list
+        // Expand score list safely
         if (row['bab_scores'] is List) {
-          row['bab_scores'].add(null);
+          row['bab_scores'] = List<dynamic>.from(row['bab_scores'])..add(null);
         }
 
         // Initialize Controller for the new Bab
@@ -1183,6 +1204,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
             row['uts'] = finalBulkScore;
           } else if (type == 'uas') {
             row['uas'] = finalBulkScore;
+          } else if (type == 'skill_score') {
+            row['skill_score'] = finalBulkScore;
           }
           _recalculateRow(row);
         }
@@ -1195,6 +1218,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   void _recalculateRow(Map<String, dynamic> row) {
     double sum = 0;
     int count = 0;
+    double oldFinalScore = row['final_score'] ?? 0.0;
+
     for (var s in row['bab_scores']) {
       if (s != null) {
         sum += s;
@@ -1209,7 +1234,20 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       sum += row['uas'];
       count++;
     }
-    row['final_score'] = count > 0 ? sum / count : 0.0;
+
+    double newFinalScore = count > 0 ? sum / count : 0.0;
+    row['final_score'] = newFinalScore;
+
+    // Auto-update skill_score if it was matching previous final_score or is 0
+    double currentSkill = row['skill_score'] ?? 0.0;
+    if (currentSkill == oldFinalScore || currentSkill == 0.0) {
+      row['skill_score'] = newFinalScore;
+      final studentClassId = row['student_class_id'];
+      final key = '$studentClassId|skill_score|null';
+      if (_scoreControllers.containsKey(key)) {
+        _scoreControllers[key]!.text = newFinalScore.toStringAsFixed(1);
+      }
+    }
   }
 
   void _updateAllDescriptions() {
@@ -1268,6 +1306,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
           'uts_score': row['uts'],
           'uas_score': row['uas'],
           'final_score': row['final_score'],
+          'skill_score': row['skill_score'],
         });
       }
 
@@ -1884,10 +1923,10 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     double rightSideWidth =
         (numChapters * gradeCellWidth) +
         (gradeCellWidth * 2) + // UTS + UAS
-        finalScoreWidth +
+        (finalScoreWidth * 2) + // Final + Skill
         predikatWidth +
         deskripsiWidth +
-        40; // Horizontal margin
+        60; // Extra horizontal margin for safety
 
     // Left Side: Frozen column (Combined Name & NIS)
     final leftSide = Container(
@@ -2127,6 +2166,23 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                     ),
                   ),
 
+                  // Skill Header
+                  Container(
+                    width: finalScoreWidth,
+                    alignment: Alignment.center,
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Skill',
+                        'id': 'Keterampilan',
+                      }),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: ColorUtils.slate700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+
                   // Pred Header
                   Container(
                     width: predikatWidth,
@@ -2222,6 +2278,17 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                           color: _getPrimaryColor(),
                           fontSize: 14,
                         ),
+                      ),
+                    ),
+
+                    // Skill Score Editable
+                    Container(
+                      width: finalScoreWidth,
+                      alignment: Alignment.center,
+                      child: _buildEditableGradeCell(
+                        studentClassId,
+                        'skill_score',
+                        null,
                       ),
                     ),
 
