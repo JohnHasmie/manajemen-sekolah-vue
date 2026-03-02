@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/raport_print_screen.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
+import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -245,10 +246,17 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
           ).selectedAcademicYear?['id']?.toString() ??
           '';
 
+      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      String semesterId = '1'; // Default to Ganjil
+      if (dateBasedSemester.containsKey('semester') &&
+          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+        semesterId = '2';
+      }
+
       final payload = {
         'student_class_id': widget.studentClassId,
         'academic_year_id': academicYearId,
-        'semester_id': '1', // Default 1 for now
+        'semester_id': semesterId,
         'spiritual_predicate': _spiritualPredicate,
         'spiritual_description': _spiritualDescCtrl.text,
         'social_predicate': _socialPredicate,

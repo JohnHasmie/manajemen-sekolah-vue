@@ -3,6 +3,7 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/raport_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
+import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/excel_raport_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -98,7 +99,13 @@ class RaportScreenState extends State<RaportScreen> {
       );
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
-      final semester = '1';
+
+      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      String semester = '1';
+      if (dateBasedSemester.containsKey('semester') &&
+          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+        semester = '2';
+      }
 
       if (academicYearId == null) {
         setState(() {
@@ -141,7 +148,13 @@ class RaportScreenState extends State<RaportScreen> {
       );
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
-      final semesterId = '1';
+
+      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      String semesterId = '1';
+      if (dateBasedSemester.containsKey('semester') &&
+          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+        semesterId = '2';
+      }
 
       if (academicYearId == null) {
         throw Exception("Tahun ajaran tidak valid.");
@@ -200,10 +213,17 @@ class RaportScreenState extends State<RaportScreen> {
       final academicYearId =
           academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
 
+      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      String semesterId = '1';
+      if (dateBasedSemester.containsKey('semester') &&
+          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+        semesterId = '2';
+      }
+
       await ExcelRaportService.exportSingleRaportPdf(
         studentClassId: student['student_class_id'].toString(),
         academicYearId: academicYearId,
-        semesterId: '1',
+        semesterId: semesterId,
         studentName: student['student_name'] ?? 'Unknown',
         context: context,
       );
