@@ -65,6 +65,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
   bool _isExporting = false;
+  bool _hasUnsavedChanges = false;
 
   @override
   void initState() {
@@ -1163,6 +1164,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                   );
                   if (index != -1) {
                     _tableData[index]['deskripsi'] = tempController.text;
+                    _hasUnsavedChanges = true;
                   }
                 });
                 Navigator.pop(context);
@@ -1353,6 +1355,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
             row['skill_score'] = finalBulkScore;
           }
           _recalculateRow(row);
+          _hasUnsavedChanges = true;
         }
       }
     });
@@ -1458,6 +1461,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       await ApiGradeRecapService.batchSaveGradeRecap(payload);
 
       if (mounted) {
+        setState(() => _hasUnsavedChanges = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Rekap Nilai berhasil disimpan')),
         );
@@ -1507,204 +1511,279 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
   // ==================== BUILDERS ====================
 
+  Future<bool> _onWillPop() async {
+    if (!_hasUnsavedChanges) return true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final languageProvider = Provider.of<LanguageProvider>(
+          context,
+          listen: false,
+        );
+        return AlertDialog(
+          title: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Unsaved Changes',
+              'id': 'Perubahan Belum Disimpan',
+            }),
+          ),
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en':
+                  'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.',
+              'id':
+                  'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
+            }),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false), // Cancel
+              child: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Cancel',
+                  'id': 'Batal',
+                }),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(context, true), // Leave
+              child: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Leave',
+                  'id': 'Keluar',
+                }),
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  void _handleBackButton() async {
+    if (_hasUnsavedChanges) {
+      final canLeave = await _onWillPop();
+      if (!canLeave) return;
+    }
+
+    if (_currentStep > 0) {
+      setState(() {
+        _currentStep--;
+        _searchController.clear();
+        _hasUnsavedChanges = false;
+      });
+    } else {
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        return Scaffold(
-          backgroundColor: ColorUtils.slate50,
-          body: Column(
-            children: [
-              // Pattern #7 Gradient Header
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 20,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      _getPrimaryColor(),
-                      _getPrimaryColor().withValues(alpha: 0.8),
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+
+            final canLeave = await _onWillPop();
+            if (canLeave && mounted) {
+              Navigator.pop(context, result);
+            }
+          },
+          child: Scaffold(
+            backgroundColor: ColorUtils.slate50,
+            body: Column(
+              children: [
+                // Pattern #7 Gradient Header
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 16,
+                    left: 16,
+                    right: 16,
+                    bottom: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _getPrimaryColor(),
+                        _getPrimaryColor().withValues(alpha: 0.8),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _getPrimaryColor().withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
                     ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _getPrimaryColor().withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        if (_currentStep > 0) {
-                          setState(() {
-                            _currentStep--;
-                            _searchController.clear();
-                          });
-                        } else {
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 20,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: _handleBackButton,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Grade Recap',
-                              'id': 'Rekap Nilai',
-                            }),
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Grade Recap',
+                                'id': 'Rekap Nilai',
+                              }),
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          Text(
-                            _currentStep == 0
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'Select Class',
-                                    'id': 'Pilih Kelas',
-                                  })
-                                : _currentStep == 1
-                                ? (_selectedClass?['nama'] ??
-                                      _selectedClass?['name'] ??
-                                      '')
-                                : (_selectedSubject?['nama'] ??
-                                      _selectedSubject?['name'] ??
-                                      ''),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.9),
+                            Text(
+                              _currentStep == 0
+                                  ? languageProvider.getTranslatedText({
+                                      'en': 'Select Class',
+                                      'id': 'Pilih Kelas',
+                                    })
+                                  : _currentStep == 1
+                                  ? (_selectedClass?['nama'] ??
+                                        _selectedClass?['name'] ??
+                                        '')
+                                  : (_selectedSubject?['nama'] ??
+                                        _selectedSubject?['name'] ??
+                                        ''),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white.withValues(alpha: 0.9),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    if (_currentStep == 2)
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: _isExporting ? null : _exportToExcel,
-                            child: Container(
-                              margin: EdgeInsets.only(right: 8),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.9),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: _isExporting
-                                  ? SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : Row(
-                                      children: [
-                                        Icon(
-                                          Icons.table_view,
+                      if (_currentStep == 2)
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: _isExporting ? null : _exportToExcel,
+                              child: Container(
+                                margin: EdgeInsets.only(right: 8),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: _isExporting
+                                    ? SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
                                           color: Colors.white,
-                                          size: 16,
                                         ),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Excel',
-                                          style: TextStyle(
+                                      )
+                                    : Row(
+                                        children: [
+                                          Icon(
+                                            Icons.table_view,
                                             color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
+                                            size: 16,
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: _isSaving ? null : _saveRecaps,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: _isSaving
-                                  ? SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'Excel',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    )
-                                  : Row(
-                                      children: [
-                                        Icon(
-                                          Icons.save,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          languageProvider.getTranslatedText({
-                                            'en': 'Save',
-                                            'id': 'Simpan',
-                                          }),
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                  ],
+                            GestureDetector(
+                              onTap: _isSaving ? null : _saveRecaps,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: _isSaving
+                                    ? SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Row(
+                                        children: [
+                                          Icon(
+                                            Icons.save,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            languageProvider.getTranslatedText({
+                                              'en': 'Save',
+                                              'id': 'Simpan',
+                                            }),
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Step indicator or search bar
-              if (_currentStep < 2) _buildTopControls(languageProvider),
+                // Step indicator or search bar
+                if (_currentStep < 2) _buildTopControls(languageProvider),
 
-              Expanded(child: _buildBody(languageProvider)),
-            ],
+                Expanded(child: _buildBody(languageProvider)),
+              ],
+            ),
           ),
         );
       },
