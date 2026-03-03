@@ -1105,6 +1105,81 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     });
   }
 
+  void _showEditDeskripsiDialog(String studentClassId, String studentName) {
+    final TextEditingController tempController = TextEditingController(
+      text: _deskripsiControllers[studentClassId]?.text ?? '',
+    );
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Edit Description - $studentName',
+              'id': 'Edit Deskripsi - $studentName',
+            }),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: TextField(
+              controller: tempController,
+              maxLines: 5,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: languageProvider.getTranslatedText({
+                  'en': 'Enter description...',
+                  'id': 'Masukkan deskripsi...',
+                }),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Cancel',
+                  'id': 'Batal',
+                }),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _getPrimaryColor(),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                setState(() {
+                  _deskripsiControllers[studentClassId]?.text =
+                      tempController.text;
+                  final index = _tableData.indexWhere(
+                    (row) => row['student_class_id'] == studentClassId,
+                  );
+                  if (index != -1) {
+                    _tableData[index]['deskripsi'] = tempController.text;
+                  }
+                });
+                Navigator.pop(context);
+              },
+              child: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Save',
+                  'id': 'Simpan',
+                }),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _addChapter() {
     setState(() {
       final newIndex = _chapters.length;
@@ -2423,6 +2498,11 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                         controller: _deskripsiControllers[studentClassId],
                         maxLines: 2,
                         style: TextStyle(fontSize: 12),
+                        readOnly: true,
+                        onTap: () {
+                          final studentName = row['nama'] ?? 'Siswa';
+                          _showEditDeskripsiDialog(studentClassId, studentName);
+                        },
                         decoration: InputDecoration(
                           isDense: true,
                           contentPadding: EdgeInsets.all(10),
