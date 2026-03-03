@@ -3441,6 +3441,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           await ApiSubjectService.batchSaveMateriProgress({
             'guru_id': widget.teacherId,
             'mata_pelajaran_id': _selectedSubjectId,
+            'class_id': _selectedClassId,
             'progress_items': progressItems,
           });
           if (kDebugMode) {

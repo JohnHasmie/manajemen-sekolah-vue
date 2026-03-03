@@ -821,7 +821,11 @@ class MateriPageState extends State<MateriPage> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
               SizedBox(width: 8),
@@ -834,7 +838,11 @@ class MateriPageState extends State<MateriPage> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                  child: Icon(
+                    Icons.refresh_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -915,7 +923,10 @@ class MateriPageState extends State<MateriPage> {
                     children: [
                       Text(
                         '${_getFilteredBabMateri().length} ${languageProvider.getTranslatedText({'en': 'materials found', 'id': 'materi ditemukan'})}',
-                        style: TextStyle(color: ColorUtils.slate500, fontSize: 14),
+                        style: TextStyle(
+                          color: ColorUtils.slate500,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -978,7 +989,9 @@ class MateriPageState extends State<MateriPage> {
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: ColorUtils.slate200, width: 1)),
+        border: Border(
+          bottom: BorderSide(color: ColorUtils.slate200, width: 1),
+        ),
       ),
       child: Column(
         children: [
@@ -999,7 +1012,11 @@ class MateriPageState extends State<MateriPage> {
                     color: primaryColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.filter_alt_rounded, size: 16, color: primaryColor),
+                  child: Icon(
+                    Icons.filter_alt_rounded,
+                    size: 16,
+                    color: primaryColor,
+                  ),
                 ),
                 SizedBox(width: 10),
                 Expanded(
@@ -1033,7 +1050,7 @@ class MateriPageState extends State<MateriPage> {
           ),
           SizedBox(height: 12),
 
-          // Tombol Generate RPP jika ada yang dicentang
+          // Tombol Generate Kegiatan jika ada yang dicentang
           if (totalChecked > 0 && _getCheckedNotGeneratedCount() > 0) ...[
             SizedBox(
               width: double.infinity,
@@ -1041,7 +1058,7 @@ class MateriPageState extends State<MateriPage> {
                 onPressed: _navigateToGenerateRPP,
                 icon: Icon(Icons.auto_awesome_rounded, size: 18),
                 label: Text(
-                  'Generate RPP (${_getCheckedNotGeneratedCount()})',
+                  'Generate Kegiatan Kelas (${_getCheckedNotGeneratedCount()})',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -1075,7 +1092,11 @@ class MateriPageState extends State<MateriPage> {
       children: [
         Text(
           languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: ColorUtils.slate600,
+          ),
         ),
         SizedBox(height: 6),
         Container(
@@ -1105,7 +1126,10 @@ class MateriPageState extends State<MateriPage> {
                         Expanded(
                           child: Text(
                             c['name'] ?? c['nama'] ?? 'Unknown',
-                            style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+                            style: TextStyle(
+                              color: ColorUtils.slate800,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
@@ -1147,7 +1171,11 @@ class MateriPageState extends State<MateriPage> {
             'en': 'Subject',
             'id': 'Mata Pelajaran',
           }),
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: ColorUtils.slate600,
+          ),
         ),
         SizedBox(height: 6),
         Container(
@@ -1177,7 +1205,10 @@ class MateriPageState extends State<MateriPage> {
                         Expanded(
                           child: Text(
                             mp['name'] ?? mp['nama'] ?? 'Unknown',
-                            style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
+                            style: TextStyle(
+                              color: ColorUtils.slate800,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
@@ -1270,7 +1301,9 @@ class MateriPageState extends State<MateriPage> {
                             decoration: BoxDecoration(
                               color: cardColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: cardColor.withValues(alpha: 0.25)),
+                              border: Border.all(
+                                color: cardColor.withValues(alpha: 0.25),
+                              ),
                             ),
                             child: Center(
                               child: Text(
@@ -1387,7 +1420,9 @@ class MateriPageState extends State<MateriPage> {
                     decoration: BoxDecoration(
                       color: subBabColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: subBabColor.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: subBabColor.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Center(
                       child: Text(
@@ -1623,7 +1658,9 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        _isChecked ? Icons.check_circle_rounded : Icons.circle_outlined,
+                        _isChecked
+                            ? Icons.check_circle_rounded
+                            : Icons.circle_outlined,
                         color: Colors.white,
                         size: 18,
                       ),
@@ -1662,7 +1699,11 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.description_rounded, color: Colors.white, size: 16),
+                  child: Icon(
+                    Icons.description_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
                 SizedBox(width: 10),
                 Expanded(
@@ -1770,7 +1811,9 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                   decoration: BoxDecoration(
                     color: cardColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: cardColor.withValues(alpha: 0.25)),
+                    border: Border.all(
+                      color: cardColor.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: Center(
                     child: Text(
