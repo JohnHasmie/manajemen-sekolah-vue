@@ -59,126 +59,175 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     );
     buffer.writeln();
 
-    // A. TUJUAN PEMBELAJARAN
-    buffer.writeln('A. TUJUAN PEMBELAJARAN');
-    if (widget.rppData['tujuan_pembelajaran'] != null) {
-      final tujuanLines = widget.rppData['tujuan_pembelajaran']
-          .toString()
-          .split('\n');
-      for (int i = 0; i < tujuanLines.length; i++) {
-        if (tujuanLines[i].trim().isNotEmpty) {
-          buffer.writeln('${i + 1}. ${tujuanLines[i].trim()}');
-        }
-      }
+    // Jika RPP hasil genrasi AI (format 10 komponen)
+    if (widget.rppData['ai_generated'] == true) {
+      buffer.writeln('A. KOMPETENSI INTI (KI)');
+      buffer.writeln(_stripHtml(widget.rppData['core_competence'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('B. KOMPETENSI DASAR (KD)');
+      buffer.writeln(_stripHtml(widget.rppData['basic_competence'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('C. INDIKATOR PENCAPAIAN KOMPETENSI');
+      buffer.writeln(_stripHtml(widget.rppData['indicator'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('D. TUJUAN PEMBELAJARAN');
+      buffer.writeln(_stripHtml(widget.rppData['learning_objective'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('E. MATERI PEMBELAJARAN');
+      buffer.writeln(_stripHtml(widget.rppData['main_material'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('F. METODE PEMBELAJARAN');
+      buffer.writeln(_stripHtml(widget.rppData['learning_method'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('G. MEDIA DAN ALAT BANTU');
+      buffer.writeln(_stripHtml(widget.rppData['media_tools'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('H. SUMBER BELAJAR');
+      buffer.writeln(_stripHtml(widget.rppData['learning_source'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('I. KEGIATAN PEMBELAJARAN');
+      buffer.writeln(_stripHtml(widget.rppData['learning_activities'] ?? ''));
+      buffer.writeln();
+
+      buffer.writeln('J. PENILAIAN (ASESMEN)');
+      buffer.writeln(_stripHtml(widget.rppData['assessment'] ?? ''));
+      buffer.writeln();
     } else {
-      // Default tujuan pembelajaran
-      buffer.writeln(
-        '1. Dengan mengamati gambar, siswa dapat memahami kosakata tentang cara memelihara kesehatan dengan tepat.',
-      );
-      buffer.writeln(
-        '2. Dengan menirukan kata-kata yang dibacakan oleh guru, siswa dapat menambah kosakata tentang cara memelihara kesehatan dengan tepat dan percaya diri.',
-      );
-      buffer.writeln(
-        '3. Melalui kegiatan membaca, siswa dapat menggunakan kosakata tentang olahraga sebagai cara memelihara kesehatan dengan tepat.',
-      );
-    }
-    buffer.writeln();
+      // Format Lama (3 Komponen)
 
-    // B. KEGIATAN PEMBELAJARAN
-    buffer.writeln('B. KEGIATAN PEMBELAJARAN');
-    buffer.writeln();
-
-    // Kegiatan Pendahuluan
-    buffer.writeln(
-      'Kegiatan Pendahuluan (${widget.rppData['waktu_pendahuluan'] ?? '15'} menit)',
-    );
-    if (widget.rppData['kegiatan_pendahuluan'] != null) {
-      final pendahuluanLines = widget.rppData['kegiatan_pendahuluan']
-          .toString()
-          .split('\n');
-      for (var line in pendahuluanLines) {
-        if (line.trim().isNotEmpty) {
-          buffer.writeln('• ${line.trim()}');
+      // A. TUJUAN PEMBELAJARAN
+      buffer.writeln('A. TUJUAN PEMBELAJARAN');
+      if (widget.rppData['tujuan_pembelajaran'] != null) {
+        final tujuanLines = widget.rppData['tujuan_pembelajaran']
+            .toString()
+            .split('\n');
+        for (int i = 0; i < tujuanLines.length; i++) {
+          if (tujuanLines[i].trim().isNotEmpty) {
+            buffer.writeln('${i + 1}. ${tujuanLines[i].trim()}');
+          }
         }
+      } else {
+        // Default tujuan pembelajaran
+        buffer.writeln(
+          '1. Dengan mengamati gambar, siswa dapat memahami kosakata tentang cara memelihara kesehatan dengan tepat.',
+        );
+        buffer.writeln(
+          '2. Dengan menirukan kata-kata yang dibacakan oleh guru, siswa dapat menambah kosakata tentang cara memelihara kesehatan dengan tepat dan percaya diri.',
+        );
+        buffer.writeln(
+          '3. Melalui kegiatan membaca, siswa dapat menggunakan kosakata tentang olahraga sebagai cara memelihara kesehatan dengan tepat.',
+        );
       }
-    } else {
-      buffer.writeln('• Melakukan Pembukaan dengan Salam dan Membaca Doa');
-      buffer.writeln(
-        '• Mengaitkan Materi Sebelumnya dengan Materi yang akan dipelajari',
-      );
-      buffer.writeln(
-        '• Memberikan gambaran tentang manfaat mempelajari pelajaran',
-      );
-    }
-    buffer.writeln();
+      buffer.writeln();
 
-    // Kegiatan Inti
-    buffer.writeln(
-      'Kegiatan Inti (${widget.rppData['waktu_inti'] ?? '140'} menit)',
-    );
-    if (widget.rppData['kegiatan_inti'] != null) {
-      final intiLines = widget.rppData['kegiatan_inti'].toString().split('\n');
-      for (var line in intiLines) {
-        if (line.trim().isNotEmpty) {
-          if (line.trim().startsWith('A.') ||
-              line.trim().startsWith('B.') ||
-              line.trim().startsWith('C.')) {
-            buffer.writeln(line.trim());
-          } else {
+      // B. KEGIATAN PEMBELAJARAN
+      buffer.writeln('B. KEGIATAN PEMBELAJARAN');
+      buffer.writeln();
+
+      // Kegiatan Pendahuluan
+      buffer.writeln(
+        'Kegiatan Pendahuluan (${widget.rppData['waktu_pendahuluan'] ?? '15'} menit)',
+      );
+      if (widget.rppData['kegiatan_pendahuluan'] != null) {
+        final pendahuluanLines = widget.rppData['kegiatan_pendahuluan']
+            .toString()
+            .split('\n');
+        for (var line in pendahuluanLines) {
+          if (line.trim().isNotEmpty) {
             buffer.writeln('• ${line.trim()}');
           }
         }
+      } else {
+        buffer.writeln('• Melakukan Pembukaan dengan Salam dan Membaca Doa');
+        buffer.writeln(
+          '• Mengaitkan Materi Sebelumnya dengan Materi yang akan dipelajari',
+        );
+        buffer.writeln(
+          '• Memberikan gambaran tentang manfaat mempelajari pelajaran',
+        );
       }
-    } else {
-      buffer.writeln('A. Ayo Mengamati');
-      buffer.writeln('• Siswa menyimak teks yang dibacakan oleh guru');
-      buffer.writeln('• Guru menunjukkan gambar jenis permainan dan olahraga');
-      buffer.writeln(
-        '• Guru memancing partisipasi aktif siswa dengan pertanyaan',
-      );
       buffer.writeln();
-      buffer.writeln('B. Ayo Membaca');
-      buffer.writeln('• Siswa menirukan kata-kata yang dibacakan guru');
-      buffer.writeln('• Guru memberi kesempatan bertanya tentang makna kata');
-      buffer.writeln();
-      buffer.writeln('C. Ayo Mencoba');
-      buffer.writeln(
-        '• Siswa mengidentifikasi gambar kegiatan yang menyehatkan',
-      );
-      buffer.writeln('• Siswa memberi tanda centang/silang pada gambar');
-    }
-    buffer.writeln();
 
-    // Kegiatan Penutup
-    buffer.writeln(
-      'Kegiatan Penutup (${widget.rppData['waktu_penutup'] ?? '15'} menit)',
-    );
-    if (widget.rppData['kegiatan_penutup'] != null) {
-      final penutupLines = widget.rppData['kegiatan_penutup'].toString().split(
-        '\n',
+      // Kegiatan Inti
+      buffer.writeln(
+        'Kegiatan Inti (${widget.rppData['waktu_inti'] ?? '140'} menit)',
       );
-      for (var line in penutupLines) {
-        if (line.trim().isNotEmpty) {
-          buffer.writeln('• ${line.trim()}');
+      if (widget.rppData['kegiatan_inti'] != null) {
+        final intiLines = widget.rppData['kegiatan_inti'].toString().split(
+          '\n',
+        );
+        for (var line in intiLines) {
+          if (line.trim().isNotEmpty) {
+            if (line.trim().startsWith('A.') ||
+                line.trim().startsWith('B.') ||
+                line.trim().startsWith('C.')) {
+              buffer.writeln(line.trim());
+            } else {
+              buffer.writeln('• ${line.trim()}');
+            }
+          }
         }
+      } else {
+        buffer.writeln('A. Ayo Mengamati');
+        buffer.writeln('• Siswa menyimak teks yang dibacakan oleh guru');
+        buffer.writeln(
+          '• Guru menunjukkan gambar jenis permainan dan olahraga',
+        );
+        buffer.writeln(
+          '• Guru memancing partisipasi aktif siswa dengan pertanyaan',
+        );
+        buffer.writeln();
+        buffer.writeln('B. Ayo Membaca');
+        buffer.writeln('• Siswa menirukan kata-kata yang dibacakan guru');
+        buffer.writeln('• Guru memberi kesempatan bertanya tentang makna kata');
+        buffer.writeln();
+        buffer.writeln('C. Ayo Mencoba');
+        buffer.writeln(
+          '• Siswa mengidentifikasi gambar kegiatan yang menyehatkan',
+        );
+        buffer.writeln('• Siswa memberi tanda centang/silang pada gambar');
       }
-    } else {
-      buffer.writeln('• Siswa membuat resume dengan bimbingan guru');
-      buffer.writeln('• Guru memeriksa pekerjaan siswa');
-      buffer.writeln('• Pemberian hadiah/pujian untuk pekerjaan yang benar');
-    }
-    buffer.writeln();
+      buffer.writeln();
 
-    // C. PENILAIAN
-    buffer.writeln('C. PENILAIAN (ASESMEN)');
-    if (widget.rppData['penilaian'] != null) {
-      buffer.writeln(widget.rppData['penilaian']);
-    } else {
+      // Kegiatan Penutup
       buffer.writeln(
-        'Penilaian terhadap materi ini dapat dilakukan sesuai kebutuhan guru yaitu dari pengamatan sikap, tes pengetahuan dan presentasi unjuk kerja atau hasil karya/projek dengan rubric penilaian.',
+        'Kegiatan Penutup (${widget.rppData['waktu_penutup'] ?? '15'} menit)',
       );
+      if (widget.rppData['kegiatan_penutup'] != null) {
+        final penutupLines = widget.rppData['kegiatan_penutup']
+            .toString()
+            .split('\n');
+        for (var line in penutupLines) {
+          if (line.trim().isNotEmpty) {
+            buffer.writeln('• ${line.trim()}');
+          }
+        }
+      } else {
+        buffer.writeln('• Siswa membuat resume dengan bimbingan guru');
+        buffer.writeln('• Guru memeriksa pekerjaan siswa');
+        buffer.writeln('• Pemberian hadiah/pujian untuk pekerjaan yang benar');
+      }
+      buffer.writeln();
+
+      // C. PENILAIAN
+      buffer.writeln('C. PENILAIAN (ASESMEN)');
+      if (widget.rppData['penilaian'] != null) {
+        buffer.writeln(widget.rppData['penilaian']);
+      } else {
+        buffer.writeln(
+          'Penilaian terhadap materi ini dapat dilakukan sesuai kebutuhan guru yaitu dari pengamatan sikap, tes pengetahuan dan presentasi unjuk kerja atau hasil karya/projek dengan rubric penilaian.',
+        );
+      }
+      buffer.writeln();
     }
-    buffer.writeln();
 
     // Tanda Tangan
     buffer.writeln('Mengetahui');
@@ -193,13 +242,54 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     buffer.writeln('...................................');
     buffer.writeln('NIP ..............................');
 
-    if (widget.rppData['is_ai_generated'] == true) {
+    if (widget.rppData['ai_generated'] == true ||
+        widget.rppData['is_ai_generated'] == true) {
       buffer.writeln();
       buffer.writeln('---');
       buffer.writeln('*RPP ini digenerate secara otomatis menggunakan AI*');
     }
 
     return buffer.toString();
+  }
+
+  // Simple HTML stripper helper
+  String _stripHtml(String html) {
+    if (html.isEmpty) return '';
+
+    // Replace list tags with newlines and bullets/numbers
+    var text = html.replaceAll(RegExp(r'<ul>|<ol>'), '\n');
+    text = text.replaceAll(RegExp(r'</ul>|</ol>'), '\n');
+
+    int counter = 1;
+    while (text.contains('<li>')) {
+      if (html.contains('<ol>')) {
+        text = text.replaceFirst('<li>', '$counter. ');
+        counter++;
+      } else {
+        text = text.replaceFirst('<li>', '• ');
+      }
+    }
+    text = text.replaceAll('</li>', '\n');
+
+    text = text.replaceAll(RegExp(r'<br\s*/?>'), '\n');
+    text = text.replaceAll(RegExp(r'<h3>'), '\n');
+    text = text.replaceAll(RegExp(r'</h3>|<p>|</p>'), '\n');
+
+    // Remove all remaining HTML tags
+    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
+
+    // Clean up extra whitespace and decode common entities
+    text = text.replaceAll('&nbsp;', ' ');
+    text = text.replaceAll('&amp;', '&');
+    text = text.replaceAll('&lt;', '<');
+    text = text.replaceAll('&gt;', '>');
+    text = text.replaceAll('&quot;', '"');
+    text = text.replaceAll('&#39;', "'");
+
+    // Remove consecutive empty lines (more than 2)
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+
+    return text.trim();
   }
 
   String _getMonthName(int month) {

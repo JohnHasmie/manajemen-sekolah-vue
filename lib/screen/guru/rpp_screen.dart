@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -408,6 +409,133 @@ class RppScreenState extends State<RppScreen> {
   }
 
   void _tambahRpp() {
+    final languageProvider = context.read<LanguageProvider>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: ColorUtils.slate200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Text(
+              languageProvider.getTranslatedText({
+                'en': 'Choose Action',
+                'id': 'Pilih Aksi',
+              }),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: ColorUtils.slate900,
+              ),
+            ),
+            SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showRppFormDialog();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _getPrimaryColor().withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _getPrimaryColor().withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.upload_file_rounded,
+                            size: 32,
+                            color: _getPrimaryColor(),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Upload Manual',
+                              'id': 'Upload Manual',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _getPrimaryColor(),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showGenerateRppFormDialog();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.success600.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: ColorUtils.success600.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 32,
+                            color: ColorUtils.success600,
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Generate AI',
+                              'id': 'Generate AI',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: ColorUtils.success600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRppFormDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -417,6 +545,23 @@ class RppScreenState extends State<RppScreen> {
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: RppFormDialog(teacherId: widget.teacherId, onSaved: _loadRpp),
+      ),
+    );
+  }
+
+  void _showGenerateRppFormDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: GenerateRppFormDialog(
+          teacherId: widget.teacherId,
+          onSaved: _loadRpp,
+        ),
       ),
     );
   }
@@ -2372,6 +2517,702 @@ class RppDetailPage extends StatelessWidget {
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: ColorUtils.slate900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GenerateRppFormDialog extends StatefulWidget {
+  final String teacherId;
+  final VoidCallback onSaved;
+
+  const GenerateRppFormDialog({
+    super.key,
+    required this.teacherId,
+    required this.onSaved,
+  });
+
+  @override
+  State<GenerateRppFormDialog> createState() => _GenerateRppFormDialogState();
+}
+
+class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _judulController = TextEditingController();
+  final _tahunAjaranController = TextEditingController();
+
+  String? _selectedMataPelajaranId;
+  String? _selectedClassId;
+  String? _selectedBabId;
+  String? _selectedSubBabId;
+  String? _selectedSemester = 'Ganjil';
+  bool _isAutoGenerating = false;
+
+  List<dynamic> _mataPelajaranList = [];
+  List<dynamic> _kelasList = [];
+  List<dynamic> _babList = [];
+  List<dynamic> _subBabList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMataPelajaranByGuru();
+    _tahunAjaranController.text = DateTime.now().year.toString();
+  }
+
+  Future<void> _loadMataPelajaranByGuru() async {
+    try {
+      final apiService = ApiService();
+      final result = await apiService.get(
+        '/guru/${widget.teacherId}/mata-pelajaran',
+      );
+      setState(() {
+        if (result is Map && result['data'] is List) {
+          _mataPelajaranList = result['data'];
+        } else if (result is List) {
+          _mataPelajaranList = result;
+        } else {
+          _mataPelajaranList = [];
+        }
+      });
+    } catch (e) {
+      _loadAllMataPelajaran();
+    }
+  }
+
+  Future<void> _loadAllMataPelajaran() async {
+    try {
+      final apiService = ApiService();
+      final result = await apiService.get('/mata-pelajaran');
+      setState(() {
+        if (result is Map && result['data'] is List) {
+          _mataPelajaranList = result['data'];
+        } else if (result is List) {
+          _mataPelajaranList = result;
+        } else {
+          _mataPelajaranList = [];
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) print('Error loading all mata pelajaran: $e');
+    }
+  }
+
+  Future<void> _loadKelasByMataPelajaran(String mataPelajaranId) async {
+    try {
+      final apiService = ApiService();
+      final result = await apiService.get(
+        '/class-by-mata-pelajaran?mata_pelajaran_id=$mataPelajaranId',
+      );
+      setState(() {
+        if (result is Map && result['data'] is List) {
+          _kelasList = result['data'];
+        } else if (result is List) {
+          _kelasList = result;
+        } else {
+          _kelasList = [];
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _kelasList = [];
+      });
+    }
+  }
+
+  Future<void> _loadBabByMataPelajaran(String subjectId) async {
+    try {
+      final result = await ApiSubjectService.getBabMateri(subjectId: subjectId);
+      setState(() {
+        _babList = result;
+      });
+    } catch (e) {
+      setState(() {
+        _babList = [];
+      });
+    }
+  }
+
+  Future<void> _loadSubBabByBab(String babId) async {
+    try {
+      final result = await ApiSubjectService.getSubBabMateri(babId: babId);
+      setState(() {
+        _subBabList = result;
+      });
+    } catch (e) {
+      setState(() {
+        _subBabList = [];
+      });
+    }
+  }
+
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isAutoGenerating = true;
+    });
+
+    try {
+      // Simulasi generate RPP untuk saat ini (frontend saja sesuai request)
+      // MOCK RESPONSE berdasarkan KamillLabs Edu AI API Documentation
+      await Future.delayed(const Duration(seconds: 2));
+
+      final mockRppResponse = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'title': _judulController.text.isNotEmpty
+            ? _judulController.text
+            : 'RPP Judul Otomatis',
+        // Menyimpan id untuk referensi, tapi menampilkan nama jika ada (di backend ini akan direlasikan)
+        'subject_id': _selectedMataPelajaranId,
+        'mata_pelajaran_nama':
+            _mataPelajaranList.firstWhere(
+              (m) => m['id'].toString() == _selectedMataPelajaranId,
+              orElse: () => {'name': 'Mata Pelajaran'},
+            )['name'] ??
+            'Mata Pelajaran',
+        'class_id': _selectedClassId,
+        'kelas_nama':
+            _kelasList.firstWhere(
+              (k) => k['id'].toString() == _selectedClassId,
+              orElse: () => {'name': 'Kelas'},
+            )['name'] ??
+            'Kelas',
+        'semester': _selectedSemester,
+        'tahun_ajaran': _tahunAjaranController.text,
+
+        // 10 Field AI Generated
+        'core_competence':
+            '<p>Menghayati dan mengamalkan ajaran agama yang dianutnya. Menghayati dan mengamalkan perilaku jujur, disiplin, santun, peduli (gotong royong, kerjasama, toleran, damai), bertanggung jawab, responsif, dan pro-aktif dalam berinteraksi secara efektif sesuai dengan perkembangan anak di lingkungan, keluarga, sekolah, masyarakat dan lingkungan alam sekitar, bangsa, negara, kawasan regional, dan kawasan internasional.</p>',
+        'basic_competence':
+            '<p>3.1 Mendeskripsikan konsep dan penerapan materi terkait dalam kehidupan sehari-hari.</p><p>4.1 Menyelesaikan masalah kontekstual yang berkaitan dengan materi ini.</p>',
+        'indicator':
+            '<ol><li>Mengidentifikasi konsep dasar.</li><li>Menjelaskan langkah-langkah penyelesaian.</li><li>Menerapkan rumus/konsep pada soal cerita.</li></ol>',
+        'learning_objective':
+            '<ol><li>Melalui diskusi kelompok, siswa dapat menjelaskan konsep dasar dengan benar.</li><li>Diberikan latihan soal, siswa dapat menghitung nilai dengan tingkat akurasi 90%.</li><li>Melalui presentasi, siswa dapat menunjukkan penerapan konsep di dunia nyata.</li></ol>',
+        'main_material':
+            '<h3>Materi Pokok</h3><ul><li>Definisi dan Konsep Dasar</li><li>Karakteristik dan Sifat Utama</li><li>Contoh Penerapan dan Studi Kasus</li></ul>',
+        'learning_method':
+            '<p>Pendekatan: Scientific Learning</p><p>Model: Problem Based Learning (PBL)</p><p>Metode: Diskusi kelompok, tanya jawab, penugasan, dan presentasi.</p>',
+        'media_tools':
+            '<ul><li>Papan tulis dan spidol</li><li>Proyektor LCD dan Laptop</li><li>Lembar Kerja Peserta Didik (LKPD)</li><li>Aplikasi pendukung / Video Pembelajaran</li></ul>',
+        'learning_source':
+            '<ul><li>Buku Paket Siswa Kelas ${_kelasList.firstWhere((k) => k['id'].toString() == _selectedClassId, orElse: () => {'name': ''})['name'] ?? ''}</li><li>Internet / Modul Pengayaan Tambahan</li></ul>',
+        'learning_activities':
+            '<h3>Pendahuluan (15 menit)</h3><ul><li>Guru membuka dengan salam dan doa.</li><li>Guru mengecek kehadiran siswa.</li><li>Apersepsi: Guru mengaitkan materi sebelumnya dengan yang akan dipelajari hari ini.</li><li>Motivasi: Guru menyampaikan tujuan pembelajaran.</li></ul><h3>Kegiatan Inti (60 menit)</h3><ul><li><strong>Mengamati:</strong> Siswa mengamati video/gambar terkait materi.</li><li><strong>Menanya:</strong> Guru mendorong siswa mengajukan pertanyaan tentang apa yang diamati.</li><li><strong>Mengeksplorasi:</strong> Siswa dibagi dalam kelompok untuk mengerjakan LKPD.</li><li><strong>Mengasosiasi:</strong> Siswa mengolah data dan informasi yang didapat.</li><li><strong>Mengkomunikasikan:</strong> Setiap perwakilan kelompok mempresentasikan hasil diskusinya.</li></ul><h3>Kegiatan Penutup (15 menit)</h3><ul><li>Siswa bersama guru menyimpulkan pembelajaran.</li><li>Refleksi: Guru menanyakan perasaan siswa setelah belajar.</li><li>Guru memberikan tugas mandiri / PR.</li><li>Berdoa dan salam penutup.</li></ul>',
+        'assessment':
+            '<h3>1. Penilaian Sikap</h3><p>Observasi keaktifan dan kerjasama selama diskusi kelompok.</p><h3>2. Penilaian Pengetahuan</h3><p>Tes tertulis (pilihan ganda dan uraian) di akhir pelajaran.</p><h3>3. Penilaian Keterampilan</h3><p>Penilaian rubrik saat presentasi hasil kerja kelompok di depan kelas.</p>',
+
+        // Metadata AI
+        'status': 'draft',
+        'ai_generated': true,
+        'ai_model_used': 'claude-sonnet-4-5-20250929',
+        'ai_tokens_used': 3200,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      if (kDebugMode) {
+        print('Mock RPP Generated: ${mockRppResponse['title']}');
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      // Navigate langsung ke halaman detail RPP yang baru di-generate
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RppDetailPage(rpp: mockRppResponse),
+        ),
+      ).then((_) {
+        // Refresh list setelah kembali dari halaman detail (jika disave)
+        widget.onSaved();
+      });
+
+      final languageProvider = context.read<LanguageProvider>();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en':
+                  'RPP generation simulated successfully. Awaiting backend integration.',
+              'id':
+                  'Simulasi generate RPP berhasil. Menunggu integrasi backend.',
+            }),
+          ),
+          backgroundColor: ColorUtils.success600,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${AppLocalizations.error.tr}: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAutoGenerating = false;
+        });
+      }
+    }
+  }
+
+  Color _getPrimaryColor() => ColorUtils.success600;
+
+  Widget _buildDialogTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    String? hintText,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        validator: validator,
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+          hintText: hintText,
+          hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
+          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogDropdown({
+    required dynamic value,
+    required String label,
+    required IconData icon,
+    required List<DropdownMenuItem<dynamic>> items,
+    required Function(dynamic) onChanged,
+    String? Function(dynamic)? validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: DropdownButtonFormField<dynamic>(
+        initialValue: value,
+        items: items,
+        onChanged: onChanged,
+        validator: validator,
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final languageProvider = context.watch<LanguageProvider>();
+    final primaryColor = _getPrimaryColor();
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.92,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header (Pattern #10 gradient)
+          Container(
+            padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
+              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Generate RPP with AI',
+                              'id': 'Generate RPP dengan AI',
+                            }),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en':
+                                  'Create interactive RPP documents automatically',
+                              'id': 'Buat dokumen RPP secara otomatis',
+                            }),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Form Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDialogTextField(
+                      controller: _judulController,
+                      label: '${AppLocalizations.title.tr} *',
+                      icon: Icons.title_rounded,
+                      hintText: languageProvider.getTranslatedText({
+                        'en': 'Enter RPP title',
+                        'id': 'Masukkan judul RPP',
+                      }),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return AppLocalizations.titleRequired.tr;
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildDialogDropdown(
+                      value: _selectedMataPelajaranId,
+                      label: '${AppLocalizations.subject.tr} *',
+                      icon: Icons.book_outlined,
+                      items: _mataPelajaranList.map((mp) {
+                        return DropdownMenuItem(
+                          value: mp['id'],
+                          child: Text(
+                            mp['name'] ??
+                                mp['nama'] ??
+                                mp['subject_name'] ??
+                                'Tanpa Nama',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedMataPelajaranId = value.toString();
+                          _selectedClassId = null;
+                          _selectedBabId = null;
+                          _selectedSubBabId = null;
+                          _babList = [];
+                          _subBabList = [];
+                        });
+                        _loadKelasByMataPelajaran(value.toString());
+                        _loadBabByMataPelajaran(value.toString());
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return AppLocalizations.subjectRequired.tr;
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDialogDropdown(
+                            value: _selectedClassId,
+                            label: '${AppLocalizations.class_.tr} *',
+                            icon: Icons.class_outlined,
+                            items: _kelasList.map((kelas) {
+                              return DropdownMenuItem(
+                                value: kelas['id'],
+                                child: Text(
+                                  kelas['name'] ??
+                                      kelas['nama'] ??
+                                      kelas['class_name'] ??
+                                      'Tanpa Nama',
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedClassId = value.toString();
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return AppLocalizations.classNameRequired.tr;
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: _buildDialogDropdown(
+                            value: _selectedSemester,
+                            label: '${AppLocalizations.semester.tr} *',
+                            icon: Icons.calendar_view_month_rounded,
+                            items: ['Ganjil', 'Genap'].map((semester) {
+                              return DropdownMenuItem(
+                                value: semester,
+                                child: Text(semester),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedSemester = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    _buildDialogDropdown(
+                      value: _selectedBabId,
+                      label:
+                          '${languageProvider.getTranslatedText({'en': 'Chapter', 'id': 'Bab'})} *',
+                      icon: Icons.bookmark_border_rounded,
+                      items: _babList.map((bab) {
+                        return DropdownMenuItem(
+                          value: bab['id'],
+                          child: Text(
+                            bab['judul_bab'] ??
+                                bab['title'] ??
+                                bab['judul'] ??
+                                'Tanpa Nama',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedBabId = value.toString();
+                          _selectedSubBabId = null;
+                          _subBabList = [];
+                        });
+                        _loadSubBabByBab(value.toString());
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return languageProvider.getTranslatedText({
+                            'en': 'Chapter is required',
+                            'id': 'Bab harus dipilih',
+                          });
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildDialogDropdown(
+                      value: _selectedSubBabId,
+                      label:
+                          '${languageProvider.getTranslatedText({'en': 'Sub Chapter', 'id': 'Sub Bab'})} (Opsional)',
+                      icon: Icons.bookmark_add_outlined,
+                      items: [
+                        DropdownMenuItem(
+                          value: null,
+                          child: Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'None',
+                              'id': 'Tidak ada',
+                            }),
+                            style: TextStyle(color: ColorUtils.slate400),
+                          ),
+                        ),
+                        ..._subBabList.map((subBab) {
+                          return DropdownMenuItem(
+                            value: subBab['id'],
+                            child: Text(
+                              subBab['judul_sub_bab'] ??
+                                  subBab['title'] ??
+                                  subBab['judul'] ??
+                                  'Tanpa Nama',
+                            ),
+                          );
+                        }),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedSubBabId = value?.toString();
+                        });
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    _buildDialogTextField(
+                      controller: _tahunAjaranController,
+                      label: '${AppLocalizations.academicYear.tr} *',
+                      icon: Icons.calendar_today_rounded,
+                      hintText: '2024/2025',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return AppLocalizations.academicYearRequired.tr;
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Footer Buttons (Enhanced Pattern)
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: ColorUtils.slate200)),
+              boxShadow: [
+                BoxShadow(
+                  color: ColorUtils.slate900.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isAutoGenerating
+                          ? null
+                          : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: ColorUtils.slate300),
+                      ),
+                      child: Text(
+                        AppLocalizations.cancel.tr,
+                        style: TextStyle(
+                          color: ColorUtils.slate700,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isAutoGenerating ? null : _submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        elevation: 2,
+                        shadowColor: primaryColor.withValues(alpha: 0.4),
+                      ),
+                      child: _isAutoGenerating
+                          ? SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              languageProvider.getTranslatedText({
+                                'en': 'Generate',
+                                'id': 'Generate',
+                              }),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
