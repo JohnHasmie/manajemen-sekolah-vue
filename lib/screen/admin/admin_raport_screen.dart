@@ -250,18 +250,6 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
   }
 
   Future<void> _viewRaportDetail(Map<String, dynamic> student) async {
-    final status = student['raport_status'] ?? 'draft';
-    if (status == 'draft') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Raport ini masih dalam status Draft dan belum memiliki data detail.',
-          ),
-        ),
-      );
-      return;
-    }
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -283,11 +271,65 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
         semesterId = '2';
       }
 
-      final detail = await ApiRaportService.getRaportDetail(
+      Map<String, dynamic>? detail = await ApiRaportService.getRaportDetail(
         studentClassId: student['student_class_id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
       );
+
+      if (detail == null) {
+        final initialData = await ApiRaportService.getInitialData(
+          studentClassId: student['student_class_id'].toString(),
+          academicYearId: academicYearId,
+          semesterId: semesterId,
+        );
+
+        if (initialData != null) {
+          final att = initialData['attendance'] ?? {};
+
+          detail = {
+            'student_class_id': student['student_class_id'],
+            'academic_year_id': academicYearId,
+            'semester_id': semesterId,
+            'status': 'draft',
+
+            // Populate defaults from initial data
+            'sick': att['sick'] ?? 0,
+            'permit': att['permit'] ?? 0,
+            'absent': att['absent'] ?? 0,
+
+            // Empty defaults for editable fields
+            'spiritual_predicate': null,
+            'spiritual_description': null,
+            'social_predicate': null,
+            'social_description': null,
+            'notes': null,
+            'promotion_decision': null,
+
+            // Map initial subjects
+            'raport_subjects':
+                (initialData['grades'] as List?)?.map((g) {
+                  return {
+                    'subject_id': g['subject_id'],
+                    'knowledge_score': g['knowledge_score']?.toString(),
+                    'knowledge_predicate': g['knowledge_predicate'],
+                    'knowledge_description': g['knowledge_description'],
+                    'skill_score': null,
+                    'skill_predicate': null,
+                    'skill_description': null,
+                    'subject': {
+                      'id': g['subject_id'],
+                      'name': g['subject_name'],
+                    },
+                  };
+                }).toList() ??
+                [],
+
+            'extracurriculars': [],
+            'achievements': [],
+          };
+        }
+      }
 
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
@@ -297,7 +339,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => ParentRaportDetailScreen(
-              raportData: detail,
+              raportData: detail!,
               studentName: student['student_name'] ?? 'Unknown',
               userRole: 'admin',
               studentData: {
