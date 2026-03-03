@@ -2749,7 +2749,9 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       }
 
       if (!mounted) return;
-      Navigator.pop(context); // Tutup dialog generate AI
+
+      final messenger = ScaffoldMessenger.of(context);
+      final languageProvider = context.read<LanguageProvider>();
 
       // Mapping 10 komponen AI ke format form RPP 3 Komponen (K-13)
       final mappedRppData = {
@@ -2784,8 +2786,8 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
         'is_ai_generated': true,
       };
 
-      // Buka halaman hasil AI RPP yang baru dibuat (K-13 Editor)
-      Navigator.push(
+      // Ganti dialog saat ini dengan halaman hasil AI RPP yang baru dibuat (K-13 Editor)
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => RppAiResultScreen(
@@ -2798,8 +2800,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
         ),
       );
 
-      final languageProvider = context.read<LanguageProvider>();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
             languageProvider.getTranslatedText({

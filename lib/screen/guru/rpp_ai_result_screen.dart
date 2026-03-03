@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -26,9 +27,9 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   bool _isSaving = false;
   bool _isRegenerating = false;
 
-  late TextEditingController _tujuanController;
-  late TextEditingController _kegiatanIntiController;
-  late TextEditingController _penilaianController;
+  late quill.QuillController _tujuanController;
+  late quill.QuillController _kegiatanIntiController;
+  late quill.QuillController _penilaianController;
 
   late TextEditingController _judulController;
 
@@ -38,26 +39,9 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     _initControllers(widget.rppData);
   }
 
-  void _initControllers(Map<String, dynamic> data) {
-    _judulController = TextEditingController(text: data['title'] ?? 'RPP AI');
+  quill.Document _convertHtmlToQuill(String html) {
+    if (html.isEmpty) return quill.Document();
 
-    _tujuanController = TextEditingController(
-      text: _stripHtml(data['learning_objective'] ?? ''),
-    );
-
-    // Gabungkan konten kegiatan pembelajaran ke kegiatan inti untuk K-13 (karena AI memberikan lengkap di sini)
-    _kegiatanIntiController = TextEditingController(
-      text: _stripHtml(data['learning_activities'] ?? ''),
-    );
-
-    _penilaianController = TextEditingController(
-      text: _stripHtml(data['assessment'] ?? ''),
-    );
-  }
-
-  // Helper untuk membersihkan HTML tag menjadi teks biasa
-  String _stripHtml(String html) {
-    if (html.isEmpty) return '';
     var text = html.replaceAll(RegExp(r'<ul>|<ol>'), '\n');
     text = text.replaceAll(RegExp(r'</ul>|</ol>'), '\n');
     int counter = 1;
@@ -81,8 +65,32 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     text = text.replaceAll('&quot;', '"');
     text = text.replaceAll('&#39;', "'");
     text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
-    return text.trim();
+    text = text.trim();
+
+    final doc = quill.Document()..insert(0, text);
+    return doc;
   }
+
+  void _initControllers(Map<String, dynamic> data) {
+    _judulController = TextEditingController(text: data['title'] ?? 'RPP AI');
+
+    _tujuanController = quill.QuillController(
+      document: _convertHtmlToQuill(data['learning_objective'] ?? ''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+
+    _kegiatanIntiController = quill.QuillController(
+      document: _convertHtmlToQuill(data['learning_activities'] ?? ''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+
+    _penilaianController = quill.QuillController(
+      document: _convertHtmlToQuill(data['assessment'] ?? ''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+  }
+
+  // stripHtml dihapus karena digunakan html2md
 
   @override
   void dispose() {
@@ -113,13 +121,15 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       };
 
       setState(() {
-        _tujuanController.text = _stripHtml(
+        _tujuanController.document = _convertHtmlToQuill(
           regeneratedData['learning_objective']!,
         );
-        _kegiatanIntiController.text = _stripHtml(
+        _kegiatanIntiController.document = _convertHtmlToQuill(
           regeneratedData['learning_activities']!,
         );
-        _penilaianController.text = _stripHtml(regeneratedData['assessment']!);
+        _penilaianController.document = _convertHtmlToQuill(
+          regeneratedData['assessment']!,
+        );
       });
 
       if (mounted) {
@@ -164,14 +174,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         'guru_id': widget.teacherId,
         'mata_pelajaran_id': widget.rppData['subject_id'],
         'judul': _judulController.text,
-        'tujuan_pembelajaran': _tujuanController.text,
+        'tujuan_pembelajaran': _tujuanController.document.toPlainText(),
         'kegiatan_pendahuluan':
             '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya',
-        'kegiatan_inti':
-            _kegiatanIntiController.text, // Menggunakan isi dari form
+        'kegiatan_inti': _kegiatanIntiController.document.toPlainText(),
         'kegiatan_penutup':
             '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa',
-        'penilaian': _penilaianController.text,
+        'penilaian': _penilaianController.document.toPlainText(),
         'satuan_pendidikan': 'SD/MI',
         'kelas_semester':
             '${widget.rppData['kelas_nama']} / ${widget.rppData['semester']}',
@@ -293,15 +302,15 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             _buildTextField(_judulController, maxLines: 1),
             SizedBox(height: 20),
             _buildSectionHeader('A. Tujuan Pembelajaran'),
-            _buildTextField(_tujuanController, maxLines: 6),
+            _buildRichTextField(_tujuanController),
             SizedBox(height: 20),
             _buildSectionHeader(
               'B. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
             ),
-            _buildTextField(_kegiatanIntiController, maxLines: 12),
+            _buildRichTextField(_kegiatanIntiController),
             SizedBox(height: 20),
             _buildSectionHeader('C. Penilaian (Asesmen)'),
-            _buildTextField(_penilaianController, maxLines: 6),
+            _buildRichTextField(_penilaianController),
             SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
@@ -374,6 +383,55 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           border: InputBorder.none,
           contentPadding: EdgeInsets.all(16),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRichTextField(quill.QuillController controller) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            child: quill.QuillSimpleToolbar(
+              controller: controller,
+              config: const quill.QuillSimpleToolbarConfig(
+                showFontFamily: false,
+                showFontSize: false,
+                showInlineCode: false,
+                showListCheck: false,
+                showCodeBlock: false,
+                showQuote: false,
+                showUndo: false,
+                showRedo: false,
+                showSearchButton: false,
+                showSubscript: false,
+                showSuperscript: false,
+              ),
+            ),
+          ),
+          Divider(height: 1, color: ColorUtils.slate200),
+          Container(
+            height: 200,
+            padding: EdgeInsets.all(16),
+            child: quill.QuillEditor.basic(
+              controller: controller,
+              config: const quill.QuillEditorConfig(),
+            ),
+          ),
+        ],
       ),
     );
   }
