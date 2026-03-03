@@ -59,79 +59,46 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     );
     buffer.writeln();
 
-    // Jika RPP hasil genrasi AI (format 10 komponen)
-    if (widget.rppData['ai_generated'] == true) {
-      buffer.writeln('A. KOMPETENSI INTI (KI)');
-      buffer.writeln(_stripHtml(widget.rppData['core_competence'] ?? ''));
-      buffer.writeln();
+    // Cek apakah RPP hasil genrasi AI (format 10 komponen API)
+    final bool isAi =
+        widget.rppData['ai_generated'] == true ||
+        widget.rppData['is_ai_generated'] == true;
 
-      buffer.writeln('B. KOMPETENSI DASAR (KD)');
-      buffer.writeln(_stripHtml(widget.rppData['basic_competence'] ?? ''));
-      buffer.writeln();
-
-      buffer.writeln('C. INDIKATOR PENCAPAIAN KOMPETENSI');
-      buffer.writeln(_stripHtml(widget.rppData['indicator'] ?? ''));
-      buffer.writeln();
-
-      buffer.writeln('D. TUJUAN PEMBELAJARAN');
-      buffer.writeln(_stripHtml(widget.rppData['learning_objective'] ?? ''));
-      buffer.writeln();
-
-      buffer.writeln('E. MATERI PEMBELAJARAN');
-      buffer.writeln(_stripHtml(widget.rppData['main_material'] ?? ''));
-      buffer.writeln();
-
-      buffer.writeln('F. METODE PEMBELAJARAN');
-      buffer.writeln(_stripHtml(widget.rppData['learning_method'] ?? ''));
-      buffer.writeln();
-
-      buffer.writeln('G. MEDIA DAN ALAT BANTU');
-      buffer.writeln(_stripHtml(widget.rppData['media_tools'] ?? ''));
-      buffer.writeln();
-
-      buffer.writeln('H. SUMBER BELAJAR');
-      buffer.writeln(_stripHtml(widget.rppData['learning_source'] ?? ''));
-      buffer.writeln();
-
-      buffer.writeln('I. KEGIATAN PEMBELAJARAN');
-      buffer.writeln(_stripHtml(widget.rppData['learning_activities'] ?? ''));
-      buffer.writeln();
-
-      buffer.writeln('J. PENILAIAN (ASESMEN)');
-      buffer.writeln(_stripHtml(widget.rppData['assessment'] ?? ''));
-      buffer.writeln();
-    } else {
-      // Format Lama (3 Komponen)
-
-      // A. TUJUAN PEMBELAJARAN
-      buffer.writeln('A. TUJUAN PEMBELAJARAN');
-      if (widget.rppData['tujuan_pembelajaran'] != null) {
-        final tujuanLines = widget.rppData['tujuan_pembelajaran']
-            .toString()
-            .split('\n');
-        for (int i = 0; i < tujuanLines.length; i++) {
-          if (tujuanLines[i].trim().isNotEmpty) {
-            buffer.writeln('${i + 1}. ${tujuanLines[i].trim()}');
-          }
+    // A. TUJUAN PEMBELAJARAN
+    buffer.writeln('A. TUJUAN PEMBELAJARAN');
+    if (isAi && widget.rppData['learning_objective'] != null) {
+      buffer.writeln(_stripHtml(widget.rppData['learning_objective']));
+    } else if (widget.rppData['tujuan_pembelajaran'] != null) {
+      final tujuanLines = widget.rppData['tujuan_pembelajaran']
+          .toString()
+          .split('\n');
+      for (int i = 0; i < tujuanLines.length; i++) {
+        if (tujuanLines[i].trim().isNotEmpty) {
+          buffer.writeln('${i + 1}. ${tujuanLines[i].trim()}');
         }
-      } else {
-        // Default tujuan pembelajaran
-        buffer.writeln(
-          '1. Dengan mengamati gambar, siswa dapat memahami kosakata tentang cara memelihara kesehatan dengan tepat.',
-        );
-        buffer.writeln(
-          '2. Dengan menirukan kata-kata yang dibacakan oleh guru, siswa dapat menambah kosakata tentang cara memelihara kesehatan dengan tepat dan percaya diri.',
-        );
-        buffer.writeln(
-          '3. Melalui kegiatan membaca, siswa dapat menggunakan kosakata tentang olahraga sebagai cara memelihara kesehatan dengan tepat.',
-        );
       }
-      buffer.writeln();
+    } else {
+      // Default tujuan pembelajaran
+      buffer.writeln(
+        '1. Dengan mengamati gambar, siswa dapat memahami kosakata tentang cara memelihara kesehatan dengan tepat.',
+      );
+      buffer.writeln(
+        '2. Dengan menirukan kata-kata yang dibacakan oleh guru, siswa dapat menambah kosakata tentang cara memelihara kesehatan dengan tepat dan percaya diri.',
+      );
+      buffer.writeln(
+        '3. Melalui kegiatan membaca, siswa dapat menggunakan kosakata tentang olahraga sebagai cara memelihara kesehatan dengan tepat.',
+      );
+    }
+    buffer.writeln();
 
-      // B. KEGIATAN PEMBELAJARAN
-      buffer.writeln('B. KEGIATAN PEMBELAJARAN');
-      buffer.writeln();
+    // B. KEGIATAN PEMBELAJARAN
+    buffer.writeln('B. KEGIATAN PEMBELAJARAN');
+    buffer.writeln();
 
+    if (isAi && widget.rppData['learning_activities'] != null) {
+      // AI sudah mencakup pendahuluan, inti, penutup dalam 1 string HTML
+      buffer.writeln(_stripHtml(widget.rppData['learning_activities']));
+    } else {
       // Kegiatan Pendahuluan
       buffer.writeln(
         'Kegiatan Pendahuluan (${widget.rppData['waktu_pendahuluan'] ?? '15'} menit)',
@@ -215,19 +182,21 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         buffer.writeln('• Guru memeriksa pekerjaan siswa');
         buffer.writeln('• Pemberian hadiah/pujian untuk pekerjaan yang benar');
       }
-      buffer.writeln();
-
-      // C. PENILAIAN
-      buffer.writeln('C. PENILAIAN (ASESMEN)');
-      if (widget.rppData['penilaian'] != null) {
-        buffer.writeln(widget.rppData['penilaian']);
-      } else {
-        buffer.writeln(
-          'Penilaian terhadap materi ini dapat dilakukan sesuai kebutuhan guru yaitu dari pengamatan sikap, tes pengetahuan dan presentasi unjuk kerja atau hasil karya/projek dengan rubric penilaian.',
-        );
-      }
-      buffer.writeln();
     }
+    buffer.writeln();
+
+    // C. PENILAIAN
+    buffer.writeln('C. PENILAIAN (ASESMEN)');
+    if (isAi && widget.rppData['assessment'] != null) {
+      buffer.writeln(_stripHtml(widget.rppData['assessment']));
+    } else if (widget.rppData['penilaian'] != null) {
+      buffer.writeln(widget.rppData['penilaian']);
+    } else {
+      buffer.writeln(
+        'Penilaian terhadap materi ini dapat dilakukan sesuai kebutuhan guru yaitu dari pengamatan sikap, tes pengetahuan dan presentasi unjuk kerja atau hasil karya/projek dengan rubric penilaian.',
+      );
+    }
+    buffer.writeln();
 
     // Tanda Tangan
     buffer.writeln('Mengetahui');

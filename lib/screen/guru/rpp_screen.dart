@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/screen/guru/rpp_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -2649,6 +2650,35 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
     }
   }
 
+  // Helper untuk membersihkan HTML tag menjadi teks biasa
+  String _stripHtml(String html) {
+    if (html.isEmpty) return '';
+    var text = html.replaceAll(RegExp(r'<ul>|<ol>'), '\n');
+    text = text.replaceAll(RegExp(r'</ul>|</ol>'), '\n');
+    int counter = 1;
+    while (text.contains('<li>')) {
+      if (html.contains('<ol>')) {
+        text = text.replaceFirst('<li>', '$counter. ');
+        counter++;
+      } else {
+        text = text.replaceFirst('<li>', '• ');
+      }
+    }
+    text = text.replaceAll('</li>', '\n');
+    text = text.replaceAll(RegExp(r'<br\s*/?>'), '\n');
+    text = text.replaceAll(RegExp(r'<h3>'), '\n');
+    text = text.replaceAll(RegExp(r'</h3>|<p>|</p>'), '\n');
+    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
+    text = text.replaceAll('&nbsp;', ' ');
+    text = text.replaceAll('&amp;', '&');
+    text = text.replaceAll('&lt;', '<');
+    text = text.replaceAll('&gt;', '>');
+    text = text.replaceAll('&quot;', '"');
+    text = text.replaceAll('&#39;', "'");
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+    return text.trim();
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -2719,28 +2749,62 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       }
 
       if (!mounted) return;
-      Navigator.pop(context);
+      Navigator.pop(context); // Tutup dialog generate AI
 
-      // Navigate langsung ke halaman detail RPP yang baru di-generate
+      // Mapping 10 komponen AI ke format form RPP 3 Komponen (K-13)
+      final mappedRppData = {
+        'id': null, // Barudibuat, belum ada ID di database manual
+        'judul': mockRppResponse['title'],
+        'mata_pelajaran_id': mockRppResponse['subject_id'],
+        'satuan_pendidikan': 'SD/MI', // Default yang dapat diedit
+        'kelas_semester':
+            '${mockRppResponse['kelas_nama']} / ${mockRppResponse['semester']}',
+        'tema': mockRppResponse['title'], // Biasanya diisi judul
+        'sub_tema': '',
+        'pembelajaran_ke': '1',
+        'alokasi_waktu': _tahunAjaranController
+            .text, // Menyimpan tahun ajaran sementara atau default
+        'waktu_pendahuluan': '15',
+        'waktu_inti': '140',
+        'waktu_penutup': '15',
+        'tujuan_pembelajaran': _stripHtml(
+          mockRppResponse['learning_objective'] as String? ?? '',
+        ),
+        // Karena form K-13 punya 3 input berbeda untuk kegiatan:
+        // Kita menggunakan learning_activities AI di kegiatan_inti, atau bisa dipisah jika AI sangat terstruktur.
+        // Untuk amannya, kita gabungkan semua learning activities AI ke 'kegiatan_inti' form
+        'kegiatan_pendahuluan':
+            '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya dengan Materi yang akan dipelajari', // Placeholder bisa diganti stripHtml
+        'kegiatan_inti': _stripHtml(
+          mockRppResponse['learning_activities'] as String? ?? '',
+        ),
+        'kegiatan_penutup':
+            '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa\n• Pemberian hadiah/pujian untuk pekerjaan yang benar',
+        'penilaian': _stripHtml(mockRppResponse['assessment'] as String? ?? ''),
+        'is_ai_generated': true,
+      };
+
+      // Buka halaman hasil AI RPP yang baru dibuat (K-13 Editor)
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => RppDetailPage(rpp: mockRppResponse),
+          builder: (context) => RppAiResultScreen(
+            rppData: mappedRppData, // Kirim data yang sudah di mapping K-13
+            teacherId: widget.teacherId,
+            onSaved: () {
+              widget.onSaved();
+            },
+          ),
         ),
-      ).then((_) {
-        // Refresh list setelah kembali dari halaman detail (jika disave)
-        widget.onSaved();
-      });
+      );
 
       final languageProvider = context.read<LanguageProvider>();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             languageProvider.getTranslatedText({
-              'en':
-                  'RPP generation simulated successfully. Awaiting backend integration.',
-              'id':
-                  'Simulasi generate RPP berhasil. Menunggu integrasi backend.',
+              'en': 'RPP successfully AI-generated.',
+              'id': 'RPP berhasil di-generate AI.',
             }),
           ),
           backgroundColor: ColorUtils.success600,
