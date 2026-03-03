@@ -30,6 +30,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
   bool _isLoading = true;
   bool _isSaving = false;
   String _errorMessage = '';
+  bool _hasUnsavedChanges = false;
 
   // Data Containers
   Map<String, dynamic>? _existingRaport;
@@ -60,6 +61,23 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _loadData();
+
+    _spiritualDescCtrl.addListener(_markUnsaved);
+    _socialDescCtrl.addListener(_markUnsaved);
+    _sickCtrl.addListener(_markUnsaved);
+    _permitCtrl.addListener(_markUnsaved);
+    _absentCtrl.addListener(_markUnsaved);
+    _notesCtrl.addListener(_markUnsaved);
+  }
+
+  void _markUnsaved() {
+    if (!_hasUnsavedChanges && !_isLoading) {
+      if (mounted) {
+        setState(() {
+          _hasUnsavedChanges = true;
+        });
+      }
+    }
   }
 
   @override
@@ -276,6 +294,9 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
 
       if (response != null) {
         if (mounted) {
+          setState(() {
+            _hasUnsavedChanges = false;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -311,98 +332,97 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
     }
   }
 
+  Future<bool> _onWillPop() async {
+    if (!_hasUnsavedChanges) return true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Perubahan Belum Disimpan'),
+          content: const Text(
+            'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false), // Cancel
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(context, true), // Leave
+              child: const Text(
+                'Keluar',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  void _handleBackButton() async {
+    if (_hasUnsavedChanges) {
+      final canLeave = await _onWillPop();
+      if (!canLeave) return;
+    }
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          // Pattern #7 Gradient Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 20,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  ColorUtils.getRoleColor('guru'),
-                  ColorUtils.getRoleColor('guru').withValues(alpha: 0.8),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        final canLeave = await _onWillPop();
+        if (canLeave && mounted) {
+          Navigator.pop(context, result);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: ColorUtils.slate50,
+        body: Column(
+          children: [
+            // Pattern #7 Gradient Header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 16,
+                left: 16,
+                right: 16,
+                bottom: 20,
+              ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    ColorUtils.getRoleColor('guru'),
+                    ColorUtils.getRoleColor('guru').withValues(alpha: 0.8),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ColorUtils.getRoleColor(
+                      'guru',
+                    ).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Isi Raport',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${widget.studentName} - ${widget.className}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_existingRaport != null &&
-                    _existingRaport!['status'] == 'final')
+              child: Row(
+                children: [
                   GestureDetector(
-                    onTap: () {
-                      if (_existingRaport != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RaportPrintScreen(
-                              raportData: _existingRaport!,
-                              studentName: widget.studentName,
-                              className: widget.className,
-                            ),
-                          ),
-                        );
-                      }
-                    },
+                    onTap: _handleBackButton,
                     child: Container(
                       width: 40,
                       height: 40,
@@ -411,143 +431,202 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
-                        Icons.print,
+                        Icons.arrow_back,
                         color: Colors.white,
                         size: 20,
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
-
-          // TabBar Container
-          Container(
-            color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              labelColor: ColorUtils.corporateBlue600,
-              unselectedLabelColor: ColorUtils.slate500,
-              indicatorColor: ColorUtils.corporateBlue600,
-              indicatorWeight: 3,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-              ),
-              isScrollable: true,
-              tabs: const [
-                Tab(text: 'Sikap'),
-                Tab(text: 'Nilai Akademik'),
-                Tab(text: 'Tambahan'),
-                Tab(text: 'Info & Keputusan'),
-              ],
-            ),
-          ),
-
-          // Body Content
-          Expanded(
-            child: _isLoading
-                ? const SkeletonListLoading()
-                : _errorMessage.isNotEmpty
-                ? Center(
-                    child: Text(
-                      _errorMessage,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  )
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildSikapTab(),
-                      _buildNilaiTab(),
-                      _buildTambahanTab(),
-                      _buildInfoTab(),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _isSaving
-                      ? null
-                      : () => _saveRaport(status: 'draft'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: BorderSide(color: ColorUtils.corporateBlue600),
-                  ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          'Simpan Draft',
-                          style: TextStyle(color: ColorUtils.corporateBlue600),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Isi Raport',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _isSaving
-                      ? null
-                      : () {
-                          // Confirmation dialog before final save
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Selesaikan Raport?'),
-                              content: const Text(
-                                'Raport akan disimpan secara final. Pengiriman ke wali murid akan dilakukan oleh Admin nantinya.',
+                        const SizedBox(height: 4),
+                        Text(
+                          '${widget.studentName} - ${widget.className}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_existingRaport != null &&
+                      _existingRaport!['status'] == 'final')
+                    GestureDetector(
+                      onTap: () {
+                        if (_existingRaport != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RaportPrintScreen(
+                                raportData: _existingRaport!,
+                                studentName: widget.studentName,
+                                className: widget.className,
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Batal'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    _saveRaport(status: 'final');
-                                  },
-                                  child: const Text('Ya, Selesaikan'),
-                                ),
-                              ],
                             ),
                           );
-                        },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: ColorUtils.corporateBlue600,
-                  ),
-                  child: const Text(
-                    'Selesaikan',
-                    style: TextStyle(color: Colors.white),
+                        }
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.print,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // TabBar Container
+            Container(
+              color: Colors.white,
+              child: TabBar(
+                controller: _tabController,
+                labelColor: ColorUtils.corporateBlue600,
+                unselectedLabelColor: ColorUtils.slate500,
+                indicatorColor: ColorUtils.corporateBlue600,
+                indicatorWeight: 3,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+                isScrollable: true,
+                tabs: const [
+                  Tab(text: 'Sikap'),
+                  Tab(text: 'Nilai Akademik'),
+                  Tab(text: 'Tambahan'),
+                  Tab(text: 'Info & Keputusan'),
+                ],
+              ),
+            ),
+
+            // Body Content
+            Expanded(
+              child: _isLoading
+                  ? const SkeletonListLoading()
+                  : _errorMessage.isNotEmpty
+                  ? Center(
+                      child: Text(
+                        _errorMessage,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    )
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildSikapTab(),
+                        _buildNilaiTab(),
+                        _buildTambahanTab(),
+                        _buildInfoTab(),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _isSaving
+                        ? null
+                        : () => _saveRaport(status: 'draft'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: ColorUtils.corporateBlue600),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            'Simpan Draft',
+                            style: TextStyle(
+                              color: ColorUtils.corporateBlue600,
+                            ),
+                          ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isSaving
+                        ? null
+                        : () {
+                            // Confirmation dialog before final save
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Selesaikan Raport?'),
+                                content: const Text(
+                                  'Raport akan disimpan secara final. Pengiriman ke wali murid akan dilakukan oleh Admin nantinya.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Batal'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      _saveRaport(status: 'final');
+                                    },
+                                    child: const Text('Ya, Selesaikan'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: ColorUtils.corporateBlue600,
+                    ),
+                    child: const Text(
+                      'Selesaikan',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -560,12 +639,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       padding: const EdgeInsets.all(16),
       children: [
         _buildSectionTitle('Sikap Spiritual'),
-        _buildDropdown(
-          'Predikat',
-          _spiritualPredicate,
-          _predicates,
-          (v) => setState(() => _spiritualPredicate = v!),
-        ),
+        _buildDropdown('Predikat', _spiritualPredicate, _predicates, (v) {
+          setState(() => _spiritualPredicate = v!);
+          _markUnsaved();
+        }),
         const SizedBox(height: 12),
         _buildTextField('Deskripsi', _spiritualDescCtrl, maxLines: 4),
 
@@ -574,12 +651,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
         const SizedBox(height: 16),
 
         _buildSectionTitle('Sikap Sosial'),
-        _buildDropdown(
-          'Predikat',
-          _socialPredicate,
-          _predicates,
-          (v) => setState(() => _socialPredicate = v!),
-        ),
+        _buildDropdown('Predikat', _socialPredicate, _predicates, (v) {
+          setState(() => _socialPredicate = v!);
+          _markUnsaved();
+        }),
         const SizedBox(height: 12),
         _buildTextField('Deskripsi', _socialDescCtrl, maxLines: 4),
       ],
@@ -634,7 +709,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                       child: _buildCompactTextField(
                         'Nilai',
                         subject['knowledge_score'],
-                        (v) => _subjects[index]['knowledge_score'] = v,
+                        (v) {
+                          _subjects[index]['knowledge_score'] = v;
+                          _markUnsaved();
+                        },
                         isNumber: true,
                       ),
                     ),
@@ -644,7 +722,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                       child: _buildCompactTextField(
                         'Predikat',
                         subject['knowledge_predicate'],
-                        (v) => _subjects[index]['knowledge_predicate'] = v,
+                        (v) {
+                          _subjects[index]['knowledge_predicate'] = v;
+                          _markUnsaved();
+                        },
                       ),
                     ),
                   ],
@@ -653,7 +734,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                 _buildCompactTextField(
                   'Deskripsi',
                   subject['knowledge_description'],
-                  (v) => _subjects[index]['knowledge_description'] = v,
+                  (v) {
+                    _subjects[index]['knowledge_description'] = v;
+                    _markUnsaved();
+                  },
                   maxLines: 2,
                 ),
 
@@ -677,7 +761,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                       child: _buildCompactTextField(
                         'Nilai',
                         subject['skill_score'],
-                        (v) => _subjects[index]['skill_score'] = v,
+                        (v) {
+                          _subjects[index]['skill_score'] = v;
+                          _markUnsaved();
+                        },
                         isNumber: true,
                       ),
                     ),
@@ -687,7 +774,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                       child: _buildCompactTextField(
                         'Predikat',
                         subject['skill_predicate'],
-                        (v) => _subjects[index]['skill_predicate'] = v,
+                        (v) {
+                          _subjects[index]['skill_predicate'] = v;
+                          _markUnsaved();
+                        },
                       ),
                     ),
                   ],
@@ -696,7 +786,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                 _buildCompactTextField(
                   'Deskripsi',
                   subject['skill_description'],
-                  (v) => _subjects[index]['skill_description'] = v,
+                  (v) {
+                    _subjects[index]['skill_description'] = v;
+                    _markUnsaved();
+                  },
                   maxLines: 2,
                 ),
               ],
@@ -721,6 +814,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                 setState(() {
                   _extras.add({'name': '', 'score': '', 'description': ''});
                 });
+                _markUnsaved();
               },
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Tambah'),
@@ -746,6 +840,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                     'description': '',
                   });
                 });
+                _markUnsaved();
               },
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Tambah'),
@@ -783,30 +878,34 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                   child: _buildCompactTextField(
                     'Nama Ekstrakurikuler',
                     extra['name'],
-                    (v) => _extras[index]['name'] = v,
+                    (v) {
+                      _extras[index]['name'] = v;
+                      _markUnsaved();
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 1,
-                  child: _buildCompactTextField(
-                    'Nilai',
-                    extra['score'],
-                    (v) => _extras[index]['score'] = v,
-                  ),
+                  child: _buildCompactTextField('Nilai', extra['score'], (v) {
+                    _extras[index]['score'] = v;
+                    _markUnsaved();
+                  }),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () => setState(() => _extras.removeAt(index)),
+                  onPressed: () {
+                    setState(() => _extras.removeAt(index));
+                    _markUnsaved();
+                  },
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            _buildCompactTextField(
-              'Keterangan',
-              extra['description'],
-              (v) => _extras[index]['description'] = v,
-            ),
+            _buildCompactTextField('Keterangan', extra['description'], (v) {
+              _extras[index]['description'] = v;
+              _markUnsaved();
+            }),
           ],
         ),
       ),
@@ -833,11 +932,12 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
               children: [
                 Expanded(
                   flex: 2,
-                  child: _buildCompactTextField(
-                    'Nama Prestasi',
-                    ach['name'],
-                    (v) => _achievements[index]['name'] = v,
-                  ),
+                  child: _buildCompactTextField('Nama Prestasi', ach['name'], (
+                    v,
+                  ) {
+                    _achievements[index]['name'] = v;
+                    _markUnsaved();
+                  }),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -845,22 +945,26 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                   child: _buildCompactTextField(
                     'Jenis (Opsional)',
                     ach['type'],
-                    (v) => _achievements[index]['type'] = v,
+                    (v) {
+                      _achievements[index]['type'] = v;
+                      _markUnsaved();
+                    },
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () =>
-                      setState(() => _achievements.removeAt(index)),
+                  onPressed: () {
+                    setState(() => _achievements.removeAt(index));
+                    _markUnsaved();
+                  },
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            _buildCompactTextField(
-              'Keterangan',
-              ach['description'],
-              (v) => _achievements[index]['description'] = v,
-            ),
+            _buildCompactTextField('Keterangan', ach['description'], (v) {
+              _achievements[index]['description'] = v;
+              _markUnsaved();
+            }),
           ],
         ),
       ),
@@ -911,12 +1015,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
         const SizedBox(height: 16),
 
         _buildSectionTitle('Keputusan Akhir Tahun (Opsional)'),
-        _buildDropdown(
-          'Keputusan',
-          _promotionDecision,
-          _decisions,
-          (v) => setState(() => _promotionDecision = v!),
-        ),
+        _buildDropdown('Keputusan', _promotionDecision, _decisions, (v) {
+          setState(() => _promotionDecision = v!);
+          _markUnsaved();
+        }),
       ],
     );
   }
