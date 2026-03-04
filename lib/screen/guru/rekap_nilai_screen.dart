@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/skeleton_loading.dart';
@@ -10,11 +11,13 @@ import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_rekap_nilai_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class RekapNilaiPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
@@ -67,9 +70,15 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   bool _isExporting = false;
   bool _hasUnsavedChanges = false;
 
+  final GlobalKey _exportKey = GlobalKey();
+  final GlobalKey _saveKey = GlobalKey();
+  final GlobalKey _addBabKey = GlobalKey();
+  String? _tourId;
+
   @override
   void initState() {
     super.initState();
+    _loadTodaySchedules(); // Added this line as per instruction, though it's also in post-frame callback
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -438,6 +447,13 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       });
 
       _processTableData(students, _chapters, rawGrades, recaps);
+
+      // Trigger tour
+      Future.delayed(Duration(milliseconds: 1000), () {
+        if (mounted && _currentStep == 2) {
+          _checkAndShowTour();
+        }
+      });
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -1689,6 +1705,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                         Row(
                           children: [
                             GestureDetector(
+                              key: _exportKey,
                               onTap: _isExporting ? null : _exportToExcel,
                               child: Container(
                                 margin: EdgeInsets.only(right: 8),
@@ -1730,6 +1747,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                               ),
                             ),
                             GestureDetector(
+                              key: _saveKey,
                               onTap: _isSaving ? null : _saveRecaps,
                               child: Container(
                                 padding: EdgeInsets.symmetric(
@@ -2627,6 +2645,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
               ),
               Spacer(),
               OutlinedButton.icon(
+                key: _addBabKey,
                 onPressed: _addChapter,
                 icon: Icon(Icons.add, size: 16),
                 label: Text(
@@ -2677,5 +2696,168 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         ),
       ],
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'rekap_nilai_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "AddBab",
+        keyTarget: _addBabKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Tambah Kolom Bab",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Klik tombol ini untuk menambahkan kolom materi atau bab baru di kanan tabel Anda.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "SaveRekap",
+        keyTarget: _saveKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Simpan Perubahan",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Kapanpun Anda mengubah judul bab, mengedit nilai, atau mengisi deskripsi. Jangan lupa tekan Simpan agar nilai tersebut dikunci (snapshot) di server.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "ExportRekap",
+        keyTarget: _exportKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Ekspor ke Excel",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Tabel rekap nilai yang telah Anda buat bisa Anda unduh seketika dalam wujud file spreedsheat Excel yang rapi.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
