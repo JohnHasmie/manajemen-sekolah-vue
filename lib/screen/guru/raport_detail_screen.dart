@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/raport_print_screen.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../../providers/academic_year_provider.dart';
 
@@ -55,6 +58,11 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
 
   final List<String> _predicates = ['Sangat Baik', 'Baik', 'Cukup', 'Kurang'];
   final List<String> _decisions = ['Naik Kelas', 'Tinggal di Kelas'];
+
+  final GlobalKey _tabKey = GlobalKey();
+  final GlobalKey _saveDraftKey = GlobalKey();
+  final GlobalKey _finalizeKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -147,6 +155,13 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
+      });
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
       });
     }
   }
@@ -499,6 +514,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
 
             // TabBar Container
             Container(
+              key: _tabKey,
               color: Colors.white,
               child: TabBar(
                 controller: _tabController,
@@ -564,6 +580,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
               children: [
                 Expanded(
                   child: OutlinedButton(
+                    key: _saveDraftKey,
                     onPressed: _isSaving
                         ? null
                         : () => _saveRaport(status: 'draft'),
@@ -588,6 +605,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
+                    key: _finalizeKey,
                     onPressed: _isSaving
                         ? null
                         : () {
@@ -1160,5 +1178,168 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
         ),
       ],
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'raport_detail_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "TabBar",
+        keyTarget: _tabKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Tab Kategori Evaluasi",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Data raport siswa terbagi menjadi 4 kelompok. Akses masing-masing tab untuk melengkapi form penjabaran Sikap, sinkronisasi Nilai Akademik, Ekstrakurikuler, serta Kehadiran.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "SimpanDraft",
+        keyTarget: _saveDraftKey,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Simpan Draft",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Gunakan opsi ini jika Anda belum selesai mengisi seluruh data siswa. Raport akan tersimpan sementara sehingga Anda dapat melanjutkannya nanti.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "Selesaikan",
+        keyTarget: _finalizeKey,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Selesaikan Raport",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Klik Selesaikan jika seluruh tab formulir telah diisi dengan lengkap dan Anda sudah yakin datanya sudah valid. Status raport akan menjadi Final.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }

@@ -1,14 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/raport_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_raport_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../../providers/academic_year_provider.dart';
 
@@ -33,6 +36,10 @@ class RaportScreenState extends State<RaportScreen> {
   Map<String, dynamic>? _selectedClass;
 
   List<dynamic> _students = [];
+
+  final GlobalKey _classSelectorKey = GlobalKey();
+  final GlobalKey _exportKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -81,6 +88,13 @@ class RaportScreenState extends State<RaportScreen> {
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
+      });
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
       });
     }
   }
@@ -322,6 +336,7 @@ class RaportScreenState extends State<RaportScreen> {
                 ),
                 if (_selectedClass != null && !_isLoading)
                   GestureDetector(
+                    key: _exportKey,
                     onTap: _isExporting ? null : _exportToExcel,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -423,6 +438,7 @@ class RaportScreenState extends State<RaportScreen> {
 
   Widget _buildClassSelector() {
     return Container(
+      key: _classSelectorKey,
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -656,5 +672,132 @@ class RaportScreenState extends State<RaportScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'raport_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "ClassSelector",
+        keyTarget: _classSelectorKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 16,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Pilih Kelas Evaluasi",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Karena Anda bertugas sebagai wali kelas, gunakan area ini untuk memilih salah satu dari kelas perwalian Anda untuk mengevaluasi data raport siswa-siswinya.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    if (_selectedClass != null && !_isLoading) {
+      targets.add(
+        TargetFocus(
+          identify: "ExportRaport",
+          keyTarget: _exportKey,
+          alignSkip: Alignment.bottomLeft,
+          shape: ShapeLightFocus.RRect,
+          radius: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Unduh Seluruh Raport",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "Dapatkan rekapan gabungan keseluruhan nilai raport untuk seisi kelas di dalam dokumen Excel (.xlsx).",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return targets;
   }
 }
