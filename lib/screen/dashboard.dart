@@ -35,6 +35,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -51,6 +52,7 @@ import 'package:manajemensekolah/widgets/dashboard/schedule_slider_card.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class Dashboard extends StatefulWidget {
   final String role;
@@ -103,6 +105,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   bool _isStatsLoaded = false;
 
   // Stats Pagination state
+
+  // Global Keys for Tour
+  final GlobalKey _profileHeaderKey = GlobalKey();
+  final GlobalKey _heroSectionKey = GlobalKey();
+  final GlobalKey _quickActionsKey = GlobalKey();
+  final GlobalKey _statsSectionKey = GlobalKey();
+  final GlobalKey _scheduleSectionKey = GlobalKey();
+  final GlobalKey _menuGridKey = GlobalKey();
+
+  String? _tourId;
 
   @override
   void initState() {
@@ -167,6 +179,255 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         setState(() {});
       }
     }
+
+    // Delay a bit to ensure UI renders before checking/showing the tour
+    Future.delayed(Duration(milliseconds: 1000), () {
+      if (mounted) {
+        _checkAndShowTour();
+      }
+    });
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: _effectiveRole,
+        name: 'dashboard_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onClickTarget: (target) {
+        // Log skip inside step if necessary
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    )..show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "ProfileHeader",
+        keyTarget: _profileHeaderKey,
+        alignSkip: Alignment.bottomRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Profil Pengguna",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Di sini Anda dapat melihat ringkasan identitas dan mengakses menu pengaturan akun dengan menekan ikon profil di kanan.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "HeroSection",
+        keyTarget: _heroSectionKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 20,
+        alignSkip: Alignment.topRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Informasi Semester",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Kartu ini menunjukkan Tahun Ajaran dan Semester yang aktif. Ketuk bagian ini untuk mengganti Tahun Ajaran secara cepat.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "StatsSection",
+        keyTarget: _statsSectionKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        alignSkip: Alignment.topRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Statistik Ringkas",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Perkembangan kelas, siswa, atau berbagai indikator penting lainnya dapat Anda pantau di ringkasan statistik ini.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    if (_effectiveRole == 'guru') {
+      targets.add(
+        TargetFocus(
+          identify: "ScheduleSection",
+          keyTarget: _scheduleSectionKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 12,
+          alignSkip: Alignment.topRight,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Jadwal Hari Ini",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "Daftar kelas yang harus Anda ajar hari ini. Cukup geser untuk melihat kelas-kelas berikutnya, dan bisa langsung ceklis absen atau jurnal.",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    targets.add(
+      TargetFocus(
+        identify: "MenuGrid",
+        keyTarget: _menuGridKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        alignSkip: Alignment.topRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Menu Utama",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Semua fitur sistem berkumpul di sini sesuai dengan akses role Anda.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 
   Future<void> _loadSemesterLabel() async {
@@ -1406,6 +1667,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   ],
                 ),
                 IconButton(
+                  key: _profileHeaderKey,
                   icon: Icon(
                     Icons.account_circle,
                     size: 20,
@@ -1432,6 +1694,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     final primaryColor = _getPrimaryColor();
 
     return Container(
+      key: _heroSectionKey,
       margin: EdgeInsets.fromLTRB(12, 8, 12, 0),
       decoration: BoxDecoration(
         gradient: ColorUtils.heroGradient(primaryColor: primaryColor),
@@ -1793,6 +2056,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
 
     return Padding(
+      key: _quickActionsKey,
       padding: EdgeInsets.fromLTRB(12, 12, 12, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1840,6 +2104,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Widget _buildTodaysOverview() {
     return Padding(
+      key: _statsSectionKey,
       padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1934,6 +2199,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } else if (_effectiveRole == 'guru') {
       return [
         ScheduleSliderCard(
+          key: _scheduleSectionKey,
           schedules: _todaysScheduleList,
           onTap: () {
             Navigator.push(
@@ -2203,6 +2469,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   Widget _buildSliverGridMenu(BuildContext context) {
     // All roles now use professional MenuItemCard design
     return SliverPadding(
+      key: _menuGridKey,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList(
         delegate: SliverChildListDelegate(_buildCategorizedMenu(context)),
