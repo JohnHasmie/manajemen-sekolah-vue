@@ -12,6 +12,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_presence_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
@@ -19,6 +20,7 @@ import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 // Model for Attendance Summary
 class AttendanceSummary {
@@ -92,6 +94,12 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   final List<String> _selectedDayIds = [];
   final List<String> _selectedLessonHourIds = [];
   bool _hasActiveFilter = false;
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _moreKey = GlobalKey();
+  final GlobalKey _infoKey = GlobalKey();
+  String? _tourId;
+  bool _isTourShowing = false;
 
   // Data for filters
   List<dynamic> _subjectList = [];
@@ -191,7 +199,15 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoadingClasses = false);
+      if (mounted) {
+        setState(() => _isLoadingClasses = false);
+        // Trigger tour
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (mounted) {
+            _checkAndShowTour();
+          }
+        });
+      }
     }
   }
 
@@ -2433,6 +2449,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
                         SizedBox(width: 12),
                         Expanded(
                           child: Column(
+                            key: _infoKey,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
@@ -2520,6 +2537,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
                           icon: Container(
                             width: 40,
                             height: 40,
+                            key: _moreKey,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
@@ -2573,6 +2591,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
                       children: [
                         Expanded(
                           child: Container(
+                            key: _searchKey,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
@@ -2633,6 +2652,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
                               color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
+                          key: _filterKey,
                           child: Stack(
                             children: [
                               IconButton(
@@ -2798,6 +2818,255 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    if (_isTourShowing) return;
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'admin_presence_report_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        if (_isTourShowing) return;
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    setState(() {
+      _isTourShowing = true;
+    });
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        setState(() {
+          _isTourShowing = false;
+        });
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        setState(() {
+          _isTourShowing = false;
+        });
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+      onClickOverlay: (target) {
+        // Optional handle
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "PresenceReportInfo",
+        keyTarget: _infoKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Attendance Reports',
+                      'id': 'Laporan Absensi',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'View and manage student attendance reports across all classes.',
+                        'id':
+                            'Lihat dan kelola laporan absensi siswa di semua kelas.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "PresenceReportSearch",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Search Attendance',
+                      'id': 'Cari Absensi',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Search for specific classes or subjects.',
+                        'id': 'Cari kelas atau mata pelajaran tertentu.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "PresenceReportFilter",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Filter Options',
+                      'id': 'Opsi Filter',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Narrow down results by date, subject, or class.',
+                        'id':
+                            'Persempit hasil berdasarkan tanggal, mata pelajaran, atau kelas.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "PresenceReportMore",
+        keyTarget: _moreKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'More Options',
+                      'id': 'Opsi Lanjutan',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Refresh data or export reports to Excel.',
+                        'id': 'Segarkan data atau export laporan ke Excel.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
 
@@ -3929,23 +4198,35 @@ class AttendanceDataSource extends DataGridSource {
 
   Color getStatusColor(String status) {
     final s = status.toLowerCase();
-    if (s == 'hadir' || s == 'present')
+    if (s == 'hadir' || s == 'present') {
       return ColorUtils.success600.withValues(alpha: 0.15);
-    if (s == 'sakit' || s == 'sick')
+    }
+    if (s == 'sakit' || s == 'sick') {
       return ColorUtils.warning600.withValues(alpha: 0.15);
-    if (s == 'izin' || s == 'permit')
+    }
+    if (s == 'izin' || s == 'permit') {
       return ColorUtils.info600.withValues(alpha: 0.15);
-    if (s == 'alpa' || s == 'absent')
+    }
+    if (s == 'alpa' || s == 'absent') {
       return ColorUtils.error600.withValues(alpha: 0.15);
+    }
     return Colors.transparent;
   }
 
   Color getStatusTextColor(String status) {
     final s = status.toLowerCase();
-    if (s == 'hadir' || s == 'present') return ColorUtils.success600;
-    if (s == 'sakit' || s == 'sick') return ColorUtils.warning600;
-    if (s == 'izin' || s == 'permit') return ColorUtils.info600;
-    if (s == 'alpa' || s == 'absent') return ColorUtils.error600;
+    if (s == 'hadir' || s == 'present') {
+      return ColorUtils.success600;
+    }
+    if (s == 'sakit' || s == 'sick') {
+      return ColorUtils.warning600;
+    }
+    if (s == 'izin' || s == 'permit') {
+      return ColorUtils.info600;
+    }
+    if (s == 'alpa' || s == 'absent') {
+      return ColorUtils.error600;
+    }
     return ColorUtils.slate900;
   }
 

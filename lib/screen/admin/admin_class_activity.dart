@@ -7,12 +7,14 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_class_activity_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class AdminClassActivityScreen extends StatefulWidget {
   const AdminClassActivityScreen({super.key});
@@ -34,6 +36,10 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
   bool _showTeacherList = true;
   bool _showSubjectList = false;
   String? _errorMessage;
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _infoKey = GlobalKey();
+  String? _tourId;
+  bool _isTourShowing = false;
 
   // Search
   final TextEditingController _searchController = TextEditingController();
@@ -63,6 +69,13 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
       setState(() {
         _teacherList = teachers;
         _isLoading = false;
+      });
+
+      // Trigger tour after teachers are loaded
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
       });
     } catch (e) {
       if (mounted) {
@@ -960,6 +973,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
                         // Title + subtitle
                         Expanded(
                           child: Column(
+                            key: _infoKey,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
@@ -1039,6 +1053,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
 
                     // Search Bar
                     Container(
+                      key: _searchKey,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.92),
                         borderRadius: BorderRadius.circular(12),
@@ -1168,5 +1183,167 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    if (_isTourShowing) return;
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'admin_class_activity_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        if (_isTourShowing) return;
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    setState(() {
+      _isTourShowing = true;
+    });
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        setState(() {
+          _isTourShowing = false;
+        });
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        setState(() {
+          _isTourShowing = false;
+        });
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+      onClickOverlay: (target) {
+        // Optional handle
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "ClassActivityInfo",
+        keyTarget: _infoKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Class Activities',
+                      'id': 'Kegiatan Kelas',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Monitor and view teaching activities conducted by all teachers.',
+                        'id':
+                            'Pantau dan lihat kegiatan mengajar yang dilakukan oleh semua guru.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "ClassActivitySearch",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Search Activities',
+                      'id': 'Cari Kegiatan',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Quickly find teachers, subjects, or specific activities.',
+                        'id':
+                            'Cari guru, mata pelajaran, atau kegiatan tertentu dengan cepat.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
