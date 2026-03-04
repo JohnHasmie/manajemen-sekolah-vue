@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/skeleton_loading.dart';
+import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/guru/rpp_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -2753,22 +2754,63 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       final messenger = ScaffoldMessenger.of(context);
       final languageProvider = context.read<LanguageProvider>();
 
+      final userData = await TokenService().getUserData();
+      final schoolObj = userData?['school'] as Map<String, dynamic>?;
+      final schoolNameStr = schoolObj != null
+          ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
+          : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
+
+      final babMap = _selectedBabId != null
+          ? _babList.firstWhere(
+              (b) => b['id'].toString() == _selectedBabId,
+              orElse: () => <String, dynamic>{},
+            )
+          : <String, dynamic>{};
+      final babName = babMap.isNotEmpty
+          ? (babMap['judul_bab'] ??
+                babMap['title'] ??
+                babMap['judul'] ??
+                'Tanpa Nama')
+          : '';
+
+      final subBabMap = _selectedSubBabId != null
+          ? _subBabList.firstWhere(
+              (s) => s['id'].toString() == _selectedSubBabId,
+              orElse: () => <String, dynamic>{},
+            )
+          : <String, dynamic>{};
+      final subBabName = subBabMap.isNotEmpty
+          ? (subBabMap['judul_sub_bab'] ??
+                subBabMap['title'] ??
+                subBabMap['judul'] ??
+                'Tanpa Nama')
+          : '';
+
       // Mapping 10 komponen AI ke format form RPP 3 Komponen (K-13)
       final mappedRppData = {
         'id': null, // Barudibuat, belum ada ID di database manual
         'judul': mockRppResponse['title'],
         'mata_pelajaran_id': mockRppResponse['subject_id'],
-        'satuan_pendidikan': 'SD/MI', // Default yang dapat diedit
+        'mata_pelajaran_nama': mockRppResponse['mata_pelajaran_nama'],
+        'satuan_pendidikan': schoolNameStr,
+        'bab_nama': babName,
+        'sub_bab_nama': subBabName,
         'kelas_semester':
             '${mockRppResponse['kelas_nama']} / ${mockRppResponse['semester']}',
         'tema': mockRppResponse['title'], // Biasanya diisi judul
         'sub_tema': '',
-        'pembelajaran_ke': '1',
+        'pembelajaran_ke': '', // Kosong saja sesuai request
         'alokasi_waktu': _tahunAjaranController
             .text, // Menyimpan tahun ajaran sementara atau default
         'waktu_pendahuluan': '15',
         'waktu_inti': '140',
         'waktu_penutup': '15',
+        'kompetensi_inti': _stripHtml(
+          mockRppResponse['core_competence'] as String? ?? '',
+        ),
+        'kompetensi_dasar': _stripHtml(
+          mockRppResponse['basic_competence'] as String? ?? '',
+        ),
         'tujuan_pembelajaran': _stripHtml(
           mockRppResponse['learning_objective'] as String? ?? '',
         ),

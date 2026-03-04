@@ -35,8 +35,17 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   late quill.QuillController _tujuanController;
   late quill.QuillController _kegiatanIntiController;
   late quill.QuillController _penilaianController;
+  late quill.QuillController _kompetensiIntiController;
+  late quill.QuillController _kompetensiDasarController;
 
   late TextEditingController _judulController;
+  late TextEditingController _satuanPendidikanController;
+  late TextEditingController _mataPelajaranController;
+  late TextEditingController _babController;
+  late TextEditingController _subBabController;
+  late TextEditingController _pembelajaranKeController;
+  late TextEditingController _kelasSemesterController;
+  late TextEditingController _alokasiWaktuController;
 
   @override
   void initState() {
@@ -77,20 +86,55 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   }
 
   void _initControllers(Map<String, dynamic> data) {
-    _judulController = TextEditingController(text: data['title'] ?? 'RPP AI');
+    _judulController = TextEditingController(
+      text: data['judul'] ?? data['title'] ?? 'RPP AI',
+    );
+    _satuanPendidikanController = TextEditingController(
+      text: data['satuan_pendidikan'] ?? 'SD/MI',
+    );
+    _mataPelajaranController = TextEditingController(
+      text: data['mata_pelajaran_nama'] ?? '',
+    );
+    _babController = TextEditingController(text: data['bab_nama'] ?? '');
+    _subBabController = TextEditingController(text: data['sub_bab_nama'] ?? '');
+    _pembelajaranKeController = TextEditingController(
+      text: data['pembelajaran_ke'] ?? '',
+    );
+    _kelasSemesterController = TextEditingController(
+      text: data['kelas_semester'] ?? '',
+    );
+    _alokasiWaktuController = TextEditingController(
+      text: data['alokasi_waktu'] ?? '',
+    );
+
+    _kompetensiIntiController = quill.QuillController(
+      document: _convertHtmlToQuill(data['kompetensi_inti'] ?? ''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+
+    _kompetensiDasarController = quill.QuillController(
+      document: _convertHtmlToQuill(data['kompetensi_dasar'] ?? ''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
 
     _tujuanController = quill.QuillController(
-      document: _convertHtmlToQuill(data['learning_objective'] ?? ''),
+      document: _convertHtmlToQuill(
+        data['tujuan_pembelajaran'] ?? data['learning_objective'] ?? '',
+      ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
     _kegiatanIntiController = quill.QuillController(
-      document: _convertHtmlToQuill(data['learning_activities'] ?? ''),
+      document: _convertHtmlToQuill(
+        data['kegiatan_inti'] ?? data['learning_activities'] ?? '',
+      ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
     _penilaianController = quill.QuillController(
-      document: _convertHtmlToQuill(data['assessment'] ?? ''),
+      document: _convertHtmlToQuill(
+        data['penilaian'] ?? data['assessment'] ?? '',
+      ),
       selection: const TextSelection.collapsed(offset: 0),
     );
   }
@@ -99,10 +143,19 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
   @override
   void dispose() {
+    _kompetensiIntiController.dispose();
+    _kompetensiDasarController.dispose();
     _tujuanController.dispose();
     _kegiatanIntiController.dispose();
     _penilaianController.dispose();
     _judulController.dispose();
+    _satuanPendidikanController.dispose();
+    _mataPelajaranController.dispose();
+    _babController.dispose();
+    _subBabController.dispose();
+    _pembelajaranKeController.dispose();
+    _kelasSemesterController.dispose();
+    _alokasiWaktuController.dispose();
     super.dispose();
   }
 
@@ -164,8 +217,8 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     try {
       // Create a new PDF document
       final PdfDocument document = PdfDocument();
-      final PdfPage page = document.pages.add();
-      final PdfGraphics graphics = page.graphics;
+      PdfPage page = document.pages.add();
+      PdfGraphics graphics = page.graphics;
 
       // Create PDF fonts
       final PdfFont font = PdfStandardFont(PdfFontFamily.helvetica, 12);
@@ -199,13 +252,40 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       );
       yPosition += 40;
 
+      // Draw meta info
+      final metaData = [
+        'Satuan Pendidikan : ${_satuanPendidikanController.text}',
+        'Mata Pelajaran    : ${_mataPelajaranController.text}',
+        'Bab               : ${_babController.text}',
+        'Sub Bab           : ${_subBabController.text}',
+        'Kelas/Semester    : ${_kelasSemesterController.text}',
+        'Pembelajaran Ke   : ${_pembelajaranKeController.text}',
+        'Alokasi Waktu     : ${_alokasiWaktuController.text}',
+      ];
+
+      for (var meta in metaData) {
+        if (yPosition > page.size.height - 30) {
+          page = document.pages.add();
+          graphics = page.graphics;
+          yPosition = 40;
+        }
+        graphics.drawString(
+          meta,
+          font,
+          bounds: Rect.fromLTWH(0, yPosition, page.size.width - 20, 15),
+        );
+        yPosition += 18;
+      }
+      yPosition += 20;
+
       // Helper function to draw section
       double drawSection(String title, String content, double startY) {
         double currentY = startY;
 
         // Check page break for header
         if (currentY > page.size.height - 50) {
-          document.pages.add();
+          page = document.pages.add();
+          graphics = page.graphics;
           currentY = 40;
         }
 
@@ -216,42 +296,53 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         );
         currentY += 20;
 
-        final List<String> lines = content.split('\n');
-        for (String line in lines) {
-          if (line.trim().isEmpty) {
-            currentY += 10;
-            continue;
-          }
-
-          if (currentY > page.size.height - 30) {
-            document.pages
-                .add(); // add page doesn't return the page to draw on graphics automatically in this loop easily without refactoring, but for simple preview we assume it fits or text breaks.
-            // In a robust implementation, we'd use PdfTextElement with layout.
-            currentY = 40;
-          }
-
-          graphics.drawString(
-            line,
-            font,
-            bounds: Rect.fromLTWH(20, currentY, page.size.width - 20, 15),
-          );
-          currentY += 18;
+        if (content.trim().isEmpty) {
+          return currentY + 10;
         }
-        return currentY + 10;
+
+        final PdfTextElement textElement = PdfTextElement(
+          text: content,
+          font: font,
+        );
+
+        final PdfLayoutResult? result = textElement.draw(
+          page: page,
+          bounds: Rect.fromLTWH(20, currentY, page.size.width - 40, 0),
+        );
+
+        if (result != null) {
+          page = result.page;
+          graphics = page.graphics;
+          currentY = result.bounds.bottom + 20;
+        } else {
+          currentY += 10;
+        }
+
+        return currentY;
       }
 
       yPosition = drawSection(
-        'A. Tujuan Pembelajaran',
+        'A. Kompetensi Inti (KI)',
+        _kompetensiIntiController.document.toPlainText(),
+        yPosition,
+      );
+      yPosition = drawSection(
+        'B. Kompetensi Dasar (KD) dan Indikator (IPK)',
+        _kompetensiDasarController.document.toPlainText(),
+        yPosition,
+      );
+      yPosition = drawSection(
+        'C. Tujuan Pembelajaran',
         _tujuanController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
-        'B. Kegiatan Pembelajaran',
+        'D. Kegiatan Pembelajaran',
         _kegiatanIntiController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
-        'C. Penilaian (Asesmen)',
+        'E. Penilaian (Asesmen)',
         _penilaianController.document.toPlainText(),
         yPosition,
       );
@@ -294,8 +385,11 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       // Waktu dan default lainnya diatur static untuk AI bypass saat ini
       final payloadData = {
         'guru_id': widget.teacherId,
-        'mata_pelajaran_id': widget.rppData['subject_id'],
+        'mata_pelajaran_id':
+            widget.rppData['mata_pelajaran_id'] ?? widget.rppData['subject_id'],
         'judul': _judulController.text,
+        'kompetensi_inti': _kompetensiIntiController.document.toPlainText(),
+        'kompetensi_dasar': _kompetensiDasarController.document.toPlainText(),
         'tujuan_pembelajaran': _tujuanController.document.toPlainText(),
         'kegiatan_pendahuluan':
             '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya',
@@ -303,13 +397,12 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         'kegiatan_penutup':
             '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa',
         'penilaian': _penilaianController.document.toPlainText(),
-        'satuan_pendidikan': 'SD/MI',
-        'kelas_semester':
-            '${widget.rppData['kelas_nama']} / ${widget.rppData['semester']}',
-        'tema': _judulController.text,
-        'sub_tema': '',
-        'pembelajaran_ke': '1',
-        'alokasi_waktu': widget.rppData['tahun_ajaran'],
+        'satuan_pendidikan': _satuanPendidikanController.text,
+        'kelas_semester': _kelasSemesterController.text,
+        'tema': _babController.text, // Bab sebagai tema
+        'sub_tema': _subBabController.text,
+        'pembelajaran_ke': _pembelajaranKeController.text,
+        'alokasi_waktu': _alokasiWaktuController.text,
         'waktu_pendahuluan': '15',
         'waktu_inti': '140',
         'waktu_penutup': '15',
@@ -428,15 +521,24 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             _buildSectionHeader('Judul RPP'),
             _buildTextField(_judulController, maxLines: 1),
             SizedBox(height: 20),
-            _buildSectionHeader('A. Tujuan Pembelajaran'),
+            _buildSectionHeader('Informasi Umum'),
+            _buildMetaInfoPanel(),
+            SizedBox(height: 20),
+            _buildSectionHeader('A. Kompetensi Inti (KI)'),
+            _buildRichTextField(_kompetensiIntiController),
+            SizedBox(height: 20),
+            _buildSectionHeader('B. Kompetensi Dasar (KD) dan Indikator (IPK)'),
+            _buildRichTextField(_kompetensiDasarController),
+            SizedBox(height: 20),
+            _buildSectionHeader('C. Tujuan Pembelajaran'),
             _buildRichTextField(_tujuanController),
             SizedBox(height: 20),
             _buildSectionHeader(
-              'B. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
+              'D. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
             ),
             _buildRichTextField(_kegiatanIntiController),
             SizedBox(height: 20),
-            _buildSectionHeader('C. Penilaian (Asesmen)'),
+            _buildSectionHeader('E. Penilaian (Asesmen)'),
             _buildRichTextField(_penilaianController),
             SizedBox(height: 40),
             SizedBox(
@@ -484,6 +586,74 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           fontWeight: FontWeight.bold,
           color: ColorUtils.slate800,
         ),
+      ),
+    );
+  }
+
+  Widget _buildMetaInfoPanel() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Column(
+        children: [
+          _buildMetaRow('Satuan Pendidikan', _satuanPendidikanController),
+          _buildMetaRow('Mata Pelajaran', _mataPelajaranController),
+          _buildMetaRow('Bab', _babController),
+          _buildMetaRow('Sub Bab', _subBabController),
+          _buildMetaRow('Kelas/Semester', _kelasSemesterController),
+          _buildMetaRow('Pembelajaran Ke', _pembelajaranKeController),
+          _buildMetaRow('Alokasi Waktu', _alokasiWaktuController),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetaRow(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: ColorUtils.slate700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(' : ', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              style: TextStyle(fontSize: 13, color: ColorUtils.slate900),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: ColorUtils.slate300),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
