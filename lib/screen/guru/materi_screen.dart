@@ -7,10 +7,12 @@ import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/materi_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class MateriPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
@@ -248,6 +250,11 @@ class MateriPageState extends State<MateriPage> {
     'Sabtu': Color(0xFF06B6D4),
   };
 
+  // Tour properties
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  String? _tourId;
+
   @override
   void initState() {
     super.initState();
@@ -436,6 +443,13 @@ class MateriPageState extends State<MateriPage> {
 
       // Load progress dari database
       await _loadMateriProgress(subjectId);
+
+      // Trigger tour
+      Future.delayed(Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
+      });
     } catch (e) {
       if (kDebugMode) {
         print('Error loading bab and sub-bab: $e');
@@ -887,33 +901,36 @@ class MateriPageState extends State<MateriPage> {
                     }),
                   ];
 
-                  return EnhancedSearchBar(
-                    controller: _searchController,
-                    hintText: languageProvider.getTranslatedText({
-                      'en': 'Search materials...',
-                      'id': 'Cari materi...',
-                    }),
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                    filterOptions: translatedFilterOptions,
-                    selectedFilter:
-                        translatedFilterOptions[_selectedFilter == 'All'
-                            ? 0
-                            : _selectedFilter == 'Today'
-                            ? 1
-                            : 2],
-                    onFilterChanged: (filter) {
-                      final index = translatedFilterOptions.indexOf(filter);
-                      setState(() {
-                        _selectedFilter = index == 0
-                            ? 'All'
-                            : index == 1
-                            ? 'Today'
-                            : 'This Week';
-                      });
-                    },
-                    showFilter: true,
+                  return Container(
+                    key: _searchKey,
+                    child: EnhancedSearchBar(
+                      controller: _searchController,
+                      hintText: languageProvider.getTranslatedText({
+                        'en': 'Search materials...',
+                        'id': 'Cari materi...',
+                      }),
+                      onChanged: (value) {
+                        setState(() {});
+                      },
+                      filterOptions: translatedFilterOptions,
+                      selectedFilter:
+                          translatedFilterOptions[_selectedFilter == 'All'
+                              ? 0
+                              : _selectedFilter == 'Today'
+                              ? 1
+                              : 2],
+                      onFilterChanged: (filter) {
+                        final index = translatedFilterOptions.indexOf(filter);
+                        setState(() {
+                          _selectedFilter = index == 0
+                              ? 'All'
+                              : index == 1
+                              ? 'Today'
+                              : 'This Week';
+                        });
+                      },
+                      showFilter: true,
+                    ),
                   );
                 },
               ),
@@ -989,6 +1006,7 @@ class MateriPageState extends State<MateriPage> {
     final primaryColor = _getPrimaryColor();
 
     return Container(
+      key: _filterKey,
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1494,6 +1512,131 @@ class MateriPageState extends State<MateriPage> {
   int _getCheckedNotGeneratedCount() {
     return _getCheckedNotGeneratedBab().length +
         _getCheckedNotGeneratedSubBab().length;
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'materi_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "FilterSection",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Pilih Kelas & Mata Pelajaran",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Pilih kelas dan mata pelajaran yang Anda ampu di sini untuk melihat daftar Bab dan Sub-bab materi yang telah ditentukan oleh kurikulum.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "SearchBar",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Pencarian Materi",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Gunakan kolom ini untuk mencari nama bab atau sub-bab dengan cepat.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
 
