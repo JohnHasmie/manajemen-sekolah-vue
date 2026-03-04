@@ -89,6 +89,7 @@ class TeachingScheduleManagementScreenState
   final GlobalKey _fabKey = GlobalKey();
   final GlobalKey _viewToggleKey = GlobalKey();
   String? _tourId;
+  bool _isTourShowing = false;
 
   // Tambahan untuk tampilan tabel
   bool _showTableView = false;
@@ -3016,6 +3017,7 @@ class TeachingScheduleManagementScreenState
   }
 
   Future<void> _checkAndShowTour() async {
+    if (_isTourShowing) return;
     try {
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
@@ -3024,6 +3026,7 @@ class TeachingScheduleManagementScreenState
       );
 
       if (status['should_show'] == true && status['tour'] != null) {
+        if (_isTourShowing) return; // Prevent multiple tours
         _tourId = status['tour']['id'];
 
         if (!mounted) return;
@@ -3040,6 +3043,10 @@ class TeachingScheduleManagementScreenState
 
     final languageProvider = context.read<LanguageProvider>();
 
+    setState(() {
+      _isTourShowing = true;
+    });
+
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black,
@@ -3050,17 +3057,26 @@ class TeachingScheduleManagementScreenState
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
+        setState(() {
+          _isTourShowing = false;
+        });
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
       },
       onSkip: () {
+        setState(() {
+          _isTourShowing = false;
+        });
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
         return true;
       },
-    )..show(context: context);
+      onClickOverlay: (target) {
+        // Optional: you might want to handle this as well
+      },
+    ).show(context: context);
   }
 
   List<TargetFocus> _createTourTargets() {
