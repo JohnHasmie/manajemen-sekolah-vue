@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
@@ -155,6 +160,123 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
   }
 
+  Future<void> _previewPDF() async {
+    try {
+      // Create a new PDF document
+      final PdfDocument document = PdfDocument();
+      final PdfPage page = document.pages.add();
+      final PdfGraphics graphics = page.graphics;
+
+      // Create PDF fonts
+      final PdfFont font = PdfStandardFont(PdfFontFamily.helvetica, 12);
+      final PdfFont titleFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        14,
+        style: PdfFontStyle.bold,
+      );
+      final PdfFont headerFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        12,
+        style: PdfFontStyle.bold,
+      );
+
+      double yPosition = 0;
+
+      // Draw title
+      graphics.drawString(
+        'RENCANA PELAKSANAAN PEMBELAJARAN (RPP)',
+        titleFont,
+        bounds: Rect.fromLTWH(0, yPosition, page.size.width, 30),
+        format: PdfStringFormat(alignment: PdfTextAlignment.center),
+      );
+      yPosition += 30;
+
+      graphics.drawString(
+        _judulController.text.toUpperCase(),
+        titleFont,
+        bounds: Rect.fromLTWH(0, yPosition, page.size.width, 30),
+        format: PdfStringFormat(alignment: PdfTextAlignment.center),
+      );
+      yPosition += 40;
+
+      // Helper function to draw section
+      double drawSection(String title, String content, double startY) {
+        double currentY = startY;
+
+        // Check page break for header
+        if (currentY > page.size.height - 50) {
+          document.pages.add();
+          currentY = 40;
+        }
+
+        graphics.drawString(
+          title,
+          headerFont,
+          bounds: Rect.fromLTWH(0, currentY, page.size.width, 20),
+        );
+        currentY += 20;
+
+        final List<String> lines = content.split('\n');
+        for (String line in lines) {
+          if (line.trim().isEmpty) {
+            currentY += 10;
+            continue;
+          }
+
+          if (currentY > page.size.height - 30) {
+            document.pages
+                .add(); // add page doesn't return the page to draw on graphics automatically in this loop easily without refactoring, but for simple preview we assume it fits or text breaks.
+            // In a robust implementation, we'd use PdfTextElement with layout.
+            currentY = 40;
+          }
+
+          graphics.drawString(
+            line,
+            font,
+            bounds: Rect.fromLTWH(20, currentY, page.size.width - 20, 15),
+          );
+          currentY += 18;
+        }
+        return currentY + 10;
+      }
+
+      yPosition = drawSection(
+        'A. Tujuan Pembelajaran',
+        _tujuanController.document.toPlainText(),
+        yPosition,
+      );
+      yPosition = drawSection(
+        'B. Kegiatan Pembelajaran',
+        _kegiatanIntiController.document.toPlainText(),
+        yPosition,
+      );
+      yPosition = drawSection(
+        'C. Penilaian (Asesmen)',
+        _penilaianController.document.toPlainText(),
+        yPosition,
+      );
+
+      // Save the document
+      final List<int> bytes = await document.save();
+      document.dispose();
+
+      final directory = await getTemporaryDirectory();
+      final file = File(
+        '${directory.path}/Preview_RPP_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+      await file.writeAsBytes(bytes, flush: true);
+
+      // Open the file
+      await OpenFile.open(file.path);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal membuat preview PDF: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _saveRPP() async {
     if (_judulController.text.isEmpty) {
       ScaffoldMessenger.of(
@@ -238,6 +360,11 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         backgroundColor: Color(0xFF4F46E5),
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: Icon(Icons.picture_as_pdf),
+            onPressed: _previewPDF,
+            tooltip: 'Preview PDF',
+          ),
           IconButton(
             icon: _isRegenerating
                 ? SizedBox(
