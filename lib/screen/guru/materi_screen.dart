@@ -4,6 +4,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
+import 'package:manajemensekolah/screen/guru/materi_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -694,6 +695,8 @@ class MateriPageState extends State<MateriPage> {
       context,
       MaterialPageRoute(
         builder: (context) => SubBabDetailPage(
+          teacherId: widget.teacher['id'],
+          subjectId: _selectedSubject ?? '',
           subBab: subBab,
           bab: bab,
           checked: _checkedSubBab[subBab['id'].toString()] ?? false,
@@ -1498,6 +1501,8 @@ class MateriPageState extends State<MateriPage> {
 class SubBabDetailPage extends StatefulWidget {
   final Map<String, dynamic> subBab;
   final Map<String, dynamic> bab;
+  final String teacherId;
+  final String subjectId;
   final bool checked;
   final ValueChanged<bool?> onCheckChanged;
 
@@ -1505,6 +1510,8 @@ class SubBabDetailPage extends StatefulWidget {
     super.key,
     required this.subBab,
     required this.bab,
+    required this.teacherId,
+    required this.subjectId,
     required this.checked,
     required this.onCheckChanged,
   });
@@ -1677,6 +1684,41 @@ class SubBabDetailPageState extends State<SubBabDetailPage> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MateriAiResultScreen(
+                        teacherId: widget.teacherId,
+                        subjectId: widget.subjectId,
+                        chapterId: widget.bab['id'].toString(),
+                        subChapterId: widget.subBab['id'].toString(),
+                        title:
+                            widget.subBab['judul_sub_bab'] ??
+                            'Materi Pembelajaran',
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.orange.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.auto_awesome,
+                    color: Colors.orange,
+                    size: 20,
                   ),
                 ),
               ),

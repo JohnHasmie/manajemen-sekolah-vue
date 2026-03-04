@@ -488,6 +488,17 @@ class ApiSubjectService {
     }
   }
 
+  // ==================== GENERATE MATERI OLEH AI ====================
+  static Future<dynamic> generateMaterial(Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/generated-materials/generate'),
+      headers: await ApiService.getHeaders(),
+      body: json.encode(data),
+    );
+
+    return _handleResponse(response);
+  }
+
   // ==================== MATERI PROGRESS METHODS ====================
 
   // Get Materi Progress (checked state) for a teacher and subject
