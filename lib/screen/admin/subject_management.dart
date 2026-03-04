@@ -996,6 +996,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
     // Initialize is_active state
     // Default to true for new subjects, or use existing value
     bool isActive = subject?['is_active'] ?? true;
+    bool isSaving = false;
 
     showModalBottomSheet(
       context: context,
@@ -1199,15 +1200,37 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                                       fieldFocusNode,
                                       onFieldSubmitted,
                                     ) {
-                                      return _buildDialogTextField(
-                                        controller: fieldController,
-                                        focusNode: fieldFocusNode,
-                                        label: languageProvider
-                                            .getTranslatedText({
-                                              'en': 'Select Subject',
-                                              'id': 'Pilih Mata Pelajaran',
-                                            }),
-                                        icon: Icons.search,
+                                      return ValueListenableBuilder<
+                                        TextEditingValue
+                                      >(
+                                        valueListenable: fieldController,
+                                        builder: (context, value, _) {
+                                          return _buildDialogTextField(
+                                            controller: fieldController,
+                                            focusNode: fieldFocusNode,
+                                            label: languageProvider
+                                                .getTranslatedText({
+                                                  'en': 'Select Subject',
+                                                  'id': 'Pilih Mata Pelajaran',
+                                                }),
+                                            icon: Icons.search,
+                                            suffixIcon: value.text.isNotEmpty
+                                                ? IconButton(
+                                                    icon: Icon(
+                                                      Icons.clear,
+                                                      size: 18,
+                                                    ),
+                                                    onPressed: () {
+                                                      setDialogState(() {
+                                                        fieldController.clear();
+                                                        selectedMasterSubjectId =
+                                                            null;
+                                                      });
+                                                    },
+                                                  )
+                                                : null,
+                                          );
+                                        },
                                       );
                                     },
                                 optionsViewBuilder: (context, onSelected, options) {
@@ -1355,92 +1378,116 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                             SizedBox(width: 12),
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () async {
-                                  if (codeController.text.isEmpty ||
-                                      nameController.text.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          languageProvider.getTranslatedText({
-                                            'en':
-                                                'Code and name must be filled',
-                                            'id': 'Kode dan nama harus diisi',
-                                          }),
-                                        ),
-                                        backgroundColor: Colors.red.shade400,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                    return;
-                                  }
+                                onPressed: isSaving
+                                    ? null
+                                    : () async {
+                                        if (codeController.text.isEmpty ||
+                                            nameController.text.isEmpty) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                languageProvider.getTranslatedText({
+                                                  'en':
+                                                      'Code and name must be filled',
+                                                  'id':
+                                                      'Kode dan nama harus diisi',
+                                                }),
+                                              ),
+                                              backgroundColor:
+                                                  Colors.red.shade400,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                          return;
+                                        }
 
-                                  // Validation logic removed to allow custom names
-                                  // while keeping the master subject link.
+                                        setDialogState(() {
+                                          isSaving = true;
+                                        });
 
-                                  try {
-                                    if (subject == null) {
-                                      await ApiSubjectService.addSubject({
-                                        'name': nameController.text,
-                                        'code': codeController.text,
-                                        'description':
-                                            descriptionController.text,
-                                        'subject_id': selectedMasterSubjectId,
-                                        'is_active': isActive,
-                                      });
-                                    } else {
-                                      await ApiSubjectService.updateSubject(
-                                        subject['id'],
-                                        {
-                                          'name': nameController.text,
-                                          'code': codeController.text,
-                                          'description':
-                                              descriptionController.text,
-                                          'subject_id': selectedMasterSubjectId,
-                                          'is_active': isActive,
-                                        },
-                                      );
-                                    }
-                                    if (mounted) {
-                                      Navigator.pop(context);
-                                      _loadSubjects(); // Reload data
-                                    }
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            languageProvider.getTranslatedText({
-                                              'en': 'Data saved successfully',
-                                              'id': 'Data berhasil disimpan',
-                                            }),
-                                          ),
-                                          backgroundColor:
-                                              Colors.green.shade400,
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
-                                    }
-                                  } catch (error) {
-                                    if (kDebugMode)
-                                      print(
-                                        'Save/Update subject error: $error',
-                                      );
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
-                                          ),
-                                          backgroundColor: Colors.red.shade400,
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
+                                        try {
+                                          if (subject == null) {
+                                            await ApiSubjectService.addSubject({
+                                              'name': nameController.text,
+                                              'code': codeController.text,
+                                              'description':
+                                                  descriptionController.text,
+                                              'subject_id':
+                                                  selectedMasterSubjectId,
+                                              'is_active': isActive,
+                                            });
+                                          } else {
+                                            await ApiSubjectService.updateSubject(
+                                              subject['id'],
+                                              {
+                                                'name': nameController.text,
+                                                'code': codeController.text,
+                                                'description':
+                                                    descriptionController.text,
+                                                'subject_id':
+                                                    selectedMasterSubjectId,
+                                                'is_active': isActive,
+                                              },
+                                            );
+                                          }
+
+                                          if (mounted) {
+                                            setDialogState(() {
+                                              isSaving = false;
+                                            });
+                                            Navigator.pop(context);
+                                            _loadSubjects(); // Reload data
+                                          }
+
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  languageProvider.getTranslatedText({
+                                                    'en':
+                                                        'Data saved successfully',
+                                                    'id':
+                                                        'Data berhasil disimpan',
+                                                  }),
+                                                ),
+                                                backgroundColor:
+                                                    Colors.green.shade400,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        } catch (error) {
+                                          if (kDebugMode) {
+                                            print(
+                                              'Save/Update subject error: $error',
+                                            );
+                                          }
+                                          setDialogState(() {
+                                            isSaving = false;
+                                          });
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
+                                                ),
+                                                backgroundColor:
+                                                    Colors.red.shade400,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: ColorUtils.corporateBlue600,
                                   foregroundColor: Colors.white,
@@ -1450,10 +1497,21 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                                   padding: EdgeInsets.symmetric(vertical: 14),
                                   elevation: 2,
                                 ),
-                                child: Text(
-                                  AppLocalizations.save.tr,
-                                  style: TextStyle(fontWeight: FontWeight.w600),
-                                ),
+                                child: isSaving
+                                    ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        AppLocalizations.save.tr,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                               ),
                             ),
                           ],
@@ -1476,6 +1534,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
     required IconData icon,
     int maxLines = 1,
     FocusNode? focusNode,
+    Widget? suffixIcon,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -1491,6 +1550,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
           labelText: label,
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 14),
           prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 20),
+          suffixIcon: suffixIcon,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: OutlineInputBorder(
