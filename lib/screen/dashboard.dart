@@ -3516,6 +3516,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                           onTap: () async {
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.clear();
+                            await LocalCacheService.clearAll();
                             if (context.mounted) {
                               Navigator.pop(context);
                               Navigator.pushNamedAndRemoveUntil(

@@ -81,7 +81,17 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handleTokenExpired() {
+  Future<void> _clearAllData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    await LocalCacheService.clearAll();
+    if (kDebugMode) {
+      print('🗑️ All local data and cache cleared');
+    }
+  }
+
+  void _handleTokenExpired() async {
+    await _clearAllData();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -121,8 +131,8 @@ class LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // Clear local API cache at start of login to ensure session isolation
-    await LocalCacheService.clearAll();
+    // Clear local data and API cache at start of login to ensure session isolation
+    await _clearAllData();
 
     final String email = emailController.text.trim();
     final String password = passwordController.text;
@@ -171,8 +181,12 @@ class LoginScreenState extends State<LoginScreen> {
       }
 
       if (error.toString().toLowerCase().contains('expired') ||
-          error.toString().toLowerCase().contains('token')) {
+          error.toString().toLowerCase().contains('token') ||
+          error.toString().toLowerCase().contains('unauthorized')) {
         _handleTokenExpired();
+      } else {
+        // Clear data on any login failure to be safe
+        await _clearAllData();
       }
 
       if (mounted) {
@@ -279,7 +293,12 @@ class LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.red.shade700,
           ),
         );
+      }
 
+      // Clear data on Google Sign In failure
+      await _clearAllData();
+
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
