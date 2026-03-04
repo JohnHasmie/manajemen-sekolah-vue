@@ -47,6 +47,8 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   late TextEditingController _kelasSemesterController;
   late TextEditingController _alokasiWaktuController;
 
+  final TextEditingController _promptController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -156,10 +158,135 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     _pembelajaranKeController.dispose();
     _kelasSemesterController.dispose();
     _alokasiWaktuController.dispose();
+    _promptController.dispose();
     super.dispose();
   }
 
-  Future<void> _regenerateRPP() async {
+  void _showRegenerateDialog() {
+    _promptController.clear();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.auto_awesome, color: ColorUtils.primary),
+              SizedBox(width: 8),
+              Text(
+                'Generate Ulang AI',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sistem akan menyusun ulang konten RPP berdasarkan data saat ini. Anda dapat menambahkan instruksi spesifik di bawah.',
+                  style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                _buildDialogField(
+                  'Mata Pelajaran',
+                  _mataPelajaranController.text,
+                ),
+                SizedBox(height: 12),
+                _buildDialogField('Bab', _babController.text),
+                SizedBox(height: 16),
+                Text(
+                  'Instruksi / Prompt Tambahan (Opsional)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate800,
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 8),
+                TextField(
+                  controller: _promptController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText:
+                        'Contoh: Buat kegiatan inti menggunakan metode diskusi kelompok dan studi kasus...',
+                    hintStyle: TextStyle(
+                      color: ColorUtils.slate400,
+                      fontSize: 14,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: ColorUtils.slate300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: ColorUtils.primary),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Batal',
+                style: TextStyle(color: ColorUtils.slate500),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _regenerateRPP(prompt: _promptController.text);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorUtils.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text('Generate'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogField(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: ColorUtils.slate500, fontSize: 12)),
+        SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Text(
+            value.isEmpty ? '-' : value,
+            style: TextStyle(
+              color: ColorUtils.slate800,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _regenerateRPP({String prompt = ''}) async {
     setState(() {
       _isRegenerating = true;
     });
@@ -469,7 +596,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                     ),
                   )
                 : Icon(Icons.refresh),
-            onPressed: _isRegenerating ? null : _regenerateRPP,
+            onPressed: _isRegenerating ? null : _showRegenerateDialog,
             tooltip: 'Generate Ulang',
           ),
           IconButton(
