@@ -10,12 +10,14 @@ import 'package:manajemensekolah/screen/guru/materi_screen.dart';
 import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class TeachingScheduleScreen extends StatefulWidget {
   const TeachingScheduleScreen({super.key});
@@ -51,6 +53,13 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
   // DITAMBAHKAN KEMBALI: Toggle antara card dan table view
   bool _isTableView = false;
+
+  // Tour properties
+  final GlobalKey _toggleViewKey = GlobalKey();
+  final GlobalKey _searchFilterKey = GlobalKey();
+  final GlobalKey _firstScheduleKey = GlobalKey();
+  final GlobalKey _actionButtonsKey = GlobalKey();
+  String? _tourId;
 
   List<String> _dayOptions = [
     'Semua Hari',
@@ -477,6 +486,13 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                 .map((e) => {'id': e.key, 'name': e.value})
                 .toList()
               ..sort((a, b) => a['name']!.compareTo(b['name']!));
+      });
+
+      // Show tour
+      Future.delayed(Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
       });
     } catch (e) {
       if (kDebugMode) {
@@ -1224,6 +1240,208 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     return filtered;
   }
 
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'teaching_schedule_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "ToggleView",
+        keyTarget: _toggleViewKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Tampilan Jadwal",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Ketuk ikon ini untuk beralih antara tampilan kartu interaktif atau tabel yang ringkas.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "SearchFilter",
+        keyTarget: _searchFilterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Pencarian & Filter",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Cari mata pelajaran, kelas, atau gunakan tombol saring di kanan untuk menampilkan jadwal pada hari tertentu saja.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    if (_jadwalList.isNotEmpty && !_isTableView) {
+      targets.add(
+        TargetFocus(
+          identify: "ScheduleItem",
+          keyTarget: _firstScheduleKey,
+          alignSkip: Alignment.topRight,
+          shape: ShapeLightFocus.RRect,
+          radius: 16,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Kartu Jadwal Kelas",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "Detail lokasi kelas, mata pelajaran, serta waktu pelaksanaan. Ketuk seluruh area kartu ini langsung untuk masuk ke halaman Presensi Kelas.",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+
+      targets.add(
+        TargetFocus(
+          identify: "ActionButtons",
+          keyTarget: _actionButtonsKey,
+          alignSkip: Alignment.topRight,
+          shape: ShapeLightFocus.RRect,
+          radius: 10,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Aksi Cepat",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "Gunakan tombol Materi untuk melihat RPP & Bab. Gunakan tombol Aktivitas untuk mencatat absen kelas dan mengisi kehadiran harian siswa.",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return targets;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -1314,6 +1532,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                         ),
                         // DITAMBAHKAN KEMBALI: Tombol toggle view
                         GestureDetector(
+                          key: _toggleViewKey,
                           onTap: _toggleView,
                           child: Container(
                             width: 40,
@@ -1475,6 +1694,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                     // Search Bar with Filter using SeparatedSearchFilter
                     // Search Bar with Filter Button
                     Row(
+                      key: _searchFilterKey,
                       children: [
                         Expanded(
                           child: Container(
@@ -2273,6 +2493,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     final primary = _getPrimaryColor();
 
     return Container(
+      key: index == 0 ? _firstScheduleKey : null,
       margin: EdgeInsets.only(bottom: 12),
       child: Material(
         color: Colors.transparent,
@@ -2426,6 +2647,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                 ),
                 SizedBox(height: 12),
                 Row(
+                  key: index == 0 ? _actionButtonsKey : null,
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
