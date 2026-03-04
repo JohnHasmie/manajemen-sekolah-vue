@@ -17,12 +17,14 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class GradePage extends StatefulWidget {
   final Map<String, dynamic> teacher;
@@ -1189,6 +1191,11 @@ class GradeBookPageState extends State<GradeBookPage> {
     return academicYearProvider.isReadOnly;
   }
 
+  // Tour properties
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _addGradeKey = GlobalKey();
+  String? _tourId;
+
   @override
   void initState() {
     super.initState();
@@ -1374,6 +1381,13 @@ class GradeBookPageState extends State<GradeBookPage> {
         }
 
         _isLoading = false;
+      });
+
+      // Trigger tour
+      Future.delayed(Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
       });
     } catch (e) {
       if (kDebugMode) print('Error loading grade data: $e');
@@ -3156,6 +3170,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                     SizedBox(width: 8),
                     // Filter button with badge
                     Stack(
+                      key: _filterKey,
                       children: [
                         GestureDetector(
                           onTap: () => _showFilterDialog(languageProvider),
@@ -3413,6 +3428,7 @@ class GradeBookPageState extends State<GradeBookPage> {
           floatingActionButton: (_isEditMode || !_canEdit || _isReadOnly)
               ? null
               : FloatingActionButton(
+                  key: _addGradeKey,
                   onPressed: () => _openNewInputForm(languageProvider),
                   backgroundColor: _getPrimaryColor(),
                   foregroundColor: Colors.white,
@@ -3421,6 +3437,132 @@ class GradeBookPageState extends State<GradeBookPage> {
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'input_grade_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    )..show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "FilterGrades",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Filter Jenis Nilai",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Gunakan tombol ini untuk menyaring kolom penilaian berdasarkan jenis (misal: hanya tampilkan UTS & UAS saja).",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    if (_canEdit && !_isReadOnly) {
+      targets.add(
+        TargetFocus(
+          identify: "AddGrade",
+          keyTarget: _addGradeKey,
+          alignSkip: Alignment.topRight,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Tambah Penilaian",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "Ketuk tombol ini untuk membuat kolom penilaian baru secara massal untuk seluruh siswa di kelas ini.",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return targets;
   }
 }
 
