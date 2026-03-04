@@ -15,11 +15,13 @@ import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class ClassActifityScreen extends StatefulWidget {
   final DateTime? initialDate;
@@ -95,6 +97,12 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   late TabController _tabController;
   String _currentTarget = 'umum';
+
+  // Tour properties
+  final GlobalKey _searchFilterKey = GlobalKey();
+  final GlobalKey _tabSwitcherKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -1356,6 +1364,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     ];
 
     return Container(
+      key: _tabSwitcherKey,
       margin: const EdgeInsets.all(16),
       child: TabSwitcher(
         tabController: _tabController,
@@ -1370,6 +1379,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
+        key: _searchFilterKey,
         children: [
           Expanded(
             child: Container(
@@ -2411,6 +2421,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         // FAB: Only show in Step 2 AND if editable
         floatingActionButton: _currentStep == 2 && _selectedSubjectCanEdit
             ? FloatingActionButton(
+                key: _fabKey,
                 onPressed: _showActivityTypeDialog,
                 backgroundColor: _getPrimaryColor(),
                 child: Icon(Icons.add, color: Colors.white),
@@ -2658,6 +2669,17 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _isLoading = false;
       });
 
+      // Show tour
+      if (_currentPage == 1 &&
+          !widget.autoShowActivityDialog &&
+          _currentStep == 2) {
+        Future.delayed(Duration(milliseconds: 1000), () {
+          if (mounted) {
+            _checkAndShowTour();
+          }
+        });
+      }
+
       // Auto show activity dialog if specified
       if (widget.autoShowActivityDialog && _currentPage == 1) {
         Future.delayed(Duration(milliseconds: 300), () {
@@ -2678,6 +2700,171 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
     }
+  }
+
+  Future<void> _checkAndShowTour() async {
+    if (_currentStep != 2) return;
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'class_activity_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "TabSwitcher",
+        keyTarget: _tabSwitcherKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Mode Tampilan",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Pilih 'Semua Siswa' untuk melihat aktivitas umum kelas, atau 'Khusus Siswa' untuk melihat histori aktivitas per murid.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "SearchFilter",
+        keyTarget: _searchFilterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Pencarian & Filter",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Cari aktivitas berdasarkan judul atau gunakan filter untuk mencari rentang waktu tertentu.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    if (_selectedSubjectCanEdit) {
+      targets.add(
+        TargetFocus(
+          identify: "AddActivity",
+          keyTarget: _fabKey,
+          alignSkip: Alignment.topLeft,
+          shape: ShapeLightFocus.Circle,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Tambah Aktivitas",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "Gunakan tombol ini untuk menambahkan aktivitas absensi/jurnal kelas maupun memberikan penugasan (PR / Ujian) kepada siswa.",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return targets;
   }
 }
 

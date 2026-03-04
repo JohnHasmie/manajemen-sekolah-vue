@@ -11,11 +11,13 @@ import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 // Model untuk Summary Absensi
 class AbsensiSummary {
@@ -109,6 +111,11 @@ class PresencePageState extends State<PresencePage>
   // Filter untuk Input Mode
   final TextEditingController _searchControllerInput = TextEditingController();
   String? _selectedStatusFilter;
+
+  // Tour properties
+  final GlobalKey _searchFilterKey = GlobalKey();
+  final GlobalKey _tabSwitcherKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -216,6 +223,13 @@ class PresencePageState extends State<PresencePage>
       if (mounted) {
         setState(() {
           _isSubmitting = false;
+        });
+
+        // Tampilkan tour jika ada
+        Future.delayed(Duration(milliseconds: 1000), () {
+          if (mounted) {
+            _checkAndShowTour();
+          }
         });
       }
     }
@@ -892,6 +906,7 @@ class PresencePageState extends State<PresencePage>
   // ========== MODE SWITCHER ==========
   Widget _buildModeSwitcher(LanguageProvider languageProvider) {
     return Container(
+      key: _tabSwitcherKey,
       margin: const EdgeInsets.all(16),
       child: TabSwitcher(
         tabController: _tabController,
@@ -1469,6 +1484,7 @@ class PresencePageState extends State<PresencePage>
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
+        key: _searchFilterKey,
         children: [
           Expanded(
             child: Container(
@@ -3500,6 +3516,131 @@ class PresencePageState extends State<PresencePage>
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'presence_teacher_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "TabSwitcher",
+        keyTarget: _tabSwitcherKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Mode Absensi",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Pilih 'Hasil Absensi' untuk melihat rekapan daftar hadir sebelumnya, atau 'Tambah Absensi' untuk mulai memanggil daftar hadir siswa hari ini.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "SearchFilter",
+        keyTarget: _searchFilterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Pencarian & Filter",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Gunakan kotak pencarian ini untuk mencari data absensi, dan gunakan tombol filter di sebelah kanannya untuk mencari rekapan absensi berdasarkan hari, bulan, atau mata pelajaran tertentu.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
 
