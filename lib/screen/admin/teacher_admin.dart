@@ -14,12 +14,14 @@ import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_teacher_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class TeacherAdminScreen extends StatefulWidget {
   const TeacherAdminScreen({super.key});
@@ -63,6 +65,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
 
   // Search debounce
   Timer? _searchDebounce;
+
+  final GlobalKey _menuKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -895,6 +903,13 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
+      });
     }
   }
 
@@ -2418,6 +2433,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                           ),
                         ),
                         PopupMenuButton<String>(
+                          key: _menuKey,
                           onSelected: (value) {
                             switch (value) {
                               case 'export':
@@ -2501,6 +2517,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                       children: [
                         Expanded(
                           child: Container(
+                            key: _searchKey,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
@@ -2559,6 +2576,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                         SizedBox(width: 8),
                         // Filter Button
                         Container(
+                          key: _filterKey,
                           decoration: BoxDecoration(
                             color: _hasActiveFilter
                                 ? Colors.white
@@ -2752,6 +2770,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
               Provider.of<AcademicYearProvider>(context).isReadOnly
               ? null
               : FloatingActionButton(
+                  key: _fabKey,
                   onPressed: () => showAddEditDialog(),
                   backgroundColor: getPrimaryColor(),
                   shape: RoundedRectangleBorder(
@@ -2762,5 +2781,240 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'teacher_admin_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    )..show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "TeacherMenu",
+        keyTarget: _menuKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Teacher Data Tools',
+                      'id': 'Alat Data Guru',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Export, import, or download teacher templates from this menu.',
+                        'id':
+                            'Ekspor, impor, atau unduh template data guru dari menu ini.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "TeacherSearch",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Find Teachers',
+                      'id': 'Cari Guru',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Search by name or email to quickly find a specific teacher.',
+                        'id':
+                            'Cari berdasarkan nama atau email untuk menemukan guru tertentu dengan cepat.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "TeacherFilter",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Filter Options',
+                      'id': 'Opsi Filter',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Filter by class, gender, or employment status.',
+                        'id':
+                            'Filter berdasarkan kelas, jenis kelamin, atau status kepegawaian.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AddTeacher",
+        keyTarget: _fabKey,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Add Teacher',
+                      'id': 'Tambah Guru',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Tap here to add a new teacher record.',
+                        'id': 'Ketuk di sini untuk menambahkan data guru baru.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }

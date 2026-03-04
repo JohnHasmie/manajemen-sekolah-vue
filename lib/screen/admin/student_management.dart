@@ -12,12 +12,14 @@ import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/student_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_student_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class StudentManagementScreen extends StatefulWidget {
   final String? initialClassId;
@@ -59,6 +61,12 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   List<Map<String, String>> _availableGenderOptions = [];
 
   // Timer? _searchDebounce; // Removed debounce
+
+  final GlobalKey _menuKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -329,6 +337,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           backgroundColor: ColorUtils.error600,
         ),
       );
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
+      });
     }
   }
 
@@ -2120,6 +2135,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
               ),
               // Action menu
               PopupMenuButton<String>(
+                key: _menuKey,
                 onSelected: (value) {
                   switch (value) {
                     case 'export':
@@ -2199,6 +2215,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
             children: [
               Expanded(
                 child: Container(
+                  key: _searchKey,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(12),
@@ -2252,6 +2269,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
               SizedBox(width: 8),
               // Filter Button
               Container(
+                key: _filterKey,
                 decoration: BoxDecoration(
                   color: _hasActiveFilter
                       ? Colors.white
@@ -2470,6 +2488,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
               Provider.of<AcademicYearProvider>(context).isReadOnly
               ? null
               : FloatingActionButton(
+                  key: _fabKey,
                   onPressed: () => _showStudentDialog(),
                   backgroundColor: _getPrimaryColor(),
                   shape: RoundedRectangleBorder(
@@ -2480,5 +2499,243 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'student_management_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "StudentMenu",
+        keyTarget: _menuKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Export & Import',
+                      'id': 'Ekspor & Impor',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Use this menu to export student data to Excel, import from files, or download the template.',
+                        'id':
+                            'Gunakan menu ini untuk mengekspor data siswa ke Excel, mengimpor dari file, atau mengunduh template.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "StudentSearch",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Quick Search',
+                      'id': 'Pencarian Cepat',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Type student names here to find them quickly across the database.',
+                        'id':
+                            'Ketik nama siswa di sini untuk menemukannya dengan cepat di seluruh database.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "StudentFilter",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Advanced Filtering',
+                      'id': 'Filter Lanjutan',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Filter students by class, grade level, gender, or guardian name.',
+                        'id':
+                            'Filter siswa berdasarkan kelas, tingkat kelas, jenis kelamin, atau nama wali.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AddStudent",
+        keyTarget: _fabKey,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Add New Student',
+                      'id': 'Tambah Siswa Baru',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Click here to manually add a new student to the system.',
+                        'id':
+                            'Klik di sini untuk menambahkan siswa baru secara manual ke dalam sistem.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
