@@ -12,12 +12,14 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_subject_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class SubjectManagementScreen extends StatefulWidget {
   const SubjectManagementScreen({super.key});
@@ -57,6 +59,13 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
   // Dynamic list untuk nama kelas yang tersedia
   List<String> _availableClassNames = [];
   List<String> _availableGradeLevels = [];
+
+  // Tour Keys
+  final GlobalKey _menuKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
+  String? _tourId;
 
   List<dynamic> _availableMasterSubjects = [];
 
@@ -817,6 +826,13 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       setState(() {
         _isLoading = false;
         _errorMessage = ErrorUtils.getFriendlyMessage(error);
+      });
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
       });
     }
   }
@@ -1667,6 +1683,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                 ),
               ),
               PopupMenuButton<String>(
+                key: _menuKey,
                 onSelected: (value) {
                   switch (value) {
                     case 'export':
@@ -1746,6 +1763,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
             children: [
               Expanded(
                 child: Container(
+                  key: _searchKey,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(12),
@@ -1797,6 +1815,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
               SizedBox(width: 8),
               // Filter Button
               Container(
+                key: _filterKey,
                 decoration: BoxDecoration(
                   color: _hasActiveFilter
                       ? Colors.white
@@ -2249,6 +2268,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
             ],
           ),
           floatingActionButton: FloatingActionButton(
+            key: _fabKey,
             onPressed: () => _showAddEditDialog(),
             backgroundColor: _getPrimaryColor(),
             shape: RoundedRectangleBorder(
@@ -2259,6 +2279,244 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'subject_management_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    )..show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "SubjectMenu",
+        keyTarget: _menuKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Subject Data Tools',
+                      'id': 'Alat Data Mata Pelajaran',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Export, import, or download subject templates from this menu.',
+                        'id':
+                            'Ekspor, impor, atau unduh template mata pelajaran dari menu ini.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "SubjectSearch",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Search Subjects',
+                      'id': 'Cari Mata Pelajaran',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Quickly find subjects by typing their name here.',
+                        'id':
+                            'Temukan mata pelajaran dengan cepat dengan mengetikkan namanya di sini.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "SubjectFilter",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Advanced Filtering',
+                      'id': 'Filter Lanjutan',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Filter subjects by status, grade level, or specific class names.',
+                        'id':
+                            'Filter mata pelajaran berdasarkan status, tingkat kelas, atau nama kelas tertentu.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AddSubject",
+        keyTarget: _fabKey,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Add New Subject',
+                      'id': 'Tambah Mata Pelajaran Baru',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Click here to manually add a new subject to the curriculum.',
+                        'id':
+                            'Klik di sini untuk menambahkan mata pelajaran baru secara manual ke kurikulum.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
 
@@ -2275,39 +2533,39 @@ class SubjectClassManagementPage extends StatefulWidget {
 
 class SubjectClassManagementPageState
     extends State<SubjectClassManagementPage> {
-  final ApiService _apiService = ApiService();
-  List<dynamic> _availableClasses = [];
-  List<dynamic> _assignedClasses = [];
-  bool _isLoading = true;
-  final TextEditingController _searchController = TextEditingController();
+  final ApiService apiService = ApiService();
+  List<dynamic> availableClasses = [];
+  List<dynamic> assignedClasses0 = [];
+  bool isLoading = true;
+  final TextEditingController searchController = TextEditingController();
 
-  String _selectedFilter = 'All';
+  String selectedFilter = 'All';
 
   @override
   void initState() {
     super.initState();
 
-    _loadData();
+    loadData();
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadData() async {
+  Future<void> loadData() async {
     try {
       setState(() {
-        _isLoading = true;
+        isLoading = true;
       });
 
       // Load semua kelas yang tersedia
-      final allClassesResponse = await _apiService.get('/class');
+      final allClassesResponse = await apiService.get('/class');
 
       // Load kelas yang sudah ditetapkan untuk mata pelajaran ini
       // getKelasByMataPelajaran already returns List<dynamic>
-      final assignedClasses = await _apiService.getClassBySubjectId(
+      final assignedClasses = await apiService.getClassBySubjectId(
         widget.subject['id'].toString(),
       );
 
@@ -2322,9 +2580,9 @@ class SubjectClassManagementPageState
       }
 
       setState(() {
-        _availableClasses = allClasses;
-        _assignedClasses = assignedClasses;
-        _isLoading = false;
+        availableClasses = allClasses;
+        assignedClasses0 = assignedClasses;
+        isLoading = false;
       });
 
       if (allClasses.isNotEmpty) {
@@ -2332,7 +2590,7 @@ class SubjectClassManagementPageState
       }
     } catch (error) {
       setState(() {
-        _isLoading = false;
+        isLoading = false;
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2342,7 +2600,7 @@ class SubjectClassManagementPageState
     }
   }
 
-  Future<void> _addClassToSubject(Map<String, dynamic> kelas) async {
+  Future<void> addClassToSubject(Map<String, dynamic> kelas) async {
     try {
       await ApiSubjectService.attachClass(
         widget.subject['id'].toString(),
@@ -2358,7 +2616,7 @@ class SubjectClassManagementPageState
         );
       }
 
-      _loadData();
+      loadData();
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2368,7 +2626,7 @@ class SubjectClassManagementPageState
     }
   }
 
-  Future<void> _removeClassFromSubject(Map<String, dynamic> kelas) async {
+  Future<void> removeClassFromSubject(Map<String, dynamic> kelas) async {
     final confirmed = await showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
@@ -2396,7 +2654,7 @@ class SubjectClassManagementPageState
           );
         }
 
-        _loadData();
+        loadData();
       } catch (error) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -2411,9 +2669,9 @@ class SubjectClassManagementPageState
   }
 
   // Method untuk menambah kelas secara cepat
-  void _showQuickAddClassDialog() {
-    final unassignedClasses = _availableClasses.where((kelas) {
-      return !_isClassAssigned(kelas['id']);
+  void showQuickAddClassDialog() {
+    final unassignedClasses = availableClasses.where((kelas) {
+      return !isClassAssigned(kelas['id']);
     }).toList();
 
     if (unassignedClasses.isEmpty) {
@@ -2447,8 +2705,8 @@ class SubjectClassManagementPageState
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          _getPrimaryColor(),
-                          _getPrimaryColor().withValues(alpha: 0.85),
+                          getPrimaryColor(),
+                          getPrimaryColor().withValues(alpha: 0.85),
                         ],
                       ),
                       borderRadius: BorderRadius.only(
@@ -2600,15 +2858,16 @@ class SubjectClassManagementPageState
                                           width: 36,
                                           height: 36,
                                           decoration: BoxDecoration(
-                                            color: _getPrimaryColor()
-                                                .withValues(alpha: 0.1),
+                                            color: getPrimaryColor().withValues(
+                                              alpha: 0.1,
+                                            ),
                                             borderRadius: BorderRadius.circular(
                                               6,
                                             ),
                                           ),
                                           child: Icon(
                                             Icons.class_,
-                                            color: _getPrimaryColor(),
+                                            color: getPrimaryColor(),
                                             size: 18,
                                           ),
                                         ),
@@ -2640,7 +2899,7 @@ class SubjectClassManagementPageState
                                         ),
                                         trailing: Container(
                                           decoration: BoxDecoration(
-                                            color: _getPrimaryColor(),
+                                            color: getPrimaryColor(),
                                             borderRadius: BorderRadius.circular(
                                               6,
                                             ),
@@ -2654,7 +2913,7 @@ class SubjectClassManagementPageState
                                         ),
                                         onTap: () {
                                           Navigator.pop(context);
-                                          _addClassToSubject(kelas);
+                                          addClassToSubject(kelas);
                                         },
                                       ),
                                     );
@@ -2729,13 +2988,13 @@ class SubjectClassManagementPageState
     );
   }
 
-  bool _isClassAssigned(String classId) {
-    return _assignedClasses.any((kelas) => kelas['id'] == classId);
+  bool isClassAssigned(String classId) {
+    return assignedClasses0.any((kelas) => kelas['id'] == classId);
   }
 
-  List<dynamic> _getFilteredClasses() {
-    final searchTerm = _searchController.text.toLowerCase();
-    return _availableClasses.where((kelas) {
+  List<dynamic> getFilteredClasses() {
+    final searchTerm = searchController.text.toLowerCase();
+    return availableClasses.where((kelas) {
       final className = kelas['name']?.toString().toLowerCase() ?? '';
       final classLevel = kelas['tingkat']?.toString().toLowerCase() ?? '';
       final homeroomTeacher =
@@ -2747,18 +3006,18 @@ class SubjectClassManagementPageState
           classLevel.contains(searchTerm) ||
           homeroomTeacher.contains(searchTerm);
 
-      final isAssigned = _isClassAssigned(kelas['id']);
+      final isAssigned = isClassAssigned(kelas['id']);
 
       final matchesFilter =
-          _selectedFilter == 'All' ||
-          (_selectedFilter == 'Assigned' && isAssigned) ||
-          (_selectedFilter == 'Unassigned' && !isAssigned);
+          selectedFilter == 'All' ||
+          (selectedFilter == 'Assigned' && isAssigned) ||
+          (selectedFilter == 'Unassigned' && !isAssigned);
 
       return matchesSearch && matchesFilter;
     }).toList();
   }
 
-  Widget _buildClassCard(
+  Widget buildClassCard(
     Map<String, dynamic> kelas,
     int index,
     bool isAssigned,
@@ -2785,9 +3044,9 @@ class SubjectClassManagementPageState
           borderRadius: BorderRadius.circular(14),
           onTap: () {
             if (isAssigned) {
-              _removeClassFromSubject(kelas);
+              removeClassFromSubject(kelas);
             } else {
-              _addClassToSubject(kelas);
+              addClassToSubject(kelas);
             }
           },
           child: Padding(
@@ -2839,12 +3098,12 @@ class SubjectClassManagementPageState
                         runSpacing: 4,
                         children: [
                           if (kelas['tingkat'] != null)
-                            _buildClassInfoTag(
+                            buildClassInfoTag(
                               Icons.layers_outlined,
                               'Tingkat ${kelas['tingkat']}',
                             ),
                           if (kelas['wali_kelas_nama'] != null)
-                            _buildClassInfoTag(
+                            buildClassInfoTag(
                               Icons.person_outline,
                               kelas['wali_kelas_nama'],
                             ),
@@ -2903,11 +3162,11 @@ class SubjectClassManagementPageState
     );
   }
 
-  Color _getPrimaryColor() {
+  Color getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');
   }
 
-  Widget _buildClassInfoTag(IconData icon, String text) {
+  Widget buildClassInfoTag(IconData icon, String text) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
@@ -2937,8 +3196,8 @@ class SubjectClassManagementPageState
 
   @override
   Widget build(BuildContext context) {
-    final filteredClasses = _getFilteredClasses();
-    final assignedCount = _assignedClasses.length;
+    final filteredClasses = getFilteredClasses();
+    final assignedCount = assignedClasses0.length;
 
     // Terjemahan filter options
     final languageProvider = context.read<LanguageProvider>();
@@ -2980,12 +3239,12 @@ class SubjectClassManagementPageState
         actions: [
           IconButton(
             icon: Icon(Icons.refresh_rounded, color: Colors.white),
-            onPressed: _loadData,
+            onPressed: loadData,
             tooltip: 'Refresh',
           ),
         ],
       ),
-      body: _isLoading
+      body: isLoading
           ? SkeletonListLoading(itemCount: 6, infoTagCount: 2)
           : Column(
               children: [
@@ -3008,21 +3267,21 @@ class SubjectClassManagementPageState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatItem(
+                      buildStatItem(
                         icon: Icons.class_,
-                        value: _availableClasses.length.toString(),
+                        value: availableClasses.length.toString(),
                         label: 'Total Kelas',
                         color: Colors.white,
                       ),
-                      _buildStatItem(
+                      buildStatItem(
                         icon: Icons.check_circle,
                         value: assignedCount.toString(),
                         label: 'Terdaftar',
                         color: Colors.white,
                       ),
-                      _buildStatItem(
+                      buildStatItem(
                         icon: Icons.add_circle,
-                        value: (_availableClasses.length - assignedCount)
+                        value: (availableClasses.length - assignedCount)
                             .toString(),
                         label: 'Belum Terdaftar',
                         color: Colors.white,
@@ -3032,22 +3291,22 @@ class SubjectClassManagementPageState
                 ),
 
                 EnhancedSearchBar(
-                  controller: _searchController,
+                  controller: searchController,
                   hintText: 'Cari kelas...',
                   onChanged: (value) {
                     setState(() {});
                   },
                   filterOptions: translatedFilterOptions,
                   selectedFilter:
-                      translatedFilterOptions[_selectedFilter == 'All'
+                      translatedFilterOptions[selectedFilter == 'All'
                           ? 0
-                          : _selectedFilter == 'Assigned'
+                          : selectedFilter == 'Assigned'
                           ? 1
                           : 2],
                   onFilterChanged: (filter) {
                     final index = translatedFilterOptions.indexOf(filter);
                     setState(() {
-                      _selectedFilter = index == 0
+                      selectedFilter = index == 0
                           ? 'All'
                           : index == 1
                           ? 'Assigned'
@@ -3079,8 +3338,8 @@ class SubjectClassManagementPageState
                       ? EmptyState(
                           title: 'Tidak ada kelas',
                           subtitle:
-                              _searchController.text.isEmpty &&
-                                  _selectedFilter == 'All'
+                              searchController.text.isEmpty &&
+                                  selectedFilter == 'All'
                               ? 'Semua kelas sudah ditampilkan'
                               : 'Tidak ditemukan hasil pencarian',
                           icon: Icons.class_outlined,
@@ -3089,8 +3348,8 @@ class SubjectClassManagementPageState
                           itemCount: filteredClasses.length,
                           itemBuilder: (context, index) {
                             final kelas = filteredClasses[index];
-                            final isAssigned = _isClassAssigned(kelas['id']);
-                            return _buildClassCard(kelas, index, isAssigned);
+                            final isAssigned = isClassAssigned(kelas['id']);
+                            return buildClassCard(kelas, index, isAssigned);
                           },
                         ),
                 ),
@@ -3100,8 +3359,8 @@ class SubjectClassManagementPageState
           Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly
           ? null
           : FloatingActionButton(
-              onPressed: _showQuickAddClassDialog,
-              backgroundColor: _getPrimaryColor(),
+              onPressed: showQuickAddClassDialog,
+              backgroundColor: getPrimaryColor(),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -3110,7 +3369,7 @@ class SubjectClassManagementPageState
     );
   }
 
-  Widget _buildStatItem({
+  Widget buildStatItem({
     required IconData icon,
     required String value,
     required String label,

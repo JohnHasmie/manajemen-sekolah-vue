@@ -14,12 +14,14 @@ import 'package:manajemensekolah/screen/admin/student_management.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_class_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class AdminClassManagementScreen extends StatefulWidget {
   const AdminClassManagementScreen({super.key});
@@ -58,6 +60,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   String? _selectedGradeFilter; // '1' to '12', or null for all
   String? _selectedHomeroomFilter; // 'true', 'false', or null
   bool _hasActiveFilter = false;
+
+  // Tour Keys
+  final GlobalKey _menuKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
+  String? _tourId;
 
   // Filter Options (from backend)
   final List<String> _availableGradeLevels = [];
@@ -650,6 +659,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
+      });
     }
   }
 
@@ -2125,6 +2141,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                           ),
                         ),
                         PopupMenuButton<String>(
+                          key: _menuKey,
                           onSelected: (value) {
                             switch (value) {
                               case 'export':
@@ -2208,6 +2225,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                       children: [
                         Expanded(
                           child: Container(
+                            key: _searchKey,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
@@ -2247,6 +2265,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                 Container(
                                   margin: EdgeInsets.only(right: 4),
                                   child: IconButton(
+                                    key: _filterKey,
                                     icon: Icon(
                                       Icons.search,
                                       color: _getPrimaryColor(),
@@ -2552,6 +2571,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                     SizedBox(height: 16),
                   ],
                   FloatingActionButton(
+                    key: _fabKey,
                     heroTag: 'fab_main_class',
                     onPressed: () {
                       setState(() {
@@ -2586,5 +2606,241 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       context,
       MaterialPageRoute(builder: (context) => ClassPromotionWizard()),
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'admin_class_management_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    )..show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "ClassMenu",
+        keyTarget: _menuKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Class Tools',
+                      'id': 'Alat Manajemen Kelas',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Export, import, or download class templates from here.',
+                        'id':
+                            'Ekspor, impor, atau unduh template data kelas dari sini.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "ClassSearch",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Find Classes',
+                      'id': 'Cari Kelas',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Quickly find classes by name using this search bar.',
+                        'id':
+                            'Temukan kelas dengan cepat berdasarkan nama menggunakan bilah pencarian ini.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "ClassFilter",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Filter Options',
+                      'id': 'Opsi Filter',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Filter classes by grade level or homeroom teacher status.',
+                        'id':
+                            'Filter kelas berdasarkan tingkat kelas atau status wali kelas.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AddClass",
+        keyTarget: _fabKey,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Add New Class',
+                      'id': 'Tambah Kelas Baru',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Create a new class and assign a homeroom teacher.',
+                        'id': 'Buat kelas baru dan tugaskan wali kelas.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
