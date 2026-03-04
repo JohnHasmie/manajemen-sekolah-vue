@@ -15,6 +15,7 @@ import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_schedule_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -23,6 +24,7 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class TeachingScheduleManagementScreen extends StatefulWidget {
   const TeachingScheduleManagementScreen({super.key});
@@ -79,6 +81,14 @@ class TeachingScheduleManagementScreenState
 
   // Search debounce
   Timer? _searchDebounce;
+
+  // Tour Keys
+  final GlobalKey _menuKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
+  final GlobalKey _viewToggleKey = GlobalKey();
+  String? _tourId;
 
   // Tambahan untuk tampilan tabel
   bool _showTableView = false;
@@ -427,6 +437,13 @@ class TeachingScheduleManagementScreenState
 
       _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       setState(() => _isLoading = false);
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
+      });
     }
   }
 
@@ -2063,6 +2080,7 @@ class TeachingScheduleManagementScreenState
                             });
                           },
                           child: Container(
+                            key: _viewToggleKey,
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
@@ -2080,6 +2098,7 @@ class TeachingScheduleManagementScreenState
                         ),
                         SizedBox(width: 8),
                         PopupMenuButton<String>(
+                          key: _menuKey,
                           onSelected: (value) {
                             switch (value) {
                               case 'export':
@@ -2168,6 +2187,7 @@ class TeachingScheduleManagementScreenState
                       children: [
                         Expanded(
                           child: Container(
+                            key: _searchKey,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(12),
@@ -2232,6 +2252,7 @@ class TeachingScheduleManagementScreenState
                         SizedBox(width: 8),
                         // Filter Button
                         Container(
+                          key: _filterKey,
                           decoration: BoxDecoration(
                             color: _hasActiveFilter
                                 ? Colors.white
@@ -2433,6 +2454,7 @@ class TeachingScheduleManagementScreenState
               ).isReadOnly
               ? null
               : FloatingActionButton(
+                  key: _fabKey,
                   onPressed: _addSchedule,
                   backgroundColor: _getPrimaryColor(),
                   shape: RoundedRectangleBorder(
@@ -2991,6 +3013,290 @@ class TeachingScheduleManagementScreenState
         ],
       ),
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'teaching_schedule_management_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    )..show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "ScheduleViewToggle",
+        keyTarget: _viewToggleKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Switch View Mode',
+                      'id': 'Ganti Mode Tampilan',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Toggle between a list view or a comprehensive timetable grid view.',
+                        'id':
+                            'Beralih antara tampilan daftar atau tampilan grid jadwal yang komprehensif.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "ScheduleMenu",
+        keyTarget: _menuKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Schedule Tools',
+                      'id': 'Alat Jadwal',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Export, import, or download schedule templates from this menu.',
+                        'id':
+                            'Ekspor, impor, atau unduh template jadwal dari menu ini.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "ScheduleSearch",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Search Schedule',
+                      'id': 'Cari Jadwal',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Find a specific teaching schedule by typing keywords here.',
+                        'id':
+                            'Temukan jadwal mengajar tertentu dengan mengetikkan kata kunci di sini.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "ScheduleFilter",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Apply Filters',
+                      'id': 'Terapkan Filter',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Filter schedules by teacher, class, day, or academic period.',
+                        'id':
+                            'Saring jadwal berdasarkan guru, kelas, hari, atau periode akademik.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AddSchedule",
+        keyTarget: _fabKey,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Add New Schedule',
+                      'id': 'Tambah Jadwal Baru',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Click here to manually create a new schedule entry.',
+                        'id':
+                            'Klik di sini untuk membuat entri jadwal baru secara manual.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
 

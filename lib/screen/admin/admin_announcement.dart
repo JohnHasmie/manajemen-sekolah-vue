@@ -10,6 +10,7 @@ import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_announcement_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -17,6 +18,7 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class AdminAnnouncementScreen extends StatefulWidget {
   const AdminAnnouncementScreen({super.key});
@@ -59,6 +61,12 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
   // Search debounce
   Timer? _searchDebounce;
+
+  // Tour Keys
+  final GlobalKey _addKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _filterKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -830,6 +838,13 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           backgroundColor: ColorUtils.error600,
         ),
       );
+    } finally {
+      // Trigger tour after initial load
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
+      });
     }
   }
 
@@ -2676,6 +2691,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                               children: [
                                 Expanded(
                                   child: TextField(
+                                    key: _searchKey,
                                     controller: _searchController,
                                     // onChanged: (value) => setState(() {}), // Disabling this to prevent excessive rebuilds
                                     style: TextStyle(
@@ -2720,6 +2736,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                         SizedBox(width: 8),
                         // Filter Button
                         Container(
+                          key: _filterKey,
                           decoration: BoxDecoration(
                             color: _hasActiveFilter
                                 ? Colors.white
@@ -2935,6 +2952,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
           // Floating Action Button
           floatingActionButton: FloatingActionButton(
+            key: _addKey,
             onPressed: () => _showAddEditDialog(),
             backgroundColor: _getPrimaryColor(),
             foregroundColor: Colors.white,
@@ -2946,5 +2964,197 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'admin_announcement_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void showTour() {
+    List<TargetFocus> targets = createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "AnnouncementAdd",
+        keyTarget: _addKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Create Announcement',
+                      'id': 'Buat Pengumuman',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Tap here to create a new announcement for school users.',
+                        'id':
+                            'Ketuk di sini untuk membuat pengumuman baru bagi pengguna sekolah.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AnnouncementSearch",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Search Announcements',
+                      'id': 'Cari Pengumuman',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Quickly find announcements by title or content keywords.',
+                        'id':
+                            'Temukan pengumuman dengan cepat berdasarkan judul atau kata kunci konten.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AnnouncementFilter",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Filter Options',
+                      'id': 'Opsi Filter',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Narrow down announcements by priority, target role, or status.',
+                        'id':
+                            'Persempit pengumuman berdasarkan prioritas, peran target, atau status.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
