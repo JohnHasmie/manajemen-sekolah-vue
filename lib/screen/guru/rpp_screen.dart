@@ -10,12 +10,14 @@ import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/guru/rpp_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class RppScreen extends StatefulWidget {
   final String teacherId;
@@ -40,6 +42,10 @@ class RppScreenState extends State<RppScreen> {
   // Filter States
   String? _selectedStatusFilter;
   bool _hasActiveFilter = false;
+
+  final GlobalKey _filterKey = GlobalKey();
+  final GlobalKey _addRppKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -398,6 +404,7 @@ class RppScreenState extends State<RppScreen> {
       setState(() {
         _rppList = rppData;
         _isLoading = false;
+        _hasActiveFilter = _selectedStatusFilter != null;
       });
     } catch (e) {
       if (kDebugMode) print('Load RPP error: $e');
@@ -407,6 +414,13 @@ class RppScreenState extends State<RppScreen> {
           _errorMessage = ErrorUtils.getFriendlyMessage(e);
         });
       }
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
+      });
     }
   }
 
@@ -591,7 +605,12 @@ class RppScreenState extends State<RppScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.confirmDelete.tr),
+        title: Text(
+          languageProvider.getTranslatedText({
+            'en': 'Confirm Delete',
+            'id': 'Konfirmasi Hapus',
+          }),
+        ),
         content: Text(
           languageProvider.getTranslatedText({
             'en': 'Are you sure you want to delete RPP "${rpp['judul']}"?',
@@ -601,7 +620,12 @@ class RppScreenState extends State<RppScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.cancel.tr),
+            child: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Cancel',
+                'id': 'Batal',
+              }),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -613,7 +637,10 @@ class RppScreenState extends State<RppScreen> {
               ),
             ),
             child: Text(
-              AppLocalizations.delete.tr,
+              languageProvider.getTranslatedText({
+                'en': 'Delete',
+                'id': 'Hapus',
+              }),
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -824,7 +851,7 @@ class RppScreenState extends State<RppScreen> {
                             rpp['mata_pelajaran_nama'] ?? 'No Subject',
                             style: TextStyle(
                               fontSize: 12,
-                              color: ColorUtils.slate50,
+                              color: ColorUtils.slate500,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -919,7 +946,10 @@ class RppScreenState extends State<RppScreen> {
           ),
           SizedBox(height: 20),
           Text(
-            AppLocalizations.noRppCreated.tr,
+            languageProvider.getTranslatedText({
+              'en': 'No RPP created yet',
+              'id': 'Belum ada RPP dibuat',
+            }),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -928,7 +958,10 @@ class RppScreenState extends State<RppScreen> {
           ),
           SizedBox(height: 8),
           Text(
-            AppLocalizations.clickPlusToCreate.tr,
+            languageProvider.getTranslatedText({
+              'en': 'Click the "+" button to create your first RPP.',
+              'id': 'Klik tombol "+" untuk membuat RPP pertama Anda.',
+            }),
             style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
           ),
         ],
@@ -958,7 +991,10 @@ class RppScreenState extends State<RppScreen> {
             ),
             SizedBox(height: 20),
             Text(
-              AppLocalizations.error.tr,
+              languageProvider.getTranslatedText({
+                'en': 'Error',
+                'id': 'Terjadi Kesalahan',
+              }),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -983,7 +1019,12 @@ class RppScreenState extends State<RppScreen> {
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: Text(AppLocalizations.retry.tr),
+              child: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Retry',
+                  'id': 'Coba Lagi',
+                }),
+              ),
             ),
           ],
         ),
@@ -1046,7 +1087,10 @@ class RppScreenState extends State<RppScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            AppLocalizations.rppList.tr,
+                            languageProvider.getTranslatedText({
+                              'en': 'RPP List',
+                              'id': 'Daftar RPP',
+                            }),
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -1055,7 +1099,10 @@ class RppScreenState extends State<RppScreen> {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            AppLocalizations.viewAndManageRpp.tr,
+                            languageProvider.getTranslatedText({
+                              'en': 'View and manage your RPP documents',
+                              'id': 'Lihat dan kelola dokumen RPP Anda',
+                            }),
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.9),
@@ -1139,6 +1186,7 @@ class RppScreenState extends State<RppScreen> {
                     SizedBox(width: 8),
                     // Filter Button
                     Container(
+                      key: _filterKey,
                       decoration: BoxDecoration(
                         color: _hasActiveFilter
                             ? Colors.white
@@ -1267,12 +1315,158 @@ class RppScreenState extends State<RppScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        key: _addRppKey,
         onPressed: _tambahRpp,
         backgroundColor: _getPrimaryColor(),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Icon(Icons.add, color: Colors.white),
       ),
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'rpp_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "FilterRPP",
+        keyTarget: _filterKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Filter RPP',
+                      'id': 'Filter RPP Cerdas',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Use this to filter your RPP by status or class.',
+                        'id':
+                            'Temukan Rencana Pelaksanaan Pembelajaran dengan mudah. Filter berdasarkan Mata Pelajaran, Kelas, atau Status.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AddRPP",
+        keyTarget: _addRppKey,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Add New RPP',
+                      'id': 'Tambah & Generate RPP',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Tap here to add a new RPP, either manually or via AI.',
+                        'id':
+                            'Klik ikon ini untuk membuat RPP baru. Anda dapat menggunakan fitur AI untuk men-generate otomatis atau mengunggah RPP manual.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
 
@@ -1540,14 +1734,21 @@ class _RppFormDialogState extends State<RppFormDialog> {
                     'en': 'RPP updated successfully',
                     'id': 'RPP berhasil diupdate',
                   })
-                : AppLocalizations.rppCreatedSuccess.tr,
+                : languageProvider.getTranslatedText({
+                    'en': 'RPP created successfully',
+                    'id': 'RPP berhasil dibuat',
+                  }),
           ),
         ),
       );
     } catch (e) {
       print('Error creating RPP: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppLocalizations.error.tr}: $e')),
+        SnackBar(
+          content: Text(
+            '${languageProvider.getTranslatedText({'en': 'Error', 'id': 'Terjadi Kesalahan'})}: $e',
+          ),
+        ),
       );
     } finally {
       setState(() {
@@ -1754,7 +1955,8 @@ class _RppFormDialogState extends State<RppFormDialog> {
                   children: [
                     _buildDialogTextField(
                       controller: _judulController,
-                      label: '${AppLocalizations.title.tr} *',
+                      label:
+                          '${languageProvider.getTranslatedText({'en': 'Title', 'id': 'Judul'})} *',
                       icon: Icons.title_rounded,
                       hintText: languageProvider.getTranslatedText({
                         'en': 'Enter RPP title',
@@ -1762,7 +1964,10 @@ class _RppFormDialogState extends State<RppFormDialog> {
                       }),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return AppLocalizations.titleRequired.tr;
+                          return languageProvider.getTranslatedText({
+                            'en': 'Title is required',
+                            'id': 'Judul wajib diisi',
+                          });
                         }
                         return null;
                       },
@@ -1770,7 +1975,8 @@ class _RppFormDialogState extends State<RppFormDialog> {
                     SizedBox(height: 12),
                     _buildDialogDropdown(
                       value: _selectedMataPelajaranId,
-                      label: '${AppLocalizations.subject.tr} *',
+                      label:
+                          '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})} *',
                       icon: Icons.book_outlined,
                       items: _mataPelajaranList.map((mp) {
                         return DropdownMenuItem(
@@ -1792,7 +1998,10 @@ class _RppFormDialogState extends State<RppFormDialog> {
                       },
                       validator: (value) {
                         if (value == null) {
-                          return AppLocalizations.subjectRequired.tr;
+                          return languageProvider.getTranslatedText({
+                            'en': 'Subject is required',
+                            'id': 'Mata pelajaran wajib diisi',
+                          });
                         }
                         return null;
                       },
@@ -1800,7 +2009,8 @@ class _RppFormDialogState extends State<RppFormDialog> {
                     SizedBox(height: 12),
                     _buildDialogDropdown(
                       value: _selectedClassId,
-                      label: '${AppLocalizations.class_.tr} *',
+                      label:
+                          '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})} *',
                       icon: Icons.class_outlined,
                       items: _kelasList.map((kelas) {
                         return DropdownMenuItem(
@@ -1820,7 +2030,10 @@ class _RppFormDialogState extends State<RppFormDialog> {
                       },
                       validator: (value) {
                         if (value == null) {
-                          return AppLocalizations.classNameRequired.tr;
+                          return languageProvider.getTranslatedText({
+                            'en': 'Class name is required',
+                            'id': 'Nama kelas wajib diisi',
+                          });
                         }
                         return null;
                       },
@@ -1828,7 +2041,8 @@ class _RppFormDialogState extends State<RppFormDialog> {
                     SizedBox(height: 12),
                     _buildDialogDropdown(
                       value: _selectedSemester,
-                      label: '${AppLocalizations.semester.tr} *',
+                      label:
+                          '${languageProvider.getTranslatedText({'en': 'Semester', 'id': 'Semester'})} *',
                       icon: Icons.calendar_view_month_rounded,
                       items: ['Ganjil', 'Genap'].map((semester) {
                         return DropdownMenuItem(
@@ -1845,12 +2059,16 @@ class _RppFormDialogState extends State<RppFormDialog> {
                     SizedBox(height: 12),
                     _buildDialogTextField(
                       controller: _tahunAjaranController,
-                      label: '${AppLocalizations.academicYear.tr} *',
+                      label:
+                          '${languageProvider.getTranslatedText({'en': 'Academic Year', 'id': 'Tahun Ajaran'})} *',
                       icon: Icons.calendar_today_rounded,
                       hintText: '2024/2025',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return AppLocalizations.academicYearRequired.tr;
+                          return languageProvider.getTranslatedText({
+                            'en': 'Academic year is required',
+                            'id': 'Tahun ajaran wajib diisi',
+                          });
                         }
                         return null;
                       },
@@ -2024,7 +2242,10 @@ class _RppFormDialogState extends State<RppFormDialog> {
                         side: BorderSide(color: ColorUtils.slate300),
                       ),
                       child: Text(
-                        AppLocalizations.cancel.tr,
+                        languageProvider.getTranslatedText({
+                          'en': 'Cancel',
+                          'id': 'Batal',
+                        }),
                         style: TextStyle(
                           color: ColorUtils.slate700,
                           fontWeight: FontWeight.w600,
@@ -2061,7 +2282,10 @@ class _RppFormDialogState extends State<RppFormDialog> {
                                       'en': 'Update',
                                       'id': 'Perbarui',
                                     })
-                                  : AppLocalizations.save.tr,
+                                  : languageProvider.getTranslatedText({
+                                      'en': 'Save',
+                                      'id': 'Simpan',
+                                    }),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -2258,7 +2482,10 @@ class RppDetailPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppLocalizations.rppDetails.tr,
+                        languageProvider.getTranslatedText({
+                          'en': 'RPP Details',
+                          'id': 'Detail RPP',
+                        }),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

@@ -9,6 +9,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -16,6 +17,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class AnnouncementScreen extends StatefulWidget {
   const AnnouncementScreen({super.key});
@@ -36,6 +38,10 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
   final Set<String> _processedIds = {}; // IDs we've already handled/queued
   final Set<String> _pendingReadIds = {}; // IDs waitng to be sent to API
   Timer? _markReadDebounce;
+
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _listKey = GlobalKey();
+  String? _tourId;
 
   @override
   void dispose() {
@@ -163,6 +169,13 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       setState(() {
         _isLoading = false;
         _errorMessage = ErrorUtils.getFriendlyMessage(e);
+      });
+    } finally {
+      // Trigger tour
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _checkAndShowTour();
+        }
       });
     }
   }
@@ -892,6 +905,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
                     // Search Bar
                     Container(
+                      key: _searchKey,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(12),
@@ -986,6 +1000,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                         color: _getPrimaryColor(),
                         backgroundColor: Colors.white,
                         child: ListView.builder(
+                          key: _listKey,
                           padding: EdgeInsets.only(top: 8, bottom: 16),
                           itemCount: _filteredAnnouncement.length,
                           itemBuilder: (context, index) {
@@ -1008,5 +1023,156 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
         );
       },
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role:
+            'walimurid', // Assuming this screen is primarily for parents, otherwise adjust role.
+        name: 'announcement_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "SearchBar",
+        keyTarget: _searchKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Search Announcements',
+                      'id': 'Pencarian Pengumuman',
+                    }),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Quickly find specific announcements by typing keywords here.',
+                        'id':
+                            'Temukan pengumuman spesifik dengan cepat dengan mengetikkan kata kunci di sini.',
+                      }),
+                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    // Only add list tour if there are items
+    if (_filteredAnnouncement.isNotEmpty) {
+      targets.add(
+        TargetFocus(
+          identify: "AnnouncementList",
+          keyTarget: _listKey,
+          alignSkip: Alignment.topRight,
+          shape: ShapeLightFocus.RRect,
+          radius: 12,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Important Updates',
+                        'id': 'Pembaruan Penting',
+                      }),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en':
+                              'Tap any announcement card to read the full details and download attachments if available.',
+                          'id':
+                              'Ketuk kartu pengumuman mana saja untuk membaca detail lengkap dan mengunduh lampiran jika tersedia. Pengumuman yang belum dibaca akan memiliki titik merah.',
+                        }),
+                        style: TextStyle(color: Colors.white, fontSize: 14.0),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return targets;
   }
 }
