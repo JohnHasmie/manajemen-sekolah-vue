@@ -34,6 +34,7 @@ class AttendanceSummary {
   final String className;
   final String? lessonHourId;
   final String? lessonHourName;
+  final String? academicYearId;
 
   AttendanceSummary({
     required this.subjectId,
@@ -46,6 +47,7 @@ class AttendanceSummary {
     required this.className,
     this.lessonHourId,
     this.lessonHourName,
+    this.academicYearId,
   });
 
   String get key =>
@@ -443,6 +445,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           className: item['class_name'] ?? 'Unknown',
           lessonHourId: lessonHourId,
           lessonHourName: lessonHourName,
+          academicYearId: academicYearId,
         );
       }).toList();
 
@@ -2372,6 +2375,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           className: summary.className,
           lessonHourId: summary.lessonHourId,
           lessonHourName: summary.lessonHourName,
+          academicYearId: summary.academicYearId,
         ),
       ),
     );
@@ -3073,23 +3077,25 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
 class AdminAbsensiDetailPage extends StatefulWidget {
   final String subjectId;
-  final String subjectName;
-  final DateTime date;
   final String classId;
+  final DateTime date;
+  final String subjectName;
   final String className;
   final String? lessonHourId;
   final String? lessonHourName;
+  final String? academicYearId;
 
   const AdminAbsensiDetailPage({
-    super.key,
+    Key? key,
     required this.subjectId,
-    required this.subjectName,
-    required this.date,
     required this.classId,
+    required this.date,
+    required this.subjectName,
     required this.className,
     this.lessonHourId,
     this.lessonHourName,
-  });
+    this.academicYearId,
+  }) : super(key: key);
 
   @override
   State<AdminAbsensiDetailPage> createState() => _AdminAbsensiDetailPageState();
@@ -3122,24 +3128,29 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         classId: widget.classId,
         lessonHourId: widget.lessonHourId,
+        academicYearId: widget.academicYearId,
       );
 
       // 2. Load students by class ID (from widget parameter)
       List<dynamic> siswaData;
       if (widget.classId.isNotEmpty) {
-        siswaData = await ApiStudentService.getStudentByClass(widget.classId);
+        siswaData = await ApiStudentService.getStudentByClass(
+          widget.classId,
+          academicYearId: widget.academicYearId,
+        );
         if (kDebugMode) {
           print(
-            'Loaded ${siswaData.length} students for class: ${widget.classId}',
+            'Loaded ${siswaData.length} students for class: ${widget.classId} in year: ${widget.academicYearId}',
           );
         }
       } else {
         // Fallback: if no classId provided, try to get from attendance data
         if (absensiData.isNotEmpty) {
-          final classIdFromData = absensiData.first['kelas_id']?.toString();
+          final classIdFromData = absensiData.first['class_id']?.toString();
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
             siswaData = await ApiStudentService.getStudentByClass(
               classIdFromData,
+              academicYearId: widget.academicYearId,
             );
             if (kDebugMode) {
               print(
@@ -4028,6 +4039,22 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
                         infoTagCount: 1,
                         showActions: false,
                       )
+                    : _siswaList.isEmpty
+                    ? Padding(
+                        padding: EdgeInsets.only(top: 40),
+                        child: EmptyState(
+                          title: languageProvider.getTranslatedText({
+                            'en': 'No Students Found',
+                            'id': 'Siswa Tidak Ditemukan',
+                          }),
+                          subtitle: languageProvider.getTranslatedText({
+                            'en':
+                                'No students were found matching the selected class and criteria.',
+                            'id':
+                                'Tidak ada siswa yang ditemukan untuk kelas dan kriteria yang dipilih.',
+                          }),
+                        ),
+                      )
                     : ListView.builder(
                         padding: EdgeInsets.only(bottom: 16),
                         itemCount: _siswaList.length,
@@ -4207,7 +4234,7 @@ class AttendanceDataSource extends DataGridSource {
     if (s == 'izin' || s == 'permit') {
       return ColorUtils.info600.withValues(alpha: 0.15);
     }
-    if (s == 'alpa' || s == 'absent') {
+    if (s == 'alpa' || s == 'alpha' || s == 'absent') {
       return ColorUtils.error600.withValues(alpha: 0.15);
     }
     return Colors.transparent;
@@ -4224,7 +4251,7 @@ class AttendanceDataSource extends DataGridSource {
     if (s == 'izin' || s == 'permit') {
       return ColorUtils.info600;
     }
-    if (s == 'alpa' || s == 'absent') {
+    if (s == 'alpa' || s == 'alpha' || s == 'absent') {
       return ColorUtils.error600;
     }
     return ColorUtils.slate900;

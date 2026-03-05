@@ -216,12 +216,10 @@ class ApiStudentService {
     );
 
     final result = _handleResponse(response);
-
-    if (result is Map<String, dynamic>) {
-      return (result['data'] as List?) ?? [];
+    if (result is Map<String, dynamic> && result.containsKey('data')) {
+      return result['data'];
     }
-
-    return result is List ? result : [];
+    return result;
   }
 
   static Future<dynamic> getStudentById(String id) async {
@@ -229,7 +227,11 @@ class ApiStudentService {
       Uri.parse('$baseUrl/student/$id'),
       headers: await ApiService.getHeaders(),
     );
-    return _handleResponse(response);
+    final result = _handleResponse(response);
+    if (result is Map<String, dynamic> && result.containsKey('data')) {
+      return result['data'];
+    }
+    return result;
   }
 
   static Future<Map<String, dynamic>> getStudentFilterOptions() async {
@@ -428,14 +430,24 @@ class ApiStudentService {
     await _clearStudentCache();
   }
 
-  static Future<List<dynamic>> getStudentByClass(String classId) async {
+  static Future<List<dynamic>> getStudentByClass(
+    String classId, {
+    String? academicYearId,
+  }) async {
     try {
+      String url = '$baseUrl/student/class/$classId';
+      if (academicYearId != null) {
+        url += '?academic_year_id=$academicYearId';
+      }
       final response = await http.get(
-        Uri.parse('$baseUrl/student/class/$classId'),
+        Uri.parse(url),
         headers: await ApiService.getHeaders(),
       );
 
       final result = _handleResponse(response);
+      if (result is Map<String, dynamic>) {
+        return (result['data'] as List?) ?? [];
+      }
       return result is List ? result : [];
     } catch (e) {
       if (kDebugMode) {
