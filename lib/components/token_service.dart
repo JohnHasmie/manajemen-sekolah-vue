@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -129,6 +130,20 @@ class TokenService {
       } catch (fcmError) {
         if (kDebugMode) {
           print('⚠️ FCM token cleanup failed (non-critical): $fcmError');
+        }
+      }
+
+      // Revoke backend token
+      try {
+        await ApiService().post('/auth/logout', {});
+        if (kDebugMode) {
+          print('✅ Backend token revoked');
+        }
+      } catch (authError) {
+        if (kDebugMode) {
+          print(
+            '⚠️ Backend token revocation failed (non-critical): $authError',
+          );
         }
       }
 

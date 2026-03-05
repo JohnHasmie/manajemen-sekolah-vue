@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
 import 'package:manajemensekolah/screen/admin/admin_class_activity.dart';
@@ -3514,9 +3515,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () async {
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.clear();
-                            await LocalCacheService.clearAll();
+                            // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
+                            await TokenService().logout();
                             if (context.mounted) {
                               Navigator.pop(context);
                               Navigator.pushNamedAndRemoveUntil(
