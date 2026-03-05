@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
@@ -8,11 +9,13 @@ import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_raport_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class AdminRaportScreen extends StatefulWidget {
   const AdminRaportScreen({super.key});
@@ -33,6 +36,12 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
   List<dynamic> _classes = [];
   Map<String, dynamic>? _selectedClass;
   List<dynamic> _students = [];
+
+  String? _tourId;
+  final GlobalKey _selectClassKey = GlobalKey();
+  final GlobalKey _studentListKey = GlobalKey();
+  final GlobalKey _exportBtnKey = GlobalKey();
+  final GlobalKey _publishBtnKey = GlobalKey();
 
   @override
   void initState() {
@@ -107,6 +116,11 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
         setState(() {
           _students = studentsData;
           _isLoadingStudents = false;
+        });
+
+        // Show tour after students are loaded
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (mounted && _students.isNotEmpty) _checkAndShowTour();
         });
       }
     } catch (e) {
@@ -542,6 +556,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
+                        key: _exportBtnKey,
                         icon: _isExporting
                             ? const SizedBox(
                                 width: 16,
@@ -570,6 +585,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
+                        key: _publishBtnKey,
                         icon: _isPublishing
                             ? const SizedBox(
                                 width: 16,
@@ -623,6 +639,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
               ),
               const SizedBox(height: 8),
               Container(
+                key: _selectClassKey,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey[300]!),
@@ -686,6 +703,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                   ),
                 )
               : ListView.builder(
+                  key: _studentListKey,
                   padding: const EdgeInsets.all(16),
                   itemCount: _students.length,
                   itemBuilder: (context, index) {
@@ -822,5 +840,253 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'admin',
+        name: 'admin_raport_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: _languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "RaportClassSelector",
+        keyTarget: _selectClassKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    _languageProvider.getTranslatedText({
+                      'en': 'Select Class',
+                      'id': 'Pilih Kelas',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      _languageProvider.getTranslatedText({
+                        'en':
+                            'Choose a class to view and manage students\' records here.',
+                        'id':
+                            'Pilih kelas untuk melihat dan mengelola raport siswa.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "RaportStudentList",
+        keyTarget: _studentListKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    _languageProvider.getTranslatedText({
+                      'en': 'Student List',
+                      'id': 'Daftar Siswa',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      _languageProvider.getTranslatedText({
+                        'en':
+                            'Tap on a student to see or edit their individual raport details.',
+                        'id':
+                            'Ketuk pada siswa untuk melihat atau mengedit detail raport mereka secara individu.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "RaportExportBtn",
+        keyTarget: _exportBtnKey,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    _languageProvider.getTranslatedText({
+                      'en': 'Export to Excel',
+                      'id': 'Ekspor ke Excel',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      _languageProvider.getTranslatedText({
+                        'en':
+                            'Download the whole class raport data in an Excel format.',
+                        'id':
+                            'Unduh seluruh data raport kelas dalam format Excel.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "RaportPublishBtn",
+        keyTarget: _publishBtnKey,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    _languageProvider.getTranslatedText({
+                      'en': 'Publish Raport',
+                      'id': 'Publikasikan Raport',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      _languageProvider.getTranslatedText({
+                        'en':
+                            'Publish the raport and send a notification directly to the parents/guardians.',
+                        'id':
+                            'Publikasikan raport dan kirim notifikasi langsung kepada wali murid.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 }
