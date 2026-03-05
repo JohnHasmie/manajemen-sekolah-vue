@@ -1124,549 +1124,630 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
     final isEdit = student != null;
 
+    bool isChangeUserMode = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.92,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Consumer<LanguageProvider>(
+            builder: (context, languageProvider, child) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-              ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // Header dengan gradient
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
-                      decoration: BoxDecoration(
-                        gradient: _getCardGradient(),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(24),
-                          topRight: Radius.circular(24),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Icon(
-                              isEdit
-                                  ? Icons.edit_rounded
-                                  : Icons.person_add_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ),
-                          SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isEdit
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Edit Student',
-                                          'id': 'Edit Siswa',
-                                        })
-                                      : languageProvider.getTranslatedText({
-                                          'en': 'Add Student',
-                                          'id': 'Tambah Siswa',
-                                        }),
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  isEdit
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Update student information',
-                                          'id': 'Perbarui data siswa',
-                                        })
-                                      : languageProvider.getTranslatedText({
-                                          'en': 'Fill in student information',
-                                          'id': 'Isi data siswa baru',
-                                        }),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.close_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.92,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
-
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildDialogTextField(
-                              controller: nameController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Name',
-                                'id': 'Nama',
-                              }),
-                              icon: Icons.person,
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogTextField(
-                              controller: nisController,
-                              label: 'NIS',
-                              icon: Icons.badge,
-                              keyboardType: TextInputType.number,
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogDropdown(
-                              value: selectedClassId,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Class',
-                                'id': 'Kelas',
-                              }),
-                              icon: Icons.school,
-                              items: _classList
-                                  .where((classItem) => classItem['id'] != null)
-                                  .map((classItem) {
-                                    return DropdownMenuItem<String>(
-                                      value: classItem['id'].toString(),
-                                      child: Text(
-                                        classItem['name'] ?? 'Unknown Class',
-                                      ),
-                                    );
-                                  })
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedClassId = value;
-                                });
-                              },
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogTextField(
-                              controller: addressController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Address',
-                                'id': 'Alamat',
-                              }),
-                              icon: Icons.location_on,
-                              maxLines: 2,
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogTextField(
-                              controller: birthDateController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Birth Date',
-                                'id': 'Tanggal Lahir',
-                              }),
-                              icon: Icons.cake,
-                              hintText: 'YYYY-MM-DD',
-                              readOnly: true,
-                              onTap: () async {
-                                final DateTime? picked = await showDatePicker(
-                                  context: context,
-                                  initialDate:
-                                      student != null &&
-                                          student['date_of_birth'] != null
-                                      ? DateTime.parse(
-                                          student['date_of_birth'].toString(),
-                                        )
-                                      : DateTime.now(),
-                                  firstDate: DateTime(1900),
-                                  lastDate: DateTime.now(),
-                                  builder: (context, child) {
-                                    return Theme(
-                                      data: Theme.of(context).copyWith(
-                                        colorScheme: ColorScheme.light(
-                                          primary: _getPrimaryColor(),
-                                          onPrimary: Colors.white,
-                                          onSurface: Colors.black,
-                                        ),
-                                      ),
-                                      child: child!,
-                                    );
-                                  },
-                                );
-                                if (picked != null) {
-                                  setState(() {
-                                    birthDateController.text =
-                                        "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-                                  });
-                                }
-                              },
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogDropdown(
-                              value: selectedGender,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Gender',
-                                'id': 'Jenis Kelamin',
-                              }),
-                              icon: Icons.transgender,
-                              items: [
-                                DropdownMenuItem(
-                                  value: 'L',
-                                  child: Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Male',
-                                      'id': 'Laki-laki',
-                                    }),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'P',
-                                  child: Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Female',
-                                      'id': 'Perempuan',
-                                    }),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedGender = value;
-                                });
-                              },
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogTextField(
-                              controller: parentNameController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Parent Name',
-                                'id': 'Nama Wali Murid',
-                              }),
-                              icon: Icons.family_restroom,
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogTextField(
-                              controller: emailParentController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Parent Email',
-                                'id': 'Email Wali Murid',
-                              }),
-                              icon: Icons.email,
-                              keyboardType: TextInputType.emailAddress,
-                              hintText: 'wali@example.com',
-                            ),
-                            SizedBox(height: 12),
-                            _buildDialogTextField(
-                              controller: phoneController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Phone Number',
-                                'id': 'No. Telepon',
-                              }),
-                              icon: Icons.phone,
-                              keyboardType: TextInputType.phone,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Enhanced Footer (Matches _showFilterSheet)
-                    Container(
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          top: BorderSide(color: ColorUtils.slate200),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: ColorUtils.slate900.withValues(alpha: 0.05),
-                            blurRadius: 8,
-                            offset: Offset(0, -2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                side: BorderSide(color: ColorUtils.slate300),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Cancel',
-                                  'id': 'Batal',
-                                }),
-                                style: TextStyle(
-                                  color: ColorUtils.slate700,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        // Header dengan gradient
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+                          decoration: BoxDecoration(
+                            gradient: _getCardGradient(),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
                             ),
                           ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final name = nameController.text.trim();
-                                final nis = nisController.text.trim();
-                                final address = addressController.text.trim();
-                                final birthDate = birthDateController.text
-                                    .trim();
-                                final nameParent = parentNameController.text
-                                    .trim();
-                                final noPhone = phoneController.text.trim();
-                                final emailParent = emailParentController.text
-                                    .trim();
-
-                                if (name.isEmpty ||
-                                    nis.isEmpty ||
-                                    selectedClassId == null ||
-                                    address.isEmpty ||
-                                    birthDate.isEmpty ||
-                                    selectedGender == null ||
-                                    nameParent.isEmpty ||
-                                    noPhone.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'All fields must be filled',
-                                          'id': 'Semua field harus diisi',
-                                        }),
-                                      ),
-                                      backgroundColor: ColorUtils.warning600,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                if (emailParent.isNotEmpty &&
-                                    !RegExp(
-                                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                                    ).hasMatch(emailParent)) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Invalid email format',
-                                          'id': 'Format email tidak valid',
-                                        }),
-                                      ),
-                                      backgroundColor: ColorUtils.warning600,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                try {
-                                  final data = {
-                                    'name': name,
-                                    'student_number': nis,
-                                    'class_id': selectedClassId,
-                                    'address': address,
-                                    'date_of_birth': birthDate,
-                                    'gender': selectedGender,
-                                    'guardian_name': nameParent,
-                                    'phone_number': noPhone,
-                                    'guardian_email': emailParent,
-                                  };
-
-                                  if (isEdit) {
-                                    await ApiStudentService.updateStudent(
-                                      student['id'],
-                                      data,
-                                    );
-                                    await _loadData();
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            languageProvider.getTranslatedText({
-                                                  'en':
-                                                      'Student successfully updated',
-                                                  'id':
-                                                      'Siswa berhasil diperbarui',
-                                                }) +
-                                                (emailParent.isNotEmpty
-                                                    ? languageProvider
-                                                          .getTranslatedText({
-                                                            'en':
-                                                                '\nParent account created/updated with password: password123',
-                                                            'id':
-                                                                '\nAkun wali dibuat/diperbarui dengan password: password123',
-                                                          })
-                                                    : ''),
-                                          ),
-                                          backgroundColor:
-                                              ColorUtils.success600,
-                                        ),
-                                      );
-                                      Navigator.pop(context);
-                                    }
-                                  } else {
-                                    await ApiStudentService.addStudent(data);
-                                    await _loadData();
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            languageProvider.getTranslatedText({
-                                                  'en':
-                                                      'Student successfully added',
-                                                  'id':
-                                                      'Siswa berhasil ditambahkan',
-                                                }) +
-                                                (emailParent.isNotEmpty
-                                                    ? languageProvider
-                                                          .getTranslatedText({
-                                                            'en':
-                                                                '\nParent account created with password: password123',
-                                                            'id':
-                                                                '\nAkun wali dibuat dengan password: password123',
-                                                          })
-                                                    : ''),
-                                          ),
-                                          backgroundColor:
-                                              ColorUtils.success600,
-                                        ),
-                                      );
-                                      Navigator.pop(context);
-                                    }
-                                  }
-                                } catch (e) {
-                                  if (kDebugMode) {
-                                    print('Save/Update student error: $e');
-                                  }
-                                  if (context.mounted) {
-                                    showDialog(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                        ),
-                                        title: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.error_outline,
-                                              color: ColorUtils.error600,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              languageProvider
-                                                  .getTranslatedText({
-                                                    'en': 'Error',
-                                                    'id': 'Gagal',
-                                                  }),
-                                              style: TextStyle(
-                                                color: ColorUtils.error600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        content: Text(
-                                          '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(e)}',
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(ctx),
-                                            child: Text(
-                                              'OK',
-                                              style: TextStyle(
-                                                color: _getPrimaryColor(),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _getPrimaryColor(),
-                                shape: RoundedRectangleBorder(
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
                                 ),
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                elevation: 2,
-                                shadowColor: _getPrimaryColor().withValues(
-                                  alpha: 0.4,
-                                ),
-                              ),
-                              child: Text(
-                                isEdit
-                                    ? languageProvider.getTranslatedText({
-                                        'en': 'Update',
-                                        'id': 'Perbarui',
-                                      })
-                                    : languageProvider.getTranslatedText({
-                                        'en': 'Save',
-                                        'id': 'Simpan',
-                                      }),
-                                style: TextStyle(
+                                child: Icon(
+                                  isEdit
+                                      ? Icons.edit_rounded
+                                      : Icons.person_add_rounded,
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                                  size: 22,
                                 ),
                               ),
+                              SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isEdit
+                                          ? languageProvider.getTranslatedText({
+                                              'en': 'Edit Student',
+                                              'id': 'Edit Siswa',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en': 'Add Student',
+                                              'id': 'Tambah Siswa',
+                                            }),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      isEdit
+                                          ? languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Update student information',
+                                              'id': 'Perbarui data siswa',
+                                            })
+                                          : languageProvider.getTranslatedText({
+                                              'en':
+                                                  'Fill in student information',
+                                              'id': 'Isi data siswa baru',
+                                            }),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildDialogTextField(
+                                  controller: nameController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Name',
+                                    'id': 'Nama',
+                                  }),
+                                  icon: Icons.person,
+                                ),
+                                SizedBox(height: 12),
+                                _buildDialogTextField(
+                                  controller: nisController,
+                                  label: 'NIS',
+                                  icon: Icons.badge,
+                                  keyboardType: TextInputType.number,
+                                ),
+                                SizedBox(height: 12),
+                                _buildDialogDropdown(
+                                  value: selectedClassId,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Class',
+                                    'id': 'Kelas',
+                                  }),
+                                  icon: Icons.school,
+                                  items: _classList
+                                      .where(
+                                        (classItem) => classItem['id'] != null,
+                                      )
+                                      .map((classItem) {
+                                        return DropdownMenuItem<String>(
+                                          value: classItem['id'].toString(),
+                                          child: Text(
+                                            classItem['name'] ??
+                                                'Unknown Class',
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedClassId = value;
+                                    });
+                                  },
+                                ),
+                                SizedBox(height: 12),
+                                _buildDialogTextField(
+                                  controller: addressController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Address',
+                                    'id': 'Alamat',
+                                  }),
+                                  icon: Icons.location_on,
+                                  maxLines: 2,
+                                ),
+                                SizedBox(height: 12),
+                                _buildDialogTextField(
+                                  controller: birthDateController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Birth Date',
+                                    'id': 'Tanggal Lahir',
+                                  }),
+                                  icon: Icons.cake,
+                                  hintText: 'YYYY-MM-DD',
+                                  readOnly: true,
+                                  onTap: () async {
+                                    final DateTime? picked =
+                                        await showDatePicker(
+                                          context: context,
+                                          initialDate:
+                                              student != null &&
+                                                  student['date_of_birth'] !=
+                                                      null
+                                              ? DateTime.parse(
+                                                  student['date_of_birth']
+                                                      .toString(),
+                                                )
+                                              : DateTime.now(),
+                                          firstDate: DateTime(1900),
+                                          lastDate: DateTime.now(),
+                                          builder: (context, child) {
+                                            return Theme(
+                                              data: Theme.of(context).copyWith(
+                                                colorScheme: ColorScheme.light(
+                                                  primary: _getPrimaryColor(),
+                                                  onPrimary: Colors.white,
+                                                  onSurface: Colors.black,
+                                                ),
+                                              ),
+                                              child: child!,
+                                            );
+                                          },
+                                        );
+                                    if (picked != null) {
+                                      setState(() {
+                                        birthDateController.text =
+                                            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                                      });
+                                    }
+                                  },
+                                ),
+                                SizedBox(height: 12),
+                                _buildDialogDropdown(
+                                  value: selectedGender,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Gender',
+                                    'id': 'Jenis Kelamin',
+                                  }),
+                                  icon: Icons.transgender,
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: 'L',
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Male',
+                                          'id': 'Laki-laki',
+                                        }),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'P',
+                                      child: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Female',
+                                          'id': 'Perempuan',
+                                        }),
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedGender = value;
+                                    });
+                                  },
+                                ),
+                                SizedBox(height: 12),
+                                if (isEdit)
+                                  Container(
+                                    margin: EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      color: ColorUtils.warning600.withValues(
+                                        alpha: 0.05,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: ColorUtils.warning600.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                      ),
+                                    ),
+                                    child: SwitchListTile(
+                                      title: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en':
+                                              'Use Another User / Change Guardian Account',
+                                          'id':
+                                              'Ganti Akun Wali / Gunakan User Wali Lain',
+                                        }),
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: ColorUtils.warning600,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        languageProvider.getTranslatedText({
+                                          'en':
+                                              'Link this student to a different user account based on the email below (does not edit the current linked user).',
+                                          'id':
+                                              'Pindahkan siswa ini ke akun wali lain berdasarkan email di bawah (tidak merubah data user saat ini).',
+                                        }),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: ColorUtils.slate600,
+                                        ),
+                                      ),
+                                      value: isChangeUserMode,
+                                      activeThumbColor: ColorUtils.warning600,
+                                      onChanged: (val) {
+                                        setDialogState(() {
+                                          isChangeUserMode = val;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                _buildDialogTextField(
+                                  controller: parentNameController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Parent Name',
+                                    'id': 'Nama Wali Murid',
+                                  }),
+                                  icon: Icons.family_restroom,
+                                ),
+                                SizedBox(height: 12),
+                                _buildDialogTextField(
+                                  controller: emailParentController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Parent Email',
+                                    'id': 'Email Wali Murid',
+                                  }),
+                                  icon: Icons.email,
+                                  keyboardType: TextInputType.emailAddress,
+                                  hintText: 'wali@example.com',
+                                ),
+                                SizedBox(height: 12),
+                                _buildDialogTextField(
+                                  controller: phoneController,
+                                  label: languageProvider.getTranslatedText({
+                                    'en': 'Phone Number',
+                                    'id': 'No. Telepon',
+                                  }),
+                                  icon: Icons.phone,
+                                  keyboardType: TextInputType.phone,
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+
+                        // Enhanced Footer (Matches _showFilterSheet)
+                        Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              top: BorderSide(color: ColorUtils.slate200),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: ColorUtils.slate900.withValues(
+                                  alpha: 0.05,
+                                ),
+                                blurRadius: 8,
+                                offset: Offset(0, -2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    side: BorderSide(
+                                      color: ColorUtils.slate300,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Cancel',
+                                      'id': 'Batal',
+                                    }),
+                                    style: TextStyle(
+                                      color: ColorUtils.slate700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    final name = nameController.text.trim();
+                                    final nis = nisController.text.trim();
+                                    final address = addressController.text
+                                        .trim();
+                                    final birthDate = birthDateController.text
+                                        .trim();
+                                    final nameParent = parentNameController.text
+                                        .trim();
+                                    final noPhone = phoneController.text.trim();
+                                    final emailParent = emailParentController
+                                        .text
+                                        .trim();
+
+                                    if (name.isEmpty ||
+                                        nis.isEmpty ||
+                                        selectedClassId == null ||
+                                        address.isEmpty ||
+                                        birthDate.isEmpty ||
+                                        selectedGender == null ||
+                                        nameParent.isEmpty ||
+                                        noPhone.isEmpty) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            languageProvider.getTranslatedText({
+                                              'en': 'All fields must be filled',
+                                              'id': 'Semua field harus diisi',
+                                            }),
+                                          ),
+                                          backgroundColor:
+                                              ColorUtils.warning600,
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    if (emailParent.isNotEmpty &&
+                                        !RegExp(
+                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                        ).hasMatch(emailParent)) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            languageProvider.getTranslatedText({
+                                              'en': 'Invalid email format',
+                                              'id': 'Format email tidak valid',
+                                            }),
+                                          ),
+                                          backgroundColor:
+                                              ColorUtils.warning600,
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    try {
+                                      final data = {
+                                        'name': name,
+                                        'student_number': nis,
+                                        'class_id': selectedClassId,
+                                        'address': address,
+                                        'date_of_birth': birthDate,
+                                        'gender': selectedGender,
+                                        'guardian_name': nameParent,
+                                        'phone_number': noPhone,
+                                        'guardian_email': emailParent,
+                                        if (isEdit && isChangeUserMode)
+                                          'use_another_user': true,
+                                      };
+
+                                      if (isEdit) {
+                                        await ApiStudentService.updateStudent(
+                                          student['id'],
+                                          data,
+                                        );
+                                        await _loadData();
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                languageProvider.getTranslatedText({
+                                                      'en':
+                                                          'Student successfully updated',
+                                                      'id':
+                                                          'Siswa berhasil diperbarui',
+                                                    }) +
+                                                    (emailParent.isNotEmpty
+                                                        ? languageProvider
+                                                              .getTranslatedText({
+                                                                'en':
+                                                                    '\nParent user linked/created. Default password for new user is password123',
+                                                                'id':
+                                                                    '\nData wali terkait & Akun wali (User) ikut diperbarui/dibuat. Password akun baru: password123',
+                                                              })
+                                                        : ''),
+                                              ),
+                                              backgroundColor:
+                                                  ColorUtils.success600,
+                                            ),
+                                          );
+                                          Navigator.pop(context);
+                                        }
+                                      } else {
+                                        await ApiStudentService.addStudent(
+                                          data,
+                                        );
+                                        await _loadData();
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                languageProvider.getTranslatedText({
+                                                      'en':
+                                                          'Student successfully added',
+                                                      'id':
+                                                          'Siswa berhasil ditambahkan',
+                                                    }) +
+                                                    (emailParent.isNotEmpty
+                                                        ? languageProvider
+                                                              .getTranslatedText({
+                                                                'en':
+                                                                    '\nParent user linked/created. Default password for new user is password123',
+                                                                'id':
+                                                                    '\nData wali terkait & Akun wali (User) ikut diperbarui/dibuat. Password akun baru: password123',
+                                                              })
+                                                        : ''),
+                                              ),
+                                              backgroundColor:
+                                                  ColorUtils.success600,
+                                            ),
+                                          );
+                                          Navigator.pop(context);
+                                        }
+                                      }
+                                    } catch (e) {
+                                      if (kDebugMode) {
+                                        print('Save/Update student error: $e');
+                                      }
+                                      if (context.mounted) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            title: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.error_outline,
+                                                  color: ColorUtils.error600,
+                                                ),
+                                                SizedBox(width: 8),
+                                                Text(
+                                                  languageProvider
+                                                      .getTranslatedText({
+                                                        'en': 'Error',
+                                                        'id': 'Gagal',
+                                                      }),
+                                                  style: TextStyle(
+                                                    color: ColorUtils.error600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            content: Text(
+                                              '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(e)}',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx),
+                                                child: Text(
+                                                  'OK',
+                                                  style: TextStyle(
+                                                    color: _getPrimaryColor(),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _getPrimaryColor(),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    elevation: 2,
+                                    shadowColor: _getPrimaryColor().withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    isEdit
+                                        ? languageProvider.getTranslatedText({
+                                            'en': 'Update',
+                                            'id': 'Perbarui',
+                                          })
+                                        : languageProvider.getTranslatedText({
+                                            'en': 'Save',
+                                            'id': 'Simpan',
+                                          }),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           );
         },
       ),
