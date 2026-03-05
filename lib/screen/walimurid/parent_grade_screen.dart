@@ -6,11 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class ParentGradeScreen extends StatefulWidget {
   final String? academicYearId;
@@ -26,6 +29,10 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   List<dynamic> _studentList = [];
   String? _selectedStudentId;
   bool _isLoading = true;
+
+  String? _tourId;
+  final GlobalKey _studentSelectorKey = GlobalKey();
+  final GlobalKey _gradeListKey = GlobalKey();
 
   // Visibility Tracking
   final Set<String> _processedIds = {}; // IDs we've already handled/queued
@@ -207,7 +214,162 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
           ),
         );
       }
+    } finally {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted && _studentList.isNotEmpty) _checkAndShowTour();
+      });
     }
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'wali',
+        name: 'parent_grade_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "StudentSelector",
+        keyTarget: _studentSelectorKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Select Child',
+                      'id': 'Pilih Anak',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Select your child to view their grades.',
+                        'id': 'Pilih anak Anda untuk melihat nilai mereka.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "GradeList",
+        keyTarget: _gradeListKey,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Grade List',
+                      'id': 'Daftar Nilai',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Here you can see the scores and details of your child\'s assessments.',
+                        'id':
+                            'Di sini Anda dapat melihat skor dan detail dari penilaian anak Anda.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 
   Color _getPrimaryColor() {
@@ -267,6 +429,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     }
 
     return Container(
+      key: _studentSelectorKey,
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,6 +833,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     }
 
     return ListView.builder(
+      key: _gradeListKey,
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _gradeList.length,
       itemBuilder: (context, index) {
