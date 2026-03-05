@@ -7,11 +7,13 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class PresenceParentPage extends StatefulWidget {
   final Map<String, dynamic> parent;
@@ -44,6 +46,10 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     'sakit': 0,
     'alpha': 0,
   };
+
+  String? _tourId;
+  final GlobalKey _monthlySummaryKey = GlobalKey();
+  final GlobalKey _absensiListKey = GlobalKey();
 
   // Visibility Tracking
   final Set<String> _processedIds = {}; // IDs we've already handled/queued
@@ -179,7 +185,164 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           ),
         );
       }
+    } finally {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted && _student != null) _checkAndShowTour();
+      });
     }
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'wali',
+        name: 'parent_presence_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "MonthlySummary",
+        keyTarget: _monthlySummaryKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Attendance Recap',
+                      'id': 'Rekap Absensi',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'See the overall attendance percentage and the breakdown of present, late, permitted, sick, and absent.',
+                        'id':
+                            'Lihat persentase kehadiran keseluruhan dan rincian hadir, terlambat, izin, sakit, dan alpha.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "AbsensiList",
+        keyTarget: _absensiListKey,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Attendance History',
+                      'id': 'Riwayat Kehadiran',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'The list of your child\'s detailed daily attendance history.',
+                        'id':
+                            'Daftar riwayat kehadiran harian anak Anda secara rinci.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 
   void _calculateMonthlySummary() {
@@ -654,6 +817,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         : 0;
 
     return Container(
+      key: _monthlySummaryKey,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1487,7 +1651,12 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                       ),
                       const SizedBox(height: 8),
 
-                      Expanded(child: _buildAbsensiList()),
+                      Expanded(
+                        child: Container(
+                          key: _absensiListKey,
+                          child: _buildAbsensiList(),
+                        ),
+                      ),
                     ],
                   ),
           ),

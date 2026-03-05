@@ -13,11 +13,13 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class ParentBillingScreen extends StatefulWidget {
   const ParentBillingScreen({super.key});
@@ -73,6 +75,10 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
   bool _hasActiveFilter = false;
 
   File? selectedFile;
+
+  String? _tourId;
+  final GlobalKey _studentSelectorKey = GlobalKey();
+  final GlobalKey _billingListKey = GlobalKey();
 
   @override
   void initState() {
@@ -164,7 +170,164 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         _isLoading = false;
         _errorMessage = ErrorUtils.getFriendlyMessage(error);
       });
+    } finally {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted && _students.isNotEmpty) _checkAndShowTour();
+      });
     }
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'wali',
+        name: 'parent_billing_screen_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "StudentSelector",
+        keyTarget: _studentSelectorKey,
+        alignSkip: Alignment.bottomRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Select Child',
+                      'id': 'Pilih Anak',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'Select your child to view their billings and payments.',
+                        'id':
+                            'Pilih anak Anda untuk melihat tagihan dan pembayaran mereka.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "BillingList",
+        keyTarget: _billingListKey,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Billing List',
+                      'id': 'Daftar Tagihan',
+                    }),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      languageProvider.getTranslatedText({
+                        'en':
+                            'See your child\'s bill status here, pay bills, and view history.',
+                        'id':
+                            'Lihat status tagihan anak Anda di sini, bayar tagihan, dan lihat riwayat.',
+                      }),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 
   Future<void> _loadTagihan() async {
@@ -707,7 +870,6 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
           // Validasi yang lebih ketat
           final allowedExtensions = ['.jpg', '.jpeg', '.png'];
           final filePath = file.path.toLowerCase();
-          final fileExtension = filePath.split('.').last;
 
           bool isValidFile = allowedExtensions.any(
             (ext) => filePath.endsWith(ext),
@@ -732,7 +894,6 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
 
           if (kDebugMode) {
             print('File selected: ${file.path}');
-            print('File extension: $fileExtension');
           }
         }
       }
@@ -1551,7 +1712,6 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
       // Validasi file type sebelum upload
       final allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
       final filePath = file.path.toLowerCase();
-      final fileExtension = filePath.split('.').last;
 
       if (!allowedExtensions.any((ext) => filePath.endsWith(ext))) {
         throw Exception(
@@ -1582,7 +1742,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         },
       );
     } catch (error) {
-      print('Error upload pembayaran: $error');
+      if (kDebugMode) {
+        print('Error upload pembayaran: $error');
+      }
       rethrow;
     }
   }
@@ -2036,6 +2198,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
               ),
               if (_students.length > 1)
                 GestureDetector(
+                  key: _studentSelectorKey,
                   onTap: () => _showStudentPicker(),
                   child: Container(
                     width: 40,
@@ -2338,6 +2501,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
                                 ],
                               )
                             : ListView.builder(
+                                key: _billingListKey,
                                 controller: _scrollController,
                                 padding: EdgeInsets.only(top: 8, bottom: 16),
                                 itemCount:
