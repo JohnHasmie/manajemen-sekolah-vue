@@ -168,7 +168,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         }
         return true;
       },
-    )..show(context: context);
+    ).show(context: context);
   }
 
   List<TargetFocus> _createTourTargets() {
@@ -2415,6 +2415,24 @@ class FinanceScreenState extends State<FinanceScreen> {
                                   SnackBar(
                                     content: Text(
                                       'Nama dan jumlah harus diisi',
+                                    ),
+                                    backgroundColor: ColorUtils.error600,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              final parsedAmount =
+                                  CurrencyInputFormatter.parseCurrency(
+                                    jumlahController.text,
+                                  );
+
+                              if (parsedAmount <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Jumlah harus lebih besar dari Rp 0',
                                     ),
                                     backgroundColor: ColorUtils.error600,
                                     behavior: SnackBarBehavior.floating,
