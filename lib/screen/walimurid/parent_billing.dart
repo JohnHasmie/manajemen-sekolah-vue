@@ -1411,16 +1411,50 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
                                   paymentDateController.text.isEmpty
                               ? null
                               : () async {
+                                  // Frontend guard: prevent overpayment
+                                  final enteredAmount = double.tryParse(
+                                    amountController.text
+                                        .replaceAll('.', '')
+                                        .replaceAll(',', ''),
+                                  );
+                                  final billAmount =
+                                      double.tryParse(
+                                        billing['jumlah']?.toString() ?? '0',
+                                      ) ??
+                                      0;
+
+                                  if (enteredAmount == null ||
+                                      enteredAmount <= 0) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Jumlah bayar tidak valid',
+                                        ),
+                                        backgroundColor: ColorUtils.error600,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  if (enteredAmount > billAmount) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Jumlah bayar tidak boleh melebihi total tagihan (${_formatCurrency(billing['jumlah'])})',
+                                        ),
+                                        backgroundColor: ColorUtils.error600,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                    return;
+                                  }
                                   try {
                                     await _uploadPayment(
                                       billingId: billing['id'],
                                       paymentMethod:
                                           paymentMethodController.text,
-                                      amount: double.parse(
-                                        amountController.text
-                                            .replaceAll('.', '')
-                                            .replaceAll(',', ''),
-                                      ),
+                                      amount: enteredAmount,
                                       paymentDate: paymentDateController.text,
                                       file: selectedFile!,
                                     );
