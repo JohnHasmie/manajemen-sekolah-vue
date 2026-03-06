@@ -219,12 +219,26 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {
+                              final name = nameController.text.trim();
+                              if (name.length < 3) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Nama sekolah minimal 3 karakter',
+                                    ),
+                                    backgroundColor: ColorUtils.error600,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
+
                               final navigator = Navigator.of(context);
                               final messenger = ScaffoldMessenger.of(context);
                               try {
                                 await ApiSettingsService.updateSchoolSettings(
-                                  schoolName: nameController.text,
-                                  address: addressController.text,
+                                  schoolName: name,
+                                  address: addressController.text.trim(),
                                   jenjang: tempJenjang,
                                 );
                                 if (mounted) {
