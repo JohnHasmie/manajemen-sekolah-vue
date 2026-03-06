@@ -33,6 +33,12 @@ class ErrorUtils {
       return 'Sesi Anda telah berakhir, silakan login kembali.';
     }
 
+    // School context mismatch (SEC-18) — specific and actionable message
+    if (errorStr.contains('school_access_denied') ||
+        errorStr.contains('tidak memiliki akses ke sekolah ini')) {
+      return 'Sesi sekolah Anda tidak valid. Silakan pilih sekolah kembali atau login ulang.';
+    }
+
     // Permission
     if (errorStr.contains('permission') ||
         errorStr.contains('403') ||

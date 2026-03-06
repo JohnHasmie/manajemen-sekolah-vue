@@ -59,13 +59,29 @@ class ApiAnnouncementService {
           ? responseBody['error']
           : null;
 
-      // If unauthorized or forbidden -> force logout + redirect
-      if (response.statusCode == 401 || response.statusCode == 403) {
+      // If unauthorized → force logout + redirect
+      if (response.statusCode == 401) {
         try {
           ApiService.logoutWithMessage(
             'Session expired or unauthorized. Please login again.',
           );
         } catch (_) {}
+      } else if (response.statusCode == 403) {
+        // Check if this is a school context error (SEC-18) vs real forbidden
+        final is403SchoolContext =
+            responseBody is Map &&
+            (responseBody['error'] ?? '').toString().contains(
+              'Anda tidak memiliki akses ke sekolah ini',
+            );
+        if (is403SchoolContext) {
+          throw Exception('SCHOOL_ACCESS_DENIED: ${responseBody['error']}');
+        } else {
+          try {
+            ApiService.logoutWithMessage(
+              'Access forbidden. Please login again.',
+            );
+          } catch (_) {}
+        }
       }
 
       throw Exception(

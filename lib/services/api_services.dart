@@ -301,9 +301,21 @@ class ApiService {
             'Session expired. Please login again.',
           );
         } else if (response.statusCode == 403) {
-          _handleAuthenticationErrorWithMessage(
-            'Access forbidden. Please login again.',
-          );
+          // Differentiate: school context error vs genuine forbidden
+          final is403SchoolContext =
+              responseBody is Map &&
+              (responseBody['error'] ?? '').toString().contains(
+                'Anda tidak memiliki akses ke sekolah ini',
+              );
+          if (is403SchoolContext) {
+            // Don't logout — just signal that school context is invalid
+            // so the calling screen can handle gracefully
+            throw Exception('SCHOOL_ACCESS_DENIED: ${responseBody['error']}');
+          } else {
+            _handleAuthenticationErrorWithMessage(
+              'Access forbidden. Please login again.',
+            );
+          }
         }
         // For 500+ errors, just throw the exception without logging out
         // The UI will handle displaying the error to the user
