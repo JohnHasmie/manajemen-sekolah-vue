@@ -51,8 +51,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _showEditProfileDialog() async {
     final nameController = TextEditingController(text: _profileData['name']);
-    final phoneController = TextEditingController(text: _profileData['phone_number']);
-    final addressController = TextEditingController(text: _profileData['address']);
+    final phoneController = TextEditingController(
+      text: _profileData['phone_number'],
+    );
+    final addressController = TextEditingController(
+      text: _profileData['address'],
+    );
 
     await showDialog(
       context: context,
@@ -87,7 +91,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.person_rounded, color: Colors.white, size: 22),
+                      child: Icon(
+                        Icons.person_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                     SizedBox(width: 14),
                     Expanded(
@@ -95,13 +103,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            context.read<LanguageProvider>().getTranslatedText(AppLocalizations.editProfile),
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                            context.read<LanguageProvider>().getTranslatedText(
+                              AppLocalizations.editProfile,
+                            ),
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                           SizedBox(height: 2),
                           Text(
                             'Perbarui informasi profil Anda',
-                            style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
                           ),
                         ],
                       ),
@@ -116,20 +133,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _buildDialogTextField(
                       controller: nameController,
-                      label: context.read<LanguageProvider>().getTranslatedText(AppLocalizations.fullName),
+                      label: context.read<LanguageProvider>().getTranslatedText(
+                        AppLocalizations.fullName,
+                      ),
                       icon: Icons.person_outline_rounded,
                     ),
                     SizedBox(height: 12),
                     _buildDialogTextField(
                       controller: phoneController,
-                      label: context.read<LanguageProvider>().getTranslatedText(AppLocalizations.phoneNumber),
+                      label: context.read<LanguageProvider>().getTranslatedText(
+                        AppLocalizations.phoneNumber,
+                      ),
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                     ),
                     SizedBox(height: 12),
                     _buildDialogTextField(
                       controller: addressController,
-                      label: context.read<LanguageProvider>().getTranslatedText(AppLocalizations.address),
+                      label: context.read<LanguageProvider>().getTranslatedText(
+                        AppLocalizations.address,
+                      ),
                       icon: Icons.location_on_outlined,
                       maxLines: 2,
                     ),
@@ -153,10 +176,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 13),
                             side: BorderSide(color: ColorUtils.slate300),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: Text(
-                            context.read<LanguageProvider>().getTranslatedText(AppLocalizations.cancel),
+                            context.read<LanguageProvider>().getTranslatedText(
+                              AppLocalizations.cancel,
+                            ),
                             style: TextStyle(color: ColorUtils.slate600),
                           ),
                         ),
@@ -180,7 +207,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 messenger.showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      lang.getTranslatedText(AppLocalizations.profileUpdatedSuccess),
+                                      lang.getTranslatedText(
+                                        AppLocalizations.profileUpdatedSuccess,
+                                      ),
                                     ),
                                     backgroundColor: ColorUtils.success600,
                                     behavior: SnackBarBehavior.floating,
@@ -205,12 +234,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: ColorUtils.corporateBlue600,
                             padding: EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             elevation: 0,
                           ),
                           child: Text(
-                            context.read<LanguageProvider>().getTranslatedText(AppLocalizations.save),
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            context.read<LanguageProvider>().getTranslatedText(
+                              AppLocalizations.save,
+                            ),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -253,7 +289,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+          borderSide: BorderSide(
+            color: ColorUtils.corporateBlue600,
+            width: 1.5,
+          ),
         ),
         filled: true,
         fillColor: ColorUtils.slate50,
@@ -282,12 +321,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: ColorUtils.slate500,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               SizedBox(height: 2),
               Text(
                 value.isNotEmpty ? value : '-',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: ColorUtils.slate900),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: ColorUtils.slate900,
+                ),
               ),
             ],
           ),
@@ -322,12 +369,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(sectionIcon, color: ColorUtils.corporateBlue600, size: 17),
+                  child: Icon(
+                    sectionIcon,
+                    color: ColorUtils.corporateBlue600,
+                    size: 17,
+                  ),
                 ),
                 SizedBox(width: 10),
                 Text(
                   sectionTitle,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ColorUtils.slate900),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.slate900,
+                  ),
                 ),
               ],
             ),
@@ -344,8 +399,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final name = _profileData['name'] ?? '';
-    final role = (_profileData['role'] != null && (_profileData['role'] as String).isNotEmpty)
-        ? (_profileData['role'] as String)[0].toUpperCase() + (_profileData['role'] as String).substring(1)
+    final role =
+        (_profileData['role'] != null &&
+            (_profileData['role'] as String).isNotEmpty)
+        ? (_profileData['role'] as String)[0].toUpperCase() +
+              (_profileData['role'] as String).substring(1)
         : 'Admin';
     final email = _profileData['email'] ?? '';
     final avatarLetter = name.isNotEmpty ? name[0].toUpperCase() : 'A';
@@ -353,7 +411,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: ColorUtils.corporateBlue600))
+          ? Center(
+              child: CircularProgressIndicator(
+                color: ColorUtils.corporateBlue600,
+              ),
+            )
           : CustomScrollView(
               slivers: [
                 // Gradient SliverAppBar with profile hero (Pattern #7)
@@ -363,8 +425,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   backgroundColor: ColorUtils.corporateBlue600,
                   iconTheme: IconThemeData(color: Colors.white),
                   title: Text(
-                    context.watch<LanguageProvider>().getTranslatedText(AppLocalizations.userProfile),
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
+                    context.watch<LanguageProvider>().getTranslatedText(
+                      AppLocalizations.userProfile,
+                    ),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17,
+                    ),
                   ),
                   actions: [
                     IconButton(
@@ -375,7 +443,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+                        child: Icon(
+                          Icons.edit_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
                       onPressed: _showEditProfileDialog,
                       tooltip: 'Edit Profil',
@@ -441,16 +513,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       email,
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: Colors.white.withValues(alpha: 0.85),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.85,
+                                        ),
                                       ),
                                     ),
                                     SizedBox(height: 8),
                                     Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.2),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                        ),
                                       ),
                                       child: Text(
                                         role,
@@ -480,19 +563,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Personal Information Card
                         _buildSectionCard(
                           sectionIcon: Icons.person_outline_rounded,
-                          sectionTitle: context.read<LanguageProvider>().getTranslatedText(AppLocalizations.personalInformation),
+                          sectionTitle: context
+                              .read<LanguageProvider>()
+                              .getTranslatedText(
+                                AppLocalizations.personalInformation,
+                              ),
                           children: [
                             _buildInfoRow(
-                              context.read<LanguageProvider>().getTranslatedText(AppLocalizations.fullName),
+                              context
+                                  .read<LanguageProvider>()
+                                  .getTranslatedText(AppLocalizations.fullName),
                               _profileData['name'] ?? '',
                               Icons.person_rounded,
                             ),
                             SizedBox(height: 12),
-                            _buildInfoRow('Email', _profileData['email'] ?? '', Icons.email_rounded),
+                            _buildInfoRow(
+                              'Email',
+                              _profileData['email'] ?? '',
+                              Icons.email_rounded,
+                            ),
                             SizedBox(height: 12),
-                            _buildInfoRow('No. Telepon', _profileData['phone_number'] ?? '', Icons.phone_rounded),
+                            _buildInfoRow(
+                              'No. Telepon',
+                              _profileData['phone_number'] ?? '',
+                              Icons.phone_rounded,
+                            ),
                             SizedBox(height: 12),
-                            _buildInfoRow('Alamat', _profileData['address'] ?? '', Icons.location_on_rounded),
+                            _buildInfoRow(
+                              'Alamat',
+                              _profileData['address'] ?? '',
+                              Icons.location_on_rounded,
+                            ),
                           ],
                         ),
                         SizedBox(height: 12),
@@ -500,16 +601,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Account Information Card
                         _buildSectionCard(
                           sectionIcon: Icons.manage_accounts_rounded,
-                          sectionTitle: context.read<LanguageProvider>().getTranslatedText(AppLocalizations.accountInformation),
+                          sectionTitle: context
+                              .read<LanguageProvider>()
+                              .getTranslatedText(
+                                AppLocalizations.accountInformation,
+                              ),
                           children: [
                             _buildInfoRow(
-                              context.read<LanguageProvider>().getTranslatedText(AppLocalizations.role),
+                              context
+                                  .read<LanguageProvider>()
+                                  .getTranslatedText(AppLocalizations.role),
                               role,
                               Icons.badge_rounded,
                             ),
                             SizedBox(height: 12),
                             _buildInfoRow(
-                              context.read<LanguageProvider>().getTranslatedText(AppLocalizations.school),
+                              context
+                                  .read<LanguageProvider>()
+                                  .getTranslatedText(AppLocalizations.school),
                               _profileData['school_name'] ?? '',
                               Icons.school_rounded,
                             ),
@@ -523,14 +632,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           height: 52,
                           child: ElevatedButton.icon(
                             onPressed: _showChangePasswordDialog,
-                            icon: Icon(Icons.lock_outline_rounded, color: Colors.white, size: 20),
+                            icon: Icon(
+                              Icons.lock_outline_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                             label: Text(
-                              context.watch<LanguageProvider>().getTranslatedText(AppLocalizations.changePassword),
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                              context
+                                  .watch<LanguageProvider>()
+                                  .getTranslatedText(
+                                    AppLocalizations.changePassword,
+                                  ),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorUtils.corporateBlue600,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                               elevation: 0,
                             ),
                           ),
@@ -577,7 +700,9 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText(AppLocalizations.passwordChangedSuccess),
+            context.read<LanguageProvider>().getTranslatedText(
+              AppLocalizations.passwordChangedSuccess,
+            ),
           ),
           backgroundColor: ColorUtils.success600,
           behavior: SnackBarBehavior.floating,
@@ -610,13 +735,20 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
     return TextFormField(
       controller: controller,
       obscureText: obscure,
-      validator: validator ??
+      validator:
+          validator ??
           (val) => val == null || val.isEmpty
-              ? context.read<LanguageProvider>().getTranslatedText(AppLocalizations.required)
+              ? context.read<LanguageProvider>().getTranslatedText(
+                  AppLocalizations.required,
+                )
               : null,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(Icons.lock_outline_rounded, color: ColorUtils.corporateBlue600, size: 20),
+        prefixIcon: Icon(
+          Icons.lock_outline_rounded,
+          color: ColorUtils.corporateBlue600,
+          size: 20,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: ColorUtils.slate200),
@@ -627,7 +759,10 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: ColorUtils.corporateBlue600, width: 1.5),
+          borderSide: BorderSide(
+            color: ColorUtils.corporateBlue600,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -685,7 +820,11 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.lock_rounded, color: Colors.white, size: 22),
+                    child: Icon(
+                      Icons.lock_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                   SizedBox(width: 14),
                   Expanded(
@@ -693,13 +832,22 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.read<LanguageProvider>().getTranslatedText(AppLocalizations.changePassword),
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                          context.read<LanguageProvider>().getTranslatedText(
+                            AppLocalizations.changePassword,
+                          ),
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                         SizedBox(height: 2),
                         Text(
                           'Masukkan kata sandi baru Anda',
-                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
                         ),
                       ],
                     ),
@@ -717,26 +865,69 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                   children: [
                     _buildPasswordField(
                       controller: _oldPasswordController,
-                      label: context.read<LanguageProvider>().getTranslatedText(AppLocalizations.oldPassword),
+                      label: context.read<LanguageProvider>().getTranslatedText(
+                        AppLocalizations.oldPassword,
+                      ),
                       obscure: _obscureOld,
-                      onToggle: () => setState(() => _obscureOld = !_obscureOld),
+                      onToggle: () =>
+                          setState(() => _obscureOld = !_obscureOld),
                     ),
                     SizedBox(height: 12),
                     _buildPasswordField(
                       controller: _newPasswordController,
-                      label: context.read<LanguageProvider>().getTranslatedText(AppLocalizations.newPassword),
+                      label: context.read<LanguageProvider>().getTranslatedText(
+                        AppLocalizations.newPassword,
+                      ),
                       obscure: _obscureNew,
-                      onToggle: () => setState(() => _obscureNew = !_obscureNew),
+                      onToggle: () =>
+                          setState(() => _obscureNew = !_obscureNew),
+                      validator: (val) {
+                        final lang = context.read<LanguageProvider>();
+                        if (val == null || val.isEmpty) {
+                          return lang.getTranslatedText(
+                            AppLocalizations.required,
+                          );
+                        }
+                        if (val.length < 8) {
+                          return lang.getTranslatedText(
+                            AppLocalizations.passwordMinLength,
+                          );
+                        }
+                        if (!val.contains(RegExp(r'[a-z]')) ||
+                            !val.contains(RegExp(r'[A-Z]'))) {
+                          return lang.getTranslatedText(
+                            AppLocalizations.passwordLetters,
+                          );
+                        }
+                        if (!val.contains(RegExp(r'[0-9]'))) {
+                          return lang.getTranslatedText(
+                            AppLocalizations.passwordNumbers,
+                          );
+                        }
+                        if (!val.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+                          return lang.getTranslatedText(
+                            AppLocalizations.passwordSymbols,
+                          );
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 12),
                     _buildPasswordField(
                       controller: _confirmPasswordController,
-                      label: context.read<LanguageProvider>().getTranslatedText(AppLocalizations.confirmPassword),
+                      label: context.read<LanguageProvider>().getTranslatedText(
+                        AppLocalizations.confirmPassword,
+                      ),
                       obscure: _obscureConfirm,
-                      onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                      onToggle: () =>
+                          setState(() => _obscureConfirm = !_obscureConfirm),
                       validator: (val) {
                         if (val != _newPasswordController.text) {
-                          return context.read<LanguageProvider>().getTranslatedText(AppLocalizations.passwordMismatch);
+                          return context
+                              .read<LanguageProvider>()
+                              .getTranslatedText(
+                                AppLocalizations.passwordMismatch,
+                              );
                         }
                         return null;
                       },
@@ -763,10 +954,14 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 13),
                           side: BorderSide(color: ColorUtils.slate300),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: Text(
-                          context.read<LanguageProvider>().getTranslatedText(AppLocalizations.cancel),
+                          context.read<LanguageProvider>().getTranslatedText(
+                            AppLocalizations.cancel,
+                          ),
                           style: TextStyle(color: ColorUtils.slate600),
                         ),
                       ),
@@ -778,18 +973,28 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ColorUtils.corporateBlue600,
                           padding: EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           elevation: 0,
                         ),
                         child: _isLoading
                             ? SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
                               )
                             : Text(
-                                context.read<LanguageProvider>().getTranslatedText(AppLocalizations.save),
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                context
+                                    .read<LanguageProvider>()
+                                    .getTranslatedText(AppLocalizations.save),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                       ),
                     ),

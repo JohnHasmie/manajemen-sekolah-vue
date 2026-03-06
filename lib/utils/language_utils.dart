@@ -1181,6 +1181,26 @@ class AppLocalizations {
     'id': 'Kata sandi tidak cocok',
   };
 
+  static Map<String, String> get passwordMinLength => {
+    'en': 'Password must be at least 8 characters',
+    'id': 'Kata sandi minimal 8 karakter',
+  };
+
+  static Map<String, String> get passwordLetters => {
+    'en': 'Password must contain uppercase and lowercase letters',
+    'id': 'Kata sandi harus mengandung huruf besar dan kecil',
+  };
+
+  static Map<String, String> get passwordNumbers => {
+    'en': 'Password must contain numbers',
+    'id': 'Kata sandi harus mengandung angka',
+  };
+
+  static Map<String, String> get passwordSymbols => {
+    'en': 'Password must contain symbols',
+    'id': 'Kata sandi harus mengandung simbol',
+  };
+
   static Map<String, String> get required => {
     'en': 'Required',
     'id': 'Wajib diisi',
