@@ -910,6 +910,7 @@ class TeachingScheduleManagementScreenState
                 .toList() ??
             [], // Use days_ids
         classId: newScheduleData['class_id'],
+        teacherId: newScheduleData['teacher_id'], // Pass teacher_id
         semesterId: newScheduleData['semester_id'],
         tahunAjaran: newScheduleData['academic_year_id'],
         jamPelajaranId: newScheduleData['lesson_hour_id'],

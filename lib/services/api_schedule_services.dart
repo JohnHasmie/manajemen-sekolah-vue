@@ -356,6 +356,7 @@ class ApiScheduleService {
   static Future<List<dynamic>> getConflictingSchedules({
     required List<String> days_ids,
     required String classId,
+    required String teacherId, // Added parameter
     required String semesterId,
     required String tahunAjaran,
     required String jamPelajaranId,
@@ -365,6 +366,7 @@ class ApiScheduleService {
       String url = '$baseUrl/teaching-schedule/conflicts?';
       url += 'days_ids=${days_ids.join(',')}&';
       url += 'class_id=$classId&';
+      url += 'teacher_id=$teacherId&'; // Added to URL
       url += 'semester_id=$semesterId&';
       url += 'academic_year_id=$tahunAjaran&';
       url += 'lesson_hour_id=$jamPelajaranId&';
