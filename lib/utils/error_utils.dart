@@ -72,6 +72,12 @@ class ErrorUtils {
     }
 
     // General exception or fallback
+    if (errorStr.contains('429') ||
+        errorStr.contains('too many requests') ||
+        errorStr.contains('throttle')) {
+      return 'Terlalu banyak permintaan. Silakan tunggu beberapa saat lagi.';
+    }
+
     if (errorStr.contains('exception') || errorStr.contains('failed')) {
       return 'Terjadi kesalahan sistem, silakan hubungi admin.';
     }
