@@ -869,17 +869,6 @@ class LoginScreenState extends State<LoginScreen> {
 
     // Navigate berdasarkan role
     Navigator.pushReplacementNamed(context, '/$userRole');
-
-    String welcomeName = responseData['user']['nama'] ?? 'User';
-    String schoolName =
-        responseData['school']?['name'] ??
-        responseData['school']?['nama_sekolah'] ??
-        '';
-    if (schoolName.isNotEmpty) welcomeName += ' di $schoolName';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Login berhasil! Selamat datang $welcomeName')),
-    );
   }
 
   void _showOtpDialog(String email) {

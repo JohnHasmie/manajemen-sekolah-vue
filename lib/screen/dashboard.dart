@@ -495,12 +495,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
       // Navigate ke dashboard dengan role baru
       Navigator.pushReplacementNamed(context, '/$role');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Berhasil pindah ke role ${_getRoleDisplayName(role)}'),
-        ),
-      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1308,28 +1302,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     if (newRole != null) {
       // Always navigate to new dashboard to refresh state completely
       Navigator.pushNamedAndRemoveUntil(context, '/$newRole', (route) => false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Berhasil pindah ke ${updatedUserData['nama_sekolah']} sebagai ${_getRoleDisplayName(newRole!)}',
-          ),
-        ),
-      );
     } else {
       // Role same, just reload data
       await _initializeData();
       setState(() {
         _userData = updatedUserData;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Berhasil pindah ke ${updatedUserData['nama_sekolah']}',
-          ),
-        ),
-      );
     }
   }
 
