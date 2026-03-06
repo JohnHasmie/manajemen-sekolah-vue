@@ -476,16 +476,28 @@ class LoginScreenState extends State<LoginScreen> {
           },
         ),
         SizedBox(height: 20),
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _showRoleSelection = false;
-              _showSchoolSelection = true; // Kembali ke pemilihan sekolah
-              _isLoading = false;
-            });
-          },
-          child: Text('Kembali ke Pilih Sekolah'),
-        ),
+        if (_schoolList.length > 1)
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _showRoleSelection = false;
+                _showSchoolSelection = true; // Kembali ke pemilihan sekolah
+                _isLoading = false;
+              });
+            },
+            child: const Text('Kembali ke Pilih Sekolah'),
+          )
+        else
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _showRoleSelection = false;
+                _showSchoolSelection = false; // Kembali ke login
+                _isLoading = false;
+              });
+            },
+            child: const Text('Kembali ke Login'),
+          ),
       ],
     );
   }
