@@ -495,10 +495,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         final typeStr =
             (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
         return [
-          'harian',
+          'uh',
           'tugas',
-          'ulangan',
-          'kuis',
           'praktek',
           'formatif',
           'sumatif',
@@ -542,15 +540,15 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         babScores = List.filled(numChapters, null);
       }
 
-      // UTS & UAS
-      var utsGrade = studentGrades.firstWhere(
-        (g) => (g['type'] ?? g['jenis'])?.toString().toLowerCase() == 'uts',
-        orElse: () => null,
-      );
-      var uasGrade = studentGrades.firstWhere(
-        (g) => (g['type'] ?? g['jenis'])?.toString().toLowerCase() == 'uas',
-        orElse: () => null,
-      );
+      // UTS/PTS & UAS/PAS
+      var utsGrade = studentGrades.firstWhere((g) {
+        final type = (g['type'] ?? g['jenis'])?.toString().toLowerCase();
+        return type == 'uts' || type == 'pts';
+      }, orElse: () => null);
+      var uasGrade = studentGrades.firstWhere((g) {
+        final type = (g['type'] ?? g['jenis'])?.toString().toLowerCase();
+        return type == 'uas' || type == 'pas';
+      }, orElse: () => null);
 
       // Check existing Recap
       var existingRecap = recaps.firstWhere(
@@ -686,10 +684,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         final typeStr =
             (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
         return [
-          'harian',
+          'uh',
           'tugas',
-          'ulangan',
-          'kuis',
           'praktek',
           'formatif',
           'sumatif',
@@ -699,6 +695,11 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       options = studentGrades.where((g) {
         final typeStr =
             (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
+        if (type.toLowerCase() == 'uts') {
+          return typeStr == 'uts' || typeStr == 'pts';
+        } else if (type.toLowerCase() == 'uas') {
+          return typeStr == 'uas' || typeStr == 'pas';
+        }
         return typeStr == type.toLowerCase();
       }).toList();
     }
@@ -712,7 +713,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
             return AlertDialog(
               title: Text(
                 type == 'bab'
-                    ? 'Pilih Nilai Harian'
+                    ? 'Pilih Nilai Harian/UH'
                     : 'Pilih Nilai ${type.toUpperCase()}',
               ),
               content: SizedBox(
@@ -848,18 +849,20 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     for (var g in _rawGrades) {
       final typeStr = (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
 
-      // Filter by requested type (harian types for bab, or specific uts/uas)
+      // Filter by requested type (harian types for bab, or specific uts/uas map)
       bool match = false;
       if (type == 'bab') {
         match = [
-          'harian',
+          'uh',
           'tugas',
-          'ulangan',
-          'kuis',
           'praktek',
           'formatif',
           'sumatif',
         ].contains(typeStr);
+      } else if (type == 'uts') {
+        match = typeStr == 'uts' || typeStr == 'pts';
+      } else if (type == 'uas') {
+        match = typeStr == 'uas' || typeStr == 'pas';
       } else {
         match = typeStr == type.toLowerCase();
       }
@@ -1334,9 +1337,15 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
             final gType =
                 (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
 
-            // For bab, we match by title/date only as types vary.
-            // For uts/uas we also ensure type matches for safety.
-            if (type != 'bab' && gType != type) return false;
+            // For uts/uas we also ensure type matches for safety, combining pts/pas respectively.
+            if (type == 'uts' && gType != 'uts' && gType != 'pts') return false;
+            if (type == 'uas' && gType != 'uas' && gType != 'pas') return false;
+            if (type != 'bab' &&
+                type != 'uts' &&
+                type != 'uas' &&
+                gType != type) {
+              return false;
+            }
 
             return gTitle == title && gDate == date;
           }).toList();
@@ -2363,7 +2372,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'UTS',
+                            'PTS/UTS',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: ColorUtils.slate700,
@@ -2392,7 +2401,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'UAS',
+                            'PAS/UAS',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: ColorUtils.slate700,

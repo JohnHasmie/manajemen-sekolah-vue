@@ -152,20 +152,15 @@ class ExcelNilaiService {
     LanguageProvider languageProvider,
   ) {
     switch (jenis) {
-      case 'harian':
+      case 'uh':
         return languageProvider.getTranslatedText({
-          'en': 'Daily',
-          'id': 'Harian',
+          'en': 'Daily/Quiz',
+          'id': 'UH/Ulangan',
         });
       case 'tugas':
         return languageProvider.getTranslatedText({
           'en': 'Assignment',
           'id': 'Tugas',
-        });
-      case 'ulangan':
-        return languageProvider.getTranslatedText({
-          'en': 'Quiz',
-          'id': 'Ulangan',
         });
       case 'uts':
         return languageProvider.getTranslatedText({
@@ -174,8 +169,18 @@ class ExcelNilaiService {
         });
       case 'uas':
         return languageProvider.getTranslatedText({'en': 'Final', 'id': 'UAS'});
+      case 'pts':
+        return languageProvider.getTranslatedText({
+          'en': 'Midterm Exam',
+          'id': 'PTS',
+        });
+      case 'pas':
+        return languageProvider.getTranslatedText({
+          'en': 'Final Exam',
+          'id': 'PAS',
+        });
       default:
-        return jenis;
+        return jenis.toUpperCase();
     }
   }
 }

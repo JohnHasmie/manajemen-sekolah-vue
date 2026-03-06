@@ -1144,11 +1144,12 @@ class GradeBookPageState extends State<GradeBookPage> {
   List<Siswa> _filteredSiswaList = [];
   List<Map<String, dynamic>> _nilaiList = [];
   final List<String> _allJenisNilaiList = [
-    'harian',
+    'uh',
     'tugas',
-    'ulangan',
     'uts',
     'uas',
+    'pts',
+    'pas',
   ];
   List<String> _filteredJenisNilaiList = [];
   bool _isLoading = true;
@@ -1156,11 +1157,12 @@ class GradeBookPageState extends State<GradeBookPage> {
 
   // Filter state
   final Map<String, bool> _jenisNilaiFilter = {
-    'harian': true,
+    'uh': true,
     'tugas': true,
-    'ulangan': true,
     'uts': true,
     'uas': true,
+    'pts': true,
+    'pas': true,
   };
 
   // Map to store unique assessments for each grade type
@@ -1277,8 +1279,9 @@ class GradeBookPageState extends State<GradeBookPage> {
         rawNilaiItems = response;
       }
 
-      if (kDebugMode)
+      if (kDebugMode) {
         print('DEBUG: Received ${rawNilaiItems.length} grade items');
+      }
 
       if (!mounted) return;
 
@@ -3029,20 +3032,15 @@ class GradeBookPageState extends State<GradeBookPage> {
 
   String _getJenisNilaiLabel(String jenis, LanguageProvider languageProvider) {
     switch (jenis) {
-      case 'harian':
+      case 'uh':
         return languageProvider.getTranslatedText({
-          'en': 'Daily',
-          'id': 'Harian',
+          'en': 'Daily/Quiz',
+          'id': 'UH/Ulangan',
         });
       case 'tugas':
         return languageProvider.getTranslatedText({
           'en': 'Assignment',
           'id': 'Tugas',
-        });
-      case 'ulangan':
-        return languageProvider.getTranslatedText({
-          'en': 'Quiz',
-          'id': 'Ulangan',
         });
       case 'uts':
         return languageProvider.getTranslatedText({
@@ -3051,8 +3049,18 @@ class GradeBookPageState extends State<GradeBookPage> {
         });
       case 'uas':
         return languageProvider.getTranslatedText({'en': 'Final', 'id': 'UAS'});
+      case 'pts':
+        return languageProvider.getTranslatedText({
+          'en': 'Midterm Exam',
+          'id': 'PTS',
+        });
+      case 'pas':
+        return languageProvider.getTranslatedText({
+          'en': 'Final Exam',
+          'id': 'PAS',
+        });
       default:
-        return jenis;
+        return jenis.toUpperCase();
     }
   }
 
@@ -3479,7 +3487,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         }
         return true;
       },
-    )..show(context: context);
+    ).show(context: context);
   }
 
   List<TargetFocus> _createTourTargets() {
@@ -3645,7 +3653,7 @@ class GradeInputFormState extends State<GradeInputForm> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      lastDate: DateTime.now(),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -3689,7 +3697,7 @@ class GradeInputFormState extends State<GradeInputForm> {
               widget.assessmentId ??
               widget
                   .existingNilai?['assessment_id'], // Priority on assessmentId
-          'score': double.parse(_nilaiController.text),
+          'score': int.parse(_nilaiController.text),
           'notes': _deskripsiController.text,
           'title': _titleController.text.isNotEmpty
               ? _titleController.text
@@ -3743,20 +3751,15 @@ class GradeInputFormState extends State<GradeInputForm> {
 
   String _getJenisNilaiLabel(String jenis, LanguageProvider languageProvider) {
     switch (jenis) {
-      case 'harian':
+      case 'uh':
         return languageProvider.getTranslatedText({
-          'en': 'Daily',
-          'id': 'Harian',
+          'en': 'Daily/Quiz',
+          'id': 'UH/Ulangan',
         });
       case 'tugas':
         return languageProvider.getTranslatedText({
           'en': 'Assignment',
           'id': 'Tugas',
-        });
-      case 'ulangan':
-        return languageProvider.getTranslatedText({
-          'en': 'Quiz',
-          'id': 'Ulangan',
         });
       case 'uts':
         return languageProvider.getTranslatedText({
@@ -3765,8 +3768,18 @@ class GradeInputFormState extends State<GradeInputForm> {
         });
       case 'uas':
         return languageProvider.getTranslatedText({'en': 'Final', 'id': 'UAS'});
+      case 'pts':
+        return languageProvider.getTranslatedText({
+          'en': 'Midterm Exam',
+          'id': 'PTS',
+        });
+      case 'pas':
+        return languageProvider.getTranslatedText({
+          'en': 'Final Exam',
+          'id': 'PAS',
+        });
       default:
-        return jenis;
+        return jenis.toUpperCase();
     }
   }
 
@@ -4054,13 +4067,13 @@ class GradeInputFormState extends State<GradeInputForm> {
                                   'id': 'Masukkan nilai',
                                 });
                               }
-                              if (double.tryParse(value) == null) {
+                              if (int.tryParse(value) == null) {
                                 return languageProvider.getTranslatedText({
-                                  'en': 'Please enter valid number',
-                                  'id': 'Masukkan angka yang valid',
+                                  'en': 'Please enter valid integer',
+                                  'id': 'Masukkan angka bulat yang valid',
                                 });
                               }
-                              final nilai = double.parse(value);
+                              final nilai = int.parse(value);
                               if (nilai < 0 || nilai > 100) {
                                 return languageProvider.getTranslatedText({
                                   'en': 'Grade must be between 0-100',
@@ -4237,11 +4250,12 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
   // Variabel untuk state
   String? _selectedJenisNilai;
   final List<String> _jenisNilaiList = [
-    'harian',
+    'uh',
     'tugas',
-    'ulangan',
     'uts',
     'uas',
+    'pts',
+    'pas',
   ];
 
   // Map untuk menyimpan nilai per siswa
@@ -4283,7 +4297,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      lastDate: DateTime.now(),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -4361,7 +4375,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
             'teacher_id': widget.teacher['id'],
             'subject_id': widget.subject['id'],
             'type': _selectedJenisNilai,
-            'score': double.parse(nilaiData!['nilai']),
+            'score': int.parse(nilaiData!['nilai']),
             'notes': nilaiData['deskripsi'] ?? '',
             'date':
                 '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
@@ -4407,9 +4421,9 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
           content: Text(
             languageProvider.getTranslatedText({
               'en':
-                  'Please check your input. Grades must be numbers between 0-100.',
+                  'Please check your input. Grades must be integers between 0-100.',
               'id':
-                  'Periksa input Anda. Nilai harus berupa angka antara 0-100.',
+                  'Periksa input Anda. Nilai harus berupa angka bulat antara 0-100.',
             }),
           ),
           backgroundColor: Colors.red.shade400,
@@ -4421,20 +4435,15 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
 
   String _getJenisNilaiLabel(String jenis, LanguageProvider languageProvider) {
     switch (jenis) {
-      case 'harian':
+      case 'uh':
         return languageProvider.getTranslatedText({
-          'en': 'Daily',
-          'id': 'Harian',
+          'en': 'Daily/Quiz',
+          'id': 'UH/Ulangan',
         });
       case 'tugas':
         return languageProvider.getTranslatedText({
           'en': 'Assignment',
           'id': 'Tugas',
-        });
-      case 'ulangan':
-        return languageProvider.getTranslatedText({
-          'en': 'Quiz',
-          'id': 'Ulangan',
         });
       case 'uts':
         return languageProvider.getTranslatedText({
@@ -4443,8 +4452,18 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
         });
       case 'uas':
         return languageProvider.getTranslatedText({'en': 'Final', 'id': 'UAS'});
+      case 'pts':
+        return languageProvider.getTranslatedText({
+          'en': 'Midterm Exam',
+          'id': 'PTS',
+        });
+      case 'pas':
+        return languageProvider.getTranslatedText({
+          'en': 'Final Exam',
+          'id': 'PAS',
+        });
       default:
-        return jenis;
+        return jenis.toUpperCase();
     }
   }
 
@@ -4585,15 +4604,11 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                         child: TextFormField(
                           controller: _tableControllers[nilaiKey],
                           focusNode: _tableFocusNodes[nilaiKey],
-                          keyboardType: TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                          keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           style: TextStyle(color: ColorUtils.slate900),
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d*'),
-                            ),
+                            FilteringTextInputFormatter.digitsOnly,
                           ],
                           decoration: InputDecoration(
                             isDense: true,
@@ -4604,13 +4619,13 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
                           ),
                           validator: (value) {
                             if (value != null && value.isNotEmpty) {
-                              final numValue = double.tryParse(value);
-                              if (numValue == null) {
+                              if (int.tryParse(value) == null) {
                                 return languageProvider.getTranslatedText({
-                                  'en': 'Numbers only',
-                                  'id': 'Hanya angka',
+                                  'en': 'Integer only',
+                                  'id': 'Hanya angka bulat',
                                 });
                               }
+                              final numValue = int.parse(value);
                               if (numValue < 0 || numValue > 100) {
                                 return languageProvider.getTranslatedText({
                                   'en': '0-100',
