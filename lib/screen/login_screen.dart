@@ -255,19 +255,26 @@ class LoginScreenState extends State<LoginScreen> {
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-      final String? token = googleAuth.accessToken; // or idToken
+      // Use idToken (JWT) for server-side verification with Google tokeninfo API
+      final String? idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        throw Exception('Gagal mendapatkan token Google. Coba lagi.');
+      }
 
       if (kDebugMode) {
         print('📧 Google User: ${googleUser.email}');
-        print('🔑 Google Token: ${token != null ? "Yes" : "No"}');
+        print(
+          '🔑 Google ID Token: ${idToken.isNotEmpty ? "Present (${idToken.length} chars)" : "Missing"}',
+        );
       }
 
-      // 2. Send to Backend
+      // 2. Send to Backend — kirim id_token untuk verifikasi server-side
       final responseData = await ApiService.googleLogin(
         email: googleUser.email,
         displayName: googleUser.displayName,
         photoUrl: googleUser.photoUrl,
-        googleToken: token,
+        idToken: idToken,
       );
 
       // 3. Handle Response

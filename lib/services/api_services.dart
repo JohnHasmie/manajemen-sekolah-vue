@@ -526,15 +526,15 @@ class ApiService {
     required String email,
     String? displayName,
     String? photoUrl,
-    String? googleToken,
+    String? idToken, // Google ID Token (JWT) for server-side verification
   }) async {
     try {
-      // Backend expects 'google_id', so we map 'googleToken' to it
       final Map<String, dynamic> body = {
         'email': email,
-        'name': displayName, // Backend uses 'name', not 'displayName'
-        'avatar': photoUrl, // Backend uses 'avatar', not 'photoUrl'
-        'google_id': googleToken, // Backend uses 'google_id', not 'googleToken'
+        'name': displayName,
+        'avatar': photoUrl,
+        'id_token':
+            idToken, // Backend verifies this against Google tokeninfo API
       };
 
       if (kDebugMode) {
