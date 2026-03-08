@@ -17,6 +17,7 @@ import 'package:manajemensekolah/screen/admin/teaching_schedule_management.dart'
 import 'package:manajemensekolah/screen/common/notification_list.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/input_grade_teacher.dart';
+import 'package:manajemensekolah/screen/guru/learning_recommendation_class_screen.dart';
 import 'package:manajemensekolah/screen/guru/materi_screen.dart';
 import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
 import 'package:manajemensekolah/screen/guru/raport_screen.dart';
@@ -98,6 +99,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   // State for Schedule Slider
   List<dynamic> _todaysScheduleList = [];
+  List<dynamic> _homeroomClasses = [];
 
   // Finance Badge State
   int _unverifiedPaymentCount = 0;
@@ -138,27 +140,31 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     // Load cached data first (fast, synchronous-like)
     await _loadCachedUserData();
 
+    // Listen for changes immediately after loading cache
+    // This ensures we catch the notification from fetchAcademicYears below
+    if (mounted) {
+      Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      ).addListener(_onYearChanged);
+    }
+
     setState(() {});
 
     try {
       // Fetch fresh data in background
+      // This might return early if year isn't loaded yet, which is fine
+      // because _onYearChanged will call it again.
       _loadFreshTeacherData();
       await _loadAccessibleSchools();
       await _loadAvailableRoles();
+
       // Fetch academic years
       if (mounted) {
         await Provider.of<AcademicYearProvider>(
           context,
           listen: false,
         ).fetchAcademicYears();
-      }
-
-      // Listen for changes
-      if (mounted) {
-        Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        ).addListener(_onYearChanged);
       }
 
       await _loadStats(); // Pastikan dipanggil setelah user data dimuat
@@ -232,7 +238,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         }
         return true;
       },
-    )..show(context: context);
+    ).show(context: context);
   }
 
   List<TargetFocus> _createTourTargets() {
@@ -485,9 +491,24 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', response['token']);
 
-      // Update user data dengan role baru
-      final updatedUserData = Map<String, dynamic>.from(_userData);
+      // Prefer response data if available, otherwise manual fallback
+      Map<String, dynamic> updatedUserData;
+      if (response['user'] != null) {
+        updatedUserData = Map<String, dynamic>.from(response['user']);
+        // Backfill essential fields if missing
+        if (updatedUserData['nama'] == null)
+          updatedUserData['nama'] = _userData['name'] ?? _userData['nama'];
+      } else {
+        updatedUserData = Map<String, dynamic>.from(_userData);
+      }
+
       updatedUserData['role'] = role;
+
+      // Preserve existing teacher/student IDs if switching within same account
+      if (_userData['teacher_id'] != null)
+        updatedUserData['teacher_id'] = _userData['teacher_id'];
+      if (_userData['user_id'] != null)
+        updatedUserData['user_id'] = _userData['user_id'];
 
       await prefs.setString('user', json.encode(updatedUserData));
 
@@ -536,15 +557,85 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       }
 
       if (academicYearId != null && _userData['id'] != null) {
-        final teacherData = await ApiTeacherService.getGuruByUserId(
-          _userData['id'].toString(),
-          academicYearId: academicYearId,
-        );
+        // Use user_id if we have it (saved from previous fetch), otherwise use current id
+        final String userId = (_userData['user_id'] ?? _userData['id'])
+            .toString();
 
-        if (teacherData != null && mounted) {
-          setState(() {
-            _userData = {..._userData, ...teacherData};
-          });
+        if (kDebugMode)
+          print('🔍 Fetching data for User ID: $userId, Year: $academicYearId');
+
+        try {
+          // Fetch Teacher Record
+          final teacherData = await ApiTeacherService.getGuruByUserId(
+            userId,
+            academicYearId: academicYearId,
+          );
+
+          if (teacherData != null && mounted) {
+            final String teacherId = teacherData['id']?.toString() ?? '';
+            if (kDebugMode) {
+              print('✅ Teacher Record Found: ID=$teacherId');
+              print('👤 User Data Role: ${widget.role}');
+              print('🗓️ Academic Year ID: $academicYearId');
+            }
+
+            setState(() {
+              // EXTREMELY IMPORTANT: We MUST NOT overwrite 'id' with teacher ID.
+              // 'id' in our app context usually refers to User ID.
+              // If we do, subsequent fresh fetches of Teacher Record will fail.
+              final String originalUserId = userId;
+
+              _userData = {
+                ..._userData,
+                ...teacherData,
+                'id': originalUserId, // Force 'id' back to User ID
+                'user_id': originalUserId,
+                'teacher_id': teacherId,
+                'guru_id': teacherId, // for backward compatibility
+              };
+            });
+
+            // Persist the clean state with separate IDs immediately
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('user', json.encode(_userData));
+
+            // Fetch Homeroom Classes using specialized Teacher ID endpoint
+            // This is more robust as it handles both User/Teacher IDs and returns is_homeroom flag.
+            if (kDebugMode)
+              print(
+                '🔍 Fetching Classes via Teacher endpoint for ID: $teacherId',
+              );
+            final classesResponse = await ApiTeacherService.getTeacherClasses(
+              teacherId,
+              academicYearId: academicYearId,
+            );
+
+            if (mounted) {
+              final List<dynamic> fetchedClasses = classesResponse;
+              // Filter only classes where the teacher is actually the Wali Kelas
+              // Using flexible truthiness check: true, 1, or "true"
+              final List<dynamic> homeroomOnly = fetchedClasses.where((cls) {
+                final isH = cls['is_homeroom'];
+                return isH == true || isH == 1 || isH.toString() == 'true';
+              }).toList();
+
+              if (kDebugMode) {
+                print('📋 Total Classes Found: ${fetchedClasses.length}');
+                print('🏠 Homeroom Classes: ${homeroomOnly.length}');
+                for (var cls in homeroomOnly) {
+                  print('   - Class: ${cls['name']} (ID: ${cls['id']})');
+                }
+              }
+              setState(() {
+                _homeroomClasses = homeroomOnly;
+              });
+            }
+          } else {
+            if (kDebugMode)
+              print('⚠️ No Teacher Record found for User ID: $userId');
+          }
+        } catch (e) {
+          if (kDebugMode) print('❌ Error in _loadFreshTeacherData: $e');
         }
       }
     } catch (e) {
@@ -2427,11 +2518,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           color: ColorUtils.error600,
           badgeCount: _stats['unread_billing'],
           onTap: () async {
-            final academicYearId = Provider.of<AcademicYearProvider>(
-              context,
-              listen: false,
-            ).selectedAcademicYear?['id']?.toString();
-
             await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => ParentBillingScreen()),
@@ -2673,12 +2759,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         title: AppLocalizations.studentAttendance.tr,
         icon: Icons.check_circle_outline,
         onTap: () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-          final guruData = {
-            'id': userData['id'] ?? '',
-            'nama': userData['nama'] ?? 'Teacher',
-            'email': userData['email'] ?? '',
+          final Map<String, String> guruData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
             'role': _effectiveRole,
           };
           if (guruData['id']!.isEmpty) {
@@ -2702,11 +2787,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         title: AppLocalizations.learningMaterials.tr,
         icon: Icons.book_outlined,
         onTap: () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-          final teacherData = {
-            'id': userData['id'] ?? '',
-            'name': userData['name'] ?? 'Teacher',
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'name': _userData['name'] ?? _userData['nama'] ?? 'Teacher',
             'role': _effectiveRole,
           };
           if (teacherData['id']!.isEmpty) {
@@ -2736,12 +2820,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         title: AppLocalizations.inputGrades.tr,
         icon: Icons.edit_note_outlined,
         onTap: () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-          final teacherData = {
-            'id': userData['id'] ?? '',
-            'nama': userData['nama'] ?? 'Teacher',
-            'email': userData['email'] ?? '',
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
             'role': _effectiveRole,
           };
           if (teacherData['id']!.isEmpty) {
@@ -2768,12 +2851,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         }),
         icon: Icons.assessment_outlined,
         onTap: () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-          final teacherData = {
-            'id': userData['id'] ?? '',
-            'nama': userData['nama'] ?? 'Teacher',
-            'email': userData['email'] ?? '',
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
             'role': _effectiveRole,
           };
           if (teacherData['id']!.isEmpty) {
@@ -2800,12 +2882,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         }),
         icon: Icons.contact_page_outlined,
         onTap: () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
           final Map<String, String> teacherData = {
-            'id': userData['id']?.toString() ?? '',
-            'nama': userData['nama']?.toString() ?? 'Teacher',
-            'email': userData['email']?.toString() ?? '',
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
             'role': _effectiveRole,
           };
           if (teacherData['id']!.isEmpty) {
@@ -2829,12 +2910,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         title: AppLocalizations.myRpp.tr,
         icon: Icons.description_outlined,
         onTap: () async {
-          final prefs = await SharedPreferences.getInstance();
-          final userData = json.decode(prefs.getString('user') ?? '{}');
-          final teacherData = {
-            'id': userData['id'] ?? '',
-            'nama': userData['nama'] ?? 'Teacher',
-            'email': userData['email'] ?? '',
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama']?.toString() ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
             'role': _effectiveRole,
           };
           if (teacherData['id']!.isEmpty) {
@@ -2869,6 +2949,35 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           _loadStats();
         },
       ),
+      if (_homeroomClasses.isNotEmpty)
+        MenuItem(
+          title: languageProvider.getTranslatedText({
+            'en': 'Learning Recommendation',
+            'id': 'Rekomendasi Belajar',
+          }),
+          icon: Icons.auto_awesome_outlined,
+          onTap: () async {
+            final Map<String, String> teacherData = {
+              'id':
+                  (_userData['teacher_id'] ?? _userData['id'])?.toString() ??
+                  '',
+              'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+              'email': _userData['email']?.toString() ?? '',
+              'role': _effectiveRole,
+            };
+            if (!context.mounted) return;
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LearningRecommendationClassScreen(
+                  teacher: teacherData,
+                  classes: _homeroomClasses,
+                ),
+              ),
+            );
+          },
+        ),
     ];
   }
 
