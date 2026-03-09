@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/conflict_resolution_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
+import 'package:manajemensekolah/components/gradient_page_header.dart';
 import 'package:manajemensekolah/components/schedule_form_dialog.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
@@ -1990,321 +1991,245 @@ class TeachingScheduleManagementScreenState
           backgroundColor: Color(0xFFF8F9FA),
           body: Column(
             children: [
-              // Header dengan gradient
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      ColorUtils.corporateBlue600,
-                      ColorUtils.corporateBlue600.withValues(alpha: 0.85),
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // Header
+              GradientPageHeader(
+                title: languageProvider.getTranslatedText({
+                  'en': 'Teaching Schedule',
+                  'id': 'Jadwal Mengajar',
+                }),
+                subtitle: languageProvider.getTranslatedText({
+                  'en': 'Manage teaching schedules',
+                  'id': 'Kelola jadwal mengajar',
+                }),
+                primaryColor: _getPrimaryColor(),
+                onBackPressed: () => Navigator.pop(context),
+                actionMenu: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _showTableView = !_showTableView;
+                          if (_showTableView) {
+                            _loadData();
+                          } else {
+                            _loadData();
+                          }
+                        });
+                      },
+                      child: Container(
+                        key: _viewToggleKey,
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Icon(
+                          _showTableView ? Icons.view_list : Icons.table_chart,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      key: _menuKey,
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'export':
+                            _exportToExcel();
+                            break;
+                          case 'import':
+                            _importFromExcel();
+                            break;
+                          case 'template':
+                            _downloadTemplate();
+                            break;
+                        }
+                      },
+                      icon: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.more_vert,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      itemBuilder: (BuildContext context) => [
+                        PopupMenuItem<String>(
+                          value: 'export',
+                          child: Row(
                             children: [
+                              Icon(Icons.download, size: 20),
+                              SizedBox(width: 8),
                               Text(
                                 languageProvider.getTranslatedText({
-                                  'en': 'Teaching Schedule',
-                                  'id': 'Jadwal Mengajar',
+                                  'en': 'Export to Excel',
+                                  'id': 'Export ke Excel',
                                 }),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Manage teaching schedules',
-                                  'id': 'Kelola jadwal mengajar',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                ),
                               ),
                             ],
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _showTableView = !_showTableView;
-                              print(
-                                'DEBUG: Toggled view. _showTableView: $_showTableView',
-                              );
-                              if (_showTableView) {
-                                _loadData(); // Fetch full data for table view
-                              } else {
-                                _loadData(); // Revert to paginated data for list view
-                              }
-                            });
-                          },
-                          child: Container(
-                            key: _viewToggleKey,
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              _showTableView
-                                  ? Icons.view_list
-                                  : Icons.table_chart,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        PopupMenuButton<String>(
-                          key: _menuKey,
-                          onSelected: (value) {
-                            switch (value) {
-                              case 'export':
-                                _exportToExcel();
-                                break;
-                              case 'import':
-                                _importFromExcel();
-                                break;
-                              case 'template':
-                                _downloadTemplate();
-                                break;
-                            }
-                          },
-                          icon: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.more_vert,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          itemBuilder: (BuildContext context) => [
-                            PopupMenuItem<String>(
-                              value: 'export',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.download, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Export to Excel',
-                                      'id': 'Export ke Excel',
-                                    }),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (!Provider.of<AcademicYearProvider>(
-                              context,
-                              listen: false,
-                            ).isReadOnly)
-                              PopupMenuItem<String>(
-                                value: 'import',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.upload, size: 20),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Import from Excel',
-                                        'id': 'Import dari Excel',
-                                      }),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            PopupMenuItem<String>(
-                              value: 'template',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.file_download, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Download Template',
-                                      'id': 'Download Template',
-                                    }),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-
-                    // Search Bar with Filter Button
-                    // Search Bar with Filter Button
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            key: _searchKey,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                        if (!Provider.of<AcademicYearProvider>(
+                          context,
+                          listen: false,
+                        ).isReadOnly)
+                          PopupMenuItem<String>(
+                            value: 'import',
                             child: Row(
                               children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _searchController,
-                                    // onChanged: (value) => setState(() {}), // Disabling this to likely match student mgmt performance preference
-                                    style: TextStyle(color: Colors.black87),
-                                    decoration: InputDecoration(
-                                      hintText: languageProvider
-                                          .getTranslatedText({
-                                            'en': 'Search schedules...',
-                                            'id': 'Cari jadwal...',
-                                          }),
-                                      hintStyle: TextStyle(color: Colors.grey),
-                                      prefixIcon: Icon(
-                                        Icons.search,
-                                        color: Colors.grey,
-                                      ),
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                    onSubmitted: (_) {
-                                      if (_showTableView) {
-                                        setState(() {
-                                          _updateGridData();
-                                        });
-                                      } else {
-                                        _loadData();
-                                      }
-                                    },
-                                  ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.only(right: 4),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.search,
-                                      color: _getPrimaryColor(),
-                                    ),
-                                    onPressed: () {
-                                      if (_showTableView) {
-                                        setState(() {
-                                          _updateGridData();
-                                        });
-                                      } else {
-                                        _loadData();
-                                      }
-                                    },
-                                  ),
+                                Icon(Icons.upload, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Import from Excel',
+                                    'id': 'Import dari Excel',
+                                  }),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                        SizedBox(width: 8),
-                        // Filter Button
-                        Container(
-                          key: _filterKey,
-                          decoration: BoxDecoration(
-                            color: _hasActiveFilter
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Stack(
+                        PopupMenuItem<String>(
+                          value: 'template',
+                          child: Row(
                             children: [
-                              IconButton(
-                                onPressed: _showFilterSheet,
-                                icon: Icon(
-                                  Icons.tune,
-                                  color: _hasActiveFilter
-                                      ? _getPrimaryColor()
-                                      : Colors.white,
-                                ),
-                                tooltip: languageProvider.getTranslatedText({
-                                  'en': 'Filter',
-                                  'id': 'Filter',
+                              Icon(Icons.file_download, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Download Template',
+                                  'id': 'Download Template',
                                 }),
                               ),
-                              if (_hasActiveFilter)
-                                Positioned(
-                                  right: 8,
-                                  top: 8,
-                                  child: Container(
-                                    padding: EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    constraints: BoxConstraints(
-                                      minWidth: 8,
-                                      minHeight: 8,
-                                    ),
-                                  ),
-                                ),
                             ],
                           ),
                         ),
                       ],
                     ),
-
-                    // Filter Chips
-                    if (_hasActiveFilter) ...[
-                      SizedBox(height: 12),
-                      SizedBox(
+                  ],
+                ),
+                searchBar: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        key: _searchKey,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                style: TextStyle(color: Colors.black87),
+                                decoration: InputDecoration(
+                                  hintText: languageProvider.getTranslatedText({
+                                    'en': 'Search schedules...',
+                                    'id': 'Cari jadwal...',
+                                  }),
+                                  hintStyle: TextStyle(color: Colors.grey),
+                                  prefixIcon: Icon(
+                                    Icons.search,
+                                    color: Colors.grey,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onSubmitted: (_) {
+                                  if (_showTableView) {
+                                    setState(() {
+                                      _updateGridData();
+                                    });
+                                  } else {
+                                    _loadData();
+                                  }
+                                },
+                              ),
+                            ),
+                            Container(
+                              margin: EdgeInsets.only(right: 4),
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.search,
+                                  color: _getPrimaryColor(),
+                                ),
+                                onPressed: () {
+                                  if (_showTableView) {
+                                    setState(() {
+                                      _updateGridData();
+                                    });
+                                  } else {
+                                    _loadData();
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    // Filter Button
+                    Container(
+                      key: _filterKey,
+                      decoration: BoxDecoration(
+                        color: _hasActiveFilter
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          IconButton(
+                            onPressed: _showFilterSheet,
+                            icon: Icon(
+                              Icons.tune,
+                              color: _hasActiveFilter
+                                  ? _getPrimaryColor()
+                                  : Colors.white,
+                            ),
+                            tooltip: languageProvider.getTranslatedText({
+                              'en': 'Filter',
+                              'id': 'Filter',
+                            }),
+                          ),
+                          if (_hasActiveFilter)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: BoxConstraints(
+                                  minWidth: 8,
+                                  minHeight: 8,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                filterChips: _hasActiveFilter
+                    ? SizedBox(
                         height: 32,
                         child: Row(
                           children: [
@@ -2322,20 +2247,17 @@ class TeachingScheduleManagementScreenState
                                           filter['label'],
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color:
-                                                _getPrimaryColor(), // Text primary color
+                                            color: _getPrimaryColor(),
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                         deleteIcon: Icon(
                                           Icons.close,
                                           size: 16,
-                                          color:
-                                              _getPrimaryColor(), // Icon primary color
+                                          color: _getPrimaryColor(),
                                         ),
                                         onDeleted: filter['onRemove'],
-                                        backgroundColor:
-                                            Colors.white, // Background white
+                                        backgroundColor: Colors.white,
                                         side: BorderSide(
                                           color: Colors.white,
                                           width: 0,
@@ -2387,10 +2309,8 @@ class TeachingScheduleManagementScreenState
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ],
-                ),
+                      )
+                    : null,
               ),
               Expanded(
                 child: _isLoading

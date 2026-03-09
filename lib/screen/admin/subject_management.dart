@@ -8,6 +8,7 @@ import 'package:manajemensekolah/components/confirmation_dialog.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
+import 'package:manajemensekolah/components/gradient_page_header.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -1673,259 +1674,184 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
   }
 
   Widget _buildHeader(BuildContext context, LanguageProvider languageProvider) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_getPrimaryColor(), _getPrimaryColor()],
+    return GradientPageHeader(
+      title: languageProvider.getTranslatedText({
+        'en': 'Subject Management',
+        'id': 'Manajemen Mata Pelajaran',
+      }),
+      subtitle: languageProvider.getTranslatedText({
+        'en': 'Manage and monitor subjects',
+        'id': 'Kelola dan pantau mata pelajaran',
+      }),
+      primaryColor: _getPrimaryColor(),
+      onBackPressed: () => Navigator.pop(context),
+      actionMenu: PopupMenuButton<String>(
+        key: _menuKey,
+        onSelected: (value) {
+          switch (value) {
+            case 'export':
+              _exportToExcel();
+              break;
+            case 'import':
+              _importFromExcel();
+              break;
+            case 'template':
+              _downloadTemplate();
+              break;
+          }
+        },
+        icon: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(Icons.more_vert, color: Colors.white, size: 20),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: _getPrimaryColor().withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+        itemBuilder: (BuildContext context) => [
+          PopupMenuItem<String>(
+            value: 'export',
+            child: Row(
+              children: [
+                Icon(Icons.download, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Export to Excel',
+                    'id': 'Export ke Excel',
+                  }),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'import',
+            child: Row(
+              children: [
+                Icon(Icons.upload, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Import from Excel',
+                    'id': 'Import dari Excel',
+                  }),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'template',
+            child: Row(
+              children: [
+                Icon(Icons.file_download, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Download Template',
+                    'id': 'Download Template',
+                  }),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      searchBar: Row(
         children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                ),
+          Expanded(
+            child: Container(
+              key: _searchKey,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(12),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Subject Management',
-                        'id': 'Manajemen Mata Pelajaran',
-                      }),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      style: TextStyle(color: Colors.black87),
+                      decoration: InputDecoration(
+                        hintText: languageProvider.getTranslatedText({
+                          'en': 'Search subjects...',
+                          'id': 'Cari mata pelajaran...',
+                        }),
+                        hintStyle: TextStyle(color: Colors.grey),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Manage and monitor subjects',
-                        'id': 'Kelola dan pantau mata pelajaran',
-                      }),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                key: _menuKey,
-                onSelected: (value) {
-                  switch (value) {
-                    case 'export':
-                      _exportToExcel();
-                      break;
-                    case 'import':
-                      _importFromExcel();
-                      break;
-                    case 'template':
-                      _downloadTemplate();
-                      break;
-                  }
-                },
-                icon: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.more_vert, color: Colors.white, size: 20),
-                ),
-                itemBuilder: (BuildContext context) => [
-                  PopupMenuItem<String>(
-                    value: 'export',
-                    child: Row(
-                      children: [
-                        Icon(Icons.download, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Export to Excel',
-                            'id': 'Export ke Excel',
-                          }),
-                        ),
-                      ],
+                      onSubmitted: (value) {
+                        setState(() {
+                          _currentPage = 1;
+                        });
+                        _loadSubjects();
+                      },
                     ),
                   ),
-                  PopupMenuItem<String>(
-                    value: 'import',
-                    child: Row(
-                      children: [
-                        Icon(Icons.upload, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Import from Excel',
-                            'id': 'Import dari Excel',
-                          }),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'template',
-                    child: Row(
-                      children: [
-                        Icon(Icons.file_download, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Download Template',
-                            'id': 'Download Template',
-                          }),
-                        ),
-                      ],
+                  Container(
+                    margin: EdgeInsets.only(right: 4),
+                    child: IconButton(
+                      icon: Icon(Icons.search, color: _getPrimaryColor()),
+                      onPressed: () {
+                        setState(() {
+                          _currentPage = 1;
+                        });
+                        _loadSubjects();
+                      },
                     ),
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-          SizedBox(height: 16),
-
-          // Search Bar with Filter Button
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  key: _searchKey,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
+          SizedBox(width: 8),
+          Container(
+            key: _filterKey,
+            decoration: BoxDecoration(
+              color: _hasActiveFilter
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+            ),
+            child: Stack(
+              children: [
+                IconButton(
+                  onPressed: _showFilterSheet,
+                  icon: Icon(
+                    Icons.tune,
+                    color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          // onChanged: (value) => setState(() {}),
-                          style: TextStyle(color: Colors.black87),
-                          decoration: InputDecoration(
-                            hintText: languageProvider.getTranslatedText({
-                              'en': 'Search subjects...',
-                              'id': 'Cari mata pelajaran...',
-                            }),
-                            hintStyle: TextStyle(color: Colors.grey),
-                            prefixIcon: Icon(Icons.search, color: Colors.grey),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                          onSubmitted: (value) {
-                            setState(() {
-                              _currentPage = 1;
-                            });
-                            _loadSubjects();
-                          },
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(right: 4),
-                        child: IconButton(
-                          icon: Icon(Icons.search, color: _getPrimaryColor()),
-                          onPressed: () {
-                            setState(() {
-                              _currentPage = 1;
-                            });
-                            _loadSubjects();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
+                  tooltip: languageProvider.getTranslatedText({
+                    'en': 'Filter',
+                    'id': 'Filter',
+                  }),
                 ),
-              ),
-              SizedBox(width: 8),
-              // Filter Button
-              Container(
-                key: _filterKey,
-                decoration: BoxDecoration(
-                  color: _hasActiveFilter
-                      ? Colors.white
-                      : Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    IconButton(
-                      onPressed: _showFilterSheet,
-                      icon: Icon(
-                        Icons.tune,
-                        color: _hasActiveFilter
-                            ? _getPrimaryColor()
-                            : Colors.white,
+                if (_hasActiveFilter)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
                       ),
-                      tooltip: languageProvider.getTranslatedText({
-                        'en': 'Filter',
-                        'id': 'Filter',
-                      }),
+                      constraints: BoxConstraints(minWidth: 8, minHeight: 8),
                     ),
-                    if (_hasActiveFilter)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: BoxConstraints(
-                            minWidth: 8,
-                            minHeight: 8,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+              ],
+            ),
           ),
-
-          // Show active filters as chips
-          if (_hasActiveFilter) ...[
-            SizedBox(height: 12),
-            SizedBox(
+        ],
+      ),
+      filterChips: _hasActiveFilter
+          ? SizedBox(
               height: 42,
               child: Row(
                 children: [
@@ -2004,10 +1930,8 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                   ),
                 ],
               ),
-            ),
-          ],
-        ],
-      ),
+            )
+          : null,
     );
   }
 
@@ -2386,7 +2310,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         }
         return true;
       },
-    )..show(context: context);
+    ).show(context: context);
   }
 
   List<TargetFocus> _createTourTargets() {
