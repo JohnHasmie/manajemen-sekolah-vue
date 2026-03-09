@@ -3577,14 +3577,18 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                               children: [
                                 Icon(
                                   Icons.settings,
-                                  color: Colors.grey.shade800,
+                                  color: ColorUtils.getRoleColor(
+                                    _effectiveRole,
+                                  ),
                                   size: 20,
                                 ),
                                 SizedBox(width: 8),
                                 Text(
                                   AppLocalizations.settings.tr,
                                   style: TextStyle(
-                                    color: Colors.grey.shade800,
+                                    color: ColorUtils.getRoleColor(
+                                      _effectiveRole,
+                                    ),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

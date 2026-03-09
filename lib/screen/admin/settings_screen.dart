@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
@@ -5,6 +7,7 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,11 +19,33 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoading = true;
   Map<String, dynamic> _profileData = {};
+  String _role = 'admin';
+
+  Color get _primaryColor => ColorUtils.getRoleColor(_role);
 
   @override
   void initState() {
     super.initState();
+    _loadRole();
     _loadProfile();
+  }
+
+  Future<void> _loadRole() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('user');
+      if (userJson != null) {
+        final user = jsonDecode(userJson);
+        final rawRole = user['role']?.toString() ?? 'admin';
+        // Normalize role aliases
+        String normalizedRole = rawRole;
+        if (rawRole == 'teacher') normalizedRole = 'guru';
+        if (rawRole == 'parent') normalizedRole = 'wali';
+        if (mounted) setState(() => _role = normalizedRole);
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading role: $e');
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -77,8 +102,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      ColorUtils.corporateBlue600,
-                      ColorUtils.corporateBlue600.withValues(alpha: 0.85),
+                      _primaryColor,
+                      _primaryColor.withValues(alpha: 0.85),
                     ],
                   ),
                 ),
@@ -232,7 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: ColorUtils.corporateBlue600,
+                            backgroundColor: _primaryColor,
                             padding: EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -262,7 +287,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showChangePasswordDialog() {
-    showDialog(context: context, builder: (context) => _ChangePasswordDialog());
+    showDialog(
+      context: context,
+      builder: (context) => _ChangePasswordDialog(primaryColor: _primaryColor),
+    );
   }
 
   Widget _buildDialogTextField({
@@ -278,7 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 20),
+        prefixIcon: Icon(icon, color: _primaryColor, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: ColorUtils.slate200),
@@ -289,10 +317,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: ColorUtils.corporateBlue600,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: _primaryColor, width: 1.5),
         ),
         filled: true,
         fillColor: ColorUtils.slate50,
@@ -309,10 +334,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: ColorUtils.corporateBlue600.withValues(alpha: 0.08),
+            color: _primaryColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
+          child: Icon(icon, color: _primaryColor, size: 18),
         ),
         SizedBox(width: 14),
         Expanded(
@@ -366,14 +391,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+                    color: _primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    sectionIcon,
-                    color: ColorUtils.corporateBlue600,
-                    size: 17,
-                  ),
+                  child: Icon(sectionIcon, color: _primaryColor, size: 17),
                 ),
                 SizedBox(width: 10),
                 Text(
@@ -411,18 +432,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: ColorUtils.corporateBlue600,
-              ),
-            )
+          ? Center(child: CircularProgressIndicator(color: _primaryColor))
           : CustomScrollView(
               slivers: [
                 // Gradient SliverAppBar with profile hero (Pattern #7)
                 SliverAppBar(
                   expandedHeight: 200,
                   pinned: true,
-                  backgroundColor: ColorUtils.corporateBlue600,
+                  backgroundColor: _primaryColor,
                   iconTheme: IconThemeData(color: Colors.white),
                   title: Text(
                     context.watch<LanguageProvider>().getTranslatedText(
@@ -461,8 +478,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            ColorUtils.corporateBlue600,
-                            ColorUtils.corporateBlue600.withValues(alpha: 0.75),
+                            _primaryColor,
+                            _primaryColor.withValues(alpha: 0.75),
                           ],
                         ),
                       ),
@@ -650,7 +667,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorUtils.corporateBlue600,
+                              backgroundColor: _primaryColor,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -670,6 +687,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 class _ChangePasswordDialog extends StatefulWidget {
+  final Color primaryColor;
+  const _ChangePasswordDialog({required this.primaryColor});
+
   @override
   __ChangePasswordDialogState createState() => __ChangePasswordDialogState();
 }
@@ -746,7 +766,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         labelText: label,
         prefixIcon: Icon(
           Icons.lock_outline_rounded,
-          color: ColorUtils.corporateBlue600,
+          color: widget.primaryColor,
           size: 20,
         ),
         border: OutlineInputBorder(
@@ -759,10 +779,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: ColorUtils.corporateBlue600,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: widget.primaryColor, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -806,8 +823,8 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    ColorUtils.corporateBlue600,
-                    ColorUtils.corporateBlue600.withValues(alpha: 0.85),
+                    widget.primaryColor,
+                    widget.primaryColor.withValues(alpha: 0.85),
                   ],
                 ),
               ),
@@ -971,7 +988,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _updatePassword,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: ColorUtils.corporateBlue600,
+                          backgroundColor: widget.primaryColor,
                           padding: EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
