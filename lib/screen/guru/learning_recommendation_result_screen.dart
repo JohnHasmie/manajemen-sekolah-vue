@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
+import 'package:manajemensekolah/screen/guru/learning_recommendation_edit_screen.dart';
 import 'package:manajemensekolah/services/api_recommendation_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
@@ -24,90 +25,13 @@ class LearningRecommendationResultScreen extends StatefulWidget {
 class _LearningRecommendationResultScreenState
     extends State<LearningRecommendationResultScreen> {
   bool _isLoading = true;
-  bool _isSaving = false;
   List<dynamic> _recommendations = [];
   String _errorMessage = '';
-
-  // Controllers for Quill editors
-  final Map<String, quill.QuillController> _descriptionControllers = {};
-  final Map<String, quill.QuillController> _materialControllers = {};
 
   @override
   void initState() {
     super.initState();
     _fetchRecommendations();
-  }
-
-  @override
-  void dispose() {
-    for (var controller in _descriptionControllers.values) {
-      controller.dispose();
-    }
-    for (var controller in _materialControllers.values) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  quill.Document _convertHtmlToQuill(String html) {
-    if (html.isEmpty) return quill.Document();
-
-    var text = html.replaceAll(RegExp(r'<ul>|<ol>'), '\n');
-    text = text.replaceAll(RegExp(r'</ul>|</ol>'), '\n');
-    int counter = 1;
-    while (text.contains('<li>')) {
-      if (text.contains('<ol>')) {
-        text = text.replaceFirst('<li>', '$counter. ');
-        counter++;
-      } else {
-        text = text.replaceFirst('<li>', '• ');
-      }
-    }
-    text = text.replaceAll('</li>', '\n');
-    text = text.replaceAll(RegExp(r'<br\s*/?>'), '\n');
-    text = text.replaceAll(RegExp(r'<h3>'), '\n');
-    text = text.replaceAll(RegExp(r'</h3>|<p>|</p>'), '\n');
-    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
-    text = text.replaceAll('&nbsp;', ' ');
-    text = text.replaceAll('&amp;', '&');
-    text = text.replaceAll('&lt;', '<');
-    text = text.replaceAll('&gt;', '>');
-    text = text.replaceAll('&quot;', '"');
-    text = text.replaceAll('&#39;', "'");
-    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
-    text = text.trim();
-
-    return quill.Document()..insert(0, text);
-  }
-
-  void _initControllers() {
-    // Clear old controllers if re-fetching
-    for (var controller in _descriptionControllers.values) {
-      controller.dispose();
-    }
-    for (var controller in _materialControllers.values) {
-      controller.dispose();
-    }
-    _descriptionControllers.clear();
-    _materialControllers.clear();
-
-    for (var rec in _recommendations) {
-      final recId = rec['id']?.toString() ?? UniqueKey().toString();
-      _descriptionControllers[recId] = quill.QuillController(
-        document: _convertHtmlToQuill(rec['description'] ?? ''),
-        selection: const TextSelection.collapsed(offset: 0),
-      );
-
-      if (rec['materials'] != null) {
-        for (var mat in rec['materials']) {
-          final matId = mat['id']?.toString() ?? UniqueKey().toString();
-          _materialControllers[matId] = quill.QuillController(
-            document: _convertHtmlToQuill(mat['content'] ?? ''),
-            selection: const TextSelection.collapsed(offset: 0),
-          );
-        }
-      }
-    }
   }
 
   Future<void> _fetchRecommendations() async {
@@ -124,7 +48,6 @@ class _LearningRecommendationResultScreenState
       if (response['success'] == true) {
         setState(() {
           _recommendations = response['data'] ?? [];
-          _initControllers();
           _isLoading = false;
         });
       } else {
@@ -134,28 +57,29 @@ class _LearningRecommendationResultScreenState
         });
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  Future<void> _saveChanges() async {
-    setState(() => _isSaving = true);
+  void _navigateToEdit() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LearningRecommendationEditScreen(
+          teacher: widget.teacher,
+          student: widget.student,
+          recommendations: _recommendations,
+        ),
+      ),
+    );
 
-    // In a real app, you would collect the data from controllers
-    // and send it back to the API.
-    // Example: collecting description from a controller:
-    // String plainText = _descriptionControllers[recId]!.document.toPlainText();
-
-    await Future.delayed(const Duration(seconds: 1)); // Simulate save
-
-    if (mounted) {
-      setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perubahan berhasil disimpan (Simulasi)')),
-      );
+    if (result == true) {
+      _fetchRecommendations(); // Refresh if data was saved
     }
   }
 
@@ -229,9 +153,7 @@ class _LearningRecommendationResultScreenState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        widget.student['nama'] ??
-                            widget.student['name'] ??
-                            'Siswa',
+                        'Siswa: ${widget.student['nama'] ?? widget.student['name'] ?? 'Siswa'}',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.9),
@@ -240,22 +162,23 @@ class _LearningRecommendationResultScreenState
                     ],
                   ),
                 ),
-                GestureDetector(
-                  onTap: _fetchRecommendations,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.white,
-                      size: 20,
+                if (!_isLoading && _recommendations.isNotEmpty)
+                  GestureDetector(
+                    onTap: _navigateToEdit,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.edit_note,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -286,52 +209,26 @@ class _LearningRecommendationResultScreenState
                     },
                   ),
           ),
-
-          // Persistent Save Button
-          if (!_isLoading && _recommendations.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : _saveChanges,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.save_outlined),
-                label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Perubahan'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getPrimaryColor(),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
         ],
       ),
+      floatingActionButton: !_isLoading && _recommendations.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: _navigateToEdit,
+              backgroundColor: _getPrimaryColor(),
+              icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+              label: const Text(
+                'Edit Hasil',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
   Widget _buildRecommendationCard(Map<String, dynamic> rec) {
-    final recId = rec['id']?.toString() ?? UniqueKey().toString();
     final priority = rec['priority']?.toString().toLowerCase() ?? 'low';
     final type = rec['type']?.toString().toLowerCase() ?? 'other';
 
@@ -348,91 +245,102 @@ class _LearningRecommendationResultScreenState
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: ColorUtils.corporateShadow(),
-        border: Border.all(
-          color: priorityColor.withValues(alpha: 0.2),
-          width: 1,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Card Header with Badge
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: priorityColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    priority.toUpperCase(),
-                    style: TextStyle(
-                      color: priorityColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: priorityColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        priority.toUpperCase(),
+                        style: TextStyle(
+                          color: priorityColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    type.toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate100,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        type.toUpperCase(),
+                        style: TextStyle(
+                          color: ColorUtils.slate600,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
+                Icon(Icons.more_horiz, color: ColorUtils.slate300),
               ],
             ),
           ),
 
           // Title
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               rec['title'] ?? 'Rekomendasi',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
                 color: ColorUtils.slate800,
+                letterSpacing: -0.5,
               ),
             ),
           ),
 
-          // Description (Quill Editor)
+          // Description (HTML render)
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Deskripsi:',
+                  'REKOMENDASI:',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: ColorUtils.slate500,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: ColorUtils.slate400,
+                    letterSpacing: 1.2,
                   ),
                 ),
-                const SizedBox(height: 8),
-                _buildQuillEditor(_descriptionControllers[recId]!),
+                const SizedBox(height: 12),
+                HtmlWidget(
+                  rec['description'] ?? '',
+                  textStyle: TextStyle(
+                    fontSize: 15,
+                    color: ColorUtils.slate700,
+                    height: 1.5,
+                  ),
+                ),
               ],
             ),
           ),
@@ -440,12 +348,14 @@ class _LearningRecommendationResultScreenState
           // AI Reasoning
           Container(
             width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: ColorUtils.slate50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: ColorUtils.slate200),
+              color: ColorUtils.primary.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: ColorUtils.primary.withValues(alpha: 0.1),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,28 +363,30 @@ class _LearningRecommendationResultScreenState
                 Row(
                   children: [
                     Icon(
-                      Icons.auto_awesome,
+                      Icons.insights_rounded,
                       color: ColorUtils.primary,
-                      size: 14,
+                      size: 16,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 8),
                     Text(
-                      'Analisis AI',
+                      'BERDASARKAN ANALISIS AI:',
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
                         color: ColorUtils.primary,
+                        letterSpacing: 1,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
                   rec['ai_reasoning'] ?? '',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: ColorUtils.slate700,
                     fontStyle: FontStyle.italic,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -486,62 +398,69 @@ class _LearningRecommendationResultScreenState
               (rec['materials'] as List).isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 20,
-                bottom: 8,
+                left: 20,
+                right: 20,
+                top: 24,
+                bottom: 12,
               ),
               child: Text(
-                'Saran Materi/Aktivitas:',
+                'MATERI & AKTIVITAS:',
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: ColorUtils.slate800,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: ColorUtils.slate400,
+                  letterSpacing: 1.2,
                 ),
               ),
             ),
             ...(rec['materials'] as List).map((mat) => _buildMaterialItem(mat)),
           ],
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
   Widget _buildMaterialItem(Map<String, dynamic> mat) {
-    final matId = mat['id']?.toString() ?? UniqueKey().toString();
     IconData iconData;
     Color iconColor;
 
     final type = mat['type']?.toString().toLowerCase() ?? 'other';
     if (type == 'video') {
-      iconData = Icons.play_circle_outline;
-      iconColor = Colors.red;
+      iconData = Icons.play_circle_filled_rounded;
+      iconColor = Colors.red.shade600;
     } else if (type == 'exercise') {
-      iconData = Icons.assignment_outlined;
-      iconColor = Colors.orange;
+      iconData = Icons.task_alt_rounded;
+      iconColor = Colors.orange.shade700;
     } else if (type == 'reading') {
-      iconData = Icons.menu_book_outlined;
-      iconColor = Colors.blue;
+      iconData = Icons.auto_stories_rounded;
+      iconColor = Colors.blue.shade700;
     } else {
-      iconData = Icons.label_outline;
-      iconColor = Colors.grey;
+      iconData = Icons.extension_rounded;
+      iconColor = ColorUtils.slate400;
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate100),
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(iconData, color: iconColor, size: 20),
-          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(iconData, color: iconColor, size: 24),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,68 +468,25 @@ class _LearningRecommendationResultScreenState
                 Text(
                   mat['title'] ?? 'Materi',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                     color: ColorUtils.slate800,
                   ),
                 ),
-                const SizedBox(height: 4),
-                _buildQuillEditor(_materialControllers[matId]!),
+                const SizedBox(height: 8),
+                HtmlWidget(
+                  mat['content'] ?? '',
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: ColorUtils.slate600,
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildQuillEditor(quill.QuillController controller) {
-    return Column(
-      children: [
-        quill.QuillSimpleToolbar(
-          controller: controller,
-          config: const quill.QuillSimpleToolbarConfig(
-            showFontFamily: false,
-            showFontSize: false,
-            showBoldButton: true,
-            showItalicButton: true,
-            showUnderLineButton: true,
-            showStrikeThrough: false,
-            showColorButton: false,
-            showBackgroundColorButton: false,
-            showClearFormat: false,
-            showLeftAlignment: false,
-            showCenterAlignment: false,
-            showRightAlignment: false,
-            showJustifyAlignment: false,
-            showListNumbers: true,
-            showListBullets: true,
-            showListCheck: false,
-            showCodeBlock: false,
-            showQuote: false,
-            showIndent: false,
-            showLink: false,
-            showUndo: true,
-            showRedo: true,
-            multiRowsDisplay: false,
-          ),
-        ),
-        Container(
-          height: 150,
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            border: Border.all(color: ColorUtils.slate200),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: quill.QuillEditor.basic(
-            controller: controller,
-            config: const quill.QuillEditorConfig(
-              placeholder: 'Masukkan konten...',
-              padding: EdgeInsets.zero,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
