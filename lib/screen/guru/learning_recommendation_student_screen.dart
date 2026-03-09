@@ -1,7 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'learning_recommendation_result_screen.dart';
 
@@ -25,6 +30,8 @@ class _LearningRecommendationStudentScreenState
   bool _isLoading = true;
   List<dynamic> _students = [];
   String _errorMessage = '';
+  final GlobalKey _studentListKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -46,12 +53,131 @@ class _LearningRecommendationStudentScreenState
         _students = students;
         _isLoading = false;
       });
+
+      if (students.isNotEmpty) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _checkAndShowTour();
+        });
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'learning_recommendation_student_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      alignSkip: Alignment.topRight,
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "StudentList",
+        keyTarget: _studentListKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            padding: const EdgeInsets.all(16),
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24, width: 1),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Student List',
+                        'id': 'Daftar Siswa',
+                      }),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en':
+                              'Choose a student to view their AI-generated learning recommendations.',
+                          'id':
+                              'Pilih siswa untuk melihat rekomendasi belajar berbasis AI.',
+                        }),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14.0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 
   Color _getPrimaryColor() {
@@ -158,6 +284,7 @@ class _LearningRecommendationStudentScreenState
                     itemBuilder: (context, index) {
                       final student = _students[index];
                       return Container(
+                        key: index == 0 ? _studentListKey : null,
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: Colors.white,

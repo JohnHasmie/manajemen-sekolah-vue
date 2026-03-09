@@ -1,9 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/learning_recommendation_edit_screen.dart';
 import 'package:manajemensekolah/services/api_recommendation_services.dart';
+import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class LearningRecommendationResultScreen extends StatefulWidget {
   final Map<String, String> teacher;
@@ -27,6 +32,9 @@ class _LearningRecommendationResultScreenState
   bool _isLoading = true;
   List<dynamic> _recommendations = [];
   String _errorMessage = '';
+  final GlobalKey _recommendationListKey = GlobalKey();
+  final GlobalKey _editButtonKey = GlobalKey();
+  String? _tourId;
 
   @override
   void initState() {
@@ -46,10 +54,17 @@ class _LearningRecommendationResultScreenState
       );
 
       if (response['success'] == true) {
+        final recommendations = response['data'] ?? [];
         setState(() {
-          _recommendations = response['data'] ?? [];
+          _recommendations = recommendations;
           _isLoading = false;
         });
+
+        if (recommendations.isNotEmpty) {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) _checkAndShowTour();
+          });
+        }
       } else {
         setState(() {
           _errorMessage = response['message'] ?? 'Gagal mengambil rekomendasi.';
@@ -64,6 +79,176 @@ class _LearningRecommendationResultScreenState
         });
       }
     }
+  }
+
+  Future<void> _checkAndShowTour() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: 'guru',
+        name: 'learning_recommendation_result_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _tourId = status['tour']['id'];
+        if (!mounted) return;
+        _showTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error checking tour status: $e');
+    }
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    final languageProvider = context.read<LanguageProvider>();
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
+      alignSkip: Alignment.topRight,
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+    final languageProvider = context.read<LanguageProvider>();
+
+    targets.add(
+      TargetFocus(
+        identify: "RecommendationList",
+        keyTarget: _recommendationListKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            padding: const EdgeInsets.all(16),
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24, width: 1),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Learning Recommendations',
+                        'id': 'Rekomendasi Belajar',
+                      }),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en':
+                              'These are AI-generated recommendations tailored to the student\'s performance.',
+                          'id':
+                              'Ini adalah rekomendasi berbasis AI yang disesuaikan dengan performa siswa.',
+                        }),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14.0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "EditButton",
+        keyTarget: _editButtonKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            padding: const EdgeInsets.all(16),
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24, width: 1),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      languageProvider.getTranslatedText({
+                        'en': 'Edit Results',
+                        'id': 'Ubah Hasil',
+                      }),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en':
+                              'Tap here to manually adjust or regenerate the recommendations.',
+                          'id':
+                              'Ketuk di sini untuk menyesuaikan secara manual atau membuat ulang rekomendasi.',
+                        }),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14.0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return targets;
   }
 
   void _navigateToEdit() async {
@@ -205,14 +390,15 @@ class _LearningRecommendationResultScreenState
                     itemCount: _recommendations.length,
                     itemBuilder: (context, index) {
                       final rec = _recommendations[index];
-                      return _buildRecommendationCard(rec);
+                      return _buildRecommendationCard(rec, isFirst: index == 0);
                     },
                   ),
           ),
         ],
       ),
-      floatingActionButton: !_isLoading && _recommendations.isNotEmpty
+      floatingActionButton: (!_isLoading && _recommendations.isNotEmpty)
           ? FloatingActionButton.extended(
+              key: _editButtonKey,
               onPressed: _navigateToEdit,
               backgroundColor: _getPrimaryColor(),
               icon: const Icon(Icons.edit, color: Colors.white, size: 20),
@@ -228,7 +414,10 @@ class _LearningRecommendationResultScreenState
     );
   }
 
-  Widget _buildRecommendationCard(Map<String, dynamic> rec) {
+  Widget _buildRecommendationCard(
+    Map<String, dynamic> rec, {
+    bool isFirst = false,
+  }) {
     final priority = rec['priority']?.toString().toLowerCase() ?? 'low';
     final type = rec['type']?.toString().toLowerCase() ?? 'other';
 
@@ -307,6 +496,7 @@ class _LearningRecommendationResultScreenState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
+              key: isFirst ? _recommendationListKey : null,
               rec['title'] ?? 'Rekomendasi',
               style: TextStyle(
                 fontSize: 20,
