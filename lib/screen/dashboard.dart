@@ -3555,47 +3555,45 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         SizedBox(height: 16),
                       ],
 
-                      // Settings Button
-                      if (_effectiveRole == 'admin') ...[
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SettingsScreen(),
-                                ),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(15),
-                            child: Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.all(16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.settings,
-                                    color: Colors.grey.shade800,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    AppLocalizations.settings.tr,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade800,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                      // Settings Button — shown for all roles
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsScreen(),
                               ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(15),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.settings,
+                                  color: Colors.grey.shade800,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.settings.tr,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade800,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        SizedBox(height: 16),
-                      ],
+                      ),
+                      SizedBox(height: 16),
 
                       // Logout Button
                       Material(
