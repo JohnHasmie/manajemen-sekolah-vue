@@ -403,9 +403,37 @@ class _LearningRecommendationResultScreenState
                     ),
                   )
                 : _recommendations.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Tidak ada rekomendasi untuk siswa ini saat ini.',
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline,
+                            size: 48,
+                            color: ColorUtils.slate300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Belum ada rekomendasi untuk siswa ini.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: ColorUtils.slate500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Generate rekomendasi dari halaman kelas terlebih dahulu.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: ColorUtils.slate400,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 : ListView.builder(

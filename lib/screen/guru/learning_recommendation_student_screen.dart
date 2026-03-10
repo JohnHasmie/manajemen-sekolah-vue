@@ -49,6 +49,7 @@ class _LearningRecommendationStudentScreenState
       final students = await ApiClassService.getStudentsByClassId(
         widget.classData['id'].toString(),
       );
+      if (!mounted) return;
       setState(() {
         _students = students;
         _isLoading = false;
@@ -60,6 +61,7 @@ class _LearningRecommendationStudentScreenState
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
