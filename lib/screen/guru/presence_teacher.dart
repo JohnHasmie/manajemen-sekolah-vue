@@ -76,9 +76,6 @@ class PresencePageState extends State<PresencePage>
   // Tab Controller for TabSwitcher
   late TabController _tabController;
 
-  // Animation controller for staggered list animations
-  late AnimationController _listAnimationController;
-
   // Data untuk mode View Results
   List<AbsensiSummary> _absensiSummaryList = [];
   bool _isLoadingSummary = false;
@@ -143,18 +140,12 @@ class PresencePageState extends State<PresencePage>
       });
     });
 
-    _listAnimationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
-
     _loadInitialData();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _listAnimationController.dispose();
     _searchController.dispose();
     _searchControllerInput.dispose();
     super.dispose();
@@ -197,7 +188,7 @@ class PresencePageState extends State<PresencePage>
 
         _isLoadingInput = false;
       });
-      _listAnimationController.forward(from: 0.0);
+
 
       // Auto-detect current schedule if not initialized from teaching_schedule
       if (widget.initialSubjectId == null) {
@@ -448,7 +439,7 @@ class PresencePageState extends State<PresencePage>
           ..sort((a, b) => b.date.compareTo(a.date));
         _isLoadingSummary = false;
       });
-      _listAnimationController.forward(from: 0.0);
+
 
       if (kDebugMode) {
         print('Loaded ${_absensiSummaryList.length} absensi summaries');
@@ -958,24 +949,7 @@ class PresencePageState extends State<PresencePage>
             ? _getPrimaryColor()
             : ColorUtils.getColorForIndex(index);
 
-        return AnimatedBuilder(
-          animation: _listAnimationController,
-          builder: (context, child) {
-            final delay = (index * 0.1).clamp(0.0, 0.8);
-            final animation = CurvedAnimation(
-              parent: _listAnimationController,
-              curve: Interval(delay, 1.0, curve: Curves.easeOut),
-            );
-
-            return FadeTransition(
-              opacity: animation,
-              child: Transform.translate(
-                offset: Offset(0, 50 * (1 - animation.value)),
-                child: child,
-              ),
-            );
-          },
-          child: Material(
+        return Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
@@ -986,7 +960,7 @@ class PresencePageState extends State<PresencePage>
                 if (_tabController.index == 0) {
                   _loadAbsensiSummary();
                 }
-                _listAnimationController.forward(from: 0.0);
+          
               },
               borderRadius: BorderRadius.circular(14),
               child: Container(
@@ -1108,7 +1082,6 @@ class PresencePageState extends State<PresencePage>
                 ),
               ),
             ),
-          ),
         );
       },
     );
@@ -2087,24 +2060,7 @@ class PresencePageState extends State<PresencePage>
         ? ColorUtils.warning600
         : ColorUtils.error600;
 
-    return AnimatedBuilder(
-      animation: _listAnimationController,
-      builder: (context, child) {
-        final delay = (index * 0.1).clamp(0.0, 0.8);
-        final animation = CurvedAnimation(
-          parent: _listAnimationController,
-          curve: Interval(delay, 1.0, curve: Curves.easeOut),
-        );
-
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 50 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: Material(
+    return Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _navigateToDetailAbsensi(summary),
@@ -2325,7 +2281,6 @@ class PresencePageState extends State<PresencePage>
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -4295,8 +4250,7 @@ class TeacherAbsensiDetailPage extends StatefulWidget {
       _TeacherAbsensiDetailPageState();
 }
 
-class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
-    with SingleTickerProviderStateMixin {
+class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
   List<dynamic> _absensiData = [];
   List<Siswa> _siswaList = [];
   bool _isLoading = true;
@@ -4304,28 +4258,13 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
   bool _isSaving = false;
   final Map<String, String> _editedStatus = {};
 
-  // Animations
-  late AnimationController _animationController;
-
   String? _detectedClassId;
 
   @override
   void initState() {
     super.initState();
     _detectedClassId = widget.classId;
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
-    );
-
     _loadData();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -4376,7 +4315,6 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
             _editedStatus[siswa.id] = _getStudentStatus(siswa.id);
           }
         });
-        _animationController.forward();
       }
     } catch (e) {
       print('Error loading absensi detail for teacher: $e');
@@ -4602,23 +4540,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
     final String statusText = _getStatusText(status, languageProvider);
     final avatarColor = ColorUtils.getColorForIndex(index);
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final delay = (index * 0.1).clamp(0.0, 0.8);
-        final animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(delay, 1.0, curve: Curves.easeOut),
-        );
-        return FadeTransition(
-          opacity: animation,
-          child: Transform.translate(
-            offset: Offset(0, 50 * (1 - animation.value)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
+    return Container(
         margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -4740,7 +4662,6 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage>
             ],
           ),
         ),
-      ),
     );
   }
 
