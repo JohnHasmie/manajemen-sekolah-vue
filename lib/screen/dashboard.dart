@@ -30,12 +30,10 @@ import 'package:manajemensekolah/screen/walimurid/parent_class_activity.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_grade_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_raport_screen.dart';
 import 'package:manajemensekolah/screen/walimurid/presence_parent.dart';
-import 'package:manajemensekolah/services/api_class_activity_services.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
-import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
@@ -675,144 +673,67 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<void> _loadStats() async {
     try {
-      if (_effectiveRole == 'guru') {
-        // Load data untuk guru
-        final userData = _userData;
-        if (userData['id'] == null) {
-          if (kDebugMode) {
-            print('❌ Guru ID tidak ditemukan');
-          }
-          return;
-        }
-
-        if (kDebugMode) {
-          print('👤 Loading stats untuk guru: ${userData['id']}');
-        }
-
-        String? academicYearId;
-        if (mounted) {
-          final academicYearProvider = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          );
-          academicYearId = academicYearProvider.selectedAcademicYear?['id']
-              ?.toString();
-        }
-
-        final schedule = await ApiScheduleService.getCurrentUserSchedule(
-          academicYear: academicYearId,
-        );
-        if (kDebugMode) {
-          print('📅 Jadwal ditemukan: ${schedule.length}');
-        }
-
-        final subjects = await ApiSubjectService.getMateri(
-          teacherId: userData['id'],
-        );
-        if (kDebugMode) {
-          print('📚 Materi ditemukan: ${subjects.length}');
-        }
-
-        final rpp = await ApiService.getRPP(teacherId: userData['id']);
-        if (kDebugMode) {
-          print('📋 RPP ditemukan: ${rpp.length}');
-        }
-
-        final totalStudentsTaught = await _getTotalStudentsTaught(
-          academicYearId,
-        );
-        final totalClassesTaught = await _getTotalClassesTaught(academicYearId);
-        final todaysClassesList = _getTodaysClassesList(schedule);
-        final todaysClasses = todaysClassesList.length;
-
-        if (kDebugMode) {
-          print(
-            '📊 Stats Guru - Siswa: $totalStudentsTaught, Kelas: $totalClassesTaught, Hari Ini: $todaysClasses',
-          );
-        }
-
-        final unreadCount = await ApiService.getUnreadAnnouncementCount();
-        final unreadActivityCount =
-            await ApiClassActivityService.getUnreadCount();
-
-        if (!mounted) return;
-
-        setState(() {
-          _isStatsLoaded = true;
-          _todaysScheduleList = todaysClassesList;
-          _stats = {
-            'total_siswa': totalStudentsTaught,
-            'total_kelas': totalClassesTaught,
-            'kelas_hari_ini': todaysClasses,
-            'total_materi': subjects.length,
-            'total_rpp': rpp.length,
-            'unread_announcements': unreadCount,
-            'unread_class_activities': unreadActivityCount,
-          };
-        });
-      } else if (_effectiveRole == 'admin') {
-        // Load data untuk admin
-        if (kDebugMode) {
-          print('👤 Loading stats untuk admin');
-        }
-
+      // Get academic year ID
+      String? academicYearId;
+      if (mounted) {
         final academicYearProvider = Provider.of<AcademicYearProvider>(
           context,
           listen: false,
         );
-        final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
+        academicYearId = academicYearProvider.selectedAcademicYear?['id']
             ?.toString();
+      }
 
-        final studentStats = await ApiStudentService.getStudentStats(
-          academicYearId: selectedYearId,
-          status: 'active',
-        );
+      // Single API call for dashboard stats
+      final dashboardData = await ApiService.getDashboardStats(
+        role: _effectiveRole,
+        academicYearId: academicYearId,
+      );
 
-        final teacherStats = await ApiTeacherService.getTeacherStats(
-          academicYearId: selectedYearId,
-        );
+      if (kDebugMode) {
+        print('📊 Dashboard stats loaded: $dashboardData');
+      }
 
-        // Filter classes by active year
-        final classes = await ApiClassService.getClassPaginated(
-          limit: 1, // We only need the total_items from pagination
-          academicYearId: selectedYearId,
-        );
-        final totalClasses = classes['pagination']?['total_items'] ?? 0;
+      if (_effectiveRole == 'guru') {
+        final todaysSchedule = dashboardData['todays_schedule'];
+        final todaysScheduleList = todaysSchedule is List
+            ? List<dynamic>.from(todaysSchedule)
+            : <dynamic>[];
 
-        final subjects = await ApiSubjectService().getSubject();
-        final unreadCount = await ApiService.getUnreadAnnouncementCount();
-        final unreadActivityCount =
-            await ApiClassActivityService.getUnreadCount();
-
+        if (!mounted) return;
+        setState(() {
+          _isStatsLoaded = true;
+          _todaysScheduleList = todaysScheduleList;
+          _stats = {
+            'total_siswa': dashboardData['total_siswa'] ?? 0,
+            'total_kelas': dashboardData['total_kelas'] ?? 0,
+            'kelas_hari_ini': dashboardData['kelas_hari_ini'] ?? 0,
+            'total_materi': dashboardData['total_materi'] ?? 0,
+            'total_rpp': dashboardData['total_rpp'] ?? 0,
+            'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+            'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
+          };
+        });
+      } else if (_effectiveRole == 'admin') {
+        // Chart data still needs separate endpoints
         final now = DateTime.now();
         final currentMonthNames = [
-          'Januari',
-          'Februari',
-          'Maret',
-          'April',
-          'Mei',
-          'Juni',
-          'Juli',
-          'Agustus',
-          'September',
-          'Oktober',
-          'November',
-          'Desember',
+          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
         ];
         final currentMonthStr = currentMonthNames[now.month - 1];
         int weekNum = (now.day / 7).ceil();
-        if (weekNum > 5) weekNum = 5; // Cap at 5 weeks
+        if (weekNum > 5) weekNum = 5;
         final currentWeekStr = 'Pekan $weekNum';
 
-        // Fetch Attendance Chart Data
         final attendanceDataList = await ApiService.getAttendanceDashboardChart(
-          academicYearId: selectedYearId,
+          academicYearId: academicYearId,
           month: currentMonthStr,
           week: currentWeekStr,
         );
 
         final financeDataList = await ApiService.getFinanceDashboardChart(
-          academicYearId: selectedYearId,
+          academicYearId: academicYearId,
         );
 
         if (!mounted) return;
@@ -823,74 +744,35 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           );
           _financeChartData = List<Map<String, dynamic>>.from(financeDataList);
           _stats = {
-            'total_siswa': studentStats['total'] ?? 0,
-            'total_guru': teacherStats['total'] ?? 0,
-            'total_kelas': totalClasses,
-            'total_mapel': subjects.length,
-            'unread_announcements': unreadCount,
-            'unread_class_activities': unreadActivityCount,
+            'total_siswa': dashboardData['total_siswa'] ?? 0,
+            'total_guru': dashboardData['total_guru'] ?? 0,
+            'total_kelas': dashboardData['total_kelas'] ?? 0,
+            'total_mapel': dashboardData['total_mapel'] ?? 0,
+            'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+            'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
           };
         });
 
         // Load Finance Stats for Admin
         await _loadFinanceStats();
       } else if (_effectiveRole == 'wali') {
-        // Load data untuk wali murid
-        final userData = _userData;
-        if (kDebugMode) {
-          print('👤 Loading stats untuk wali: ${userData['id']}');
-        }
-
-        final studentsData = await _getStudentDataForParent(
-          userData['id'] ?? '',
-        );
-        if (kDebugMode) {
-          print('👶 Data siswa untuk wali: ${studentsData.length}');
-        }
-
-        // Fetch Attendance Chart Data for Parent
+        // Chart data still needs separate endpoint
         final now = DateTime.now();
         final currentMonthNames = [
-          'Januari',
-          'Februari',
-          'Maret',
-          'April',
-          'Mei',
-          'Juni',
-          'Juli',
-          'Agustus',
-          'September',
-          'Oktober',
-          'November',
-          'Desember',
+          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
         ];
         final currentMonthStr = currentMonthNames[now.month - 1];
         int weekNum = (now.day / 7).ceil();
         if (weekNum > 5) weekNum = 5;
         final currentWeekStr = 'Pekan $weekNum';
 
-        final academicYearProvider = Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        );
-        final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
-            ?.toString();
-
         final attendanceDataList = await ApiService.getAttendanceDashboardChart(
-          academicYearId: selectedYearId,
+          academicYearId: academicYearId,
           month: currentMonthStr,
           week: currentWeekStr,
           role: _effectiveRole,
         );
-
-        // Untuk pengumuman, kita gunakan fallback dulu
-        final announcements = await _getAnnouncements();
-        final unreadCount = await ApiService.getUnreadAnnouncementCount();
-        final unreadActivityCount =
-            await ApiClassActivityService.getUnreadCount();
-        final unreadGradeCount = await ApiService.getUnreadGradeCount();
-        final unreadPresenceCount = await ApiService.getUnreadPresenceCount();
-        final unreadBillingCount = await ApiService.getUnreadBillingCount();
 
         if (!mounted) return;
         setState(() {
@@ -899,13 +781,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             attendanceDataList,
           );
           _stats = {
-            'anak_terdaftar': studentsData.length,
-            'pengumuman_terbaru': announcements.length,
-            'unread_announcements': unreadCount,
-            'unread_class_activities': unreadActivityCount,
-            'unread_grades': unreadGradeCount,
-            'unread_presence': unreadPresenceCount,
-            'unread_billing': unreadBillingCount,
+            'anak_terdaftar': dashboardData['anak_terdaftar'] ?? 0,
+            'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+            'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
+            'unread_grades': dashboardData['unread_grades'] ?? 0,
+            'unread_presence': dashboardData['unread_presence'] ?? 0,
+            'unread_billing': dashboardData['unread_billing'] ?? 0,
           };
         });
       }
@@ -944,168 +825,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           };
         }
       });
-    }
-  }
-
-  Future<int> _getTotalStudentsTaught(String? academicYearId) async {
-    try {
-      final classesTaught = await _getClassesTaught(academicYearId);
-      if (classesTaught.isEmpty) {
-        return 0;
-      }
-
-      int total = 0;
-      for (var classes in classesTaught) {
-        try {
-          final students = await ApiClassService.getStudentsByClassId(
-            classes['id']?.toString() ?? '',
-            // Assuming getStudentsByClassId might also support academic year if classStudents table is time-bound?
-            // But usually classId is unique per year if classes are not reused.
-            // If classes are reused, we might need filtering students by year status.
-            // For now, assume class ID is sufficient.
-          );
-          total += students.length;
-          if (kDebugMode) {
-            print('`Siswa di kelas ${classes['nama']}: ${students.length}`');
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('❌ Error getting students for class ${classes['id']}: $e');
-          }
-        }
-      }
-
-      if (kDebugMode) {
-        print('`📊 Total siswa diampu: $total`');
-      }
-      return total;
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error in _getTotalStudentsTaught: $e');
-      }
-      return 0;
-    }
-  }
-
-  Future<int> _getTotalClassesTaught(String? academicYearId) async {
-    try {
-      final classesTaught = await _getClassesTaught(academicYearId);
-      return classesTaught.length;
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error in _getTotalClassesTaught: $e');
-      }
-      return 0;
-    }
-  }
-
-  Future<List<dynamic>> _getClassesTaught(String? academicYearId) async {
-    try {
-      final schedule = await ApiScheduleService.getCurrentUserSchedule(
-        academicYear: academicYearId,
-      );
-      if (kDebugMode) {
-        print('📅 Total jadwal: ${schedule.length}');
-      }
-
-      if (schedule.isEmpty) {
-        if (kDebugMode) {
-          print('⚠️ Tidak ada jadwal ditemukan');
-        }
-        return [];
-      }
-
-      final classIds = schedule
-          .map((s) => s['class_id']?.toString())
-          .where((id) => id != null)
-          .toSet()
-          .toList();
-      if (kDebugMode) {
-        print('🎯 Kelas IDs unik: $classIds');
-      }
-
-      List<dynamic> classes = [];
-      for (var classId in classIds) {
-        try {
-          final classData = await ApiClassService.getClassById(classId!);
-          if (classData != null) {
-            classes.add(classData);
-            if (kDebugMode) {
-              print('✅ Kelas $classId ditemukan');
-            }
-          } else {
-            if (kDebugMode) {
-              print('❌ Kelas $classId tidak ditemukan');
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('❌ Error getting class $classId: $e');
-          }
-        }
-      }
-
-      if (kDebugMode) {
-        print('🏫 Total kelas diampu: ${classes.length}');
-      }
-      return classes;
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error in _getClassesTaught: $e');
-      }
-      return [];
-    }
-  }
-
-  List<dynamic> _getTodaysClassesList(List<dynamic> schedule) {
-    try {
-      if (schedule.isEmpty) return [];
-
-      final today = DateTime.now();
-      final dayNames = [
-        'Minggu',
-        'Senin',
-        'Selasa',
-        'Rabu',
-        'Kamis',
-        'Jumat',
-        'Sabtu',
-      ];
-
-      // Adjust index: DateTime.weekday returns 1-7, but our list is 0-6
-      // So we need to subtract 1, but also handle Sunday (7 -> 0)
-      final todayIndex = today.weekday % 7; // This will convert 7 (Sunday) to 0
-      final todayName = dayNames[todayIndex];
-
-      if (kDebugMode) {
-        print(
-          '📅 Hari ini: $todayName (index: $todayIndex, weekday: ${today.weekday})',
-        );
-      }
-
-      final todayClasses = schedule.where((s) {
-        final nameDay = s['hari_nama']?.toString() ?? '';
-        return nameDay == todayName;
-      }).toList();
-
-      // Sort by time
-      todayClasses.sort((a, b) {
-        String timeA =
-            a['lesson_hour']?['start_time'] ?? a['start_time'] ?? '00:00';
-        String timeB =
-            b['lesson_hour']?['start_time'] ?? b['start_time'] ?? '00:00';
-        return timeA.compareTo(timeB);
-      });
-
-      if (kDebugMode) {
-        print('🎯 Kelas hari ini: ${todayClasses.length}');
-      }
-      return todayClasses;
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error in _getTodaysClassesList: $e');
-      }
-      return [];
     }
   }
 
@@ -1185,45 +904,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error getting student data for parent: $e');
-      }
-      return [];
-    }
-  }
-
-  Future<List<dynamic>> _getAnnouncements() async {
-    try {
-      // Sama seperti di PengumumanScreen - langsung ambil dari API
-      // Backend sudah melakukan filtering berdasarkan role user
-      if (kDebugMode) {
-        print('🔄 Memuat data pengumuman untuk role: $_effectiveRole');
-      }
-
-      final announcementData = await ApiService().get(
-        '/announcement/user/current',
-      );
-
-      if (kDebugMode) {
-        print('✅ Response dari API:');
-        print('Type: ${announcementData.runtimeType}');
-        print(
-          'Length: ${announcementData is List ? announcementData.length : 'N/A'}',
-        );
-      }
-
-      // Backend sudah filter berdasarkan role, jadi langsung return aja
-      if (announcementData is List) {
-        if (kDebugMode) {
-          print(
-            '📊 Data pengumuman berhasil dimuat: ${announcementData.length} pengumuman',
-          );
-        }
-        return announcementData;
-      }
-
-      return [];
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error loading pengumuman: $e');
       }
       return [];
     }

@@ -23,15 +23,15 @@ class ApiService {
   static late final String baseUrl;
 
   static Future<void> init() async {
-    final envBaseUrl = dotenv.env['API_BASE_URL'];
+    // final envBaseUrl = dotenv.env['API_BASE_URL'];
 
-    if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
-      baseUrl = envBaseUrl;
-      if (kDebugMode) {
-        print('📡 API Base URL from .env: $baseUrl');
-      }
-      return;
-    }
+    // if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
+    //   baseUrl = envBaseUrl;
+    //   if (kDebugMode) {
+    //     print('📡 API Base URL from .env: $baseUrl');
+    //   }
+    //   return;
+    // }
 
     // Fallback if .env is missing or API_BASE_URL is empty
     if (kIsWeb) {
@@ -611,6 +611,33 @@ class ApiService {
 
     final result = _handleResponse(response);
     return result is List ? result : [];
+  }
+
+  // Dashboard Stats - single endpoint for all dashboard data
+  static Future<Map<String, dynamic>> getDashboardStats({
+    required String role,
+    String? academicYearId,
+  }) async {
+    try {
+      String url = '$baseUrl/dashboard/stats?role=$role';
+      if (academicYearId != null && academicYearId.isNotEmpty) {
+        url += '&academic_year_id=$academicYearId';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _getHeaders(),
+      );
+
+      final result = _handleResponse(response);
+      if (result is Map<String, dynamic> && result['success'] == true) {
+        return Map<String, dynamic>.from(result['data'] ?? {});
+      }
+      return {};
+    } catch (e) {
+      if (kDebugMode) print('Error fetching dashboard stats: $e');
+      return {};
+    }
   }
 
   // Switch sekolah
