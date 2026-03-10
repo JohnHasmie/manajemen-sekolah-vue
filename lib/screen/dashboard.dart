@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/widgets/dashboard/attendance_overview_card.dart';
+import 'package:manajemensekolah/widgets/dashboard/lesson_plan_status_card.dart';
 import 'package:manajemensekolah/widgets/dashboard/material_slider_card.dart';
 import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
@@ -718,6 +720,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             'kelas_hari_ini': dashboardData['kelas_hari_ini'] ?? 0,
             'total_materi': dashboardData['total_materi'] ?? 0,
             'total_rpp': dashboardData['total_rpp'] ?? 0,
+            'rpp_approved': dashboardData['rpp_approved'] ?? 0,
+            'rpp_rejected': dashboardData['rpp_rejected'] ?? 0,
+            'rpp_pending': dashboardData['rpp_pending'] ?? 0,
+            'attendance_summary': dashboardData['attendance_summary'] ?? {},
             'unread_announcements': dashboardData['unread_announcements'] ?? 0,
             'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
           };
@@ -1966,12 +1972,22 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             );
           },
         ),
-        OverviewCard(
-          title: 'Attendance',
-          value: _stats['total_siswa']?.toString() ?? '0',
-          subtitle: 'Students today',
-          icon: Icons.how_to_reg_outlined,
-          accentColor: ColorUtils.success600,
+        AttendanceOverviewCard(
+          hadir: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['hadir'] ?? 0)
+              : 0,
+          izin: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['izin'] ?? 0)
+              : 0,
+          sakit: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['sakit'] ?? 0)
+              : 0,
+          alpha: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['alpha'] ?? 0)
+              : 0,
+          total: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['total'] ?? 0)
+              : 0,
           onTap: () {
             Navigator.push(
               context,
@@ -1992,12 +2008,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             );
           },
         ),
-        OverviewCard(
-          title: 'Lesson Plans',
-          value: _stats['total_rpp']?.toString() ?? '0',
-          subtitle: 'Prepared documents',
-          icon: Icons.description_outlined,
-          accentColor: ColorUtils.corporateBlue600,
+        LessonPlanStatusCard(
+          approved: _stats['rpp_approved'] ?? 0,
+          rejected: _stats['rpp_rejected'] ?? 0,
+          pending: _stats['rpp_pending'] ?? 0,
           onTap: () {
             Navigator.push(
               context,
