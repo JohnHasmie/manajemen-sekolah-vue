@@ -3,8 +3,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart'; // Required for kDebugMode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/screen/guru/rpp_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
-import 'package:manajemensekolah/utils/error_utils.dart'; // Import ErrorUtils
+import 'package:manajemensekolah/utils/color_utils.dart';
+import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -24,6 +27,55 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   bool _isEditing = false;
   String _editedContent = '';
 
+  bool get _hasAiAdditionalData {
+    const aiKeys = [
+      'core_competence',
+      'basic_competence',
+      'indicator',
+      'learning_objective',
+      'main_material',
+      'learning_method',
+      'media_tools',
+      'learning_source',
+      'learning_activities',
+      'assessment',
+      // Metadata yang biasanya disimpan dengan AI generation
+      'ai_model_used',
+      'ai_tokens_used',
+      'ai_generated',
+    ];
+
+    return aiKeys.any((key) {
+      final value = widget.rppData[key];
+      return value != null && value.toString().trim().isNotEmpty;
+    });
+  }
+
+  String get _teacherId {
+    return (widget.rppData['guru_id'] ?? widget.rppData['teacher_id'] ?? '')
+        .toString();
+  }
+
+  void _openAiRppScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RppAiResultScreen(
+          rppData: widget.rppData,
+          teacherId: _teacherId,
+          onSaved: () {
+            // Jika ingin refresh halaman setelah menyimpan, bisa tambahkan logika di sini.
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('RPP AI berhasil disimpan')),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -33,30 +85,74 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   String _formatRPPContent() {
     final buffer = StringBuffer();
 
+    String getField(List<String> keys, {String defaultValue = ''}) {
+      for (final key in keys) {
+        final value = widget.rppData[key];
+        if (value != null && value.toString().trim().isNotEmpty) {
+          return value.toString().trim();
+        }
+      }
+      return defaultValue;
+    }
+
+    final title = getField(['judul', 'title'], defaultValue: 'RPP');
+    final subjectName = getField([
+      'mata_pelajaran_nama',
+      'subject_name',
+    ]);
+    final className = getField(['kelas_nama', 'class_name']);
+    final semester = getField(['semester']);
+    final academicYear = getField(['tahun_ajaran', 'academic_year']);
+    final teacherName = getField(['guru_nama', 'teacher_name']);
+    final status = getField(['status']);
+
+    // Header fields yang mungkin ada dari AI generation atau input manual
+    final unit = getField(['satuan_pendidikan', 'education_unit']);
+    final theme = getField(['tema', 'theme']);
+    final subTheme = getField(['sub_tema', 'sub_theme']);
+    final sequence = getField(['pembelajaran_ke', 'learning_sequence']);
+    final timeAllocation = getField(['alokasi_waktu', 'time_allocation']);
+
     buffer.writeln('RENCANA PELAKSANAAN PEMBELAJARAN (RPP)');
-    buffer.writeln('KURIKULUM 2013 (3 KOMPONEN)');
-    buffer.writeln('(Sesuai Edaran Mendikbud Nomor 14 Tahun 2019)');
     buffer.writeln();
 
-    // Informasi Header
-    buffer.writeln(
-      'Satuan Pendidikan\t: ${widget.rppData['satuan_pendidikan'] ?? 'SD/MI'}',
-    );
-    buffer.writeln(
-      'Kelas / Semester\t: ${widget.rppData['kelas_semester'] ?? '1 / 1'}',
-    );
-    buffer.writeln(
-      'Tema\t\t\t: ${widget.rppData['tema'] ?? 'Kegemaranku (Tema 2)'}',
-    );
-    buffer.writeln(
-      'Sub Tema\t\t: ${widget.rppData['sub_tema'] ?? 'Gemar Berolahraga (Sub Tema 1)'}',
-    );
-    buffer.writeln(
-      'Pembelajaran ke\t: ${widget.rppData['pembelajaran_ke'] ?? '1'}',
-    );
-    buffer.writeln(
-      'Alokasi waktu\t: ${widget.rppData['alokasi_waktu'] ?? '1 Hari'}',
-    );
+    // Informasi Header dari database
+    buffer.writeln('Judul\t\t\t: $title');
+    if (subjectName.isNotEmpty) {
+      buffer.writeln('Mata Pelajaran\t: $subjectName');
+    }
+    if (className.isNotEmpty) {
+      buffer.writeln('Kelas\t\t\t: $className');
+    }
+    if (semester.isNotEmpty) {
+      buffer.writeln('Semester\t\t: $semester');
+    }
+    if (academicYear.isNotEmpty) {
+      buffer.writeln('Tahun Ajaran\t\t: $academicYear');
+    }
+    if (teacherName.isNotEmpty) {
+      buffer.writeln('Guru\t\t\t: $teacherName');
+    }
+    if (status.isNotEmpty) {
+      buffer.writeln('Status\t\t\t: $status');
+    }
+
+    // Header tambahan (dari AI generation atau input manual)
+    if (unit.isNotEmpty) {
+      buffer.writeln('Satuan Pendidikan\t: $unit');
+    }
+    if (theme.isNotEmpty) {
+      buffer.writeln('Tema\t\t\t: $theme');
+    }
+    if (subTheme.isNotEmpty) {
+      buffer.writeln('Sub Tema\t\t: $subTheme');
+    }
+    if (sequence.isNotEmpty) {
+      buffer.writeln('Pembelajaran ke\t: $sequence');
+    }
+    if (timeAllocation.isNotEmpty) {
+      buffer.writeln('Alokasi waktu\t: $timeAllocation');
+    }
     buffer.writeln();
 
     // Cek apakah RPP hasil genrasi AI (format 10 komponen API)
@@ -64,139 +160,203 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         widget.rppData['ai_generated'] == true ||
         widget.rppData['is_ai_generated'] == true;
 
-    // A. TUJUAN PEMBELAJARAN
-    buffer.writeln('A. TUJUAN PEMBELAJARAN');
-    if (isAi && widget.rppData['learning_objective'] != null) {
-      buffer.writeln(_stripHtml(widget.rppData['learning_objective']));
-    } else if (widget.rppData['tujuan_pembelajaran'] != null) {
-      final tujuanLines = widget.rppData['tujuan_pembelajaran']
-          .toString()
-          .split('\n');
-      for (int i = 0; i < tujuanLines.length; i++) {
-        if (tujuanLines[i].trim().isNotEmpty) {
-          buffer.writeln('${i + 1}. ${tujuanLines[i].trim()}');
-        }
-      }
-    } else {
-      // Default tujuan pembelajaran
+    // Kompetensi Inti & Kompetensi Dasar (jika tersedia)
+    final String kompetensiInti = getField([
+      'kompetensi_inti',
+      'kompetensiInti',
+      'ki',
+      'core_competence',
+    ]);
+    final String kompetensiDasar = getField([
+      'kompetensi_dasar',
+      'kompetensiDasar',
+      'kd',
+      'basic_competence',
+    ]);
+    final String indikator = getField(['indikator', 'indicator']);
+
+    int sectionIndex = 1;
+    if (kompetensiInti.isNotEmpty) {
       buffer.writeln(
-        '1. Dengan mengamati gambar, siswa dapat memahami kosakata tentang cara memelihara kesehatan dengan tepat.',
+        '${String.fromCharCode(64 + sectionIndex)}. KOMPETENSI INTI (KI)',
       );
-      buffer.writeln(
-        '2. Dengan menirukan kata-kata yang dibacakan oleh guru, siswa dapat menambah kosakata tentang cara memelihara kesehatan dengan tepat dan percaya diri.',
-      );
-      buffer.writeln(
-        '3. Melalui kegiatan membaca, siswa dapat menggunakan kosakata tentang olahraga sebagai cara memelihara kesehatan dengan tepat.',
-      );
+      buffer.writeln(_stripHtml(kompetensiInti));
+      buffer.writeln();
+      sectionIndex++;
     }
-    buffer.writeln();
 
-    // B. KEGIATAN PEMBELAJARAN
-    buffer.writeln('B. KEGIATAN PEMBELAJARAN');
-    buffer.writeln();
-
-    if (isAi && widget.rppData['learning_activities'] != null) {
-      // AI sudah mencakup pendahuluan, inti, penutup dalam 1 string HTML
-      buffer.writeln(_stripHtml(widget.rppData['learning_activities']));
-    } else {
-      // Kegiatan Pendahuluan
+    if (kompetensiDasar.isNotEmpty) {
       buffer.writeln(
-        'Kegiatan Pendahuluan (${widget.rppData['waktu_pendahuluan'] ?? '15'} menit)',
+        '${String.fromCharCode(64 + sectionIndex)}. KOMPETENSI DASAR (KD)',
       );
-      if (widget.rppData['kegiatan_pendahuluan'] != null) {
-        final pendahuluanLines = widget.rppData['kegiatan_pendahuluan']
-            .toString()
-            .split('\n');
-        for (var line in pendahuluanLines) {
-          if (line.trim().isNotEmpty) {
-            buffer.writeln('• ${line.trim()}');
+      buffer.writeln(_stripHtml(kompetensiDasar));
+      buffer.writeln();
+      sectionIndex++;
+    }
+
+    if (indikator.isNotEmpty) {
+      buffer.writeln('${String.fromCharCode(64 + sectionIndex)}. INDIKATOR');
+      buffer.writeln(_stripHtml(indikator));
+      buffer.writeln();
+      sectionIndex++;
+    }
+
+    // TUJUAN PEMBELAJARAN
+    final tujuan = getField([
+      'learning_objective',
+      'tujuan_pembelajaran',
+      'learning_objectives',
+    ]);
+
+    if (tujuan.isNotEmpty) {
+      buffer.writeln(
+        '${String.fromCharCode(64 + sectionIndex)}. TUJUAN PEMBELAJARAN',
+      );
+      sectionIndex++;
+      if (isAi) {
+        buffer.writeln(_stripHtml(tujuan));
+      } else {
+        final tujuanLines = tujuan.split('\n');
+        for (int i = 0; i < tujuanLines.length; i++) {
+          if (tujuanLines[i].trim().isNotEmpty) {
+            buffer.writeln('${i + 1}. ${tujuanLines[i].trim()}');
           }
         }
-      } else {
-        buffer.writeln('• Melakukan Pembukaan dengan Salam dan Membaca Doa');
-        buffer.writeln(
-          '• Mengaitkan Materi Sebelumnya dengan Materi yang akan dipelajari',
-        );
-        buffer.writeln(
-          '• Memberikan gambaran tentang manfaat mempelajari pelajaran',
-        );
       }
       buffer.writeln();
+    }
 
-      // Kegiatan Inti
+    // KEGIATAN PEMBELAJARAN
+    final kegiatanPendahuluan = getField([
+      'kegiatan_pendahuluan',
+      'preliminary_activities',
+    ]);
+    final kegiatanInti = getField([
+      'learning_activities',
+      'kegiatan_inti',
+      'core_activities',
+    ]);
+    final kegiatanPenutup = getField([
+      'kegiatan_penutup',
+      'closing_activities',
+    ]);
+
+    if (kegiatanInti.isNotEmpty ||
+        kegiatanPendahuluan.isNotEmpty ||
+        kegiatanPenutup.isNotEmpty) {
       buffer.writeln(
-        'Kegiatan Inti (${widget.rppData['waktu_inti'] ?? '140'} menit)',
+        '${String.fromCharCode(64 + sectionIndex)}. KEGIATAN PEMBELAJARAN',
       );
-      if (widget.rppData['kegiatan_inti'] != null) {
-        final intiLines = widget.rppData['kegiatan_inti'].toString().split(
-          '\n',
-        );
-        for (var line in intiLines) {
-          if (line.trim().isNotEmpty) {
-            if (line.trim().startsWith('A.') ||
-                line.trim().startsWith('B.') ||
-                line.trim().startsWith('C.')) {
-              buffer.writeln(line.trim());
-            } else {
+      buffer.writeln();
+      sectionIndex++;
+
+      if (kegiatanPendahuluan.isEmpty && kegiatanPenutup.isEmpty) {
+        // Data dari DB (learning_activities) atau AI - 1 field saja
+        buffer.writeln(_stripHtml(kegiatanInti));
+      } else {
+        // Data terpisah (pendahuluan, inti, penutup)
+        if (kegiatanPendahuluan.isNotEmpty) {
+          final pendahuluanTime = getField(['waktu_pendahuluan']);
+          buffer.writeln(
+            'Kegiatan Pendahuluan${pendahuluanTime.isNotEmpty ? ' ($pendahuluanTime menit)' : ''}',
+          );
+          for (var line in kegiatanPendahuluan.split('\n')) {
+            if (line.trim().isNotEmpty) {
+              buffer.writeln('• ${line.trim()}');
+            }
+          }
+          buffer.writeln();
+        }
+
+        if (kegiatanInti.isNotEmpty) {
+          final intiTime = getField(['waktu_inti']);
+          buffer.writeln(
+            'Kegiatan Inti${intiTime.isNotEmpty ? ' ($intiTime menit)' : ''}',
+          );
+          for (var line in kegiatanInti.split('\n')) {
+            if (line.trim().isNotEmpty) {
+              if (line.trim().startsWith('A.') ||
+                  line.trim().startsWith('B.') ||
+                  line.trim().startsWith('C.')) {
+                buffer.writeln(line.trim());
+              } else {
+                buffer.writeln('• ${line.trim()}');
+              }
+            }
+          }
+          buffer.writeln();
+        }
+
+        if (kegiatanPenutup.isNotEmpty) {
+          final penutupTime = getField(['waktu_penutup']);
+          buffer.writeln(
+            'Kegiatan Penutup${penutupTime.isNotEmpty ? ' ($penutupTime menit)' : ''}',
+          );
+          for (var line in kegiatanPenutup.split('\n')) {
+            if (line.trim().isNotEmpty) {
               buffer.writeln('• ${line.trim()}');
             }
           }
         }
-      } else {
-        buffer.writeln('A. Ayo Mengamati');
-        buffer.writeln('• Siswa menyimak teks yang dibacakan oleh guru');
-        buffer.writeln(
-          '• Guru menunjukkan gambar jenis permainan dan olahraga',
-        );
-        buffer.writeln(
-          '• Guru memancing partisipasi aktif siswa dengan pertanyaan',
-        );
-        buffer.writeln();
-        buffer.writeln('B. Ayo Membaca');
-        buffer.writeln('• Siswa menirukan kata-kata yang dibacakan guru');
-        buffer.writeln('• Guru memberi kesempatan bertanya tentang makna kata');
-        buffer.writeln();
-        buffer.writeln('C. Ayo Mencoba');
-        buffer.writeln(
-          '• Siswa mengidentifikasi gambar kegiatan yang menyehatkan',
-        );
-        buffer.writeln('• Siswa memberi tanda centang/silang pada gambar');
       }
       buffer.writeln();
+    }
 
-      // Kegiatan Penutup
+    // PENILAIAN
+    final assessment = getField(['assessment', 'penilaian']);
+    if (assessment.isNotEmpty) {
       buffer.writeln(
-        'Kegiatan Penutup (${widget.rppData['waktu_penutup'] ?? '15'} menit)',
+        '${String.fromCharCode(64 + sectionIndex)}. PENILAIAN (ASESMEN)',
       );
-      if (widget.rppData['kegiatan_penutup'] != null) {
-        final penutupLines = widget.rppData['kegiatan_penutup']
-            .toString()
-            .split('\n');
-        for (var line in penutupLines) {
-          if (line.trim().isNotEmpty) {
-            buffer.writeln('• ${line.trim()}');
-          }
-        }
+      if (isAi) {
+        buffer.writeln(_stripHtml(assessment));
       } else {
-        buffer.writeln('• Siswa membuat resume dengan bimbingan guru');
-        buffer.writeln('• Guru memeriksa pekerjaan siswa');
-        buffer.writeln('• Pemberian hadiah/pujian untuk pekerjaan yang benar');
+        buffer.writeln(assessment);
       }
+      buffer.writeln();
     }
-    buffer.writeln();
 
-    // C. PENILAIAN
-    buffer.writeln('C. PENILAIAN (ASESMEN)');
-    if (isAi && widget.rppData['assessment'] != null) {
-      buffer.writeln(_stripHtml(widget.rppData['assessment']));
-    } else if (widget.rppData['penilaian'] != null) {
-      buffer.writeln(widget.rppData['penilaian']);
-    } else {
+    // Materi dan Sumber Belajar (jika tersedia)
+    final String mainMaterial = getField(['main_material']);
+    final String learningMethod = getField(['learning_method']);
+    final String mediaTools = getField(['media_tools']);
+    final String learningSource = getField(['learning_source']);
+
+    if (mainMaterial.isNotEmpty) {
       buffer.writeln(
-        'Penilaian terhadap materi ini dapat dilakukan sesuai kebutuhan guru yaitu dari pengamatan sikap, tes pengetahuan dan presentasi unjuk kerja atau hasil karya/projek dengan rubric penilaian.',
+        '${String.fromCharCode(64 + sectionIndex)}. MATERI POKOK',
       );
+      sectionIndex++;
+      buffer.writeln(_stripHtml(mainMaterial));
+      buffer.writeln();
     }
-    buffer.writeln();
+
+    if (learningMethod.isNotEmpty) {
+      buffer.writeln(
+        '${String.fromCharCode(64 + sectionIndex)}. METODE PEMBELAJARAN',
+      );
+      sectionIndex++;
+      buffer.writeln(_stripHtml(learningMethod));
+      buffer.writeln();
+    }
+
+    if (mediaTools.isNotEmpty) {
+      buffer.writeln(
+        '${String.fromCharCode(64 + sectionIndex)}. MEDIA / ALAT',
+      );
+      sectionIndex++;
+      buffer.writeln(_stripHtml(mediaTools));
+      buffer.writeln();
+    }
+
+    if (learningSource.isNotEmpty) {
+      buffer.writeln(
+        '${String.fromCharCode(64 + sectionIndex)}. SUMBER BELAJAR',
+      );
+      sectionIndex++;
+      buffer.writeln(_stripHtml(learningSource));
+      buffer.writeln();
+    }
 
     // Tanda Tangan
     buffer.writeln('Mengetahui');
@@ -285,25 +445,52 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     });
 
     try {
+      // Map data (falling back to known AI-generated key names if available)
+      String fallback(List<String> keys) {
+        for (final k in keys) {
+          if (widget.rppData.containsKey(k) && widget.rppData[k] != null) {
+            return widget.rppData[k].toString();
+          }
+        }
+        return '';
+      }
+
       await ApiSubjectService.saveRPP({
-        'guru_id': widget.rppData['guru_id'],
-        'mata_pelajaran_id': widget.rppData['mata_pelajaran_id'],
-        'judul': widget.rppData['judul'],
-        'tujuan_pembelajaran': widget.rppData['tujuan_pembelajaran'],
-        'kegiatan_pendahuluan': widget.rppData['kegiatan_pendahuluan'],
-        'kegiatan_inti': widget.rppData['kegiatan_inti'],
-        'kegiatan_penutup': widget.rppData['kegiatan_penutup'],
-        'penilaian': widget.rppData['penilaian'],
-        'satuan_pendidikan': widget.rppData['satuan_pendidikan'],
-        'kelas_semester': widget.rppData['kelas_semester'],
-        'tema': widget.rppData['tema'],
-        'sub_tema': widget.rppData['sub_tema'],
-        'pembelajaran_ke': widget.rppData['pembelajaran_ke'],
-        'alokasi_waktu': widget.rppData['alokasi_waktu'],
-        'waktu_pendahuluan': widget.rppData['waktu_pendahuluan'],
-        'waktu_inti': widget.rppData['waktu_inti'],
-        'waktu_penutup': widget.rppData['waktu_penutup'],
-        'is_ai_generated': widget.rppData['is_ai_generated'] ?? false,
+        'teacher_id': fallback(['teacher_id', 'guru_id']),
+        'subject_id': fallback(['subject_id', 'mata_pelajaran_id']),
+        'class_id': fallback(['class_id']),
+        'title': fallback(['title', 'judul']),
+        'semester': fallback(['semester']),
+        'academic_year': fallback(['academic_year', 'tahun_ajaran']),
+        'core_competence': fallback([
+          'core_competence',
+          'kompetensi_inti',
+          'kompetensiInti',
+          'ki',
+        ]),
+        'basic_competence': fallback([
+          'basic_competence',
+          'kompetensi_dasar',
+          'kompetensiDasar',
+          'kd',
+        ]),
+        'indicator': fallback(['indicator', 'indikator']),
+        'learning_objective': fallback([
+          'learning_objective',
+          'tujuan_pembelajaran',
+          'learning_objectives',
+        ]),
+        'main_material': fallback(['main_material']),
+        'learning_method': fallback(['learning_method']),
+        'media_tools': fallback(['media_tools']),
+        'learning_source': fallback(['learning_source']),
+        'learning_activities': fallback([
+          'learning_activities',
+          'kegiatan_inti',
+          'core_activities',
+        ]),
+        'assessment': fallback(['assessment', 'penilaian']),
+        'status': fallback(['status']),
       });
 
       ScaffoldMessenger.of(
@@ -440,6 +627,105 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     }
   }
 
+  bool _isDownloading = false;
+
+  String? get _filePath {
+    final fp = widget.rppData['file_path'];
+    if (fp != null && fp.toString().trim().isNotEmpty) {
+      return fp.toString().trim();
+    }
+    return null;
+  }
+
+  String _getFileExtension(String filePath) {
+    final fileName = _getFileName(filePath);
+    final dotIndex = fileName.lastIndexOf('.');
+    if (dotIndex == -1) return '';
+    return fileName.substring(dotIndex).toLowerCase();
+  }
+
+  String _getFileName(String filePath) {
+    return Uri.parse(filePath).pathSegments.last;
+  }
+
+  IconData _getFileIcon(String ext) {
+    switch (ext) {
+      case '.pdf':
+        return Icons.picture_as_pdf;
+      case '.doc':
+      case '.docx':
+        return Icons.description;
+      case '.jpg':
+      case '.jpeg':
+      case '.png':
+        return Icons.image;
+      default:
+        return Icons.insert_drive_file;
+    }
+  }
+
+  Color _getFileIconColor(String ext) {
+    switch (ext) {
+      case '.pdf':
+        return Colors.red;
+      case '.doc':
+      case '.docx':
+        return Colors.blue;
+      case '.jpg':
+      case '.jpeg':
+      case '.png':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Future<void> _downloadAndOpenFile() async {
+    final filePath = _filePath;
+    if (filePath == null) return;
+
+    setState(() {
+      _isDownloading = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(filePath));
+
+      if (response.statusCode == 200) {
+        final directory = await getTemporaryDirectory();
+        final fileName = _getFileName(filePath);
+        final localFile = File('${directory.path}/$fileName');
+        await localFile.writeAsBytes(response.bodyBytes, flush: true);
+
+        await OpenFile.open(localFile.path);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('File berhasil diunduh')),
+          );
+        }
+      } else {
+        throw Exception('Gagal mengunduh file (${response.statusCode})');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Download file error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDownloading = false;
+        });
+      }
+    }
+  }
+
   void _toggleEdit() {
     setState(() {
       _isEditing = !_isEditing;
@@ -452,96 +738,224 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     });
   }
 
+  Color get _primaryColor => ColorUtils.getRoleColor('guru');
+
+  LinearGradient get _headerGradient => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [_primaryColor, _primaryColor.withValues(alpha: 0.85)],
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Edit RPP' : 'Detail RPP'),
-        backgroundColor: Color(0xFF4F46E5),
-        foregroundColor: Colors.white,
-        actions: [
-          if (!_isEditing) ...[
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: _toggleEdit,
-              tooltip: 'Edit RPP',
-            ),
-            IconButton(
-              icon: Icon(Icons.download),
-              onPressed: _exportToWord,
-              tooltip: 'Download sebagai PDF',
-            ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'word') _exportToText();
-                if (value == 'pdf') _exportToWord();
-                if (value == 'copy') _copyToClipboard();
-              },
-              itemBuilder: (BuildContext context) => [
-                PopupMenuItem(
-                  value: 'word',
-                  child: Row(
-                    children: [
-                      Icon(Icons.description, color: Colors.blue),
-                      SizedBox(width: 8),
-                      Text('Export ke Word'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'pdf',
-                  child: Row(
-                    children: [
-                      Icon(Icons.picture_as_pdf, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Export ke PDF'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'copy',
-                  child: Row(
-                    children: [
-                      Icon(Icons.content_copy, color: Colors.green),
-                      SizedBox(width: 8),
-                      Text('Copy ke Clipboard'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-          if (_isEditing) ...[
-            IconButton(
-              icon: Icon(Icons.save),
-              onPressed: () {
-                _toggleEdit();
-                _saveRPP();
-              },
-              tooltip: 'Simpan Perubahan',
-            ),
-            IconButton(
-              icon: Icon(Icons.close),
-              onPressed: _toggleEdit,
-              tooltip: 'Batal Edit',
-            ),
-          ],
-          if (widget.isNew && !_isEditing) ...[
-            IconButton(
-              icon: _isSaving
-                  ? CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    )
-                  : Icon(Icons.save),
-              onPressed: _isSaving ? null : _saveRPP,
-              tooltip: 'Simpan RPP',
-            ),
-          ],
+      backgroundColor: Color(0xFFF8F9FA),
+      body: Column(
+        children: [
+          // Gradient Header
+          _buildHeader(),
+          // Body
+          Expanded(
+            child: _isEditing ? _buildEditor() : _buildPreview(),
+          ),
         ],
       ),
-      body: _isEditing ? _buildEditor() : _buildPreview(),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      decoration: BoxDecoration(
+        gradient: _headerGradient,
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isEditing ? 'Edit RPP' : 'Detail RPP',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      widget.rppData['judul']?.toString() ??
+                          widget.rppData['title']?.toString() ??
+                          'RPP',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              // Action buttons
+              ..._buildHeaderActions(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildHeaderActions() {
+    if (_isEditing) {
+      return [
+        _buildHeaderButton(
+          icon: Icons.save_rounded,
+          onTap: () {
+            _toggleEdit();
+            _saveRPP();
+          },
+        ),
+        SizedBox(width: 8),
+        _buildHeaderButton(
+          icon: Icons.close_rounded,
+          onTap: _toggleEdit,
+        ),
+      ];
+    }
+
+    return [
+      if (widget.isNew)
+        _buildHeaderButton(
+          icon: _isSaving ? null : Icons.save_rounded,
+          isLoading: _isSaving,
+          onTap: _isSaving ? null : _saveRPP,
+        ),
+      if (!widget.isNew) ...[
+        _buildHeaderButton(
+          icon: Icons.edit_outlined,
+          onTap: _toggleEdit,
+        ),
+        SizedBox(width: 8),
+        if (_hasAiAdditionalData) ...[
+          _buildHeaderButton(
+            icon: Icons.smart_toy_rounded,
+            onTap: _openAiRppScreen,
+          ),
+          SizedBox(width: 8),
+        ],
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'text') _exportToText();
+            if (value == 'pdf') _exportToWord();
+            if (value == 'copy') _copyToClipboard();
+          },
+          icon: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.more_vert, color: Colors.white, size: 20),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem(
+              value: 'pdf',
+              child: Row(
+                children: [
+                  Icon(Icons.picture_as_pdf, color: Colors.red, size: 20),
+                  SizedBox(width: 10),
+                  Text('Export ke PDF'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'text',
+              child: Row(
+                children: [
+                  Icon(Icons.description, color: Colors.blue, size: 20),
+                  SizedBox(width: 10),
+                  Text('Export ke Text'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'copy',
+              child: Row(
+                children: [
+                  Icon(Icons.content_copy, color: _primaryColor, size: 20),
+                  SizedBox(width: 10),
+                  Text('Copy ke Clipboard'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    ];
+  }
+
+  Widget _buildHeaderButton({
+    IconData? icon,
+    VoidCallback? onTap,
+    bool isLoading = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: isLoading
+            ? Padding(
+                padding: EdgeInsets.all(10),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Icon(icon, color: Colors.white, size: 20),
+      ),
     );
   }
 
@@ -550,16 +964,22 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       padding: EdgeInsets.all(16),
       child: Column(
         children: [
-          // Toolbar sederhana
+          // Toolbar
           Container(
             padding: EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ColorUtils.slate200),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 2,
+                  color: _primaryColor.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+                BoxShadow(
+                  color: ColorUtils.slate900.withValues(alpha: 0.04),
+                  blurRadius: 4,
                   offset: Offset(0, 1),
                 ),
               ],
@@ -581,11 +1001,17 @@ class RPPDetailPageState extends State<RPPDetailPage> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: ColorUtils.slate200),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 2,
+                    color: _primaryColor.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                  BoxShadow(
+                    color: ColorUtils.slate900.withValues(alpha: 0.04),
+                    blurRadius: 4,
                     offset: Offset(0, 1),
                   ),
                 ],
@@ -598,11 +1024,13 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.all(16),
                   hintText: 'Ketik RPP disini...',
+                  hintStyle: TextStyle(color: ColorUtils.slate400),
                 ),
                 style: TextStyle(
                   fontSize: 14,
                   fontFamily: 'Courier',
                   height: 1.5,
+                  color: ColorUtils.slate800,
                 ),
               ),
             ),
@@ -618,7 +1046,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     VoidCallback onPressed,
   ) {
     return IconButton(
-      icon: Icon(icon, size: 20),
+      icon: Icon(icon, size: 20, color: ColorUtils.slate600),
       onPressed: onPressed,
       tooltip: text,
     );
@@ -627,21 +1055,141 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   Widget _buildPreview() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 2),
+      child: Column(
+        children: [
+          // File attachment card
+          if (_filePath != null) _buildFileCard(),
+          // RPP content
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: _primaryColor.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: Offset(0, 3),
+                ),
+                BoxShadow(
+                  color: ColorUtils.slate900.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: _buildFormattedContent(),
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: _buildFormattedContent(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFileCard() {
+    final filePath = _filePath!;
+    final ext = _getFileExtension(filePath);
+    final fileName = _getFileName(filePath);
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _primaryColor.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: Offset(0, 3),
+          ),
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: _isDownloading ? null : _downloadAndOpenFile,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _getFileIconColor(ext).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _getFileIconColor(ext).withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Icon(
+                    _getFileIcon(ext),
+                    color: _getFileIconColor(ext),
+                    size: 28,
+                  ),
+                ),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'File Lampiran RPP',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: ColorUtils.slate800,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        fileName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8),
+                _isDownloading
+                    ? SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: _primaryColor,
+                        ),
+                      )
+                    : Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _primaryColor.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.download_rounded,
+                          color: _primaryColor,
+                          size: 20,
+                        ),
+                      ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -665,7 +1213,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF4F46E5),
+                  color: _primaryColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -677,7 +1225,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         if (line.startsWith('=')) {
           return Container(
             height: 2,
-            color: Colors.grey.shade300,
+            color: ColorUtils.slate200,
             margin: EdgeInsets.symmetric(vertical: 8),
           );
         }
@@ -698,7 +1246,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF4F46E5),
+                  color: _primaryColor,
                 ),
               ),
               SizedBox(height: 8),
@@ -714,7 +1262,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: ColorUtils.slate700,
               ),
             ),
           );
@@ -757,7 +1305,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(
         children: cells.map((cell) {
@@ -766,9 +1314,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
             child: Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: ColorUtils.slate200),
               ),
-              child: Text(cell.trim(), style: TextStyle(fontSize: 12)),
+              child: Text(
+                cell.trim(),
+                style: TextStyle(fontSize: 12, color: ColorUtils.slate700),
+              ),
             ),
           );
         }).toList(),

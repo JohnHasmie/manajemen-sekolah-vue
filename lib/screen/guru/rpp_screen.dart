@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -8,6 +9,7 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/guru/rpp_ai_result_screen.dart';
+import 'package:manajemensekolah/screen/guru/rpp_detail_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
@@ -17,6 +19,7 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class RppScreen extends StatefulWidget {
@@ -681,11 +684,37 @@ class RppScreenState extends State<RppScreen> {
     }
   }
 
-  void _lihatDetailRpp(Map<String, dynamic> rpp) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => RppDetailPage(rpp: rpp)),
-    );
+  Future<void> _lihatDetailRpp(Map<String, dynamic> rpp) async {
+    final id = rpp['id']?.toString();
+    if (id == null || id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorUtils.getFriendlyMessage(Exception('RPP ID tidak tersedia')),
+          ),
+          backgroundColor: ColorUtils.error600,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final fullRpp = await ApiService.getRppById(id);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RPPDetailPage(rppData: fullRpp),
+        ),
+      );
+    } catch (e) {
+      if (kDebugMode) print('Fetch RPP detail error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorUtils.getFriendlyMessage(e)),
+          backgroundColor: ColorUtils.error600,
+        ),
+      );
+    }
   }
 
   Color _getStatusColor(String status) {
@@ -1659,6 +1688,82 @@ class _RppFormDialogState extends State<RppFormDialog> {
     }
   }
 
+  // Helper to download and open file
+  Future<void> _downloadAndOpenFile(
+    BuildContext context,
+    String filePath,
+  ) async {
+    try {
+      // Construct full URL properly
+      // If ApiService.baseUrl is "https://edu-api.kamillabs.com/api"
+      // Static files are usually at "https://edu-api.kamillabs.com/uploads/..."
+      // We stripping the '/api' suffix to get the root.
+      final rootUrl = ApiService.baseUrl.replaceFirst('/api', '');
+
+      // Ensure filePath doesn't double slash and is properly combined
+      String cleanPath = filePath;
+      if (!cleanPath.startsWith('/')) {
+        cleanPath = '/$cleanPath';
+      }
+
+      final fullUrl = '$rootUrl$cleanPath';
+
+      if (kDebugMode) {
+        print('Downloading file from: $fullUrl');
+      }
+
+      final languageProvider = context.read<LanguageProvider>();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Downloading file...',
+              'id': 'Mengunduh file...',
+            }),
+          ),
+        ),
+      );
+
+      final response = await http.get(Uri.parse(fullUrl));
+
+      if (response.statusCode == 200) {
+        final dir = await getTemporaryDirectory();
+        // Extract filename
+        final fileName = cleanPath.split('/').last;
+        final file = File('${dir.path}/$fileName');
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        if (kDebugMode) {
+          print('File saved to: ${file.path}');
+        }
+
+        await OpenFile.open(file.path);
+      } else if (response.statusCode == 404) {
+        throw Exception(
+          languageProvider.getTranslatedText({
+            'en': 'File not found on server',
+            'id': 'File tidak ditemukan di server',
+          }),
+        );
+      } else {
+        throw Exception(
+          '${languageProvider.getTranslatedText({'en': 'Failed to download file', 'id': 'Gagal mengunduh file'})}: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error opening file: $e');
+      }
+
+      String message = e.toString().replaceFirst('Exception: ', '');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: ColorUtils.error600),
+      );
+    }
+  }
+
   // File Upload Logic Removed - Using simplified version
 
   Future<void> _submitForm() async {
@@ -2304,456 +2409,6 @@ class _RppFormDialogState extends State<RppFormDialog> {
   }
 }
 
-// RppDetailPage tetap sama seperti sebelumnya
-// Helper to download and open file
-Future<void> _downloadAndOpenFile(BuildContext context, String filePath) async {
-  try {
-    // Construct full URL properly
-    // If ApiService.baseUrl is "https://edu-api.kamillabs.com/api"
-    // Static files are usually at "https://edu-api.kamillabs.com/uploads/..."
-    // We stripping the '/api' suffix to get the root.
-    final rootUrl = ApiService.baseUrl.replaceFirst('/api', '');
-
-    // Ensure filePath doesn't double slash and is properly combined
-    String cleanPath = filePath;
-    if (!cleanPath.startsWith('/')) {
-      cleanPath = '/$cleanPath';
-    }
-
-    final fullUrl = '$rootUrl$cleanPath';
-
-    if (kDebugMode) {
-      print('Downloading file from: $fullUrl');
-    }
-
-    final languageProvider = context.read<LanguageProvider>();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Downloading file...',
-            'id': 'Mengunduh file...',
-          }),
-        ),
-      ),
-    );
-
-    final response = await http.get(Uri.parse(fullUrl));
-
-    if (response.statusCode == 200) {
-      final dir = await getTemporaryDirectory();
-      // Extract filename
-      final fileName = cleanPath.split('/').last;
-      final file = File('${dir.path}/$fileName');
-
-      await file.writeAsBytes(response.bodyBytes);
-
-      if (kDebugMode) {
-        print('File saved to: ${file.path}');
-      }
-
-      await OpenFile.open(file.path);
-    } else if (response.statusCode == 404) {
-      throw Exception(
-        languageProvider.getTranslatedText({
-          'en': 'File not found on server',
-          'id': 'File tidak ditemukan di server',
-        }),
-      );
-    } else {
-      throw Exception(
-        '${languageProvider.getTranslatedText({'en': 'Failed to download file', 'id': 'Gagal mengunduh file'})}: ${response.statusCode}',
-      );
-    }
-  } catch (e) {
-    if (kDebugMode) {
-      print('Error opening file: $e');
-    }
-
-    String message = e.toString().replaceFirst('Exception: ', '');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: ColorUtils.error600),
-    );
-  }
-}
-
-class RppDetailPage extends StatelessWidget {
-  final Map<String, dynamic> rpp;
-
-  const RppDetailPage({super.key, required this.rpp});
-
-  Color _getPrimaryColor() => ColorUtils.getRoleColor('guru');
-
-  Color _getStatusColor(String? status) {
-    switch (status) {
-      case 'Disetujui':
-      case 'Approved':
-        return ColorUtils.success600;
-      case 'Menunggu':
-      case 'Pending':
-        return ColorUtils.warning600;
-      case 'Ditolak':
-      case 'Rejected':
-        return ColorUtils.error600;
-      case 'Draft':
-      case 'draft':
-        return ColorUtils.info600;
-      default:
-        return ColorUtils.slate400;
-    }
-  }
-
-  String _getStatusLabel(String? status) {
-    switch (status) {
-      case 'Approved':
-      case 'Disetujui':
-        return 'Disetujui';
-      case 'Pending':
-      case 'Menunggu':
-        return 'Menunggu';
-      case 'Draft':
-      case 'draft':
-        return 'Draft';
-      case 'Rejected':
-      case 'Ditolak':
-        return 'Ditolak';
-      default:
-        return status ?? '-';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final languageProvider = context.watch<LanguageProvider>();
-    final statusColor = _getStatusColor(rpp['status']);
-
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          // Pattern #7 Inline Gradient Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 12,
-              left: 16,
-              right: 16,
-              bottom: 20,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _getPrimaryColor(),
-                  _getPrimaryColor().withValues(alpha: 0.85),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'RPP Details',
-                          'id': 'Detail RPP',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      if ((rpp['judul'] ?? '').isNotEmpty) ...[
-                        SizedBox(height: 2),
-                        Text(
-                          rpp['judul'] ?? '',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Scrollable Body
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title + Status card
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: ColorUtils.slate200),
-                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          rpp['judul'] ?? 'No Title',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate900,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: statusColor.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: statusColor,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              SizedBox(width: 6),
-                              Text(
-                                _getStatusLabel(rpp['status']),
-                                style: TextStyle(
-                                  color: statusColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 16),
-
-                  // Info Card
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: ColorUtils.slate200),
-                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'RPP Information',
-                            'id': 'Informasi RPP',
-                          }),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: ColorUtils.slate600,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        _buildDetailItem(
-                          languageProvider.getTranslatedText({
-                            'en': 'Subject',
-                            'id': 'Mata Pelajaran',
-                          }),
-                          rpp['mata_pelajaran_nama'] ?? '-',
-                        ),
-                        _buildDetailItem(
-                          languageProvider.getTranslatedText({
-                            'en': 'Class',
-                            'id': 'Kelas',
-                          }),
-                          rpp['kelas_nama'] ?? '-',
-                        ),
-                        _buildDetailItem(
-                          languageProvider.getTranslatedText({
-                            'en': 'Academic Year',
-                            'id': 'Tahun Ajaran',
-                          }),
-                          '${rpp['semester'] ?? '-'} ${rpp['tahun_ajaran'] ?? '-'}',
-                        ),
-                        if (rpp['catatan'] != null &&
-                            rpp['catatan'].toString().isNotEmpty)
-                          _buildDetailItem(
-                            languageProvider.getTranslatedText({
-                              'en': 'Notes',
-                              'id': 'Catatan',
-                            }),
-                            rpp['catatan'],
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 16),
-
-                  // File Section
-                  if (rpp['file_path'] != null)
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: ColorUtils.slate200),
-                        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () =>
-                              _downloadAndOpenFile(context, rpp['file_path']),
-                          borderRadius: BorderRadius.circular(14),
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: ColorUtils.info600.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.picture_as_pdf_rounded,
-                                    color: ColorUtils.info600,
-                                    size: 22,
-                                  ),
-                                ),
-                                SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Attached File',
-                                          'id': 'File Terlampir',
-                                        }),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: ColorUtils.slate900,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        rpp['file_path'].split('/').last,
-                                        style: TextStyle(
-                                          color: ColorUtils.slate500,
-                                          fontSize: 12,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.download_rounded,
-                                  color: ColorUtils.slate400,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailItem(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: ColorUtils.slate500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: ColorUtils.slate900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class GenerateRppFormDialog extends StatefulWidget {
   final String teacherId;
   final VoidCallback onSaved;
@@ -2779,6 +2434,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
   String? _selectedSubBabId;
   String? _selectedSemester = 'Ganjil';
   bool _isAutoGenerating = false;
+  String _generationStatus = '';
 
   List<dynamic> _mataPelajaranList = [];
   List<dynamic> _kelasList = [];
@@ -2908,189 +2564,376 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
   }
 
   Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (kDebugMode) print('🚀 _submitForm called');
+    if (!_formKey.currentState!.validate()) {
+      if (kDebugMode) print('❌ Validation failed');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mohon lengkapi semua field yang wajib diisi'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
+    if (kDebugMode) print('✅ Validation passed, starting API call');
     setState(() {
       _isAutoGenerating = true;
+      _generationStatus = 'Sedang menghubungi AI KamillLabs...';
     });
 
     try {
-      // Simulasi generate RPP untuk saat ini (frontend saja sesuai request)
-      // MOCK RESPONSE berdasarkan KamillLabs Edu AI API Documentation
-      await Future.delayed(const Duration(seconds: 2));
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final userJson = prefs.getString('user');
+      String? schoolId;
 
-      final mockRppResponse = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'title': _judulController.text.isNotEmpty
-            ? _judulController.text
-            : 'RPP Judul Otomatis',
-        // Menyimpan id untuk referensi, tapi menampilkan nama jika ada (di backend ini akan direlasikan)
+      if (userJson != null) {
+        final user = json.decode(userJson);
+        schoolId = user['school_id']?.toString();
+      }
+
+      if (kDebugMode) {
+        print('📡 Current ApiService.baseUrl: ${ApiService.baseUrl}');
+        print('🔑 Using Token: ${token != null ? "Available" : "NULL"}');
+        if (token != null && token.length > 5) {
+          print('🔑 Token Prefix: ${token.substring(0, 5)}...');
+        }
+        print(
+          '🏫 Using School ID: ${schoolId ?? "NULL"} (Removed from AI request headers)',
+        );
+      }
+
+      final requestBody = {
+        'title': _judulController.text,
         'subject_id': _selectedMataPelajaranId,
-        'mata_pelajaran_nama':
-            _mataPelajaranList.firstWhere(
-              (m) => m['id'].toString() == _selectedMataPelajaranId,
-              orElse: () => {'name': 'Mata Pelajaran'},
-            )['name'] ??
-            'Mata Pelajaran',
         'class_id': _selectedClassId,
-        'kelas_nama':
-            _kelasList.firstWhere(
-              (k) => k['id'].toString() == _selectedClassId,
-              orElse: () => {'name': 'Kelas'},
-            )['name'] ??
-            'Kelas',
+        'chapter_id': _selectedBabId,
+        'sub_chapter_id': _selectedSubBabId,
         'semester': _selectedSemester,
-        'tahun_ajaran': _tahunAjaranController.text,
-
-        // 10 Field AI Generated
-        'core_competence':
-            '<p>Menghayati dan mengamalkan ajaran agama yang dianutnya. Menghayati dan mengamalkan perilaku jujur, disiplin, santun, peduli (gotong royong, kerjasama, toleran, damai), bertanggung jawab, responsif, dan pro-aktif dalam berinteraksi secara efektif sesuai dengan perkembangan anak di lingkungan, keluarga, sekolah, masyarakat dan lingkungan alam sekitar, bangsa, negara, kawasan regional, dan kawasan internasional.</p>',
-        'basic_competence':
-            '<p>3.1 Mendeskripsikan konsep dan penerapan materi terkait dalam kehidupan sehari-hari.</p><p>4.1 Menyelesaikan masalah kontekstual yang berkaitan dengan materi ini.</p>',
-        'indicator':
-            '<ol><li>Mengidentifikasi konsep dasar.</li><li>Menjelaskan langkah-langkah penyelesaian.</li><li>Menerapkan rumus/konsep pada soal cerita.</li></ol>',
-        'learning_objective':
-            '<ol><li>Melalui diskusi kelompok, siswa dapat menjelaskan konsep dasar dengan benar.</li><li>Diberikan latihan soal, siswa dapat menghitung nilai dengan tingkat akurasi 90%.</li><li>Melalui presentasi, siswa dapat menunjukkan penerapan konsep di dunia nyata.</li></ol>',
-        'main_material':
-            '<h3>Materi Pokok</h3><ul><li>Definisi dan Konsep Dasar</li><li>Karakteristik dan Sifat Utama</li><li>Contoh Penerapan dan Studi Kasus</li></ul>',
-        'learning_method':
-            '<p>Pendekatan: Scientific Learning</p><p>Model: Problem Based Learning (PBL)</p><p>Metode: Diskusi kelompok, tanya jawab, penugasan, dan presentasi.</p>',
-        'media_tools':
-            '<ul><li>Papan tulis dan spidol</li><li>Proyektor LCD dan Laptop</li><li>Lembar Kerja Peserta Didik (LKPD)</li><li>Aplikasi pendukung / Video Pembelajaran</li></ul>',
-        'learning_source':
-            '<ul><li>Buku Paket Siswa Kelas ${_kelasList.firstWhere((k) => k['id'].toString() == _selectedClassId, orElse: () => {'name': ''})['name'] ?? ''}</li><li>Internet / Modul Pengayaan Tambahan</li></ul>',
-        'learning_activities':
-            '<h3>Pendahuluan (15 menit)</h3><ul><li>Guru membuka dengan salam dan doa.</li><li>Guru mengecek kehadiran siswa.</li><li>Apersepsi: Guru mengaitkan materi sebelumnya dengan yang akan dipelajari hari ini.</li><li>Motivasi: Guru menyampaikan tujuan pembelajaran.</li></ul><h3>Kegiatan Inti (60 menit)</h3><ul><li><strong>Mengamati:</strong> Siswa mengamati video/gambar terkait materi.</li><li><strong>Menanya:</strong> Guru mendorong siswa mengajukan pertanyaan tentang apa yang diamati.</li><li><strong>Mengeksplorasi:</strong> Siswa dibagi dalam kelompok untuk mengerjakan LKPD.</li><li><strong>Mengasosiasi:</strong> Siswa mengolah data dan informasi yang didapat.</li><li><strong>Mengkomunikasikan:</strong> Setiap perwakilan kelompok mempresentasikan hasil diskusinya.</li></ul><h3>Kegiatan Penutup (15 menit)</h3><ul><li>Siswa bersama guru menyimpulkan pembelajaran.</li><li>Refleksi: Guru menanyakan perasaan siswa setelah belajar.</li><li>Guru memberikan tugas mandiri / PR.</li><li>Berdoa dan salam penutup.</li></ul>',
-        'assessment':
-            '<h3>1. Penilaian Sikap</h3><p>Observasi keaktifan dan kerjasama selama diskusi kelompok.</p><h3>2. Penilaian Pengetahuan</h3><p>Tes tertulis (pilihan ganda dan uraian) di akhir pelajaran.</p><h3>3. Penilaian Keterampilan</h3><p>Penilaian rubrik saat presentasi hasil kerja kelompok di depan kelas.</p>',
-
-        // Metadata AI
-        'status': 'draft',
-        'ai_generated': true,
-        'ai_model_used': 'claude-sonnet-4-5-20250929',
-        'ai_tokens_used': 3200,
-        'created_at': DateTime.now().toIso8601String(),
+        'academic_year': _tahunAjaranController.text,
+        'teacher_id': widget.teacherId,
       };
 
       if (kDebugMode) {
-        print('Mock RPP Generated: ${mockRppResponse['title']}');
+        print('🌐 Sending POST request to KamillLabs...');
+        print('📦 Payload: ${json.encode(requestBody)}');
       }
 
-      if (!mounted) return;
-
-      final messenger = ScaffoldMessenger.of(context);
-      final languageProvider = context.read<LanguageProvider>();
-
-      final userData = await TokenService().getUserData();
-      final schoolObj = userData?['school'] as Map<String, dynamic>?;
-      final schoolNameStr = schoolObj != null
-          ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
-          : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
-
-      final babMap = _selectedBabId != null
-          ? _babList.firstWhere(
-              (b) => b['id'].toString() == _selectedBabId,
-              orElse: () => <String, dynamic>{},
-            )
-          : <String, dynamic>{};
-      final babName = babMap.isNotEmpty
-          ? (babMap['judul_bab'] ??
-                babMap['title'] ??
-                babMap['judul'] ??
-                'Tanpa Nama')
-          : '';
-
-      final subBabMap = _selectedSubBabId != null
-          ? _subBabList.firstWhere(
-              (s) => s['id'].toString() == _selectedSubBabId,
-              orElse: () => <String, dynamic>{},
-            )
-          : <String, dynamic>{};
-      final subBabName = subBabMap.isNotEmpty
-          ? (subBabMap['judul_sub_bab'] ??
-                subBabMap['title'] ??
-                subBabMap['judul'] ??
-                'Tanpa Nama')
-          : '';
-
-      // Mapping 10 komponen AI ke format form RPP 3 Komponen (K-13)
-      final mappedRppData = {
-        'id': null, // Barudibuat, belum ada ID di database manual
-        'judul': mockRppResponse['title'],
-        'mata_pelajaran_id': mockRppResponse['subject_id'],
-        'mata_pelajaran_nama': mockRppResponse['mata_pelajaran_nama'],
-        'satuan_pendidikan': schoolNameStr,
-        'bab_nama': babName,
-        'sub_bab_nama': subBabName,
-        'kelas_semester':
-            '${mockRppResponse['kelas_nama']} / ${mockRppResponse['semester']}',
-        'tema': mockRppResponse['title'], // Biasanya diisi judul
-        'sub_tema': '',
-        'pembelajaran_ke': '', // Kosong saja sesuai request
-        'alokasi_waktu': _tahunAjaranController
-            .text, // Menyimpan tahun ajaran sementara atau default
-        'waktu_pendahuluan': '15',
-        'waktu_inti': '140',
-        'waktu_penutup': '15',
-        'kompetensi_inti': _stripHtml(
-          mockRppResponse['core_competence'] as String? ?? '',
-        ),
-        'kompetensi_dasar': _stripHtml(
-          mockRppResponse['basic_competence'] as String? ?? '',
-        ),
-        'tujuan_pembelajaran': _stripHtml(
-          mockRppResponse['learning_objective'] as String? ?? '',
-        ),
-        // Karena form K-13 punya 3 input berbeda untuk kegiatan:
-        // Kita menggunakan learning_activities AI di kegiatan_inti, atau bisa dipisah jika AI sangat terstruktur.
-        // Untuk amannya, kita gabungkan semua learning activities AI ke 'kegiatan_inti' form
-        'kegiatan_pendahuluan':
-            '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya dengan Materi yang akan dipelajari', // Placeholder bisa diganti stripHtml
-        'kegiatan_inti': _stripHtml(
-          mockRppResponse['learning_activities'] as String? ?? '',
-        ),
-        'kegiatan_penutup':
-            '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa\n• Pemberian hadiah/pujian untuk pekerjaan yang benar',
-        'penilaian': _stripHtml(mockRppResponse['assessment'] as String? ?? ''),
-        'is_ai_generated': true,
-      };
-
-      // Ganti dialog saat ini dengan halaman hasil AI RPP yang baru dibuat (K-13 Editor)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RppAiResultScreen(
-            rppData: mappedRppData, // Kirim data yang sudah di mapping K-13
-            teacherId: widget.teacherId,
-            onSaved: () {
-              widget.onSaved();
+      // Panggilan API asli ke KamillLabs Edu AI
+      final response = await http
+          .post(
+            Uri.parse(
+              'https://edu-ai-api.kamillabs.com/api/lesson-plans/generate',
+            ),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
             },
-          ),
-        ),
-      );
+            body: json.encode(requestBody),
+          )
+          .timeout(const Duration(seconds: 60));
 
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
-              'en': 'RPP successfully AI-generated.',
-              'id': 'RPP berhasil di-generate AI.',
-            }),
+      if (kDebugMode) print('📥 Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 202) {
+        // Async Mode - navigate to result screen with polling
+        final resultBody = json.decode(response.body);
+
+        if (kDebugMode) print('📋 Full 202 Response: ${response.body}');
+
+        // Try multiple field names for poll_url and job_id
+        final pollUrl =
+            (resultBody['poll_url'] ??
+                    resultBody['polling_url'] ??
+                    resultBody['status_url'])
+                as String?;
+        final jobId =
+            (resultBody['job_id'] ??
+                    resultBody['jobId'] ??
+                    resultBody['id'] ??
+                    resultBody['data']?['id'] ??
+                    resultBody['data']?['job_id'])
+                as String?;
+
+        if (kDebugMode) print('⏳ Job Queued: $jobId | Polling at: $pollUrl');
+
+        // Build metadata for the result screen
+        final pollingMetadata = await _buildPollingMetadata();
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RppAiResultScreen(
+              teacherId: widget.teacherId,
+              onSaved: widget.onSaved,
+              pollUrl: pollUrl,
+              jobId: jobId,
+              token: token,
+              pollingMetadata: pollingMetadata,
+            ),
           ),
-          backgroundColor: ColorUtils.success600,
-        ),
-      );
+        );
+        return;
+      }
+
+      if (response.statusCode == 429) {
+        if (kDebugMode) print('⚠️ Rate limit reached');
+        final errorBody = json.decode(response.body);
+        final message =
+            errorBody['message'] ??
+            'Batas pembuatan RPP AI harian/bulanan telah tercapai.';
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              icon: Icon(
+                Icons.timer_off_rounded,
+                color: ColorUtils.warning600,
+                size: 48,
+              ),
+              title: Text(
+                'Batas Tercapai',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              content: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
+              ),
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorUtils.warning600,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  ),
+                  child: Text('Mengerti'),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        if (kDebugMode) print('❌ API Error Body: ${response.body}');
+        final errorBody = json.decode(response.body);
+        final message = errorBody['message'] ?? 'Gagal generate RPP';
+        throw Exception(message);
+      }
+
+      final resultBody = json.decode(response.body);
+      final rppResponse = resultBody['data'] ?? resultBody;
+
+      await _processAndNavigate(rppResponse);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppLocalizations.error.tr}: $e')),
-      );
+      if (kDebugMode) print('🚨 _submitForm error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.error.tr}: $e')),
+        );
+      }
     } finally {
+      if (kDebugMode)
+        print('🏁 _submitForm finished (isAutoGenerating: false)');
       if (mounted) {
         setState(() {
           _isAutoGenerating = false;
+          _generationStatus = '';
         });
       }
     }
+  }
+
+  Future<Map<String, dynamic>> _buildPollingMetadata() async {
+    final userData = await TokenService().getUserData();
+    final schoolObj = userData?['school'] as Map<String, dynamic>?;
+    final schoolNameStr = schoolObj != null
+        ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
+        : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
+
+    final selectedSubject = _mataPelajaranList.firstWhere(
+      (m) => m['id'].toString() == _selectedMataPelajaranId,
+      orElse: () => {'name': 'Mata Pelajaran'},
+    );
+    final mataPelajaranNama =
+        selectedSubject['name'] ?? selectedSubject['nama'] ?? 'Mata Pelajaran';
+
+    final selectedClass = _kelasList.firstWhere(
+      (k) => k['id'].toString() == _selectedClassId,
+      orElse: () => {'name': 'Kelas'},
+    );
+    final kelasNama = selectedClass['name'] ?? selectedClass['nama'] ?? 'Kelas';
+
+    final babMap = _selectedBabId != null
+        ? _babList.firstWhere(
+            (b) => b['id'].toString() == _selectedBabId,
+            orElse: () => <String, dynamic>{},
+          )
+        : <String, dynamic>{};
+    final babName = babMap.isNotEmpty
+        ? (babMap['judul_bab'] ?? babMap['title'] ?? babMap['judul'] ?? '')
+        : '';
+
+    final subBabMap = _selectedSubBabId != null
+        ? _subBabList.firstWhere(
+            (s) => s['id'].toString() == _selectedSubBabId,
+            orElse: () => <String, dynamic>{},
+          )
+        : <String, dynamic>{};
+    final subBabName = subBabMap.isNotEmpty
+        ? (subBabMap['judul_sub_bab'] ??
+              subBabMap['title'] ??
+              subBabMap['judul'] ??
+              '')
+        : '';
+
+    return {
+      'title': _judulController.text,
+      'mata_pelajaran_id': _selectedMataPelajaranId,
+      'mata_pelajaran_nama': mataPelajaranNama,
+      'satuan_pendidikan': schoolNameStr,
+      'bab_nama': babName,
+      'sub_bab_nama': subBabName,
+      'kelas_semester': '$kelasNama / ${_selectedSemester ?? 'Ganjil'}',
+      'alokasi_waktu': _tahunAjaranController.text,
+    };
+  }
+
+  Future<void> _processAndNavigate(dynamic rppResponse) async {
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final languageProvider = context.read<LanguageProvider>();
+
+    final userData = await TokenService().getUserData();
+    final schoolObj = userData?['school'] as Map<String, dynamic>?;
+    final schoolNameStr = schoolObj != null
+        ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
+        : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
+
+    final selectedSubject = _mataPelajaranList.firstWhere(
+      (m) => m['id'].toString() == _selectedMataPelajaranId,
+      orElse: () => {'name': 'Mata Pelajaran'},
+    );
+    final mataPelajaranNama =
+        rppResponse['mata_pelajaran_nama'] ??
+        selectedSubject['name'] ??
+        selectedSubject['nama'] ??
+        'Mata Pelajaran';
+
+    final selectedClass = _kelasList.firstWhere(
+      (k) => k['id'].toString() == _selectedClassId,
+      orElse: () => {'name': 'Kelas'},
+    );
+    final kelasNama =
+        rppResponse['kelas_nama'] ??
+        selectedClass['name'] ??
+        selectedClass['nama'] ??
+        'Kelas';
+
+    final babMap = _selectedBabId != null
+        ? _babList.firstWhere(
+            (b) => b['id'].toString() == _selectedBabId,
+            orElse: () => <String, dynamic>{},
+          )
+        : <String, dynamic>{};
+    final babName = babMap.isNotEmpty
+        ? (babMap['judul_bab'] ??
+              babMap['title'] ??
+              babMap['judul'] ??
+              'Tanpa Nama')
+        : '';
+
+    final subBabMap = _selectedSubBabId != null
+        ? _subBabList.firstWhere(
+            (s) => s['id'].toString() == _selectedSubBabId,
+            orElse: () => <String, dynamic>{},
+          )
+        : <String, dynamic>{};
+    final subBabName = subBabMap.isNotEmpty
+        ? (subBabMap['judul_sub_bab'] ??
+              subBabMap['title'] ??
+              subBabMap['judul'] ??
+              'Tanpa Nama')
+        : '';
+
+    final mappedRppData = {
+      'id': null,
+      'judul': rppResponse['title'] ?? _judulController.text,
+      'mata_pelajaran_id': _selectedMataPelajaranId,
+      'mata_pelajaran_nama': mataPelajaranNama,
+      'satuan_pendidikan': schoolNameStr,
+      'bab_nama': babName,
+      'sub_bab_nama': subBabName,
+      'kelas_semester':
+          '$kelasNama / ${rppResponse['semester'] ?? _selectedSemester}',
+      'tema': rppResponse['title'],
+      'sub_tema': '',
+      'pembelajaran_ke': '',
+      'alokasi_waktu': _tahunAjaranController.text,
+      'waktu_pendahuluan': '15',
+      'waktu_inti': '140',
+      'waktu_penutup': '15',
+      'kompetensi_inti': _stripHtml(
+        rppResponse['core_competence'] as String? ?? '',
+      ),
+      'kompetensi_dasar': _stripHtml(
+        rppResponse['basic_competence'] as String? ?? '',
+      ),
+      'tujuan_pembelajaran': _stripHtml(
+        rppResponse['learning_objective'] as String? ?? '',
+      ),
+      'kegiatan_pendahuluan':
+          '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya dengan Materi yang akan dipelajari',
+      'kegiatan_inti': _stripHtml(
+        rppResponse['learning_activities'] as String? ?? '',
+      ),
+      'kegiatan_penutup':
+          '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa\n• Pemberian hadiah/pujian untuk pekerjaan yang benar',
+      'penilaian': _stripHtml(rppResponse['assessment'] as String? ?? ''),
+      'is_ai_generated': true,
+    };
+
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RppAiResultScreen(
+          rppData: mappedRppData,
+          teacherId: widget.teacherId,
+          onSaved: () {
+            widget.onSaved();
+          },
+        ),
+      ),
+    );
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          languageProvider.getTranslatedText({
+            'en': 'RPP successfully AI-generated.',
+            'id': 'RPP berhasil di-generate AI.',
+          }),
+        ),
+        backgroundColor: ColorUtils.success600,
+      ),
+    );
   }
 
   Color _getPrimaryColor() => ColorUtils.success600;
@@ -3177,7 +3020,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header (Pattern #10 gradient)
+          // Header
           Container(
             padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
             decoration: BoxDecoration(
@@ -3471,7 +3314,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
             ),
           ),
 
-          // Footer Buttons (Enhanced Pattern)
+          // Footer Buttons
           Container(
             padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -3524,13 +3367,28 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
                         shadowColor: primaryColor.withValues(alpha: 0.4),
                       ),
                       child: _isAutoGenerating
-                          ? SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                if (_generationStatus.isNotEmpty) ...[
+                                  SizedBox(height: 4),
+                                  Text(
+                                    _generationStatus,
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             )
                           : Text(
                               languageProvider.getTranslatedText({

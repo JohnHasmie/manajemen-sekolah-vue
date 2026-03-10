@@ -1,27 +1,42 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
 class RppAiResultScreen extends StatefulWidget {
-  final Map<String, dynamic> rppData;
+  final Map<String, dynamic>? rppData;
   final String teacherId;
   final VoidCallback onSaved;
 
+  /// Polling mode fields - when set, the screen will poll for results
+  final String? pollUrl;
+  final String? jobId;
+  final String? token;
+
+  /// Metadata to build rppData after polling completes
+  final Map<String, dynamic>? pollingMetadata;
+
   const RppAiResultScreen({
     super.key,
-    required this.rppData,
+    this.rppData,
     required this.teacherId,
     required this.onSaved,
+    this.pollUrl,
+    this.jobId,
+    this.token,
+    this.pollingMetadata,
   });
 
   @override
@@ -31,6 +46,9 @@ class RppAiResultScreen extends StatefulWidget {
 class _RppAiResultScreenState extends State<RppAiResultScreen> {
   bool _isSaving = false;
   bool _isRegenerating = false;
+  bool _isPolling = false;
+  String _pollingStatus = '';
+  String? _pollingError;
 
   late quill.QuillController _tujuanController;
   late quill.QuillController _kegiatanIntiController;
@@ -52,7 +70,180 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   @override
   void initState() {
     super.initState();
-    _initControllers(widget.rppData);
+    if (widget.pollUrl != null || widget.jobId != null) {
+      // Polling mode - init empty controllers and start polling
+      _initControllers({});
+      _isPolling = true;
+      _pollingStatus = 'RPP sedang disusun oleh AI...';
+      _startPolling();
+    } else {
+      _initControllers(widget.rppData ?? {});
+    }
+  }
+
+  Future<void> _startPolling() async {
+    // Validate we have a poll URL or job ID
+    if (widget.pollUrl == null && widget.jobId == null) {
+      if (kDebugMode) print('❌ No poll_url or job_id available');
+      if (mounted) {
+        setState(() {
+          _isPolling = false;
+          _pollingError =
+              'Server tidak mengembalikan informasi polling (poll_url/job_id null). '
+              'Silakan coba lagi.';
+        });
+      }
+      return;
+    }
+
+    // Per docs Section 2.2: GET /api/ai-jobs/{id}
+    final pollPath =
+        widget.pollUrl ?? '/api/ai-jobs/${widget.jobId}';
+    final fullUrl = 'https://edu-ai-api.kamillabs.com$pollPath';
+
+    if (kDebugMode) print('🔄 Starting polling at: $fullUrl');
+
+    int attempts = 0;
+    const maxAttempts = 60; // 5 minutes (60 * 5s)
+
+    while (attempts < maxAttempts) {
+      if (!mounted) return;
+      attempts++;
+
+      try {
+        if (kDebugMode) print('🔄 Poll attempt #$attempts');
+
+        final response = await http
+            .get(
+              Uri.parse(fullUrl),
+              headers: {
+                'Accept': 'application/json',
+                if (widget.token != null)
+                  'Authorization': 'Bearer ${widget.token}',
+              },
+            )
+            .timeout(const Duration(seconds: 15));
+
+        if (!mounted) return;
+
+        if (kDebugMode) {
+          print('📥 Poll response status: ${response.statusCode}');
+          print('📥 Poll response body: ${response.body}');
+        }
+
+        if (response.statusCode == 200) {
+          final resultBody = json.decode(response.body);
+          // Per docs: response is { success, data: { status, result, error_message } }
+          final jobData = resultBody['data'] ?? resultBody;
+          final status = jobData['status'] ?? resultBody['status'];
+
+          if (status == 'completed' || status == 'success') {
+            // Per docs Section 2.2: result is inside data.result
+            final rppResponse = jobData['result'] ??
+                jobData['data'] ??
+                resultBody['result'] ??
+                resultBody;
+            _applyPollingResult(rppResponse);
+            return;
+          } else if (status == 'failed' || status == 'error') {
+            setState(() {
+              _isPolling = false;
+              _pollingError = jobData['error_message'] ??
+                  jobData['error'] ??
+                  resultBody['message'] ??
+                  'AI generation failed';
+            });
+            return;
+          } else {
+            // Still processing (pending, processing)
+            final statusLabel = status == 'processing'
+                ? 'AI sedang memproses'
+                : 'Menunggu antrian AI';
+            setState(() {
+              _pollingStatus =
+                  '$statusLabel... (${attempts * 5}s)';
+            });
+          }
+        } else if (response.statusCode == 202) {
+          // Still processing
+          setState(() {
+            _pollingStatus =
+                'AI masih memproses... (${attempts * 5}s)';
+          });
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Polling error attempt #$attempts: $e');
+        // Don't fail immediately on network errors, keep retrying
+      }
+
+      await Future.delayed(const Duration(seconds: 5));
+    }
+
+    if (mounted) {
+      setState(() {
+        _isPolling = false;
+        _pollingError = 'Waktu tunggu AI habis (5 menit). Silakan coba lagi.';
+      });
+    }
+  }
+
+  void _applyPollingResult(dynamic rppResponse) {
+    final metadata = widget.pollingMetadata ?? {};
+
+    final mappedData = {
+      'judul': rppResponse['title'] ?? metadata['title'] ?? 'RPP AI',
+      'mata_pelajaran_id': metadata['mata_pelajaran_id'],
+      'mata_pelajaran_nama': metadata['mata_pelajaran_nama'] ?? '',
+      'satuan_pendidikan': metadata['satuan_pendidikan'] ?? 'SD/MI',
+      'bab_nama': metadata['bab_nama'] ?? '',
+      'sub_bab_nama': metadata['sub_bab_nama'] ?? '',
+      'kelas_semester': metadata['kelas_semester'] ?? '',
+      'tema': rppResponse['title'],
+      'sub_tema': '',
+      'pembelajaran_ke': '',
+      'alokasi_waktu': metadata['alokasi_waktu'] ?? '',
+      'kompetensi_inti': _stripHtml(rppResponse['core_competence'] as String? ?? ''),
+      'kompetensi_dasar': _stripHtml(rppResponse['basic_competence'] as String? ?? ''),
+      'tujuan_pembelajaran': _stripHtml(rppResponse['learning_objective'] as String? ?? ''),
+      'kegiatan_inti': _stripHtml(rppResponse['learning_activities'] as String? ?? ''),
+      'penilaian': _stripHtml(rppResponse['assessment'] as String? ?? ''),
+      'is_ai_generated': true,
+    };
+
+    setState(() {
+      _isPolling = false;
+      _pollingError = null;
+    });
+    _initControllers(mappedData);
+    setState(() {});
+  }
+
+  String _stripHtml(String html) {
+    if (html.isEmpty) return '';
+    var text = html.replaceAll(RegExp(r'<ul>|<ol>'), '\n');
+    text = text.replaceAll(RegExp(r'</ul>|</ol>'), '\n');
+    int counter = 1;
+    while (text.contains('<li>')) {
+      if (html.contains('<ol>')) {
+        text = text.replaceFirst('<li>', '$counter. ');
+        counter++;
+      } else {
+        text = text.replaceFirst('<li>', '• ');
+      }
+    }
+    text = text.replaceAll('</li>', '\n');
+    text = text.replaceAll(RegExp(r'<br\s*/?>'), '\n');
+    text = text.replaceAll(RegExp(r'<h3>'), '\n');
+    text = text.replaceAll(RegExp(r'</h3>|<p>|</p>'), '\n');
+    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
+    text = text.replaceAll('&nbsp;', ' ');
+    text = text.replaceAll('&amp;', '&');
+    text = text.replaceAll('&lt;', '<');
+    text = text.replaceAll('&gt;', '>');
+    text = text.replaceAll('&quot;', '"');
+    text = text.replaceAll('&#39;', "'");
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+    return text.trim();
   }
 
   quill.Document _convertHtmlToQuill(String html) {
@@ -513,7 +704,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       final payloadData = {
         'guru_id': widget.teacherId,
         'mata_pelajaran_id':
-            widget.rppData['mata_pelajaran_id'] ?? widget.rppData['subject_id'],
+            widget.rppData?['mata_pelajaran_id'] ?? widget.rppData?['subject_id'],
         'judul': _judulController.text,
         'kompetensi_inti': _kompetensiIntiController.document.toPlainText(),
         'kompetensi_dasar': _kompetensiDasarController.document.toPlainText(),
@@ -571,51 +762,212 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
   }
 
+  Widget _buildPollingSkeletonBody() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Status banner
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Color(0xFF4F46E5).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Color(0xFF4F46E5).withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Color(0xFF4F46E5),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI sedang menyusun RPP...',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4F46E5),
+                          fontSize: 14,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        _pollingStatus,
+                        style: TextStyle(
+                          color: ColorUtils.slate500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 24),
+          // Skeleton sections
+          _buildSkeletonSection('Judul RPP', height: 48),
+          SizedBox(height: 20),
+          _buildSkeletonSection('Informasi Umum', height: 200),
+          SizedBox(height: 20),
+          _buildSkeletonSection('A. Kompetensi Inti (KI)', height: 120),
+          SizedBox(height: 20),
+          _buildSkeletonSection('B. Kompetensi Dasar (KD)', height: 120),
+          SizedBox(height: 20),
+          _buildSkeletonSection('C. Tujuan Pembelajaran', height: 120),
+          SizedBox(height: 20),
+          _buildSkeletonSection('D. Kegiatan Pembelajaran', height: 150),
+          SizedBox(height: 20),
+          _buildSkeletonSection('E. Penilaian (Asesmen)', height: 120),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonSection(String title, {double height = 120}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: ColorUtils.slate800,
+          ),
+        ),
+        SizedBox(height: 8),
+        Shimmer.fromColors(
+          baseColor: ColorUtils.shimmerBaseColor,
+          highlightColor: ColorUtils.shimmerHighlightColor,
+          child: Container(
+            width: double.infinity,
+            height: height,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPollingErrorBody() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: ColorUtils.error600.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 36,
+                color: ColorUtils.error600,
+              ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Gagal Generate RPP',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate700,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              _pollingError ?? '',
+              style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF4F46E5),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text('Kembali'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text('Hasil RPP AI (K-13)'),
+        title: Text(_isPolling ? 'Generating RPP AI...' : 'Hasil RPP AI (K-13)'),
         backgroundColor: Color(0xFF4F46E5),
         foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.picture_as_pdf),
-            onPressed: _previewPDF,
-            tooltip: 'Preview PDF',
-          ),
-          IconButton(
-            icon: _isRegenerating
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Icon(Icons.refresh),
-            onPressed: _isRegenerating ? null : _showRegenerateDialog,
-            tooltip: 'Generate Ulang',
-          ),
-          IconButton(
-            icon: _isSaving
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Icon(Icons.save),
-            onPressed: _isSaving ? null : _saveRPP,
-            tooltip: 'Simpan RPP',
-          ),
-        ],
+        actions: _isPolling || _pollingError != null
+            ? []
+            : [
+                IconButton(
+                  icon: Icon(Icons.picture_as_pdf),
+                  onPressed: _previewPDF,
+                  tooltip: 'Preview PDF',
+                ),
+                IconButton(
+                  icon: _isRegenerating
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Icon(Icons.refresh),
+                  onPressed: _isRegenerating ? null : _showRegenerateDialog,
+                  tooltip: 'Generate Ulang',
+                ),
+                IconButton(
+                  icon: _isSaving
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Icon(Icons.save),
+                  onPressed: _isSaving ? null : _saveRPP,
+                  tooltip: 'Simpan RPP',
+                ),
+              ],
       ),
-      body: SingleChildScrollView(
+      body: _isPolling
+          ? _buildPollingSkeletonBody()
+          : _pollingError != null
+              ? _buildPollingErrorBody()
+              : SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
