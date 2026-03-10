@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/enhanced_search_bar.dart';
-import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/materi_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
@@ -986,11 +986,9 @@ class MateriPageState extends State<MateriPage> {
               // Content Section
               Expanded(
                 child: _isLoading
-                    ? LoadingScreen(
-                        message: languageProvider.getTranslatedText({
-                          'en': 'Loading materials...',
-                          'id': 'Memuat materi...',
-                        }),
+                    ? SkeletonListLoading(
+                        padding: EdgeInsets.only(top: 8, bottom: 80),
+                        showActions: false,
                       )
                     : _selectedSubject == null
                     ? _buildEmptyState(
@@ -2115,11 +2113,9 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
               _buildHeader(languageProvider),
               Expanded(
                 child: (_isLoading || _isLoadingAi)
-                    ? LoadingScreen(
-                        message: languageProvider.getTranslatedText({
-                          'en': 'Loading content...',
-                          'id': 'Memuat konten...',
-                        }),
+                    ? SkeletonListLoading(
+                        padding: EdgeInsets.only(top: 8, bottom: 80),
+                        showActions: false,
                       )
                     : (_contentMateriList.isEmpty && _aiGeneratedData == null)
                         ? _buildEmptyContent(languageProvider)
