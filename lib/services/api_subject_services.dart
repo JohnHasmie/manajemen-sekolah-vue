@@ -239,7 +239,9 @@ class ApiSubjectService {
     );
 
     final result = _handleResponse(response);
-    return result is List ? result : [];
+    if (result is List) return result;
+    if (result is Map && result['data'] is List) return result['data'];
+    return [];
   }
 
   static Future<List<dynamic>> getBabMateri({String? subjectId}) async {
@@ -489,13 +491,126 @@ class ApiSubjectService {
   }
 
   // ==================== GENERATE MATERI OLEH AI ====================
-  static Future<dynamic> generateMaterial(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/generated-materials/generate'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
+  static const String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
 
+  /// Headers khusus untuk KamillLabs AI API (tanpa X-School-ID)
+  static Future<Map<String, String>> _getAiHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  static Future<http.Response> generateMaterialRaw(
+      Map<String, dynamic> data) async {
+    final response = await http
+        .post(
+          Uri.parse('$_aiBaseUrl/generated-materials/generate'),
+          headers: await _getAiHeaders(),
+          body: json.encode(data),
+        )
+        .timeout(const Duration(seconds: 60));
+    return response;
+  }
+
+  static Future<dynamic> generateMaterial(Map<String, dynamic> data) async {
+    final response = await generateMaterialRaw(data);
+    return _handleResponse(response);
+  }
+
+  /// Poll AI job status from KamillLabs Edu AI
+  static Future<http.Response> pollAiJob(String jobId, String token) async {
+    final response = await http
+        .get(
+          Uri.parse('$_aiBaseUrl/ai-jobs/$jobId'),
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 15));
+    return response;
+  }
+
+  /// Get generated material by ID from KamillLabs Edu AI
+  static Future<dynamic> getGeneratedMaterial(String materialId) async {
+    if (kDebugMode) {
+      print('🔍 Getting material: $_aiBaseUrl/generated-materials/$materialId');
+    }
+    final response = await http.get(
+      Uri.parse('$_aiBaseUrl/generated-materials/$materialId'),
+      headers: await _getAiHeaders(),
+    );
+    if (kDebugMode) {
+      print('🔍 Get material response: ${response.statusCode} - ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}');
+    }
+    return _handleResponse(response);
+  }
+
+  /// Check cache for generated material
+  static Future<dynamic> checkMaterialCache({
+    required String teacherId,
+    required String chapterId,
+    String? subChapterId,
+  }) async {
+    String url =
+        '$_aiBaseUrl/generated-materials/check-cache?teacher_id=$teacherId&chapter_id=$chapterId';
+    if (subChapterId != null) url += '&sub_chapter_id=$subChapterId';
+    if (kDebugMode) {
+      print('🔍 Check cache URL: $url');
+    }
+    final response = await http.get(
+      Uri.parse(url),
+      headers: await _getAiHeaders(),
+    );
+    if (kDebugMode) {
+      print('🔍 Check cache response: ${response.statusCode} - ${response.body}');
+    }
+    return _handleResponse(response);
+  }
+
+  /// List generated materials with filters (fallback when check-cache fails)
+  static Future<dynamic> listGeneratedMaterials({
+    required String teacherId,
+    String? subjectId,
+    String? chapterId,
+  }) async {
+    String url =
+        '$_aiBaseUrl/generated-materials?teacher_id=$teacherId';
+    if (subjectId != null) url += '&subject_id=$subjectId';
+    if (chapterId != null) url += '&chapter_id=$chapterId';
+    if (kDebugMode) {
+      print('🔍 List materials URL: $url');
+    }
+    final response = await http.get(
+      Uri.parse(url),
+      headers: await _getAiHeaders(),
+    );
+    if (kDebugMode) {
+      print('🔍 List materials response: ${response.statusCode}');
+    }
+    return _handleResponse(response);
+  }
+
+  /// Regenerate quiz for generated material
+  static Future<dynamic> regenerateQuiz(String materialId) async {
+    final response = await http.post(
+      Uri.parse('$_aiBaseUrl/generated-materials/$materialId/regenerate-quiz'),
+      headers: await _getAiHeaders(),
+    );
+    return _handleResponse(response);
+  }
+
+  /// Regenerate references for generated material
+  static Future<dynamic> regenerateReferences(String materialId) async {
+    final response = await http.post(
+      Uri.parse(
+          '$_aiBaseUrl/generated-materials/$materialId/regenerate-reference'),
+      headers: await _getAiHeaders(),
+    );
     return _handleResponse(response);
   }
 

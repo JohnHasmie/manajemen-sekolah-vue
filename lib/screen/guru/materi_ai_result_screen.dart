@@ -1,8 +1,13 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/loading_screen.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MateriAiResultScreen extends StatefulWidget {
   final String teacherId;
@@ -27,6 +32,10 @@ class MateriAiResultScreen extends StatefulWidget {
 class MateriAiResultScreenState extends State<MateriAiResultScreen> {
   bool _isLoading = true;
   bool _isRegenerating = false;
+  bool _isPolling = false;
+  String _pollingStatus = '';
+  String? _pollingError;
+  String? _materialId;
   Map<String, dynamic>? _aiData;
   final TextEditingController _promptController = TextEditingController();
 
@@ -34,6 +43,12 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
   void initState() {
     super.initState();
     _generateMateri();
+  }
+
+  @override
+  void dispose() {
+    _promptController.dispose();
+    super.dispose();
   }
 
   String _stripHtml(String html) {
@@ -64,6 +79,11 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
     return text.trim();
   }
 
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
   Future<void> _generateMateri({String prompt = ''}) async {
     setState(() {
       if (_aiData != null) {
@@ -71,10 +91,11 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
       } else {
         _isLoading = true;
       }
+      _pollingError = null;
     });
 
     try {
-      final payload = {
+      final payload = <String, dynamic>{
         'teacher_id': widget.teacherId,
         'subject_id': widget.subjectId,
         'chapter_id': widget.chapterId,
@@ -88,91 +109,275 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
         payload['prompt'] = prompt;
       }
 
-      final response = await ApiSubjectService.generateMaterial(payload);
+      final response = await ApiSubjectService.generateMaterialRaw(payload);
 
-      // Async or sync response handling based on documentation
-      if (response['job_id'] != null) {
-        // Just mock it for now or display a message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Proses generate sedang berjalan di latar belakang (Job ID: ${response['job_id']})',
-            ),
-          ),
-        );
-        Navigator.pop(context);
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        print('📥 Generate Material Response: ${response.statusCode}');
+        print('📥 Body: ${response.body}');
+      }
+
+      if (response.statusCode == 202) {
+        // Async mode - start polling
+        final resultBody = json.decode(response.body);
+        final pollUrl = (resultBody['poll_url'] ??
+                resultBody['polling_url'] ??
+                resultBody['status_url'])
+            as String?;
+        final jobId = (resultBody['job_id'] ??
+                resultBody['jobId'] ??
+                resultBody['id'] ??
+                resultBody['data']?['id'] ??
+                resultBody['data']?['job_id'])
+            as String?;
+
+        if (kDebugMode) print('⏳ Job Queued: $jobId | Polling at: $pollUrl');
+
+        setState(() {
+          _isPolling = true;
+          _isLoading = true;
+          _isRegenerating = false;
+          _pollingStatus = 'AI sedang menyusun materi...';
+        });
+
+        await _startPolling(jobId: jobId, pollUrl: pollUrl);
         return;
       }
 
+      if (response.statusCode == 429) {
+        final errorBody = json.decode(response.body);
+        final message = errorBody['message'] ??
+            'Batas pembuatan materi AI harian/bulanan telah tercapai.';
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isRegenerating = false;
+            _pollingError = message;
+          });
+        }
+        return;
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final resultBody = json.decode(response.body);
+        final data = resultBody['data'] ?? resultBody;
+        _applyResult(data, cached: resultBody['cached'] == true);
+        return;
+      }
+
+      // Other errors
+      final errorBody = json.decode(response.body);
+      throw Exception(errorBody['message'] ?? 'Gagal generate materi');
+    } catch (e) {
+      if (!mounted) return;
+      if (kDebugMode) print('❌ Generate error: $e');
+
       setState(() {
-        _aiData = response['data'];
         _isLoading = false;
         _isRegenerating = false;
+        _isPolling = false;
+        _pollingError = ErrorUtils.getFriendlyMessage(e);
       });
-    } catch (e) {
-      // Tampilkan data contoh / mock data jika API gagal atau belum terkoneksi
+    }
+  }
+
+  Future<void> _startPolling({String? jobId, String? pollUrl}) async {
+    if (jobId == null && pollUrl == null) {
       if (mounted) {
+        setState(() {
+          _isPolling = false;
+          _isLoading = false;
+          _pollingError = 'Tidak ada informasi polling dari server.';
+        });
+      }
+      return;
+    }
+
+    final token = await _getToken();
+    if (token == null) {
+      if (mounted) {
+        setState(() {
+          _isPolling = false;
+          _isLoading = false;
+          _pollingError = 'Token autentikasi tidak ditemukan.';
+        });
+      }
+      return;
+    }
+
+    final pollPath = pollUrl ?? '/api/ai-jobs/$jobId';
+    final fullUrl = 'https://edu-ai-api.kamillabs.com$pollPath';
+
+    if (kDebugMode) print('🔄 Starting polling at: $fullUrl');
+
+    int attempts = 0;
+    const maxAttempts = 60; // 5 minutes max (60 * 5s)
+
+    while (attempts < maxAttempts) {
+      if (!mounted) return;
+      attempts++;
+
+      try {
+        if (kDebugMode) print('🔄 Poll attempt #$attempts');
+
+        final response = await http
+            .get(
+              Uri.parse(fullUrl),
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+            )
+            .timeout(const Duration(seconds: 15));
+
+        if (!mounted) return;
+
+        if (kDebugMode) {
+          print('📥 Poll status: ${response.statusCode}');
+        }
+
+        if (response.statusCode == 200) {
+          final resultBody = json.decode(response.body);
+          final jobData = resultBody['data'] ?? resultBody;
+          final status = jobData['status'] ?? resultBody['status'];
+
+          if (status == 'completed' || status == 'success') {
+            final materialData = jobData['result'] ??
+                jobData['data'] ??
+                resultBody['result'] ??
+                resultBody;
+            _applyResult(materialData);
+            return;
+          } else if (status == 'failed' || status == 'error') {
+            setState(() {
+              _isPolling = false;
+              _isLoading = false;
+              _pollingError = jobData['error_message'] ??
+                  'AI gagal memproses materi. Silakan coba lagi.';
+            });
+            return;
+          }
+
+          // Still processing
+          if (mounted) {
+            setState(() {
+              _pollingStatus = status == 'processing'
+                  ? 'AI sedang memproses materi (percobaan $attempts)...'
+                  : 'Menunggu antrian AI (percobaan $attempts)...';
+            });
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Poll error: $e');
+      }
+
+      // Wait 5 seconds before next poll
+      await Future.delayed(const Duration(seconds: 5));
+    }
+
+    // Timeout
+    if (mounted) {
+      setState(() {
+        _isPolling = false;
+        _isLoading = false;
+        _pollingError =
+            'Proses AI memakan waktu terlalu lama. Silakan coba lagi nanti.';
+      });
+    }
+  }
+
+  void _applyResult(Map<String, dynamic> data, {bool cached = false}) {
+    if (!mounted) return;
+
+    setState(() {
+      _aiData = data;
+      _materialId = data['id']?.toString();
+      _isLoading = false;
+      _isRegenerating = false;
+      _isPolling = false;
+      _pollingError = null;
+    });
+
+    if (cached && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Materi dimuat dari cache.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _regenerateQuiz() async {
+    if (_materialId == null) return;
+
+    setState(() => _isRegenerating = true);
+    try {
+      final response =
+          await ApiSubjectService.regenerateQuiz(_materialId!);
+
+      if (!mounted) return;
+
+      final newQuizzes = response['data'] as List?;
+      if (newQuizzes != null && _aiData != null) {
+        setState(() {
+          final existing = List.from(_aiData!['quizzes'] ?? []);
+          existing.addAll(newQuizzes);
+          _aiData!['quizzes'] = existing;
+          _isRegenerating = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Menggunakan data contoh (Mock Data) karena: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
+                'Kuis baru ditambahkan (sisa regenerasi: ${response['remaining'] ?? '?'})'),
           ),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isRegenerating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text('Gagal regenerasi kuis: ${ErrorUtils.getFriendlyMessage(e)}')),
+      );
+    }
+  }
 
-      setState(() {
-        _aiData = {
-          "id": "mock-uuid-1234",
-          "material_content":
-              "<h2>Materi Aljabar Linear</h2><p>Aljabar linear adalah bidang studi matematika yang mempelajari sistem persamaan linear dan solusinya, vektor, serta transformasi linear. Konsep ini sangat penting dalam berbagai bidang ilmu, termasuk fisika, teknik, ilmu komputer, dan ekonomi.</p><h3>Konsep Utama</h3><ul><li>Vektor dan Ruang Vektor</li><li>Matriks dan Operasi Matriks</li><li>Sistem Persamaan Linear</li></ul>",
-          "quizzes": [
-            {
-              "id": "quiz-uuid-1",
-              "question": "Jika 2x + 3 = 11, berapakah nilai x?",
-              "question_type": "multiple_choice",
-              "options": ["A. x = 3", "B. x = 4", "C. x = 5", "D. x = 6"],
-              "correct_answer": "B. x = 4",
-              "explanation":
-                  "Pindahkan 3 ke ruas kanan: 2x = 11 - 3, sehingga 2x = 8. Bagi kedua ruas dengan 2: x = 4.",
-              "difficulty": "easy",
-              "generation_batch": 1,
-            },
-            {
-              "id": "quiz-uuid-2",
-              "question":
-                  "Jelaskan apa yang dimaksud dengan matriks identitas!",
-              "question_type": "essay",
-              "correct_answer":
-                  "Matriks persegi yang elemen-elemen pada diagonal utamanya bernilai 1 dan elemen lainnya bernilai 0.",
-              "explanation":
-                  "Matriks identitas bertindak seperti angka 1 dalam perkalian bilangan biasa. Jika matriks A dikalikan dengan matriks identitas I, hasilnya adalah matriks A itu sendiri.",
-              "difficulty": "medium",
-              "generation_batch": 1,
-            },
-          ],
-          "references": [
-            {
-              "id": "ref-uuid-1",
-              "title": "Konsep Dasar Aljabar dan Persamaan",
-              "content":
-                  "<p>Untuk memahami aljabar, kita harus terbiasa dengan penggunaan huruf (variabel) untuk mewakili angka yang belum diketahui nilainya. Persamaan adalah kalimat matematika yang menyamakan dua ekspresi aljabar.</p>",
-              "type": "concept_deep_dive",
-              "generation_batch": 1,
-            },
-            {
-              "id": "ref-uuid-2",
-              "title": "Kesalahan Umum Pemula",
-              "content":
-                  "<p>Banyak siswa yang salah dalam mendistribusikan tanda negatif saat menyelesaikan persamaan. Ingatlah bahwa -(x + 3) sama dengan -x - 3, bukan -x + 3.</p>",
-              "type": "common_misconception",
-              "generation_batch": 1,
-            },
-          ],
-        };
-        _isLoading = false;
-        _isRegenerating = false;
-      });
+  Future<void> _regenerateReferences() async {
+    if (_materialId == null) return;
+
+    setState(() => _isRegenerating = true);
+    try {
+      final response =
+          await ApiSubjectService.regenerateReferences(_materialId!);
+
+      if (!mounted) return;
+
+      final newRefs = response['data'] as List?;
+      if (newRefs != null && _aiData != null) {
+        setState(() {
+          _aiData!['references'] = newRefs;
+          _isRegenerating = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Referensi diperbarui (sisa regenerasi: ${response['remaining'] ?? '?'})'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isRegenerating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Gagal regenerasi referensi: ${ErrorUtils.getFriendlyMessage(e)}')),
+      );
     }
   }
 
@@ -187,7 +392,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
           ),
           title: Row(
             children: [
-              Icon(Icons.auto_awesome, color: ColorUtils.primary),
+              Icon(Icons.auto_awesome, color: _getPrimaryColor()),
               SizedBox(width: 8),
               Text(
                 'Generate Ulang AI',
@@ -266,7 +471,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: ColorUtils.primary),
+                      borderSide: BorderSide(color: _getPrimaryColor()),
                     ),
                   ),
                 ),
@@ -287,7 +492,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
                 _generateMateri(prompt: _promptController.text);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: ColorUtils.primary,
+                backgroundColor: _getPrimaryColor(),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -296,6 +501,101 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
               child: Text('Generate'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showRegenOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Regenerasi Konten',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: ColorUtils.slate800,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Pilih bagian yang ingin di-generate ulang oleh AI',
+                  style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+                ),
+                SizedBox(height: 16),
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _getPrimaryColor().withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.auto_awesome,
+                        color: _getPrimaryColor(), size: 20),
+                  ),
+                  title: Text('Generate Ulang Semua',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text('Buat ulang materi, kuis, dan referensi'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showRegenerateDialog();
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child:
+                        Icon(Icons.quiz_rounded, color: Colors.orange, size: 20),
+                  ),
+                  title: Text('Tambah Kuis Baru',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle:
+                      Text('Menambahkan kuis baru ke daftar yang sudah ada'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _regenerateQuiz();
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.menu_book_rounded,
+                        color: Colors.blue, size: 20),
+                  ),
+                  title: Text('Ganti Referensi',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle:
+                      Text('Mengganti seluruh referensi dengan yang baru'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _regenerateReferences();
+                  },
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -374,28 +674,375 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
             ),
           ),
           SizedBox(width: 8),
-          GestureDetector(
-            onTap: _isRegenerating ? null : _showRegenerateDialog,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
+          if (!_isLoading && _aiData != null)
+            GestureDetector(
+              onTap: _isRegenerating ? null : _showRegenOptions,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: _isRegenerating
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 20),
               ),
-              child: _isRegenerating
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
             ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPollingView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(
+                color: _getPrimaryColor(),
+                strokeWidth: 3,
+              ),
+            ),
+            SizedBox(height: 24),
+            Text(
+              _pollingStatus,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate700,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Mohon tunggu, proses ini membutuhkan waktu beberapa saat...',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: ColorUtils.slate500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 60, color: Colors.red.shade400),
+            SizedBox(height: 16),
+            Text(
+              'Gagal Generate Materi',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: ColorUtils.slate800,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              _pollingError!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: ColorUtils.slate600,
+              ),
+            ),
+            SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => _generateMateri(),
+              icon: Icon(Icons.refresh),
+              label: Text('Coba Lagi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _getPrimaryColor(),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuizCard(int idx, Map<String, dynamic> quiz) {
+    Color diffColor = Colors.grey;
+    String difficulty =
+        quiz['difficulty']?.toString().toLowerCase() ?? '';
+    if (difficulty == 'easy') {
+      diffColor = Colors.green;
+    } else if (difficulty == 'medium') {
+      diffColor = Colors.orange;
+    } else if (difficulty == 'hard') {
+      diffColor = Colors.red;
+    }
+
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: ColorUtils.slate200),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Pertanyaan ${idx + 1}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: ColorUtils.slate500,
+                    fontSize: 13,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate100,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        quiz['question_type']
+                                ?.toString()
+                                .replaceAll('_', ' ')
+                                .toUpperCase() ??
+                            'KUIS',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: ColorUtils.slate600,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: diffColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: diffColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        difficulty.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: diffColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            Text(
+              quiz['question'] ?? '',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                color: ColorUtils.slate800,
+              ),
+            ),
+            SizedBox(height: 12),
+            if (quiz['options'] != null &&
+                (quiz['options'] as List).isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: (quiz['options'] as List).map((opt) {
+                    bool isTargetAnswer = opt.toString().trim() ==
+                        quiz['correct_answer']?.toString().trim();
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            isTargetAnswer
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
+                            size: 16,
+                            color: isTargetAnswer
+                                ? Colors.green
+                                : ColorUtils.slate400,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              opt.toString(),
+                              style: TextStyle(
+                                color: isTargetAnswer
+                                    ? Colors.green.shade700
+                                    : ColorUtils.slate700,
+                                fontWeight: isTargetAnswer
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              SizedBox(height: 12),
+            ],
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Kunci Jawaban:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    quiz['correct_answer'] ?? '-',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green.shade900,
+                    ),
+                  ),
+                  if (quiz['explanation'] != null) ...[
+                    SizedBox(height: 8),
+                    Divider(color: Colors.green.shade200),
+                    SizedBox(height: 4),
+                    Text(
+                      'Penjelasan:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.green.shade700,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      quiz['explanation'] ?? '',
+                      style: TextStyle(
+                        color: Colors.green.shade900,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReferenceCard(Map<String, dynamic> ref) {
+    String refType = ref['type']
+            ?.toString()
+            .replaceAll('_', ' ')
+            .toUpperCase() ??
+        'REFERENSI';
+
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: ColorUtils.slate200),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getPrimaryColor().withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    refType,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: _getPrimaryColor(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Text(
+              ref['title'] ?? '',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: ColorUtils.slate800,
+                fontSize: 15,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              _stripHtml(ref['content'] ?? ''),
+              style: TextStyle(
+                color: ColorUtils.slate600,
+                height: 1.5,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -408,446 +1055,165 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
         children: [
           _buildHeader(),
           Expanded(
-            child: _isLoading
-                ? LoadingScreen(
-                    message:
-                        'AI sedang menyusun materi untuk ${widget.title}...',
-                  )
-                : _aiData == null
-                ? Center(child: Text('Gagal memuat materi.'))
-                : SingleChildScrollView(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: ColorUtils.slate200),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.title,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorUtils.slate800,
-                                ),
-                              ),
-                              SizedBox(height: 16),
-                              Divider(),
-                              Text(
-                                _stripHtml(
-                                  _aiData!['material_content'] ??
-                                      '<p>Konten tidak tersedia.</p>',
-                                ),
-                                style: TextStyle(
-                                  height: 1.5,
-                                  color: ColorUtils.slate700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        if ((_aiData!['quizzes'] as List?)?.isNotEmpty ==
-                            true) ...[
-                          SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.quiz_rounded,
-                                color: ColorUtils.primary,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Kuis & Evaluasi',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorUtils.slate800,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          ...(_aiData!['quizzes'] as List).asMap().entries.map((
-                            entry,
-                          ) {
-                            int idx = entry.key;
-                            var quiz = entry.value;
-
-                            // Menentukan warna badge kesulitan
-                            Color diffColor = Colors.grey;
-                            String difficulty =
-                                quiz['difficulty']?.toString().toLowerCase() ??
-                                '';
-                            if (difficulty == 'easy')
-                              diffColor = Colors.green;
-                            else if (difficulty == 'medium')
-                              diffColor = Colors.orange;
-                            else if (difficulty == 'hard')
-                              diffColor = Colors.red;
-
-                            return Card(
-                              elevation: 0,
-                              margin: EdgeInsets.only(bottom: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: ColorUtils.slate200),
-                              ),
-                              child: Padding(
+            child: _pollingError != null
+                ? _buildErrorView()
+                : _isPolling
+                    ? _buildPollingView()
+                    : _isLoading
+                        ? LoadingScreen(
+                            message:
+                                'AI sedang menyusun materi untuk ${widget.title}...',
+                          )
+                        : _aiData == null
+                            ? Center(child: Text('Gagal memuat materi.'))
+                            : SingleChildScrollView(
                                 padding: EdgeInsets.all(16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'Pertanyaan ${idx + 1}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: ColorUtils.slate500,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: ColorUtils.slate100,
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                quiz['question_type']
-                                                        ?.toString()
-                                                        .replaceAll('_', ' ')
-                                                        .toUpperCase() ??
-                                                    'KUIS',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: ColorUtils.slate600,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(width: 6),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: diffColor.withValues(
-                                                  alpha: 0.1,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                                border: Border.all(
-                                                  color: diffColor.withValues(
-                                                    alpha: 0.3,
-                                                  ),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                difficulty.toUpperCase(),
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: diffColor,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 12),
-                                    Text(
-                                      quiz['question'] ?? '',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 15,
-                                        color: ColorUtils.slate800,
-                                      ),
-                                    ),
-                                    SizedBox(height: 12),
-                                    if (quiz['options'] != null &&
-                                        (quiz['options'] as List)
-                                            .isNotEmpty) ...[
-                                      Container(
-                                        width: double.infinity,
-                                        padding: EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: ColorUtils.slate50,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: (quiz['options'] as List).map((
-                                            opt,
-                                          ) {
-                                            bool isTargetAnswer =
-                                                opt.toString().trim() ==
-                                                quiz['correct_answer']
-                                                    ?.toString()
-                                                    .trim();
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 6,
-                                              ),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Icon(
-                                                    isTargetAnswer
-                                                        ? Icons.check_circle
-                                                        : Icons
-                                                              .radio_button_unchecked,
-                                                    size: 16,
-                                                    color: isTargetAnswer
-                                                        ? Colors.green
-                                                        : ColorUtils.slate400,
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Text(
-                                                      opt.toString(),
-                                                      style: TextStyle(
-                                                        color: isTargetAnswer
-                                                            ? Colors
-                                                                  .green
-                                                                  .shade700
-                                                            : ColorUtils
-                                                                  .slate700,
-                                                        fontWeight:
-                                                            isTargetAnswer
-                                                            ? FontWeight.w600
-                                                            : FontWeight.normal,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ),
-                                      ),
-                                      SizedBox(height: 12),
-                                    ],
+                                    // Material content
                                     Container(
-                                      width: double.infinity,
-                                      padding: EdgeInsets.all(12),
+                                      padding: EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.shade50,
-                                        borderRadius: BorderRadius.circular(8),
+                                        color: Colors.white,
+                                        borderRadius:
+                                            BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: Colors.green.shade200,
-                                        ),
+                                            color: ColorUtils.slate200),
                                       ),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Kunci Jawaban:',
+                                            widget.title,
                                             style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.green.shade700,
+                                              fontSize: 18,
                                               fontWeight: FontWeight.bold,
+                                              color: ColorUtils.slate800,
                                             ),
                                           ),
-                                          SizedBox(height: 4),
+                                          SizedBox(height: 16),
+                                          Divider(),
                                           Text(
-                                            quiz['correct_answer'] ?? '-',
+                                            _stripHtml(
+                                              _aiData!['material_content'] ??
+                                                  '<p>Konten tidak tersedia.</p>',
+                                            ),
                                             style: TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.green.shade900,
+                                              height: 1.5,
+                                              color: ColorUtils.slate700,
                                             ),
                                           ),
-                                          if (quiz['explanation'] != null) ...[
-                                            SizedBox(height: 8),
-                                            Divider(
-                                              color: Colors.green.shade200,
-                                            ),
-                                            SizedBox(height: 4),
-                                            Text(
-                                              'Penjelasan:',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.green.shade700,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            SizedBox(height: 4),
-                                            Text(
-                                              quiz['explanation'] ?? '',
-                                              style: TextStyle(
-                                                color: Colors.green.shade900,
-                                                fontSize: 13,
-                                                height: 1.4,
-                                              ),
-                                            ),
-                                          ],
                                         ],
                                       ),
                                     ),
+
+                                    // Quizzes
+                                    if ((_aiData!['quizzes'] as List?)
+                                            ?.isNotEmpty ==
+                                        true) ...[
+                                      SizedBox(height: 24),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.quiz_rounded,
+                                                  color: _getPrimaryColor()),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                'Kuis & Evaluasi',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: ColorUtils.slate800,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (_materialId != null)
+                                            TextButton.icon(
+                                              onPressed: _isRegenerating
+                                                  ? null
+                                                  : _regenerateQuiz,
+                                              icon: Icon(Icons.add,
+                                                  size: 16,
+                                                  color: _getPrimaryColor()),
+                                              label: Text(
+                                                'Tambah Kuis',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: _getPrimaryColor(),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 12),
+                                      ...(_aiData!['quizzes'] as List)
+                                          .asMap()
+                                          .entries
+                                          .map((entry) => _buildQuizCard(
+                                              entry.key,
+                                              Map<String, dynamic>.from(
+                                                  entry.value))),
+                                    ],
+
+                                    // References
+                                    if ((_aiData!['references'] as List?)
+                                            ?.isNotEmpty ==
+                                        true) ...[
+                                      SizedBox(height: 24),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.menu_book_rounded,
+                                                  color: _getPrimaryColor()),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                'Referensi Pembelajaran',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: ColorUtils.slate800,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (_materialId != null)
+                                            TextButton.icon(
+                                              onPressed: _isRegenerating
+                                                  ? null
+                                                  : _regenerateReferences,
+                                              icon: Icon(Icons.refresh,
+                                                  size: 16,
+                                                  color: Colors.blue),
+                                              label: Text(
+                                                'Ganti',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.blue,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 12),
+                                      ...(_aiData!['references'] as List).map(
+                                          (ref) => _buildReferenceCard(
+                                              Map<String, dynamic>.from(ref))),
+                                    ],
+
+                                    SizedBox(height: 16),
                                   ],
                                 ),
                               ),
-                            );
-                          }),
-                        ],
-
-                        if ((_aiData!['references'] as List?)?.isNotEmpty ==
-                            true) ...[
-                          SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.menu_book_rounded,
-                                color: ColorUtils.primary,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Referensi Pembelajaran',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorUtils.slate800,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          ...(_aiData!['references'] as List).map((ref) {
-                            String refType =
-                                ref['type']
-                                    ?.toString()
-                                    .replaceAll('_', ' ')
-                                    .toUpperCase() ??
-                                'REFERENSI';
-
-                            return Card(
-                              elevation: 0,
-                              margin: EdgeInsets.only(bottom: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: ColorUtils.slate200),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: ColorUtils.primary
-                                                .withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            refType,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color: ColorUtils.primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 10),
-                                    Text(
-                                      ref['title'] ?? '',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: ColorUtils.slate800,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      _stripHtml(ref['content'] ?? ''),
-                                      style: TextStyle(
-                                        color: ColorUtils.slate600,
-                                        height: 1.5,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
-                      ],
-                    ),
-                  ),
           ),
-          if (!_isLoading && _aiData != null)
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    offset: Offset(0, -4),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Implementasi API Save nanti
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Fitur simpan ke database akan segera hadir.',
-                      ),
-                    ),
-                  );
-                },
-                icon: Icon(Icons.save_rounded),
-                label: Text(
-                  'Simpan ke Database',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade600,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
