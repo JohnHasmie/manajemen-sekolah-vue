@@ -49,15 +49,26 @@ class _LearningRecommendationResultScreenState
     });
 
     try {
-      final teacherId = widget.teacher['id'] ?? '';
+      final teacherId = widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
       final classId = widget.classData['id']?.toString() ?? '';
-      final studentId = widget.student['id']?.toString() ?? '';
+      final studentId = widget.student['id']?.toString() ??
+          widget.student['student_id']?.toString() ?? '';
+
+      if (kDebugMode) {
+        print('📥 Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId');
+        print('📥 Teacher data: ${widget.teacher}');
+        print('📥 Student data keys: ${widget.student.keys.toList()}');
+      }
 
       final response = await ApiRecommendationService.getRecommendations(
         teacherId: teacherId,
         classId: classId,
         studentId: studentId,
       );
+
+      if (kDebugMode) {
+        print('📥 Response: ${response.toString().length > 500 ? response.toString().substring(0, 500) : response}');
+      }
 
       if (response['success'] == true) {
         final data = response['data'];
@@ -69,6 +80,10 @@ class _LearningRecommendationResultScreenState
           recommendations = data['data'];
         } else {
           recommendations = [];
+        }
+
+        if (kDebugMode) {
+          print('📥 Recommendations count: ${recommendations.length}, data type: ${data.runtimeType}');
         }
 
         setState(() {

@@ -29,6 +29,11 @@ class ApiRecommendationService {
     } else if (response.statusCode == 422) {
       final message = body['message'] ?? 'Validation error';
       throw Exception(message);
+    } else if (response.statusCode == 500) {
+      if (kDebugMode) {
+        print('🔴 Server Error 500: ${response.body}');
+      }
+      throw Exception('Server sedang bermasalah. Coba lagi nanti.');
     } else {
       throw Exception(
         body['message'] ?? body['error'] ?? 'Request failed (${response.statusCode})',
@@ -136,7 +141,7 @@ class ApiRecommendationService {
 
   /// List recommendations with filters (paginated)
   static Future<Map<String, dynamic>> getRecommendations({
-    required String teacherId,
+    String? teacherId,
     String? classId,
     String? studentId,
     String? subjectId,
@@ -147,10 +152,10 @@ class ApiRecommendationService {
     int perPage = 15,
   }) async {
     final params = <String, String>{
-      'teacher_id': teacherId,
       'page': page.toString(),
       'per_page': perPage.toString(),
     };
+    if (teacherId != null && teacherId.isNotEmpty) params['teacher_id'] = teacherId;
     if (classId != null) params['class_id'] = classId;
     if (studentId != null) params['student_id'] = studentId;
     if (subjectId != null) params['subject_id'] = subjectId;
@@ -166,7 +171,8 @@ class ApiRecommendationService {
         .timeout(const Duration(seconds: 30));
 
     if (kDebugMode) {
-      print('📋 List recommendations: ${response.statusCode}');
+      print('📋 List recommendations: ${response.statusCode} - URL: $uri');
+      print('📋 Response body: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}');
     }
 
     final body = _handleResponse(response);
@@ -272,13 +278,17 @@ class ApiRecommendationService {
           .timeout(const Duration(seconds: 15));
 
       if (kDebugMode) {
-        print('🔄 Poll attempt $attempt: ${response.statusCode}');
+        print('🔄 Poll attempt $attempt: ${response.statusCode} - ${response.body.length > 300 ? response.body.substring(0, 300) : response.body}');
       }
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         final data = body['data'] ?? body;
         final status = data['status']?.toString().toLowerCase() ?? '';
+
+        if (kDebugMode) {
+          print('📌 Job $jobId: status=$status, progress=${data['progress'] ?? 'N/A'}, error=${data['error'] ?? 'none'}');
+        }
 
         onProgress?.call(status, attempt);
 
