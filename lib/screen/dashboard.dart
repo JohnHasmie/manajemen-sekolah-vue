@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/widgets/dashboard/material_slider_card.dart';
 import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
@@ -97,6 +98,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   // State for Schedule Slider
   List<dynamic> _todaysScheduleList = [];
+  List<dynamic> _materialOverview = [];
   List<dynamic> _homeroomClasses = [];
 
   // Finance Badge State
@@ -700,10 +702,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             ? List<dynamic>.from(todaysSchedule)
             : <dynamic>[];
 
+        final materialOverviewRaw = dashboardData['material_overview'];
+        final materialOverviewList = materialOverviewRaw is List
+            ? List<dynamic>.from(materialOverviewRaw)
+            : <dynamic>[];
+
         if (!mounted) return;
         setState(() {
           _isStatsLoaded = true;
           _todaysScheduleList = todaysScheduleList;
+          _materialOverview = materialOverviewList;
           _stats = {
             'total_siswa': dashboardData['total_siswa'] ?? 0,
             'total_kelas': dashboardData['total_kelas'] ?? 0,
@@ -1973,12 +1981,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             );
           },
         ),
-        OverviewCard(
-          title: 'Materials',
-          value: _stats['total_materi']?.toString() ?? '0',
-          subtitle: 'Learning resources',
-          icon: Icons.book_outlined,
-          accentColor: ColorUtils.info600,
+        MaterialSliderCard(
+          materials: _materialOverview,
           onTap: () {
             Navigator.push(
               context,
@@ -2142,6 +2146,17 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
+          ),
+        ),
+        QuickActionButton(
+          label: 'Absensi',
+          icon: Icons.how_to_reg_outlined,
+          color: ColorUtils.warning600,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PresencePage(teacher: _userData),
+            ),
           ),
         ),
         QuickActionButton(
