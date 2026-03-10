@@ -23,15 +23,15 @@ class ApiService {
   static late final String baseUrl;
 
   static Future<void> init() async {
-    // final envBaseUrl = dotenv.env['API_BASE_URL'];
+    final envBaseUrl = dotenv.env['API_BASE_URL'];
 
-    // if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
-    //   baseUrl = envBaseUrl;
-    //   if (kDebugMode) {
-    //     print('📡 API Base URL from .env: $baseUrl');
-    //   }
-    //   return;
-    // }
+    if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
+      baseUrl = envBaseUrl;
+      if (kDebugMode) {
+        print('📡 API Base URL from .env: $baseUrl');
+      }
+      return;
+    }
 
     // Fallback if .env is missing or API_BASE_URL is empty
     if (kIsWeb) {

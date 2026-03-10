@@ -49,12 +49,28 @@ class _LearningRecommendationResultScreenState
     });
 
     try {
+      final teacherId = widget.teacher['id'] ?? '';
+      final classId = widget.classData['id']?.toString() ?? '';
+      final studentId = widget.student['id']?.toString() ?? '';
+
       final response = await ApiRecommendationService.getRecommendations(
-        studentId: widget.student['id'].toString(),
+        teacherId: teacherId,
+        classId: classId,
+        studentId: studentId,
       );
 
       if (response['success'] == true) {
-        final recommendations = response['data'] ?? [];
+        final data = response['data'];
+        // Handle both paginated (data.data) and direct list responses
+        final List recommendations;
+        if (data is List) {
+          recommendations = data;
+        } else if (data is Map && data['data'] is List) {
+          recommendations = data['data'];
+        } else {
+          recommendations = [];
+        }
+
         setState(() {
           _recommendations = recommendations;
           _isLoading = false;
@@ -68,6 +84,13 @@ class _LearningRecommendationResultScreenState
       } else {
         setState(() {
           _errorMessage = response['message'] ?? 'Gagal mengambil rekomendasi.';
+          _isLoading = false;
+        });
+      }
+    } on RateLimitException catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.message;
           _isLoading = false;
         });
       }

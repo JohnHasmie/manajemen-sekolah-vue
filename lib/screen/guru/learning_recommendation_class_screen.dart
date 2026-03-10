@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/services/api_recommendation_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
-import 'package:manajemensekolah/widgets/dashboard/menu_item_card.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
@@ -29,12 +29,45 @@ class _LearningRecommendationClassScreenState
   final GlobalKey _classListKey = GlobalKey();
   String? _tourId;
 
+  // Summary data per class ID
+  final Map<String, Map<String, dynamic>> _classSummaries = {};
+  final Map<String, bool> _loadingSummaries = {};
+
   @override
   void initState() {
     super.initState();
+    _loadAllSummaries();
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) _checkAndShowTour();
     });
+  }
+
+  Future<void> _loadAllSummaries() async {
+    for (final cls in widget.classes) {
+      final classId = cls['id']?.toString();
+      if (classId == null) continue;
+      _loadClassSummary(classId);
+    }
+  }
+
+  Future<void> _loadClassSummary(String classId) async {
+    if (!mounted) return;
+    setState(() => _loadingSummaries[classId] = true);
+
+    try {
+      final summary = await ApiRecommendationService.getClassSummary(classId);
+      if (mounted) {
+        setState(() {
+          _classSummaries[classId] = summary['data'] ?? {};
+          _loadingSummaries[classId] = false;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading summary for $classId: $e');
+      if (mounted) {
+        setState(() => _loadingSummaries[classId] = false);
+      }
+    }
   }
 
   Future<void> _checkAndShowTour() async {
@@ -210,7 +243,7 @@ class _LearningRecommendationClassScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Pilih Kelas',
+                        'Rekomendasi Belajar',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -220,7 +253,7 @@ class _LearningRecommendationClassScreenState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Pilih kelas perwalian Anda untuk melihat rekomendasi belajaran siswa',
+                        'Pilih kelas untuk melihat rekomendasi siswa',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.9),
@@ -237,36 +270,228 @@ class _LearningRecommendationClassScreenState
 
           // Body
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: widget.classes.length,
-              itemBuilder: (context, index) {
-                final cls = widget.classes[index];
-                return Padding(
-                  key: index == 0 ? _classListKey : null,
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: MenuItemCard(
-                    title: cls['name'] ?? cls['nama'] ?? 'Kelas Tanpa Nama',
-                    icon: Icons.class_outlined,
-                    primaryColor: _getPrimaryColor(),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              LearningRecommendationStudentScreen(
-                                teacher: widget.teacher,
-                                classData: cls,
-                              ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+            child: RefreshIndicator(
+              onRefresh: _loadAllSummaries,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: widget.classes.length,
+                itemBuilder: (context, index) {
+                  final cls = widget.classes[index];
+                  final classId = cls['id']?.toString() ?? '';
+                  final className = cls['name'] ?? cls['nama'] ?? 'Kelas';
+                  final summary = _classSummaries[classId];
+                  final isLoading = _loadingSummaries[classId] == true;
+
+                  return Padding(
+                    key: index == 0 ? _classListKey : null,
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildClassCard(
+                      className: className,
+                      classId: classId,
+                      classData: cls,
+                      summary: summary,
+                      isLoading: isLoading,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildClassCard({
+    required String className,
+    required String classId,
+    required Map<String, dynamic> classData,
+    Map<String, dynamic>? summary,
+    bool isLoading = false,
+  }) {
+    final totalRec = summary?['total_recommendations'] ?? 0;
+
+    // API may return by_status/by_priority as List or Map
+    final byStatus = _toCountMap(summary?['by_status']);
+    final byPriority = _toCountMap(summary?['by_priority']);
+
+    final pending = byStatus['pending'] ?? 0;
+    final inProgress = byStatus['in_progress'] ?? 0;
+    final completed = byStatus['completed'] ?? 0;
+    final highPriority = byPriority['high'] ?? 0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LearningRecommendationStudentScreen(
+                teacher: widget.teacher,
+                classData: classData,
+              ),
+            ),
+          ).then((_) {
+            // Refresh summary when returning
+            _loadClassSummary(classId);
+          });
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorUtils.slate200, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: _getPrimaryColor().withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+              BoxShadow(
+                color: ColorUtils.slate900.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Class icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _getPrimaryColor().withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: _getPrimaryColor().withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  Icons.class_outlined,
+                  size: 24,
+                  color: _getPrimaryColor(),
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Class info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      className,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.slate900,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    if (isLoading)
+                      Text(
+                        'Memuat...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate400,
+                        ),
+                      )
+                    else if (totalRec > 0)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          _buildMiniTag(
+                            '$totalRec rekomendasi',
+                            ColorUtils.info600,
+                          ),
+                          if (highPriority > 0)
+                            _buildMiniTag(
+                              '$highPriority prioritas tinggi',
+                              ColorUtils.error600,
+                            ),
+                          if (pending > 0)
+                            _buildMiniTag(
+                              '$pending pending',
+                              ColorUtils.warning600,
+                            ),
+                          if (inProgress > 0)
+                            _buildMiniTag(
+                              '$inProgress proses',
+                              ColorUtils.corporateBlue600,
+                            ),
+                          if (completed > 0)
+                            _buildMiniTag(
+                              '$completed selesai',
+                              ColorUtils.success600,
+                            ),
+                        ],
+                      )
+                    else
+                      Text(
+                        'Belum ada rekomendasi',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate400,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              Icon(
+                Icons.chevron_right_rounded,
+                color: ColorUtils.slate400,
+                size: 24,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Convert API response (List or Map) to a {key: count} map.
+  /// List format: [{"status": "pending", "count": 3}, ...]
+  /// Map format: {"pending": 3, ...}
+  Map<String, int> _toCountMap(dynamic data) {
+    if (data is Map) {
+      return data.map((k, v) => MapEntry(k.toString(), v is int ? v : int.tryParse(v.toString()) ?? 0));
+    }
+    if (data is List) {
+      final map = <String, int>{};
+      for (final item in data) {
+        if (item is Map) {
+          final key = (item['status'] ?? item['priority'] ?? item['category'] ?? '').toString();
+          final count = item['count'] is int ? item['count'] : int.tryParse(item['count'].toString()) ?? 0;
+          if (key.isNotEmpty) map[key] = count;
+        }
+      }
+      return map;
+    }
+    return {};
+  }
+
+  Widget _buildMiniTag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
