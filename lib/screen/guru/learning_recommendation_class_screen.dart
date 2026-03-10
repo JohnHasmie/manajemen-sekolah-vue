@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:manajemensekolah/services/api_recommendation_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
+import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -34,30 +36,74 @@ class _LearningRecommendationClassScreenState
   final Map<String, Map<String, dynamic>> _classSummaries = {};
   final Map<String, bool> _loadingSummaries = {};
 
+  // Recommendation history per class (grouped by date)
+  final Map<String, List<Map<String, dynamic>>> _classHistory = {};
+  final Map<String, bool> _loadingHistory = {};
+
   // Subjects per class (from teaching schedule)
   List<dynamic> _teacherSchedules = [];
   bool _schedulesLoaded = false;
 
+  // Teacher profile ID (resolved from user_id)
+  String? _teacherProfileId;
+
   // Generate state
   final Map<String, bool> _generating = {};
+
+  // Expanded class cards
+  final Map<String, bool> _expandedClass = {};
 
   @override
   void initState() {
     super.initState();
-    _loadAllSummaries();
-    _loadTeacherSchedules();
+    _loadAllData();
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) _checkAndShowTour();
     });
   }
 
-  Future<void> _loadAllSummaries() async {
+  Future<void> _loadAllData() async {
+    // Resolve teacher profile ID (user_id → teacher_id)
+    await _resolveTeacherProfileId();
+    _loadTeacherSchedules();
     for (final cls in widget.classes) {
       final classId = cls['id']?.toString();
       if (classId == null) continue;
       _loadClassSummary(classId);
+      _loadClassHistory(classId);
     }
   }
+
+  Future<void> _resolveTeacherProfileId() async {
+    try {
+      final userId = widget.teacher['id'] ?? '';
+      if (kDebugMode) {
+        print('👤 Resolving teacher profile for user: $userId');
+        print('👤 widget.teacher keys: ${widget.teacher.keys.toList()}');
+        print('👤 widget.teacher: ${widget.teacher}');
+      }
+      if (userId.isEmpty) return;
+
+      final apiTeacherService = ApiTeacherService();
+      final profileData = await apiTeacherService.getTeacherById(userId);
+      if (kDebugMode) {
+        print('👤 getTeacherById response: ${profileData?.toString().substring(0, (profileData.toString().length > 300) ? 300 : profileData.toString().length)}');
+      }
+      if (profileData != null) {
+        _teacherProfileId = profileData['id']?.toString();
+        if (kDebugMode) {
+          print(
+              '👤 Teacher Profile ID resolved: $_teacherProfileId (user: $userId)');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Could not resolve teacher profile ID: $e');
+    }
+  }
+
+  /// Get the effective teacher ID for API calls
+  String get _effectiveTeacherId =>
+      _teacherProfileId ?? widget.teacher['id'] ?? '';
 
   Future<void> _loadClassSummary(String classId) async {
     if (!mounted) return;
@@ -79,13 +125,108 @@ class _LearningRecommendationClassScreenState
     }
   }
 
+  Future<void> _loadClassHistory(String classId) async {
+    if (!mounted) return;
+    setState(() => _loadingHistory[classId] = true);
+
+    try {
+      if (kDebugMode) {
+        print('📋 Loading history for class $classId, teacher: $_effectiveTeacherId');
+      }
+
+      final result = await ApiRecommendationService.getRecommendations(
+        teacherId: _effectiveTeacherId,
+        classId: classId,
+        perPage: 50,
+      );
+
+      if (kDebugMode) {
+        final dataList = (result['data'] as List?) ?? [];
+        print('📋 History result for $classId: ${dataList.length} recommendations, meta: ${result['meta']}');
+        if (dataList.isNotEmpty) {
+          print('📋 First rec: trigger_source=${dataList.first['trigger_source']}, created_at=${dataList.first['created_at']}, teacher_id=${dataList.first['teacher_id']}');
+        }
+      }
+
+      if (!mounted) return;
+
+      // Group by date + trigger_source so different periods on same day are separate
+      final recommendations = (result['data'] as List?) ?? [];
+      final grouped = <String, Map<String, dynamic>>{};
+
+      for (final rec in recommendations) {
+        final createdAt = rec['created_at']?.toString() ?? '';
+        if (createdAt.isEmpty) continue;
+
+        final dateKey = createdAt.length >= 10
+            ? createdAt.substring(0, 10)
+            : createdAt;
+        final triggerSource = rec['trigger_source']?.toString() ?? 'on_demand';
+
+        // Composite key: date + trigger_source
+        final groupKey = '${dateKey}_$triggerSource';
+
+        if (!grouped.containsKey(groupKey)) {
+          grouped[groupKey] = {
+            'date': dateKey,
+            'trigger_source': triggerSource,
+            'count': 0,
+            'by_status': <String, int>{},
+            'by_priority': <String, int>{},
+            'by_category': <String, int>{},
+          };
+        }
+
+        final group = grouped[groupKey]!;
+        group['count'] = (group['count'] as int) + 1;
+
+        final status = rec['status']?.toString() ?? 'pending';
+        final statusMap = group['by_status'] as Map<String, int>;
+        statusMap[status] = (statusMap[status] ?? 0) + 1;
+
+        final priority = rec['priority']?.toString() ?? 'medium';
+        final priorityMap = group['by_priority'] as Map<String, int>;
+        priorityMap[priority] = (priorityMap[priority] ?? 0) + 1;
+
+        final category = rec['category']?.toString() ?? '';
+        if (category.isNotEmpty) {
+          final catMap = group['by_category'] as Map<String, int>;
+          catMap[category] = (catMap[category] ?? 0) + 1;
+        }
+      }
+
+      // Sort by date descending, then by trigger_source
+      final history = grouped.values.toList()
+        ..sort((a, b) {
+          final dateCompare =
+              (b['date'] as String).compareTo(a['date'] as String);
+          if (dateCompare != 0) return dateCompare;
+          return (a['trigger_source'] as String)
+              .compareTo(b['trigger_source'] as String);
+        });
+
+      setState(() {
+        _classHistory[classId] = history;
+        _loadingHistory[classId] = false;
+      });
+    } catch (e) {
+      if (kDebugMode) print('Error loading history for $classId: $e');
+      if (mounted) {
+        setState(() {
+          _classHistory[classId] = [];
+          _loadingHistory[classId] = false;
+        });
+      }
+    }
+  }
+
   Future<void> _loadTeacherSchedules() async {
     try {
-      final teacherId = widget.teacher['id'] ?? '';
-      if (teacherId.isEmpty) return;
+      final teacherIdForSchedule = widget.teacher['id'] ?? '';
+      if (teacherIdForSchedule.isEmpty) return;
 
       final schedules = await ApiScheduleService.getScheduleByTeacher(
-        teacherId: teacherId,
+        teacherId: teacherIdForSchedule,
       );
       if (mounted) {
         setState(() {
@@ -99,7 +240,6 @@ class _LearningRecommendationClassScreenState
     }
   }
 
-  /// Get unique subjects for a specific class from the teacher's schedule
   List<Map<String, String>> _getSubjectsForClass(String classId) {
     final seen = <String>{};
     final subjects = <Map<String, String>>[];
@@ -123,22 +263,34 @@ class _LearningRecommendationClassScreenState
     return subjects;
   }
 
-  /// Show subject picker and generate recommendations for a class
-  Future<void> _generateForClass(String classId, String className) async {
-    final subjects = _getSubjectsForClass(classId);
+  // ==================== GENERATE FLOW ====================
 
+  Future<void> _generateForClass(String classId, String className) async {
+    // Step 1: Pick period
+    final period = await _showPeriodPicker(className);
+    if (period == null || !mounted) return;
+
+    // Step 2: If monthly, pick month
+    String? selectedMonth;
+    if (period == 'monthly') {
+      selectedMonth = await _showMonthPicker();
+      if (selectedMonth == null || !mounted) return;
+    }
+
+    // Step 3: Pick subject
+    final subjects = _getSubjectsForClass(classId);
     if (subjects.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Tidak ada mata pelajaran ditemukan untuk kelas ini'),
+            content:
+                Text('Tidak ada mata pelajaran ditemukan untuk kelas ini'),
           ),
         );
       }
       return;
     }
 
-    // If only one subject, use it directly; otherwise show picker
     Map<String, String>? selectedSubject;
     if (subjects.length == 1) {
       selectedSubject = subjects.first;
@@ -158,18 +310,37 @@ class _LearningRecommendationClassScreenState
 
     if (selectedSubject == null || !mounted) return;
 
+    // Step 4: Generate
     setState(() => _generating[classId] = true);
 
+    // Map period to trigger_source
+    String triggerSource;
+    switch (period) {
+      case 'weekly':
+        triggerSource = 'weekly_review';
+        break;
+      case 'monthly':
+        triggerSource = 'post_exam';
+        break;
+      case 'mid_semester':
+        triggerSource = 'post_exam';
+        break;
+      case 'semester':
+        triggerSource = 'on_demand';
+        break;
+      default:
+        triggerSource = 'on_demand';
+    }
+
     try {
-      final teacherId = widget.teacher['id'] ?? '';
       final result = await ApiRecommendationService.generateForClass(
-        teacherId: teacherId,
+        teacherId: _effectiveTeacherId,
         classId: classId,
         subjectId: selectedSubject['id']!,
+        triggerSource: triggerSource,
       );
 
       if (result['async'] == true) {
-        // Async mode - poll for completion
         final jobId = result['job_id']?.toString();
         if (jobId != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -183,7 +354,9 @@ class _LearningRecommendationClassScreenState
             await ApiRecommendationService.pollJobUntilComplete(
               jobId,
               onProgress: (status, attempt) {
-                if (kDebugMode) print('Job $jobId: $status (attempt $attempt)');
+                if (kDebugMode) {
+                  print('Job $jobId: $status (attempt $attempt)');
+                }
               },
             );
             if (mounted) {
@@ -206,7 +379,6 @@ class _LearningRecommendationClassScreenState
           }
         }
       } else {
-        // Sync mode - data returned directly
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -217,8 +389,9 @@ class _LearningRecommendationClassScreenState
         }
       }
 
-      // Refresh summary
+      // Refresh data
       _loadClassSummary(classId);
+      _loadClassHistory(classId);
     } on RateLimitException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -242,6 +415,268 @@ class _LearningRecommendationClassScreenState
       if (mounted) setState(() => _generating[classId] = false);
     }
   }
+
+  Future<String?> _showPeriodPicker(String className) async {
+    final primaryColor = _getPrimaryColor();
+
+    return showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Pilih Periode Analisis',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: ColorUtils.slate900,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Generate rekomendasi AI untuk $className',
+              style: TextStyle(
+                fontSize: 13,
+                color: ColorUtils.slate500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildPeriodOption(
+              ctx: ctx,
+              value: 'weekly',
+              icon: Icons.date_range_rounded,
+              title: 'Pekanan',
+              subtitle: 'Analisis minggu ini & 1 minggu sebelumnya',
+              color: const Color(0xFF3B82F6),
+            ),
+            _buildPeriodOption(
+              ctx: ctx,
+              value: 'monthly',
+              icon: Icons.calendar_month_rounded,
+              title: 'Bulanan',
+              subtitle: 'Pilih bulan untuk dianalisis',
+              color: const Color(0xFF8B5CF6),
+            ),
+            _buildPeriodOption(
+              ctx: ctx,
+              value: 'mid_semester',
+              icon: Icons.school_rounded,
+              title: 'Setengah Semester',
+              subtitle: 'Analisis UTS / tengah semester',
+              color: primaryColor,
+            ),
+            _buildPeriodOption(
+              ctx: ctx,
+              value: 'semester',
+              icon: Icons.emoji_events_rounded,
+              title: 'Semester',
+              subtitle: 'Analisis UAS / akhir semester penuh',
+              color: const Color(0xFFF59E0B),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeriodOption({
+    required BuildContext ctx,
+    required String value,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => Navigator.pop(ctx, value),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              border: Border.all(color: ColorUtils.slate200),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: color.withValues(alpha: 0.2)),
+                  ),
+                  child: Icon(icon, size: 20, color: color),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: ColorUtils.slate800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded,
+                    size: 20, color: ColorUtils.slate400),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _showMonthPicker() async {
+    final now = DateTime.now();
+    final months = <Map<String, dynamic>>[];
+
+    // Show last 6 months
+    for (int i = 0; i < 6; i++) {
+      final month = DateTime(now.year, now.month - i, 1);
+      months.add({
+        'value': DateFormat('yyyy-MM').format(month),
+        'label': DateFormat('MMMM yyyy', 'id_ID').format(month),
+        'isCurrent': i == 0,
+      });
+    }
+
+    return showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Pilih Bulan',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: ColorUtils.slate900,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...months.map((m) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => Navigator.pop(ctx, m['value'] as String),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: m['isCurrent'] == true
+                              ? _getPrimaryColor().withValues(alpha: 0.05)
+                              : null,
+                          border: Border.all(
+                            color: m['isCurrent'] == true
+                                ? _getPrimaryColor().withValues(alpha: 0.3)
+                                : ColorUtils.slate200,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today_rounded,
+                                size: 18, color: ColorUtils.slate500),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                m['label'] as String,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: ColorUtils.slate800,
+                                ),
+                              ),
+                            ),
+                            if (m['isCurrent'] == true)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: _getPrimaryColor()
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'Bulan Ini',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: _getPrimaryColor(),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==================== TOUR ====================
 
   Future<void> _checkAndShowTour() async {
     try {
@@ -356,9 +791,39 @@ class _LearningRecommendationClassScreenState
     return targets;
   }
 
+  // ==================== HELPERS ====================
+
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
   }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      return DateFormat('d MMMM yyyy', 'id_ID').format(date);
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  String _getRelativeDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final target = DateTime(date.year, date.month, date.day);
+      final diff = today.difference(target).inDays;
+
+      if (diff == 0) return 'Hari ini';
+      if (diff == 1) return 'Kemarin';
+      if (diff < 7) return '$diff hari lalu';
+      return _formatDate(dateStr);
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  // ==================== BUILD ====================
 
   @override
   Widget build(BuildContext context) {
@@ -445,8 +910,7 @@ class _LearningRecommendationClassScreenState
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                await _loadAllSummaries();
-                await _loadTeacherSchedules();
+                await _loadAllData();
               },
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -458,6 +922,10 @@ class _LearningRecommendationClassScreenState
                   final summary = _classSummaries[classId];
                   final isLoading = _loadingSummaries[classId] == true;
                   final isGenerating = _generating[classId] == true;
+                  final history = _classHistory[classId] ?? [];
+                  final isLoadingHistory =
+                      _loadingHistory[classId] == true;
+                  final isExpanded = _expandedClass[classId] == true;
 
                   return Padding(
                     key: index == 0 ? _classListKey : null,
@@ -469,6 +937,9 @@ class _LearningRecommendationClassScreenState
                       summary: summary,
                       isLoading: isLoading,
                       isGenerating: isGenerating,
+                      history: history,
+                      isLoadingHistory: isLoadingHistory,
+                      isExpanded: isExpanded,
                     ),
                   );
                 },
@@ -487,157 +958,197 @@ class _LearningRecommendationClassScreenState
     Map<String, dynamic>? summary,
     bool isLoading = false,
     bool isGenerating = false,
+    List<Map<String, dynamic>> history = const [],
+    bool isLoadingHistory = false,
+    bool isExpanded = false,
   }) {
-    // API returns by_status as Map: {"pending": 20, "in_progress": 5, ...}
     final byStatus = _toCountMap(summary?['by_status']);
-    final byPriority = _toCountMap(summary?['by_priority']);
-
-    // Compute total from by_status values
     final totalRec = byStatus.values.fold<int>(0, (sum, v) => sum + v);
+    final primaryColor = _getPrimaryColor();
 
-    final pending = byStatus['pending'] ?? 0;
-    final inProgress = byStatus['in_progress'] ?? 0;
-    final completed = byStatus['completed'] ?? 0;
-    final highPriority = byPriority['high'] ?? 0;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LearningRecommendationStudentScreen(
-                teacher: widget.teacher,
-                classData: classData,
-              ),
-            ),
-          ).then((_) {
-            _loadClassSummary(classId);
-          });
-        },
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: ColorUtils.slate200, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: _getPrimaryColor().withValues(alpha: 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-              BoxShadow(
-                color: ColorUtils.slate900.withValues(alpha: 0.06),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        border: Border.all(color: ColorUtils.slate200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  // Class icon
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor().withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: _getPrimaryColor().withValues(alpha: 0.15),
-                        width: 1,
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header row - tap to expand
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _expandedClass[classId] = !isExpanded;
+                });
+              },
+              borderRadius: BorderRadius.vertical(
+                top: const Radius.circular(16),
+                bottom: isExpanded
+                    ? Radius.zero
+                    : const Radius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: primaryColor.withValues(alpha: 0.15),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.class_outlined,
+                        size: 24,
+                        color: primaryColor,
                       ),
                     ),
-                    child: Icon(
-                      Icons.class_outlined,
-                      size: 24,
-                      color: _getPrimaryColor(),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-
-                  // Class info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          className,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        if (isLoading)
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            'Memuat...',
+                            className,
                             style: TextStyle(
-                              fontSize: 12,
-                              color: ColorUtils.slate400,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate900,
+                              letterSpacing: -0.2,
                             ),
-                          )
-                        else if (totalRec > 0)
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 4,
-                            children: [
-                              _buildMiniTag(
-                                '$totalRec rekomendasi',
-                                ColorUtils.info600,
+                          ),
+                          const SizedBox(height: 4),
+                          if (isLoading)
+                            Text(
+                              'Memuat...',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: ColorUtils.slate400,
                               ),
-                              if (highPriority > 0)
-                                _buildMiniTag(
-                                  '$highPriority prioritas tinggi',
-                                  ColorUtils.error600,
-                                ),
-                              if (pending > 0)
-                                _buildMiniTag(
-                                  '$pending pending',
-                                  ColorUtils.warning600,
-                                ),
-                              if (inProgress > 0)
-                                _buildMiniTag(
-                                  '$inProgress proses',
-                                  ColorUtils.corporateBlue600,
-                                ),
-                              if (completed > 0)
-                                _buildMiniTag(
-                                  '$completed selesai',
-                                  ColorUtils.success600,
-                                ),
-                            ],
-                          )
-                        else
-                          Text(
-                            'Belum ada rekomendasi',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: ColorUtils.slate400,
+                            )
+                          else if (totalRec > 0)
+                            Text(
+                              '$totalRec rekomendasi  •  ${history.length} sesi',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: ColorUtils.slate500,
+                              ),
+                            )
+                          else
+                            Text(
+                              'Belum ada rekomendasi',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: ColorUtils.slate400,
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: ColorUtils.slate400,
+                        size: 24,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Expanded content
+          if (isExpanded) ...[
+            Divider(height: 1, color: ColorUtils.slate200),
+
+            // History list
+            if (isLoadingHistory)
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: primaryColor,
                     ),
                   ),
-
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: ColorUtils.slate400,
-                    size: 24,
-                  ),
-                ],
+                ),
+              )
+            else if (history.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(Icons.lightbulb_outline_rounded,
+                        size: 32, color: ColorUtils.slate300),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Belum ada riwayat rekomendasi',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: ColorUtils.slate500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tekan tombol Generate untuk membuat rekomendasi AI',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: ColorUtils.slate400,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 8),
+                itemCount: history.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: 6),
+                itemBuilder: (context, index) {
+                  final entry = history[index];
+                  return _buildHistoryItem(
+                    entry: entry,
+                    classData: classData,
+                    classId: classId,
+                  );
+                },
               ),
 
-              // Generate button
-              if (_schedulesLoaded && !isLoading) ...[
-                const SizedBox(height: 12),
-                SizedBox(
+            // Generate button
+            if (_schedulesLoaded) ...[
+              Padding(
+                padding:
+                    const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                child: SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: isGenerating
@@ -649,38 +1160,188 @@ class _LearningRecommendationClassScreenState
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: _getPrimaryColor(),
+                              color: primaryColor,
                             ),
                           )
-                        : Icon(Icons.auto_awesome, size: 16, color: _getPrimaryColor()),
+                        : Icon(Icons.auto_awesome,
+                            size: 16, color: primaryColor),
                     label: Text(
                       isGenerating
                           ? 'Memproses...'
-                          : totalRec > 0
-                              ? 'Generate Ulang'
-                              : 'Generate Rekomendasi AI',
+                          : 'Generate Rekomendasi AI',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: isGenerating
                             ? ColorUtils.slate400
-                            : _getPrimaryColor(),
+                            : primaryColor,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
                         color: isGenerating
                             ? ColorUtils.slate300
-                            : _getPrimaryColor().withValues(alpha: 0.4),
+                            : primaryColor.withValues(alpha: 0.4),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
                 ),
-              ],
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryItem({
+    required Map<String, dynamic> entry,
+    required Map<String, dynamic> classData,
+    required String classId,
+  }) {
+    final date = entry['date'] as String;
+    final count = entry['count'] as int;
+    final triggerSource = entry['trigger_source']?.toString() ?? 'on_demand';
+    final byStatus = entry['by_status'] as Map<String, int>;
+    final byPriority = entry['by_priority'] as Map<String, int>;
+    final highCount = byPriority['high'] ?? 0;
+    final pendingCount = byStatus['pending'] ?? 0;
+    final completedCount = byStatus['completed'] ?? 0;
+
+    final periodInfo = _getPeriodInfo(triggerSource);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          // Pass resolved teacher_id so student/result screens can query correctly
+          final teacherWithProfileId = Map<String, String>.from(widget.teacher);
+          if (_teacherProfileId != null) {
+            teacherWithProfileId['teacher_id'] = _teacherProfileId!;
+          }
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LearningRecommendationStudentScreen(
+                teacher: teacherWithProfileId,
+                classData: classData,
+              ),
+            ),
+          ).then((_) {
+            _loadClassSummary(classId);
+            _loadClassHistory(classId);
+          });
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: ColorUtils.slate50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: ColorUtils.slate200),
+          ),
+          child: Row(
+            children: [
+              // Period icon with color
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: periodInfo.color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: periodInfo.color.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Icon(
+                  periodInfo.icon,
+                  size: 18,
+                  color: periodInfo.color,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _getRelativeDate(date),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                        ),
+                        // Period badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: periodInfo.color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: periodInfo.color.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Text(
+                            periodInfo.label,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: periodInfo.color,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        _buildMiniTag(
+                          '$count rekomendasi',
+                          ColorUtils.slate600,
+                        ),
+                        if (highCount > 0)
+                          _buildMiniTag(
+                            '$highCount prioritas tinggi',
+                            const Color(0xFFEF4444),
+                          ),
+                        if (pendingCount > 0)
+                          _buildMiniTag(
+                            '$pendingCount pending',
+                            const Color(0xFFF59E0B),
+                          ),
+                        if (completedCount > 0)
+                          _buildMiniTag(
+                            '$completedCount selesai',
+                            const Color(0xFF10B981),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: ColorUtils.slate400,
+              ),
             ],
           ),
         ),
@@ -688,11 +1349,42 @@ class _LearningRecommendationClassScreenState
     );
   }
 
-  /// Convert API response (List or Map) to a {key: count} map.
+  /// Map trigger_source back to period display info
+  ({Color color, String label, IconData icon}) _getPeriodInfo(
+      String triggerSource) {
+    switch (triggerSource) {
+      case 'weekly_review':
+        return (
+          color: const Color(0xFF3B82F6),
+          label: 'Pekanan',
+          icon: Icons.date_range_rounded,
+        );
+      case 'post_exam':
+        return (
+          color: const Color(0xFF8B5CF6),
+          label: 'Bulanan/UTS',
+          icon: Icons.calendar_month_rounded,
+        );
+      case 'attendance_alert':
+        return (
+          color: const Color(0xFFEF4444),
+          label: 'Kehadiran',
+          icon: Icons.warning_amber_rounded,
+        );
+      case 'on_demand':
+      default:
+        return (
+          color: const Color(0xFFF59E0B),
+          label: 'Semester',
+          icon: Icons.emoji_events_rounded,
+        );
+    }
+  }
+
   Map<String, int> _toCountMap(dynamic data) {
     if (data is Map) {
-      return data.map((k, v) =>
-          MapEntry(k.toString(), v is int ? v : int.tryParse(v.toString()) ?? 0));
+      return data.map((k, v) => MapEntry(
+          k.toString(), v is int ? v : int.tryParse(v.toString()) ?? 0));
     }
     if (data is List) {
       final map = <String, int>{};
@@ -716,10 +1408,10 @@ class _LearningRecommendationClassScreenState
 
   Widget _buildMiniTag(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         text,

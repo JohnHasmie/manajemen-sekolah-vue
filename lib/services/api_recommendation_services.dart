@@ -49,6 +49,7 @@ class ApiRecommendationService {
     required String teacherId,
     required String classId,
     required String subjectId,
+    String? triggerSource,
     bool forceRegenerate = false,
   }) async {
     final response = await http
@@ -59,6 +60,7 @@ class ApiRecommendationService {
             'teacher_id': teacherId,
             'class_id': classId,
             'subject_id': subjectId,
+            if (triggerSource != null) 'trigger_source': triggerSource,
             if (forceRegenerate) 'force_regenerate': true,
           }),
         )
