@@ -51,13 +51,13 @@ class _LearningRecommendationResultScreenState
     try {
       final teacherId = widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
       final classId = widget.classData['id']?.toString() ?? '';
-      final studentId = widget.student['id']?.toString() ??
-          widget.student['student_id']?.toString() ?? '';
+      final studentId = widget.student['student_id']?.toString() ??
+          widget.student['id']?.toString() ?? '';
 
       if (kDebugMode) {
         print('📥 Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId');
-        print('📥 Teacher data: ${widget.teacher}');
-        print('📥 Student data keys: ${widget.student.keys.toList()}');
+        print('📥 Student object: ${widget.student}');
+        print('📥 Student id=${widget.student['id']}, student_id=${widget.student['student_id']}, nama=${widget.student['nama']}');
       }
 
       final response = await ApiRecommendationService.getRecommendations(
