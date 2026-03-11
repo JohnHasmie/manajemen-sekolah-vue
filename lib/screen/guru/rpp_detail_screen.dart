@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart'; // Required for kDebugMode
@@ -10,6 +11,7 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class RPPDetailPage extends StatefulWidget {
@@ -26,6 +28,26 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   bool _isSaving = false;
   bool _isEditing = false;
   String _editedContent = '';
+
+  // Regeneration state
+  Map<String, dynamic> _regenLimits = {};
+  bool _isLoadingLimits = false;
+  String? _regeneratingField; // null = not regenerating, 'all' = all fields
+  late Map<String, dynamic> _rppData;
+
+  // RPP content field definitions
+  static const List<Map<String, String>> _rppFields = [
+    {'key': 'core_competence', 'label': 'Kompetensi Inti (KI)', 'altKey': 'kompetensi_inti'},
+    {'key': 'basic_competence', 'label': 'Kompetensi Dasar (KD)', 'altKey': 'kompetensi_dasar'},
+    {'key': 'indicator', 'label': 'Indikator', 'altKey': 'indikator'},
+    {'key': 'learning_objective', 'label': 'Tujuan Pembelajaran', 'altKey': 'tujuan_pembelajaran'},
+    {'key': 'main_material', 'label': 'Materi Pokok', 'altKey': ''},
+    {'key': 'learning_method', 'label': 'Metode Pembelajaran', 'altKey': ''},
+    {'key': 'media_tools', 'label': 'Media / Alat', 'altKey': ''},
+    {'key': 'learning_source', 'label': 'Sumber Belajar', 'altKey': ''},
+    {'key': 'learning_activities', 'label': 'Kegiatan Pembelajaran', 'altKey': 'kegiatan_inti'},
+    {'key': 'assessment', 'label': 'Penilaian (Asesmen)', 'altKey': 'penilaian'},
+  ];
 
   bool get _hasAiAdditionalData {
     const aiKeys = [
@@ -46,13 +68,13 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     ];
 
     return aiKeys.any((key) {
-      final value = widget.rppData[key];
+      final value = _rppData[key];
       return value != null && value.toString().trim().isNotEmpty;
     });
   }
 
   String get _teacherId {
-    return (widget.rppData['guru_id'] ?? widget.rppData['teacher_id'] ?? '')
+    return (_rppData['guru_id'] ?? _rppData['teacher_id'] ?? '')
         .toString();
   }
 
@@ -61,7 +83,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       context,
       MaterialPageRoute(
         builder: (context) => RppAiResultScreen(
-          rppData: widget.rppData,
+          rppData: _rppData,
           teacherId: _teacherId,
           onSaved: () {
             // Jika ingin refresh halaman setelah menyimpan, bisa tambahkan logika di sini.
@@ -79,7 +101,485 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   @override
   void initState() {
     super.initState();
+    _rppData = Map<String, dynamic>.from(widget.rppData);
     _editedContent = _formatRPPContent();
+    if (_hasAiAdditionalData && _rppId != null) {
+      _loadRegenLimits();
+    }
+  }
+
+  String? get _rppId {
+    final id = _rppData['id'] ?? _rppData['rpp_id'] ?? _rppData['lesson_plan_id'];
+    return id?.toString();
+  }
+
+  Future<void> _loadRegenLimits() async {
+    final rppId = _rppId;
+    if (rppId == null) return;
+
+    setState(() => _isLoadingLimits = true);
+    try {
+      final result = await ApiSubjectService.getRppRegenLimits(rppId);
+      if (mounted) {
+        setState(() {
+          _regenLimits = (result is Map<String, dynamic>)
+              ? (result['data'] ?? result)
+              : {};
+          _isLoadingLimits = false;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('Load regen limits error: $e');
+      if (mounted) setState(() => _isLoadingLimits = false);
+    }
+  }
+
+  String _getFieldValue(String key, String altKey) {
+    final val = _rppData[key];
+    if (val != null && val.toString().trim().isNotEmpty) return val.toString().trim();
+    if (altKey.isNotEmpty) {
+      final altVal = _rppData[altKey];
+      if (altVal != null && altVal.toString().trim().isNotEmpty) return altVal.toString().trim();
+    }
+    return '';
+  }
+
+  Map<String, dynamic>? _getFieldRegenInfo(String fieldKey) {
+    if (_regenLimits.isEmpty) return null;
+    final fields = _regenLimits['fields'] ?? _regenLimits;
+    if (fields is Map) return fields[fieldKey] as Map<String, dynamic>?;
+    return null;
+  }
+
+  Future<void> _showRegenDialog(String fieldKey, String fieldLabel) async {
+    final regenInfo = _getFieldRegenInfo(fieldKey);
+    final remaining = regenInfo?['remaining'] ?? 2;
+
+    if (remaining <= 0) {
+      _showLimitReachedDialog(fieldLabel);
+      return;
+    }
+
+    final textController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Regenerasi $fieldLabel',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sisa regenerasi: $remaining dari ${regenInfo?['max'] ?? 2}',
+              style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
+            ),
+            SizedBox(height: 12),
+            TextField(
+              controller: textController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Tambahan instruksi (opsional)',
+                hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: ColorUtils.slate200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: ColorUtils.slate200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: _primaryColor),
+                ),
+                contentPadding: EdgeInsets.all(12),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal', style: TextStyle(color: ColorUtils.slate500)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text('Regenerasi'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      _regenerateField(fieldKey, fieldLabel, textController.text);
+    }
+  }
+
+  Future<void> _showRegenAllDialog() async {
+    final textController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: Icon(Icons.auto_awesome, color: _primaryColor, size: 40),
+        title: Text(
+          'Regenerasi Semua Field',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Semua field RPP akan di-generate ulang. Setiap field memiliki batas regenerasi masing-masing.',
+              style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
+            ),
+            SizedBox(height: 12),
+            TextField(
+              controller: textController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Tambahan instruksi untuk semua field (opsional)',
+                hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: ColorUtils.slate200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: ColorUtils.slate200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: _primaryColor),
+                ),
+                contentPadding: EdgeInsets.all(12),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal', style: TextStyle(color: ColorUtils.slate500)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: Icon(Icons.auto_awesome, size: 18),
+            label: Text('Regenerasi Semua'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      _regenerateAllFields(textController.text);
+    }
+  }
+
+  void _showLimitReachedDialog(String fieldLabel) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: Icon(Icons.timer_off_rounded, color: ColorUtils.warning600, size: 48),
+        title: Text(
+          'Batas Tercapai',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Batas regenerasi untuk "$fieldLabel" telah tercapai (maksimal 2 kali per field).',
+          style: TextStyle(fontSize: 14, color: ColorUtils.slate600),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _regenerateField(String fieldKey, String fieldLabel, String additionalText) async {
+    final rppId = _rppId;
+    if (kDebugMode) {
+      print('🔄 Regen field: $fieldKey, rppId: $rppId');
+      print('🔄 RPP data keys: ${_rppData.keys.toList()}');
+      print('🔄 RPP id fields: id=${_rppData['id']}, rpp_id=${_rppData['rpp_id']}, lesson_plan_id=${_rppData['lesson_plan_id']}');
+    }
+    if (rppId == null) return;
+
+    setState(() => _regeneratingField = fieldKey);
+
+    try {
+      final response = await ApiSubjectService.regenRppFieldRaw(
+        rppId,
+        fieldKey,
+        additionalText: additionalText.isNotEmpty ? additionalText : null,
+      );
+
+      if (!mounted) return;
+
+      // Check if response is HTML (server error page from proxy/CDN)
+      if (response.body.trimLeft().startsWith('<!DOCTYPE') || response.body.trimLeft().startsWith('<html')) {
+        if (kDebugMode) print('🔄 Got HTML response (status ${response.statusCode}) - server error');
+        setState(() => _regeneratingField = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Server AI sedang tidak tersedia (${response.statusCode}). Coba lagi nanti.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (response.statusCode == 429) {
+        final errorBody = json.decode(response.body);
+        _showLimitReachedDialog(errorBody['message'] ?? fieldLabel);
+        setState(() => _regeneratingField = null);
+        return;
+      }
+
+      final body = json.decode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Direct response with updated field
+        final data = body['data'] ?? body;
+        if (data[fieldKey] != null) {
+          setState(() {
+            _rppData[fieldKey] = data[fieldKey];
+            _editedContent = _formatRPPContent();
+            _regeneratingField = null;
+          });
+          _loadRegenLimits();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$fieldLabel berhasil di-regenerasi')),
+          );
+        } else {
+          // Maybe full RPP data returned
+          _updateRppDataFromResponse(data);
+          setState(() => _regeneratingField = null);
+          _loadRegenLimits();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$fieldLabel berhasil di-regenerasi')),
+          );
+        }
+      } else if (response.statusCode == 202) {
+        // Async job - need to poll
+        final jobId = (body['job_id'] ?? body['data']?['id'] ?? body['data']?['job_id'])?.toString();
+        final pollUrl = (body['poll_url'] ?? body['polling_url'])?.toString();
+        if (jobId != null) {
+          _pollRegenJob(jobId, pollUrl, fieldKey, fieldLabel);
+        } else {
+          setState(() => _regeneratingField = null);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal mendapatkan job ID'), backgroundColor: Colors.red),
+          );
+        }
+      } else {
+        setState(() => _regeneratingField = null);
+        final msg = body['message'] ?? 'Gagal regenerasi $fieldLabel';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) print('Regen field error: $e');
+      if (mounted) {
+        setState(() => _regeneratingField = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e)), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _regenerateAllFields(String additionalText) async {
+    final rppId = _rppId;
+    if (rppId == null) return;
+
+    setState(() => _regeneratingField = 'all');
+
+    int successCount = 0;
+    int failCount = 0;
+
+    for (final field in _rppFields) {
+      final fieldKey = field['key']!;
+      final fieldValue = _getFieldValue(fieldKey, field['altKey'] ?? '');
+      if (fieldValue.isEmpty) continue; // Skip empty fields
+
+      final regenInfo = _getFieldRegenInfo(fieldKey);
+      final remaining = regenInfo?['remaining'] ?? 2;
+      if (remaining <= 0) {
+        failCount++;
+        continue;
+      }
+
+      try {
+        final response = await ApiSubjectService.regenRppFieldRaw(
+          rppId,
+          fieldKey,
+          additionalText: additionalText.isNotEmpty ? additionalText : null,
+        );
+
+        if (!mounted) return;
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final body = json.decode(response.body);
+          final data = body['data'] ?? body;
+          if (data[fieldKey] != null) {
+            _rppData[fieldKey] = data[fieldKey];
+          } else {
+            _updateRppDataFromResponse(data);
+          }
+          successCount++;
+        } else if (response.statusCode == 202) {
+          final body = json.decode(response.body);
+          final jobId = (body['job_id'] ?? body['data']?['id'])?.toString();
+          if (jobId != null) {
+            await _pollRegenJobSync(jobId, fieldKey);
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } else {
+          failCount++;
+        }
+      } catch (e) {
+        if (kDebugMode) print('Regen all field $fieldKey error: $e');
+        failCount++;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _editedContent = _formatRPPContent();
+        _regeneratingField = null;
+      });
+      _loadRegenLimits();
+
+      String msg = '$successCount field berhasil di-regenerasi';
+      if (failCount > 0) msg += ', $failCount gagal/melewati batas';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
+
+  Future<void> _pollRegenJob(String jobId, String? pollUrl, String fieldKey, String fieldLabel) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    for (int i = 0; i < 60; i++) {
+      await Future.delayed(Duration(seconds: 5));
+      if (!mounted) return;
+
+      try {
+        final response = await ApiSubjectService.pollAiJob(jobId, token);
+        final body = json.decode(response.body);
+        final jobData = body['data'] ?? body;
+        final status = jobData['status'] ?? body['status'];
+
+        if (status == 'completed' || status == 'success') {
+          final result = jobData['result'] ?? jobData['data'] ?? body['result'] ?? body;
+          if (result[fieldKey] != null) {
+            setState(() {
+              _rppData[fieldKey] = result[fieldKey];
+              _editedContent = _formatRPPContent();
+              _regeneratingField = null;
+            });
+          } else {
+            _updateRppDataFromResponse(result);
+            setState(() => _regeneratingField = null);
+          }
+          _loadRegenLimits();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$fieldLabel berhasil di-regenerasi')),
+            );
+          }
+          return;
+        } else if (status == 'failed' || status == 'error') {
+          final errMsg = jobData['error_message'] ?? 'Regenerasi gagal';
+          setState(() => _regeneratingField = null);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(errMsg), backgroundColor: Colors.red),
+            );
+          }
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('Poll regen error: $e');
+      }
+    }
+
+    // Timeout
+    if (mounted) {
+      setState(() => _regeneratingField = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Regenerasi $fieldLabel timeout'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _pollRegenJobSync(String jobId, String fieldKey) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    for (int i = 0; i < 60; i++) {
+      await Future.delayed(Duration(seconds: 5));
+      if (!mounted) return;
+
+      try {
+        final response = await ApiSubjectService.pollAiJob(jobId, token);
+        final body = json.decode(response.body);
+        final jobData = body['data'] ?? body;
+        final status = jobData['status'] ?? body['status'];
+
+        if (status == 'completed' || status == 'success') {
+          final result = jobData['result'] ?? jobData['data'] ?? body['result'] ?? body;
+          if (result[fieldKey] != null) {
+            _rppData[fieldKey] = result[fieldKey];
+          } else {
+            _updateRppDataFromResponse(result);
+          }
+          return;
+        } else if (status == 'failed' || status == 'error') {
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('Poll regen sync error: $e');
+      }
+    }
+  }
+
+  void _updateRppDataFromResponse(Map<String, dynamic> data) {
+    for (final field in _rppFields) {
+      final key = field['key']!;
+      if (data.containsKey(key) && data[key] != null) {
+        _rppData[key] = data[key];
+      }
+    }
+    setState(() => _editedContent = _formatRPPContent());
   }
 
   String _formatRPPContent() {
@@ -87,7 +587,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
     String getField(List<String> keys, {String defaultValue = ''}) {
       for (final key in keys) {
-        final value = widget.rppData[key];
+        final value = _rppData[key];
         if (value != null && value.toString().trim().isNotEmpty) {
           return value.toString().trim();
         }
@@ -157,8 +657,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
     // Cek apakah RPP hasil genrasi AI (format 10 komponen API)
     final bool isAi =
-        widget.rppData['ai_generated'] == true ||
-        widget.rppData['is_ai_generated'] == true;
+        _rppData['ai_generated'] == true ||
+        _rppData['is_ai_generated'] == true;
 
     // Kompetensi Inti & Kompetensi Dasar (jika tersedia)
     final String kompetensiInti = getField([
@@ -371,8 +871,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     buffer.writeln('...................................');
     buffer.writeln('NIP ..............................');
 
-    if (widget.rppData['ai_generated'] == true ||
-        widget.rppData['is_ai_generated'] == true) {
+    if (_rppData['ai_generated'] == true ||
+        _rppData['is_ai_generated'] == true) {
       buffer.writeln();
       buffer.writeln('---');
       buffer.writeln('*RPP ini digenerate secara otomatis menggunakan AI*');
@@ -448,8 +948,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       // Map data (falling back to known AI-generated key names if available)
       String fallback(List<String> keys) {
         for (final k in keys) {
-          if (widget.rppData.containsKey(k) && widget.rppData[k] != null) {
-            return widget.rppData[k].toString();
+          if (_rppData.containsKey(k) && _rppData[k] != null) {
+            return _rppData[k].toString();
           }
         }
         return '';
@@ -572,7 +1072,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       // Get directory dengan error handling
       final directory = await getTemporaryDirectory();
       final file = File(
-        '${directory.path}/RPP_${widget.rppData['judul']}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        '${directory.path}/RPP_${_rppData['judul']}_${DateTime.now().millisecondsSinceEpoch}.pdf',
       );
       await file.writeAsBytes(bytes, flush: true);
 
@@ -603,7 +1103,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
       final directory = await getTemporaryDirectory();
       final file = File(
-        '${directory.path}/RPP_${widget.rppData['judul']}_${DateTime.now().millisecondsSinceEpoch}.txt',
+        '${directory.path}/RPP_${_rppData['judul']}_${DateTime.now().millisecondsSinceEpoch}.txt',
       );
       await file.writeAsString(_editedContent, flush: true);
 
@@ -630,7 +1130,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   bool _isDownloading = false;
 
   String? get _filePath {
-    final fp = widget.rppData['file_path'];
+    final fp = _rppData['file_path'];
     if (fp != null && fp.toString().trim().isNotEmpty) {
       return fp.toString().trim();
     }
@@ -818,8 +1318,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      widget.rppData['judul']?.toString() ??
-                          widget.rppData['title']?.toString() ??
+                      _rppData['judul']?.toString() ??
+                          _rppData['title']?.toString() ??
                           'RPP',
                       style: TextStyle(
                         fontSize: 14,
@@ -1053,37 +1553,447 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildPreview() {
+    final bool canRegen = _hasAiAdditionalData && _rppId != null;
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(16),
       child: Column(
         children: [
           // File attachment card
           if (_filePath != null) _buildFileCard(),
-          // RPP content
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: _primaryColor.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: Offset(0, 3),
+
+          // Regenerate All button
+          if (canRegen) ...[
+            _buildRegenAllButton(),
+            SizedBox(height: 16),
+          ],
+
+          // RPP content - structured fields with regen buttons
+          if (canRegen)
+            _buildStructuredFieldsView()
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ColorUtils.slate200, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: _primaryColor.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: Offset(0, 3),
+                  ),
+                  BoxShadow(
+                    color: ColorUtils.slate900.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: _buildFormattedContent(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegenAllButton() {
+    final isRegenerating = _regeneratingField == 'all';
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _primaryColor.withValues(alpha: 0.08),
+            _primaryColor.withValues(alpha: 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _primaryColor.withValues(alpha: 0.2)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: isRegenerating ? null : _showRegenAllDialog,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _primaryColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _primaryColor.withValues(alpha: 0.15)),
+                  ),
+                  child: isRegenerating
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: _primaryColor,
+                          ),
+                        )
+                      : Icon(Icons.auto_awesome, color: _primaryColor, size: 20),
                 ),
-                BoxShadow(
-                  color: ColorUtils.slate900.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isRegenerating ? 'Sedang memproses...' : 'Regenerasi Semua Field',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: ColorUtils.slate800,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Generate ulang seluruh konten RPP dengan AI',
+                        style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: ColorUtils.slate400),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStructuredFieldsView() {
+    // Header info card
+    final headerWidgets = <Widget>[
+      _buildHeaderInfoCard(),
+      SizedBox(height: 12),
+    ];
+
+    // Field cards
+    final fieldWidgets = _rppFields.map((field) {
+      final fieldKey = field['key']!;
+      final fieldLabel = field['label']!;
+      final altKey = field['altKey'] ?? '';
+      final value = _getFieldValue(fieldKey, altKey);
+      if (value.isEmpty) return SizedBox.shrink();
+      return Padding(
+        padding: EdgeInsets.only(bottom: 12),
+        child: _buildFieldCard(fieldKey, fieldLabel, value),
+      );
+    }).toList();
+
+    // Signature section
+    final signatureWidget = _buildSignatureCard();
+
+    return Column(
+      children: [
+        ...headerWidgets,
+        ...fieldWidgets,
+        signatureWidget,
+      ],
+    );
+  }
+
+  Widget _buildHeaderInfoCard() {
+    String getField(List<String> keys, {String defaultValue = ''}) {
+      for (final key in keys) {
+        final value = _rppData[key];
+        if (value != null && value.toString().trim().isNotEmpty) {
+          return value.toString().trim();
+        }
+      }
+      return defaultValue;
+    }
+
+    final title = getField(['judul', 'title'], defaultValue: 'RPP');
+    final subjectName = getField(['mata_pelajaran_nama', 'subject_name']);
+    final className = getField(['kelas_nama', 'class_name']);
+    final semester = getField(['semester']);
+    final academicYear = getField(['tahun_ajaran', 'academic_year']);
+    final teacherName = getField(['guru_nama', 'teacher_name']);
+    final status = getField(['status']);
+
+    final infoItems = <MapEntry<String, String>>[
+      if (subjectName.isNotEmpty) MapEntry('Mata Pelajaran', subjectName),
+      if (className.isNotEmpty) MapEntry('Kelas', className),
+      if (semester.isNotEmpty) MapEntry('Semester', semester),
+      if (academicYear.isNotEmpty) MapEntry('Tahun Ajaran', academicYear),
+      if (teacherName.isNotEmpty) MapEntry('Guru', teacherName),
+      if (status.isNotEmpty) MapEntry('Status', status),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: Offset(0, 3),
+          ),
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'RENCANA PELAKSANAAN PEMBELAJARAN (RPP)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: _primaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate800,
+              ),
+            ),
+            if (infoItems.isNotEmpty) ...[
+              SizedBox(height: 12),
+              ...infoItems.map((item) => Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      child: Text(
+                        item.key,
+                        style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
+                      ),
+                    ),
+                    Text(': ', style: TextStyle(fontSize: 13, color: ColorUtils.slate500)),
+                    Expanded(
+                      child: Text(
+                        item.value,
+                        style: TextStyle(fontSize: 13, color: ColorUtils.slate700),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFieldCard(String fieldKey, String fieldLabel, String value) {
+    final regenInfo = _getFieldRegenInfo(fieldKey);
+    final remaining = regenInfo?['remaining'] ?? 2;
+    final max = regenInfo?['max'] ?? 2;
+    final used = regenInfo?['used'] ?? 0;
+    final isRegeneratingThis = _regeneratingField == fieldKey || _regeneratingField == 'all';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: Offset(0, 3),
+          ),
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Field header with regen button
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: _primaryColor.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    fieldLabel,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _primaryColor,
+                    ),
+                  ),
+                ),
+                // Regen limit indicator
+                if (regenInfo != null && !_isLoadingLimits) ...[
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: remaining > 0
+                          ? _primaryColor.withValues(alpha: 0.1)
+                          : ColorUtils.slate200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$used/$max',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: remaining > 0 ? _primaryColor : ColorUtils.slate400,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                ],
+                // Regen button
+                Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
+                    onTap: isRegeneratingThis
+                        ? null
+                        : () => _showRegenDialog(fieldKey, fieldLabel),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: remaining > 0
+                            ? _primaryColor.withValues(alpha: 0.1)
+                            : ColorUtils.slate100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: remaining > 0
+                              ? _primaryColor.withValues(alpha: 0.2)
+                              : ColorUtils.slate200,
+                        ),
+                      ),
+                      child: isRegeneratingThis
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: _primaryColor,
+                              ),
+                            )
+                          : Icon(
+                              Icons.star_rounded,
+                              size: 16,
+                              color: remaining > 0
+                                  ? _primaryColor
+                                  : ColorUtils.slate400,
+                            ),
+                    ),
+                  ),
                 ),
               ],
             ),
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: _buildFormattedContent(),
+          ),
+          // Field content
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: SelectableText(
+              _stripHtml(value),
+              style: TextStyle(fontSize: 14, height: 1.6, color: ColorUtils.slate700),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSignatureCard() {
+    return Container(
+      margin: EdgeInsets.only(top: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: Offset(0, 3),
+          ),
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text('Mengetahui', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      SizedBox(height: 4),
+                      Text('Kepala Sekolah', style: TextStyle(fontSize: 13)),
+                      SizedBox(height: 40),
+                      Text('...................................', style: TextStyle(fontSize: 12)),
+                      Text('NIP ..............................', style: TextStyle(fontSize: 11, color: ColorUtils.slate500)),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text('', style: TextStyle(fontSize: 13)),
+                      SizedBox(height: 4),
+                      Text('Guru Mata Pelajaran', style: TextStyle(fontSize: 13)),
+                      SizedBox(height: 40),
+                      Text('...................................', style: TextStyle(fontSize: 12)),
+                      Text('NIP ..............................', style: TextStyle(fontSize: 11, color: ColorUtils.slate500)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (_rppData['ai_generated'] == true || _rppData['is_ai_generated'] == true) ...[
+              SizedBox(height: 16),
+              Divider(color: ColorUtils.slate200),
+              SizedBox(height: 8),
+              Text(
+                'RPP ini digenerate secara otomatis menggunakan AI',
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: ColorUtils.slate400),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

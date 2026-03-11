@@ -614,6 +614,79 @@ class ApiSubjectService {
     return _handleResponse(response);
   }
 
+  // ==================== RPP REGENERATION METHODS ====================
+
+  /// Regenerate a specific RPP field (Section 5.6)
+  /// POST /api/lesson-plans/{id}/regen/{field}
+  /// Max 2 regenerations per field
+  static Future<http.Response> regenRppFieldRaw(
+    String rppId,
+    String field, {
+    String? additionalText,
+  }) async {
+    final body = <String, dynamic>{};
+    if (additionalText != null && additionalText.trim().isNotEmpty) {
+      body['additional_text'] = additionalText.trim();
+    }
+    final url = '$_aiBaseUrl/lesson-plans/$rppId/regen/$field';
+    if (kDebugMode) {
+      print('🔄 Regen RPP field URL: $url');
+      print('🔄 Regen RPP body: ${json.encode(body)}');
+    }
+    final response = await http
+        .post(
+          Uri.parse(url),
+          headers: await _getAiHeaders(),
+          body: json.encode(body),
+        )
+        .timeout(const Duration(seconds: 60));
+    if (kDebugMode) {
+      print('🔄 Regen RPP response: ${response.statusCode} - ${response.body.length > 300 ? response.body.substring(0, 300) : response.body}');
+    }
+    return response;
+  }
+
+  /// Get RPP regen limits per field (Section 5.7)
+  /// GET /api/lesson-plans/{id}/regen-limits
+  static Future<dynamic> getRppRegenLimits(String rppId) async {
+    if (kDebugMode) print('🔄 Regen limits URL: $_aiBaseUrl/lesson-plans/$rppId/regen-limits');
+    final response = await http.get(
+      Uri.parse('$_aiBaseUrl/lesson-plans/$rppId/regen-limits'),
+      headers: await _getAiHeaders(),
+    );
+    if (kDebugMode) print('🔄 Regen limits response: ${response.statusCode}');
+    if (response.body.trimLeft().startsWith('<!DOCTYPE') || response.body.trimLeft().startsWith('<html')) {
+      throw Exception('Server AI tidak tersedia (${response.statusCode})');
+    }
+    return _handleResponse(response);
+  }
+
+  /// Update RPP fields / auto-save (Section 5.5)
+  /// PATCH /api/lesson-plans/{id}
+  static Future<dynamic> updateRppFields(
+    String rppId,
+    Map<String, dynamic> fields,
+  ) async {
+    final response = await http
+        .patch(
+          Uri.parse('$_aiBaseUrl/lesson-plans/$rppId'),
+          headers: await _getAiHeaders(),
+          body: json.encode(fields),
+        )
+        .timeout(const Duration(seconds: 30));
+    return _handleResponse(response);
+  }
+
+  /// Get RPP detail from AI API (Section 5.4)
+  /// GET /api/lesson-plans/{id}
+  static Future<dynamic> getRppDetail(String rppId) async {
+    final response = await http.get(
+      Uri.parse('$_aiBaseUrl/lesson-plans/$rppId'),
+      headers: await _getAiHeaders(),
+    );
+    return _handleResponse(response);
+  }
+
   // ==================== MATERI PROGRESS METHODS ====================
 
   // Get Materi Progress (checked state) for a teacher and subject
