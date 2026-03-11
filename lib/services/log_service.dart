@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,12 +50,15 @@ class LogService {
         },
       };
 
-      final apiKey = dotenv.env['LOG_API_KEY'] ?? '';
+      final token = prefs.getString('token');
 
       await http
           .post(
             Uri.parse(_logApiUrl),
-            headers: {'Content-Type': 'application/json', 'x-api-key': apiKey},
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
             body: json.encode(body),
           )
           .timeout(const Duration(seconds: 5));

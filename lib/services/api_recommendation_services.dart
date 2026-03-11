@@ -70,6 +70,15 @@ class ApiRecommendationService {
 
     if (kDebugMode) {
       print('🤖 Generate recommendations: ${response.statusCode}');
+      print('🤖 Request body sent: ${json.encode({
+        'teacher_id': teacherId,
+        'class_id': classId,
+        'subject_id': subjectId,
+        if (triggerSource != null) 'trigger_source': triggerSource,
+        if (forceRegenerate) 'force_regenerate': true,
+        if (includeOnTrack != null) 'include_on_track': includeOnTrack,
+      })}');
+      print('🤖 Response body: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}');
     }
 
     final body = json.decode(response.body);

@@ -306,6 +306,16 @@ class _LearningRecommendationClassScreenState
     // Step 3: Generate
     setState(() => _generating[classId] = true);
 
+    if (kDebugMode) {
+      print('🚀 Generate Recommendation Params:');
+      print('   teacherId: $_effectiveTeacherId');
+      print('   classId: $classId');
+      print('   subjectId: ${selectedSubject['id']}');
+      print('   subjectName: ${selectedSubject['name']}');
+      print('   includeOnTrack: $includeOnTrack');
+      print('   className: $className');
+    }
+
     try {
       final result = await ApiRecommendationService.generateForClass(
         teacherId: _effectiveTeacherId,

@@ -29,7 +29,9 @@ class MateriAiResultScreen extends StatefulWidget {
   MateriAiResultScreenState createState() => MateriAiResultScreenState();
 }
 
-class MateriAiResultScreenState extends State<MateriAiResultScreen> {
+class MateriAiResultScreenState extends State<MateriAiResultScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool _isLoading = true;
   bool _isRegenerating = false;
   bool _isPolling = false;
@@ -42,11 +44,13 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
     _generateMateri();
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _promptController.dispose();
     super.dispose();
   }
@@ -601,6 +605,69 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
     );
   }
 
+  /// Parse material_content which might be JSON string or plain text/HTML
+  Map<String, String> _parseMaterialContent() {
+    final raw = _aiData?['material_content'];
+    if (raw == null) return {'Konten': 'Konten tidak tersedia.'};
+
+    final rawStr = raw.toString().trim();
+
+    // Try parsing as JSON object
+    if (rawStr.startsWith('{')) {
+      try {
+        final parsed = json.decode(rawStr);
+        if (parsed is Map) {
+          final result = <String, String>{};
+          for (final entry in parsed.entries) {
+            final key = _formatSectionTitle(entry.key.toString());
+            var value = entry.value.toString();
+            // Replace literal \n with actual newlines
+            value = value.replaceAll(r'\n', '\n');
+            result[key] = value.trim();
+          }
+          return result;
+        }
+      } catch (_) {}
+    }
+
+    // Fallback: treat as plain text/HTML
+    return {'Ringkasan': _stripHtml(rawStr)};
+  }
+
+  String _formatSectionTitle(String key) {
+    // Convert snake_case/camelCase keys to readable titles
+    final map = {
+      'ringkasan': 'Ringkasan',
+      'summary': 'Ringkasan',
+      'penjelasan': 'Penjelasan',
+      'explanation': 'Penjelasan',
+      'materi': 'Materi',
+      'content': 'Konten',
+      'tujuan_pembelajaran': 'Tujuan Pembelajaran',
+      'learning_objectives': 'Tujuan Pembelajaran',
+      'poin_penting': 'Poin Penting',
+      'key_points': 'Poin Penting',
+      'contoh': 'Contoh',
+      'examples': 'Contoh',
+      'kesimpulan': 'Kesimpulan',
+      'conclusion': 'Kesimpulan',
+      'latihan': 'Latihan',
+      'exercises': 'Latihan',
+      'catatan': 'Catatan',
+      'notes': 'Catatan',
+    };
+
+    final lower = key.toLowerCase();
+    if (map.containsKey(lower)) return map[lower]!;
+
+    // Convert snake_case to Title Case
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+  }
+
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('guru');
   }
@@ -1047,6 +1114,342 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
     );
   }
 
+  Widget _buildMaterialTab() {
+    final sections = _parseMaterialContent();
+    return ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: sections.length,
+      itemBuilder: (context, index) {
+        final title = sections.keys.elementAt(index);
+        final content = sections.values.elementAt(index);
+        return _buildSectionCard(title, content, index);
+      },
+    );
+  }
+
+  Widget _buildSectionCard(String title, String content, int index) {
+    final colors = [
+      _getPrimaryColor(),
+      Colors.orange,
+      Colors.teal,
+      Colors.purple,
+      Colors.indigo,
+      Colors.pink,
+    ];
+    final accentColor = colors[index % colors.length];
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: Offset(0, 3),
+          ),
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+              border: Border(
+                bottom: BorderSide(color: accentColor.withValues(alpha: 0.12)),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: accentColor.withValues(alpha: 0.15)),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Section content
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: _buildFormattedContent(content),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormattedContent(String content) {
+    // Split into paragraphs and render
+    final paragraphs = content
+        .split(RegExp(r'\n\s*\n'))
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+
+    if (paragraphs.length <= 1) {
+      // Single paragraph - check for bullet-like lines
+      final lines = content.split('\n').where((l) => l.trim().isNotEmpty).toList();
+      if (lines.length > 1 && lines.any((l) => l.trim().startsWith(RegExp(r'[-•\d]+[.)]?\s')))) {
+        return _buildBulletList(lines);
+      }
+      return Text(
+        content.replaceAll(r'\n', '\n'),
+        style: TextStyle(
+          fontSize: 14,
+          color: ColorUtils.slate700,
+          height: 1.6,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: paragraphs.asMap().entries.map((entry) {
+        final paragraph = entry.value.trim();
+        final lines = paragraph.split('\n').where((l) => l.trim().isNotEmpty).toList();
+
+        // Check if this paragraph is a bullet list
+        if (lines.length > 1 && lines.every((l) => l.trim().startsWith(RegExp(r'[-•\d]+[.)]?\s')))) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: _buildBulletList(lines),
+          );
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: Text(
+            paragraph,
+            style: TextStyle(
+              fontSize: 14,
+              color: ColorUtils.slate700,
+              height: 1.6,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildBulletList(List<String> lines) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines.map((line) {
+        final trimmed = line.trim();
+        // Check if it starts with a bullet or number
+        final isBullet = trimmed.startsWith(RegExp(r'[-•]\s'));
+        final isNumbered = trimmed.startsWith(RegExp(r'\d+[.)]\s'));
+
+        String text = trimmed;
+        if (isBullet) {
+          text = trimmed.replaceFirst(RegExp(r'^[-•]\s*'), '');
+        } else if (isNumbered) {
+          text = trimmed.replaceFirst(RegExp(r'^\d+[.)]\s*'), '');
+        }
+
+        if (isBullet || isNumbered) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: EdgeInsets.only(top: 7, right: 10, left: 4),
+                  decoration: BoxDecoration(
+                    color: _getPrimaryColor().withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: ColorUtils.slate700,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: Text(
+            trimmed,
+            style: TextStyle(
+              fontSize: 14,
+              color: ColorUtils.slate700,
+              height: 1.5,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildQuizTab() {
+    final quizzes = _aiData?['quizzes'] as List? ?? [];
+    if (quizzes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.quiz_outlined, size: 48, color: ColorUtils.slate300),
+            SizedBox(height: 12),
+            Text(
+              'Belum ada kuis',
+              style: TextStyle(color: ColorUtils.slate500, fontSize: 15),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        if (_materialId != null)
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${quizzes.length} Pertanyaan',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate600,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _isRegenerating ? null : _regenerateQuiz,
+                  icon: Icon(Icons.add, size: 16, color: _getPrimaryColor()),
+                  label: Text(
+                    'Tambah Kuis',
+                    style: TextStyle(fontSize: 12, color: _getPrimaryColor()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: ListView.builder(
+            padding: EdgeInsets.all(16),
+            itemCount: quizzes.length,
+            itemBuilder: (context, index) {
+              return _buildQuizCard(
+                index,
+                Map<String, dynamic>.from(quizzes[index]),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReferenceTab() {
+    final refs = _aiData?['references'] as List? ?? [];
+    if (refs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.menu_book_outlined, size: 48, color: ColorUtils.slate300),
+            SizedBox(height: 12),
+            Text(
+              'Belum ada referensi',
+              style: TextStyle(color: ColorUtils.slate500, fontSize: 15),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        if (_materialId != null)
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${refs.length} Referensi',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate600,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _isRegenerating ? null : _regenerateReferences,
+                  icon: Icon(Icons.refresh, size: 16, color: Colors.blue),
+                  label: Text(
+                    'Ganti',
+                    style: TextStyle(fontSize: 12, color: Colors.blue),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: ListView.builder(
+            padding: EdgeInsets.all(16),
+            itemCount: refs.length,
+            itemBuilder: (context, index) {
+              return _buildReferenceCard(
+                Map<String, dynamic>.from(refs[index]),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1066,152 +1469,53 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen> {
                           )
                         : _aiData == null
                             ? Center(child: Text('Gagal memuat materi.'))
-                            : SingleChildScrollView(
-                                padding: EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Material content
-                                    Container(
-                                      padding: EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        border: Border.all(
-                                            color: ColorUtils.slate200),
+                            : Column(
+                                children: [
+                                  // Tab bar
+                                  Container(
+                                    color: Colors.white,
+                                    child: TabBar(
+                                      controller: _tabController,
+                                      labelColor: _getPrimaryColor(),
+                                      unselectedLabelColor: ColorUtils.slate400,
+                                      indicatorColor: _getPrimaryColor(),
+                                      indicatorWeight: 3,
+                                      labelStyle: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
                                       ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            widget.title,
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: ColorUtils.slate800,
-                                            ),
-                                          ),
-                                          SizedBox(height: 16),
-                                          Divider(),
-                                          Text(
-                                            _stripHtml(
-                                              _aiData!['material_content'] ??
-                                                  '<p>Konten tidak tersedia.</p>',
-                                            ),
-                                            style: TextStyle(
-                                              height: 1.5,
-                                              color: ColorUtils.slate700,
-                                            ),
-                                          ),
-                                        ],
+                                      unselectedLabelStyle: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
                                       ),
+                                      tabs: [
+                                        Tab(
+                                          icon: Icon(Icons.article_outlined, size: 20),
+                                          text: 'Materi',
+                                        ),
+                                        Tab(
+                                          icon: Icon(Icons.quiz_outlined, size: 20),
+                                          text: 'Kuis',
+                                        ),
+                                        Tab(
+                                          icon: Icon(Icons.menu_book_outlined, size: 20),
+                                          text: 'Referensi',
+                                        ),
+                                      ],
                                     ),
-
-                                    // Quizzes
-                                    if ((_aiData!['quizzes'] as List?)
-                                            ?.isNotEmpty ==
-                                        true) ...[
-                                      SizedBox(height: 24),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Icon(Icons.quiz_rounded,
-                                                  color: _getPrimaryColor()),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                'Kuis & Evaluasi',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: ColorUtils.slate800,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          if (_materialId != null)
-                                            TextButton.icon(
-                                              onPressed: _isRegenerating
-                                                  ? null
-                                                  : _regenerateQuiz,
-                                              icon: Icon(Icons.add,
-                                                  size: 16,
-                                                  color: _getPrimaryColor()),
-                                              label: Text(
-                                                'Tambah Kuis',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: _getPrimaryColor(),
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 12),
-                                      ...(_aiData!['quizzes'] as List)
-                                          .asMap()
-                                          .entries
-                                          .map((entry) => _buildQuizCard(
-                                              entry.key,
-                                              Map<String, dynamic>.from(
-                                                  entry.value))),
-                                    ],
-
-                                    // References
-                                    if ((_aiData!['references'] as List?)
-                                            ?.isNotEmpty ==
-                                        true) ...[
-                                      SizedBox(height: 24),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Icon(Icons.menu_book_rounded,
-                                                  color: _getPrimaryColor()),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                'Referensi Pembelajaran',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: ColorUtils.slate800,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          if (_materialId != null)
-                                            TextButton.icon(
-                                              onPressed: _isRegenerating
-                                                  ? null
-                                                  : _regenerateReferences,
-                                              icon: Icon(Icons.refresh,
-                                                  size: 16,
-                                                  color: Colors.blue),
-                                              label: Text(
-                                                'Ganti',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.blue,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 12),
-                                      ...(_aiData!['references'] as List).map(
-                                          (ref) => _buildReferenceCard(
-                                              Map<String, dynamic>.from(ref))),
-                                    ],
-
-                                    SizedBox(height: 16),
-                                  ],
-                                ),
+                                  ),
+                                  // Tab content
+                                  Expanded(
+                                    child: TabBarView(
+                                      controller: _tabController,
+                                      children: [
+                                        _buildMaterialTab(),
+                                        _buildQuizTab(),
+                                        _buildReferenceTab(),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
           ),
         ],
