@@ -34,13 +34,13 @@ class ApiService {
     }
 
     // Fallback if .env is missing or API_BASE_URL is empty
-    if (kIsWeb) {
-      baseUrl = 'http://127.0.0.1:8000/api';
-    } else if (Platform.isAndroid) {
-      baseUrl = 'http://127.0.0.1:8000/api';
-    } else {
-      baseUrl = 'http://127.0.0.1:8000/api';
-    }
+    // if (kIsWeb) {
+    //   baseUrl = 'http://127.0.0.1:8000/api';
+    // } else if (Platform.isAndroid) {
+    //   baseUrl = 'http://127.0.0.1:8000/api';
+    // } else {
+    //   baseUrl = 'http://127.0.0.1:8000/api';
+    // }
   }
 
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
@@ -57,16 +57,8 @@ class ApiService {
       if (kDebugMode) {
         print('❌ GET Error on $endpoint: $e');
       }
-      // If it's a network error or critical error, logout user
-      if (e is SocketException || e.toString().contains('Failed host lookup')) {
-        await _handleAuthenticationErrorWithMessage(
-          'Connection failed. Please check your internet connection and try again.',
-        );
-      } else if (e.toString().contains('Timeout')) {
-        await _handleAuthenticationErrorWithMessage(
-          'Request timeout. Please try again.',
-        );
-      }
+      // Network errors should NOT trigger logout - just rethrow
+      // Only 401/403 should trigger logout (handled in _handleResponse)
       rethrow;
     }
   }
@@ -86,15 +78,6 @@ class ApiService {
       if (kDebugMode) {
         print('❌ POST Error on $endpoint: $e');
       }
-      if (e is SocketException || e.toString().contains('Failed host lookup')) {
-        await _handleAuthenticationErrorWithMessage(
-          'Connection failed. Please check your internet connection and try again.',
-        );
-      } else if (e.toString().contains('Timeout')) {
-        await _handleAuthenticationErrorWithMessage(
-          'Request timeout. Please try again.',
-        );
-      }
       rethrow;
     }
   }
@@ -113,15 +96,6 @@ class ApiService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ PUT Error on $endpoint: $e');
-      }
-      if (e is SocketException || e.toString().contains('Failed host lookup')) {
-        await _handleAuthenticationErrorWithMessage(
-          'Connection failed. Please check your internet connection and try again.',
-        );
-      } else if (e.toString().contains('Timeout')) {
-        await _handleAuthenticationErrorWithMessage(
-          'Request timeout. Please try again.',
-        );
       }
       rethrow;
     }
@@ -166,15 +140,6 @@ class ApiService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ DELETE Error on $endpoint: $e');
-      }
-      if (e is SocketException || e.toString().contains('Failed host lookup')) {
-        await _handleAuthenticationErrorWithMessage(
-          'Connection failed. Please check your internet connection and try again.',
-        );
-      } else if (e.toString().contains('Timeout')) {
-        await _handleAuthenticationErrorWithMessage(
-          'Request timeout. Please try again.',
-        );
       }
       rethrow;
     }
@@ -313,12 +278,8 @@ class ApiService {
         throw Exception(errorMessage);
       }
     } catch (e) {
-      // Handle JSON decode errors
-      if (e is FormatException) {
-        _handleAuthenticationErrorWithMessage(
-          'Invalid server response. Please try again.',
-        );
-      }
+      // FormatException = server returned non-JSON (e.g. HTML error page)
+      // Don't logout - just rethrow so UI can handle it
       rethrow;
     }
   }
