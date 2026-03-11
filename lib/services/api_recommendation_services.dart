@@ -51,6 +51,7 @@ class ApiRecommendationService {
     required String subjectId,
     String? triggerSource,
     bool forceRegenerate = false,
+    bool? includeOnTrack,
   }) async {
     final response = await http
         .post(
@@ -62,6 +63,7 @@ class ApiRecommendationService {
             'subject_id': subjectId,
             if (triggerSource != null) 'trigger_source': triggerSource,
             if (forceRegenerate) 'force_regenerate': true,
+            if (includeOnTrack != null) 'include_on_track': includeOnTrack,
           }),
         )
         .timeout(const Duration(seconds: 60));

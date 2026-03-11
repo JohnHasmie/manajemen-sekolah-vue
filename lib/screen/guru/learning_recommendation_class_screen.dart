@@ -266,18 +266,11 @@ class _LearningRecommendationClassScreenState
   // ==================== GENERATE FLOW ====================
 
   Future<void> _generateForClass(String classId, String className) async {
-    // Step 1: Pick period
-    final period = await _showPeriodPicker(className);
-    if (period == null || !mounted) return;
+    // Step 1: Pick scope (all students or only those who need recommendations)
+    final includeOnTrack = await _showScopePicker(className);
+    if (includeOnTrack == null || !mounted) return;
 
-    // Step 2: If monthly, pick month
-    String? selectedMonth;
-    if (period == 'monthly') {
-      selectedMonth = await _showMonthPicker();
-      if (selectedMonth == null || !mounted) return;
-    }
-
-    // Step 3: Pick subject
+    // Step 2: Pick subject
     final subjects = _getSubjectsForClass(classId);
     if (subjects.isEmpty) {
       if (mounted) {
@@ -310,34 +303,15 @@ class _LearningRecommendationClassScreenState
 
     if (selectedSubject == null || !mounted) return;
 
-    // Step 4: Generate
+    // Step 3: Generate
     setState(() => _generating[classId] = true);
-
-    // Map period to trigger_source
-    String triggerSource;
-    switch (period) {
-      case 'weekly':
-        triggerSource = 'weekly_review';
-        break;
-      case 'monthly':
-        triggerSource = 'post_exam';
-        break;
-      case 'mid_semester':
-        triggerSource = 'post_exam';
-        break;
-      case 'semester':
-        triggerSource = 'on_demand';
-        break;
-      default:
-        triggerSource = 'on_demand';
-    }
 
     try {
       final result = await ApiRecommendationService.generateForClass(
         teacherId: _effectiveTeacherId,
         classId: classId,
         subjectId: selectedSubject['id']!,
-        triggerSource: triggerSource,
+        includeOnTrack: includeOnTrack,
       );
 
       if (result['async'] == true) {
@@ -416,10 +390,8 @@ class _LearningRecommendationClassScreenState
     }
   }
 
-  Future<String?> _showPeriodPicker(String className) async {
-    final primaryColor = _getPrimaryColor();
-
-    return showModalBottomSheet<String>(
+  Future<bool?> _showScopePicker(String className) async {
+    return showModalBottomSheet<bool>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -442,7 +414,7 @@ class _LearningRecommendationClassScreenState
             ),
             const SizedBox(height: 16),
             Text(
-              'Pilih Periode Analisis',
+              'Pilih Cakupan Siswa',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -458,36 +430,22 @@ class _LearningRecommendationClassScreenState
               ),
             ),
             const SizedBox(height: 16),
-            _buildPeriodOption(
+            _buildScopeOption(
               ctx: ctx,
-              value: 'weekly',
-              icon: Icons.date_range_rounded,
-              title: 'Pekanan',
-              subtitle: 'Analisis minggu ini & 1 minggu sebelumnya',
+              value: true,
+              icon: Icons.groups_rounded,
+              title: 'Semua Siswa',
+              subtitle:
+                  'Generate rekomendasi untuk semua siswa termasuk yang sudah baik',
               color: const Color(0xFF3B82F6),
             ),
-            _buildPeriodOption(
+            _buildScopeOption(
               ctx: ctx,
-              value: 'monthly',
-              icon: Icons.calendar_month_rounded,
-              title: 'Bulanan',
-              subtitle: 'Pilih bulan untuk dianalisis',
-              color: const Color(0xFF8B5CF6),
-            ),
-            _buildPeriodOption(
-              ctx: ctx,
-              value: 'mid_semester',
-              icon: Icons.school_rounded,
-              title: 'Setengah Semester',
-              subtitle: 'Analisis UTS / tengah semester',
-              color: primaryColor,
-            ),
-            _buildPeriodOption(
-              ctx: ctx,
-              value: 'semester',
-              icon: Icons.emoji_events_rounded,
-              title: 'Semester',
-              subtitle: 'Analisis UAS / akhir semester penuh',
+              value: false,
+              icon: Icons.person_search_rounded,
+              title: 'Siswa yang Perlu Saja',
+              subtitle:
+                  'Hanya siswa yang membutuhkan rekomendasi berdasarkan data performa',
               color: const Color(0xFFF59E0B),
             ),
             const SizedBox(height: 8),
@@ -497,9 +455,9 @@ class _LearningRecommendationClassScreenState
     );
   }
 
-  Widget _buildPeriodOption({
+  Widget _buildScopeOption({
     required BuildContext ctx,
-    required String value,
+    required bool value,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -559,118 +517,6 @@ class _LearningRecommendationClassScreenState
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Future<String?> _showMonthPicker() async {
-    final now = DateTime.now();
-    final months = <Map<String, dynamic>>[];
-
-    // Show last 6 months
-    for (int i = 0; i < 6; i++) {
-      final month = DateTime(now.year, now.month - i, 1);
-      months.add({
-        'value': DateFormat('yyyy-MM').format(month),
-        'label': DateFormat('MMMM yyyy', 'id_ID').format(month),
-        'isCurrent': i == 0,
-      });
-    }
-
-    return showModalBottomSheet<String>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Pilih Bulan',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: ColorUtils.slate900,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...months.map((m) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => Navigator.pop(ctx, m['value'] as String),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: m['isCurrent'] == true
-                              ? _getPrimaryColor().withValues(alpha: 0.05)
-                              : null,
-                          border: Border.all(
-                            color: m['isCurrent'] == true
-                                ? _getPrimaryColor().withValues(alpha: 0.3)
-                                : ColorUtils.slate200,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.calendar_today_rounded,
-                                size: 18, color: ColorUtils.slate500),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                m['label'] as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: ColorUtils.slate800,
-                                ),
-                              ),
-                            ),
-                            if (m['isCurrent'] == true)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: _getPrimaryColor()
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'Bulan Ini',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: _getPrimaryColor(),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                )),
-            const SizedBox(height: 8),
-          ],
         ),
       ),
     );
