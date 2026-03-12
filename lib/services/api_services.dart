@@ -34,13 +34,10 @@ class ApiService {
     }
 
     // Fallback if .env is missing or API_BASE_URL is empty
-    // if (kIsWeb) {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // } else if (Platform.isAndroid) {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // } else {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // }
+    baseUrl = 'https://edu-api.kamillabs.com/api';
+    if (kDebugMode) {
+      print('📡 API Base URL fallback: $baseUrl');
+    }
   }
 
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {

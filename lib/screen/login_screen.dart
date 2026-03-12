@@ -180,9 +180,12 @@ class LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      if (error.toString().toLowerCase().contains('expired') ||
-          error.toString().toLowerCase().contains('token') ||
-          error.toString().toLowerCase().contains('unauthorized')) {
+      // Only trigger session expired for actual 401/unauthorized errors,
+      // not for errors that merely contain the word "token" in their message
+      final errorStr = error.toString().toLowerCase();
+      if (errorStr.contains('401') ||
+          errorStr.contains('session expired') ||
+          errorStr.contains('unauthorized')) {
         _handleTokenExpired();
       } else {
         // Clear data on any login failure to be safe

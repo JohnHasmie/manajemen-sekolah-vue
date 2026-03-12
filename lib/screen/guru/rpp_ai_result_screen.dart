@@ -772,9 +772,9 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Color(0xFF4F46E5).withValues(alpha: 0.08),
+              color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Color(0xFF4F46E5).withValues(alpha: 0.2)),
+              border: Border.all(color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -783,7 +783,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                   height: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: Color(0xFF4F46E5),
+                    color: ColorUtils.getRoleColor('guru'),
                   ),
                 ),
                 SizedBox(width: 12),
@@ -795,7 +795,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                         'AI sedang menyusun RPP...',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF4F46E5),
+                          color: ColorUtils.getRoleColor('guru'),
                           fontSize: 14,
                         ),
                       ),
@@ -901,7 +901,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF4F46E5),
+                backgroundColor: ColorUtils.getRoleColor('guru'),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -923,7 +923,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_isPolling ? 'Generating RPP AI...' : 'Hasil RPP AI (K-13)'),
-        backgroundColor: Color(0xFF4F46E5),
+        backgroundColor: ColorUtils.getRoleColor('guru'),
         foregroundColor: Colors.white,
         actions: _isPolling || _pollingError != null
             ? []

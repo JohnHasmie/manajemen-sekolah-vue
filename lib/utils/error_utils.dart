@@ -24,12 +24,17 @@ class ErrorUtils {
       return 'Koneksi terlalu lambat atau waktu habis, silakan coba lagi.';
     }
 
-    // Authentication/Authorization
+    // Specific login errors - check BEFORE generic auth errors
+    if (errorStr.contains('tidak mengembalikan token') ||
+        errorStr.contains('gagal mendapatkan token google')) {
+      return 'Login gagal. Silakan coba lagi.';
+    }
+
+    // Authentication/Authorization - only for actual session/auth issues
     if (errorStr.contains('re-login') ||
         errorStr.contains('401') ||
         errorStr.contains('unauthorized') ||
-        errorStr.contains('expired') ||
-        errorStr.contains('token')) {
+        errorStr.contains('session expired')) {
       return 'Sesi Anda telah berakhir, silakan login kembali.';
     }
 
