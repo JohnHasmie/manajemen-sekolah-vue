@@ -1342,6 +1342,8 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       }
     }
 
+    bool isChangeUserMode = false;
+
     // Validate that selectedWaliKelasId exists in _classes AND has a name (matching dropdown filter)
     if (selectedWaliKelasId != null) {
       final exists = _classes.any(
@@ -1498,6 +1500,55 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                                     icon: Icons.person,
                                   ),
                                   SizedBox(height: 12),
+                                  if (teacher != null)
+                                    Container(
+                                      margin: EdgeInsets.only(bottom: 12),
+                                      decoration: BoxDecoration(
+                                        color: ColorUtils.warning600.withValues(
+                                          alpha: 0.05,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: ColorUtils.warning600.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                        ),
+                                      ),
+                                      child: SwitchListTile(
+                                        title: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en':
+                                                'Use Another User / Change Account',
+                                            'id':
+                                                'Ganti Akun / Gunakan User Lain',
+                                          }),
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: ColorUtils.warning600,
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          languageProvider.getTranslatedText({
+                                            'en':
+                                                'Link this teacher to a different user account based on the email below (does not edit the current linked user).',
+                                            'id':
+                                                'Pindahkan guru ini ke akun user lain berdasarkan email di bawah (tidak merubah data user saat ini).',
+                                          }),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: ColorUtils.slate600,
+                                          ),
+                                        ),
+                                        value: isChangeUserMode,
+                                        activeThumbColor: ColorUtils.warning600,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            isChangeUserMode = val;
+                                          });
+                                        },
+                                      ),
+                                    ),
                                   buildDialogTextField(
                                     controller: emailController,
                                     label: languageProvider.getTranslatedText({
@@ -1828,6 +1879,8 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                                           'subject_ids': selectedSubjectIds,
                                           'class_ids': selectedClassIds,
                                           'academic_year_id': selectedYearId,
+                                          if (teacher != null && isChangeUserMode)
+                                            'use_another_user': true,
                                         };
 
                                         String teacherId;
