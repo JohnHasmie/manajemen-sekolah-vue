@@ -13,6 +13,7 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_subject_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
@@ -98,7 +99,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       if (kDebugMode) {
         print('♻️ Refreshing subjects due to FCM sync trigger');
       }
-      _loadSubjects(resetPage: true).then((_) {
+      _loadSubjects(resetPage: true, useCache: false).then((_) {
         // Optional: show a small snackbar if item count changed
       });
     }
@@ -744,19 +745,111 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
     );
   }
 
-  Future<void> _loadSubjects({bool resetPage = true}) async {
-    try {
-      if (resetPage) {
-        setState(() {
-          _isLoading = true;
-          _currentPage = 1;
-          _hasMoreData = true;
-          _subjectList = []; // Reset list
-          _errorMessage = '';
-        });
+  String? _buildSubjectCacheKey() {
+    // Only cache default first-page view (no filters/search) for fast reload
+    if (_currentPage != 1) return null;
+    if (_selectedStatusFilter != null ||
+        _selectedGradeLevelFilter != null ||
+        _selectedKelasStatusFilter != null ||
+        _selectedClassNameFilter != null ||
+        _searchController.text.trim().isNotEmpty) {
+      return null;
+    }
+
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
+    return 'subject_list_$yearId';
+  }
+
+  void _applySubjectExtractedData(List<dynamic> data) {
+    // Extract unique class names and grade levels from subjects
+    Set<String> classNamesSet = {};
+    Set<String> gradeLevelsSet = {};
+
+    for (var subject in data) {
+      // Support both naming conventions
+      final kelasNames =
+          (subject['class_names'] ?? subject['kelas_names'])?.toString() ?? '';
+      if (kelasNames.isNotEmpty) {
+        final names = kelasNames
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty);
+        classNamesSet.addAll(names);
       }
 
-      // Load with pagination and backend filtering
+      // Extract grade levels
+      final gradeLevels =
+          (subject['class_grade_levels'] ?? subject['kelas_grade_levels'])
+              ?.toString() ??
+          '';
+      if (gradeLevels.isNotEmpty) {
+        final levels = gradeLevels
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty);
+        gradeLevelsSet.addAll(levels);
+      }
+    }
+
+    _availableClassNames = classNamesSet.toList()..sort();
+    _availableGradeLevels = gradeLevelsSet.toList()
+      ..sort((a, b) {
+        final aInt = int.tryParse(a) ?? 0;
+        final bInt = int.tryParse(b) ?? 0;
+        return aInt.compareTo(bInt);
+      });
+  }
+
+  Future<void> _loadSubjects({bool resetPage = true, bool useCache = true}) async {
+    try {
+      if (resetPage) {
+        _currentPage = 1;
+        _hasMoreData = true;
+
+        // ─── Step 1: Try loading from cache for instant display ───
+        if (useCache) {
+          final cacheKey = _buildSubjectCacheKey();
+          if (cacheKey != null) {
+            try {
+              final cached = await LocalCacheService.load(
+                cacheKey,
+                ttl: const Duration(hours: 3),
+              );
+              if (cached != null && mounted) {
+                final cachedData = Map<String, dynamic>.from(cached);
+                final subjects = List<dynamic>.from(cachedData['subjects'] ?? []);
+                _applySubjectExtractedData(subjects);
+                setState(() {
+                  _subjectList = subjects;
+                  _paginationMeta = cachedData['pagination'] != null
+                      ? Map<String, dynamic>.from(cachedData['pagination'])
+                      : null;
+                  _hasMoreData = cachedData['pagination']?['has_next_page'] ?? false;
+                  _isLoading = false;
+                  _errorMessage = '';
+                });
+                if (kDebugMode) print('⚡ Subjects loaded from cache');
+              }
+            } catch (e) {
+              if (kDebugMode) print('⚠️ Subject cache load failed: $e');
+            }
+          }
+        }
+
+        // Show loading skeleton only if we have no data yet (no cache hit)
+        if (_subjectList.isEmpty && mounted) {
+          setState(() {
+            _isLoading = true;
+            _errorMessage = '';
+          });
+        }
+      }
+
+      // ─── Step 2: Fetch fresh data from API ───
       final response = await ApiSubjectService.getSubjectsPaginated(
         page: _currentPage,
         limit: _perPage,
@@ -775,59 +868,37 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         print('✅ Subjects received: ${data.length} items');
       }
 
-      // Extract unique class names and grade levels from subjects
-      Set<String> classNamesSet = {};
-      Set<String> gradeLevelsSet = {};
-
-      for (var subject in data) {
-        // Support both naming conventions
-        final kelasNames =
-            (subject['class_names'] ?? subject['kelas_names'])?.toString() ??
-            '';
-        if (kelasNames.isNotEmpty) {
-          final names = kelasNames
-              .split(',')
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty);
-          classNamesSet.addAll(names);
-        }
-
-        // Extract grade levels
-        final gradeLevels =
-            (subject['class_grade_levels'] ?? subject['kelas_grade_levels'])
-                ?.toString() ??
-            '';
-        if (gradeLevels.isNotEmpty) {
-          final levels = gradeLevels
-              .split(',')
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty);
-          gradeLevelsSet.addAll(levels);
-        }
-      }
+      _applySubjectExtractedData(data);
 
       setState(() {
         _subjectList = data;
-        _availableClassNames = classNamesSet.toList()..sort();
-        _availableGradeLevels = gradeLevelsSet.toList()
-          ..sort((a, b) {
-            final aInt = int.tryParse(a) ?? 0;
-            final bInt = int.tryParse(b) ?? 0;
-            return aInt.compareTo(bInt);
-          });
         _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
         _errorMessage = '';
       });
+
+      // ─── Step 3: Save to cache (only for default view) ───
+      final cacheKey = _buildSubjectCacheKey();
+      if (cacheKey != null) {
+        LocalCacheService.save(cacheKey, {
+          'subjects': data,
+          'pagination': response['pagination'],
+        });
+      }
     } catch (error) {
       if (kDebugMode) print('Load subjects error: $error');
       if (!mounted) return;
 
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(error);
-      });
+      // Only show error if we don't have cached data displayed
+      if (_subjectList.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(error);
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
     } finally {
       // Trigger tour
       Future.delayed(const Duration(milliseconds: 1000), () {
@@ -836,6 +907,15 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         }
       });
     }
+  }
+
+  /// Force refresh: clear cache and reload from API
+  Future<void> _forceRefresh() async {
+    final cacheKey = _buildSubjectCacheKey();
+    if (cacheKey != null) {
+      await LocalCacheService.invalidate(cacheKey);
+    }
+    await _loadSubjects(resetPage: true, useCache: false);
   }
 
   Future<void> _loadMoreSubjects() async {
@@ -1689,6 +1769,9 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         key: _menuKey,
         onSelected: (value) {
           switch (value) {
+            case 'refresh':
+              _forceRefresh();
+              break;
             case 'export':
               _exportToExcel();
               break;
@@ -1710,6 +1793,21 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
           child: Icon(Icons.more_vert, color: Colors.white, size: 20),
         ),
         itemBuilder: (BuildContext context) => [
+          PopupMenuItem<String>(
+            value: 'refresh',
+            child: Row(
+              children: [
+                Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                SizedBox(width: 8),
+                Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Refresh Data',
+                    'id': 'Perbarui Data',
+                  }),
+                ),
+              ],
+            ),
+          ),
           PopupMenuItem<String>(
             value: 'export',
             child: Row(

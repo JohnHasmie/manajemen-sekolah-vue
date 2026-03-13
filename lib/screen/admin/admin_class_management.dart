@@ -17,6 +17,7 @@ import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_class_service.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -605,18 +606,67 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     );
   }
 
+  String? _buildClassCacheKey() {
+    // Only cache default first-page view (no filters/search) for fast reload
+    if (_currentPage != 1) return null;
+    if (_selectedGradeFilter != null ||
+        _selectedHomeroomFilter != null ||
+        _searchController.text.trim().isNotEmpty) {
+      return null;
+    }
+
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
+    return 'class_list_$yearId';
+  }
+
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-          _currentPage = 1;
-          _hasMoreData = true;
-          _classes = []; // Reset list
-        });
+        _currentPage = 1;
+        _hasMoreData = true;
+
+        // ─── Step 1: Try loading from cache for instant display ───
+        if (useCache) {
+          final cacheKey = _buildClassCacheKey();
+          if (cacheKey != null) {
+            try {
+              final cached = await LocalCacheService.load(
+                cacheKey,
+                ttl: const Duration(hours: 3),
+              );
+              if (cached != null && mounted) {
+                final cachedData = Map<String, dynamic>.from(cached);
+                setState(() {
+                  _classes = List<dynamic>.from(cachedData['classes'] ?? []);
+                  _paginationMeta = cachedData['pagination'] != null
+                      ? Map<String, dynamic>.from(cachedData['pagination'])
+                      : null;
+                  _hasMoreData = cachedData['pagination']?['has_next_page'] ?? false;
+                  _isLoading = false;
+                  _errorMessage = null;
+                });
+                if (kDebugMode) print('⚡ Classes loaded from cache');
+              }
+            } catch (e) {
+              if (kDebugMode) print('⚠️ Class cache load failed: $e');
+            }
+          }
+        }
+
+        // Show loading skeleton only if we have no data yet (no cache hit)
+        if (_classes.isEmpty && mounted) {
+          setState(() {
+            _isLoading = true;
+            _errorMessage = null;
+          });
+        }
       }
 
+      // ─── Step 2: Fetch fresh data from API ───
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
@@ -644,18 +694,33 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
       });
+
+      // ─── Step 3: Save to cache (only for default view) ───
+      final cacheKey = _buildClassCacheKey();
+      if (cacheKey != null) {
+        LocalCacheService.save(cacheKey, {
+          'classes': response['data'] ?? [],
+          'pagination': response['pagination'],
+        });
+      }
     } catch (e) {
+      if (kDebugMode) print('Load classes error: $e');
       if (!mounted) return;
 
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(e);
-      });
+      // Only show error if we don't have cached data displayed
+      if (_classes.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: $_errorMessage',
+            '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
           ),
           backgroundColor: Colors.red,
         ),
@@ -668,6 +733,15 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         }
       });
     }
+  }
+
+  /// Force refresh: clear cache and reload from API
+  Future<void> _forceRefresh() async {
+    final cacheKey = _buildClassCacheKey();
+    if (cacheKey != null) {
+      await LocalCacheService.invalidate(cacheKey);
+    }
+    await _loadData(resetPage: true, useCache: false);
   }
 
   Future<void> _onRefresh() async {
@@ -2083,6 +2157,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                   key: _menuKey,
                   onSelected: (value) {
                     switch (value) {
+                      case 'refresh':
+                        _forceRefresh();
+                        break;
                       case 'export':
                         _exportToExcel();
                         break;
@@ -2104,6 +2181,21 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                     child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                   ),
                   itemBuilder: (BuildContext context) => [
+                    PopupMenuItem<String>(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Refresh Data',
+                              'id': 'Perbarui Data',
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
                     PopupMenuItem<String>(
                       value: 'export',
                       child: Row(

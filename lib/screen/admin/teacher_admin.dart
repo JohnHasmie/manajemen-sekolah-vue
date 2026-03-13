@@ -17,6 +17,7 @@ import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_teacher_service.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -830,18 +831,71 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
     );
   }
 
+  /// Build cache key — only cache default view (page 1, no filters/search).
+  String? _buildTeacherCacheKey() {
+    if (_currentPage != 1) return null;
+    if (_selectedClassId != null ||
+        _selectedHomeroomFilter != null ||
+        _selectedGender != null ||
+        _selectedEmploymentStatus != null ||
+        _selectedTeachingClassId != null ||
+        _showAllTeachers ||
+        _searchController.text.trim().isNotEmpty) {
+      return null;
+    }
+    final yearId = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    ).selectedAcademicYear?['id']?.toString() ?? 'default';
+    return 'teacher_list_$yearId';
+  }
+
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
-        setState(() {
-          _isLoading = true;
-          _currentPage = 1;
-          _hasMoreData = true;
-          _teachers = []; // Reset list
-        });
+        _currentPage = 1;
+        _hasMoreData = true;
+
+        // ─── Step 1: Load from cache for instant display ───
+        if (useCache) {
+          final cacheKey = _buildTeacherCacheKey();
+          if (cacheKey != null) {
+            try {
+              final cached = await LocalCacheService.load(
+                cacheKey,
+                ttl: const Duration(hours: 3),
+              );
+              if (cached != null && mounted) {
+                final cachedData = Map<String, dynamic>.from(cached);
+                setState(() {
+                  _teachers = List<dynamic>.from(cachedData['teachers'] ?? []);
+                  _subjects = List<dynamic>.from(cachedData['subjects'] ?? []);
+                  _classes = List<dynamic>.from(cachedData['classes'] ?? []);
+                  _paginationMeta = cachedData['pagination'] != null
+                      ? Map<String, dynamic>.from(cachedData['pagination'])
+                      : null;
+                  _hasMoreData = cachedData['pagination']?['has_next_page'] ?? false;
+                  _isLoading = false;
+                  _errorMessage = null;
+                });
+                if (kDebugMode) print('⚡ Teachers loaded from cache');
+              }
+            } catch (e) {
+              if (kDebugMode) print('⚠️ Teacher cache load failed: $e');
+            }
+          }
+        }
+
+        // Show skeleton only if no cached data displayed
+        if (_teachers.isEmpty && mounted) {
+          setState(() {
+            _isLoading = true;
+            _errorMessage = null;
+          });
+        }
       }
 
-      // Load with pagination and backend filtering
+      // ─── Step 2: Fetch fresh data from API ───
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
@@ -884,14 +938,30 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
       });
+
+      // ─── Step 3: Save to cache (only for default view) ───
+      final cacheKey = _buildTeacherCacheKey();
+      if (cacheKey != null) {
+        LocalCacheService.save(cacheKey, {
+          'teachers': response['data'] ?? [],
+          'subjects': subjectData,
+          'classes': classData,
+          'pagination': response['pagination'],
+        });
+      }
     } catch (e) {
       if (kDebugMode) print('Load teachers error: $e');
       if (!mounted) return;
 
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(e);
-      });
+      // Only show error if no cached data displayed
+      if (_teachers.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -912,6 +982,15 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         }
       });
     }
+  }
+
+  /// Force refresh: clear cache and reload from API
+  Future<void> _forceRefresh() async {
+    final cacheKey = _buildTeacherCacheKey();
+    if (cacheKey != null) {
+      await LocalCacheService.invalidate(cacheKey);
+    }
+    await _loadData(resetPage: true, useCache: false);
   }
 
   Future<void> onRefresh() async {
@@ -2427,6 +2506,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                   key: _menuKey,
                   onSelected: (value) {
                     switch (value) {
+                      case 'refresh':
+                        _forceRefresh();
+                        break;
                       case 'export':
                         exportToExcel();
                         break;
@@ -2452,6 +2534,21 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                     ),
                   ),
                   itemBuilder: (BuildContext context) => [
+                    PopupMenuItem<String>(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          SizedBox(width: 8),
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Refresh Data',
+                              'id': 'Perbarui Data',
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
                     PopupMenuItem<String>(
                       value: 'export',
                       child: Row(
