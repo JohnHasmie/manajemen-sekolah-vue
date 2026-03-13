@@ -9,6 +9,7 @@ import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_rpp_service.dart';
@@ -404,6 +405,36 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
     );
   }
 
+  String? _buildTeacherCacheKey() {
+    if (_currentPage != 1) return null;
+    if (_searchController.text.trim().isNotEmpty) return null;
+    return 'rpp_teacher_list';
+  }
+
+  String? _buildRppCacheKey() {
+    if (_currentPage != 1) return null;
+    if (_selectedStatusFilter != null ||
+        _searchController.text.trim().isNotEmpty) {
+      return null;
+    }
+    final yearId = Provider.of<AcademicYearProvider>(context, listen: false)
+        .selectedAcademicYear?['id']
+        ?.toString() ?? 'default';
+    return 'rpp_list_${_selectedTeacherId}_$yearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    if (_showTeacherList && widget.teacherId == null) {
+      final cacheKey = _buildTeacherCacheKey();
+      if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
+      _loadTeachersPaginated(reset: true, useCache: false);
+    } else {
+      final cacheKey = _buildRppCacheKey();
+      if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
+      _loadRppPaginated(reset: true, useCache: false);
+    }
+  }
+
   Future<void> _exportToExcel() async {
     await ExcelRppService.exportRppToExcel(rppList: _rppList, context: context);
   }
@@ -415,8 +446,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
         _errorMessage = null;
       });
 
-      // deprecated: use paginated loader
-      await _loadRppPaginated(reset: true);
+      await _loadRppPaginated(reset: true, useCache: false);
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -432,8 +462,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
         _errorMessage = null;
       });
 
-      // Refresh using paginated endpoint
-      await _loadRppPaginated(reset: true);
+      await _loadRppPaginated(reset: true, useCache: false);
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -442,24 +471,44 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
     }
   }
 
-  Future<void> _loadTeachersPaginated({bool reset = false}) async {
+  Future<void> _loadTeachersPaginated({bool reset = false, bool useCache = true}) async {
     try {
       if (reset) {
         _currentPage = 1;
         _hasMoreData = true;
       }
 
-      setState(() {
-        if (reset) {
+      // Step 1: Try cache for instant display (only on reset/first load)
+      if (useCache && reset) {
+        final cacheKey = _buildTeacherCacheKey();
+        if (cacheKey != null) {
+          final cached = await LocalCacheService.load(cacheKey);
+          if (cached != null && cached['data'] != null && mounted) {
+            final cachedList = cached['data'] as List<dynamic>;
+            if (cachedList.isNotEmpty) {
+              setState(() {
+                _teacherList = cachedList;
+                _hasMoreData = cached['hasMoreData'] ?? true;
+                _isLoading = false;
+              });
+            }
+          }
+        }
+      }
+
+      // Show skeleton only if list is empty
+      if (reset && _teacherList.isEmpty && mounted) {
+        setState(() {
           _isLoading = true;
           _errorMessage = null;
-          _teacherList = [];
-        } else {
+        });
+      } else if (!reset) {
+        setState(() {
           _isLoadingMore = true;
-        }
-      });
+        });
+      }
 
-      // Using the method from ApiTeacherService we checked earlier
+      // Step 2: Fetch fresh from API
       final result = await ApiTeacherService.getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
@@ -485,13 +534,26 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
             _isLoading = false;
             _isLoadingMore = false;
           });
+
+          // Step 3: Save to cache (only page 1 default view)
+          if (reset) {
+            final cacheKey = _buildTeacherCacheKey();
+            if (cacheKey != null) {
+              await LocalCacheService.save(cacheKey, {
+                'data': data,
+                'hasMoreData': _hasMoreData,
+              });
+            }
+          }
         }
       } else {
         if (mounted) {
           setState(() {
             _isLoading = false;
             _isLoadingMore = false;
-            _errorMessage = 'Failed to load teachers';
+            if (_teacherList.isEmpty) {
+              _errorMessage = 'Failed to load teachers';
+            }
           });
         }
       }
@@ -500,28 +562,52 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
         setState(() {
           _isLoading = false;
           _isLoadingMore = false;
-          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+          if (_teacherList.isEmpty) {
+            _errorMessage = ErrorUtils.getFriendlyMessage(e);
+          }
         });
       }
     }
   }
 
-  Future<void> _loadRppPaginated({bool reset = false}) async {
+  Future<void> _loadRppPaginated({bool reset = false, bool useCache = true}) async {
     try {
       if (reset) {
         _currentPage = 1;
         _hasMoreData = true;
       }
 
-      setState(() {
-        if (reset) {
+      // Step 1: Try cache for instant display (only on reset/first load)
+      if (useCache && reset) {
+        final cacheKey = _buildRppCacheKey();
+        if (cacheKey != null) {
+          final cached = await LocalCacheService.load(cacheKey);
+          if (cached != null && cached['data'] != null && mounted) {
+            final cachedList = cached['data'] as List<dynamic>;
+            if (cachedList.isNotEmpty) {
+              setState(() {
+                _rppList = cachedList;
+                _hasMoreData = cached['hasMoreData'] ?? true;
+                _isLoading = false;
+              });
+            }
+          }
+        }
+      }
+
+      // Show skeleton only if list is empty
+      if (reset && _rppList.isEmpty && mounted) {
+        setState(() {
           _isLoading = true;
           _errorMessage = null;
-        } else {
+        });
+      } else if (!reset) {
+        setState(() {
           _isLoadingMore = true;
-        }
-      });
+        });
+      }
 
+      // Step 2: Fetch fresh from API
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
@@ -542,34 +628,54 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
 
       if (result['success'] == true) {
         final List<dynamic> data = result['data'] ?? [];
-
         final pagination = result['pagination'] ?? {};
 
-        setState(() {
-          if (reset) {
-            _rppList = data;
-          } else {
-            _rppList.addAll(data);
-          }
+        if (mounted) {
+          setState(() {
+            if (reset) {
+              _rppList = data;
+            } else {
+              _rppList.addAll(data);
+            }
 
-          _hasMoreData =
-              pagination['has_next_page'] ?? (data.length == _perPage);
-          _isLoading = false;
-          _isLoadingMore = false;
-        });
+            _hasMoreData =
+                pagination['has_next_page'] ?? (data.length == _perPage);
+            _isLoading = false;
+            _isLoadingMore = false;
+          });
+
+          // Step 3: Save to cache (only page 1 default view)
+          if (reset) {
+            final cacheKey = _buildRppCacheKey();
+            if (cacheKey != null) {
+              await LocalCacheService.save(cacheKey, {
+                'data': data,
+                'hasMoreData': _hasMoreData,
+              });
+            }
+          }
+        }
       } else {
-        setState(() {
-          _isLoading = false;
-          _isLoadingMore = false;
-          _errorMessage = 'Failed to load RPP';
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isLoadingMore = false;
+            if (_rppList.isEmpty) {
+              _errorMessage = 'Failed to load RPP';
+            }
+          });
+        }
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _isLoadingMore = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(e);
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLoadingMore = false;
+          if (_rppList.isEmpty) {
+            _errorMessage = ErrorUtils.getFriendlyMessage(e);
+          }
+        });
+      }
     }
   }
 
@@ -1095,8 +1201,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                             ],
                           ),
                         ),
-                        if (!_showTeacherList) // Only show options in RPP view
-                          PopupMenuButton<String>(
+                        PopupMenuButton<String>(
                             key: _menuKey,
                             onSelected: (value) {
                               switch (value) {
@@ -1104,7 +1209,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                                   _exportToExcel();
                                   break;
                                 case 'refresh':
-                                  _loadRppByTeacher();
+                                  _forceRefresh();
                                   break;
                               }
                             },
@@ -1122,33 +1227,29 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                               ),
                             ),
                             itemBuilder: (BuildContext context) => [
-                              PopupMenuItem<String>(
-                                value: 'export',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.download, size: 20),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Export to Excel',
-                                        'id': 'Export ke Excel',
-                                      }),
-                                    ),
-                                  ],
+                              if (!_showTeacherList)
+                                PopupMenuItem<String>(
+                                  value: 'export',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.download, size: 20),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        languageProvider.getTranslatedText({
+                                          'en': 'Export to Excel',
+                                          'id': 'Export ke Excel',
+                                        }),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
                               PopupMenuItem<String>(
                                 value: 'refresh',
                                 child: Row(
                                   children: [
-                                    Icon(Icons.refresh, size: 20),
+                                    Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
                                     SizedBox(width: 8),
-                                    Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Refresh',
-                                        'id': 'Refresh',
-                                      }),
-                                    ),
+                                    Text('Perbarui Data'),
                                   ],
                                 ),
                               ),

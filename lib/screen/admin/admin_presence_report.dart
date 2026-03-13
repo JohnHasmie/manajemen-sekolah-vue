@@ -7,6 +7,7 @@ import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
@@ -127,15 +128,78 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     }
   }
 
-  Future<void> _loadFilterData() async {
-    if (mounted) setState(() => _isLoadingClasses = true);
+  String? _buildFilterDataCacheKey() {
+    final yearId = context
+        .read<AcademicYearProvider>()
+        .selectedAcademicYear?['id']
+        ?.toString() ?? 'default';
+    return 'presence_filter_data_$yearId';
+  }
 
-    // List to store results
+  String? _buildSummaryCacheKey() {
+    if (_currentPage != 1) return null;
+    if (_selectedDateFilter != null ||
+        _selectedSubjectIds.isNotEmpty ||
+        _selectedClassIds.isNotEmpty ||
+        _selectedDayIds.isNotEmpty ||
+        _selectedLessonHourIds.isNotEmpty ||
+        _searchController.text.trim().isNotEmpty ||
+        _showTableView) {
+      return null;
+    }
+    final yearId = context
+        .read<AcademicYearProvider>()
+        .selectedAcademicYear?['id']
+        ?.toString() ?? 'default';
+    return 'presence_summary_$yearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    final filterKey = _buildFilterDataCacheKey();
+    if (filterKey != null) await LocalCacheService.invalidate(filterKey);
+    final summaryKey = _buildSummaryCacheKey();
+    if (summaryKey != null) await LocalCacheService.invalidate(summaryKey);
+    if (_selectedClassData == null) {
+      _loadFilterData(useCache: false);
+    } else {
+      _loadData(useCache: false);
+    }
+  }
+
+  Future<void> _loadFilterData({bool useCache = true}) async {
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cacheKey = _buildFilterDataCacheKey();
+      if (cacheKey != null) {
+        final cached = await LocalCacheService.load(cacheKey);
+        if (cached != null && mounted) {
+          final cachedSubjects = cached['subjects'] as List<dynamic>? ?? [];
+          final cachedClasses = cached['classes'] as List<dynamic>? ?? [];
+          final cachedTeachers = cached['teachers'] as List<dynamic>? ?? [];
+          final cachedLessonHours = cached['lessonHours'] as List<dynamic>? ?? [];
+          if (cachedSubjects.isNotEmpty || cachedClasses.isNotEmpty) {
+            setState(() {
+              _subjectList = cachedSubjects;
+              _classList = cachedClasses;
+              _fullTeacherList = cachedTeachers;
+              _lessonHours = cachedLessonHours;
+              _isLoadingClasses = false;
+            });
+          }
+        }
+      }
+    }
+
+    // Show loading only if data is empty
+    if (_classList.isEmpty && mounted) {
+      setState(() => _isLoadingClasses = true);
+    }
+
+    // Step 2: Fetch fresh from API
     List<dynamic> subjects = [];
     List<dynamic> classes = [];
 
     try {
-      // Execute requests in parallel with individual error handling
       final results = await Future.wait([
         ApiSubjectService()
             .getSubject()
@@ -183,14 +247,23 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           _fullTeacherList = teachers;
           _lessonHours = lessonHours;
         });
+      }
 
-        // No animation needed
+      // Step 3: Save to cache
+      final cacheKey = _buildFilterDataCacheKey();
+      if (cacheKey != null) {
+        await LocalCacheService.save(cacheKey, {
+          'subjects': subjects,
+          'classes': classes,
+          'teachers': teachers,
+          'lessonHours': lessonHours,
+        });
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error loading filter data (critical): $e');
       }
-      if (mounted) {
+      if (mounted && _classList.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -348,17 +421,78 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool useCache = true}) async {
     if (!mounted) return;
 
-    setState(() {
-      _isLoadingSummary = true;
-      _currentPage = 1;
-      _hasMoreData = true;
-      _absensiSummaryList.clear();
-    });
+    _currentPage = 1;
+    _hasMoreData = true;
 
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cacheKey = _buildSummaryCacheKey();
+      if (cacheKey != null) {
+        final cached = await LocalCacheService.load(cacheKey);
+        if (cached != null && cached['data'] != null && mounted) {
+          final cachedList = cached['data'] as List<dynamic>;
+          if (cachedList.isNotEmpty) {
+            final cachedItems = cachedList.map((item) {
+              return AttendanceSummary(
+                subjectId: item['subjectId']?.toString() ?? '',
+                subjectName: item['subjectName'] ?? 'Unknown',
+                date: DateTime.tryParse(item['date'] ?? '') ?? DateTime.now(),
+                totalStudents: item['totalStudents'] ?? 0,
+                present: item['present'] ?? 0,
+                absent: item['absent'] ?? 0,
+                classId: item['classId']?.toString() ?? '',
+                className: item['className'] ?? 'Unknown',
+                lessonHourId: item['lessonHourId'],
+                lessonHourName: item['lessonHourName'],
+                academicYearId: item['academicYearId'],
+              );
+            }).toList();
+            setState(() {
+              _absensiSummaryList = cachedItems;
+              _hasMoreData = cached['hasMoreData'] ?? false;
+              _isLoadingSummary = false;
+            });
+          }
+        }
+      }
+    }
+
+    // Show skeleton only if list is empty
+    if (_absensiSummaryList.isEmpty && mounted) {
+      setState(() {
+        _isLoadingSummary = true;
+      });
+    }
+
+    // Step 2: Fetch fresh from API
     await _fetchData();
+
+    // Step 3: Save to cache (only default view, page 1)
+    if (mounted) {
+      final cacheKey = _buildSummaryCacheKey();
+      if (cacheKey != null && _absensiSummaryList.isNotEmpty) {
+        final serialized = _absensiSummaryList.map((item) => {
+          'subjectId': item.subjectId,
+          'subjectName': item.subjectName,
+          'date': item.date.toIso8601String(),
+          'totalStudents': item.totalStudents,
+          'present': item.present,
+          'absent': item.absent,
+          'classId': item.classId,
+          'className': item.className,
+          'lessonHourId': item.lessonHourId,
+          'lessonHourName': item.lessonHourName,
+          'academicYearId': item.academicYearId,
+        }).toList();
+        await LocalCacheService.save(cacheKey, {
+          'data': serialized,
+          'hasMoreData': _hasMoreData,
+        });
+      }
+    }
   }
 
   Future<void> _loadMoreData() async {
@@ -571,7 +705,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
                             builder: (context) =>
                                 PresencePage(teacher: teacher),
                           ),
-                        ).then((_) => _loadData());
+                        ).then((_) => _loadData(useCache: false));
                       },
                     ),
                   );
@@ -2346,7 +2480,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           ),
         );
 
-        _loadData();
+        _loadData(useCache: false);
       } catch (e) {
         setState(() {
           _isLoadingSummary = false;
@@ -2513,11 +2647,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
                           onSelected: (value) {
                             switch (value) {
                               case 'refresh':
-                                if (_selectedClassData == null) {
-                                  _loadFilterData();
-                                } else {
-                                  _loadData();
-                                }
+                                _forceRefresh();
                                 break;
                               case 'export':
                                 if (_selectedClassData != null) {
@@ -2557,14 +2687,9 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
                               value: 'refresh',
                               child: Row(
                                 children: [
-                                  Icon(Icons.refresh, size: 20),
+                                  Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
                                   SizedBox(width: 8),
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Refresh',
-                                      'id': 'Refresh',
-                                    }),
-                                  ),
+                                  Text('Perbarui Data'),
                                 ],
                               ),
                             ),
