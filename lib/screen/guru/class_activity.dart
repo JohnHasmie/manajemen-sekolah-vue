@@ -15,6 +15,7 @@ import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -55,6 +56,8 @@ class ClassActifityScreen extends StatefulWidget {
 
 class ClassActifityScreenState extends State<ClassActifityScreen>
     with TickerProviderStateMixin {
+  static const String _prefKeyLastCacheKey = 'class_activity_last_cache_key';
+
   List<dynamic> _scheduleList = [];
   List<dynamic> _subjectList = [];
   List<dynamic> _chapterList = [];
@@ -147,6 +150,29 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       _isLoading = true;
     });
     _loadActivities();
+  }
+
+  String? _buildClassesCacheKey() {
+    if (_teacherId.isEmpty) return null;
+    final academicYearId = context
+        .read<AcademicYearProvider>()
+        .selectedAcademicYear?['id']
+        ?.toString();
+    return 'class_activity_classes_${_teacherId}_$academicYearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('class_activity_');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_prefKeyLastCacheKey);
+    if (_currentStep == 0) {
+      setState(() => _isLoading = true);
+      _loadUserData();
+    } else if (_currentStep == 1) {
+      _loadSubjectsForClass();
+    } else if (_currentStep == 2) {
+      _resetAndLoadActivities();
+    }
   }
 
   Future<void> _loadMoreActivities() async {
@@ -536,6 +562,29 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _teacherName = userData['nama']?.toString() ?? 'Guru';
       });
 
+      // Early cache load using persisted last cache key
+      if (_classList.isEmpty) {
+        final lastCacheKey = prefs.getString(_prefKeyLastCacheKey);
+        if (lastCacheKey != null) {
+          try {
+            final cached = await LocalCacheService.load(lastCacheKey, ttl: const Duration(hours: 3));
+            if (cached != null && mounted) {
+              final cachedData = Map<String, dynamic>.from(cached);
+              setState(() {
+                _classList = List<dynamic>.from(cachedData['classes'] ?? []);
+                _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
+                if (_classList.isNotEmpty) _isLoading = false;
+              });
+              if (kDebugMode) {
+                print('Loaded ${_classList.length} classes from early cache');
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) print('Early cache load error: $e');
+          }
+        }
+      }
+
       if (kDebugMode) {
         print('User ID from prefs: $userId');
         print('User Role: $role');
@@ -658,34 +707,71 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     }
   }
 
-  Future<void> _loadClasses(String teacherId, {bool isAdmin = false}) async {
+  Future<void> _loadClasses(String teacherId, {bool isAdmin = false, bool useCache = true}) async {
     try {
       final academicYearId = context
           .read<AcademicYearProvider>()
           .selectedAcademicYear?['id']
           ?.toString();
 
+      final cacheKey = 'class_activity_classes_${teacherId}_$academicYearId';
+
+      // Step 1: Try loading from cache if list is still empty
+      if (useCache && _classList.isEmpty) {
+        try {
+          final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
+          if (cached != null && mounted) {
+            final cachedData = Map<String, dynamic>.from(cached);
+            setState(() {
+              _classList = List<dynamic>.from(cachedData['classes'] ?? []);
+              _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
+              _isLoading = false;
+            });
+            if (kDebugMode) print('Loaded ${_classList.length} classes from cache');
+          }
+        } catch (e) {
+          if (kDebugMode) print('Cache load error: $e');
+        }
+      }
+
+      // Step 2: Show skeleton only if still empty
+      if (_classList.isEmpty && mounted) {
+        setState(() => _isLoading = true);
+      }
+
+      // Step 3: Fetch fresh data from API
       List<dynamic> classes = [];
 
       if (isAdmin) {
-        // Use ApiClassService for Admin
         final response = await ApiClassService.getClassPaginated(
-          limit: 100, // Load many classes
+          limit: 100,
           academicYearId: academicYearId,
         );
         classes = response['data'] ?? [];
       } else {
-        // Use ApiTeacherService for Teacher
         classes = await ApiTeacherService.getTeacherClasses(
           teacherId,
           academicYearId: academicYearId,
         );
       }
 
+      if (!mounted) return;
+
+      // Step 4: Update UI with fresh data
       setState(() {
         _classList = classes;
         _isLoading = false;
       });
+
+      // Step 5: Save to cache and persist cache key
+      await LocalCacheService.save(cacheKey, {
+        'classes': classes,
+        'schedules': _scheduleList,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefKeyLastCacheKey, cacheKey);
+
+      if (kDebugMode) print('Saved ${classes.length} classes to cache ($cacheKey)');
     } catch (e) {
       if (kDebugMode) {
         print('Error loading classes: $e');
@@ -693,11 +779,13 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
       if (!mounted) return;
 
-      setState(() {
-        _isLoading = false;
-      });
-
-      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+      // Only show error if no cached data available
+      if (_classList.isEmpty) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+      }
     }
   }
 
@@ -724,6 +812,15 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           print(
             'Loaded ${_scheduleList.length} schedules for teacher $teacherId',
           );
+        }
+
+        // Update cache with schedules data
+        final cacheKey = _buildClassesCacheKey();
+        if (cacheKey != null && _classList.isNotEmpty) {
+          LocalCacheService.save(cacheKey, {
+            'classes': _classList,
+            'schedules': schedules,
+          });
         }
       }
     } catch (e) {
@@ -2546,7 +2643,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               ),
               PopupMenuButton<String>(
                 onSelected: (value) {
-                  // Implement actions if needed
+                  if (value == 'refresh') {
+                    _forceRefresh();
+                  }
                 },
                 icon: Container(
                   width: 40,
@@ -2558,6 +2657,16 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                   child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                 ),
                 itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'refresh',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                        SizedBox(width: 8),
+                        Text('Perbarui Data'),
+                      ],
+                    ),
+                  ),
                   PopupMenuItem<String>(
                     value: 'help',
                     child: Row(
