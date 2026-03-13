@@ -11,6 +11,7 @@ import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -53,6 +54,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
   // DITAMBAHKAN KEMBALI: Toggle antara card dan table view
   bool _isTableView = false;
+
+  // Last known cache key for early cache loading
+  static const String _prefKeyLastCacheKey = 'schedule_last_cache_key';
 
   // Tour properties
   final GlobalKey _toggleViewKey = GlobalKey();
@@ -156,6 +160,32 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         _teacherId = userId; // Fallback
         _teacherNama = userData['nama']?.toString() ?? 'Guru';
       });
+
+      // Early cache load: use last known cache key for instant display
+      final lastCacheKey = prefs.getString(_prefKeyLastCacheKey);
+      if (lastCacheKey != null) {
+        try {
+          final cached = await LocalCacheService.load(
+            lastCacheKey,
+            ttl: const Duration(hours: 3),
+          );
+          if (cached != null && mounted) {
+            final cachedData = Map<String, dynamic>.from(cached);
+            setState(() {
+              _jadwalList = List<dynamic>.from(cachedData['jadwal'] ?? []);
+              _availableClasses =
+                  (cachedData['availableClasses'] as List<dynamic>?)
+                          ?.map((e) => Map<String, String>.from(e))
+                          .toList() ??
+                      [];
+              _isLoading = false;
+            });
+            if (kDebugMode) print('⚡ Early schedule cache loaded (key: $lastCacheKey)');
+          }
+        } catch (e) {
+          if (kDebugMode) print('⚠️ Early schedule cache failed: $e');
+        }
+      }
 
       if (userId.isNotEmpty) {
         String? resolvedTeacherId;
@@ -415,15 +445,74 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     }
   }
 
-  Future<void> _loadJadwal() async {
+  String? _buildScheduleCacheKey() {
+    // Don't cache when filters or search are active
+    if (_selectedDayIds.isNotEmpty ||
+        _selectedClassId != null ||
+        _searchController.text.isNotEmpty ||
+        (_selectedFilterSemester != null &&
+            _selectedFilterSemester != _selectedSemester)) {
+      return null;
+    }
+    if (_teacherId.isEmpty) return null;
+
+    final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
+    if (_isHomeroomView && _selectedHomeroomClass != null) {
+      final classId = _selectedHomeroomClass!['id'].toString();
+      return 'schedule_homeroom_${classId}_${semesterToUse}_$_selectedAcademicYear';
+    }
+    return 'schedule_teacher_${_teacherId}_${semesterToUse}_$_selectedAcademicYear';
+  }
+
+  Future<void> _forceRefresh() async {
+    final cacheKey = _buildScheduleCacheKey();
+    if (cacheKey != null) {
+      await LocalCacheService.invalidate(cacheKey);
+    }
+    await LocalCacheService.clearStartingWith('schedule_');
+    _loadJadwal(useCache: false);
+  }
+
+  Future<void> _loadJadwal({bool useCache = true}) async {
     if (_teacherId.isEmpty) {
       setState(() => _isLoading = false);
       return;
     }
 
-    try {
-      setState(() => _isLoading = true);
+    final cacheKey = _buildScheduleCacheKey();
 
+    // Step 1: Try loading from cache for instant display
+    if (useCache && cacheKey != null) {
+      try {
+        final cached = await LocalCacheService.load(
+          cacheKey,
+          ttl: const Duration(hours: 3),
+        );
+        if (cached != null && mounted) {
+          final cachedData = Map<String, dynamic>.from(cached);
+          setState(() {
+            _jadwalList = List<dynamic>.from(cachedData['jadwal'] ?? []);
+            _availableClasses = (cachedData['availableClasses'] as List<dynamic>?)
+                    ?.map((e) => Map<String, String>.from(e))
+                    .toList() ??
+                [];
+            _isLoading = false;
+          });
+          if (kDebugMode) print('⚡ Schedule loaded from cache');
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Schedule cache load failed: $e');
+      }
+    }
+
+    // Step 2: Show skeleton only if no cached data displayed
+    final hasData = _jadwalList.isNotEmpty;
+    if (!hasData && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 3: Fetch fresh data from API
+    try {
       // Use filter semester/year if set, otherwise use selected
       final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
       final academicYearToUse = _selectedAcademicYear;
@@ -462,31 +551,42 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         print('Total schedule items loaded: ${jadwal.length}');
       }
 
+      // Extract unique classes for filter
+      final uniqueClasses = <String, String>{};
+      for (var item in jadwal) {
+        final id =
+            item['class_id']?.toString() ??
+            item['kelas_id']?.toString() ??
+            '';
+        final name =
+            item['class_name']?.toString() ??
+            item['kelas_nama']?.toString() ??
+            '';
+        if (id.isNotEmpty && name.isNotEmpty) {
+          uniqueClasses[id] = name;
+        }
+      }
+      final classes = uniqueClasses.entries
+          .map((e) => {'id': e.key, 'name': e.value})
+          .toList()
+        ..sort((a, b) => a['name']!.compareTo(b['name']!));
+
       setState(() {
         _jadwalList = jadwal;
+        _availableClasses = classes;
         _isLoading = false;
-
-        // Extract unique classes for filter
-        final uniqueClasses = <String, String>{};
-        for (var item in jadwal) {
-          final id =
-              item['class_id']?.toString() ??
-              item['kelas_id']?.toString() ??
-              '';
-          final name =
-              item['class_name']?.toString() ??
-              item['kelas_nama']?.toString() ??
-              '';
-          if (id.isNotEmpty && name.isNotEmpty) {
-            uniqueClasses[id] = name;
-          }
-        }
-        _availableClasses =
-            uniqueClasses.entries
-                .map((e) => {'id': e.key, 'name': e.value})
-                .toList()
-              ..sort((a, b) => a['name']!.compareTo(b['name']!));
       });
+
+      // Save to cache and persist the cache key for early loading next time
+      if (cacheKey != null) {
+        LocalCacheService.save(cacheKey, {
+          'jadwal': jadwal,
+          'availableClasses': classes,
+        });
+        SharedPreferences.getInstance().then((prefs) {
+          prefs.setString(_prefKeyLastCacheKey, cacheKey);
+        });
+      }
 
       // Show tour
       Future.delayed(Duration(milliseconds: 1000), () {
@@ -498,12 +598,15 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       if (kDebugMode) {
         print('Error load jadwal: $e');
       }
-      setState(() {
-        _isLoading = false;
-      });
 
       if (mounted) {
-        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+        setState(() {
+          _isLoading = false;
+        });
+        // Only show error if no cached data displayed
+        if (!hasData) {
+          _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+        }
       }
     }
   }
@@ -1549,17 +1652,36 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                           ),
                         ),
                         SizedBox(width: 8),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.schedule,
-                            color: Colors.white,
-                            size: 20,
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'refresh') {
+                              _forceRefresh();
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem<String>(
+                              value: 'refresh',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                                  SizedBox(width: 8),
+                                  Text('Perbarui Data'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.more_vert_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ],
