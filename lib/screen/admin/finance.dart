@@ -15,6 +15,7 @@ import 'package:manajemensekolah/screen/admin/class_finance_report_screen.dart';
 import 'package:manajemensekolah/services/api_academic_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/currency_formatter.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -690,14 +691,85 @@ class FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
-  Future<void> _loadData() async {
-    try {
+  String? _buildFinanceCacheKey() {
+    // Don't cache when filters or search are active
+    if (_selectedStatusFilter != null ||
+        _selectedPeriodeFilter != null ||
+        _searchController.text.isNotEmpty) {
+      return null;
+    }
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    final yearId =
+        academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'all';
+    return 'finance_data_$yearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    final cacheKey = _buildFinanceCacheKey();
+    if (cacheKey != null) {
+      await LocalCacheService.invalidate(cacheKey);
+    }
+    // Also clear any finance-related cache keys
+    await LocalCacheService.clearStartingWith('finance_');
+    _loadData(useCache: false);
+  }
+
+  Future<void> _loadData({bool useCache = true}) async {
+    final cacheKey = _buildFinanceCacheKey();
+
+    // Step 1: Try loading from cache first for instant display
+    if (useCache && cacheKey != null) {
+      try {
+        final cached = await LocalCacheService.load(cacheKey);
+        if (cached != null && cached is Map<String, dynamic>) {
+          if (mounted) {
+            setState(() {
+              _jenisPembayaranList =
+                  (cached['jenisPembayaran'] as List<dynamic>?) ?? [];
+              _tagihanList = (cached['tagihan'] as List<dynamic>?) ?? [];
+              _pembayaranPendingList =
+                  (cached['pendingPayments'] as List<dynamic>?) ?? [];
+              _totalPembayaranPending =
+                  (cached['totalPending'] as int?) ?? 0;
+              _dashboardData =
+                  Map<String, dynamic>.from(cached['dashboard'] ?? {});
+              _kelasList = (cached['kelas'] as List<dynamic>?) ?? [];
+              _siswaList = (cached['siswa'] as List<dynamic>?) ?? [];
+              _siswaByKelas = (cached['siswaByKelas'] as Map<String, dynamic>?)
+                      ?.map((k, v) => MapEntry(k, List<dynamic>.from(v))) ??
+                  {};
+              _tagihanBySiswa =
+                  (cached['tagihanBySiswa'] as Map<String, dynamic>?)
+                          ?.map(
+                            (k, v) => MapEntry(k, List<dynamic>.from(v)),
+                          ) ??
+                      {};
+              _isLoading = false;
+              _errorMessage = '';
+            });
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error loading finance cache: $e');
+      }
+    }
+
+    // Step 2: Show skeleton only if no cached data displayed
+    final hasData = _jenisPembayaranList.isNotEmpty ||
+        _tagihanList.isNotEmpty ||
+        _dashboardData.isNotEmpty;
+    if (!hasData) {
       setState(() {
         _isLoading = true;
         _errorMessage = '';
       });
+    }
 
-      // Load semua data sekaligus
+    // Step 3: Fetch fresh data from API
+    try {
       await Future.wait([
         _loadJenisPembayaran(),
         _loadTagihan(),
@@ -711,12 +783,30 @@ class FinanceScreenState extends State<FinanceScreen> {
           _isLoading = false;
         });
       }
+
+      // Save to cache
+      if (cacheKey != null) {
+        await LocalCacheService.save(cacheKey, {
+          'jenisPembayaran': _jenisPembayaranList,
+          'tagihan': _tagihanList,
+          'pendingPayments': _pembayaranPendingList,
+          'totalPending': _totalPembayaranPending,
+          'dashboard': _dashboardData,
+          'kelas': _kelasList,
+          'siswa': _siswaList,
+          'siswaByKelas': _siswaByKelas,
+          'tagihanBySiswa': _tagihanBySiswa,
+        });
+      }
     } catch (error) {
       if (kDebugMode) print('Error loading data: $error');
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = ErrorUtils.getFriendlyMessage(error);
+          // Only show error if no cached data displayed
+          if (!hasData) {
+            _errorMessage = ErrorUtils.getFriendlyMessage(error);
+          }
         });
       }
     }
@@ -2484,7 +2574,7 @@ class FinanceScreenState extends State<FinanceScreen> {
                                 if (context.mounted) {
                                   Navigator.pop(context);
                                 }
-                                _loadData();
+                                _loadData(useCache: false);
 
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -2663,7 +2753,7 @@ class FinanceScreenState extends State<FinanceScreen> {
             ),
           );
         }
-        _loadData();
+        _loadData(useCache: false);
       } catch (error) {
         if (kDebugMode) print('Error deleting payment type: $error');
         if (mounted) {
@@ -3131,7 +3221,7 @@ class FinanceScreenState extends State<FinanceScreen> {
               behavior: SnackBarBehavior.floating,
             ),
           );
-          _loadData();
+          _loadData(useCache: false);
         }
       } catch (error) {
         if (kDebugMode) print('Error generating bills: $error');
@@ -3369,7 +3459,7 @@ class FinanceScreenState extends State<FinanceScreen> {
 
                                 if (context.mounted) {
                                   Navigator.pop(context);
-                                  _loadData();
+                                  _loadData(useCache: false);
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -4057,7 +4147,7 @@ class FinanceScreenState extends State<FinanceScreen> {
               backgroundColor: ColorUtils.success600,
             ),
           );
-          _loadData();
+          _loadData(useCache: false);
         }
       } catch (e) {
         if (mounted) {
@@ -4181,9 +4271,25 @@ class FinanceScreenState extends State<FinanceScreen> {
                         ],
                       ),
                     ),
-                    // Refresh button
-                    GestureDetector(
-                      onTap: _loadData,
+                    // Menu button
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'refresh') {
+                          _forceRefresh();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem<String>(
+                          value: 'refresh',
+                          child: Row(
+                            children: [
+                              Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                              SizedBox(width: 8),
+                              Text('Perbarui Data'),
+                            ],
+                          ),
+                        ),
+                      ],
                       child: Container(
                         width: 40,
                         height: 40,
@@ -4192,7 +4298,7 @@ class FinanceScreenState extends State<FinanceScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
-                          Icons.refresh_rounded,
+                          Icons.more_vert_rounded,
                           color: Colors.white,
                           size: 20,
                         ),

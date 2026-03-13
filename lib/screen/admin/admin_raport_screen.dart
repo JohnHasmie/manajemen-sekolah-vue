@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_raport_detail_screen.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -50,8 +51,57 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
     _loadInitialData();
   }
 
-  Future<void> _loadInitialData() async {
-    setState(() => _isLoading = true);
+  String? _buildClassesCacheKey() {
+    final yearId = Provider.of<AcademicYearProvider>(context, listen: false)
+        .selectedAcademicYear?['id']
+        ?.toString() ?? 'default';
+    return 'raport_classes_$yearId';
+  }
+
+  String? _buildStudentsCacheKey() {
+    if (_selectedClass == null) return null;
+    final yearId = Provider.of<AcademicYearProvider>(context, listen: false)
+        .selectedAcademicYear?['id']
+        ?.toString() ?? 'default';
+    return 'raport_students_${_selectedClass!['id']}_$yearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    final classesKey = _buildClassesCacheKey();
+    if (classesKey != null) await LocalCacheService.invalidate(classesKey);
+    if (_selectedClass != null) {
+      final studentsKey = _buildStudentsCacheKey();
+      if (studentsKey != null) await LocalCacheService.invalidate(studentsKey);
+      _loadStudents(useCache: false);
+    } else {
+      _loadInitialData(useCache: false);
+    }
+  }
+
+  Future<void> _loadInitialData({bool useCache = true}) async {
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cacheKey = _buildClassesCacheKey();
+      if (cacheKey != null) {
+        final cached = await LocalCacheService.load(cacheKey);
+        if (cached != null && cached['data'] != null && mounted) {
+          final cachedList = cached['data'] as List<dynamic>;
+          if (cachedList.isNotEmpty) {
+            setState(() {
+              _classes = cachedList;
+              _isLoading = false;
+            });
+          }
+        }
+      }
+    }
+
+    // Show loading only if classes empty
+    if (_classes.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 2: Fetch fresh from API
     try {
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -70,25 +120,59 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
           _classes = classesResponse['data'] ?? [];
           _isLoading = false;
         });
+
+        // Step 3: Save to cache
+        final cacheKey = _buildClassesCacheKey();
+        if (cacheKey != null) {
+          await LocalCacheService.save(cacheKey, {
+            'data': classesResponse['data'] ?? [],
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _errorMessage = e.toString();
-          _isLoading = false;
-        });
+        if (_classes.isEmpty) {
+          setState(() {
+            _errorMessage = e.toString();
+            _isLoading = false;
+          });
+        } else {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
 
-  Future<void> _loadStudents() async {
+  Future<void> _loadStudents({bool useCache = true}) async {
     if (_selectedClass == null) return;
 
-    setState(() {
-      _isLoadingStudents = true;
-      _errorMessage = '';
-    });
+    _errorMessage = '';
 
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cacheKey = _buildStudentsCacheKey();
+      if (cacheKey != null) {
+        final cached = await LocalCacheService.load(cacheKey);
+        if (cached != null && cached['data'] != null && mounted) {
+          final cachedList = cached['data'] as List<dynamic>;
+          if (cachedList.isNotEmpty) {
+            setState(() {
+              _students = cachedList;
+              _isLoadingStudents = false;
+            });
+          }
+        }
+      }
+    }
+
+    // Show loading only if students empty
+    if (_students.isEmpty && mounted) {
+      setState(() {
+        _isLoadingStudents = true;
+      });
+    }
+
+    // Step 2: Fetch fresh from API
     try {
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -118,6 +202,12 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
           _isLoadingStudents = false;
         });
 
+        // Step 3: Save to cache
+        final cacheKey = _buildStudentsCacheKey();
+        if (cacheKey != null) {
+          await LocalCacheService.save(cacheKey, {'data': studentsData});
+        }
+
         // Show tour after students are loaded
         Future.delayed(const Duration(milliseconds: 1000), () {
           if (mounted && _students.isNotEmpty) _checkAndShowTour();
@@ -125,10 +215,14 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _errorMessage = e.toString();
-          _isLoadingStudents = false;
-        });
+        if (_students.isEmpty) {
+          setState(() {
+            _errorMessage = e.toString();
+            _isLoadingStudents = false;
+          });
+        } else {
+          setState(() => _isLoadingStudents = false);
+        }
       }
     }
   }
@@ -243,7 +337,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          _loadStudents(); // Reload status
+          _loadStudents(useCache: false); // Reload status
         }
       } else {
         throw Exception('Gagal mengirim raport: ${response.statusCode}');
@@ -528,6 +622,38 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                       ),
                     ],
                   ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'refresh') {
+                      _forceRefresh();
+                    }
+                  },
+                  icon: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.more_vert,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          const SizedBox(width: 8),
+                          const Text('Perbarui Data'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
