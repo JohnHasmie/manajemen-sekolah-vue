@@ -18,7 +18,9 @@ import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_schedule_service.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -98,6 +100,10 @@ class TeachingScheduleManagementScreenState
   TimetableDataSource? _timetableDataSource;
   AcademicYearProvider? _academicYearProvider;
 
+  // Persisted cache key values
+  String? _lastCachedAcademicYear;
+  String? _lastCachedSemester;
+
   @override
   void initState() {
     super.initState();
@@ -122,6 +128,8 @@ class TeachingScheduleManagementScreenState
     // Listen to academic year changes
     _academicYearProvider?.addListener(_onAcademicYearProviderChanged);
 
+    // Load cached data first for instant display, then fetch fresh
+    _loadCachedScheduleData();
     _loadFilterOptions();
     _loadData();
 
@@ -129,12 +137,53 @@ class TeachingScheduleManagementScreenState
     FCMService().syncTrigger.addListener(_onSyncTriggered);
   }
 
+  /// Load cached schedule data for instant display before any API calls
+  Future<void> _loadCachedScheduleData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _lastCachedAcademicYear = prefs.getString('schedule_last_year_id');
+      _lastCachedSemester = prefs.getString('schedule_last_semester_id');
+
+      if (_lastCachedAcademicYear == null || _lastCachedSemester == null) return;
+
+      final cacheKey = 'schedule_list_${_lastCachedAcademicYear}_$_lastCachedSemester';
+      final cached = await LocalCacheService.load(
+        cacheKey,
+        ttl: const Duration(hours: 3),
+      );
+
+      if (cached == null || !mounted) return;
+
+      final cachedData = Map<String, dynamic>.from(cached);
+      setState(() {
+        _applyScheduleData(
+          scheduleResponse: {
+            'data': List<dynamic>.from(cachedData['schedules'] ?? []),
+            'pagination': cachedData['pagination'] != null
+                ? Map<String, dynamic>.from(cachedData['pagination'])
+                : null,
+          },
+          teacher: List<dynamic>.from(cachedData['teachers'] ?? []),
+          subject: List<dynamic>.from(cachedData['subjects'] ?? []),
+          classData: List<dynamic>.from(cachedData['classes'] ?? []),
+          hari: List<dynamic>.from(cachedData['hari'] ?? []),
+          semester: List<dynamic>.from(cachedData['semester'] ?? []),
+          jamPelajaran: List<dynamic>.from(cachedData['jamPelajaran'] ?? []),
+        );
+      });
+      _updateGridData();
+      if (kDebugMode) print('⚡ Schedules loaded from persisted cache (early)');
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Early schedule cache load failed: $e');
+    }
+  }
+
   void _onSyncTriggered() {
     final trigger = FCMService().syncTrigger.value;
     if (trigger != null && trigger['type'] == 'refresh_schedules') {
       if (mounted) {
         if (kDebugMode) print('📦 Sync triggered: refresh_schedules');
-        _loadData(resetPage: true);
+        _loadData(resetPage: true, useCache: false);
       }
     }
   }
@@ -310,17 +359,110 @@ class TeachingScheduleManagementScreenState
     );
   }
 
-  Future<void> _loadData({bool resetPage = true}) async {
+  String? _buildScheduleCacheKey() {
+    // Only cache default first-page view (no filters/search) for fast reload
+    if (_currentPage != 1) return null;
+    if (_showTableView) return null;
+    if (_selectedGuruId != null ||
+        _selectedClassId != null ||
+        _selectedHariId != null ||
+        _selectedJamPelajaran != null ||
+        _selectedFilterSemester != null ||
+        _searchController.text.trim().isNotEmpty) {
+      return null;
+    }
+
+    final key = 'schedule_list_${_selectedAcademicYear}_$_selectedSemester';
+
+    // Persist current values so early cache load works on next launch
+    if (_selectedAcademicYear != _lastCachedAcademicYear ||
+        _selectedSemester != _lastCachedSemester) {
+      _lastCachedAcademicYear = _selectedAcademicYear;
+      _lastCachedSemester = _selectedSemester;
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('schedule_last_year_id', _selectedAcademicYear);
+        prefs.setString('schedule_last_semester_id', _selectedSemester);
+      });
+    }
+
+    return key;
+  }
+
+  void _applyScheduleData({
+    required Map<String, dynamic> scheduleResponse,
+    required List<dynamic> teacher,
+    required List<dynamic> subject,
+    required List<dynamic> classData,
+    required List<dynamic> hari,
+    required List<dynamic> semester,
+    required List<dynamic> jamPelajaran,
+  }) {
+    _scheduleList = scheduleResponse['data'] ?? [];
+    _teacherList = teacher;
+    _subjectList = subject;
+    _classList = classData;
+    _hariList = hari;
+    if (hari.isEmpty && _availableDays.isNotEmpty) {
+      _hariList = _availableDays;
+    }
+    _semesterList = semester;
+    _jamPelajaranList = jamPelajaran;
+    _paginationMeta = scheduleResponse['pagination'];
+    _hasMoreData = scheduleResponse['pagination']?['has_next_page'] ?? false;
+    _isLoading = false;
+  }
+
+  Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
-        setState(() {
-          _isLoading = true;
-          _currentPage = 1;
-          _hasMoreData = true;
-          _scheduleList = []; // Reset list
-        });
+        _currentPage = 1;
+        _hasMoreData = true;
+
+        // ─── Step 1: Try loading from cache for instant display ───
+        if (useCache) {
+          final cacheKey = _buildScheduleCacheKey();
+          if (cacheKey != null) {
+            try {
+              final cached = await LocalCacheService.load(
+                cacheKey,
+                ttl: const Duration(hours: 3),
+              );
+              if (cached != null && mounted) {
+                final cachedData = Map<String, dynamic>.from(cached);
+                setState(() {
+                  _applyScheduleData(
+                    scheduleResponse: {
+                      'data': List<dynamic>.from(cachedData['schedules'] ?? []),
+                      'pagination': cachedData['pagination'] != null
+                          ? Map<String, dynamic>.from(cachedData['pagination'])
+                          : null,
+                    },
+                    teacher: List<dynamic>.from(cachedData['teachers'] ?? []),
+                    subject: List<dynamic>.from(cachedData['subjects'] ?? []),
+                    classData: List<dynamic>.from(cachedData['classes'] ?? []),
+                    hari: List<dynamic>.from(cachedData['hari'] ?? []),
+                    semester: List<dynamic>.from(cachedData['semester'] ?? []),
+                    jamPelajaran: List<dynamic>.from(cachedData['jamPelajaran'] ?? []),
+                  );
+                });
+                _updateGridData();
+                if (kDebugMode) print('⚡ Schedules loaded from cache');
+              }
+            } catch (e) {
+              if (kDebugMode) print('⚠️ Schedule cache load failed: $e');
+            }
+          }
+        }
+
+        // Show loading skeleton only if we have no data yet (no cache hit)
+        if (_scheduleList.isEmpty && mounted) {
+          setState(() {
+            _isLoading = true;
+          });
+        }
       }
 
+      // ─── Step 2: Fetch fresh data from API ───
       // Gunakan nilai semester dan tahun ajaran yang sudah diset
       final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
       final academicYearToUse = _selectedAcademicYear;
@@ -380,9 +522,6 @@ class TeachingScheduleManagementScreenState
 
       if (!mounted) return;
 
-      print(
-        'DEBUG: _loadData results received. _showTableView: $_showTableView',
-      );
       final scheduleResponse = results[0] as Map<String, dynamic>;
       final teacher = results[1] as List<dynamic>;
       final subject = results[2] as List<dynamic>;
@@ -391,39 +530,35 @@ class TeachingScheduleManagementScreenState
       final semester = results[5] as List<dynamic>;
       final jamPelajaran = results[6] as List<dynamic>;
 
-      print(
-        'DEBUG: _loadData scheduleResponse data length: ${(scheduleResponse['data'] ?? []).length}',
-      );
-
       setState(() {
-        _scheduleList = scheduleResponse['data'] ?? [];
-        _teacherList = teacher;
-        _subjectList = subject;
-        _classList = classData;
-        _hariList = hari;
-        print('DEBUG: _loadData hari count: ${hari.length}');
-        if (hari.isEmpty) {
-          print(
-            'DEBUG: hari is empty. _availableDays count: ${_availableDays.length}',
-          );
-          if (_availableDays.isNotEmpty) {
-            _hariList = _availableDays;
-            print('DEBUG: Using _availableDays as fallback for _hariList');
-          }
-        }
-        _semesterList = semester;
-        if (kDebugMode) {
-          print('DEBUG: _semesterList loaded: $_semesterList');
-        }
-        _jamPelajaranList = jamPelajaran;
-        _paginationMeta = scheduleResponse['pagination'];
-        _hasMoreData =
-            scheduleResponse['pagination']?['has_next_page'] ?? false;
-        _isLoading = false;
+        _applyScheduleData(
+          scheduleResponse: scheduleResponse,
+          teacher: teacher,
+          subject: subject,
+          classData: classData,
+          hari: hari,
+          semester: semester,
+          jamPelajaran: jamPelajaran,
+        );
       });
 
       // Update grid data
       _updateGridData();
+
+      // ─── Step 3: Save to cache (only for default view) ───
+      final cacheKey = _buildScheduleCacheKey();
+      if (cacheKey != null) {
+        LocalCacheService.save(cacheKey, {
+          'schedules': scheduleResponse['data'] ?? [],
+          'pagination': scheduleResponse['pagination'],
+          'teachers': teacher,
+          'subjects': subject,
+          'classes': classData,
+          'hari': hari,
+          'semester': semester,
+          'jamPelajaran': jamPelajaran,
+        });
+      }
 
       // Update semester selection based on loaded semester list
       // This may trigger reload if semester is different
@@ -437,7 +572,10 @@ class TeachingScheduleManagementScreenState
 
       if (!mounted) return;
 
-      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+      // Only show error if we don't have cached data displayed
+      if (_scheduleList.isEmpty) {
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+      }
       setState(() => _isLoading = false);
     } finally {
       // Trigger tour
@@ -447,6 +585,15 @@ class TeachingScheduleManagementScreenState
         }
       });
     }
+  }
+
+  /// Force refresh: clear cache and reload from API
+  Future<void> _forceRefresh() async {
+    final cacheKey = _buildScheduleCacheKey();
+    if (cacheKey != null) {
+      await LocalCacheService.invalidate(cacheKey);
+    }
+    await _loadData(resetPage: true, useCache: false);
   }
 
   Future<void> _loadMoreData() async {
@@ -2037,6 +2184,9 @@ class TeachingScheduleManagementScreenState
                       key: _menuKey,
                       onSelected: (value) {
                         switch (value) {
+                          case 'refresh':
+                            _forceRefresh();
+                            break;
                           case 'export':
                             _exportToExcel();
                             break;
@@ -2062,6 +2212,21 @@ class TeachingScheduleManagementScreenState
                         ),
                       ),
                       itemBuilder: (BuildContext context) => [
+                        PopupMenuItem<String>(
+                          value: 'refresh',
+                          child: Row(
+                            children: [
+                              Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                              SizedBox(width: 8),
+                              Text(
+                                languageProvider.getTranslatedText({
+                                  'en': 'Refresh Data',
+                                  'id': 'Perbarui Data',
+                                }),
+                              ),
+                            ],
+                          ),
+                        ),
                         PopupMenuItem<String>(
                           value: 'export',
                           child: Row(

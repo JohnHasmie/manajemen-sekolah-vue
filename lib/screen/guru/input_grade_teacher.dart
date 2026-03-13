@@ -18,6 +18,7 @@ import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -129,18 +130,74 @@ class GradePageState extends State<GradePage> {
     }
   }
 
+  // ==================== CACHE KEYS ====================
+
+  String? _buildClassCacheKey() {
+    if (_currentPage != 1) return null;
+    if (_searchController.text.trim().isNotEmpty) return null;
+
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
+    final teacherId = widget.teacher['id']?.toString() ?? 'unknown';
+    return 'grade_classes_${teacherId}_$yearId';
+  }
+
+  String? _buildSubjectCacheKey() {
+    if (_selectedClass == null) return null;
+
+    final academicYearProvider = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    );
+    final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
+    final teacherId = widget.teacher['id']?.toString() ?? 'unknown';
+    final classId = _selectedClass!['id']?.toString() ?? 'unknown';
+    return 'grade_subjects_${teacherId}_${classId}_$yearId';
+  }
+
   // ==================== LOAD LOGIC ====================
 
-  Future<void> _loadClasses({bool resetPage = true}) async {
+  Future<void> _loadClasses({bool resetPage = true, bool useCache = true}) async {
     if (resetPage) {
-      setState(() {
-        _isLoading = true;
-        _currentPage = 1;
-        _classList = [];
-        _hasMoreData = true;
-      });
+      _currentPage = 1;
+      _hasMoreData = true;
+
+      // ─── Step 1: Try loading from cache ───
+      if (useCache) {
+        final cacheKey = _buildClassCacheKey();
+        if (cacheKey != null) {
+          try {
+            final cached = await LocalCacheService.load(
+              cacheKey,
+              ttl: const Duration(hours: 3),
+            );
+            if (cached != null && mounted) {
+              final cachedData = Map<String, dynamic>.from(cached);
+              setState(() {
+                _classList = List<dynamic>.from(cachedData['classes'] ?? []);
+                _hasMoreData = cachedData['hasMoreData'] ?? false;
+                _isLoading = false;
+              });
+              if (kDebugMode) print('⚡ Grade classes loaded from cache');
+            }
+          } catch (e) {
+            if (kDebugMode) print('⚠️ Grade class cache load failed: $e');
+          }
+        }
+      }
+
+      // Show skeleton only if no data yet
+      if (_classList.isEmpty && mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
     }
 
+    // ─── Step 2: Fetch fresh from API ───
     try {
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -200,10 +257,23 @@ class GradePageState extends State<GradePage> {
           _isLoading = false;
         });
       }
+
+      // ─── Step 3: Save to cache ───
+      if (resetPage) {
+        final cacheKey = _buildClassCacheKey();
+        if (cacheKey != null) {
+          LocalCacheService.save(cacheKey, {
+            'classes': loadedClasses,
+            'hasMoreData': _hasMoreData,
+          });
+        }
+      }
     } catch (e) {
       if (kDebugMode) print('Error loading classes: $e');
       if (mounted) {
-        setState(() => _isLoading = false);
+        if (_classList.isEmpty) {
+          setState(() => _isLoading = false);
+        }
         _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
     }
@@ -219,12 +289,38 @@ class GradePageState extends State<GradePage> {
     setState(() => _isLoadingMore = false);
   }
 
-  Future<void> _loadSubjects() async {
-    setState(() {
-      _isLoading = true;
-      _subjectList = [];
-    });
+  Future<void> _loadSubjects({bool useCache = true}) async {
+    // ─── Step 1: Try loading from cache ───
+    if (useCache) {
+      final cacheKey = _buildSubjectCacheKey();
+      if (cacheKey != null) {
+        try {
+          final cached = await LocalCacheService.load(
+            cacheKey,
+            ttl: const Duration(hours: 3),
+          );
+          if (cached != null && mounted) {
+            final cachedData = Map<String, dynamic>.from(cached);
+            setState(() {
+              _subjectList = List<dynamic>.from(cachedData['subjects'] ?? []);
+              _isLoading = false;
+            });
+            if (kDebugMode) print('⚡ Grade subjects loaded from cache');
+          }
+        } catch (e) {
+          if (kDebugMode) print('⚠️ Grade subject cache load failed: $e');
+        }
+      }
+    }
 
+    // Show skeleton only if no data yet
+    if (_subjectList.isEmpty && mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
+    // ─── Step 2: Fetch fresh from API ───
     try {
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -259,7 +355,6 @@ class GradePageState extends State<GradePage> {
 
       if (isHomeroom || isAdmin) {
         // 2. Homeroom or Admin: Get ALL subjects assigned to this class
-        // Use the new endpoint that fetches from subject_classes pivot
         final response = await http.get(
           Uri.parse(
             '${ApiService.baseUrl}/class/${_selectedClass!['id']}/subjects',
@@ -329,10 +424,20 @@ class GradePageState extends State<GradePage> {
           _isLoading = false;
         });
       }
+
+      // ─── Step 3: Save to cache ───
+      final cacheKey = _buildSubjectCacheKey();
+      if (cacheKey != null) {
+        LocalCacheService.save(cacheKey, {
+          'subjects': subjects,
+        });
+      }
     } catch (e) {
       if (kDebugMode) print('Error loading subjects: $e');
       if (mounted) {
-        setState(() => _isLoading = false);
+        if (_subjectList.isEmpty) {
+          setState(() => _isLoading = false);
+        }
         _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
     }
@@ -1198,6 +1303,16 @@ class GradeBookPageState extends State<GradeBookPage> {
   final GlobalKey _addGradeKey = GlobalKey();
   String? _tourId;
 
+  String _buildGradeCacheKey() {
+    final academicYearId = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    ).selectedAcademicYear?['id']?.toString() ?? 'default';
+    final subjectId = widget.subject['id']?.toString() ?? 'unknown';
+    final classId = widget.classData['id']?.toString() ?? 'unknown';
+    return 'grade_book_${subjectId}_${classId}_$academicYearId';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1236,25 +1351,156 @@ class GradeBookPageState extends State<GradeBookPage> {
     });
   }
 
-  Future<void> _loadData({bool showLoading = true}) async {
+  /// Process raw grade items and apply to state (used by both cache and fresh load)
+  void _processAndApplyGradeData(List<dynamic> siswaData, List<dynamic> rawNilaiItems) {
+    _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
+    _filteredSiswaList = List.from(_siswaList);
+
+    final currentStudentIds = _siswaList.map((s) => s.id.toString()).toSet();
+    final currentStudentClassIds = _siswaList
+        .map((s) => s.studentClassId?.toString())
+        .where((id) => id != null)
+        .cast<String>()
+        .toSet();
+
+    // Filter and map grades to internal legacy format
+    _nilaiList = rawNilaiItems
+        .where((item) {
+          final studentId =
+              (item['student_id'] ??
+                      item['siswa_id'] ??
+                      item['siswa']?['id'])
+                  ?.toString();
+          final studentClassId =
+              (item['student_class_id'] ?? item['siswa_kelas_id'])
+                  ?.toString();
+
+          return currentStudentIds.contains(studentId) ||
+              (studentClassId != null &&
+                  currentStudentClassIds.contains(studentClassId));
+        })
+        .map<Map<String, dynamic>>((item) {
+          return {
+            'id': item['id'],
+            'siswa_id':
+                (item['student_id'] ??
+                        item['siswa_id'] ??
+                        item['siswa']?['id'])
+                    ?.toString(),
+            'student_class_id':
+                (item['student_class_id'] ?? item['siswa_kelas_id'])
+                    ?.toString(),
+            'nilai': item['score'] ?? item['nilai'],
+            'deskripsi': item['notes'] ?? item['deskripsi'],
+            'tanggal':
+                item['assessment']?['date'] ??
+                item['date'] ??
+                item['tanggal'],
+            'jenis':
+                (item['assessment']?['type'] ??
+                        item['type'] ??
+                        item['jenis'])
+                    ?.toString()
+                    .toLowerCase(),
+            'title': item['assessment']?['title'] ?? item['title'] ?? '',
+            'assessment_id': item['assessment_id'],
+          };
+        })
+        .toList();
+
+    // Process unique assessments for headers
+    _assessmentHeaders = {};
+
+    for (var nilai in _nilaiList) {
+      final jenis = nilai['jenis']?.toString().toLowerCase();
+      if (jenis == null || !_allJenisNilaiList.contains(jenis)) continue;
+
+      String? rawDate = nilai['tanggal'];
+      if (rawDate != null) {
+        final datePart = rawDate.split('T')[0];
+        final assessmentId = nilai['assessment_id'];
+        final title = (nilai['title'] ?? '').toString().trim();
+
+        if (!_assessmentHeaders.containsKey(jenis)) {
+          _assessmentHeaders[jenis] = [];
+        }
+
+        // Check if header already exists
+        final existingIndex = _assessmentHeaders[jenis]!.indexWhere((h) {
+          final headerId = h['id']?.toString();
+          final currentAssessmentId = assessmentId?.toString();
+
+          if (currentAssessmentId != null && headerId != null) {
+            return headerId == currentAssessmentId;
+          }
+          if (currentAssessmentId != null || headerId != null) {
+            return false;
+          }
+          final hTitle = (h['title'] ?? '').toString().trim();
+          return h['date'] == datePart && hTitle == title;
+        });
+
+        if (existingIndex == -1) {
+          _assessmentHeaders[jenis]!.add({
+            'id': assessmentId,
+            'date': datePart,
+            'title': title,
+            'is_temp': false,
+          });
+        }
+      }
+    }
+
+    // Sort headers by date and title
+    for (var key in _assessmentHeaders.keys) {
+      _assessmentHeaders[key]!.sort((a, b) {
+        final dateCompare = a['date'].compareTo(b['date']);
+        if (dateCompare != 0) return dateCompare;
+        return (a['title'] ?? '').compareTo(b['title'] ?? '');
+      });
+    }
+
+    _isLoading = false;
+  }
+
+  Future<void> _loadData({bool showLoading = true, bool useCache = true}) async {
     try {
       if (!mounted) return;
-      if (showLoading) setState(() => _isLoading = true);
 
+      // ─── Step 1: Try loading from cache ───
+      if (showLoading && useCache) {
+        try {
+          final cacheKey = _buildGradeCacheKey();
+          final cached = await LocalCacheService.load(
+            cacheKey,
+            ttl: const Duration(hours: 3),
+          );
+          if (cached != null && mounted) {
+            final cachedData = Map<String, dynamic>.from(cached);
+            setState(() {
+              _processAndApplyGradeData(
+                List<dynamic>.from(cachedData['siswaData'] ?? []),
+                List<dynamic>.from(cachedData['nilaiItems'] ?? []),
+              );
+            });
+            _filterSiswa();
+            if (kDebugMode) print('⚡ Grade book loaded from cache');
+          }
+        } catch (e) {
+          if (kDebugMode) print('⚠️ Grade book cache load failed: $e');
+        }
+      }
+
+      // Show skeleton only if no data yet
+      if (_siswaList.isEmpty && mounted) {
+        if (showLoading) setState(() => _isLoading = true);
+      }
+
+      // ─── Step 2: Fetch fresh from API ───
       // 1. Load siswa berdasarkan kelas
       final siswaData = await ApiStudentService.getStudentByClass(
         widget.classData['id'],
       );
-
-      _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
-      _filteredSiswaList = List.from(_siswaList);
-
-      final currentStudentIds = _siswaList.map((s) => s.id.toString()).toSet();
-      final currentStudentClassIds = _siswaList
-          .map((s) => s.studentClassId?.toString())
-          .where((id) => id != null)
-          .cast<String>()
-          .toSet();
 
       // 2. Load nilai yang sudah ada
       final academicYearId = Provider.of<AcademicYearProvider>(
@@ -1262,7 +1508,6 @@ class GradeBookPageState extends State<GradeBookPage> {
         listen: false,
       ).selectedAcademicYear?['id'];
 
-      // Construct URL with query parameters
       final subjectId = widget.subject['id'];
       final url =
           '/grades?subject_id=$subjectId&limit=500${academicYearId != null ? "&academic_year_id=$academicYearId" : ""}';
@@ -1286,104 +1531,15 @@ class GradeBookPageState extends State<GradeBookPage> {
       if (!mounted) return;
 
       setState(() {
-        // Filter and map grades to internal legacy format
-        _nilaiList = rawNilaiItems
-            .where((item) {
-              final studentId =
-                  (item['student_id'] ??
-                          item['siswa_id'] ??
-                          item['siswa']?['id'])
-                      ?.toString();
-              final studentClassId =
-                  (item['student_class_id'] ?? item['siswa_kelas_id'])
-                      ?.toString();
+        _processAndApplyGradeData(siswaData, rawNilaiItems);
+      });
+      _filterSiswa();
 
-              return currentStudentIds.contains(studentId) ||
-                  (studentClassId != null &&
-                      currentStudentClassIds.contains(studentClassId));
-            })
-            .map<Map<String, dynamic>>((item) {
-              return {
-                'id': item['id'],
-                'siswa_id':
-                    (item['student_id'] ??
-                            item['siswa_id'] ??
-                            item['siswa']?['id'])
-                        ?.toString(),
-                'student_class_id':
-                    (item['student_class_id'] ?? item['siswa_kelas_id'])
-                        ?.toString(),
-                'nilai': item['score'] ?? item['nilai'],
-                'deskripsi': item['notes'] ?? item['deskripsi'],
-                'tanggal':
-                    item['assessment']?['date'] ??
-                    item['date'] ??
-                    item['tanggal'],
-                'jenis':
-                    (item['assessment']?['type'] ??
-                            item['type'] ??
-                            item['jenis'])
-                        ?.toString()
-                        .toLowerCase(),
-                'title': item['assessment']?['title'] ?? item['title'] ?? '',
-                'assessment_id': item['assessment_id'],
-              };
-            })
-            .toList();
-
-        // 3. Process unique assessments for headers
-        _assessmentHeaders = {};
-
-        for (var nilai in _nilaiList) {
-          final jenis = nilai['jenis']?.toString().toLowerCase();
-          if (jenis == null || !_allJenisNilaiList.contains(jenis)) continue;
-
-          String? rawDate = nilai['tanggal'];
-          if (rawDate != null) {
-            final datePart = rawDate.split('T')[0];
-            final assessmentId = nilai['assessment_id'];
-            final title = (nilai['title'] ?? '').toString().trim();
-
-            if (!_assessmentHeaders.containsKey(jenis)) {
-              _assessmentHeaders[jenis] = [];
-            }
-
-            // Check if header already exists
-            final existingIndex = _assessmentHeaders[jenis]!.indexWhere((h) {
-              final headerId = h['id']?.toString();
-              final currentAssessmentId = assessmentId?.toString();
-
-              if (currentAssessmentId != null && headerId != null) {
-                return headerId == currentAssessmentId;
-              }
-              if (currentAssessmentId != null || headerId != null) {
-                return false;
-              }
-              final hTitle = (h['title'] ?? '').toString().trim();
-              return h['date'] == datePart && hTitle == title;
-            });
-
-            if (existingIndex == -1) {
-              _assessmentHeaders[jenis]!.add({
-                'id': assessmentId,
-                'date': datePart,
-                'title': title,
-                'is_temp': false,
-              });
-            }
-          }
-        }
-
-        // Sort headers by date and title
-        for (var key in _assessmentHeaders.keys) {
-          _assessmentHeaders[key]!.sort((a, b) {
-            final dateCompare = a['date'].compareTo(b['date']);
-            if (dateCompare != 0) return dateCompare;
-            return (a['title'] ?? '').compareTo(b['title'] ?? '');
-          });
-        }
-
-        _isLoading = false;
+      // ─── Step 3: Save to cache ───
+      final cacheKey = _buildGradeCacheKey();
+      LocalCacheService.save(cacheKey, {
+        'siswaData': siswaData,
+        'nilaiItems': rawNilaiItems,
       });
 
       // Trigger tour
@@ -1395,7 +1551,9 @@ class GradeBookPageState extends State<GradeBookPage> {
     } catch (e) {
       if (kDebugMode) print('Error loading grade data: $e');
       if (!mounted) return;
-      setState(() => _isLoading = false);
+      if (_siswaList.isEmpty) {
+        setState(() => _isLoading = false);
+      }
       _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     }
   }
