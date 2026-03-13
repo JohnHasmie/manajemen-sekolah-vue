@@ -199,8 +199,9 @@ class ApiService {
 
         if (user['school_id'] != null) {
           headers['X-School-ID'] = user['school_id'].toString();
-          if (kDebugMode)
+          if (kDebugMode) {
             print('✅ Injected X-School-ID: ${headers['X-School-ID']}');
+          }
         } else {
           if (kDebugMode) print('⚠️ school_id missing in user object');
         }

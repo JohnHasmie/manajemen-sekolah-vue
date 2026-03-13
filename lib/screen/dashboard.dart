@@ -153,6 +153,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     setState(() {});
 
+    // ─── Load cached stats immediately (before any network call) ───
+    await _loadCachedStats();
+
     try {
       // Fetch fresh data in background
       // This might return early if year isn't loaded yet, which is fine
@@ -169,7 +172,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ).fetchAcademicYears();
       }
 
-      await _loadStats(); // Pastikan dipanggil setelah user data dimuat
+      await _loadStats(); // Fetch fresh data & update cache
       await _loadSemesterLabel();
     } catch (e) {
       if (kDebugMode) print('❌ Error during initialization: $e');
@@ -456,6 +459,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   void _onYearChanged() {
     if (!mounted) return;
+    // Reset loaded flag so skeleton shows while fetching
+    // Cache for new year will be loaded/created by _loadStats
     setState(() => _isStatsLoaded = false);
     _loadStats();
     _loadUserData();
@@ -675,9 +680,153 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _loadStats() async {
+  /// Last known academic year ID — loaded from prefs so cache key works before provider.
+  String? _lastAcademicYearId;
+
+  /// Load only cached stats (no network). Called early to avoid skeleton.
+  Future<void> _loadCachedStats() async {
     try {
-      // Get academic year ID
+      // Restore last known academic year ID so cache key matches
+      final prefs = await SharedPreferences.getInstance();
+      _lastAcademicYearId = prefs.getString('dashboard_last_year_id');
+
+      if (_lastAcademicYearId == null) return; // First launch, no cache yet
+
+      final cachedStats = await LocalCacheService.load(
+        _dashboardCacheKey('stats'),
+        ttl: const Duration(hours: 6),
+      );
+      if (cachedStats == null || !mounted) return;
+
+      final cachedAttendance = await LocalCacheService.load(
+        _dashboardCacheKey('attendance_chart'),
+        ttl: const Duration(hours: 6),
+      );
+      final cachedFinance = await LocalCacheService.load(
+        _dashboardCacheKey('finance_chart'),
+        ttl: const Duration(hours: 6),
+      );
+
+      if (kDebugMode) print('⚡ Dashboard displaying cached stats (yearId=$_lastAcademicYearId)');
+
+      _applyStatsData(
+        Map<String, dynamic>.from(cachedStats),
+        attendanceChart: cachedAttendance != null
+            ? List<Map<String, dynamic>>.from(
+                (cachedAttendance as List).map((e) => Map<String, dynamic>.from(e)),
+              )
+            : null,
+        financeChart: cachedFinance != null
+            ? List<Map<String, dynamic>>.from(
+                (cachedFinance as List).map((e) => Map<String, dynamic>.from(e)),
+              )
+            : null,
+      );
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Early cache load failed (non-critical): $e');
+    }
+  }
+
+  /// Cache key builder for dashboard data.
+  /// Uses provider year if available, otherwise falls back to last persisted year ID.
+  String _dashboardCacheKey(String suffix) {
+    String? academicYearId;
+    if (mounted) {
+      final provider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      academicYearId = provider.selectedAcademicYear?['id']?.toString();
+    }
+    // Use provider value if available, otherwise fallback to last known
+    final yearKey = academicYearId ?? _lastAcademicYearId ?? 'default';
+
+    // Persist whenever we get a real ID from the provider
+    if (academicYearId != null && academicYearId != _lastAcademicYearId) {
+      _lastAcademicYearId = academicYearId;
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('dashboard_last_year_id', academicYearId!);
+      });
+    }
+
+    return 'dashboard_${_effectiveRole}_${yearKey}_$suffix';
+  }
+
+  /// Apply dashboard stats data to state from a raw map (cache or fresh)
+  void _applyStatsData(Map<String, dynamic> dashboardData, {
+    List<Map<String, dynamic>>? attendanceChart,
+    List<Map<String, dynamic>>? financeChart,
+  }) {
+    if (!mounted) return;
+
+    if (_effectiveRole == 'guru') {
+      final todaysSchedule = dashboardData['todays_schedule'];
+      final todaysScheduleList = todaysSchedule is List
+          ? List<dynamic>.from(todaysSchedule)
+          : <dynamic>[];
+
+      final materialOverviewRaw = dashboardData['material_overview'];
+      final materialOverviewList = materialOverviewRaw is List
+          ? List<dynamic>.from(materialOverviewRaw)
+          : <dynamic>[];
+
+      setState(() {
+        _isStatsLoaded = true;
+        _todaysScheduleList = todaysScheduleList;
+        _materialOverview = materialOverviewList;
+        _stats = {
+          'total_siswa': dashboardData['total_siswa'] ?? 0,
+          'total_kelas': dashboardData['total_kelas'] ?? 0,
+          'kelas_hari_ini': dashboardData['kelas_hari_ini'] ?? 0,
+          'total_materi': dashboardData['total_materi'] ?? 0,
+          'total_rpp': dashboardData['total_rpp'] ?? 0,
+          'rpp_approved': dashboardData['rpp_approved'] ?? 0,
+          'rpp_rejected': dashboardData['rpp_rejected'] ?? 0,
+          'rpp_pending': dashboardData['rpp_pending'] ?? 0,
+          'attendance_summary': dashboardData['attendance_summary'] ?? {},
+          'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+          'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
+        };
+      });
+    } else if (_effectiveRole == 'admin') {
+      setState(() {
+        _isStatsLoaded = true;
+        if (attendanceChart != null) {
+          _attendanceChartData = attendanceChart;
+        }
+        if (financeChart != null) {
+          _financeChartData = financeChart;
+        }
+        _stats = {
+          'total_siswa': dashboardData['total_siswa'] ?? 0,
+          'total_guru': dashboardData['total_guru'] ?? 0,
+          'total_kelas': dashboardData['total_kelas'] ?? 0,
+          'total_mapel': dashboardData['total_mapel'] ?? 0,
+          'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+          'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
+        };
+      });
+    } else if (_effectiveRole == 'wali') {
+      setState(() {
+        _isStatsLoaded = true;
+        if (attendanceChart != null) {
+          _attendanceChartData = attendanceChart;
+        }
+        _stats = {
+          'anak_terdaftar': dashboardData['anak_terdaftar'] ?? 0,
+          'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+          'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
+          'unread_grades': dashboardData['unread_grades'] ?? 0,
+          'unread_presence': dashboardData['unread_presence'] ?? 0,
+          'unread_billing': dashboardData['unread_billing'] ?? 0,
+        };
+      });
+    }
+  }
+
+  Future<void> _loadStats() async {
+    // ─── Fetch fresh data from API (cache already loaded by _loadCachedStats) ───
+    try {
       String? academicYearId;
       if (mounted) {
         final academicYearProvider = Provider.of<AcademicYearProvider>(
@@ -688,157 +837,100 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             ?.toString();
       }
 
-      // Single API call for dashboard stats
       final dashboardData = await ApiService.getDashboardStats(
         role: _effectiveRole,
         academicYearId: academicYearId,
       );
 
-      if (kDebugMode) {
-        print('📊 Dashboard stats loaded: $dashboardData');
+      if (kDebugMode) print('📊 Dashboard fresh stats loaded');
+
+      // Fetch chart data for admin/wali
+      List<Map<String, dynamic>>? freshAttendance;
+      List<Map<String, dynamic>>? freshFinance;
+
+      if (_effectiveRole == 'admin' || _effectiveRole == 'wali') {
+        final now = DateTime.now();
+        final currentMonthNames = [
+          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+        ];
+        final currentMonthStr = currentMonthNames[now.month - 1];
+        int weekNum = (now.day / 7).ceil();
+        if (weekNum > 5) weekNum = 5;
+        final currentWeekStr = 'Pekan $weekNum';
+
+        final attendanceDataList = await ApiService.getAttendanceDashboardChart(
+          academicYearId: academicYearId,
+          month: currentMonthStr,
+          week: currentWeekStr,
+          role: _effectiveRole == 'wali' ? _effectiveRole : null,
+        );
+        freshAttendance = List<Map<String, dynamic>>.from(attendanceDataList);
+
+        if (_effectiveRole == 'admin') {
+          final financeDataList = await ApiService.getFinanceDashboardChart(
+            academicYearId: academicYearId,
+          );
+          freshFinance = List<Map<String, dynamic>>.from(financeDataList);
+        }
       }
 
-      if (_effectiveRole == 'guru') {
-        final todaysSchedule = dashboardData['todays_schedule'];
-        final todaysScheduleList = todaysSchedule is List
-            ? List<dynamic>.from(todaysSchedule)
-            : <dynamic>[];
+      if (!mounted) return;
 
-        final materialOverviewRaw = dashboardData['material_overview'];
-        final materialOverviewList = materialOverviewRaw is List
-            ? List<dynamic>.from(materialOverviewRaw)
-            : <dynamic>[];
+      // ─── Step 3: Apply fresh data & save to cache ───
+      _applyStatsData(
+        dashboardData,
+        attendanceChart: freshAttendance,
+        financeChart: freshFinance,
+      );
 
-        if (!mounted) return;
-        setState(() {
-          _isStatsLoaded = true;
-          _todaysScheduleList = todaysScheduleList;
-          _materialOverview = materialOverviewList;
-          _stats = {
-            'total_siswa': dashboardData['total_siswa'] ?? 0,
-            'total_kelas': dashboardData['total_kelas'] ?? 0,
-            'kelas_hari_ini': dashboardData['kelas_hari_ini'] ?? 0,
-            'total_materi': dashboardData['total_materi'] ?? 0,
-            'total_rpp': dashboardData['total_rpp'] ?? 0,
-            'rpp_approved': dashboardData['rpp_approved'] ?? 0,
-            'rpp_rejected': dashboardData['rpp_rejected'] ?? 0,
-            'rpp_pending': dashboardData['rpp_pending'] ?? 0,
-            'attendance_summary': dashboardData['attendance_summary'] ?? {},
-            'unread_announcements': dashboardData['unread_announcements'] ?? 0,
-            'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
-          };
-        });
-      } else if (_effectiveRole == 'admin') {
-        // Chart data still needs separate endpoints
-        final now = DateTime.now();
-        final currentMonthNames = [
-          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-        ];
-        final currentMonthStr = currentMonthNames[now.month - 1];
-        int weekNum = (now.day / 7).ceil();
-        if (weekNum > 5) weekNum = 5;
-        final currentWeekStr = 'Pekan $weekNum';
+      // Save fresh data to cache (non-blocking)
+      LocalCacheService.save(_dashboardCacheKey('stats'), dashboardData);
+      if (freshAttendance != null) {
+        LocalCacheService.save(_dashboardCacheKey('attendance_chart'), freshAttendance);
+      }
+      if (freshFinance != null) {
+        LocalCacheService.save(_dashboardCacheKey('finance_chart'), freshFinance);
+      }
 
-        final attendanceDataList = await ApiService.getAttendanceDashboardChart(
-          academicYearId: academicYearId,
-          month: currentMonthStr,
-          week: currentWeekStr,
-        );
-
-        final financeDataList = await ApiService.getFinanceDashboardChart(
-          academicYearId: academicYearId,
-        );
-
-        if (!mounted) return;
-        setState(() {
-          _isStatsLoaded = true;
-          _attendanceChartData = List<Map<String, dynamic>>.from(
-            attendanceDataList,
-          );
-          _financeChartData = List<Map<String, dynamic>>.from(financeDataList);
-          _stats = {
-            'total_siswa': dashboardData['total_siswa'] ?? 0,
-            'total_guru': dashboardData['total_guru'] ?? 0,
-            'total_kelas': dashboardData['total_kelas'] ?? 0,
-            'total_mapel': dashboardData['total_mapel'] ?? 0,
-            'unread_announcements': dashboardData['unread_announcements'] ?? 0,
-            'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
-          };
-        });
-
-        // Load Finance Stats for Admin
+      // Load Finance Stats for Admin
+      if (_effectiveRole == 'admin') {
         await _loadFinanceStats();
-      } else if (_effectiveRole == 'wali') {
-        // Chart data still needs separate endpoint
-        final now = DateTime.now();
-        final currentMonthNames = [
-          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-        ];
-        final currentMonthStr = currentMonthNames[now.month - 1];
-        int weekNum = (now.day / 7).ceil();
-        if (weekNum > 5) weekNum = 5;
-        final currentWeekStr = 'Pekan $weekNum';
-
-        final attendanceDataList = await ApiService.getAttendanceDashboardChart(
-          academicYearId: academicYearId,
-          month: currentMonthStr,
-          week: currentWeekStr,
-          role: _effectiveRole,
-        );
-
-        if (!mounted) return;
-        setState(() {
-          _isStatsLoaded = true;
-          _attendanceChartData = List<Map<String, dynamic>>.from(
-            attendanceDataList,
-          );
-          _stats = {
-            'anak_terdaftar': dashboardData['anak_terdaftar'] ?? 0,
-            'unread_announcements': dashboardData['unread_announcements'] ?? 0,
-            'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
-            'unread_grades': dashboardData['unread_grades'] ?? 0,
-            'unread_presence': dashboardData['unread_presence'] ?? 0,
-            'unread_billing': dashboardData['unread_billing'] ?? 0,
-          };
-        });
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error loading stats: $e');
+        print('❌ Error loading fresh stats: $e');
       }
-      // Fallback data dengan logging
-      if (kDebugMode) {
-        print('🔄 Menggunakan fallback data');
+      // Only show fallback if we don't already have cached data displayed
+      if (!_isStatsLoaded && mounted) {
+        if (kDebugMode) print('🔄 Menggunakan fallback data (no cache available)');
+        setState(() {
+          _isStatsLoaded = true;
+          if (_effectiveRole == 'guru') {
+            _stats = {
+              'total_siswa': 24,
+              'total_kelas': 1,
+              'kelas_hari_ini': 2,
+              'total_materi': 5,
+              'total_rpp': 3,
+            };
+          } else if (_effectiveRole == 'admin') {
+            _stats = {
+              'total_siswa': 150,
+              'total_guru': 25,
+              'total_kelas': 12,
+              'total_mapel': 15,
+            };
+          } else if (_effectiveRole == 'wali') {
+            _stats = {
+              'anak_terdaftar': 2,
+              'pengumuman_terbaru': 3,
+              'unread_grades': 0,
+              'unread_presence': 0,
+            };
+          }
+        });
       }
-      if (!mounted) return;
-      setState(() {
-        _isStatsLoaded = true;
-        if (_effectiveRole == 'guru') {
-          _stats = {
-            'total_siswa': 24,
-            'total_kelas': 1,
-            'kelas_hari_ini': 2,
-            'total_materi': 5,
-            'total_rpp': 3,
-          };
-        } else if (_effectiveRole == 'admin') {
-          _stats = {
-            'total_siswa': 150,
-            'total_guru': 25,
-            'total_kelas': 12,
-            'total_mapel': 15,
-          };
-        } else if (_effectiveRole == 'wali') {
-          _stats = {
-            'anak_terdaftar': 2,
-            'pengumuman_terbaru': 3,
-            'unread_grades': 0,
-            'unread_presence': 0,
-          };
-        }
-      });
     }
   }
 
