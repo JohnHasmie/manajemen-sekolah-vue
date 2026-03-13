@@ -6,6 +6,7 @@ import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_class_activity_service.dart';
@@ -56,20 +57,91 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
     super.dispose();
   }
 
-  Future<void> _loadTeachers() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+  String? _buildTeacherCacheKey() {
+    if (_searchController.text.trim().isNotEmpty) return null;
+    return 'class_activity_teachers';
+  }
 
+  String? _buildSubjectCacheKey() {
+    if (_selectedTeacherId == null) return null;
+    if (_searchController.text.trim().isNotEmpty) return null;
+    final yearId = context
+        .read<AcademicYearProvider>()
+        .selectedAcademicYear?['id']
+        ?.toString() ?? 'default';
+    return 'class_activity_subjects_${_selectedTeacherId}_$yearId';
+  }
+
+  String? _buildActivityCacheKey() {
+    if (_selectedTeacherId == null || _selectedSubjectId == null) return null;
+    if (_searchController.text.trim().isNotEmpty) return null;
+    final yearId = context
+        .read<AcademicYearProvider>()
+        .selectedAcademicYear?['id']
+        ?.toString() ?? 'default';
+    return 'class_activity_list_${_selectedTeacherId}_${_selectedSubjectId}_$yearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    if (_showTeacherList) {
+      final cacheKey = _buildTeacherCacheKey();
+      if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
+      _loadTeachers(useCache: false);
+    } else if (_showSubjectList) {
+      final cacheKey = _buildSubjectCacheKey();
+      if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
+      _loadSubjectsByTeacher(_selectedTeacherId!, _selectedTeacherName!, useCache: false);
+    } else {
+      final cacheKey = _buildActivityCacheKey();
+      if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
+      _loadActivitiesBySubject(_selectedSubjectId!, _selectedSubjectName!, useCache: false);
+    }
+  }
+
+  Future<void> _loadTeachers({bool useCache = true}) async {
+    try {
+      _errorMessage = null;
+
+      // Step 1: Try cache for instant display
+      if (useCache) {
+        final cacheKey = _buildTeacherCacheKey();
+        if (cacheKey != null) {
+          final cached = await LocalCacheService.load(cacheKey);
+          if (cached != null && cached['data'] != null && mounted) {
+            final cachedList = cached['data'] as List<dynamic>;
+            if (cachedList.isNotEmpty) {
+              setState(() {
+                _teacherList = cachedList;
+                _isLoading = false;
+              });
+            }
+          }
+        }
+      }
+
+      // Show skeleton only if list is empty
+      if (_teacherList.isEmpty && mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+
+      // Step 2: Fetch fresh from API
       final apiTeacherService = ApiTeacherService();
       final teachers = await apiTeacherService.getTeacher();
+
+      if (!mounted) return;
 
       setState(() {
         _teacherList = teachers;
         _isLoading = false;
       });
+
+      // Step 3: Save to cache
+      final cacheKey = _buildTeacherCacheKey();
+      if (cacheKey != null) {
+        await LocalCacheService.save(cacheKey, {'data': teachers});
+      }
 
       // Trigger tour after teachers are loaded
       Future.delayed(const Duration(milliseconds: 1000), () {
@@ -79,11 +151,17 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
       });
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = ErrorUtils.getFriendlyMessage(e);
-        });
-        _showErrorSnackBar('Gagal memuat data guru: $_errorMessage');
+        if (_teacherList.isEmpty) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = ErrorUtils.getFriendlyMessage(e);
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        _showErrorSnackBar('Gagal memuat data guru: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -122,18 +200,41 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
 
   Future<void> _loadSubjectsByTeacher(
     String teacherId,
-    String teacherName,
-  ) async {
+    String teacherName, {
+    bool useCache = true,
+  }) async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-        _selectedTeacherId = teacherId;
-        _selectedTeacherName = teacherName;
-        _showTeacherList = false;
-        _showSubjectList = true;
-      });
+      _errorMessage = null;
+      _selectedTeacherId = teacherId;
+      _selectedTeacherName = teacherName;
+      _showTeacherList = false;
+      _showSubjectList = true;
 
+      // Step 1: Try cache for instant display
+      if (useCache) {
+        final cacheKey = _buildSubjectCacheKey();
+        if (cacheKey != null) {
+          final cached = await LocalCacheService.load(cacheKey);
+          if (cached != null && cached['data'] != null && mounted) {
+            final cachedList = cached['data'] as List<dynamic>;
+            if (cachedList.isNotEmpty) {
+              setState(() {
+                _subjectList = cachedList;
+                _isLoading = false;
+              });
+            }
+          }
+        }
+      }
+
+      // Show skeleton only if list is empty
+      if (_subjectList.isEmpty && mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+
+      // Step 2: Fetch fresh from API
       final academicYearId = context
           .read<AcademicYearProvider>()
           .selectedAcademicYear?['id']
@@ -144,34 +245,71 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         academicYearId: academicYearId,
       );
 
+      if (!mounted) return;
+
       setState(() {
         _subjectList = response['data'] ?? [];
         _isLoading = false;
       });
+
+      // Step 3: Save to cache
+      final cacheKey = _buildSubjectCacheKey();
+      if (cacheKey != null) {
+        await LocalCacheService.save(cacheKey, {'data': response['data'] ?? []});
+      }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = ErrorUtils.getFriendlyMessage(e);
-        });
-        _showErrorSnackBar('Gagal memuat data mata pelajaran: $_errorMessage');
+        if (_subjectList.isEmpty) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = ErrorUtils.getFriendlyMessage(e);
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        _showErrorSnackBar('Gagal memuat data mata pelajaran: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
 
   Future<void> _loadActivitiesBySubject(
     String subjectId,
-    String subjectName,
-  ) async {
+    String subjectName, {
+    bool useCache = true,
+  }) async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-        _selectedSubjectId = subjectId;
-        _selectedSubjectName = subjectName;
-        _showSubjectList = false;
-      });
+      _errorMessage = null;
+      _selectedSubjectId = subjectId;
+      _selectedSubjectName = subjectName;
+      _showSubjectList = false;
 
+      // Step 1: Try cache for instant display
+      if (useCache) {
+        final cacheKey = _buildActivityCacheKey();
+        if (cacheKey != null) {
+          final cached = await LocalCacheService.load(cacheKey);
+          if (cached != null && cached['data'] != null && mounted) {
+            final cachedList = cached['data'] as List<dynamic>;
+            if (cachedList.isNotEmpty) {
+              setState(() {
+                _activityList = cachedList;
+                _isLoading = false;
+              });
+            }
+          }
+        }
+      }
+
+      // Show skeleton only if list is empty
+      if (_activityList.isEmpty && mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+
+      // Step 2: Fetch fresh from API
       final academicYearId = context
           .read<AcademicYearProvider>()
           .selectedAcademicYear?['id']
@@ -183,17 +321,31 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         academicYearId: academicYearId,
       );
 
+      if (!mounted) return;
+
       setState(() {
         _activityList = response['data'] ?? [];
         _isLoading = false;
       });
+
+      // Step 3: Save to cache
+      final cacheKey = _buildActivityCacheKey();
+      if (cacheKey != null) {
+        await LocalCacheService.save(cacheKey, {'data': response['data'] ?? []});
+      }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = ErrorUtils.getFriendlyMessage(e);
-        });
-        _showErrorSnackBar('Gagal memuat data kegiatan: $_errorMessage');
+        if (_activityList.isEmpty) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = ErrorUtils.getFriendlyMessage(e);
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        _showErrorSnackBar('Gagal memuat data kegiatan: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -1029,23 +1181,38 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
                             ],
                           ),
                         ),
-                        // Icon badge
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                        // Menu button
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'refresh') {
+                              _forceRefresh();
+                            }
+                          },
+                          icon: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.more_vert,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
-                          child: Icon(
-                            _showTeacherList
-                                ? Icons.people
-                                : (_showSubjectList
-                                      ? Icons.menu_book
-                                      : Icons.assignment),
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                          itemBuilder: (context) => [
+                            PopupMenuItem<String>(
+                              value: 'refresh',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                                  SizedBox(width: 8),
+                                  Text('Perbarui Data'),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

@@ -9,6 +9,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_announcement_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -145,6 +146,25 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     } catch (e) {
       if (kDebugMode) print("Error auto-marking read: $e");
     }
+  }
+
+  String? _buildAnnouncementCacheKey() {
+    if (_currentPage != 1) return null;
+    if (_selectedPriorityFilter != null ||
+        _selectedTargetFilter != null ||
+        _selectedStatusFilter != null ||
+        _searchController.text.trim().isNotEmpty) {
+      return null;
+    }
+    return 'announcement_list';
+  }
+
+  Future<void> _forceRefresh() async {
+    final cacheKey = _buildAnnouncementCacheKey();
+    if (cacheKey != null) {
+      await LocalCacheService.invalidate(cacheKey);
+    }
+    _loadData(resetPage: true, useCache: false);
   }
 
   void _onScroll() {
@@ -705,19 +725,42 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     );
   }
 
-  Future<void> _loadData({bool resetPage = true}) async {
+  Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
+        _currentPage = 1;
+        _hasMoreData = true;
+        _errorMessage = null;
+        _processedIds.clear();
+      }
+
+      // Step 1: Try cache for instant display
+      if (useCache && resetPage) {
+        final cacheKey = _buildAnnouncementCacheKey();
+        if (cacheKey != null) {
+          final cached = await LocalCacheService.load(cacheKey);
+          if (cached != null && cached['data'] != null && mounted) {
+            final cachedList = cached['data'] as List<dynamic>;
+            if (cachedList.isNotEmpty) {
+              setState(() {
+                _announcements = cachedList;
+                _paginationMeta = cached['pagination'];
+                _hasMoreData = cached['pagination']?['has_next_page'] ?? false;
+                _isLoading = false;
+              });
+            }
+          }
+        }
+      }
+
+      // Show skeleton only if list is empty
+      if (_announcements.isEmpty && mounted) {
         setState(() {
           _isLoading = true;
-          _currentPage = 1;
-          _hasMoreData = true;
-          _announcements = []; // Reset list
-          _errorMessage = null;
-          _processedIds.clear(); // Clear processed IDs on new data load
         });
       }
 
+      // Step 2: Fetch fresh from API
       // Map display values to backend values
       String? mappedPrioritas;
       if (_selectedPriorityFilter != null) {
@@ -794,24 +837,22 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
       if (response.containsKey('data') && response.containsKey('pagination')) {
         var fetchedList = response['data'] ?? [];
 
-        // Keep all items (including read ones) as per user request
-        if (fetchedList is List) {
-          // No filtering
-        }
-
         setState(() {
           _announcements = fetchedList;
           _paginationMeta = response['pagination'];
           _hasMoreData = response['pagination']?['has_next_page'] ?? false;
           _isLoading = false;
-          // Clear error message on successful load
           _errorMessage = null;
         });
 
-        // Removed eager marking
-        // if (_announcements.isNotEmpty) {
-        //   _markAnnouncementsAsRead(_announcements);
-        // }
+        // Step 3: Save to cache
+        final cacheKey = _buildAnnouncementCacheKey();
+        if (cacheKey != null) {
+          await LocalCacheService.save(cacheKey, {
+            'data': fetchedList,
+            'pagination': response['pagination'],
+          });
+        }
       } else {
         if (kDebugMode) {
           print('❌ Unexpected response structure');
@@ -824,16 +865,23 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(e);
-      });
+      // Only show error if we don't have cached data
+      if (_announcements.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal memuat data pengumuman', 'id': 'Gagal memuat data pengumuman'})}: $_errorMessage',
+            '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal memuat data pengumuman', 'id': 'Gagal memuat data pengumuman'})}: ${ErrorUtils.getFriendlyMessage(e)}',
           ),
           backgroundColor: ColorUtils.error600,
         ),
@@ -1373,7 +1421,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                                           Navigator.pop(context);
                                         }
                                       }
-                                      _loadData();
+                                      _loadData(resetPage: true, useCache: false);
                                     } catch (e) {
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(
@@ -1784,7 +1832,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     if (confirmed == true) {
       try {
         await _apiService.delete('/announcement/${announcementData['id']}');
-        await _loadData();
+        await _loadData(resetPage: true, useCache: false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -2660,24 +2708,42 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                             ],
                           ),
                         ),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'refresh') {
+                              _forceRefresh();
+                            }
+                          },
+                          icon: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.more_vert,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.announcement,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                          itemBuilder: (context) => [
+                            PopupMenuItem<String>(
+                              value: 'refresh',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                                  SizedBox(width: 8),
+                                  Text('Perbarui Data'),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                     SizedBox(height: 16),
 
-                    // Search Bar with Filter Button
                     // Search Bar with Filter Button
                     Row(
                       children: [
