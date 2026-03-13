@@ -108,6 +108,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   // Skeleton loading state
   bool _isStatsLoaded = false;
+  bool _statsAlreadyFetched = false;
 
   // Stats Pagination state
 
@@ -172,7 +173,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ).fetchAcademicYears();
       }
 
-      await _loadStats(); // Fetch fresh data & update cache
+      // Only load stats if _onYearChanged hasn't already triggered it
+      if (!_statsAlreadyFetched) {
+        await _loadStats();
+      }
       await _loadSemesterLabel();
     } catch (e) {
       if (kDebugMode) print('❌ Error during initialization: $e');
@@ -459,9 +463,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   void _onYearChanged() {
     if (!mounted) return;
-    // Reset loaded flag so skeleton shows while fetching
-    // Cache for new year will be loaded/created by _loadStats
-    setState(() => _isStatsLoaded = false);
+    // Don't show skeleton if we already have data — stale-while-revalidate
+    _statsAlreadyFetched = true;
     _loadStats();
     _loadUserData();
   }
