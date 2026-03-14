@@ -10,6 +10,7 @@ import 'package:manajemensekolah/screen/guru/materi_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -244,6 +245,7 @@ class MateriPageState extends State<MateriPage> {
   }
 
   bool _isLoading = false;
+  bool _isLoadingBab = false;
   String _debugInfo = '';
 
   // Color scheme matching teaching schedule
@@ -283,12 +285,25 @@ class MateriPageState extends State<MateriPage> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
+  String? _buildMateriCacheKey() {
+    final teacherId = widget.teacher['id']?.toString() ?? '';
+    if (teacherId.isEmpty) return null;
+    return 'materi_data_$teacherId';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('materi_');
+    setState(() {
+      _isLoading = true;
+      _subjectList.clear();
+      _classList.clear();
+    });
+    _loadData(useCache: false);
+  }
+
+  Future<void> _loadData({bool useCache = true}) async {
     try {
       if (!mounted) return;
-      setState(() {
-        _isLoading = true;
-      });
 
       final String? teacherId = widget.teacher['id'];
       if (kDebugMode) {
@@ -306,9 +321,66 @@ class MateriPageState extends State<MateriPage> {
         return;
       }
 
+      final cacheKey = _buildMateriCacheKey();
+
+      // Step 1: Try cache for instant display
+      if (useCache && _subjectList.isEmpty && cacheKey != null) {
+        try {
+          final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
+          if (cached != null && mounted) {
+            final cachedData = Map<String, dynamic>.from(cached);
+            final cachedSubjects = List<dynamic>.from(cachedData['subjects'] ?? []);
+            final cachedClasses = List<dynamic>.from(cachedData['classes'] ?? []);
+            final cachedMateri = List<dynamic>.from(cachedData['materi'] ?? []);
+
+            if (cachedSubjects.isNotEmpty) {
+              setState(() {
+                _subjectList = cachedSubjects;
+                _classList = cachedClasses;
+                _materiList = cachedMateri;
+                _teacherProfileId = cachedData['teacherProfileId']?.toString();
+                _isLoading = false;
+
+                // Set initial selections from cache
+                if (widget.initialClassId != null &&
+                    cachedClasses.any((c) => c['id'] == widget.initialClassId)) {
+                  _selectedClassId = widget.initialClassId;
+                  _selectedClassName = widget.initialClassName;
+                } else if (cachedClasses.isNotEmpty) {
+                  _selectedClassId = cachedClasses[0]['id'];
+                  _selectedClassName = cachedClasses[0]['name'] ?? cachedClasses[0]['nama'];
+                }
+
+                if (widget.initialSubjectId != null &&
+                    cachedSubjects.any((mp) => mp['id'] == widget.initialSubjectId)) {
+                  _selectedSubject = widget.initialSubjectId;
+                } else if (cachedSubjects.isNotEmpty) {
+                  _selectedSubject = cachedSubjects[0]['id'];
+                }
+              });
+
+              // Load bab materi for selected subject
+              if (_selectedSubject != null) {
+                _loadBabMateri(_selectedSubject!);
+              }
+
+              if (kDebugMode) print('Loaded materi data from cache');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) print('Materi cache load error: $e');
+        }
+      }
+
+      // Step 2: Show skeleton only if still empty
+      if (_subjectList.isEmpty && mounted) {
+        setState(() => _isLoading = true);
+      }
+
+      // Step 3: Fetch fresh from API
       final ApiTeacherService apiTeacherService = ApiTeacherService();
 
-      // Resolve teacher profile ID (tabel teachers, bukan user ID)
+      // Resolve teacher profile ID
       try {
         final teacherProfile =
             await apiTeacherService.getTeacherById(teacherId);
@@ -332,11 +404,9 @@ class MateriPageState extends State<MateriPage> {
         print('Mata pelajaran found: ${subject.length}');
       }
 
-      // Load Classes Taught by Teacher
       final classes = await ApiTeacherService.getTeacherClasses(teacherId);
       if (!mounted) return;
 
-      // Sort classes numerically/alphabetically (e.g., 7A, 7B, 8A)
       classes.sort((a, b) {
         String nameA = (a['name'] ?? a['nama'] ?? '').toString();
         String nameB = (b['name'] ?? b['nama'] ?? '').toString();
@@ -347,7 +417,6 @@ class MateriPageState extends State<MateriPage> {
         print('Classes found: ${classes.length}');
       }
 
-      // Jika guru tidak memiliki mata pelajaran, tampilkan pesan
       if (subject.isEmpty) {
         setState(() {
           _isLoading = false;
@@ -368,7 +437,6 @@ class MateriPageState extends State<MateriPage> {
         _isLoading = false;
         _debugInfo = '${subject.length} mata pelajaran ditemukan';
 
-        // Set initial class
         if (widget.initialClassId != null &&
             classes.any((c) => c['id'] == widget.initialClassId)) {
           _selectedClassId = widget.initialClassId;
@@ -378,7 +446,6 @@ class MateriPageState extends State<MateriPage> {
           _selectedClassName = classes[0]['name'] ?? classes[0]['nama'];
         }
 
-        // Use initialSubjectId if provided, otherwise use first subject
         if (widget.initialSubjectId != null &&
             subject.any((mp) => mp['id'] == widget.initialSubjectId)) {
           _selectedSubject = widget.initialSubjectId;
@@ -388,24 +455,87 @@ class MateriPageState extends State<MateriPage> {
           _loadBabMateri(_selectedSubject!);
         }
       });
+
+      // Save to cache
+      if (cacheKey != null) {
+        await LocalCacheService.save(cacheKey, {
+          'subjects': subject,
+          'classes': classes,
+          'materi': materi,
+          'teacherProfileId': _teacherProfileId,
+        });
+        if (kDebugMode) print('Saved materi data to cache');
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error loading MateriPage data: $e');
       }
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _debugInfo = 'Error: ${e.toString()}';
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-      );
+
+      if (_subjectList.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _debugInfo = 'Error: ${e.toString()}';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
+      }
     }
   }
 
-  Future<void> _loadBabMateri(String subjectId) async {
+  Future<void> _loadBabMateri(String subjectId, {bool useCache = true}) async {
+    final babCacheKey = 'materi_bab_${widget.teacher['id']}_$subjectId';
+
+    // Show skeleton if list is empty
+    if (_babMateriList.isEmpty && mounted) {
+      setState(() => _isLoadingBab = true);
+    }
+
+    // Step 1: Try cache for instant display
+    if (useCache && _babMateriList.isEmpty) {
+      try {
+        final cached = await LocalCacheService.load(babCacheKey, ttl: const Duration(hours: 3));
+        if (cached != null && mounted) {
+          final cachedData = Map<String, dynamic>.from(cached);
+          final cachedBab = List<dynamic>.from(cachedData['babMateri'] ?? []);
+          final cachedSubBab = List<dynamic>.from(cachedData['subBabMateri'] ?? []);
+
+          if (cachedBab.isNotEmpty) {
+            setState(() {
+              _babMateriList = cachedBab;
+              _subBabMateriList = cachedSubBab;
+              _isLoadingBab = false;
+              _expandedBab.clear();
+              _checkedBab.clear();
+              _checkedSubBab.clear();
+              _generatedBab.clear();
+              _generatedSubBab.clear();
+              _usedBab.clear();
+              _usedSubBab.clear();
+              for (var bab in cachedBab) {
+                _expandedBab[bab['id'].toString()] = false;
+                _checkedBab[bab['id'].toString()] = false;
+                _generatedBab[bab['id'].toString()] = false;
+                _usedBab[bab['id'].toString()] = false;
+              }
+              for (var subBab in cachedSubBab) {
+                _checkedSubBab[subBab['id'].toString()] = false;
+              }
+              _debugInfo = '${cachedBab.length} bab materi, ${cachedSubBab.length} sub-bab ditemukan';
+            });
+            // Load progress from DB even with cached structure
+            _loadMateriProgress(subjectId);
+            if (kDebugMode) print('Loaded bab materi from cache');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Bab cache load error: $e');
+      }
+    }
+
+    // Step 2: Fetch fresh from API
     try {
-      // Find Master Subject ID from the selected School Subject ID
       final subject = _subjectList.firstWhere(
         (s) => s['id'] == subjectId,
         orElse: () => null,
@@ -424,7 +554,6 @@ class MateriPageState extends State<MateriPage> {
       );
       if (!mounted) return;
 
-      // Pre-fetch all sub-chapters for these babs in parallel
       final List<Future<List<dynamic>>> futures = [];
       for (var bab in babMateri) {
         futures.add(
@@ -435,40 +564,43 @@ class MateriPageState extends State<MateriPage> {
       final List<List<dynamic>> allSubBabsResults = await Future.wait(futures);
       if (!mounted) return;
 
+      final allSubBabs = <dynamic>[];
+      for (var subBabs in allSubBabsResults) {
+        allSubBabs.addAll(subBabs);
+      }
+
       setState(() {
         _babMateriList = babMateri;
-        // Clear sub bab list when changing subject
-        _subBabMateriList.clear();
+        _subBabMateriList = List.from(allSubBabs);
+        _isLoadingBab = false;
 
-        // Add all fetched sub-chapters to the list
-        for (var subBabs in allSubBabsResults) {
-          _subBabMateriList.addAll(subBabs);
-        }
-
-        // Clear expanded, checked, and generated states
         _expandedBab.clear();
         _checkedBab.clear();
         _checkedSubBab.clear();
         _generatedBab.clear();
         _generatedSubBab.clear();
-        _usedBab.clear(); // Clear used state
-        _usedSubBab.clear(); // Clear used state
+        _usedBab.clear();
+        _usedSubBab.clear();
 
-        // Inisialisasi state expanded dan checked untuk setiap bab
         for (var bab in babMateri) {
           _expandedBab[bab['id'].toString()] = false;
           _checkedBab[bab['id'].toString()] = false;
           _generatedBab[bab['id'].toString()] = false;
-          _usedBab[bab['id'].toString()] = false; // Initialize used state
+          _usedBab[bab['id'].toString()] = false;
         }
 
-        // Inisialisasi state checked untuk setiap sub-bab
         for (var subBab in _subBabMateriList) {
           _checkedSubBab[subBab['id'].toString()] = false;
         }
 
         _debugInfo =
             '${babMateri.length} bab materi, ${_subBabMateriList.length} sub-bab ditemukan';
+      });
+
+      // Save to cache
+      await LocalCacheService.save(babCacheKey, {
+        'babMateri': babMateri,
+        'subBabMateri': allSubBabs,
       });
 
       // Load progress dari database
@@ -485,12 +617,15 @@ class MateriPageState extends State<MateriPage> {
         print('Error loading bab and sub-bab: $e');
       }
       if (!mounted) return;
-      setState(() {
-        _debugInfo = 'Error: $e';
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-      );
+      setState(() => _isLoadingBab = false);
+      if (_babMateriList.isEmpty) {
+        setState(() {
+          _debugInfo = 'Error: $e';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+        );
+      }
     }
   }
 
@@ -876,21 +1011,33 @@ class MateriPageState extends State<MateriPage> {
                 ),
               ),
               SizedBox(width: 8),
-              GestureDetector(
-                onTap: _loadData,
-                child: Container(
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'refresh') {
+                    _forceRefresh();
+                  }
+                },
+                icon: Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.refresh_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                 ),
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'refresh',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                        SizedBox(width: 8),
+                        Text('Perbarui Data'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -997,6 +1144,11 @@ class MateriPageState extends State<MateriPage> {
                           'id': 'Pilih mata pelajaran untuk melihat materi',
                         }),
                         languageProvider,
+                      )
+                    : _isLoadingBab
+                    ? SkeletonListLoading(
+                        padding: EdgeInsets.only(top: 8, bottom: 80),
+                        showActions: false,
                       )
                     : _babMateriList.isEmpty
                     ? _buildEmptyState(
@@ -1197,6 +1349,7 @@ class MateriPageState extends State<MateriPage> {
                         selectedClass['name'] ?? selectedClass['nama'];
                     _babMateriList = [];
                     _subBabMateriList = [];
+                    _isLoadingBab = true;
                     _searchController.clear();
                   });
                   if (_selectedSubject != null) {
@@ -1272,6 +1425,7 @@ class MateriPageState extends State<MateriPage> {
                     _babMateriList = [];
                     _subBabMateriList = [];
                     _contentMateriList = [];
+                    _isLoadingBab = true;
                     _searchController.clear();
                   });
                   _loadBabMateri(newValue);
@@ -1716,11 +1870,29 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
   }
 
   Future<void> _loadContentMateri() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
+    final contentCacheKey = 'materi_content_${widget.subBab['id']}';
 
+    // Step 1: Try cache for instant display
+    try {
+      final cached = await LocalCacheService.load(contentCacheKey, ttl: const Duration(hours: 6));
+      if (cached != null && mounted) {
+        setState(() {
+          _contentMateriList = List<dynamic>.from(cached);
+          _isLoading = false;
+        });
+        if (kDebugMode) print('Loaded content materi from cache');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Content cache load error: $e');
+    }
+
+    // Step 2: Show loading only if still empty
+    if (_contentMateriList.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 3: Fetch fresh from API
+    try {
       final kontenMateri = await ApiSubjectService.getContentMateri(
         subBabId: widget.subBab['id'].toString(),
       );
@@ -1734,24 +1906,42 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
         _contentMateriList = kontenMateri;
         _isLoading = false;
       });
+
+      // Save to cache
+      await LocalCacheService.save(contentCacheKey, kontenMateri);
     } catch (e) {
       if (kDebugMode) {
         print('Error loading content materi: $e');
       }
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   Future<void> _loadAiContent() async {
-    try {
-      setState(() {
-        _isLoadingAi = true;
-      });
+    final aiCacheKey = 'materi_ai_${widget.teacherId}_${widget.bab['id']}_${widget.subBab['id']}';
 
-      // Try check-cache first per docs Section 4.7
+    // Step 1: Try local cache for instant display
+    try {
+      final cached = await LocalCacheService.load(aiCacheKey, ttl: const Duration(hours: 6));
+      if (cached != null && mounted) {
+        setState(() {
+          _aiGeneratedData = Map<String, dynamic>.from(cached);
+          _isLoadingAi = false;
+        });
+        if (kDebugMode) print('Loaded AI content from local cache');
+      }
+    } catch (e) {
+      if (kDebugMode) print('AI local cache load error: $e');
+    }
+
+    // Step 2: Show loading only if no cached data
+    if (_aiGeneratedData == null && mounted) {
+      setState(() => _isLoadingAi = true);
+    }
+
+    // Step 3: Fetch fresh from API
+    try {
       if (kDebugMode) {
         print('AI Cache Check: teacherId=${widget.teacherId}, chapterId=${widget.bab['id']}, subChapterId=${widget.subBab['id']}');
       }
@@ -1766,10 +1956,6 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
         );
         if (!mounted) return;
 
-        if (kDebugMode) {
-          print('AI Cache Result: $cacheResult');
-        }
-
         if (cacheResult != null) {
           final cacheData = cacheResult is Map && cacheResult['data'] is Map
               ? cacheResult['data']
@@ -1780,9 +1966,6 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
               (cacheData['material_id'] ?? cacheData['id'])?.toString();
 
           if (isCached && materialId != null) {
-            if (kDebugMode) {
-              print('AI Material found in cache, loading ID: $materialId');
-            }
             final materialResult =
                 await ApiSubjectService.getGeneratedMaterial(materialId);
             if (!mounted) return;
@@ -1810,17 +1993,11 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
           );
           if (!mounted) return;
 
-          if (kDebugMode) {
-            print('AI List Result: $listResult');
-          }
-
-          // Response: { data: [ { id, ... }, ... ] } or [ { id, ... } ]
           final items = listResult is Map
               ? (listResult['data'] is List ? listResult['data'] : null)
               : (listResult is List ? listResult : null);
 
           if (items != null && items.isNotEmpty) {
-            // Find material matching this sub-chapter, or take first one
             final subChapterId = widget.subBab['id'].toString();
             Map<String, dynamic>? match;
 
@@ -1836,7 +2013,6 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
             }
 
             if (match != null) {
-              // Load full detail
               final materialId = match['id']?.toString();
               if (materialId != null) {
                 final materialResult =
@@ -1864,14 +2040,18 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
         _aiGeneratedData = aiData;
         _isLoadingAi = false;
       });
+
+      // Save to local cache
+      if (aiData != null) {
+        await LocalCacheService.save(aiCacheKey, aiData);
+        if (kDebugMode) print('Saved AI content to local cache');
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error loading AI content: $e');
       }
       if (!mounted) return;
-      setState(() {
-        _isLoadingAi = false;
-      });
+      setState(() => _isLoadingAi = false);
     }
   }
 
@@ -2112,12 +2292,12 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
             children: [
               _buildHeader(languageProvider),
               Expanded(
-                child: (_isLoading || _isLoadingAi)
+                child: _isLoading
                     ? SkeletonListLoading(
                         padding: EdgeInsets.only(top: 8, bottom: 80),
                         showActions: false,
                       )
-                    : (_contentMateriList.isEmpty && _aiGeneratedData == null)
+                    : (_contentMateriList.isEmpty && _aiGeneratedData == null && !_isLoadingAi)
                         ? _buildEmptyContent(languageProvider)
                         : _buildTabbedContent(),
               ),

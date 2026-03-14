@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/loading_screen.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
@@ -12,6 +13,7 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -151,15 +153,76 @@ class PresencePageState extends State<PresencePage>
     super.dispose();
   }
 
-  Future<void> _loadInitialData() async {
+  String? _buildPresenceCacheKey() {
+    final teacherId = widget.teacher['id']?.toString() ?? '';
+    if (teacherId.isEmpty) return null;
+    final academicYearId = context
+        .read<AcademicYearProvider>()
+        .selectedAcademicYear?['id']
+        ?.toString();
+    return 'presence_initial_${teacherId}_$academicYearId';
+  }
+
+  String? _buildSummaryCacheKey() {
+    final teacherId = widget.teacher['id']?.toString() ?? '';
+    if (teacherId.isEmpty) return null;
+    final academicYearId = context
+        .read<AcademicYearProvider>()
+        .selectedAcademicYear?['id']
+        ?.toString();
+    return 'presence_summary_${teacherId}_$academicYearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('presence_');
+    setState(() {
+      _isLoadingInput = true;
+      _isLoadingSummary = true;
+    });
+    _loadInitialData(useCache: false);
+  }
+
+  Future<void> _loadInitialData({bool useCache = true}) async {
     try {
       final academicYearId = context
           .read<AcademicYearProvider>()
           .selectedAcademicYear?['id']
           ?.toString();
 
+      final cacheKey = _buildPresenceCacheKey();
+
+      // Step 1: Try cache for instant display
+      if (useCache && _classList.isEmpty && cacheKey != null) {
+        try {
+          final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
+          if (cached != null && mounted) {
+            final cachedData = Map<String, dynamic>.from(cached);
+            setState(() {
+              _classList = List<dynamic>.from(cachedData['classList'] ?? []);
+              _subjectTeacher = List<dynamic>.from(cachedData['subjects'] ?? []);
+              _lessonHours = List<dynamic>.from(cachedData['lessonHours'] ?? []);
+              final studentRaw = List<dynamic>.from(cachedData['studentList'] ?? []);
+              _studentList = studentRaw.map((s) => Siswa.fromJson(Map<String, dynamic>.from(s))).toList();
+              _filteredStudentList = _studentList;
+              for (var student in _studentList) {
+                _absensiStatus[student.id] = 'hadir';
+              }
+              if (_classList.isNotEmpty) _isLoadingInput = false;
+            });
+            if (kDebugMode) print('Loaded presence data from cache');
+          }
+        } catch (e) {
+          if (kDebugMode) print('Presence cache load error: $e');
+        }
+      }
+
+      // Step 2: Show loading only if still empty
+      if (_classList.isEmpty && mounted) {
+        setState(() => _isLoadingInput = true);
+      }
+
+      // Step 3: Fetch fresh from API
       final [classList, studentList, lessonHours] = await Future.wait([
-        // Ambil kelas dan siswa terlebih dahulu
         ApiTeacherService.getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
@@ -168,11 +231,12 @@ class PresencePageState extends State<PresencePage>
         ApiScheduleService.getJamPelajaran(),
       ]);
 
-      // Ambil mata pelajaran berdasarkan kelas yang terdeteksi atau default
       final subjects = await _getSubjectByTeacher(
         widget.teacher['id'],
         classId: _selectedClassId,
       );
+
+      if (!mounted) return;
 
       setState(() {
         _subjectTeacher = subjects;
@@ -181,7 +245,6 @@ class PresencePageState extends State<PresencePage>
         _lessonHours = lessonHours;
         _filteredStudentList = _studentList;
 
-        // Set default status untuk semua siswa
         for (var student in _studentList) {
           _absensiStatus[student.id] = 'hadir';
         }
@@ -189,6 +252,16 @@ class PresencePageState extends State<PresencePage>
         _isLoadingInput = false;
       });
 
+      // Save to cache
+      if (cacheKey != null) {
+        await LocalCacheService.save(cacheKey, {
+          'classList': classList,
+          'subjects': subjects,
+          'lessonHours': lessonHours,
+          'studentList': studentList,
+        });
+        if (kDebugMode) print('Saved presence initial data to cache');
+      }
 
       // Auto-detect current schedule if not initialized from teaching_schedule
       if (widget.initialSubjectId == null) {
@@ -202,21 +275,23 @@ class PresencePageState extends State<PresencePage>
     } catch (e) {
       if (kDebugMode) print('PresencePage initial data error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(ErrorUtils.getFriendlyMessage(e)),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+
+      // Only show error if no cached data
+      if (_classList.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorUtils.getFriendlyMessage(e)),
+            backgroundColor: ColorUtils.error600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } finally {
-      // Check mounted sebelum setState
       if (mounted) {
         setState(() {
           _isSubmitting = false;
         });
 
-        // Tampilkan tour jika ada
         Future.delayed(Duration(milliseconds: 1000), () {
           if (mounted) {
             _checkAndShowTour();
@@ -382,14 +457,48 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
-  Future<void> _loadAbsensiSummary() async {
-    // Check mounted sebelum memulai loading
+  Future<void> _loadAbsensiSummary({bool useCache = true}) async {
     if (!mounted) return;
 
-    setState(() {
-      _isLoadingSummary = true;
-    });
+    final summaryCacheKey = _buildSummaryCacheKey();
 
+    // Step 1: Try cache for instant display
+    if (useCache && _absensiSummaryList.isEmpty && summaryCacheKey != null) {
+      try {
+        final cached = await LocalCacheService.load(summaryCacheKey, ttl: const Duration(hours: 1));
+        if (cached != null && mounted) {
+          final cachedList = List<dynamic>.from(cached);
+          setState(() {
+            _absensiSummaryList = cachedList.map((absen) {
+              final m = Map<String, dynamic>.from(absen);
+              return AbsensiSummary(
+                subjectId: m['subjectId'] ?? '',
+                subjectName: m['subjectName'] ?? '',
+                date: DateTime.tryParse(m['date'] ?? '') ?? DateTime.now(),
+                totalStudent: m['totalStudent'] ?? 0,
+                present: m['present'] ?? 0,
+                absent: m['absent'] ?? 0,
+                classId: m['classId'],
+                className: m['className'],
+                lessonHourId: m['lessonHourId'],
+                lessonHourName: m['lessonHourName'],
+              );
+            }).toList();
+            _isLoadingSummary = false;
+          });
+          if (kDebugMode) print('Loaded ${_absensiSummaryList.length} summaries from cache');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Summary cache load error: $e');
+      }
+    }
+
+    // Step 2: Show loading only if still empty
+    if (_absensiSummaryList.isEmpty && mounted) {
+      setState(() => _isLoadingSummary = true);
+    }
+
+    // Step 3: Fetch fresh from API
     try {
       final academicYearId = context
           .read<AcademicYearProvider>()
@@ -404,7 +513,6 @@ class PresencePageState extends State<PresencePage>
       final Map<String, AbsensiSummary> summaryMap = {};
 
       for (var absen in absensiData) {
-        // Data from summary endpoint is already aggregated
         final subjectId = (absen['subject_id'] ?? '').toString();
         final subjectName = absen['subject_name'] ?? 'Unknown';
         final className = absen['class_name'] ?? 'Unknown';
@@ -431,15 +539,32 @@ class PresencePageState extends State<PresencePage>
         summaryMap[summary.key] = summary;
       }
 
-      // Check mounted sebelum setState
       if (!mounted) return;
 
+      final sortedList = summaryMap.values.toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+
       setState(() {
-        _absensiSummaryList = summaryMap.values.toList()
-          ..sort((a, b) => b.date.compareTo(a.date));
+        _absensiSummaryList = sortedList;
         _isLoadingSummary = false;
       });
 
+      // Save to cache
+      if (summaryCacheKey != null) {
+        final cacheData = sortedList.map((s) => {
+          'subjectId': s.subjectId,
+          'subjectName': s.subjectName,
+          'date': s.date.toIso8601String(),
+          'totalStudent': s.totalStudent,
+          'present': s.present,
+          'absent': s.absent,
+          'classId': s.classId,
+          'className': s.className,
+          'lessonHourId': s.lessonHourId,
+          'lessonHourName': s.lessonHourName,
+        }).toList();
+        await LocalCacheService.save(summaryCacheKey, cacheData);
+      }
 
       if (kDebugMode) {
         print('Loaded ${_absensiSummaryList.length} absensi summaries');
@@ -448,11 +573,10 @@ class PresencePageState extends State<PresencePage>
       if (kDebugMode) {
         print('Error loading absensi summary: $e');
       }
-      // Check mounted sebelum setState
       if (mounted) {
-        setState(() {
-          _isLoadingSummary = false;
-        });
+        if (_absensiSummaryList.isEmpty) {
+          setState(() => _isLoadingSummary = false);
+        }
       }
     }
   }
@@ -1097,12 +1221,7 @@ class PresencePageState extends State<PresencePage>
         }
 
         if (_isLoadingSummary) {
-          return LoadingScreen(
-            message: languageProvider.getTranslatedText({
-              'en': 'Loading attendance data...',
-              'id': 'Memuat data absensi...',
-            }),
-          );
+          return SkeletonListLoading(itemCount: 5, infoTagCount: 2);
         }
 
         final filteredSummaries = _getFilteredSummaries();
@@ -1406,12 +1525,8 @@ class PresencePageState extends State<PresencePage>
               ),
               PopupMenuButton<String>(
                 onSelected: (value) {
-                  switch (value) {
-                    case 'refresh':
-                      if (_tabController.index == 0) {
-                        _loadAbsensiSummary();
-                      }
-                      break;
+                  if (value == 'refresh') {
+                    _forceRefresh();
                   }
                 },
                 icon: Container(
@@ -1428,14 +1543,9 @@ class PresencePageState extends State<PresencePage>
                     value: 'refresh',
                     child: Row(
                       children: [
-                        Icon(Icons.refresh, size: 20),
+                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
                         SizedBox(width: 8),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Refresh',
-                            'id': 'Refresh',
-                          }),
-                        ),
+                        Text('Perbarui Data'),
                       ],
                     ),
                   ),
@@ -2343,12 +2453,7 @@ class PresencePageState extends State<PresencePage>
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         if (_isLoadingInput) {
-          return LoadingScreen(
-            message: languageProvider.getTranslatedText({
-              'en': 'Loading data...',
-              'id': 'Memuat data...',
-            }),
-          );
+          return SkeletonListLoading(itemCount: 4, infoTagCount: 1);
         }
 
         return Column(
