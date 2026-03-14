@@ -13,6 +13,7 @@ import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_rekap_nilai_service.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -254,14 +255,45 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     );
   }
 
+  // ==================== CACHE ====================
+
+  String? _buildClassesCacheKey() {
+    final teacherId = widget.teacher['id']?.toString() ?? '';
+    if (teacherId.isEmpty) return null;
+    final academicYearId = context
+        .read<AcademicYearProvider>()
+        .selectedAcademicYear?['id']
+        ?.toString();
+    return 'rekap_nilai_classes_${teacherId}_$academicYearId';
+  }
+
+  String _buildRecapCacheKey() {
+    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final academicYearId =
+        (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString() ?? '';
+    final classId = _selectedClass?['id']?.toString() ?? '';
+    final subjectId = _selectedSubject?['id']?.toString() ?? '';
+    return 'rekap_nilai_recap_${classId}_${subjectId}_$academicYearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('rekap_nilai_');
+    if (_currentStep == 0) {
+      _loadClasses(useCache: false);
+    } else if (_currentStep == 1) {
+      _loadSubjects(useCache: false);
+    } else if (_currentStep == 2) {
+      _loadRecapData(useCache: false);
+    }
+  }
+
   // ==================== LOAD DATA ====================
 
-  Future<void> _loadClasses({bool resetPage = true}) async {
+  Future<void> _loadClasses({bool resetPage = true, bool useCache = true}) async {
     if (resetPage) {
       setState(() {
         _isLoading = true;
         _currentPage = 1;
-        _classList = [];
         _hasMoreData = true;
       });
     }
@@ -274,7 +306,30 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
       final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+      final cacheKey = _buildClassesCacheKey();
 
+      // Step 1: Try cache for instant display
+      if (useCache && resetPage && _classList.isEmpty && cacheKey != null) {
+        try {
+          final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
+          if (cached != null && mounted) {
+            setState(() {
+              _classList = List<dynamic>.from(cached);
+              if (_classList.isNotEmpty) _isLoading = false;
+            });
+            if (kDebugMode) print('Loaded ${_classList.length} classes from cache');
+          }
+        } catch (e) {
+          if (kDebugMode) print('Classes cache load error: $e');
+        }
+      }
+
+      // Step 2: Show skeleton only if still empty
+      if (_classList.isEmpty && mounted) {
+        setState(() => _isLoading = true);
+      }
+
+      // Step 3: Fetch fresh from API
       List<dynamic> loadedClasses = [];
 
       if (role.contains('guru')) {
@@ -304,12 +359,19 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
           _isLoading = false;
         });
       }
+
+      // Save to cache (only for first page, no search)
+      if (resetPage && _searchController.text.isEmpty && cacheKey != null) {
+        await LocalCacheService.save(cacheKey, loadedClasses);
+      }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+        if (_classList.isEmpty) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+          );
+        }
       }
     }
   }
@@ -322,12 +384,31 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     setState(() => _isLoadingMore = false);
   }
 
-  Future<void> _loadSubjects() async {
-    setState(() {
-      _isLoading = true;
-      _subjectList = [];
-    });
+  Future<void> _loadSubjects({bool useCache = true}) async {
+    final subjectCacheKey = 'rekap_nilai_subjects_${widget.teacher['id']}_${_selectedClass!['id']}';
 
+    // Step 1: Try cache
+    if (useCache && _subjectList.isEmpty) {
+      try {
+        final cached = await LocalCacheService.load(subjectCacheKey, ttl: const Duration(hours: 3));
+        if (cached != null && mounted) {
+          setState(() {
+            _subjectList = List<dynamic>.from(cached);
+            if (_subjectList.isNotEmpty) _isLoading = false;
+          });
+          if (kDebugMode) print('Loaded ${_subjectList.length} subjects from cache');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Subjects cache load error: $e');
+      }
+    }
+
+    // Step 2: Show skeleton only if still empty
+    if (_subjectList.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 3: Fetch fresh from API
     try {
       final response = await http.get(
         Uri.parse(
@@ -338,23 +419,29 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
       if (response.statusCode == 200) {
         final allSubjects = json.decode(response.body) as List;
-        setState(() {
-          _subjectList = allSubjects;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _subjectList = allSubjects;
+            _isLoading = false;
+          });
+        }
+
+        // Save to cache
+        await LocalCacheService.save(subjectCacheKey, allSubjects);
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+        if (_subjectList.isEmpty) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+          );
+        }
       }
     }
   }
 
-  Future<void> _loadRecapData() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadRecapData({bool useCache = true}) async {
     try {
       final provider = Provider.of<AcademicYearProvider>(
         context,
@@ -374,23 +461,49 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
       final classId = _selectedClass!['id'].toString();
       final subjectId = _selectedSubject!['id'].toString();
-
-      // 1. Fetch Students
-      final students = await ApiClassService.getStudentsByClassId(classId);
-
-      // 2. Resolve Master Subject ID for Chapters
       final masterSubjectId = _selectedSubject?['subject_id']?.toString();
       if (masterSubjectId == null) {
         throw Exception('Master Subject ID not found for this subject.');
       }
 
+      final recapCacheKey = _buildRecapCacheKey();
+
+      // Step 1: Try cache for instant display
+      if (useCache) {
+        final cached = await LocalCacheService.load(recapCacheKey);
+        if (cached != null && cached is Map) {
+          final cachedStudents = List<dynamic>.from(cached['students'] ?? []);
+          final cachedChapters = List<dynamic>.from(cached['chapters'] ?? []);
+          final cachedRawGrades = List<dynamic>.from(cached['rawGrades'] ?? []);
+          final cachedRecaps = List<dynamic>.from(cached['recaps'] ?? []);
+
+          if (cachedStudents.isNotEmpty) {
+            _chapters = List.from(cachedChapters);
+            _allAvailableChapters = List.from(cached['allChapters'] ?? cachedChapters);
+            _applyRecapChapterNames(cachedRecaps);
+
+            setState(() {
+              _rawGrades = cachedRawGrades;
+              _allAvailableChapters = List.from(cached['allChapters'] ?? cachedChapters);
+            });
+
+            _processTableData(cachedStudents, _chapters, cachedRawGrades, cachedRecaps);
+          }
+        }
+      }
+
+      // Step 2: Show skeleton only if no data yet
+      if (_tableData.isEmpty) {
+        setState(() => _isLoading = true);
+      }
+
+      // Step 3: Fetch fresh data from API
+      final students = await ApiClassService.getStudentsByClassId(classId);
+
       final chapters = await ApiSubjectService.getBabMateri(
         subjectId: masterSubjectId,
       );
-      _chapters = List.from(chapters);
-      _allAvailableChapters = List.from(chapters);
 
-      // 3. Fetch Grades
       final rawGradesResponse = await ApiService().get(
         '/grades?class_id=$classId&subject_id=$subjectId&academic_year_id=$academicYearId&limit=1000',
       );
@@ -403,43 +516,15 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         }
       }
 
-      // 4. Fetch existing Recaps
       final recaps = await ApiGradeRecapService.getGradeRecaps(
         classId: classId,
         subjectId: subjectId,
         academicYearId: academicYearId,
       );
 
-      // Restore Chapters from saved Recap (Expand list if needed)
-      if (recaps.isNotEmpty) {
-        List<String> longestBabNames = [];
-        for (var r in recaps) {
-          if (r['bab_names'] != null && r['bab_names'] is List) {
-            final names = List<String>.from(r['bab_names']);
-            if (names.length > longestBabNames.length) {
-              longestBabNames = names;
-            }
-          }
-        }
-
-        if (longestBabNames.isNotEmpty) {
-          while (_chapters.length < longestBabNames.length) {
-            _chapters.add({
-              'judul_bab': 'Bab ${_chapters.length + 1}',
-              'judul': 'Bab ${_chapters.length + 1}',
-              'title': 'Bab ${_chapters.length + 1}',
-            });
-          }
-
-          for (int i = 0; i < longestBabNames.length; i++) {
-            if (i < _chapters.length) {
-              _chapters[i]['judul_bab'] = longestBabNames[i];
-              _chapters[i]['judul'] = longestBabNames[i];
-              _chapters[i]['title'] = longestBabNames[i];
-            }
-          }
-        }
-      }
+      _chapters = List.from(chapters);
+      _allAvailableChapters = List.from(chapters);
+      _applyRecapChapterNames(recaps);
 
       setState(() {
         _rawGrades = rawGrades;
@@ -447,6 +532,15 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       });
 
       _processTableData(students, _chapters, rawGrades, recaps);
+
+      // Save to cache
+      await LocalCacheService.save(recapCacheKey, {
+        'students': students,
+        'chapters': chapters,
+        'allChapters': List.from(chapters),
+        'rawGrades': rawGrades,
+        'recaps': recaps,
+      });
 
       // Trigger tour
       Future.delayed(Duration(milliseconds: 1000), () {
@@ -456,10 +550,44 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       });
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+        if (_tableData.isEmpty) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+          );
+        }
+      }
+    }
+  }
+
+  void _applyRecapChapterNames(List<dynamic> recaps) {
+    if (recaps.isNotEmpty) {
+      List<String> longestBabNames = [];
+      for (var r in recaps) {
+        if (r['bab_names'] != null && r['bab_names'] is List) {
+          final names = List<String>.from(r['bab_names']);
+          if (names.length > longestBabNames.length) {
+            longestBabNames = names;
+          }
+        }
+      }
+
+      if (longestBabNames.isNotEmpty) {
+        while (_chapters.length < longestBabNames.length) {
+          _chapters.add({
+            'judul_bab': 'Bab ${_chapters.length + 1}',
+            'judul': 'Bab ${_chapters.length + 1}',
+            'title': 'Bab ${_chapters.length + 1}',
+          });
+        }
+
+        for (int i = 0; i < longestBabNames.length; i++) {
+          if (i < _chapters.length) {
+            _chapters[i]['judul_bab'] = longestBabNames[i];
+            _chapters[i]['judul'] = longestBabNames[i];
+            _chapters[i]['title'] = longestBabNames[i];
+          }
+        }
       }
     }
   }
@@ -1711,96 +1839,70 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                         ),
                       ),
                       if (_currentStep == 2)
-                        Row(
-                          children: [
-                            GestureDetector(
-                              key: _exportKey,
-                              onTap: _isExporting ? null : _exportToExcel,
-                              child: Container(
-                                margin: EdgeInsets.only(right: 8),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.9),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: _isExporting
-                                    ? SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : Row(
-                                        children: [
-                                          Icon(
-                                            Icons.table_view,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            'Excel',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                              ),
+                        GestureDetector(
+                          key: _saveKey,
+                          onTap: _isSaving ? null : _saveRecaps,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            margin: EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            GestureDetector(
-                              key: _saveKey,
-                              onTap: _isSaving ? null : _saveRecaps,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: _isSaving
-                                    ? SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : Row(
-                                        children: [
-                                          Icon(
-                                            Icons.save,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            languageProvider.getTranslatedText({
-                                              'en': 'Save',
-                                              'id': 'Simpan',
-                                            }),
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
+                            child: _isSaving
+                                ? Center(
+                                    child: SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
                                       ),
-                              ),
-                            ),
-                          ],
+                                    ),
+                                  )
+                                : Icon(Icons.save, color: Colors.white, size: 20),
+                          ),
                         ),
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'refresh') _forceRefresh();
+                          if (value == 'export_excel' && !_isExporting) _exportToExcel();
+                        },
+                        icon: Container(
+                          key: _currentStep == 2 ? _exportKey : null,
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(Icons.more_vert, color: Colors.white, size: 20),
+                        ),
+                        itemBuilder: (BuildContext context) => [
+                          PopupMenuItem<String>(
+                            value: 'refresh',
+                            child: Row(
+                              children: [
+                                Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                                SizedBox(width: 8),
+                                Text('Perbarui Data'),
+                              ],
+                            ),
+                          ),
+                          if (_currentStep == 2)
+                            PopupMenuItem<String>(
+                              value: 'export_excel',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.table_view, size: 20, color: Colors.green),
+                                  SizedBox(width: 8),
+                                  Text('Export Excel'),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -2159,7 +2261,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   }
 
   Widget _buildRecapTable(LanguageProvider languageProvider) {
-    if (_isLoading) return Center(child: CircularProgressIndicator());
+    if (_isLoading) return SkeletonListLoading(itemCount: 5, infoTagCount: 3, showActions: false);
 
     int numChapters = _chapters.isNotEmpty ? _chapters.length : 1;
 
