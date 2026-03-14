@@ -45,6 +45,9 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // Show AI polling view immediately (not blue LoadingScreen)
+    _isPolling = true;
+    _pollingStatus = 'AI sedang memproses materi (percobaan 1)...';
     _generateMateri();
   }
 
