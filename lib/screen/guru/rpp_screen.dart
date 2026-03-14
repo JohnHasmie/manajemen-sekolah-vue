@@ -617,7 +617,7 @@ class RppScreenState extends State<RppScreen> {
         ),
         child: GenerateRppFormDialog(
           teacherId: widget.teacherId,
-          onSaved: _loadRpp,
+          onSaved: _forceRefresh,
         ),
       ),
     );

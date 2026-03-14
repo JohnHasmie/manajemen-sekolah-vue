@@ -740,8 +740,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             backgroundColor: ColorUtils.success600,
           ),
         );
-        widget.onSaved();
-        Navigator.pop(context); // Kembali ke list RPP
+        Navigator.pop(context); // Kembali ke list RPP (PopScope triggers onSaved)
       }
     } catch (e) {
       if (kDebugMode) print('Save AI RPP error: $e');
@@ -919,7 +918,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          widget.onSaved(); // Refresh RPP list when navigating back
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_isPolling ? 'Generating RPP AI...' : 'Hasil RPP AI (K-13)'),
@@ -1052,6 +1057,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
