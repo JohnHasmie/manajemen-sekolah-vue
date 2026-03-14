@@ -1144,7 +1144,7 @@ class _LearningRecommendationClassScreenState
 
     final periodInfo = _getPeriodInfo(triggerSource);
 
-    return Material(
+    return Material(  
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
