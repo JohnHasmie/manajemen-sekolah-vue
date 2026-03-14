@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_settings_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -48,18 +50,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _loadProfile() async {
-    try {
-      final data = await ApiSettingsService.getProfile();
-      if (mounted) {
+  static const String _profileCacheKey = 'settings_profile';
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.invalidate(_profileCacheKey);
+    _loadProfile(useCache: false);
+  }
+
+  Future<void> _loadProfile({bool useCache = true}) async {
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(_profileCacheKey);
+      if (cached != null && cached is Map<String, dynamic>) {
+        if (!mounted) return;
         setState(() {
-          _profileData = data;
+          _profileData = cached;
           _isLoading = false;
         });
       }
+    }
+
+    // Step 2: Show loading only if no data yet
+    if (_profileData.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 3: Fetch fresh from API
+    try {
+      final data = await ApiSettingsService.getProfile();
+      if (!mounted) return;
+
+      await LocalCacheService.save(_profileCacheKey, data);
+
+      setState(() {
+        _profileData = data;
+        _isLoading = false;
+      });
     } catch (e) {
       if (kDebugMode) print('Load profile error: $e');
-      if (mounted) {
+      if (!mounted) return;
+      // Only show error if no cached data
+      if (_profileData.isEmpty) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -226,9 +257,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 phoneNumber: phoneController.text,
                                 address: addressController.text,
                               );
+                              await LocalCacheService.invalidate(_profileCacheKey);
                               if (mounted) {
                                 navigator.pop();
-                                _loadProfile();
+                                _loadProfile(useCache: false);
                                 messenger.showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -432,7 +464,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: _primaryColor))
+          ? const SkeletonListLoading()
           : CustomScrollView(
               slivers: [
                 // Gradient SliverAppBar with profile hero (Pattern #7)
@@ -468,6 +500,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       onPressed: _showEditProfileDialog,
                       tooltip: 'Edit Profil',
+                    ),
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: Colors.white),
+                      onSelected: (value) {
+                        if (value == 'refresh') _forceRefresh();
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'refresh',
+                          child: Row(
+                            children: [
+                              Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                              SizedBox(width: 8),
+                              Text('Perbarui Data'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(width: 8),
                   ],
