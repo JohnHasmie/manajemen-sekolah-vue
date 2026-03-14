@@ -7,6 +7,7 @@ import 'package:manajemensekolah/services/api_raport_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/services/excel_raport_service.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -47,19 +48,57 @@ class RaportScreenState extends State<RaportScreen> {
     _loadInitialData();
   }
 
-  Future<void> _loadInitialData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
+  String? _getAcademicYearId() {
+    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    return (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString();
+  }
 
+  String _buildClassesCacheKey() {
+    final academicYearId = _getAcademicYearId() ?? '';
+    return 'raport_classes_${widget.teacher['id']}_$academicYearId';
+  }
+
+  String _buildStudentsCacheKey() {
+    final academicYearId = _getAcademicYearId() ?? '';
+    final classId = _selectedClass?['id']?.toString() ?? '';
+    return 'raport_students_${classId}_$academicYearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('raport_');
+    _loadInitialData(useCache: false);
+  }
+
+  Future<void> _loadInitialData({bool useCache = true}) async {
+    final classesCacheKey = _buildClassesCacheKey();
+
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(classesCacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _classes = List<dynamic>.from(cached);
+            _selectedClass = _classes.first;
+            _errorMessage = '';
+          });
+          _loadStudentsForClass();
+        }
+      }
+    }
+
+    // Step 2: Show loading only if no data
+    if (_classes.isEmpty) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+    }
+
+    // Step 3: Fetch fresh data from API
     try {
-      final academicYearId = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).selectedAcademicYear?['id']?.toString();
+      final academicYearId = _getAcademicYearId();
 
-      // Only fetching classes where the teacher is a homeroom teacher (if the API supports it, otherwise filtering locally or relying on backend constraint)
       final classesResponse = await ApiClassService.getClassPaginated(
         waliclassId: widget.teacher['id'],
         academicYearId: academicYearId,
@@ -75,22 +114,37 @@ class RaportScreenState extends State<RaportScreen> {
         }
       }
 
-      setState(() {
-        _classes = uniqueClassesMap.values.toList();
-        if (_classes.isNotEmpty) {
-          _selectedClass = _classes.first;
-          _loadStudentsForClass();
-        } else {
-          _isLoading = false;
-        }
-      });
+      final freshClasses = uniqueClassesMap.values.toList();
+
+      if (mounted) {
+        setState(() {
+          _classes = freshClasses;
+          if (_classes.isNotEmpty) {
+            // Preserve selected class - must use the NEW instance from freshClasses
+            final match = _selectedClass != null
+                ? _classes.cast<Map<String, dynamic>?>().firstWhere(
+                    (c) => c?['id'].toString() == _selectedClass!['id'].toString(),
+                    orElse: () => null,
+                  )
+                : null;
+            _selectedClass = match ?? _classes.first;
+            _loadStudentsForClass(useCache: useCache);
+          } else {
+            _isLoading = false;
+          }
+        });
+      }
+
+      // Save to cache
+      await LocalCacheService.save(classesCacheKey, freshClasses);
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted && _classes.isEmpty) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     } finally {
-      // Trigger tour
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) {
           _checkAndShowTour();
@@ -99,20 +153,45 @@ class RaportScreenState extends State<RaportScreen> {
     }
   }
 
-  Future<void> _loadStudentsForClass() async {
+  Future<void> _loadStudentsForClass({bool useCache = true}) async {
     if (_selectedClass == null) return;
 
-    setState(() {
-      _isLoadingStudents = true;
-    });
+    final studentsCacheKey = _buildStudentsCacheKey();
 
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(studentsCacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _students = List<dynamic>.from(cached);
+            _isLoadingStudents = false;
+            _isLoading = false;
+          });
+        }
+      }
+    }
+
+    // Step 2: Show loading only if no data
+    if (_students.isEmpty) {
+      setState(() {
+        _isLoadingStudents = true;
+      });
+    }
+
+    // Step 3: Fetch fresh data from API
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
-      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
+      final academicYearId = _getAcademicYearId();
+      if (academicYearId == null) {
+        if (_students.isEmpty) {
+          setState(() {
+            _errorMessage = "Tahun ajaran tidak valid.";
+            _isLoadingStudents = false;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
 
       final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
       String semester = '1';
@@ -121,33 +200,30 @@ class RaportScreenState extends State<RaportScreen> {
         semester = '2';
       }
 
-      if (academicYearId == null) {
-        setState(() {
-          _errorMessage = "Tahun ajaran tidak valid.";
-          _isLoadingStudents = false;
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Fetch students and their raport status
       final response = await ApiRaportService.getRaports(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semester,
       );
 
-      setState(() {
-        _students = response;
-        _isLoadingStudents = false;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _students = response;
+          _isLoadingStudents = false;
+          _isLoading = false;
+        });
+      }
+
+      // Save to cache
+      await LocalCacheService.save(studentsCacheKey, response);
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoadingStudents = false;
-        _isLoading = false;
-      });
+      if (mounted && _students.isEmpty) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoadingStudents = false;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -334,51 +410,45 @@ class RaportScreenState extends State<RaportScreen> {
                     ],
                   ),
                 ),
-                if (_selectedClass != null && !_isLoading)
-                  GestureDetector(
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'refresh') _forceRefresh();
+                    if (value == 'export_excel' && !_isExporting) _exportToExcel();
+                  },
+                  icon: Container(
                     key: _exportKey,
-                    onTap: _isExporting ? null : _exportToExcel,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: _isExporting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Row(
-                              children: [
-                                const Icon(
-                                  Icons.file_download,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _languageProvider.getTranslatedText({
-                                    'en': 'Export',
-                                    'id': 'Export',
-                                  }),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
                   ),
+                  itemBuilder: (BuildContext context) => [
+                    PopupMenuItem<String>(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          const SizedBox(width: 8),
+                          const Text('Perbarui Data'),
+                        ],
+                      ),
+                    ),
+                    if (_selectedClass != null && !_isLoading)
+                      PopupMenuItem<String>(
+                        value: 'export_excel',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.file_download, size: 20, color: Colors.green),
+                            const SizedBox(width: 8),
+                            const Text('Export Excel'),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),

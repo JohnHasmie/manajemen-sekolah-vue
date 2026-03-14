@@ -5,6 +5,7 @@ import 'package:manajemensekolah/screen/guru/raport_print_screen.dart';
 import 'package:manajemensekolah/services/api_raport_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -79,13 +80,26 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
   }
 
   void _markUnsaved() {
-    if (!_hasUnsavedChanges && !_isLoading) {
-      if (mounted) {
-        setState(() {
-          _hasUnsavedChanges = true;
-        });
-      }
+    if (!_hasUnsavedChanges && !_isLoading && mounted) {
+      setState(() {
+        _hasUnsavedChanges = true;
+      });
     }
+  }
+
+  String? _getAcademicYearId() {
+    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    return (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString();
+  }
+
+  String _buildDetailCacheKey() {
+    final academicYearId = _getAcademicYearId() ?? '';
+    return 'raport_detail_${widget.studentClassId}_$academicYearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('raport_detail_${widget.studentClassId}');
+    _loadData(useCache: false);
   }
 
   @override
@@ -100,45 +114,80 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
+  Future<void> _loadData({bool useCache = true}) async {
+    final detailCacheKey = _buildDetailCacheKey();
+    final academicYearId = _getAcademicYearId() ?? '';
 
+    if (academicYearId.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = "Tahun ajaran tidak valid.";
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(detailCacheKey);
+      if (cached != null && cached is Map<String, dynamic>) {
+        final cachedDetail = cached['existingDetail'];
+        final cachedInitial = cached['initialData'];
+
+        if (cachedDetail != null) {
+          _existingRaport = Map<String, dynamic>.from(cachedDetail);
+          _populateFromExisting(_existingRaport!);
+          if (cachedInitial != null && cachedInitial['grades'] != null) {
+            _syncSubjectsWithRecap(List<dynamic>.from(cachedInitial['grades']));
+          }
+        } else if (cachedInitial != null) {
+          _populateFromInitial(Map<String, dynamic>.from(cachedInitial));
+        }
+
+        if (mounted && (_existingRaport != null || cachedInitial != null)) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = '';
+          });
+        }
+      }
+    }
+
+    // Step 2: Show loading only if no data yet
+    if (_subjects.isEmpty && mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+    }
+
+    // Step 3: Fetch fresh data from API
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
-      final academicYearId =
-          academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
-      final semester =
-          '1'; // TODO: Update to use real semester dynamically if needed
-
-      if (academicYearId.isEmpty) {
-        throw Exception("Tahun ajaran tidak valid.");
+      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      String semester = '1';
+      if (dateBasedSemester.containsKey('semester') &&
+          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+        semester = '2';
       }
 
-      // 1. Try fetching existing raport detail
       final existingDetail = await ApiRaportService.getRaportDetail(
         studentClassId: widget.studentClassId,
         academicYearId: academicYearId,
         semesterId: semester,
       );
 
-      // 2. Fetch initial data (Attendance snaphot, Grade Recaps)
       final initialData = await ApiRaportService.getInitialData(
         studentClassId: widget.studentClassId,
         academicYearId: academicYearId,
         semesterId: semester,
       );
 
+      if (!mounted) return;
+
       if (existingDetail != null) {
         _existingRaport = existingDetail;
         _populateFromExisting(existingDetail);
-
-        // Ensure subjects are synced with initialData if any new subject was added to recaps
         if (initialData != null && initialData['grades'] != null) {
           _syncSubjectsWithRecap(initialData['grades']);
         }
@@ -151,13 +200,20 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       setState(() {
         _isLoading = false;
       });
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
+
+      // Save to cache
+      await LocalCacheService.save(detailCacheKey, {
+        'existingDetail': existingDetail,
+        'initialData': initialData,
       });
+    } catch (e) {
+      if (mounted && _subjects.isEmpty) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     } finally {
-      // Trigger tour
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) {
           _checkAndShowTour();
@@ -272,12 +328,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
     });
 
     try {
-      final academicYearId =
-          Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString() ??
-          '';
+      final academicYearId = _getAcademicYearId() ?? '';
 
       final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
       String semesterId = '1'; // Default to Ganjil
@@ -308,6 +359,10 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       final response = await ApiRaportService.saveRaport(payload);
 
       if (response != null) {
+        // Invalidate cache after save
+        await LocalCacheService.clearStartingWith('raport_detail_${widget.studentClassId}');
+        await LocalCacheService.clearStartingWith('raport_students_');
+
         if (mounted) {
           setState(() {
             _hasUnsavedChanges = false;
@@ -508,6 +563,32 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
                         ),
                       ),
                     ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'refresh') _forceRefresh();
+                    },
+                    icon: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                    ),
+                    itemBuilder: (BuildContext context) => [
+                      PopupMenuItem<String>(
+                        value: 'refresh',
+                        child: Row(
+                          children: [
+                            Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                            const SizedBox(width: 8),
+                            const Text('Perbarui Data'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
