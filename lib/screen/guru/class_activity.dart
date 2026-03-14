@@ -169,7 +169,11 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       setState(() => _isLoading = true);
       _loadUserData();
     } else if (_currentStep == 1) {
-      _loadSubjectsForClass();
+      setState(() {
+        _subjectList.clear();
+        _isLoading = true;
+      });
+      _loadSubjectsForClass(useCache: false);
     } else if (_currentStep == 2) {
       _resetAndLoadActivities();
     }
@@ -830,11 +834,33 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     }
   }
 
-  Future<void> _loadSubjectsForClass() async {
+  Future<void> _loadSubjectsForClass({bool useCache = true}) async {
     if (_selectedClassId == null) return;
 
-    setState(() => _isLoading = true);
+    final subjectCacheKey = 'class_activity_subjects_${_teacherId}_$_selectedClassId';
 
+    // Step 1: Try cache first
+    if (useCache && _subjectList.isEmpty) {
+      try {
+        final cached = await LocalCacheService.load(subjectCacheKey, ttl: const Duration(hours: 3));
+        if (cached != null && mounted) {
+          setState(() {
+            _subjectList = List<dynamic>.from(cached);
+            _isLoading = false;
+          });
+          if (kDebugMode) print('Loaded ${_subjectList.length} subjects from cache');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Subject cache load error: $e');
+      }
+    }
+
+    // Step 2: Show skeleton only if still empty
+    if (_subjectList.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 3: Fetch fresh from API
     try {
       final academicYearId = context
           .read<AcademicYearProvider>()
@@ -877,7 +903,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
       if (isHomeroom || isAdmin) {
         // 2. If Homeroom or Admin, fetch ALL subjects assigned to this class
-        // Use the new endpoint that fetches from subject_classes pivot
         final response = await http.get(
           Uri.parse('${ApiService.baseUrl}/class/$_selectedClassId/subjects'),
           headers: await ApiService.getHeaders(),
@@ -890,7 +915,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           for (var subject in allSubjects) {
             final subjectId = subject['id'].toString();
             var s = Map<String, dynamic>.from(subject);
-            // Editable only if I teach it OR if I'm admin
             s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
             uniqueSubjects[subjectId] = s;
           }
@@ -924,12 +948,18 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           _isLoading = false;
         });
       }
+
+      // Save to cache
+      await LocalCacheService.save(subjectCacheKey, subjects);
+      if (kDebugMode) print('Saved ${subjects.length} subjects to cache');
     } catch (e) {
       if (kDebugMode) {
         print('Error loading subjects: $e');
       }
       if (mounted) {
-        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+        if (_subjectList.isEmpty) {
+          _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+        }
         setState(() => _isLoading = false);
       }
     }
