@@ -13,6 +13,7 @@ import 'package:manajemensekolah/screen/guru/rpp_detail_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -383,19 +384,50 @@ class RppScreenState extends State<RppScreen> {
     );
   }
 
-  Future<void> _loadRpp() async {
-    try {
+  String? _getAcademicYearId() {
+    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    return (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString();
+  }
+
+  String _buildRppCacheKey() {
+    final academicYearId = _getAcademicYearId() ?? '';
+    return 'rpp_list_${widget.teacherId}_$academicYearId';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('rpp_');
+    _loadRpp(useCache: false);
+  }
+
+  Future<void> _loadRpp({bool useCache = true}) async {
+    final isFilteredOrSearched = _searchController.text.isNotEmpty || _selectedStatusFilter != null;
+    final rppCacheKey = _buildRppCacheKey();
+
+    // Step 1: Try cache for instant display (only for unfiltered default view)
+    if (useCache && !isFilteredOrSearched) {
+      final cached = await LocalCacheService.load(rppCacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _rppList = List<dynamic>.from(cached);
+            _isLoading = false;
+            _errorMessage = null;
+          });
+        }
+      }
+    }
+
+    // Step 2: Show loading only if no data yet
+    if (_rppList.isEmpty && mounted) {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
+    }
 
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
-      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
+    // Step 3: Fetch fresh data from API
+    try {
+      final academicYearId = _getAcademicYearId();
 
       final rppData = await ApiService.getRPP(
         teacherId: widget.teacherId,
@@ -404,21 +436,27 @@ class RppScreenState extends State<RppScreen> {
         academicYearId: academicYearId,
       );
 
-      setState(() {
-        _rppList = rppData;
-        _isLoading = false;
-        _hasActiveFilter = _selectedStatusFilter != null;
-      });
+      if (mounted) {
+        setState(() {
+          _rppList = rppData;
+          _isLoading = false;
+          _hasActiveFilter = _selectedStatusFilter != null;
+        });
+      }
+
+      // Save to cache only for unfiltered default view
+      if (!isFilteredOrSearched) {
+        await LocalCacheService.save(rppCacheKey, rppData);
+      }
     } catch (e) {
       if (kDebugMode) print('Load RPP error: $e');
-      if (mounted) {
+      if (mounted && _rppList.isEmpty) {
         setState(() {
           _isLoading = false;
           _errorMessage = ErrorUtils.getFriendlyMessage(e);
         });
       }
     } finally {
-      // Trigger tour
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) {
           _checkAndShowTour();
@@ -654,7 +692,8 @@ class RppScreenState extends State<RppScreen> {
     if (confirmed == true) {
       try {
         await ApiService.deleteRPP(rpp['id']);
-        _loadRpp();
+        await LocalCacheService.clearStartingWith('rpp_');
+        _loadRpp(useCache: false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1140,21 +1179,31 @@ class RppScreenState extends State<RppScreen> {
                         ],
                       ),
                     ),
-                    GestureDetector(
-                      onTap: _loadRpp,
-                      child: Container(
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'refresh') _forceRefresh();
+                      },
+                      icon: Container(
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(
-                          Icons.refresh_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                        child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                       ),
+                      itemBuilder: (BuildContext context) => [
+                        PopupMenuItem<String>(
+                          value: 'refresh',
+                          child: Row(
+                            children: [
+                              Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                              SizedBox(width: 8),
+                              Text('Perbarui Data'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
