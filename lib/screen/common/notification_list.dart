@@ -26,18 +26,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   bool _isLoading = true;
 
   Color _getPrimaryColor() {
-    switch (widget.role) {
-      case 'guru':
-      case 'teacher':
-        return ColorUtils.corporateBlue600;
-      case 'admin':
-        return ColorUtils.corporateBlue700;
-      case 'wali':
-      case 'parent':
-        return ColorUtils.success600;
-      default:
-        return ColorUtils.corporateBlue600;
-    }
+    return ColorUtils.getRoleColor(widget.role);
   }
 
   @override
