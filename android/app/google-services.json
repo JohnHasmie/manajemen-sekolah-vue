@@ -67,6 +67,22 @@
           }
         },
         {
+          "client_id": "631663251271-j6182r3jqqebrv57goqdtte02fct68q0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kamillabs.kamiledu",
+            "certificate_hash": "0163bc4f8b9d6584f18247082a3b5d0e994b2204"
+          }
+        },
+        {
+          "client_id": "631663251271-oov5b2pbrgsjq7bufs7s2i7of44tm56k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kamillabs.kamiledu",
+            "certificate_hash": "131a969626a2d0f3cedeff6f578462c984b50d9e"
+          }
+        },
+        {
           "client_id": "631663251271-q5fmm1j2r4hko6fkicn5mml5vt8r3cnb.apps.googleusercontent.com",
           "client_type": 3
         }
