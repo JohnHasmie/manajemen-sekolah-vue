@@ -14,6 +14,7 @@ import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -105,15 +106,55 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
     super.dispose();
   }
 
+  String _buildStudentsCacheKey() {
+    return 'parent_billing_students';
+  }
+
+  String _buildBillingCacheKey() {
+    return 'parent_billing_list_${_selectedStudentId ?? "unknown"}';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('parent_billing_');
+    _loadInitialData(useCache: false);
+  }
+
   Future<void> _loadData() async {
     await _loadInitialData();
   }
 
-  Future<void> _loadInitialData() async {
-    try {
-      setState(() => _isLoading = true);
+  Future<void> _loadInitialData({bool useCache = true}) async {
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final studentsCacheKey = _buildStudentsCacheKey();
+      final cachedStudents = await LocalCacheService.load(studentsCacheKey);
+      if (cachedStudents != null && cachedStudents is List && cachedStudents.isNotEmpty) {
+        if (!mounted) return;
+        final parsedStudents = cachedStudents.map((s) => Siswa.fromJson(s)).toList();
+        setState(() {
+          _students = parsedStudents;
+          if (_selectedStudentId == null && _students.isNotEmpty) {
+            _selectedStudentId = _students[0].id;
+            _selectedStudent = _students[0];
+          }
+          _isLoading = false;
+          _errorMessage = '';
+        });
+        // Also try loading cached billing
+        await _loadTagihan(useCache: true);
+      }
+    }
 
-      // Get user data from shared preferences
+    // Step 2: Show skeleton only if list is empty
+    if (_students.isEmpty && mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+    }
+
+    // Step 3: Fetch fresh from API
+    try {
       final prefs = await SharedPreferences.getInstance();
       final userString = prefs.getString('user');
       if (userString == null) throw Exception('User not logged in');
@@ -121,16 +162,13 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
       final userId = userData['id'].toString();
       final guardianEmail = userData['email'];
 
-      // Load students for this parent using ApiStudentService
       final allStudents = await ApiStudentService.getStudent(
         userId: userId,
         guardianEmail: guardianEmail,
       );
 
-      // Filter students like in dashboard.dart
       List<dynamic> filteredStudents = [];
 
-      // Check for siswa_id in user data first
       if (userData['siswa_id'] != null && userData['siswa_id'].isNotEmpty) {
         final student = allStudents.firstWhere(
           (student) => student['id'] == userData['siswa_id'],
@@ -150,26 +188,36 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         }).toList();
       }
 
+      if (!mounted) return;
+
+      // Save students to cache
+      await LocalCacheService.save(_buildStudentsCacheKey(), filteredStudents);
+
       if (filteredStudents.isNotEmpty) {
         _students = filteredStudents.map((s) => Siswa.fromJson(s)).toList();
 
-        if (_students.isNotEmpty) {
+        if (_selectedStudentId == null && _students.isNotEmpty) {
           _selectedStudentId = _students[0].id;
           _selectedStudent = _students[0];
         }
       }
 
-      await _loadTagihan();
+      await _loadTagihan(useCache: false);
 
       setState(() {
         _isLoading = false;
+        _errorMessage = '';
       });
     } catch (error) {
       if (kDebugMode) print('Load initial billing data error: $error');
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(error);
-      });
+      if (!mounted) return;
+      // Only show error if no cached data
+      if (_students.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(error);
+        });
+      }
     } finally {
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted && _students.isNotEmpty) _checkAndShowTour();
@@ -330,21 +378,37 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
     return targets;
   }
 
-  Future<void> _loadTagihan() async {
+  Future<void> _loadTagihan({bool useCache = true}) async {
     if (_selectedStudentId == null) return;
 
+    final cacheKey = _buildBillingCacheKey();
+
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _billingList = List<dynamic>.from(cached);
+        });
+      }
+    }
+
+    // Step 2: Fetch fresh from API
     try {
       final response = await _apiService.get(
         '/bill/parent',
         params: {'student_id': _selectedStudentId},
       );
+      if (!mounted) return;
+
+      final freshList = response is List ? response : [];
+      await LocalCacheService.save(cacheKey, freshList);
+
       setState(() {
-        _billingList = response is List ? response : [];
+        _billingList = freshList;
       });
 
-      // Automatically mark ALL finance notifications for this student as read when entering/switching student
-      // This ensures the dashboard unread count is updated, even for notifications
-      // not linked to a specific bill in the current list.
       ApiService.markBillRead(studentId: _selectedStudentId!);
     } catch (error) {
       if (kDebugMode) {
@@ -2249,17 +2313,23 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
                   ),
                 ),
               SizedBox(width: 8),
-              GestureDetector(
-                onTap: _loadData,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) {
+                  if (value == 'refresh') _forceRefresh();
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'refresh',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                        const SizedBox(width: 8),
+                        const Text('Perbarui Data'),
+                      ],
+                    ),
                   ),
-                  child: Icon(Icons.refresh, color: Colors.white, size: 20),
-                ),
+                ],
               ),
             ],
           ),

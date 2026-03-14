@@ -34,4 +34,18 @@ class Siswa {
       studentClassId: json['student_class_id'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'kelas_nama': className,
+      'student_number': nis,
+      'address': alamat,
+      'guardian_name': nameParent,
+      'phone_number': noTelepon,
+      'class_id': classId,
+      'student_class_id': studentClassId,
+    };
+  }
 }

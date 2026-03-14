@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/walimurid/parent_raport_detail_screen.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:provider/provider.dart';
@@ -34,21 +36,28 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
+  String _buildCacheKey() {
+    final yearId =
+        widget.academicYearId ??
+        Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        ).selectedAcademicYear?['id']?.toString() ??
+        'unknown';
+    return 'parent_raport_${yearId}_$_selectedSemesterId';
+  }
 
-    try {
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('parent_raport_');
+    _loadData(useCache: false);
+  }
+
+  Future<void> _loadData({bool useCache = true}) async {
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      // We need parentData for _buildCacheKey context, load it first
       final prefs = await SharedPreferences.getInstance();
       _parentData = json.decode(prefs.getString('user') ?? '{}');
-
-      if (_parentData.isEmpty || _parentData['id'] == null) {
-        throw Exception(
-          "Sesi wali murid tidak ditemukan. Silakan login kembali.",
-        );
-      }
 
       final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
       if (dateBasedSemester.containsKey('semester') &&
@@ -56,9 +65,52 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
         _selectedSemesterId = '2';
       }
 
+      final cacheKey = _buildCacheKey();
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _studentsData = List<dynamic>.from(cached);
+          _isLoading = false;
+          _errorMessage = '';
+        });
+      }
+    }
+
+    // Step 2: Show skeleton only if list is empty
+    if (_studentsData.isEmpty && mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+    }
+
+    // Step 3: Fetch fresh from API
+    try {
+      if (_parentData.isEmpty || _parentData['id'] == null) {
+        final prefs = await SharedPreferences.getInstance();
+        _parentData = json.decode(prefs.getString('user') ?? '{}');
+      }
+
+      if (_parentData.isEmpty || _parentData['id'] == null) {
+        throw Exception(
+          "Sesi wali murid tidak ditemukan. Silakan login kembali.",
+        );
+      }
+
+      if (!useCache) {
+        final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+        if (dateBasedSemester.containsKey('semester') &&
+            dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+          _selectedSemesterId = '2';
+        }
+      }
+
       await _fetchParentRaports();
     } catch (e) {
-      if (mounted) {
+      if (!mounted) return;
+      // Only show error if no cached data
+      if (_studentsData.isEmpty) {
         setState(() => _errorMessage = ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
@@ -86,16 +138,19 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       if (jsonResponse['success']) {
+        final freshData = jsonResponse['data'] ?? [];
+        if (!mounted) return;
+
+        // Save to cache
+        await LocalCacheService.save(_buildCacheKey(), freshData);
+
         setState(() {
-          _studentsData = jsonResponse['data'] ?? [];
+          _studentsData = freshData;
         });
       } else {
         throw Exception(jsonResponse['message'] ?? 'Gagal memuat e-raport.');
       }
     } else {
-      setState(() {
-        _studentsData = [];
-      });
       String errorMsg =
           'Gagal mengambil data dari server (Status: ${response.statusCode}).';
       try {
@@ -188,18 +243,23 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
                     ],
                   ),
                 ),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.assignment_turned_in_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) {
+                    if (value == 'refresh') _forceRefresh();
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          const SizedBox(width: 8),
+                          const Text('Perbarui Data'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -237,7 +297,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
 
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonListLoading()
                 : _errorMessage.isNotEmpty && _studentsData.isEmpty
                 ? Center(
                     child: Padding(

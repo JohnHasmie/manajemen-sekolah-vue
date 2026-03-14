@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
@@ -108,23 +109,34 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     }
   }
 
+  String get _studentsCacheKey => 'parent_activity_students_${widget.academicYearId ?? 'default'}';
+
+  String _buildActivitiesCacheKey() {
+    return 'parent_activity_list_${_selectedStudentId}_${widget.academicYearId ?? 'default'}';
+  }
+
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('parent_activity_');
+    _loadUserData(useCache: false);
+  }
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> _loadUserData({bool useCache = true}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userData = json.decode(prefs.getString('user') ?? '{}');
 
       setState(() {
         _parentName =
-            userData['name']?.toString() ?? 'Wali Murid'; // Fix: Use 'name'
+            userData['name']?.toString() ?? 'Wali Murid';
       });
 
-      await _loadStudentsForParent();
+      await _loadStudentsForParent(useCache: useCache);
     } catch (e) {
       if (kDebugMode) {
         print('Error load user data: $e');
@@ -138,30 +150,48 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     }
   }
 
-  Future<void> _loadStudentsForParent() async {
+  Future<void> _loadStudentsForParent({bool useCache = true}) async {
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(_studentsCacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _studentList = cached;
+          _isLoading = false;
+        });
+        // Auto-select if only 1 student
+        if (_studentList.length == 1 && _selectedStudentId == null) {
+          _selectedStudentId = _studentList[0]['id'];
+          await _loadActivities(useCache: true);
+        }
+      }
+    }
+
+    // Step 2: Show loading only if no data yet
+    if (_studentList.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 3: Fetch fresh from API
     try {
       final prefs = await SharedPreferences.getInstance();
       final userData = json.decode(prefs.getString('user') ?? '{}');
       final userId = userData['id']?.toString() ?? '';
       final guardianEmail = userData['email']?.toString();
 
-      // Dapatkan siswa yang difilter server-side berdasarkan userId parent
       final allStudents = await ApiStudentService.getStudent(
         academicYearId: widget.academicYearId,
-        userId: userId, // Filter server-side
+        userId: userId,
         guardianEmail: guardianEmail,
       );
 
-      // Filter siswa berdasarkan berbagai kemungkinan relasi
-      // Filter siswa berdasarkan berbagai kemungkinan relasi
       final filteredStudents = allStudents.where((student) {
         return student['guardian_email'] == userData['email'] ||
-            student['guardian_name'] ==
-                userData['name'] || // Fix: userData['name']
-            student['user_id'].toString() ==
-                userId || // Match user_id (Student.user_id)
-            student['parent_id'].toString() == userId || // Legacy check
-            student['wali_id'].toString() == userId || // Legacy check
+            student['guardian_name'] == userData['name'] ||
+            student['user_id'].toString() == userId ||
+            student['parent_id'].toString() == userId ||
+            student['wali_id'].toString() == userId ||
             (userData['student_id'] != null &&
                 student['id'] == userData['student_id']) ||
             (userData['siswa_id'] != null &&
@@ -172,15 +202,18 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         print('DEBUG: User Data: $userData');
       }
 
+      if (!mounted) return;
+
+      await LocalCacheService.save(_studentsCacheKey, filteredStudents);
+
       setState(() {
         _studentList = filteredStudents;
       });
 
-      // Jika hanya ada 1 siswa, langsung pilih dan load aktivitasnya
       if (_studentList.isNotEmpty) {
         if (_studentList.length == 1) {
           _selectedStudentId = _studentList[0]['id'];
-          await _loadActivities();
+          await _loadActivities(useCache: useCache);
         }
       } else {
         setState(() => _isLoading = false);
@@ -189,8 +222,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       if (kDebugMode) {
         print('Error load students for parent: $e');
       }
-      setState(() => _isLoading = false);
-      if (mounted) {
+      if (!mounted) return;
+      if (_studentList.isEmpty) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
         );
@@ -198,12 +232,30 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     }
   }
 
-  Future<void> _loadActivities() async {
+  Future<void> _loadActivities({bool useCache = true}) async {
     if (_selectedStudentId == null) return;
 
-    try {
-      setState(() => _isLoading = true);
+    final cacheKey = _buildActivitiesCacheKey();
 
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _activityList = cached;
+          _isLoading = false;
+        });
+      }
+    }
+
+    // Step 2: Show loading only if no data yet
+    if (_activityList.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 3: Fetch fresh from API
+    try {
       final selectedStudent = _studentList.firstWhere(
         (s) => s['id'] == _selectedStudentId,
         orElse: () => {},
@@ -219,11 +271,16 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           academicYearId: widget.academicYearId,
         );
 
+        if (!mounted) return;
+
+        await LocalCacheService.save(cacheKey, activities);
+
         setState(() {
           _activityList = activities;
           _isLoading = false;
         });
       } else {
+        if (!mounted) return;
         setState(() {
           _activityList = [];
           _isLoading = false;
@@ -233,8 +290,9 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       if (kDebugMode) {
         print('Error load activities: $e');
       }
-      setState(() => _isLoading = false);
-      if (mounted) {
+      if (!mounted) return;
+      if (_activityList.isEmpty) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorUtils.getFriendlyMessage(e)),
@@ -512,6 +570,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
               onChanged: (value) {
                 setState(() {
                   _selectedStudentId = value;
+                  _activityList = [];
                 });
                 _loadActivities();
               },
@@ -1156,17 +1215,23 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: _loadActivities,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) {
+                  if (value == 'refresh') _forceRefresh();
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'refresh',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                        SizedBox(width: 8),
+                        Text('Perbarui Data'),
+                      ],
+                    ),
                   ),
-                  child: Icon(Icons.refresh, color: Colors.white, size: 20),
-                ),
+                ],
               ),
             ],
           ),

@@ -8,6 +8,7 @@ import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/date_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
@@ -122,17 +123,47 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     }
   }
 
+  String get _cacheKey =>
+      'parent_presence_${widget.studentId}_${widget.academicYearId ?? "default"}';
+
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.invalidate(_cacheKey);
+    _loadData(useCache: false);
+  }
 
+  Future<void> _loadData({bool useCache = true}) async {
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(_cacheKey);
+      if (cached != null && cached is Map<String, dynamic>) {
+        if (!mounted) return;
+        if (cached['absensiData'] != null) {
+          setState(() {
+            _absensiData = cached['absensiData'] as List;
+            if (cached['studentData'] != null) {
+              _student = Siswa.fromJson(
+                Map<String, dynamic>.from(cached['studentData'] as Map),
+              );
+            }
+            _calculateMonthlySummary();
+            _isLoading = false;
+          });
+        }
+      }
+    }
+
+    // Step 2: Show loading only if no data yet
+    if (_absensiData.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    // Step 3: Fetch fresh from API, save to cache, update UI
     try {
       // Load data siswa
       final userId = widget.parent['id']?.toString();
@@ -160,6 +191,12 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         _isLoading = false;
       });
 
+      // Save to cache
+      await LocalCacheService.save(_cacheKey, {
+        'studentData': student.toJson(),
+        'absensiData': absensiData,
+      });
+
       // Mark notifications as read
       ApiService.markAttendanceRead(studentId: widget.studentId);
 
@@ -177,7 +214,8 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         _isLoading = false;
       });
 
-      if (mounted) {
+      // Only show error if no cached data available
+      if (_absensiData.isEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorUtils.getFriendlyMessage(e)),
@@ -1374,18 +1412,23 @@ class PresenceParentPageState extends State<PresenceParentPage> {
                   ],
                 ),
               ),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.calendar_month,
-                  color: Colors.white,
-                  size: 20,
-                ),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) {
+                  if (value == 'refresh') _forceRefresh();
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'refresh',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                        SizedBox(width: 8),
+                        Text('Perbarui Data'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
