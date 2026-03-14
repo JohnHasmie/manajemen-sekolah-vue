@@ -5,6 +5,7 @@ import 'package:manajemensekolah/services/api_recommendation_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
@@ -62,42 +63,47 @@ class _LearningRecommendationClassScreenState
     });
   }
 
-  Future<void> _loadAllData() async {
-    // Resolve teacher profile ID (user_id → teacher_id)
-    await _resolveTeacherProfileId();
-    _loadTeacherSchedules();
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('recommendation_');
+    _loadAllData(useCache: false);
+  }
+
+  Future<void> _loadAllData({bool useCache = true}) async {
+    await _resolveTeacherProfileId(useCache: useCache);
+    _loadTeacherSchedules(useCache: useCache);
     for (final cls in widget.classes) {
       final classId = cls['id']?.toString();
       if (classId == null) continue;
-      _loadClassSummary(classId);
-      _loadClassHistory(classId);
+      _loadClassSummary(classId, useCache: useCache);
+      _loadClassHistory(classId, useCache: useCache);
     }
   }
 
-  Future<void> _resolveTeacherProfileId() async {
-    try {
-      final userId = widget.teacher['id'] ?? '';
-      if (kDebugMode) {
-        print('👤 Resolving teacher profile for user: $userId');
-        print('👤 widget.teacher keys: ${widget.teacher.keys.toList()}');
-        print('👤 widget.teacher: ${widget.teacher}');
-      }
-      if (userId.isEmpty) return;
+  Future<void> _resolveTeacherProfileId({bool useCache = true}) async {
+    final userId = widget.teacher['id'] ?? '';
+    if (userId.isEmpty) return;
+    final cacheKey = 'recommendation_teacher_profile_$userId';
 
+    // Try cache
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is String && cached.isNotEmpty) {
+        _teacherProfileId = cached;
+        return;
+      }
+    }
+
+    try {
       final apiTeacherService = ApiTeacherService();
       final profileData = await apiTeacherService.getTeacherById(userId);
-      if (kDebugMode) {
-        print('👤 getTeacherById response: ${profileData?.toString().substring(0, (profileData.toString().length > 300) ? 300 : profileData.toString().length)}');
-      }
       if (profileData != null) {
         _teacherProfileId = profileData['id']?.toString();
-        if (kDebugMode) {
-          print(
-              '👤 Teacher Profile ID resolved: $_teacherProfileId (user: $userId)');
+        if (_teacherProfileId != null) {
+          await LocalCacheService.save(cacheKey, _teacherProfileId);
         }
       }
     } catch (e) {
-      if (kDebugMode) print('⚠️ Could not resolve teacher profile ID: $e');
+      if (kDebugMode) print('Could not resolve teacher profile ID: $e');
     }
   }
 
@@ -105,9 +111,26 @@ class _LearningRecommendationClassScreenState
   String get _effectiveTeacherId =>
       _teacherProfileId ?? widget.teacher['id'] ?? '';
 
-  Future<void> _loadClassSummary(String classId) async {
+  Future<void> _loadClassSummary(String classId, {bool useCache = true}) async {
     if (!mounted) return;
-    setState(() => _loadingSummaries[classId] = true);
+    final cacheKey = 'recommendation_summary_$classId';
+
+    // Try cache
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is Map) {
+        if (mounted) {
+          setState(() {
+            _classSummaries[classId] = Map<String, dynamic>.from(cached);
+            _loadingSummaries[classId] = false;
+          });
+        }
+      }
+    }
+
+    if (!_classSummaries.containsKey(classId) && mounted) {
+      setState(() => _loadingSummaries[classId] = true);
+    }
 
     try {
       final summary = await ApiRecommendationService.getClassSummary(classId);
@@ -117,6 +140,7 @@ class _LearningRecommendationClassScreenState
           _loadingSummaries[classId] = false;
         });
       }
+      await LocalCacheService.save(cacheKey, summary['data'] ?? {});
     } catch (e) {
       if (kDebugMode) print('Error loading summary for $classId: $e');
       if (mounted) {
@@ -125,32 +149,38 @@ class _LearningRecommendationClassScreenState
     }
   }
 
-  Future<void> _loadClassHistory(String classId) async {
+  Future<void> _loadClassHistory(String classId, {bool useCache = true}) async {
     if (!mounted) return;
-    setState(() => _loadingHistory[classId] = true);
+    final cacheKey = 'recommendation_history_${classId}_$_effectiveTeacherId';
+
+    // Try cache
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _classHistory[classId] = List<Map<String, dynamic>>.from(
+              cached.map((e) => Map<String, dynamic>.from(e)),
+            );
+            _loadingHistory[classId] = false;
+          });
+        }
+      }
+    }
+
+    if (!_classHistory.containsKey(classId) && mounted) {
+      setState(() => _loadingHistory[classId] = true);
+    }
 
     try {
-      if (kDebugMode) {
-        print('📋 Loading history for class $classId, teacher: $_effectiveTeacherId');
-      }
-
       final result = await ApiRecommendationService.getRecommendations(
         teacherId: _effectiveTeacherId,
         classId: classId,
         perPage: 50,
       );
 
-      if (kDebugMode) {
-        final dataList = (result['data'] as List?) ?? [];
-        print('📋 History result for $classId: ${dataList.length} recommendations, meta: ${result['meta']}');
-        if (dataList.isNotEmpty) {
-          print('📋 First rec: trigger_source=${dataList.first['trigger_source']}, created_at=${dataList.first['created_at']}, teacher_id=${dataList.first['teacher_id']}');
-        }
-      }
-
       if (!mounted) return;
 
-      // Group by date + trigger_source so different periods on same day are separate
       final recommendations = (result['data'] as List?) ?? [];
       final grouped = <String, Map<String, dynamic>>{};
 
@@ -162,8 +192,6 @@ class _LearningRecommendationClassScreenState
             ? createdAt.substring(0, 10)
             : createdAt;
         final triggerSource = rec['trigger_source']?.toString() ?? 'on_demand';
-
-        // Composite key: date + trigger_source
         final groupKey = '${dateKey}_$triggerSource';
 
         if (!grouped.containsKey(groupKey)) {
@@ -195,7 +223,6 @@ class _LearningRecommendationClassScreenState
         }
       }
 
-      // Sort by date descending, then by trigger_source
       final history = grouped.values.toList()
         ..sort((a, b) {
           final dateCompare =
@@ -209,9 +236,12 @@ class _LearningRecommendationClassScreenState
         _classHistory[classId] = history;
         _loadingHistory[classId] = false;
       });
+
+      // Save grouped history to cache
+      await LocalCacheService.save(cacheKey, history);
     } catch (e) {
       if (kDebugMode) print('Error loading history for $classId: $e');
-      if (mounted) {
+      if (mounted && !_classHistory.containsKey(classId)) {
         setState(() {
           _classHistory[classId] = [];
           _loadingHistory[classId] = false;
@@ -220,11 +250,25 @@ class _LearningRecommendationClassScreenState
     }
   }
 
-  Future<void> _loadTeacherSchedules() async {
-    try {
-      final teacherIdForSchedule = widget.teacher['id'] ?? '';
-      if (teacherIdForSchedule.isEmpty) return;
+  Future<void> _loadTeacherSchedules({bool useCache = true}) async {
+    final teacherIdForSchedule = widget.teacher['id'] ?? '';
+    if (teacherIdForSchedule.isEmpty) return;
+    final cacheKey = 'recommendation_schedules_$teacherIdForSchedule';
 
+    // Try cache
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _teacherSchedules = List<dynamic>.from(cached);
+            _schedulesLoaded = true;
+          });
+        }
+      }
+    }
+
+    try {
       final schedules = await ApiScheduleService.getScheduleByTeacher(
         teacherId: teacherIdForSchedule,
       );
@@ -234,6 +278,7 @@ class _LearningRecommendationClassScreenState
           _schedulesLoaded = true;
         });
       }
+      await LocalCacheService.save(cacheKey, schedules);
     } catch (e) {
       if (kDebugMode) print('Error loading schedules: $e');
       if (mounted) setState(() => _schedulesLoaded = true);
@@ -373,9 +418,11 @@ class _LearningRecommendationClassScreenState
         }
       }
 
-      // Refresh data
-      _loadClassSummary(classId);
-      _loadClassHistory(classId);
+      // Invalidate cache and refresh data
+      await LocalCacheService.clearStartingWith('recommendation_summary_$classId');
+      await LocalCacheService.clearStartingWith('recommendation_history_$classId');
+      _loadClassSummary(classId, useCache: false);
+      _loadClassHistory(classId, useCache: false);
     } on RateLimitException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -758,6 +805,32 @@ class _LearningRecommendationClassScreenState
                     ],
                   ),
                 ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'refresh') _forceRefresh();
+                  },
+                  icon: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                  ),
+                  itemBuilder: (BuildContext context) => [
+                    PopupMenuItem<String>(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          const SizedBox(width: 8),
+                          const Text('Perbarui Data'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -1061,10 +1134,10 @@ class _LearningRecommendationClassScreenState
     required String classId,
   }) {
     final date = entry['date'] as String;
-    final count = entry['count'] as int;
+    final count = entry['count'] is int ? entry['count'] as int : int.tryParse(entry['count'].toString()) ?? 0;
     final triggerSource = entry['trigger_source']?.toString() ?? 'on_demand';
-    final byStatus = entry['by_status'] as Map<String, int>;
-    final byPriority = entry['by_priority'] as Map<String, int>;
+    final byStatus = _toCountMap(entry['by_status']);
+    final byPriority = _toCountMap(entry['by_priority']);
     final highCount = byPriority['high'] ?? 0;
     final pendingCount = byStatus['pending'] ?? 0;
     final completedCount = byStatus['completed'] ?? 0;

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
@@ -39,20 +40,53 @@ class _LearningRecommendationStudentScreenState
     _loadStudents();
   }
 
-  Future<void> _loadStudents() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
+  String _buildStudentsCacheKey() {
+    final classId = widget.classData['id']?.toString() ?? '';
+    return 'recommendation_students_$classId';
+  }
 
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.invalidate(_buildStudentsCacheKey());
+    _loadStudents(useCache: false);
+  }
+
+  Future<void> _loadStudents({bool useCache = true}) async {
+    final cacheKey = _buildStudentsCacheKey();
+
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _students = cached;
+          _isLoading = false;
+          _errorMessage = '';
+        });
+      }
+    }
+
+    // Step 2: Show skeleton only if list is empty
+    if (_students.isEmpty && mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+    }
+
+    // Step 3: Fetch fresh from API
     try {
       final students = await ApiClassService.getStudentsByClassId(
         widget.classData['id'].toString(),
       );
       if (!mounted) return;
+
+      await LocalCacheService.save(cacheKey, students);
+
       setState(() {
         _students = students;
         _isLoading = false;
+        _errorMessage = '';
       });
 
       if (students.isNotEmpty) {
@@ -62,10 +96,13 @@ class _LearningRecommendationStudentScreenState
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      // Only show error if no cached data
+      if (_students.isEmpty) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -262,6 +299,24 @@ class _LearningRecommendationStudentScreenState
                       ),
                     ],
                   ),
+                ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) {
+                    if (value == 'refresh') _forceRefresh();
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          const SizedBox(width: 8),
+                          const Text('Perbarui Data'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

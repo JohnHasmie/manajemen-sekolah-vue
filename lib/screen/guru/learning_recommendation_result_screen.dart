@@ -4,6 +4,7 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/learning_recommendation_edit_screen.dart';
 import 'package:manajemensekolah/services/api_recommendation_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -42,12 +43,44 @@ class _LearningRecommendationResultScreenState
     _fetchRecommendations();
   }
 
-  Future<void> _fetchRecommendations() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
+  String _buildRecommendationsCacheKey() {
+    final teacherId = widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
+    final classId = widget.classData['id']?.toString() ?? '';
+    final studentId = widget.student['student_id']?.toString() ??
+        widget.student['id']?.toString() ?? '';
+    return 'recommendation_result_${teacherId}_${classId}_$studentId';
+  }
 
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.invalidate(_buildRecommendationsCacheKey());
+    _fetchRecommendations(useCache: false);
+  }
+
+  Future<void> _fetchRecommendations({bool useCache = true}) async {
+    final cacheKey = _buildRecommendationsCacheKey();
+
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(cacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _recommendations = cached;
+          _isLoading = false;
+          _errorMessage = '';
+        });
+      }
+    }
+
+    // Step 2: Show skeleton only if list is empty
+    if (_recommendations.isEmpty && mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+    }
+
+    // Step 3: Fetch fresh from API
     try {
       final teacherId = widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
       final classId = widget.classData['id']?.toString() ?? '';
@@ -86,9 +119,13 @@ class _LearningRecommendationResultScreenState
           print('📥 Recommendations count: ${recommendations.length}, data type: ${data.runtimeType}');
         }
 
+        await LocalCacheService.save(cacheKey, recommendations);
+
+        if (!mounted) return;
         setState(() {
           _recommendations = recommendations;
           _isLoading = false;
+          _errorMessage = '';
         });
 
         if (recommendations.isNotEmpty) {
@@ -97,20 +134,23 @@ class _LearningRecommendationResultScreenState
           });
         }
       } else {
-        setState(() {
-          _errorMessage = response['message'] ?? 'Gagal mengambil rekomendasi.';
-          _isLoading = false;
-        });
+        if (!mounted) return;
+        if (_recommendations.isEmpty) {
+          setState(() {
+            _errorMessage = response['message'] ?? 'Gagal mengambil rekomendasi.';
+            _isLoading = false;
+          });
+        }
       }
     } on RateLimitException catch (e) {
-      if (mounted) {
+      if (mounted && _recommendations.isEmpty) {
         setState(() {
           _errorMessage = e.message;
           _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && _recommendations.isEmpty) {
         setState(() {
           _errorMessage = e.toString();
           _isLoading = false;
@@ -302,7 +342,8 @@ class _LearningRecommendationResultScreenState
     );
 
     if (result == true) {
-      _fetchRecommendations(); // Refresh if data was saved
+      await LocalCacheService.invalidate(_buildRecommendationsCacheKey());
+      _fetchRecommendations(useCache: false); // Refresh if data was saved
     }
   }
 
@@ -385,23 +426,36 @@ class _LearningRecommendationResultScreenState
                     ],
                   ),
                 ),
-                if (!_isLoading && _recommendations.isNotEmpty)
-                  GestureDetector(
-                    onTap: _navigateToEdit,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.edit_note,
-                        color: Colors.white,
-                        size: 24,
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) {
+                    if (value == 'refresh') _forceRefresh();
+                    if (value == 'edit') _navigateToEdit();
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          const SizedBox(width: 8),
+                          const Text('Perbarui Data'),
+                        ],
                       ),
                     ),
-                  ),
+                    if (!_isLoading && _recommendations.isNotEmpty)
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_note, size: 20, color: ColorUtils.slate600),
+                            const SizedBox(width: 8),
+                            const Text('Edit Hasil'),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),

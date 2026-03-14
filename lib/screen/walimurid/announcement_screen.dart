@@ -10,6 +10,7 @@ import 'package:manajemensekolah/components/error_screen.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_tour_services.dart';
+import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
@@ -115,63 +116,79 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+  static const String _announcementCacheKey = 'announcement_list';
 
-      // Load user role from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final userData = prefs.getString('user');
-      if (userData != null) {
-        final user = json.decode(userData);
+  Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('announcement_');
+    _loadData(useCache: false);
+  }
+
+  Future<void> _loadData({bool useCache = true}) async {
+    // Load user role from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final userData = prefs.getString('user');
+    if (userData != null) {
+      final user = json.decode(userData);
+      if (mounted) {
         setState(() {
           _userRole = user['role'] ?? 'wali';
         });
       }
+    }
 
-      if (kDebugMode) {
-        print('🔄 Memuat data pengumuman untuk role: $_userRole');
+    // Step 1: Try cache for instant display
+    if (useCache) {
+      final cached = await LocalCacheService.load(_announcementCacheKey);
+      if (cached != null && cached is List && cached.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _announcementList = List<dynamic>.from(cached);
+            _isLoading = false;
+            _errorMessage = null;
+          });
+        }
       }
+    }
+
+    // Step 2: Show loading only if no data yet
+    if (_announcementList.isEmpty && mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
+    // Step 3: Fetch fresh data from API
+    try {
       final response = await _apiService.get('/announcement/user/current');
 
-      if (kDebugMode) {
-        print('✅ Response dari API:');
-        print('Type: ${response.runtimeType}');
-        print('Data: $response');
-      }
-
-      // Handle response structure: {success, data, pagination}
       List<dynamic> announcementList = [];
       if (response is Map<String, dynamic> && response['data'] != null) {
         announcementList = response['data'] is List ? response['data'] : [];
       } else if (response is List) {
-        // Fallback for direct list response
         announcementList = response;
       }
 
-      setState(() {
-        _announcementList = announcementList;
-        _isLoading = false;
-      });
-
-      if (kDebugMode) {
-        print(
-          '📊 Data berhasil dimuat: ${_announcementList.length} pengumuman',
-        );
+      if (mounted) {
+        setState(() {
+          _announcementList = announcementList;
+          _isLoading = false;
+        });
       }
+
+      // Save to cache
+      await LocalCacheService.save(_announcementCacheKey, announcementList);
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error loading announcements: $e');
+        print('Error loading announcements: $e');
       }
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(e);
-      });
+      if (mounted && _announcementList.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+        });
+      }
     } finally {
-      // Trigger tour
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) {
           _checkAndShowTour();
@@ -886,18 +903,31 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
                             ],
                           ),
                         ),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'refresh') _forceRefresh();
+                          },
+                          icon: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                           ),
-                          child: Icon(
-                            Icons.announcement,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                          itemBuilder: (BuildContext context) => [
+                            PopupMenuItem<String>(
+                              value: 'refresh',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                                  SizedBox(width: 8),
+                                  Text('Perbarui Data'),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
