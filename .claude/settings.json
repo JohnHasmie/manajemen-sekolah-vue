@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(brew install:*)",
-      "Read(//dev/**)"
+      "Read(//dev/**)",
+      "Bash(brew list:*)",
+      "Bash(pdftotext /Users/macbook/development/projects/non-FCM/manajemennonfcm/KamillLabs_Edu_AI_API_Documentation.pdf -)"
     ]
   }
 }

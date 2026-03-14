@@ -1470,10 +1470,28 @@ class ApiService {
     }
   }
 
-  // Check server health
+  // Check server health - does NOT use _handleResponse to avoid
+  // triggering auto-logout redirects that cause login screen loops
   static Future<Map<String, dynamic>> checkHealth() async {
-    final response = await http.get(Uri.parse('$baseUrl/health'));
-    return _handleResponse(response);
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/health'))
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        try {
+          return json.decode(response.body) as Map<String, dynamic>;
+        } catch (_) {
+          return {'status': 'ok'};
+        }
+      } else {
+        throw Exception(
+          'Server returned status ${response.statusCode}',
+        );
+      }
+    } on Exception {
+      rethrow;
+    }
   }
 
   // Manual payment entry by admin (for offline/cash payments)
