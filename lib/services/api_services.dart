@@ -33,11 +33,19 @@ class ApiService {
       return;
     }
 
+    // if (kIsWeb) {
+    //   baseUrl = 'http://127.0.0.1:8000/api';
+    // } else if (Platform.isAndroid) {
+    //   baseUrl = 'http://127.0.0.1:8000/api';
+    // } else {
+    //   baseUrl = 'http://127.0.0.1:8000/api';
+    // }
+
     // Fallback if .env is missing or API_BASE_URL is empty
-    baseUrl = 'https://edu-api.kamillabs.com/api';
-    if (kDebugMode) {
-      print('📡 API Base URL fallback: $baseUrl');
-    }
+    // baseUrl = 'https://edu-api.kamillabs.com/api';
+    // if (kDebugMode) {
+    //   print('📡 API Base URL fallback: $baseUrl');
+    // }
   }
 
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
