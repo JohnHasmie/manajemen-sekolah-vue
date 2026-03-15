@@ -32,6 +32,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   String? _selectedStudentId;
   String _parentName = '';
   bool _isLoading = true;
+  bool _hasFreshData = false; // Only show unread dots after fresh API data arrives
 
   String? _tourId;
   final GlobalKey _studentSelectorKey = GlobalKey();
@@ -61,6 +62,8 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   void _onItemVisible(Map<String, dynamic> activity) {
+    if (!_hasFreshData) return; // Skip auto-marking from stale cache data
+
     final id = activity['id'].toString();
     final isRead =
         activity['is_read'] == true ||
@@ -241,13 +244,14 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
     final cacheKey = _buildActivitiesCacheKey();
 
-    // Step 1: Try cache for instant display
+    // Step 1: Try cache for instant display (without unread indicators)
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
         if (!mounted) return;
         setState(() {
           _activityList = cached;
+          _hasFreshData = false; // Don't show unread dots from stale cache
           _isLoading = false;
         });
       }
@@ -281,12 +285,14 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
         setState(() {
           _activityList = activities;
+          _hasFreshData = true; // Now safe to show unread dots
           _isLoading = false;
         });
       } else {
         if (!mounted) return;
         setState(() {
           _activityList = [];
+          _hasFreshData = true;
           _isLoading = false;
         });
       }
@@ -575,6 +581,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
                 setState(() {
                   _selectedStudentId = value;
                   _activityList = [];
+                  _hasFreshData = false;
                 });
                 _loadActivities();
               },
@@ -887,7 +894,8 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         final isAssignment = activity['jenis'] == 'tugas';
         final isSpecificTarget = activity['target'] == 'khusus';
         final isForThisStudent = activity['untuk_siswa_ini'] == true;
-        final isRead =
+        // Only show unread dots when we have fresh API data, not stale cache
+        final isRead = !_hasFreshData ||
             activity['is_read'] == true ||
             activity['is_read'] == 1 ||
             activity['is_read'] == '1';
