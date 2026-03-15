@@ -103,6 +103,10 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         }
       });
 
+      // Update cache so next visit won't show stale unread dots
+      final cacheKey = _buildActivitiesCacheKey();
+      await LocalCacheService.save(cacheKey, _activityList);
+
       await ApiClassActivityService.markAsRead(ids);
     } catch (e) {
       if (kDebugMode) print("Error auto-marking read: $e");
