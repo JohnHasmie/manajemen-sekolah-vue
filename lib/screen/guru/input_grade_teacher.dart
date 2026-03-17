@@ -1510,7 +1510,7 @@ class GradeBookPageState extends State<GradeBookPage> {
 
       final subjectId = widget.subject['id'];
       final url =
-          '/grades?subject_id=$subjectId&limit=500${academicYearId != null ? "&academic_year_id=$academicYearId" : ""}';
+          '/grades/teacher?subject_id=$subjectId&limit=500${academicYearId != null ? "&academic_year_id=$academicYearId" : ""}';
 
       if (kDebugMode) print('DEBUG: Loading grades from $url');
 

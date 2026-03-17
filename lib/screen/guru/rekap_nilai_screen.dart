@@ -505,7 +505,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       );
 
       final rawGradesResponse = await ApiService().get(
-        '/grades?class_id=$classId&subject_id=$subjectId&academic_year_id=$academicYearId&limit=1000',
+        '/grades/teacher?class_id=$classId&subject_id=$subjectId&academic_year_id=$academicYearId&limit=1000',
       );
       List<dynamic> rawGrades = [];
       if (rawGradesResponse != null) {

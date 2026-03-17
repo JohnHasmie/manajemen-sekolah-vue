@@ -4,7 +4,8 @@
       "Bash(brew install:*)",
       "Read(//dev/**)",
       "Bash(brew list:*)",
-      "Bash(pdftotext /Users/macbook/development/projects/non-FCM/manajemennonfcm/KamillLabs_Edu_AI_API_Documentation.pdf -)"
+      "Bash(pdftotext /Users/macbook/development/projects/non-FCM/manajemennonfcm/KamillLabs_Edu_AI_API_Documentation.pdf -)",
+      "Bash(pip3 install:*)"
     ]
   }
 }
