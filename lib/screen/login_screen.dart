@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:manajemensekolah/services/analytics_service.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
@@ -231,6 +232,29 @@ class LoginScreenState extends State<LoginScreen> {
 
     // Clear force logout flag
     await prefs.setBool('force_logout', false);
+
+    // Track login in Firebase Analytics
+    final user = responseData['user'];
+    if (user != null) {
+      final email = user['email'] ?? '';
+      final role = user['role'] ?? '';
+      final userId = user['id']?.toString() ?? '';
+      final name = user['name'] ?? user['nama'] ?? '';
+      final schoolName = user['school_name'] ?? user['nama_sekolah'] ?? '';
+
+      await AnalyticsService.setUser(
+        userId: userId,
+        email: email,
+        role: role,
+        name: name,
+        schoolName: schoolName,
+      );
+      await AnalyticsService.logLogin(
+        method: 'google',
+        email: email,
+        role: role,
+      );
+    }
 
     // Background FCM refresh - NOT awaited to ensure fast navigation
     _refreshFcmTokenInBackground();

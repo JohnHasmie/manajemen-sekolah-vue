@@ -14,8 +14,10 @@ import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/screen/dashboard.dart';
 import 'package:manajemensekolah/screen/login_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
+import 'package:manajemensekolah/services/analytics_service.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/log_service.dart';
+import 'package:manajemensekolah/services/performance_service.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,6 +65,18 @@ void main() async {
           );
         }
         LogService.sendError(e, stack);
+      }
+
+      // Initialize Firebase Analytics & Performance
+      try {
+        await AnalyticsService.initialize();
+        await PerformanceService.initialize();
+        // Set user jika sudah login sebelumnya
+        await AnalyticsService.setUserFromPrefs();
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ Analytics/Performance init failed (non-critical): $e');
+        }
       }
 
       await initializeDateFormatting('id_ID', null);
@@ -221,6 +235,10 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
         builder: (context, languageProvider, child) {
           return MaterialApp(
             navigatorKey: navigatorKey,
+            navigatorObservers: [
+              if (AnalyticsService.observer != null)
+                AnalyticsService.observer!,
+            ],
             title: languageProvider.getTranslatedText({
               'en': 'School Management',
               'id': 'Manajemen Sekolah',

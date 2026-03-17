@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:manajemensekolah/main.dart';
 import 'package:manajemensekolah/screen/login_screen.dart';
+import 'package:manajemensekolah/services/performance_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
@@ -49,6 +51,10 @@ class ApiService {
   }
 
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
+    final metric = await PerformanceService.startHttpMetric(
+      '$baseUrl$endpoint',
+      HttpMethod.Get,
+    );
     try {
       Uri uri = Uri.parse('$baseUrl$endpoint');
       if (params != null && params.isNotEmpty) {
@@ -57,29 +63,45 @@ class ApiService {
       final response = await http
           .get(uri, headers: await _getHeaders())
           .timeout(const Duration(seconds: 30));
+      await PerformanceService.stopHttpMetric(
+        metric,
+        httpResponseCode: response.statusCode,
+        responsePayloadSize: response.contentLength,
+      );
       return _handleResponse(response);
     } catch (e) {
+      await PerformanceService.stopHttpMetric(metric, httpResponseCode: 0);
       if (kDebugMode) {
         print('❌ GET Error on $endpoint: $e');
       }
-      // Network errors should NOT trigger logout - just rethrow
-      // Only 401/403 should trigger logout (handled in _handleResponse)
       rethrow;
     }
   }
 
   // Instance method untuk POST request
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
+    final metric = await PerformanceService.startHttpMetric(
+      '$baseUrl$endpoint',
+      HttpMethod.Post,
+    );
     try {
+      final body = json.encode(data);
       final response = await http
           .post(
             Uri.parse('$baseUrl$endpoint'),
             headers: await _getHeaders(),
-            body: json.encode(data),
+            body: body,
           )
           .timeout(const Duration(seconds: 30));
+      await PerformanceService.stopHttpMetric(
+        metric,
+        httpResponseCode: response.statusCode,
+        requestPayloadSize: body.length,
+        responsePayloadSize: response.contentLength,
+      );
       return _handleResponse(response);
     } catch (e) {
+      await PerformanceService.stopHttpMetric(metric, httpResponseCode: 0);
       if (kDebugMode) {
         print('❌ POST Error on $endpoint: $e');
       }
@@ -89,16 +111,28 @@ class ApiService {
 
   // Instance method untuk PUT request
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
+    final metric = await PerformanceService.startHttpMetric(
+      '$baseUrl$endpoint',
+      HttpMethod.Put,
+    );
     try {
+      final body = json.encode(data);
       final response = await http
           .put(
             Uri.parse('$baseUrl$endpoint'),
             headers: await _getHeaders(),
-            body: json.encode(data),
+            body: body,
           )
           .timeout(const Duration(seconds: 30));
+      await PerformanceService.stopHttpMetric(
+        metric,
+        httpResponseCode: response.statusCode,
+        requestPayloadSize: body.length,
+        responsePayloadSize: response.contentLength,
+      );
       return _handleResponse(response);
     } catch (e) {
+      await PerformanceService.stopHttpMetric(metric, httpResponseCode: 0);
       if (kDebugMode) {
         print('❌ PUT Error on $endpoint: $e');
       }
@@ -137,12 +171,22 @@ class ApiService {
 
   // Instance method untuk DELETE request
   Future<dynamic> delete(String endpoint) async {
+    final metric = await PerformanceService.startHttpMetric(
+      '$baseUrl$endpoint',
+      HttpMethod.Delete,
+    );
     try {
       final response = await http
           .delete(Uri.parse('$baseUrl$endpoint'), headers: await _getHeaders())
           .timeout(const Duration(seconds: 30));
+      await PerformanceService.stopHttpMetric(
+        metric,
+        httpResponseCode: response.statusCode,
+        responsePayloadSize: response.contentLength,
+      );
       return _handleResponse(response);
     } catch (e) {
+      await PerformanceService.stopHttpMetric(metric, httpResponseCode: 0);
       if (kDebugMode) {
         print('❌ DELETE Error on $endpoint: $e');
       }

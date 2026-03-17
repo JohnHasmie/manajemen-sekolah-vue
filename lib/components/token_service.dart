@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:manajemensekolah/services/analytics_service.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
@@ -150,6 +151,9 @@ class TokenService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
+
+      // Track logout in analytics
+      await AnalyticsService.logLogout();
 
       // Clear local API cache
       await LocalCacheService.clearAll();
