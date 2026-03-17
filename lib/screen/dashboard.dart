@@ -179,6 +179,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         await _loadStats();
       }
       await _loadSemesterLabel();
+      _preCacheSchoolData(); // Non-blocking pre-cache for child screens
     } catch (e) {
       if (kDebugMode) print('❌ Error during initialization: $e');
       if (mounted) {
@@ -455,10 +456,48 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           _currentSemesterLabel = result['label'];
         });
       }
+      // Cache for other screens (teaching_schedule, etc.)
+      if (result.isNotEmpty) {
+        LocalCacheService.save('school_current_semester', result);
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error loading semester label: $e');
       }
+    }
+  }
+
+  /// Pre-cache school reference data (semester list, day list) for child screens.
+  /// Called once during dashboard init so sub-screens don't need to re-fetch.
+  Future<void> _preCacheSchoolData() async {
+    try {
+      // Cache semester list if not already cached
+      final cachedSemester = await LocalCacheService.load(
+        'school_semester_data',
+        ttl: const Duration(hours: 12),
+      );
+      if (cachedSemester == null) {
+        final semesterData = await ApiScheduleService.getSemester();
+        if (semesterData.isNotEmpty) {
+          LocalCacheService.save('school_semester_data', semesterData);
+          if (kDebugMode) print('📦 Pre-cached semester data');
+        }
+      }
+
+      // Cache day list if not already cached
+      final cachedDays = await LocalCacheService.load(
+        'school_day_data',
+        ttl: const Duration(hours: 24),
+      );
+      if (cachedDays == null) {
+        final dayData = await ApiScheduleService.getHari();
+        if (dayData.isNotEmpty) {
+          LocalCacheService.save('school_day_data', dayData);
+          if (kDebugMode) print('📦 Pre-cached day data');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Pre-cache school data failed (non-critical): $e');
     }
   }
 

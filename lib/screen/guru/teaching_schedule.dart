@@ -344,7 +344,23 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
   Future<void> _loadDayData() async {
     try {
-      final dayData = await ApiScheduleService.getHari();
+      // Try cache first (day data is static, cache for 24h)
+      final cached = await LocalCacheService.load(
+        'school_day_data',
+        ttl: const Duration(hours: 24),
+      );
+
+      List<dynamic> dayData;
+      if (cached != null) {
+        dayData = List<dynamic>.from(cached);
+        if (kDebugMode) print('⚡ Day data loaded from cache');
+      } else {
+        dayData = await ApiScheduleService.getHari();
+        if (dayData.isNotEmpty) {
+          LocalCacheService.save('school_day_data', dayData);
+        }
+      }
+
       if (dayData.isNotEmpty) {
         final Map<String, String> newDayIdMap = {};
         final List<String> newDayOptions = ['Semua Hari'];
@@ -375,7 +391,22 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
   Future<void> _loadSemesterData() async {
     try {
-      final semesterData = await ApiScheduleService.getSemester();
+      // ─── Try cache first (semester list rarely changes, cache 12h) ───
+      List<dynamic> semesterData;
+      final cachedSemester = await LocalCacheService.load(
+        'school_semester_data',
+        ttl: const Duration(hours: 12),
+      );
+
+      if (cachedSemester != null) {
+        semesterData = List<dynamic>.from(cachedSemester);
+        if (kDebugMode) print('⚡ Semester list loaded from cache');
+      } else {
+        semesterData = await ApiScheduleService.getSemester();
+        if (semesterData.isNotEmpty) {
+          LocalCacheService.save('school_semester_data', semesterData);
+        }
+      }
 
       setState(() {
         _semesterList = semesterData;
@@ -383,9 +414,24 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
       String? semesterId;
 
-      // 1. Fetch from Backend API (Sync with Dashboard)
+      // ─── Try cached current-date-based semester (cache 6h) ───
       try {
-        final result = await ApiScheduleService.getDateBasedSemester();
+        Map<String, dynamic> result;
+        final cachedDateBased = await LocalCacheService.load(
+          'school_current_semester',
+          ttl: const Duration(hours: 6),
+        );
+
+        if (cachedDateBased != null) {
+          result = Map<String, dynamic>.from(cachedDateBased);
+          if (kDebugMode) print('⚡ Current semester loaded from cache');
+        } else {
+          result = await ApiScheduleService.getDateBasedSemester();
+          if (result.isNotEmpty) {
+            LocalCacheService.save('school_current_semester', result);
+          }
+        }
+
         if (result.isNotEmpty && result.containsKey('semester')) {
           final targetSemesterName = result['semester'].toString();
 
@@ -438,13 +484,23 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
   Future<void> _loadAcademicYearData() async {
     try {
-      final academicYears = await ApiScheduleService.getAcademicYear();
-
-      // Get global selected year from provider
+      // ─── Read from AcademicYearProvider (already fetched by Dashboard) ───
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
       );
+
+      List<dynamic> academicYears = academicYearProvider.academicYears;
+
+      // Fallback: if provider is empty (e.g. deep link), fetch from API
+      if (academicYears.isEmpty) {
+        if (kDebugMode) print('📡 AcademicYearProvider empty, fetching from API');
+        await academicYearProvider.fetchAcademicYears();
+        academicYears = academicYearProvider.academicYears;
+      } else {
+        if (kDebugMode) print('⚡ Academic years loaded from provider (${academicYears.length} items)');
+      }
+
       final globalSelectedYear = academicYearProvider.selectedAcademicYear;
 
       setState(() {
