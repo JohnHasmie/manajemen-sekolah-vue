@@ -377,35 +377,33 @@ class MateriPageState extends State<MateriPage> {
         setState(() => _isLoading = true);
       }
 
-      // Step 3: Fetch fresh from API
+      // Step 3: Fetch fresh from API (parallel)
       final ApiTeacherService apiTeacherService = ApiTeacherService();
 
+      // Run all independent API calls in parallel
+      final results = await Future.wait([
+        apiTeacherService.getTeacherById(teacherId).catchError((e) {
+          if (kDebugMode) print('Could not resolve teacher profile ID: $e');
+          return null;
+        }),
+        apiTeacherService.getSubjectByTeacher(teacherId),
+        ApiTeacherService.getTeacherClasses(teacherId),
+        ApiSubjectService.getMateri(teacherId: teacherId),
+      ]);
+      if (!mounted) return;
+
       // Resolve teacher profile ID
-      try {
-        final teacherProfile =
-            await apiTeacherService.getTeacherById(teacherId);
-        if (teacherProfile is Map<String, dynamic>) {
-          final profileData = teacherProfile['data'] ?? teacherProfile;
-          _teacherProfileId = profileData['id']?.toString();
-          if (kDebugMode) {
-            print('Teacher Profile ID resolved: $_teacherProfileId (user: $teacherId)');
-          }
-        }
-      } catch (e) {
+      final teacherProfile = results[0];
+      if (teacherProfile is Map<String, dynamic>) {
+        final profileData = teacherProfile['data'] ?? teacherProfile;
+        _teacherProfileId = profileData['id']?.toString();
         if (kDebugMode) {
-          print('Could not resolve teacher profile ID: $e');
+          print('Teacher Profile ID resolved: $_teacherProfileId (user: $teacherId)');
         }
       }
 
-      final subject = await apiTeacherService.getSubjectByTeacher(teacherId);
-      if (!mounted) return;
-
-      if (kDebugMode) {
-        print('Mata pelajaran found: ${subject.length}');
-      }
-
-      final classes = await ApiTeacherService.getTeacherClasses(teacherId);
-      if (!mounted) return;
+      final subject = results[1] as List<dynamic>;
+      final classes = results[2] as List<dynamic>;
 
       classes.sort((a, b) {
         String nameA = (a['name'] ?? a['nama'] ?? '').toString();
@@ -414,6 +412,7 @@ class MateriPageState extends State<MateriPage> {
       });
 
       if (kDebugMode) {
+        print('Mata pelajaran found: ${subject.length}');
         print('Classes found: ${classes.length}');
       }
 
@@ -427,8 +426,7 @@ class MateriPageState extends State<MateriPage> {
         return;
       }
 
-      final materi = await ApiSubjectService.getMateri(teacherId: teacherId);
-      if (!mounted) return;
+      final materi = results[3] as List<dynamic>;
 
       setState(() {
         _subjectList = subject;
@@ -554,19 +552,14 @@ class MateriPageState extends State<MateriPage> {
       );
       if (!mounted) return;
 
-      final List<Future<List<dynamic>>> futures = [];
-      for (var bab in babMateri) {
-        futures.add(
-          ApiSubjectService.getSubBabMateri(babId: bab['id'].toString()),
-        );
-      }
-
-      final List<List<dynamic>> allSubBabsResults = await Future.wait(futures);
-      if (!mounted) return;
-
+      // Extract sub-chapters directly from getBabMateri response
+      // (backend already includes sub_chapters nested in each chapter)
       final allSubBabs = <dynamic>[];
-      for (var subBabs in allSubBabsResults) {
-        allSubBabs.addAll(subBabs);
+      for (var bab in babMateri) {
+        final subChapters = bab['sub_chapters'];
+        if (subChapters is List) {
+          allSubBabs.addAll(subChapters);
+        }
       }
 
       setState(() {
