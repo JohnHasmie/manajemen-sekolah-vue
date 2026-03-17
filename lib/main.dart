@@ -11,6 +11,7 @@ import 'package:manajemensekolah/components/error_handler.dart';
 import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/providers/teacher_provider.dart';
 import 'package:manajemensekolah/screen/dashboard.dart';
 import 'package:manajemensekolah/screen/login_screen.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -229,6 +230,9 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
         ),
         ChangeNotifierProvider<AcademicYearProvider>(
           create: (_) => AcademicYearProvider(),
+        ),
+        ChangeNotifierProvider<TeacherProvider>(
+          create: (_) => TeacherProvider(),
         ),
       ],
       child: Consumer<LanguageProvider>(

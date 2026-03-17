@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/providers/teacher_provider.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
 import 'package:manajemensekolah/screen/guru/materi_screen.dart';
 import 'package:manajemensekolah/screen/guru/presence_teacher.dart';
@@ -147,21 +148,18 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   Future<void> _loadUserData() async {
     if (kDebugMode) {
       print(
-        '===== TeachingScheduleScreen: _loadUserData STARTED (Refactored) =====',
+        '===== TeachingScheduleScreen: _loadUserData STARTED =====',
       );
     }
     try {
+      // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
+      final teacherProvider = Provider.of<TeacherProvider>(
+        context,
+        listen: false,
+      );
+
+      // Early cache load for instant display (while provider/API resolves)
       final prefs = await SharedPreferences.getInstance();
-      final userDataStr = prefs.getString('user');
-      final userData = json.decode(userDataStr ?? '{}');
-      final userId = userData['id']?.toString() ?? '';
-
-      setState(() {
-        _teacherId = userId; // Fallback
-        _teacherNama = userData['nama']?.toString() ?? 'Guru';
-      });
-
-      // Early cache load: use last known cache key for instant display
       final lastCacheKey = prefs.getString(_prefKeyLastCacheKey);
       if (lastCacheKey != null) {
         try {
@@ -187,12 +185,50 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         }
       }
 
+      if (teacherProvider.isLoaded && teacherProvider.teacherId != null) {
+        // ✅ Use cached data from provider — no API calls needed
+        if (kDebugMode) {
+          print('⚡ Using TeacherProvider cache (teacherId=${teacherProvider.teacherId})');
+        }
+
+        setState(() {
+          _teacherId = teacherProvider.teacherId!;
+          _teacherNama = teacherProvider.teacherName ?? 'Guru';
+          _homeroomClassesList = teacherProvider.homeroomClasses
+              .map((cls) => Map<String, dynamic>.from(cls))
+              .toList();
+
+          if (_homeroomClassesList.isNotEmpty &&
+              _selectedHomeroomClass == null) {
+            _selectedHomeroomClass = _homeroomClassesList.first;
+          }
+        });
+
+        await _loadDayData();
+        await _loadSemesterData();
+        await _loadAcademicYearData();
+        _loadJadwal();
+        return;
+      }
+
+      // ─── Step 2: Fallback — fetch from API (direct navigation, deep link, etc.) ───
+      if (kDebugMode) {
+        print('📡 TeacherProvider empty, falling back to API');
+      }
+
+      final userDataStr = prefs.getString('user');
+      final userData = json.decode(userDataStr ?? '{}');
+      final userId = userData['id']?.toString() ?? '';
+
+      setState(() {
+        _teacherId = userId; // Fallback
+        _teacherNama = userData['nama']?.toString() ?? 'Guru';
+      });
+
       if (userId.isNotEmpty) {
         String? resolvedTeacherId;
 
-        // 1. Resolve Teacher ID (Similar to class_activity.dart)
         try {
-          // Check if userData itself is a teacher record
           final looksLikeTeacher =
               userData.containsKey('employee_number') ||
               userData.containsKey('nip') ||
@@ -203,7 +239,6 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             if (kDebugMode)
               print('Use ID from prefs directly: $resolvedTeacherId');
           } else {
-            // Fetch from API
             String? academicYearId;
             try {
               if (mounted) {
@@ -214,16 +249,19 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               }
             } catch (e) {}
 
-            if (kDebugMode)
-              print('Resolving via API for user: $userId, AY: $academicYearId');
+            // Ensure TeacherProvider is loaded for future screens
+            await teacherProvider.ensureLoaded(academicYearId: academicYearId);
 
-            final teacherData = await ApiTeacherService.getGuruByUserId(
-              userId,
-              academicYearId: academicYearId,
-            );
-
-            if (teacherData != null && teacherData['id'] != null) {
-              resolvedTeacherId = teacherData['id'].toString();
+            if (teacherProvider.teacherId != null) {
+              resolvedTeacherId = teacherProvider.teacherId;
+            } else {
+              final teacherData = await ApiTeacherService.getGuruByUserId(
+                userId,
+                academicYearId: academicYearId,
+              );
+              if (teacherData != null && teacherData['id'] != null) {
+                resolvedTeacherId = teacherData['id'].toString();
+              }
             }
           }
         } catch (e) {
@@ -236,57 +274,55 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             _teacherId = resolvedTeacherId!;
           });
 
-          // 2. Load Classes explicitly (The robust way from class_activity.dart)
-          String? academicYearId;
-          try {
-            if (mounted) {
-              academicYearId = Provider.of<AcademicYearProvider>(
-                context,
-                listen: false,
-              ).selectedAcademicYear?['id']?.toString();
+          // Use homeroom classes from provider if available
+          if (teacherProvider.isLoaded) {
+            setState(() {
+              _homeroomClassesList = teacherProvider.homeroomClasses
+                  .map((cls) => Map<String, dynamic>.from(cls))
+                  .toList();
+
+              if (_homeroomClassesList.isNotEmpty &&
+                  _selectedHomeroomClass == null) {
+                _selectedHomeroomClass = _homeroomClassesList.first;
+              }
+            });
+          } else {
+            // Last resort: fetch classes directly
+            String? academicYearId;
+            try {
+              if (mounted) {
+                academicYearId = Provider.of<AcademicYearProvider>(
+                  context,
+                  listen: false,
+                ).selectedAcademicYear?['id']?.toString();
+              }
+            } catch (e) {}
+
+            final allTeacherClasses = await ApiTeacherService.getTeacherClasses(
+              resolvedTeacherId,
+              academicYearId: academicYearId,
+            );
+
+            final homeroomClasses = <Map<String, dynamic>>[];
+            for (var cls in allTeacherClasses) {
+              final isHomeroom =
+                  cls['is_homeroom'] == true ||
+                  cls['is_homeroom'] == 1 ||
+                  cls['is_homeroom'].toString().toLowerCase() == 'true' ||
+                  cls['is_homeroom'].toString() == '1';
+              if (isHomeroom) {
+                homeroomClasses.add(Map<String, dynamic>.from(cls));
+              }
             }
-          } catch (e) {}
 
-          final allTeacherClasses = await ApiTeacherService.getTeacherClasses(
-            resolvedTeacherId,
-            academicYearId: academicYearId,
-          );
-
-          if (kDebugMode)
-            print('Raw Classes from API: ${allTeacherClasses.length}');
-
-          // 3. Filter for Homeroom Classes
-          final homeroomClasses = <Map<String, dynamic>>[];
-
-          for (var cls in allTeacherClasses) {
-            // Robust check for is_homeroom flag
-            final isHomeroom =
-                cls['is_homeroom'] == true ||
-                cls['is_homeroom'] == 1 ||
-                cls['is_homeroom'].toString().toLowerCase() == 'true' ||
-                cls['is_homeroom'].toString() == '1';
-
-            if (isHomeroom) {
-              homeroomClasses.add(Map<String, dynamic>.from(cls));
-            }
+            setState(() {
+              _homeroomClassesList = homeroomClasses;
+              if (_homeroomClassesList.isNotEmpty &&
+                  _selectedHomeroomClass == null) {
+                _selectedHomeroomClass = _homeroomClassesList.first;
+              }
+            });
           }
-
-          setState(() {
-            _homeroomClassesList = homeroomClasses;
-
-            // Auto-select first if available and not yet selected
-            if (_homeroomClassesList.isNotEmpty &&
-                _selectedHomeroomClass == null) {
-              _selectedHomeroomClass = _homeroomClassesList.first;
-            }
-
-            if (kDebugMode) {
-              print(
-                '✅ Homeroom Classes Filtered: ${_homeroomClassesList.length}',
-              );
-              print('✅ Selected Homeroom: $_selectedHomeroomClass');
-            }
-          });
         } else {
           if (kDebugMode) print('❌ Failed to resolve Teacher ID');
         }

@@ -7,6 +7,7 @@ import 'package:manajemensekolah/widgets/dashboard/lesson_plan_status_card.dart'
 import 'package:manajemensekolah/widgets/dashboard/material_slider_card.dart';
 import 'package:manajemensekolah/components/token_service.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/providers/teacher_provider.dart';
 import 'package:manajemensekolah/screen/admin/admin_announcement.dart';
 import 'package:manajemensekolah/screen/admin/admin_class_activity.dart';
 import 'package:manajemensekolah/screen/admin/admin_data_management.dart';
@@ -639,6 +640,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               setState(() {
                 _homeroomClasses = homeroomOnly;
               });
+
+              // Populate TeacherProvider so other screens can reuse
+              if (mounted) {
+                Provider.of<TeacherProvider>(context, listen: false)
+                    .setTeacherData(
+                  userId: userId,
+                  teacherId: teacherId,
+                  teacherName: _userData['nama'] ?? 'Guru',
+                  teacherData: _userData,
+                  allClasses: fetchedClasses,
+                  homeroomClasses: homeroomOnly,
+                );
+              }
             }
           } else {
             if (kDebugMode)
@@ -1122,6 +1136,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   ) async {
     // Clear all cache to prevent stale data from previous school
     await LocalCacheService.clearAll();
+    if (mounted) {
+      Provider.of<TeacherProvider>(context, listen: false).clear();
+    }
 
     // Update token
     final prefs = await SharedPreferences.getInstance();

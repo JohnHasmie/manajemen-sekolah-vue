@@ -25,23 +25,23 @@ class ApiService {
   static late final String baseUrl;
 
   static Future<void> init() async {
-    final envBaseUrl = dotenv.env['API_BASE_URL'];
+    // final envBaseUrl = dotenv.env['API_BASE_URL'];
 
-    if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
-      baseUrl = envBaseUrl;
-      if (kDebugMode) {
-        print('📡 API Base URL from .env: $baseUrl');
-      }
-      return;
-    }
-
-    // if (kIsWeb) {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // } else if (Platform.isAndroid) {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // } else {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
+    // if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
+    //   baseUrl = envBaseUrl;
+    //   if (kDebugMode) {
+    //     print('📡 API Base URL from .env: $baseUrl');
+    //   }
+    //   return;
     // }
+
+    if (kIsWeb) {
+      baseUrl = 'http://127.0.0.1:8000/api';
+    } else if (Platform.isAndroid) {
+      baseUrl = 'http://127.0.0.1:8000/api';
+    } else {
+      baseUrl = 'http://127.0.0.1:8000/api';
+    }
   }
 
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
