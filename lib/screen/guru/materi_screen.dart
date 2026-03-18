@@ -6,6 +6,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/enhanced_search_bar.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/screen/guru/class_activity.dart';
+import 'package:manajemensekolah/providers/teacher_provider.dart';
 import 'package:manajemensekolah/screen/guru/materi_ai_result_screen.dart';
 import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
@@ -301,6 +302,74 @@ class MateriPageState extends State<MateriPage> {
     _loadData(useCache: false);
   }
 
+  /// Load subjects filtered by classId — cache per class
+  Future<void> _loadSubjectsForClass(String classId, {bool useCache = true}) async {
+    final String? teacherId = widget.teacher['id'];
+    if (teacherId == null) return;
+
+    final cacheKey = 'materi_subjects_${teacherId}_$classId';
+
+    // Try cache first
+    if (useCache) {
+      try {
+        final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 6));
+        if (cached != null && mounted) {
+          final subjects = List<dynamic>.from(cached);
+          if (subjects.isNotEmpty) {
+            _applySubjectList(subjects);
+            if (kDebugMode) print('⚡ Loaded subjects for class $classId from cache');
+            return;
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Subject cache error: $e');
+      }
+    }
+
+    // Fetch from API with classId filter
+    try {
+      final apiTeacherService = ApiTeacherService();
+      final subjects = await apiTeacherService.getSubjectByTeacher(teacherId, classId: classId);
+      if (!mounted) return;
+
+      _applySubjectList(subjects);
+
+      // Save to cache
+      if (subjects.isNotEmpty) {
+        await LocalCacheService.save(cacheKey, subjects);
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading subjects for class: $e');
+    }
+  }
+
+  /// Apply subject list to state and auto-select first subject
+  void _applySubjectList(List<dynamic> subjects) {
+    setState(() {
+      _subjectList = subjects;
+      _babMateriList = [];
+      _subBabMateriList = [];
+      _isLoading = false;
+
+      if (widget.initialSubjectId != null &&
+          subjects.any((mp) => mp['id'] == widget.initialSubjectId)) {
+        _selectedSubject = widget.initialSubjectId;
+      } else if (subjects.isNotEmpty) {
+        _selectedSubject = subjects[0]['id'];
+      } else {
+        _selectedSubject = null;
+      }
+
+      if (subjects.isEmpty) {
+        _debugInfo = 'Tidak ada mata pelajaran untuk kelas ini';
+      }
+    });
+
+    if (_selectedSubject != null) {
+      _loadBabMateri(_selectedSubject!);
+    }
+  }
+
   Future<void> _loadData({bool useCache = true}) async {
     try {
       if (!mounted) return;
@@ -323,96 +392,136 @@ class MateriPageState extends State<MateriPage> {
 
       final cacheKey = _buildMateriCacheKey();
 
-      // Step 1: Try cache for instant display
-      if (useCache && _subjectList.isEmpty && cacheKey != null) {
+      // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
+      final teacherProvider = Provider.of<TeacherProvider>(
+        context,
+        listen: false,
+      );
+
+      // Resolve teacher profile ID from provider (skip /api/teacher/{id})
+      if (teacherProvider.isLoaded && teacherProvider.teacherId != null) {
+        _teacherProfileId = teacherProvider.teacherId;
+        if (kDebugMode) print('⚡ TeacherProvider: profileId=$_teacherProfileId');
+      }
+
+      List<dynamic>? providerClassList;
+      if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
+        providerClassList = teacherProvider.allClasses;
+        if (kDebugMode) print('⚡ Using TeacherProvider classList (${providerClassList.length} classes)');
+      }
+
+      // ─── Step 2: Resolve classList early (for subject filtering) ───
+      List<dynamic> resolvedClasses = providerClassList ?? [];
+
+      // If no provider classes, try loading from cache or will be fetched later
+      if (resolvedClasses.isEmpty && useCache && cacheKey != null) {
         try {
           final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
-          if (cached != null && mounted) {
+          if (cached != null) {
             final cachedData = Map<String, dynamic>.from(cached);
-            final cachedSubjects = List<dynamic>.from(cachedData['subjects'] ?? []);
-            final cachedClasses = List<dynamic>.from(cachedData['classes'] ?? []);
-            final cachedMateri = List<dynamic>.from(cachedData['materi'] ?? []);
+            resolvedClasses = List<dynamic>.from(cachedData['classes'] ?? []);
+            _teacherProfileId ??= cachedData['teacherProfileId']?.toString();
+          }
+        } catch (_) {}
+      }
 
-            if (cachedSubjects.isNotEmpty) {
+      // Determine selected class
+      String? selectedClassId;
+      String? selectedClassName;
+      if (widget.initialClassId != null &&
+          resolvedClasses.any((c) => c['id'] == widget.initialClassId)) {
+        selectedClassId = widget.initialClassId;
+        selectedClassName = widget.initialClassName;
+      } else if (resolvedClasses.isNotEmpty) {
+        selectedClassId = resolvedClasses[0]['id'];
+        selectedClassName = resolvedClasses[0]['name'] ?? resolvedClasses[0]['nama'];
+      }
+
+      // ─── Step 3: Try subjects cache (per class) → return early if hit ───
+      if (useCache && _subjectList.isEmpty && selectedClassId != null) {
+        final subjectCacheKey = 'materi_subjects_${teacherId}_$selectedClassId';
+        try {
+          final cachedSubjects = await LocalCacheService.load(subjectCacheKey, ttl: const Duration(hours: 6));
+          if (cachedSubjects != null && mounted) {
+            final subjects = List<dynamic>.from(cachedSubjects);
+            if (subjects.isNotEmpty) {
               setState(() {
-                _subjectList = cachedSubjects;
-                _classList = cachedClasses;
-                _materiList = cachedMateri;
-                _teacherProfileId = cachedData['teacherProfileId']?.toString();
+                _classList = resolvedClasses;
+                _selectedClassId = selectedClassId;
+                _selectedClassName = selectedClassName;
                 _isLoading = false;
-
-                // Set initial selections from cache
-                if (widget.initialClassId != null &&
-                    cachedClasses.any((c) => c['id'] == widget.initialClassId)) {
-                  _selectedClassId = widget.initialClassId;
-                  _selectedClassName = widget.initialClassName;
-                } else if (cachedClasses.isNotEmpty) {
-                  _selectedClassId = cachedClasses[0]['id'];
-                  _selectedClassName = cachedClasses[0]['name'] ?? cachedClasses[0]['nama'];
-                }
-
-                if (widget.initialSubjectId != null &&
-                    cachedSubjects.any((mp) => mp['id'] == widget.initialSubjectId)) {
-                  _selectedSubject = widget.initialSubjectId;
-                } else if (cachedSubjects.isNotEmpty) {
-                  _selectedSubject = cachedSubjects[0]['id'];
-                }
               });
 
-              // Load bab materi for selected subject
-              if (_selectedSubject != null) {
-                _loadBabMateri(_selectedSubject!);
-              }
+              _applySubjectList(subjects);
 
-              if (kDebugMode) print('Loaded materi data from cache');
+              if (kDebugMode) print('⚡ Loaded from cache (classes + subjects for $selectedClassId) — skipping API');
+              return; // ✅ Cache hit — no API calls needed
             }
           }
         } catch (e) {
-          if (kDebugMode) print('Materi cache load error: $e');
+          if (kDebugMode) print('Subject cache load error: $e');
         }
       }
 
-      // Step 2: Show skeleton only if still empty
+      // ─── Step 3: No cache — show skeleton and fetch from API ───
       if (_subjectList.isEmpty && mounted) {
         setState(() => _isLoading = true);
       }
 
-      // Step 3: Fetch fresh from API (parallel)
       final ApiTeacherService apiTeacherService = ApiTeacherService();
 
-      // Run all independent API calls in parallel
-      final results = await Future.wait([
-        apiTeacherService.getTeacherById(teacherId).catchError((e) {
-          if (kDebugMode) print('Could not resolve teacher profile ID: $e');
-          return null;
-        }),
-        apiTeacherService.getSubjectByTeacher(teacherId),
-        ApiTeacherService.getTeacherClasses(teacherId),
-        ApiSubjectService.getMateri(teacherId: teacherId),
-      ]);
-      if (!mounted) return;
+      // ─── Step 4: No cache — fetch from API ───
+      // First resolve classes if not from provider
+      List<dynamic> classes = resolvedClasses;
+      if (classes.isEmpty) {
+        classes = await ApiTeacherService.getTeacherClasses(teacherId);
+        if (!mounted) return;
+        classes.sort((a, b) {
+          String nameA = (a['name'] ?? a['nama'] ?? '').toString();
+          String nameB = (b['name'] ?? b['nama'] ?? '').toString();
+          return nameA.compareTo(nameB);
+        });
+      }
 
-      // Resolve teacher profile ID
-      final teacherProfile = results[0];
-      if (teacherProfile is Map<String, dynamic>) {
-        final profileData = teacherProfile['data'] ?? teacherProfile;
-        _teacherProfileId = profileData['id']?.toString();
-        if (kDebugMode) {
-          print('Teacher Profile ID resolved: $_teacherProfileId (user: $teacherId)');
+      // Determine selected class for subject filtering
+      if (selectedClassId == null && classes.isNotEmpty) {
+        if (widget.initialClassId != null &&
+            classes.any((c) => c['id'] == widget.initialClassId)) {
+          selectedClassId = widget.initialClassId;
+          selectedClassName = widget.initialClassName;
+        } else {
+          selectedClassId = classes[0]['id'];
+          selectedClassName = classes[0]['name'] ?? classes[0]['nama'];
         }
       }
 
-      final subject = results[1] as List<dynamic>;
-      final classes = results[2] as List<dynamic>;
+      // Resolve teacher profile ID if needed
+      if (_teacherProfileId == null) {
+        try {
+          final teacherProfile = await apiTeacherService.getTeacherById(teacherId);
+          if (teacherProfile is Map<String, dynamic>) {
+            final profileData = teacherProfile['data'] ?? teacherProfile;
+            _teacherProfileId = profileData['id']?.toString();
+          }
+        } catch (e) {
+          if (kDebugMode) print('Could not resolve teacher profile ID: $e');
+        }
+      }
 
-      classes.sort((a, b) {
-        String nameA = (a['name'] ?? a['nama'] ?? '').toString();
-        String nameB = (b['name'] ?? b['nama'] ?? '').toString();
-        return nameA.compareTo(nameB);
-      });
+      // Fetch subjects filtered by selected class + materi in parallel
+      final List<Future> futures = [
+        apiTeacherService.getSubjectByTeacher(teacherId, classId: selectedClassId),
+        ApiSubjectService.getMateri(teacherId: teacherId),
+      ];
+
+      final results = await Future.wait(futures);
+      if (!mounted) return;
+
+      final subject = results[0] as List<dynamic>;
+      final materi = results[1] as List<dynamic>;
 
       if (kDebugMode) {
-        print('Mata pelajaran found: ${subject.length}');
+        print('Mata pelajaran found: ${subject.length} (class: $selectedClassId)');
         print('Classes found: ${classes.length}');
       }
 
@@ -421,49 +530,34 @@ class MateriPageState extends State<MateriPage> {
           _isLoading = false;
           _subjectList = [];
           _classList = classes;
-          _debugInfo = 'Guru ini belum memiliki mata pelajaran yang ditugaskan';
+          _selectedClassId = selectedClassId;
+          _selectedClassName = selectedClassName;
+          _debugInfo = 'Guru ini belum memiliki mata pelajaran untuk kelas ini';
         });
         return;
       }
 
-      final materi = results[3] as List<dynamic>;
-
       setState(() {
-        _subjectList = subject;
         _classList = classes;
         _materiList = materi;
+        _selectedClassId = selectedClassId;
+        _selectedClassName = selectedClassName;
         _isLoading = false;
-        _debugInfo = '${subject.length} mata pelajaran ditemukan';
-
-        if (widget.initialClassId != null &&
-            classes.any((c) => c['id'] == widget.initialClassId)) {
-          _selectedClassId = widget.initialClassId;
-          _selectedClassName = widget.initialClassName;
-        } else if (classes.isNotEmpty) {
-          _selectedClassId = classes[0]['id'];
-          _selectedClassName = classes[0]['name'] ?? classes[0]['nama'];
-        }
-
-        if (widget.initialSubjectId != null &&
-            subject.any((mp) => mp['id'] == widget.initialSubjectId)) {
-          _selectedSubject = widget.initialSubjectId;
-          _loadBabMateri(_selectedSubject!);
-        } else if (subject.isNotEmpty) {
-          _selectedSubject = subject[0]['id'];
-          _loadBabMateri(_selectedSubject!);
-        }
       });
 
-      // Save to cache
+      _applySubjectList(subject);
+
+      // Save to cache (classes + per-class subjects)
       if (cacheKey != null) {
         await LocalCacheService.save(cacheKey, {
-          'subjects': subject,
           'classes': classes,
-          'materi': materi,
           'teacherProfileId': _teacherProfileId,
         });
-        if (kDebugMode) print('Saved materi data to cache');
       }
+      if (selectedClassId != null && subject.isNotEmpty) {
+        await LocalCacheService.save('materi_subjects_${teacherId}_$selectedClassId', subject);
+      }
+      if (kDebugMode) print('Saved materi data to cache');
     } catch (e) {
       if (kDebugMode) {
         print('Error loading MateriPage data: $e');
@@ -490,7 +584,7 @@ class MateriPageState extends State<MateriPage> {
       setState(() => _isLoadingBab = true);
     }
 
-    // Step 1: Try cache for instant display
+    // Step 1: Try cache → return early if hit
     if (useCache && _babMateriList.isEmpty) {
       try {
         final cached = await LocalCacheService.load(babCacheKey, ttl: const Duration(hours: 3));
@@ -522,9 +616,14 @@ class MateriPageState extends State<MateriPage> {
               }
               _debugInfo = '${cachedBab.length} bab materi, ${cachedSubBab.length} sub-bab ditemukan';
             });
-            // Load progress from DB even with cached structure
-            _loadMateriProgress(subjectId);
-            if (kDebugMode) print('Loaded bab materi from cache');
+            // Load progress from DB (always fresh — this is user-specific state)
+            await _loadMateriProgress(subjectId);
+            // Trigger tour check
+            Future.delayed(const Duration(milliseconds: 1000), () {
+              if (mounted) _checkAndShowTour();
+            });
+            if (kDebugMode) print('⚡ Loaded bab materi from cache — skipping API');
+            return; // ✅ Cache hit — no API calls for bab-material
           }
         }
       } catch (e) {
@@ -532,7 +631,7 @@ class MateriPageState extends State<MateriPage> {
       }
     }
 
-    // Step 2: Fetch fresh from API
+    // Step 2: No cache — fetch fresh from API
     try {
       final subject = _subjectList.firstWhere(
         (s) => s['id'] == subjectId,
@@ -1342,12 +1441,14 @@ class MateriPageState extends State<MateriPage> {
                         selectedClass['name'] ?? selectedClass['nama'];
                     _babMateriList = [];
                     _subBabMateriList = [];
-                    _isLoadingBab = true;
+                    _subjectList = [];
+                    _selectedSubject = null;
+                    _isLoadingBab = false;
+                    _isLoading = true;
                     _searchController.clear();
                   });
-                  if (_selectedSubject != null) {
-                    _loadBabMateri(_selectedSubject!);
-                  }
+                  // Reload subjects filtered by the new class
+                  _loadSubjectsForClass(newValue);
                 }
               },
             ),
