@@ -106,36 +106,51 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
   Future<void> _loadFilterOptions() async {
     try {
+      // Try cache first — return early on hit
+      const cacheKey = 'student_filter_options';
+      final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 6));
+      if (cached != null && cached is Map<String, dynamic>) {
+        if (!mounted) return;
+        _applyFilterOptions(cached);
+        return;
+      }
+
       final response = await ApiStudentService.getStudentFilterOptions();
 
       if (!mounted) return;
 
       if (response['success'] == true && response['data'] != null) {
-        setState(() {
-          _filterOptions = response['data'];
-          _availableGradeLevels = List<String>.from(
-            response['data']['grade_levels'] ?? [],
-          );
-          _availableClass = response['data']['kelas'] ?? [];
-          _availableGenderOptions = List<Map<String, String>>.from(
-            (response['data']['gender_options'] ?? []).map(
-              (item) => {
-                'value': item['value'].toString(),
-                'label': item['label'].toString(),
-              },
-            ),
-          );
-        });
-        if (kDebugMode) {
-          print(
-            '✅ Filter options loaded: ${_availableGradeLevels.length} grades, ${_availableClass.length} kelas',
-          );
-        }
+        // Non-blocking save
+        LocalCacheService.save(cacheKey, response['data']);
+        _applyFilterOptions(response['data']);
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error loading filter options: $e');
       }
+    }
+  }
+
+  void _applyFilterOptions(Map<String, dynamic> data) {
+    setState(() {
+      _filterOptions = data;
+      _availableGradeLevels = List<String>.from(
+        data['grade_levels'] ?? [],
+      );
+      _availableClass = data['kelas'] ?? [];
+      _availableGenderOptions = List<Map<String, String>>.from(
+        (data['gender_options'] ?? []).map(
+          (item) => {
+            'value': item['value'].toString(),
+            'label': item['label'].toString(),
+          },
+        ),
+      );
+    });
+    if (kDebugMode) {
+      print(
+        '✅ Filter options loaded: ${_availableGradeLevels.length} grades, ${_availableClass.length} kelas',
+      );
     }
   }
 
@@ -300,7 +315,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         _currentPage = 1;
         _hasMoreData = true;
 
-        // ─── Step 1: Try loading from cache for instant display ───
+        // ─── Step 1: Try cache — return early on hit ───
         if (useCache) {
           final cacheKey = _buildStudentCacheKey();
           if (cacheKey != null) {
@@ -322,6 +337,11 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                   _errorMessage = null;
                 });
                 if (kDebugMode) print('⚡ Students loaded from cache');
+                // Return early — trigger tour from cache path
+                Future.delayed(const Duration(milliseconds: 1000), () {
+                  if (mounted) _checkAndShowTour();
+                });
+                return;
               }
             } catch (e) {
               if (kDebugMode) print('⚠️ Student cache load failed: $e');
@@ -373,7 +393,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         _isLoading = false;
       });
 
-      // ─── Step 3: Save to cache (only for default view) ───
+      // ─── Step 3: Save to cache (non-blocking, only for default view) ───
       final cacheKey = _buildStudentCacheKey();
       if (cacheKey != null) {
         LocalCacheService.save(cacheKey, {
@@ -427,6 +447,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
+    await LocalCacheService.clearStartingWith('tour_student_management_');
+    await LocalCacheService.invalidate('student_filter_options');
     await _loadData(resetPage: true, useCache: false);
   }
 
@@ -2609,11 +2631,25 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check cache first — return early on hit
+      const tourCacheKey = 'tour_student_management_admin';
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id'];
+          if (mounted) _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'student_management_tour',
       );
+
+      // Save to cache (non-blocking)
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -2644,11 +2680,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_student_management_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_student_management_admin', {'should_show': false});
         }
         return true;
       },

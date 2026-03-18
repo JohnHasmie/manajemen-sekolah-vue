@@ -144,6 +144,25 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   Future<void> _loadSchoolSettings() async {
     try {
+      // ─── Cache-first: return early on hit ───
+      const cacheKey = 'school_settings';
+      try {
+        final cached = await LocalCacheService.load(
+          cacheKey,
+          ttl: const Duration(hours: 24),
+        );
+        if (cached != null && mounted) {
+          setState(() {
+            _schoolJenjang = cached['jenjang'];
+            _generateGradeLevels();
+          });
+          if (kDebugMode) print('⚡ School settings loaded from cache');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ School settings cache load failed: $e');
+      }
+
       final settings = await ApiSettingsService.getSchoolSettings();
       if (!mounted) return;
 
@@ -151,6 +170,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         _schoolJenjang = settings['jenjang'];
         _generateGradeLevels();
       });
+      // Non-blocking cache save
+      LocalCacheService.save(cacheKey, settings);
     } catch (e) {
       if (kDebugMode) {
         print('Error loading school settings: $e');
@@ -188,6 +209,24 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   Future<void> _fetchTeachers() async {
     try {
+      // ─── Cache-first: return early on hit ───
+      const cacheKey = 'teachers_all_list';
+      try {
+        final cached = await LocalCacheService.load(
+          cacheKey,
+          ttl: const Duration(hours: 6),
+        );
+        if (cached != null && mounted) {
+          setState(() {
+            _teachers = List<dynamic>.from(cached);
+          });
+          if (kDebugMode) print('⚡ Teachers list loaded from cache (${_teachers.length})');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Teachers list cache load failed: $e');
+      }
+
       // Fetch all teachers (limit 1000) to ensure we have the homeroom teacher in the list
       final response = await ApiTeacherService.getTeachersPaginated(
         limit: 1000,
@@ -197,6 +236,8 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       setState(() {
         _teachers = response['data'] ?? [];
       });
+      // Non-blocking cache save
+      LocalCacheService.save(cacheKey, response['data'] ?? []);
       if (kDebugMode) {
         print('✅ Loaded ${_teachers.length} teachers for wali kelas selection');
       }
@@ -650,6 +691,11 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                   _errorMessage = null;
                 });
                 if (kDebugMode) print('⚡ Classes loaded from cache');
+                // Cache hit → return early, no background API refresh
+                Future.delayed(const Duration(milliseconds: 1000), () {
+                  if (mounted) _checkAndShowTour();
+                });
+                return;
               }
             } catch (e) {
               if (kDebugMode) print('⚠️ Class cache load failed: $e');
@@ -741,6 +787,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
+    await LocalCacheService.clearStartingWith('tour_class_management_');
+    await LocalCacheService.invalidate('school_settings');
+    await LocalCacheService.invalidate('teachers_all_list');
     await _loadData(resetPage: true, useCache: false);
   }
 
@@ -1718,15 +1767,17 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         children: [
           Icon(icon, size: 11, color: ColorUtils.slate600),
           SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              color: ColorUtils.slate700,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 11,
+                color: ColorUtils.slate700,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -2625,11 +2676,29 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   Future<void> _checkAndShowTour() async {
     try {
+      // ─── Cache-first: skip API if tour already dismissed ───
+      const tourCacheKey = 'tour_class_management_admin';
+      try {
+        final cached = await LocalCacheService.load(
+          tourCacheKey,
+          ttl: const Duration(hours: 24),
+        );
+        if (cached != null && cached['should_show'] == false) {
+          if (kDebugMode) print('⚡ Class management tour skipped (cached)');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'admin_class_management_tour',
       );
+
+      // Non-blocking cache save
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -2660,11 +2729,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_class_management_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_class_management_admin', {'should_show': false});
         }
         return true;
       },

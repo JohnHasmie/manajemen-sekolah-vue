@@ -157,6 +157,28 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         }
       }
 
+      // ─── Cache-first: return early on hit ───
+      final cacheKey = 'teacher_filter_options_${academicYearId ?? 'default'}';
+      try {
+        final cached = await LocalCacheService.load(
+          cacheKey,
+          ttl: const Duration(hours: 6),
+        );
+        if (cached != null && mounted) {
+          final cachedData = Map<String, dynamic>.from(cached);
+          setState(() {
+            _availableClass = List<dynamic>.from(cachedData['kelas'] ?? []);
+            _availableGenders = List<dynamic>.from(cachedData['gender_options'] ?? []);
+            _availableEmploymentStatus =
+                List<dynamic>.from(cachedData['employment_status_options'] ?? []);
+          });
+          if (kDebugMode) print('⚡ Teacher filter options loaded from cache');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Teacher filter cache load failed: $e');
+      }
+
       final response = await ApiTeacherService.getTeacherFilterOptions(
         academicYearId: academicYearId,
       );
@@ -169,6 +191,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
           _availableGenders = response['data']['gender_options'] ?? [];
           _availableEmploymentStatus =
               response['data']['employment_status_options'] ?? [];
+        });
+        // Non-blocking cache save
+        LocalCacheService.save(cacheKey, {
+          'kelas': response['data']['kelas'] ?? [],
+          'gender_options': response['data']['gender_options'] ?? [],
+          'employment_status_options': response['data']['employment_status_options'] ?? [],
         });
         if (kDebugMode) {
           print(
@@ -879,6 +907,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                   _errorMessage = null;
                 });
                 if (kDebugMode) print('⚡ Teachers loaded from cache');
+                // Cache hit → return early, no background API refresh
+                Future.delayed(const Duration(milliseconds: 1000), () {
+                  if (mounted) _checkAndShowTour();
+                });
+                return;
               }
             } catch (e) {
               if (kDebugMode) print('⚠️ Teacher cache load failed: $e');
@@ -990,6 +1023,12 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
+    await LocalCacheService.clearStartingWith('tour_teacher_admin_');
+    final yearId = Provider.of<AcademicYearProvider>(
+      context,
+      listen: false,
+    ).selectedAcademicYear?['id']?.toString() ?? 'default';
+    await LocalCacheService.invalidate('teacher_filter_options_$yearId');
     await _loadData(resetPage: true, useCache: false);
   }
 
@@ -2449,15 +2488,17 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         children: [
           Icon(icon, size: 11, color: ColorUtils.slate600),
           SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              color: ColorUtils.slate700,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 11,
+                color: ColorUtils.slate700,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -2860,11 +2901,29 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // ─── Cache-first: skip API if tour already dismissed ───
+      const tourCacheKey = 'tour_teacher_admin_screen_admin';
+      try {
+        final cached = await LocalCacheService.load(
+          tourCacheKey,
+          ttl: const Duration(hours: 24),
+        );
+        if (cached != null && cached['should_show'] == false) {
+          if (kDebugMode) print('⚡ Teacher admin tour skipped (cached)');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'teacher_admin_tour',
       );
+
+      // Non-blocking cache save
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -2895,11 +2954,13 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_teacher_admin_screen_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_teacher_admin_screen_admin', {'should_show': false});
         }
         return true;
       },
