@@ -10,6 +10,7 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/services/api_class_activity_services.dart';
+import 'package:manajemensekolah/providers/teacher_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -126,6 +127,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   }
 
   void _handleTabSelection() {
+    // TabController listener fires twice (animation start + end).
+    // Only react once — after the animation settles.
+    if (_tabController.indexIsChanging) return;
+
     setState(() {
       _currentTarget = _tabController.index == 0 ? 'umum' : 'khusus';
     });
@@ -554,17 +559,16 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       print('===== _loadUserData STARTED =====');
     }
     try {
+      // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
+      final teacherProvider = Provider.of<TeacherProvider>(
+        context,
+        listen: false,
+      );
+
       final prefs = await SharedPreferences.getInstance();
       final userData = json.decode(prefs.getString('user') ?? '{}');
-
-      final userId = userData['id']?.toString() ?? '';
       final role = userData['role']?.toString().toLowerCase() ?? '';
       final isAdmin = role == 'admin' || role == 'super_admin';
-
-      setState(() {
-        _teacherId = userId; // Initially set to userId
-        _teacherName = userData['nama']?.toString() ?? 'Guru';
-      });
 
       // Early cache load using persisted last cache key
       if (_classList.isEmpty) {
@@ -580,7 +584,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                 if (_classList.isNotEmpty) _isLoading = false;
               });
               if (kDebugMode) {
-                print('Loaded ${_classList.length} classes from early cache');
+                print('⚡ Loaded ${_classList.length} classes from early cache');
               }
             }
           } catch (e) {
@@ -588,6 +592,40 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           }
         }
       }
+
+      if (!isAdmin && teacherProvider.isLoaded && teacherProvider.teacherId != null) {
+        // ✅ Use cached data from provider — no API calls needed
+        if (kDebugMode) {
+          print('⚡ Using TeacherProvider cache (teacherId=${teacherProvider.teacherId})');
+        }
+
+        setState(() {
+          _teacherId = teacherProvider.teacherId!;
+          _teacherName = teacherProvider.teacherName ?? 'Guru';
+        });
+
+        // Load classes and schedule using cached teacher ID
+        await Future.wait([
+          _loadClasses(teacherProvider.teacherId!, isAdmin: false),
+          _loadSchedule(teacherProvider.teacherId!),
+        ]);
+
+        // If initial params provided, try to navigate deep
+        await _handleInitialNavigation();
+        return;
+      }
+
+      // ─── Step 2: Fallback — fetch from API (direct navigation, deep link, etc.) ───
+      if (kDebugMode) {
+        print('📡 TeacherProvider empty, falling back to API');
+      }
+
+      final userId = userData['id']?.toString() ?? '';
+
+      setState(() {
+        _teacherId = userId; // Initially set to userId
+        _teacherName = userData['nama']?.toString() ?? 'Guru';
+      });
 
       if (kDebugMode) {
         print('User ID from prefs: $userId');
@@ -604,10 +642,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           // Teacher Case: Resolve Teacher ID
           try {
             String? resolvedTeacherId;
-            Map<String, dynamic>? teacherData;
 
-            // 1. Check if userData itself is already a teacher record
-            // Teacher records usually have employee_number/nip and a user_id pointing to the user table
             final looksLikeTeacher =
                 userData.containsKey('employee_number') ||
                 userData.containsKey('nip') ||
@@ -621,58 +656,53 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               }
               resolvedTeacherId = userId;
             } else {
-              // 2. Try to resolve via API if it looks like a generic user record
-              teacherData = await ApiTeacherService.getGuruByUserId(userId);
-              if (teacherData != null && teacherData['id'] != null) {
-                resolvedTeacherId = teacherData['id'].toString();
-                if (kDebugMode) {
-                  print('Resolved Teacher ID from API: $resolvedTeacherId');
+              // Try TeacherProvider.ensureLoaded first
+              String? academicYearId;
+              try {
+                if (mounted) {
+                  academicYearId = Provider.of<AcademicYearProvider>(
+                    context,
+                    listen: false,
+                  ).selectedAcademicYear?['id']?.toString();
+                }
+              } catch (e) {}
+
+              await teacherProvider.ensureLoaded(academicYearId: academicYearId);
+
+              if (teacherProvider.teacherId != null) {
+                resolvedTeacherId = teacherProvider.teacherId;
+              } else {
+                // Last resort: direct API call
+                final teacherData = await ApiTeacherService.getGuruByUserId(
+                  userId,
+                  academicYearId: academicYearId,
+                );
+                if (teacherData != null && teacherData['id'] != null) {
+                  resolvedTeacherId = teacherData['id'].toString();
                 }
               }
             }
 
             if (resolvedTeacherId != null) {
+              if (kDebugMode) print('✅ Resolved Teacher ID: $resolvedTeacherId');
               setState(() {
-                _teacherId =
-                    resolvedTeacherId!; // Update to Teacher ID for activities
+                _teacherId = resolvedTeacherId!;
               });
 
-              // 2. Load Classes using TEACHER ID
               await Future.wait([
                 _loadClasses(resolvedTeacherId, isAdmin: false),
-                _loadSchedule(
-                  resolvedTeacherId,
-                ), // Load schedule for dialog filtering
+                _loadSchedule(resolvedTeacherId),
               ]);
 
-              // If initial params provided, try to navigate deep
-              if (widget.initialClassId != null) {
-                _selectedClassId = widget.initialClassId;
-                _selectedClassName = widget.initialClassName;
-                _currentStep = 1; // Basic step
-
-                // Always load subjects for the class so the list is ready if we go back
-                await _loadSubjectsForClass();
-
-                if (widget.initialSubjectId != null) {
-                  _selectedSubjectId = widget.initialSubjectId;
-                  // Need to find subject name? Or rely on initialSubjectName
-                  _selectedSubjectName =
-                      widget.initialSubjectName; // Assuming passed
-                  _currentStep = 2; // Go to Activity List
-                  await _loadActivities();
-                }
-              }
+              await _handleInitialNavigation();
             } else {
               // FALLBACK: Teacher resolution failed.
-              // This might be an Admin whose role wasn't saved in prefs.
               if (kDebugMode) {
                 print(
                   '❌ Failed to resolve Teacher ID. Attempting fallback as Admin...',
                 );
               }
 
-              // Try loading classes as if Admin
               await _loadClasses(userId, isAdmin: true);
 
               if (_classList.isNotEmpty) {
@@ -683,7 +713,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                   print(
                     '❌ Fallback failed: No classes loaded or not authorized',
                   );
-                // Only now stop loading
                 setState(() => _isLoading = false);
               }
             }
@@ -708,6 +737,24 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
       setState(() => _isLoading = false);
+    }
+  }
+
+  /// Handle deep navigation from initial parameters (extracted to avoid duplication)
+  Future<void> _handleInitialNavigation() async {
+    if (widget.initialClassId != null) {
+      _selectedClassId = widget.initialClassId;
+      _selectedClassName = widget.initialClassName;
+      _currentStep = 1;
+
+      await _loadSubjectsForClass();
+
+      if (widget.initialSubjectId != null) {
+        _selectedSubjectId = widget.initialSubjectId;
+        _selectedSubjectName = widget.initialSubjectName;
+        _currentStep = 2;
+        await _loadActivities();
+      }
     }
   }
 
