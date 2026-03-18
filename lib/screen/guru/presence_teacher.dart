@@ -7,6 +7,7 @@ import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/components/tab_switcher.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/providers/teacher_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -133,6 +134,9 @@ class PresencePageState extends State<PresencePage>
 
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
+      // TabController listener fires twice (animation start + end).
+      // Only react once — after the animation settles.
+      if (_tabController.indexIsChanging) return;
       if (!mounted) return;
       setState(() {
         // Trigger rebuild when tab changes
@@ -182,6 +186,35 @@ class PresencePageState extends State<PresencePage>
     _loadInitialData(useCache: false);
   }
 
+  /// Load a single data source with cache-first pattern.
+  /// Returns cached data if available, otherwise fetches from API and saves to cache.
+  Future<List<dynamic>> _loadWithCache({
+    required String cacheKey,
+    required Duration ttl,
+    required Future<List<dynamic>> Function() apiFetcher,
+    bool useCache = true,
+  }) async {
+    // Try cache first
+    if (useCache) {
+      try {
+        final cached = await LocalCacheService.load(cacheKey, ttl: ttl);
+        if (cached != null) {
+          if (kDebugMode) print('⚡ Cache hit: $cacheKey');
+          return List<dynamic>.from(cached);
+        }
+      } catch (e) {
+        if (kDebugMode) print('Cache load error ($cacheKey): $e');
+      }
+    }
+
+    // Fetch from API
+    final data = await apiFetcher();
+    if (data.isNotEmpty) {
+      LocalCacheService.save(cacheKey, data);
+    }
+    return data;
+  }
+
   Future<void> _loadInitialData({bool useCache = true}) async {
     try {
       final academicYearId = context
@@ -190,8 +223,21 @@ class PresencePageState extends State<PresencePage>
           ?.toString();
 
       final cacheKey = _buildPresenceCacheKey();
+      final teacherId = widget.teacher['id']?.toString() ?? '';
 
-      // Step 1: Try cache for instant display
+      // ─── Step 1: Try TeacherProvider for classList (populated by Dashboard) ───
+      final teacherProvider = Provider.of<TeacherProvider>(
+        context,
+        listen: false,
+      );
+
+      List<dynamic>? providerClassList;
+      if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
+        providerClassList = teacherProvider.allClasses;
+        if (kDebugMode) print('⚡ Using TeacherProvider classList (${providerClassList.length} classes)');
+      }
+
+      // Step 2: Try composite local cache for instant display
       if (useCache && _classList.isEmpty && cacheKey != null) {
         try {
           final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
@@ -209,32 +255,66 @@ class PresencePageState extends State<PresencePage>
               }
               if (_classList.isNotEmpty) _isLoadingInput = false;
             });
-            if (kDebugMode) print('Loaded presence data from cache');
+            if (kDebugMode) print('⚡ Loaded presence composite cache');
           }
         } catch (e) {
           if (kDebugMode) print('Presence cache load error: $e');
         }
       }
 
-      // Step 2: Show loading only if still empty
+      // If provider has classes, use them immediately for display
+      if (_classList.isEmpty && providerClassList != null && mounted) {
+        setState(() {
+          _classList = providerClassList!;
+          if (_classList.isNotEmpty) _isLoadingInput = false;
+        });
+      }
+
+      // Step 3: Show loading only if still empty
       if (_classList.isEmpty && mounted) {
         setState(() => _isLoadingInput = true);
       }
 
-      // Step 3: Fetch fresh from API
-      final [classList, studentList, lessonHours] = await Future.wait([
-        ApiTeacherService.getTeacherClasses(
-          widget.teacher['id'],
-          academicYearId: academicYearId,
-        ),
-        ApiStudentService.getStudent(academicYearId: academicYearId),
-        ApiScheduleService.getJamPelajaran(),
-      ]);
+      // Step 4: Fetch data — each source uses its own cache
+      final classListFuture = providerClassList != null
+          ? Future.value(providerClassList)
+          : _loadWithCache(
+              cacheKey: 'presence_classes_${teacherId}_$academicYearId',
+              ttl: const Duration(hours: 6),
+              apiFetcher: () => ApiTeacherService.getTeacherClasses(
+                teacherId,
+                academicYearId: academicYearId,
+              ),
+              useCache: useCache,
+            );
 
-      final subjects = await _getSubjectByTeacher(
-        widget.teacher['id'],
-        classId: _selectedClassId,
+      final studentFuture = _loadWithCache(
+        cacheKey: 'school_student_data_$academicYearId',
+        ttl: const Duration(hours: 6),
+        apiFetcher: () => ApiStudentService.getStudent(academicYearId: academicYearId),
+        useCache: useCache,
       );
+
+      final lessonHourFuture = _loadWithCache(
+        cacheKey: 'school_lesson_hour_data',
+        ttl: const Duration(hours: 24),
+        apiFetcher: () => ApiScheduleService.getJamPelajaran(),
+        useCache: useCache,
+      );
+
+      final subjectFuture = _loadWithCache(
+        cacheKey: 'presence_subjects_${teacherId}_${_selectedClassId ?? 'all'}',
+        ttl: const Duration(hours: 3),
+        apiFetcher: () => _getSubjectByTeacher(teacherId, classId: _selectedClassId),
+        useCache: useCache,
+      );
+
+      final [classList, studentList, lessonHours, subjects] = await Future.wait([
+        classListFuture,
+        studentFuture,
+        lessonHourFuture,
+        subjectFuture,
+      ]);
 
       if (!mounted) return;
 
@@ -252,7 +332,7 @@ class PresencePageState extends State<PresencePage>
         _isLoadingInput = false;
       });
 
-      // Save to cache
+      // Save composite cache for early loading next time
       if (cacheKey != null) {
         await LocalCacheService.save(cacheKey, {
           'classList': classList,
@@ -260,7 +340,6 @@ class PresencePageState extends State<PresencePage>
           'lessonHours': lessonHours,
           'studentList': studentList,
         });
-        if (kDebugMode) print('Saved presence initial data to cache');
       }
 
       // Auto-detect current schedule if not initialized from teaching_schedule
@@ -420,23 +499,73 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
-  // Load today's schedules and detect current one
+  // Load today's schedules and detect current one.
+  // Uses cached schedule from teaching_schedule screen if available — NO extra API call.
   Future<void> _detectCurrentSchedule() async {
     try {
-      final schedules = await ApiScheduleService.getSchedule(
-        teacherId: widget.teacher['id'],
-        dayId: _getCurrentDayId(),
-        semesterId: _getCurrentSemester(),
-        academicYear: _getCurrentAcademicYear(),
-      );
+      final teacherId = widget.teacher['id']?.toString() ?? '';
+      final dayId = _getCurrentDayId();
+
+      // ─── Try teaching_schedule's cached data first (already fetched by that screen) ───
+      List<dynamic>? todaySchedules;
+
+      // Search for any matching teaching_schedule cache
+      final possibleCacheKeys = <String>[];
+      // Teaching schedule caches with pattern: schedule_teacher_{id}_{semester}_{year}
+      final semester = _getCurrentSemester();
+      final academicYear = _getCurrentAcademicYear();
+      possibleCacheKeys.add('schedule_teacher_${teacherId}_${semester}_$academicYear');
+
+      for (final key in possibleCacheKeys) {
+        try {
+          final cached = await LocalCacheService.load(key, ttl: const Duration(hours: 3));
+          if (cached != null) {
+            final cachedData = Map<String, dynamic>.from(cached);
+            final allSchedules = List<dynamic>.from(cachedData['jadwal'] ?? []);
+
+            if (allSchedules.isNotEmpty) {
+              // Filter locally by today's day ID
+              todaySchedules = allSchedules.where((s) {
+                final sDayId = (s['day_id'] ?? s['hari_id'] ?? '').toString();
+                // Also check days_ids array
+                final daysIds = s['days_ids'];
+                if (sDayId == dayId) return true;
+                if (daysIds is List) {
+                  return daysIds.any((id) => id.toString() == dayId);
+                }
+                if (daysIds is String) {
+                  return daysIds.contains(dayId);
+                }
+                return false;
+              }).toList();
+
+              if (kDebugMode) print('⚡ Detected today schedule from teaching_schedule cache (${todaySchedules.length} items)');
+              break;
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) print('Cache read error ($key): $e');
+        }
+      }
+
+      // ─── Fallback: fetch from API only if no cache available ───
+      if (todaySchedules == null) {
+        if (kDebugMode) print('📡 No schedule cache, fetching from API');
+        todaySchedules = await ApiScheduleService.getSchedule(
+          teacherId: teacherId,
+          dayId: dayId,
+          semesterId: semester,
+          academicYear: academicYear,
+        );
+      }
 
       setState(() {
-        if (schedules.isNotEmpty) {
+        if (todaySchedules != null && todaySchedules.isNotEmpty) {
           // Find current schedule based on time
           Map<String, dynamic>? currentSchedule;
-          for (var schedule in schedules) {
-            final startTime = schedule['jam_mulai']?.toString() ?? '';
-            final endTime = schedule['jam_selesai']?.toString() ?? '';
+          for (var schedule in todaySchedules) {
+            final startTime = (schedule['jam_mulai'] ?? schedule['start_time'] ?? '').toString();
+            final endTime = (schedule['jam_selesai'] ?? schedule['end_time'] ?? '').toString();
 
             if (_isWithinScheduleTime(startTime, endTime)) {
               currentSchedule = schedule;
@@ -445,15 +574,15 @@ class PresencePageState extends State<PresencePage>
           }
 
           if (currentSchedule != null) {
-            _selectedSubjectId = currentSchedule['mata_pelajaran_id']
+            _selectedSubjectId = (currentSchedule['mata_pelajaran_id'] ?? currentSchedule['subject_id'])
                 ?.toString();
-            _selectedClassId = currentSchedule['kelas_id']?.toString();
+            _selectedClassId = (currentSchedule['kelas_id'] ?? currentSchedule['class_id'])?.toString();
             _filterStudentsByClass(_selectedClassId);
           }
         }
       });
     } catch (e) {
-      print('Error detecting current schedule: $e');
+      if (kDebugMode) print('Error detecting current schedule: $e');
     }
   }
 
