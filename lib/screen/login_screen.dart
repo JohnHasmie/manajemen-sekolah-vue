@@ -119,56 +119,6 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handleTokenExpired() async {
-    await _clearAllData();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.info_outline, color: Colors.white, size: 20),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Sesi telah berakhir. Silakan login kembali.',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: const Color(0xFF0D47A1),
-          duration: Duration(seconds: 8),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          action: SnackBarAction(
-            label: '✕',
-            textColor: Colors.white,
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-          ),
-        ),
-      );
-
-      // Clear state
-      setState(() {
-        _isLoading = false;
-        _showSchoolSelection = false;
-        _showRoleSelection = false;
-        _schoolList = [];
-        _roleList = [];
-        _selectedSchool = null;
-        _userData = null;
-        _selectedSchoolId = null;
-      });
-
-      // Clear form
-      emailController.clear();
-      passwordController.clear();
-    }
-  }
 
   Future<void> login() async {
     if (!_serverConnected) {
@@ -221,40 +171,40 @@ class LoginScreenState extends State<LoginScreen> {
         print('❌ Login error: $error');
       }
 
-      String errorMessage = ErrorUtils.getFriendlyMessage(error);
       final errorStr = error.toString().toLowerCase();
 
       // Check if this is an "unregistered email" error
+      // Backend may return 401 with generic message, so also check for 401
+      // combined with login context (no active session = unregistered or wrong creds)
       final isUnregistered = errorStr.contains('email tidak terdaftar') ||
           errorStr.contains('email not registered') ||
           errorStr.contains('user not found') ||
           errorStr.contains('user tidak ditemukan') ||
           errorStr.contains('no account found') ||
-          errorStr.contains('akun tidak ditemukan');
+          errorStr.contains('akun tidak ditemukan') ||
+          errorStr.contains('belum terdaftar') ||
+          errorStr.contains('tidak memiliki akun');
 
       if (mounted) {
         if (isUnregistered) {
           _showUnregisteredDialog();
         } else {
+          // On login screen, 401 means wrong credentials — NOT session expired
+          final friendlyMessage = (errorStr.contains('401') ||
+                  errorStr.contains('unauthorized'))
+              ? 'Email atau password salah, atau akun belum terdaftar. Silakan periksa kembali.'
+              : ErrorUtils.getFriendlyMessage(error);
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(errorMessage),
+              content: Text(friendlyMessage),
               backgroundColor: Colors.red.shade700,
             ),
           );
         }
       }
 
-      // Only trigger session expired for actual 401/unauthorized errors,
-      // not for errors that merely contain the word "token" in their message
-      if (errorStr.contains('401') ||
-          errorStr.contains('session expired') ||
-          errorStr.contains('unauthorized')) {
-        _handleTokenExpired();
-      } else {
-        // Clear data on any login failure to be safe
-        await _clearAllData();
-      }
+      await _clearAllData();
 
       if (mounted) {
         setState(() {

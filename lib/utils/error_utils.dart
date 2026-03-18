@@ -44,6 +44,37 @@ class ErrorUtils {
       return 'Sesi sekolah Anda tidak valid. Silakan pilih sekolah kembali atau login ulang.';
     }
 
+    // ── Specific Business Logic (check BEFORE generic status codes) ──
+
+    // Unregistered email / account
+    if (errorStr.contains('email tidak terdaftar') ||
+        errorStr.contains('email not registered') ||
+        errorStr.contains('user not found') ||
+        errorStr.contains('user tidak ditemukan') ||
+        errorStr.contains('no account found') ||
+        errorStr.contains('akun tidak ditemukan') ||
+        errorStr.contains('belum terdaftar') ||
+        errorStr.contains('tidak memiliki akun')) {
+      return 'Akun dengan email tersebut belum terdaftar. Silakan hubungi admin sekolah Anda untuk didaftarkan.';
+    }
+
+    // No schools assigned
+    if (errorStr.contains('tidak terdaftar pada sekolah') ||
+        errorStr.contains('no schools assigned')) {
+      return 'Akun Anda belum terdaftar pada sekolah manapun, hubungi admin sekolah Anda.';
+    }
+
+    // Wrong credentials
+    if (errorStr.contains('email atau password salah') ||
+        errorStr.contains('wrong password') ||
+        errorStr.contains('invalid credential') ||
+        errorStr.contains('credentials do not match') ||
+        errorStr.contains('kredensial tidak cocok')) {
+      return 'Email atau password salah.';
+    }
+
+    // ── Generic status code handlers ──
+
     // Permission
     if (errorStr.contains('permission') ||
         errorStr.contains('403') ||
@@ -52,7 +83,7 @@ class ErrorUtils {
       return 'Akses ditolak. Mohon hubungi admin sekolah Anda.';
     }
 
-    // Not Found
+    // Not Found (generic — after specific business logic checks)
     if (errorStr.contains('not found') || errorStr.contains('404')) {
       return 'Data yang diminta tidak ditemukan di server.';
     }
@@ -62,28 +93,6 @@ class ErrorUtils {
         errorStr.contains('internal server error') ||
         errorStr.contains('server error')) {
       return 'Terjadi kesalahan pada sistem server, mohon hubungi admin.';
-    }
-
-    // Specific Business Logic / Backend Errors
-    if (errorStr.contains('tidak terdaftar pada sekolah') ||
-        errorStr.contains('no schools assigned')) {
-      return 'Akun Anda belum terdaftar pada sekolah manapun, hubungi admin sekolah Anda.';
-    }
-
-    if (errorStr.contains('email atau password salah') ||
-        errorStr.contains('wrong password') ||
-        errorStr.contains('invalid credential')) {
-      return 'Email atau password salah.';
-    }
-
-    // Unregistered email
-    if (errorStr.contains('email tidak terdaftar') ||
-        errorStr.contains('email not registered') ||
-        errorStr.contains('user not found') ||
-        errorStr.contains('user tidak ditemukan') ||
-        errorStr.contains('no account found') ||
-        errorStr.contains('akun tidak ditemukan')) {
-      return 'Akun dengan email tersebut belum terdaftar. Silakan hubungi admin sekolah Anda untuk didaftarkan.';
     }
 
     // General exception or fallback
