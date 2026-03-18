@@ -1897,11 +1897,13 @@ class MateriPageState extends State<MateriPage> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_materi_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_materi_screen_guru', {'should_show': false});
         }
         return true;
       },

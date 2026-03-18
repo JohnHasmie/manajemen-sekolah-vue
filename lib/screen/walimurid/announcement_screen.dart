@@ -1108,11 +1108,13 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_announcement_screen_$_userRole', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_announcement_screen_$_userRole', {'should_show': false});
         }
         return true;
       },

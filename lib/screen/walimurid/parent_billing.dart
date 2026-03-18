@@ -116,6 +116,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('parent_billing_');
+    await LocalCacheService.clearStartingWith('tour_parent_billing_');
     _loadInitialData(useCache: false);
   }
 
@@ -124,10 +125,10 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
   }
 
   Future<void> _loadInitialData({bool useCache = true}) async {
-    // Step 1: Try cache for instant display
+    // Step 1: Try cache — return early on hit
     if (useCache) {
       final studentsCacheKey = _buildStudentsCacheKey();
-      final cachedStudents = await LocalCacheService.load(studentsCacheKey);
+      final cachedStudents = await LocalCacheService.load(studentsCacheKey, ttl: const Duration(hours: 6));
       if (cachedStudents != null && cachedStudents is List && cachedStudents.isNotEmpty) {
         if (!mounted) return;
         final parsedStudents = cachedStudents.map((s) => Siswa.fromJson(s)).toList();
@@ -140,8 +141,12 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
           _isLoading = false;
           _errorMessage = '';
         });
-        // Also try loading cached billing
+        // Load cached billing then return early
         await _loadTagihan(useCache: true);
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (mounted && _students.isNotEmpty) _checkAndShowTour();
+        });
+        return;
       }
     }
 
@@ -190,8 +195,8 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
 
       if (!mounted) return;
 
-      // Save students to cache
-      await LocalCacheService.save(_buildStudentsCacheKey(), filteredStudents);
+      // Save students to cache (non-blocking)
+      LocalCacheService.save(_buildStudentsCacheKey(), filteredStudents);
 
       if (filteredStudents.isNotEmpty) {
         _students = filteredStudents.map((s) => Siswa.fromJson(s)).toList();
@@ -227,11 +232,25 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check cache first — return early on hit
+      const tourCacheKey = 'tour_parent_billing_screen_wali';
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id'];
+          if (mounted) _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'wali',
         name: 'parent_billing_screen_tour',
       );
+
+      // Save to cache (non-blocking)
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -262,11 +281,13 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_parent_billing_screen_wali', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_parent_billing_screen_wali', {'should_show': false});
         }
         return true;
       },
@@ -383,14 +404,17 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
 
     final cacheKey = _buildBillingCacheKey();
 
-    // Step 1: Try cache for instant display
+    // Step 1: Try cache — return early on hit
     if (useCache) {
-      final cached = await LocalCacheService.load(cacheKey);
+      final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
       if (cached != null && cached is List && cached.isNotEmpty) {
         if (!mounted) return;
         setState(() {
           _billingList = List<dynamic>.from(cached);
         });
+        // Mark read only if there are unread items
+        _markBillReadIfNeeded();
+        return;
       }
     }
 
@@ -403,17 +427,28 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
       if (!mounted) return;
 
       final freshList = response is List ? response : [];
-      await LocalCacheService.save(cacheKey, freshList);
+      // Non-blocking save
+      LocalCacheService.save(cacheKey, freshList);
 
       setState(() {
         _billingList = freshList;
       });
 
-      ApiService.markBillRead(studentId: _selectedStudentId!);
+      // Mark read only if there are unread items
+      _markBillReadIfNeeded();
     } catch (error) {
       if (kDebugMode) {
         print('Error loading tagihan: $error');
       }
+    }
+  }
+
+  void _markBillReadIfNeeded() {
+    if (_selectedStudentId == null) return;
+    final hasUnread = _billingList.any((b) =>
+        b['is_read'] != true && b['is_read'] != 1 && b['is_read'] != '1');
+    if (hasUnread) {
+      ApiService.markBillRead(studentId: _selectedStudentId!);
     }
   }
 

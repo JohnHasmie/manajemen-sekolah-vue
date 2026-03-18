@@ -2987,11 +2987,13 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_rekap_nilai_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_rekap_nilai_screen_guru', {'should_show': false});
         }
         return true;
       },

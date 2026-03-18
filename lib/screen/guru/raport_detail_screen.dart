@@ -1321,11 +1321,13 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_raport_detail_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_raport_detail_screen_guru', {'should_show': false});
         }
         return true;
       },

@@ -134,13 +134,14 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.invalidate(_cacheKey);
+    await LocalCacheService.clearStartingWith('tour_parent_presence_');
     _loadData(useCache: false);
   }
 
   Future<void> _loadData({bool useCache = true}) async {
-    // Step 1: Try cache for instant display
+    // Try cache — return early if hit
     if (useCache) {
-      final cached = await LocalCacheService.load(_cacheKey);
+      final cached = await LocalCacheService.load(_cacheKey, ttl: const Duration(hours: 3));
       if (cached != null && cached is Map<String, dynamic>) {
         if (!mounted) return;
         if (cached['absensiData'] != null) {
@@ -154,18 +155,21 @@ class PresenceParentPageState extends State<PresenceParentPage> {
             _calculateMonthlySummary();
             _isLoading = false;
           });
+          if (kDebugMode) print('📦 PresenceParent: from cache (${_absensiData.length})');
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted && _student != null) _checkAndShowTour();
+          });
+          return;
         }
       }
     }
 
-    // Step 2: Show loading only if no data yet
+    // No cache — fetch from API
     if (_absensiData.isEmpty && mounted) {
       setState(() => _isLoading = true);
     }
 
-    // Step 3: Fetch fresh from API, save to cache, update UI
     try {
-      // Load data siswa
       final userId = widget.parent['id']?.toString();
       final guardianEmail = widget.parent['email']?.toString();
 
@@ -177,7 +181,6 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           .map((s) => Siswa.fromJson(s))
           .firstWhere((s) => s.id == widget.studentId);
 
-      // Load data absensi
       final absensiData = await ApiService.getAbsensi(
         studentId: widget.studentId,
         academicYearId: widget.academicYearId,
@@ -191,30 +194,23 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         _isLoading = false;
       });
 
-      // Save to cache
-      await LocalCacheService.save(_cacheKey, {
+      // Save to cache (non-blocking)
+      LocalCacheService.save(_cacheKey, {
         'studentData': student.toJson(),
         'absensiData': absensiData,
       });
 
-      // Mark notifications as read
-      ApiService.markAttendanceRead(studentId: widget.studentId);
-
-      if (kDebugMode) {
-        print(
-          'Loaded ${_absensiData.length} absensi records for student ${_student?.name}',
-        );
+      // Mark notifications as read — only if there are unread items
+      final hasUnread = absensiData.any((a) =>
+          a['is_read'] != true && a['is_read'] != 1 && a['is_read'] != '1');
+      if (hasUnread) {
+        ApiService.markAttendanceRead(studentId: widget.studentId);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading parent presence data: $e');
-      }
+      if (kDebugMode) print('Error loading parent presence data: $e');
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
 
-      // Only show error if no cached data available
       if (_absensiData.isEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -231,16 +227,28 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   }
 
   Future<void> _checkAndShowTour() async {
+    const tourCacheKey = 'tour_parent_presence_screen_wali';
     try {
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'wali',
         name: 'parent_presence_screen_tour',
       );
 
+      LocalCacheService.save(tourCacheKey, status);
+
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
-
         if (!mounted) return;
         _showTour();
       }
@@ -267,11 +275,13 @@ class PresenceParentPageState extends State<PresenceParentPage> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_parent_presence_screen_wali', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_parent_presence_screen_wali', {'should_show': false});
         }
         return true;
       },

@@ -1467,11 +1467,13 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
         }
         return true;
       },

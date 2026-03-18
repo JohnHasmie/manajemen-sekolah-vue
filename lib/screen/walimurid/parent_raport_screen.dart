@@ -49,24 +49,43 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('parent_raport_');
+    await LocalCacheService.clearStartingWith('school_day_data');
     _loadData(useCache: false);
   }
 
+  Future<void> _resolveSemester() async {
+    // Use shared school_day_data cache (24h TTL) instead of direct API call
+    final cached = await LocalCacheService.load('school_day_data', ttl: const Duration(hours: 24));
+    Map<String, dynamic>? dateBasedSemester;
+
+    if (cached != null && cached is Map<String, dynamic>) {
+      dateBasedSemester = cached;
+    } else {
+      dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      // Non-blocking save
+      LocalCacheService.save('school_day_data', dateBasedSemester);
+    }
+
+    if (dateBasedSemester.containsKey('semester') &&
+        dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+      _selectedSemesterId = '2';
+    }
+  }
+
   Future<void> _loadData({bool useCache = true}) async {
-    // Step 1: Try cache for instant display
-    if (useCache) {
-      // We need parentData for _buildCacheKey context, load it first
+    // Load parent data
+    if (_parentData.isEmpty || _parentData['id'] == null) {
       final prefs = await SharedPreferences.getInstance();
       _parentData = json.decode(prefs.getString('user') ?? '{}');
+    }
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        _selectedSemesterId = '2';
-      }
+    // Resolve semester
+    await _resolveSemester();
 
+    // Step 1: Try cache — return early on hit
+    if (useCache) {
       final cacheKey = _buildCacheKey();
-      final cached = await LocalCacheService.load(cacheKey);
+      final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
       if (cached != null && cached is List && cached.isNotEmpty) {
         if (!mounted) return;
         setState(() {
@@ -74,6 +93,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
           _isLoading = false;
           _errorMessage = '';
         });
+        return;
       }
     }
 
@@ -88,22 +108,9 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
     // Step 3: Fetch fresh from API
     try {
       if (_parentData.isEmpty || _parentData['id'] == null) {
-        final prefs = await SharedPreferences.getInstance();
-        _parentData = json.decode(prefs.getString('user') ?? '{}');
-      }
-
-      if (_parentData.isEmpty || _parentData['id'] == null) {
         throw Exception(
           "Sesi wali murid tidak ditemukan. Silakan login kembali.",
         );
-      }
-
-      if (!useCache) {
-        final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
-        if (dateBasedSemester.containsKey('semester') &&
-            dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-          _selectedSemesterId = '2';
-        }
       }
 
       await _fetchParentRaports();
@@ -141,8 +148,8 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
         final freshData = jsonResponse['data'] ?? [];
         if (!mounted) return;
 
-        // Save to cache
-        await LocalCacheService.save(_buildCacheKey(), freshData);
+        // Save to cache (non-blocking)
+        LocalCacheService.save(_buildCacheKey(), freshData);
 
         setState(() {
           _studentsData = freshData;
@@ -392,7 +399,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
                                   CircleAvatar(
                                     radius: 24,
                                     backgroundColor: ColorUtils.corporateBlue600
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                     child: Text(
                                       (student['student']['name'] ?? '?')[0]
                                           .toUpperCase(),

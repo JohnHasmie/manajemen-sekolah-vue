@@ -207,11 +207,13 @@ class _LearningRecommendationResultScreenState
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_recommendation_result_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_recommendation_result_screen_guru', {'should_show': false});
         }
         return true;
       },

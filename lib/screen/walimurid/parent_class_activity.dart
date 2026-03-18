@@ -367,11 +367,13 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_parent_class_activity_screen_wali', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_parent_class_activity_screen_wali', {'should_show': false});
         }
         return true;
       },

@@ -120,6 +120,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('parent_grade_');
+    await LocalCacheService.clearStartingWith('tour_parent_grade_');
     _loadUserData(useCache: false);
   }
 
@@ -146,9 +147,9 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   }
 
   Future<void> _loadStudentsForParent({bool useCache = true}) async {
-    // Step 1: Try cache for instant display
+    // Try cache — return early if hit
     if (useCache) {
-      final cached = await LocalCacheService.load(_studentsCacheKey);
+      final cached = await LocalCacheService.load(_studentsCacheKey, ttl: const Duration(hours: 6));
       if (cached != null && cached is List && cached.isNotEmpty) {
         if (!mounted) return;
         setState(() {
@@ -159,15 +160,16 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
           _selectedStudentId = _studentList[0]['id'];
           await _loadGrades(useCache: true);
         }
+        if (kDebugMode) print('📦 ParentGradeStudents: from cache (${cached.length})');
+        return;
       }
     }
 
-    // Step 2: Show loading only if no data yet
+    // No cache — fetch from API
     if (_studentList.isEmpty && mounted) {
       setState(() => _isLoading = true);
     }
 
-    // Step 3: Fetch fresh from API
     try {
       final prefs = await SharedPreferences.getInstance();
       final userData = json.decode(prefs.getString('user') ?? '{}');
@@ -194,7 +196,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
       if (!mounted) return;
 
-      await LocalCacheService.save(_studentsCacheKey, filteredStudents);
+      LocalCacheService.save(_studentsCacheKey, filteredStudents);
 
       setState(() {
         _studentList = filteredStudents;
@@ -209,9 +211,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load students for parent grade: $e');
-      }
+      if (kDebugMode) print('Error load students for parent grade: $e');
       if (!mounted) return;
       if (_studentList.isEmpty) {
         setState(() => _isLoading = false);
@@ -227,24 +227,28 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
     final cacheKey = _buildGradesCacheKey();
 
-    // Step 1: Try cache for instant display
+    // Try cache — return early if hit (don't use for grades with is_read tracking)
     if (useCache) {
-      final cached = await LocalCacheService.load(cacheKey);
+      final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
       if (cached != null && cached is List && cached.isNotEmpty) {
         if (!mounted) return;
         setState(() {
           _gradeList = cached;
           _isLoading = false;
         });
+        if (kDebugMode) print('📦 ParentGrades: from cache (${cached.length})');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted && _studentList.isNotEmpty) _checkAndShowTour();
+        });
+        return;
       }
     }
 
-    // Step 2: Show loading only if no data yet
+    // No cache — fetch from API
     if (_gradeList.isEmpty && mounted) {
       setState(() => _isLoading = true);
     }
 
-    // Step 3: Fetch fresh from API
     try {
       final grades = await ApiService.getNilai(
         siswaId: _selectedStudentId,
@@ -253,16 +257,14 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
       if (!mounted) return;
 
-      await LocalCacheService.save(cacheKey, grades);
+      LocalCacheService.save(cacheKey, grades);
 
       setState(() {
         _gradeList = grades;
         _isLoading = false;
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load grades: $e');
-      }
+      if (kDebugMode) print('Error load grades: $e');
       if (!mounted) return;
       if (_gradeList.isEmpty) {
         setState(() => _isLoading = false);
@@ -281,16 +283,29 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
   }
 
   Future<void> _checkAndShowTour() async {
+    const tourCacheKey = 'tour_parent_grade_screen_wali';
     try {
+      // Try cache first
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'wali',
         name: 'parent_grade_screen_tour',
       );
 
+      LocalCacheService.save(tourCacheKey, status);
+
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
-
         if (!mounted) return;
         _showTour();
       }
@@ -317,11 +332,13 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_parent_grade_screen_wali', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_parent_grade_screen_wali', {'should_show': false});
         }
         return true;
       },
