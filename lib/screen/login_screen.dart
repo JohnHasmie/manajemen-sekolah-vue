@@ -60,6 +60,34 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showUnregisteredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.person_off_outlined,
+          color: Color(0xFF0D47A1),
+          size: 48,
+        ),
+        title: Text(
+          'Akun Belum Terdaftar',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        content: Text(
+          'Email yang Anda masukkan belum terdaftar di sistem. '
+          'Silakan hubungi admin sekolah Anda untuk mendaftarkan akun.',
+          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _checkServerConnection() async {
     try {
       await ApiService.checkHealth();
@@ -194,19 +222,31 @@ class LoginScreenState extends State<LoginScreen> {
       }
 
       String errorMessage = ErrorUtils.getFriendlyMessage(error);
+      final errorStr = error.toString().toLowerCase();
+
+      // Check if this is an "unregistered email" error
+      final isUnregistered = errorStr.contains('email tidak terdaftar') ||
+          errorStr.contains('email not registered') ||
+          errorStr.contains('user not found') ||
+          errorStr.contains('user tidak ditemukan') ||
+          errorStr.contains('no account found') ||
+          errorStr.contains('akun tidak ditemukan');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+        if (isUnregistered) {
+          _showUnregisteredDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+        }
       }
 
       // Only trigger session expired for actual 401/unauthorized errors,
       // not for errors that merely contain the word "token" in their message
-      final errorStr = error.toString().toLowerCase();
       if (errorStr.contains('401') ||
           errorStr.contains('session expired') ||
           errorStr.contains('unauthorized')) {
@@ -342,14 +382,26 @@ class LoginScreenState extends State<LoginScreen> {
       }
 
       String errorMessage = ErrorUtils.getFriendlyMessage(error);
+      final errorStr = error.toString().toLowerCase();
+
+      final isUnregistered = errorStr.contains('email tidak terdaftar') ||
+          errorStr.contains('email not registered') ||
+          errorStr.contains('user not found') ||
+          errorStr.contains('user tidak ditemukan') ||
+          errorStr.contains('no account found') ||
+          errorStr.contains('akun tidak ditemukan');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+        if (isUnregistered) {
+          _showUnregisteredDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+        }
       }
 
       // Clear data on Google Sign In failure

@@ -76,6 +76,16 @@ class ErrorUtils {
       return 'Email atau password salah.';
     }
 
+    // Unregistered email
+    if (errorStr.contains('email tidak terdaftar') ||
+        errorStr.contains('email not registered') ||
+        errorStr.contains('user not found') ||
+        errorStr.contains('user tidak ditemukan') ||
+        errorStr.contains('no account found') ||
+        errorStr.contains('akun tidak ditemukan')) {
+      return 'Akun dengan email tersebut belum terdaftar. Silakan hubungi admin sekolah Anda untuk didaftarkan.';
+    }
+
     // General exception or fallback
     if (errorStr.contains('429') ||
         errorStr.contains('too many requests') ||
