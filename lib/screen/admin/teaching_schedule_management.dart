@@ -324,6 +324,29 @@ class TeachingScheduleManagementScreenState
 
   Future<void> _loadFilterOptions() async {
     try {
+      // ─── Cache-first: return early on hit ───
+      final cacheKey = 'schedule_filter_options_$_selectedAcademicYear';
+      try {
+        final cached = await LocalCacheService.load(
+          cacheKey,
+          ttl: const Duration(hours: 6),
+        );
+        if (cached != null && mounted) {
+          final cachedData = Map<String, dynamic>.from(cached);
+          setState(() {
+            _availableTeachers = List<dynamic>.from(cachedData['teachers'] ?? []);
+            _availableClasses = List<dynamic>.from(cachedData['classes'] ?? []);
+            _availableDays = List<dynamic>.from(cachedData['days'] ?? []);
+            _availableSemesters = List<dynamic>.from(cachedData['semesters'] ?? []);
+            _availableAcademicYears = List<dynamic>.from(cachedData['academic_years'] ?? []);
+          });
+          if (kDebugMode) print('⚡ Schedule filter options loaded from cache');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Schedule filter cache load failed: $e');
+      }
+
       final response = await ApiScheduleService.getScheduleFilterOptions(
         academicYearId: _selectedAcademicYear,
       );
@@ -338,7 +361,15 @@ class TeachingScheduleManagementScreenState
           _availableSemesters = response['data']['semesters'] ?? [];
           _availableAcademicYears = response['data']['academic_years'] ?? [];
         });
-        print('✅ Schedule filter options loaded');
+        // Non-blocking cache save
+        LocalCacheService.save(cacheKey, {
+          'teachers': response['data']['teachers'] ?? [],
+          'classes': response['data']['classes'] ?? [],
+          'days': response['data']['days'] ?? [],
+          'semesters': response['data']['semesters'] ?? [],
+          'academic_years': response['data']['academic_years'] ?? [],
+        });
+        if (kDebugMode) print('✅ Schedule filter options loaded');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -447,6 +478,15 @@ class TeachingScheduleManagementScreenState
                 });
                 _updateGridData();
                 if (kDebugMode) print('⚡ Schedules loaded from cache');
+                // Cache hit → return early, no background API refresh
+                Future.delayed(const Duration(milliseconds: 1000), () {
+                  if (mounted) _checkAndShowTour();
+                });
+                // Update semester selection from cached semester list
+                if (_semesterList.isNotEmpty) {
+                  _updateCurrentSemester();
+                }
+                return;
               }
             } catch (e) {
               if (kDebugMode) print('⚠️ Schedule cache load failed: $e');
@@ -594,6 +634,8 @@ class TeachingScheduleManagementScreenState
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
+    await LocalCacheService.clearStartingWith('tour_schedule_management_');
+    await LocalCacheService.invalidate('schedule_filter_options_$_selectedAcademicYear');
     await _loadData(resetPage: true, useCache: false);
   }
 
@@ -1158,12 +1200,16 @@ class TeachingScheduleManagementScreenState
         children: [
           Icon(icon, size: 12, color: ColorUtils.slate600),
           const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              color: ColorUtils.slate700,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 11,
+                color: ColorUtils.slate700,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -3116,11 +3162,29 @@ class TeachingScheduleManagementScreenState
   Future<void> _checkAndShowTour() async {
     if (_isTourShowing) return;
     try {
+      // ─── Cache-first: skip API if tour already dismissed ───
+      const tourCacheKey = 'tour_schedule_management_admin';
+      try {
+        final cached = await LocalCacheService.load(
+          tourCacheKey,
+          ttl: const Duration(hours: 24),
+        );
+        if (cached != null && cached['should_show'] == false) {
+          if (kDebugMode) print('⚡ Schedule management tour skipped (cached)');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'teaching_schedule_management_tour',
       );
+
+      // Non-blocking cache save
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         if (_isTourShowing) return; // Prevent multiple tours
@@ -3159,6 +3223,7 @@ class TeachingScheduleManagementScreenState
         });
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_schedule_management_admin', {'should_show': false});
         }
       },
       onSkip: () {
@@ -3167,6 +3232,7 @@ class TeachingScheduleManagementScreenState
         });
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_schedule_management_admin', {'should_show': false});
         }
         return true;
       },
