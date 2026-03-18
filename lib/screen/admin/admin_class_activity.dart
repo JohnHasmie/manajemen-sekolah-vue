@@ -83,6 +83,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
   }
 
   Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('tour_class_activity_');
     if (_showTeacherList) {
       final cacheKey = _buildTeacherCacheKey();
       if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
@@ -114,6 +115,12 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
                 _teacherList = cachedList;
                 _isLoading = false;
               });
+              if (kDebugMode) print('⚡ Class activity teachers loaded from cache');
+              // Cache hit → return early
+              Future.delayed(const Duration(milliseconds: 1000), () {
+                if (mounted) _checkAndShowTour();
+              });
+              return;
             }
           }
         }
@@ -137,10 +144,10 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         _isLoading = false;
       });
 
-      // Step 3: Save to cache
+      // Step 3: Save to cache (non-blocking)
       final cacheKey = _buildTeacherCacheKey();
       if (cacheKey != null) {
-        await LocalCacheService.save(cacheKey, {'data': teachers});
+        LocalCacheService.save(cacheKey, {'data': teachers});
       }
 
       // Trigger tour after teachers are loaded
@@ -222,6 +229,8 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
                 _subjectList = cachedList;
                 _isLoading = false;
               });
+              if (kDebugMode) print('⚡ Class activity subjects loaded from cache');
+              return;
             }
           }
         }
@@ -252,10 +261,10 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         _isLoading = false;
       });
 
-      // Step 3: Save to cache
+      // Step 3: Save to cache (non-blocking)
       final cacheKey = _buildSubjectCacheKey();
       if (cacheKey != null) {
-        await LocalCacheService.save(cacheKey, {'data': response['data'] ?? []});
+        LocalCacheService.save(cacheKey, {'data': response['data'] ?? []});
       }
     } catch (e) {
       if (mounted) {
@@ -297,6 +306,8 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
                 _activityList = cachedList;
                 _isLoading = false;
               });
+              if (kDebugMode) print('⚡ Class activities loaded from cache');
+              return;
             }
           }
         }
@@ -328,10 +339,10 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         _isLoading = false;
       });
 
-      // Step 3: Save to cache
+      // Step 3: Save to cache (non-blocking)
       final cacheKey = _buildActivityCacheKey();
       if (cacheKey != null) {
-        await LocalCacheService.save(cacheKey, {'data': response['data'] ?? []});
+        LocalCacheService.save(cacheKey, {'data': response['data'] ?? []});
       }
     } catch (e) {
       if (mounted) {
@@ -748,12 +759,16 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         children: [
           Icon(icon, size: 10, color: c),
           SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              color: c,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 10,
+                color: c,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -1355,11 +1370,29 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
   Future<void> _checkAndShowTour() async {
     if (_isTourShowing) return;
     try {
+      // ─── Cache-first: skip API if tour already dismissed ───
+      const tourCacheKey = 'tour_class_activity_admin';
+      try {
+        final cached = await LocalCacheService.load(
+          tourCacheKey,
+          ttl: const Duration(hours: 24),
+        );
+        if (cached != null && cached['should_show'] == false) {
+          if (kDebugMode) print('⚡ Class activity tour skipped (cached)');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'admin_class_activity_tour',
       );
+
+      // Non-blocking cache save
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         if (_isTourShowing) return;
@@ -1398,6 +1431,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         });
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_class_activity_admin', {'should_show': false});
         }
       },
       onSkip: () {
@@ -1406,6 +1440,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         });
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_class_activity_admin', {'should_show': false});
         }
         return true;
       },

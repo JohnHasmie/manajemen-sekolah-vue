@@ -164,6 +164,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
+    await LocalCacheService.clearStartingWith('tour_announcement_');
+    await LocalCacheService.invalidate('announcement_filter_options');
     _loadData(resetPage: true, useCache: false);
   }
 
@@ -190,6 +192,27 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
   Future<void> _loadFilterOptions() async {
     try {
+      // ─── Cache-first: return early on hit ───
+      const cacheKey = 'announcement_filter_options';
+      try {
+        final cached = await LocalCacheService.load(
+          cacheKey,
+          ttl: const Duration(hours: 6),
+        );
+        if (cached != null && mounted) {
+          final cachedData = Map<String, dynamic>.from(cached);
+          setState(() {
+            _availablePrioritasOptions = List<dynamic>.from(cachedData['prioritas_options'] ?? []);
+            _availableTargetOptions = List<dynamic>.from(cachedData['target_options'] ?? []);
+            _availableStatusOptions = List<dynamic>.from(cachedData['status_options'] ?? []);
+          });
+          if (kDebugMode) print('⚡ Announcement filter options loaded from cache');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Announcement filter cache load failed: $e');
+      }
+
       final response =
           await ApiAnnouncementService.getAnnouncementFilterOptions();
 
@@ -201,6 +224,12 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
               response['data']['prioritas_options'] ?? [];
           _availableTargetOptions = response['data']['target_options'] ?? [];
           _availableStatusOptions = response['data']['status_options'] ?? [];
+        });
+        // Non-blocking cache save
+        LocalCacheService.save(cacheKey, {
+          'prioritas_options': response['data']['prioritas_options'] ?? [],
+          'target_options': response['data']['target_options'] ?? [],
+          'status_options': response['data']['status_options'] ?? [],
         });
         if (kDebugMode) {
           print('✅ Announcement filter options loaded');
@@ -748,6 +777,12 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                 _hasMoreData = cached['pagination']?['has_next_page'] ?? false;
                 _isLoading = false;
               });
+              if (kDebugMode) print('⚡ Announcements loaded from cache');
+              // Cache hit → return early, no background API refresh
+              Future.delayed(const Duration(milliseconds: 1000), () {
+                if (mounted) _checkAndShowTour();
+              });
+              return;
             }
           }
         }
@@ -845,10 +880,10 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           _errorMessage = null;
         });
 
-        // Step 3: Save to cache
+        // Step 3: Save to cache (non-blocking)
         final cacheKey = _buildAnnouncementCacheKey();
         if (cacheKey != null) {
-          await LocalCacheService.save(cacheKey, {
+          LocalCacheService.save(cacheKey, {
             'data': fetchedList,
             'pagination': response['pagination'],
           });
@@ -2059,12 +2094,16 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
         children: [
           Icon(icon, size: 10, color: c),
           SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              color: c,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 10,
+                color: c,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -3034,11 +3073,29 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // ─── Cache-first: skip API if tour already dismissed ───
+      const tourCacheKey = 'tour_announcement_admin';
+      try {
+        final cached = await LocalCacheService.load(
+          tourCacheKey,
+          ttl: const Duration(hours: 24),
+        );
+        if (cached != null && cached['should_show'] == false) {
+          if (kDebugMode) print('⚡ Announcement tour skipped (cached)');
+          return;
+        }
+      } catch (e) {
+        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'admin_announcement_tour',
       );
+
+      // Non-blocking cache save
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -3069,11 +3126,13 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
       onFinish: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_announcement_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          LocalCacheService.save('tour_announcement_admin', {'should_show': false});
         }
         return true;
       },
