@@ -403,7 +403,7 @@ class RppScreenState extends State<RppScreen> {
     final isFilteredOrSearched = _searchController.text.isNotEmpty || _selectedStatusFilter != null;
     final rppCacheKey = _buildRppCacheKey();
 
-    // Step 1: Try cache for instant display (only for unfiltered default view)
+    // Step 1: Try cache → return early (only for unfiltered default view)
     if (useCache && !isFilteredOrSearched) {
       final cached = await LocalCacheService.load(rppCacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -413,19 +413,21 @@ class RppScreenState extends State<RppScreen> {
             _isLoading = false;
             _errorMessage = null;
           });
+          _checkAndShowTour();
         }
+        if (kDebugMode) print('📦 RppScreen: Data from cache (${cached.length})');
+        return;
       }
     }
 
-    // Step 2: Show loading only if no data yet
-    if (_rppList.isEmpty && mounted) {
+    // Step 2: Show loading & fetch from API
+    if (mounted) {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
     }
 
-    // Step 3: Fetch fresh data from API
     try {
       final academicYearId = _getAcademicYearId();
 
@@ -1404,11 +1406,25 @@ class RppScreenState extends State<RppScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check cache first (24h TTL)
+      const tourCacheKey = 'tour_rpp_screen_guru';
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (mounted) _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'guru',
         name: 'rpp_screen_tour',
       );
+
+      // Cache the result
+      await LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
