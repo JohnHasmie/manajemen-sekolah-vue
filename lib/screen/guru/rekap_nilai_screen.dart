@@ -500,6 +500,60 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     }
   }
 
+  /// Generic cache-first loader for individual data sources
+  Future<List<dynamic>> _loadWithCache({
+    required String cacheKey,
+    required Duration ttl,
+    required Future<List<dynamic>> Function() apiFetcher,
+    bool useCache = true,
+  }) async {
+    if (useCache) {
+      try {
+        final cached = await LocalCacheService.load(cacheKey, ttl: ttl);
+        if (cached != null) {
+          if (kDebugMode) print('⚡ Cache hit: $cacheKey');
+          return List<dynamic>.from(cached);
+        }
+      } catch (_) {}
+    }
+    final data = await apiFetcher();
+    if (data.isNotEmpty) LocalCacheService.save(cacheKey, data);
+    return data;
+  }
+
+  /// Grades loader with special response parsing
+  Future<List<dynamic>> _loadGradesWithCache({
+    required String cacheKey,
+    required Duration ttl,
+    required String classId,
+    required String subjectId,
+    required String academicYearId,
+    bool useCache = true,
+  }) async {
+    if (useCache) {
+      try {
+        final cached = await LocalCacheService.load(cacheKey, ttl: ttl);
+        if (cached != null) {
+          if (kDebugMode) print('⚡ Cache hit: $cacheKey');
+          return List<dynamic>.from(cached);
+        }
+      } catch (_) {}
+    }
+    final rawGradesResponse = await ApiService().get(
+      '/grades/teacher?class_id=$classId&subject_id=$subjectId&academic_year_id=$academicYearId&limit=1000',
+    );
+    List<dynamic> rawGrades = [];
+    if (rawGradesResponse != null) {
+      if (rawGradesResponse is Map && rawGradesResponse['data'] != null) {
+        rawGrades = rawGradesResponse['data'];
+      } else if (rawGradesResponse is List) {
+        rawGrades = rawGradesResponse;
+      }
+    }
+    if (rawGrades.isNotEmpty) LocalCacheService.save(cacheKey, rawGrades);
+    return rawGrades;
+  }
+
   Future<void> _loadRecapData({bool useCache = true}) async {
     try {
       final provider = Provider.of<AcademicYearProvider>(
@@ -564,30 +618,55 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         setState(() => _isLoading = true);
       }
 
-      // ─── Step 3: No cache — fetch fresh data from API ───
-      final students = await ApiClassService.getStudentsByClassId(classId);
+      // ─── Step 3: Load each data source with individual cache ───
+      // This allows cross-screen cache reuse (e.g. students from presence,
+      // bab-material from materi_screen)
 
-      final chapters = await ApiSubjectService.getBabMateri(
-        subjectId: masterSubjectId,
-      );
+      final studentCacheKey = 'students_class_$classId';
+      final babCacheKey = 'bab_material_$masterSubjectId';
+      final gradesCacheKey = 'rekap_grades_${classId}_${subjectId}_$academicYearId';
+      final recapsCacheKey = 'rekap_recaps_${classId}_${subjectId}_$academicYearId';
 
-      final rawGradesResponse = await ApiService().get(
-        '/grades/teacher?class_id=$classId&subject_id=$subjectId&academic_year_id=$academicYearId&limit=1000',
-      );
-      List<dynamic> rawGrades = [];
-      if (rawGradesResponse != null) {
-        if (rawGradesResponse is Map && rawGradesResponse['data'] != null) {
-          rawGrades = rawGradesResponse['data'];
-        } else if (rawGradesResponse is List) {
-          rawGrades = rawGradesResponse;
-        }
-      }
+      // Load all 4 sources in parallel — each checks its own cache first
+      final results = await Future.wait([
+        _loadWithCache(
+          cacheKey: studentCacheKey,
+          ttl: const Duration(hours: 6),
+          apiFetcher: () => ApiClassService.getStudentsByClassId(classId),
+          useCache: useCache,
+        ),
+        _loadWithCache(
+          cacheKey: babCacheKey,
+          ttl: const Duration(hours: 12),
+          apiFetcher: () => ApiSubjectService.getBabMateri(subjectId: masterSubjectId),
+          useCache: useCache,
+        ),
+        _loadGradesWithCache(
+          cacheKey: gradesCacheKey,
+          ttl: const Duration(hours: 3),
+          classId: classId,
+          subjectId: subjectId,
+          academicYearId: academicYearId,
+          useCache: useCache,
+        ),
+        _loadWithCache(
+          cacheKey: recapsCacheKey,
+          ttl: const Duration(hours: 3),
+          apiFetcher: () => ApiGradeRecapService.getGradeRecaps(
+            classId: classId,
+            subjectId: subjectId,
+            academicYearId: academicYearId,
+          ),
+          useCache: useCache,
+        ),
+      ]);
 
-      final recaps = await ApiGradeRecapService.getGradeRecaps(
-        classId: classId,
-        subjectId: subjectId,
-        academicYearId: academicYearId,
-      );
+      if (!mounted) return;
+
+      final students = results[0];
+      final chapters = results[1];
+      final rawGrades = results[2];
+      final recaps = results[3];
 
       _chapters = List.from(chapters);
       _allAvailableChapters = List.from(chapters);
@@ -600,7 +679,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
       _processTableData(students, _chapters, rawGrades, recaps);
 
-      // Save to cache
+      // Save composite cache for full return-early on next visit
       await LocalCacheService.save(recapCacheKey, {
         'students': students,
         'chapters': chapters,
