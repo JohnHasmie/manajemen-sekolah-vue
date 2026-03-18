@@ -104,7 +104,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
     if (widget.schedule != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _setEditFormValues();
+        if (mounted) _setEditFormValues();
       });
     }
 
@@ -183,6 +183,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
       final occupied = response['data'] is List ? response['data'] : [];
 
+      if (!mounted) return;
       setState(() {
         _occupiedSlots = occupied;
 
@@ -215,6 +216,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       final teacherSubjects = await widget.apiTeacherService
           .getSubjectByTeacher(teacherId);
 
+      if (!mounted) return;
+
       final filtered = widget.subjectList.where((subject) {
         return teacherSubjects.any(
           (teacherSubject) => teacherSubject['id'] == subject['id'],
@@ -246,6 +249,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       if (kDebugMode) {
         print('Error filtering subjects: $e');
       }
+      if (!mounted) return;
       setState(() {
         _filteredSubjectList = widget.subjectList;
         _isLoadingSubjects = false;
@@ -1350,11 +1354,15 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
         'teacher_id': _selectedTeacher,
         'subject_id': _selectedSubject,
         'class_id': _selectedClass,
-        'days_ids': _selectedDayIds, // Changed key & data structure
+        'days_ids': _selectedDayIds,
         'semester_id': _selectedSemester,
         'academic_year_id': _selectedAcademicYear,
-        'lesson_hour_id': _selectedJamPelajaran,
+        'lesson_hour_days_id': _selectedJamPelajaran,
       };
+
+      if (kDebugMode) {
+        print('DEBUG: Saving schedule data: $scheduleData');
+      }
 
       Navigator.pop(context, scheduleData);
     }

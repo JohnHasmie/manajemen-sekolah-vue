@@ -133,6 +133,7 @@ class ApiScheduleService {
     String? search,
     String? jamPelajaranId,
     String? hourNumber,
+    bool skipCache = false,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
@@ -170,16 +171,22 @@ class ApiScheduleService {
     final cacheKey = 'schedule_paginated?$queryString';
 
     try {
-      // 1. Try Load from Cache
-      final cachedData = await LocalCacheService.load(
-        cacheKey,
-        ttl: const Duration(minutes: 30),
-      );
-      if (cachedData != null) {
-        if (kDebugMode) {
-          print('DEBUG: Returning cached schedule data for $cacheKey');
+      // 1. Try Load from Cache (skip if explicitly requested)
+      if (!skipCache) {
+        final cachedData = await LocalCacheService.load(
+          cacheKey,
+          ttl: const Duration(minutes: 30),
+        );
+        if (cachedData != null) {
+          if (kDebugMode) {
+            print('DEBUG: Returning cached schedule data for $cacheKey');
+          }
+          return cachedData;
         }
-        return cachedData;
+      } else {
+        if (kDebugMode) {
+          print('DEBUG: Skipping cache for $cacheKey (skipCache=true)');
+        }
       }
 
       // 2. Fetch from API
@@ -253,14 +260,25 @@ class ApiScheduleService {
   }
 
   static Future<dynamic> addSchedule(Map<String, dynamic> data) async {
+    if (kDebugMode) {
+      print('DEBUG: addSchedule request body: ${json.encode(data)}');
+    }
+
     final response = await http.post(
       Uri.parse('$baseUrl/teaching-schedule'),
       headers: await _getHeaders(),
       body: json.encode(data),
     );
 
+    if (kDebugMode) {
+      print('DEBUG: addSchedule response: ${response.statusCode} - ${response.body}');
+    }
+
+    // Always invalidate cache after POST, even if response is an error
+    // (backend may have saved the data despite returning 500)
+    await invalidateCache();
+
     final result = _handleResponse(response);
-    await invalidateCache(); // Invalidate cache on add
     return result;
   }
 
@@ -274,8 +292,8 @@ class ApiScheduleService {
       body: json.encode(data),
     );
 
+    await invalidateCache();
     _handleResponse(response);
-    await invalidateCache(); // Invalidate cache on update
   }
 
   static Future<void> deleteSchedule(String id) async {

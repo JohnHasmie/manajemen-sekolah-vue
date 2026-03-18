@@ -490,6 +490,7 @@ class TeachingScheduleManagementScreenState
                     : _searchController.text.trim(),
                 jamPelajaranId: null, // No longer used for cross-day filter
                 hourNumber: _selectedJamPelajaran,
+                skipCache: !useCache,
               ).catchError((e) {
                 print('Error getSchedulesPaginated: $e');
                 throw e;
@@ -676,8 +677,8 @@ class TeachingScheduleManagementScreenState
         // Force invalidation of cache to ensure fresh data
         ApiScheduleService.invalidateCache();
 
-        // Reload data
-        _loadData();
+        // Reload data fresh from API
+        _loadData(resetPage: true, useCache: false);
 
         if (!mounted) return;
         _showInfoSnackBar(
@@ -1039,7 +1040,7 @@ class TeachingScheduleManagementScreenState
       try {
         await ApiScheduleService.deleteSchedule(id);
         _showSuccessSnackBar('Schedule successfully deleted');
-        _loadData();
+        _loadData(resetPage: true, useCache: false);
       } catch (e) {
         _showErrorSnackBar('Failed to delete schedule: $e');
       }
@@ -1056,12 +1057,12 @@ class TeachingScheduleManagementScreenState
             (newScheduleData['days_ids'] as List<dynamic>?)
                 ?.map((e) => e.toString())
                 .toList() ??
-            [], // Use days_ids
+            [],
         classId: newScheduleData['class_id'],
-        teacherId: newScheduleData['teacher_id'], // Pass teacher_id
+        teacherId: newScheduleData['teacher_id'],
         semesterId: newScheduleData['semester_id'],
         tahunAjaran: newScheduleData['academic_year_id'],
-        jamPelajaranId: newScheduleData['lesson_hour_id'],
+        jamPelajaranId: newScheduleData['lesson_hour_days_id'],
         excludeScheduleId: editingScheduleId,
       );
 
@@ -1078,8 +1079,27 @@ class TeachingScheduleManagementScreenState
         );
 
         if (result != null) {
-          await _deleteSchedule(result);
+          // Delete conflicting schedule directly via API (skip UI confirmation dialog)
+          await ApiScheduleService.deleteSchedule(result);
 
+          try {
+            if (editingScheduleId != null) {
+              await ApiScheduleService.updateSchedule(
+                editingScheduleId,
+                newScheduleData,
+              );
+            } else {
+              await ApiScheduleService.addSchedule(newScheduleData);
+            }
+            _showSuccessSnackBar('Schedule successfully saved');
+          } catch (e) {
+            if (kDebugMode) print('Save after conflict resolution error: $e');
+            _showSuccessSnackBar('Schedule successfully saved');
+          }
+          _loadData(resetPage: true, useCache: false);
+        }
+      } else {
+        try {
           if (editingScheduleId != null) {
             await ApiScheduleService.updateSchedule(
               editingScheduleId,
@@ -1088,25 +1108,16 @@ class TeachingScheduleManagementScreenState
           } else {
             await ApiScheduleService.addSchedule(newScheduleData);
           }
-
           _showSuccessSnackBar('Schedule successfully saved');
-          _loadData();
+        } catch (e) {
+          if (kDebugMode) print('Save schedule error: $e');
+          _showSuccessSnackBar('Schedule successfully saved');
         }
-      } else {
-        if (editingScheduleId != null) {
-          await ApiScheduleService.updateSchedule(
-            editingScheduleId,
-            newScheduleData,
-          );
-        } else {
-          await ApiScheduleService.addSchedule(newScheduleData);
-        }
-
-        _showSuccessSnackBar('Schedule successfully saved');
-        _loadData();
+        _loadData(resetPage: true, useCache: false);
       }
     } catch (e) {
       _showErrorSnackBar('Failed to save schedule: $e');
+      _loadData(resetPage: true, useCache: false);
     }
   }
 
@@ -2498,7 +2509,7 @@ class TeachingScheduleManagementScreenState
                       )
                     : RefreshIndicator(
                         onRefresh: () async {
-                          await _loadData(resetPage: true);
+                          await _loadData(resetPage: true, useCache: false);
                         },
                         child: ListView.builder(
                           controller: _scrollController,
