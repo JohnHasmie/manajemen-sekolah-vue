@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/providers/teacher_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_grade_recap_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
@@ -79,7 +80,6 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   @override
   void initState() {
     super.initState();
-    _loadTodaySchedules(); // Added this line as per instruction, though it's also in post-frame callback
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -121,12 +121,26 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
   Future<void> _loadTodaySchedules() async {
     try {
-      final days = await ApiScheduleService.getHari();
+      // 1. Load Days — try cache first (shared with teaching_schedule)
+      List<dynamic> days = [];
+      try {
+        final cachedDays = await LocalCacheService.load('school_day_data', ttl: const Duration(hours: 24));
+        if (cachedDays != null) {
+          days = List<dynamic>.from(cachedDays);
+          if (kDebugMode) print('⚡ Rekap: days from cache');
+        }
+      } catch (_) {}
+      if (days.isEmpty) {
+        days = await ApiScheduleService.getHari();
+        if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
+      }
+
       final Map<String, String> dayIdMap = {};
       for (var day in days) {
         dayIdMap[day['nama'] ?? day['name'] ?? ''] = day['id'].toString();
       }
 
+      // 2. Determine Today
       final now = DateTime.now();
       final dayNamesISO = [
         'Monday',
@@ -148,20 +162,39 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       });
 
       if (!mounted) return;
+
+      // 3. Load Teacher Schedules — try teaching_schedule's cache first
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
       );
-      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']?.toString();
+      final semesterProvider = academicYearProvider.selectedAcademicYear;
+      final semester = semesterProvider?['semester']?.toString() ?? '1';
+      final teacherId = widget.teacher['id']?.toString() ?? '';
 
-      final schedules = await ApiScheduleService.getSchedulesPaginated(
-        limit: 100,
-        guruId: widget.teacher['id'],
-        tahunAjaran: academicYearId,
-      );
+      List<dynamic> allSchedules = [];
 
-      final List<dynamic> allSchedules = schedules['data'] ?? [];
+      // Try teaching_schedule's cached data
+      final scheduleCacheKey = 'schedule_teacher_${teacherId}_${semester}_$academicYearId';
+      try {
+        final cached = await LocalCacheService.load(scheduleCacheKey, ttl: const Duration(hours: 3));
+        if (cached != null) {
+          final cachedData = Map<String, dynamic>.from(cached);
+          allSchedules = List<dynamic>.from(cachedData['jadwal'] ?? []);
+          if (kDebugMode) print('⚡ Rekap: schedules from teaching_schedule cache (${allSchedules.length})');
+        }
+      } catch (_) {}
+
+      // Fallback to API
+      if (allSchedules.isEmpty) {
+        final schedules = await ApiScheduleService.getSchedulesPaginated(
+          limit: 100,
+          guruId: widget.teacher['id'],
+          tahunAjaran: academicYearId,
+        );
+        allSchedules = schedules['data'] ?? [];
+      }
 
       if (mounted) {
         setState(() {
@@ -290,14 +323,57 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   // ==================== LOAD DATA ====================
 
   Future<void> _loadClasses({bool resetPage = true, bool useCache = true}) async {
+    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+    final isGuru = role.contains('guru');
+
     if (resetPage) {
-      setState(() {
-        _isLoading = true;
-        _currentPage = 1;
-        _hasMoreData = true;
-      });
+      _currentPage = 1;
+      _hasMoreData = true;
+
+      // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
+      if (isGuru && useCache) {
+        final teacherProvider = Provider.of<TeacherProvider>(context, listen: false);
+        if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
+          setState(() {
+            _classList = List.from(teacherProvider.allClasses);
+            _hasMoreData = false;
+            _isLoading = false;
+          });
+          if (kDebugMode) print('⚡ Rekap classes from TeacherProvider (${_classList.length})');
+          return; // ✅ Provider hit — no API needed
+        }
+      }
+
+      // ─── Step 2: Try cache → return early ───
+      if (useCache) {
+        final cacheKey = _buildClassesCacheKey();
+        if (cacheKey != null) {
+          try {
+            final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
+            if (cached != null && mounted) {
+              final cachedClasses = List<dynamic>.from(cached);
+              if (cachedClasses.isNotEmpty) {
+                setState(() {
+                  _classList = cachedClasses;
+                  _isLoading = false;
+                });
+                if (kDebugMode) print('⚡ Rekap classes from cache (${cachedClasses.length})');
+                return; // ✅ Cache hit — no API needed
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) print('Classes cache load error: $e');
+          }
+        }
+      }
+
+      // Show skeleton only if still empty
+      if (_classList.isEmpty && mounted) {
+        setState(() => _isLoading = true);
+      }
     }
 
+    // ─── Step 3: No cache — fetch fresh from API ───
     try {
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -305,34 +381,10 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       );
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
-      final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-      final cacheKey = _buildClassesCacheKey();
 
-      // Step 1: Try cache for instant display
-      if (useCache && resetPage && _classList.isEmpty && cacheKey != null) {
-        try {
-          final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
-          if (cached != null && mounted) {
-            setState(() {
-              _classList = List<dynamic>.from(cached);
-              if (_classList.isNotEmpty) _isLoading = false;
-            });
-            if (kDebugMode) print('Loaded ${_classList.length} classes from cache');
-          }
-        } catch (e) {
-          if (kDebugMode) print('Classes cache load error: $e');
-        }
-      }
-
-      // Step 2: Show skeleton only if still empty
-      if (_classList.isEmpty && mounted) {
-        setState(() => _isLoading = true);
-      }
-
-      // Step 3: Fetch fresh from API
       List<dynamic> loadedClasses = [];
 
-      if (role.contains('guru')) {
+      if (isGuru) {
         loadedClasses = await ApiTeacherService.getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
@@ -361,8 +413,11 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       }
 
       // Save to cache (only for first page, no search)
-      if (resetPage && _searchController.text.isEmpty && cacheKey != null) {
-        await LocalCacheService.save(cacheKey, loadedClasses);
+      if (resetPage && _searchController.text.isEmpty) {
+        final cacheKey = _buildClassesCacheKey();
+        if (cacheKey != null) {
+          await LocalCacheService.save(cacheKey, loadedClasses);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -387,28 +442,32 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   Future<void> _loadSubjects({bool useCache = true}) async {
     final subjectCacheKey = 'rekap_nilai_subjects_${widget.teacher['id']}_${_selectedClass!['id']}';
 
-    // Step 1: Try cache
+    // ─── Step 1: Try cache → return early ───
     if (useCache && _subjectList.isEmpty) {
       try {
         final cached = await LocalCacheService.load(subjectCacheKey, ttl: const Duration(hours: 3));
         if (cached != null && mounted) {
-          setState(() {
-            _subjectList = List<dynamic>.from(cached);
-            if (_subjectList.isNotEmpty) _isLoading = false;
-          });
-          if (kDebugMode) print('Loaded ${_subjectList.length} subjects from cache');
+          final cachedSubjects = List<dynamic>.from(cached);
+          if (cachedSubjects.isNotEmpty) {
+            setState(() {
+              _subjectList = cachedSubjects;
+              _isLoading = false;
+            });
+            if (kDebugMode) print('⚡ Rekap subjects from cache (${cachedSubjects.length}) — skipping API');
+            return; // ✅ Cache hit — no API needed
+          }
         }
       } catch (e) {
         if (kDebugMode) print('Subjects cache load error: $e');
       }
     }
 
-    // Step 2: Show skeleton only if still empty
+    // Show skeleton only if still empty
     if (_subjectList.isEmpty && mounted) {
       setState(() => _isLoading = true);
     }
 
-    // Step 3: Fetch fresh from API
+    // ─── Step 2: No cache — fetch fresh from API ───
     try {
       final response = await http.get(
         Uri.parse(
@@ -468,9 +527,9 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
       final recapCacheKey = _buildRecapCacheKey();
 
-      // Step 1: Try cache for instant display
+      // ─── Step 1: Try cache → return early ───
       if (useCache) {
-        final cached = await LocalCacheService.load(recapCacheKey);
+        final cached = await LocalCacheService.load(recapCacheKey, ttl: const Duration(hours: 3));
         if (cached != null && cached is Map) {
           final cachedStudents = List<dynamic>.from(cached['students'] ?? []);
           final cachedChapters = List<dynamic>.from(cached['chapters'] ?? []);
@@ -488,16 +547,24 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
             });
 
             _processTableData(cachedStudents, _chapters, cachedRawGrades, cachedRecaps);
+
+            // Trigger tour
+            Future.delayed(const Duration(milliseconds: 1000), () {
+              if (mounted && _currentStep == 2) _checkAndShowTour();
+            });
+
+            if (kDebugMode) print('⚡ Rekap data from cache — skipping API');
+            return; // ✅ Cache hit — no API needed
           }
         }
       }
 
-      // Step 2: Show skeleton only if no data yet
+      // ─── Step 2: Show skeleton only if no data yet ───
       if (_tableData.isEmpty) {
         setState(() => _isLoading = true);
       }
 
-      // Step 3: Fetch fresh data from API
+      // ─── Step 3: No cache — fetch fresh data from API ───
       final students = await ApiClassService.getStudentsByClassId(classId);
 
       final chapters = await ApiSubjectService.getBabMateri(
