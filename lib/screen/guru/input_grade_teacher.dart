@@ -11,6 +11,7 @@ import 'package:manajemensekolah/components/empty_state.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
 import 'package:manajemensekolah/models/siswa.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/providers/teacher_provider.dart';
 import 'package:manajemensekolah/services/api_class_services.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
 import 'package:manajemensekolah/services/api_services.dart';
@@ -161,11 +162,30 @@ class GradePageState extends State<GradePage> {
   // ==================== LOAD LOGIC ====================
 
   Future<void> _loadClasses({bool resetPage = true, bool useCache = true}) async {
+    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+    final isGuru = _canEdit && role.contains('guru');
+
     if (resetPage) {
       _currentPage = 1;
       _hasMoreData = true;
 
-      // ─── Step 1: Try loading from cache ───
+      // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
+      if (isGuru && useCache) {
+        final teacherProvider = Provider.of<TeacherProvider>(context, listen: false);
+        if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
+          List<dynamic> providerClasses = List.from(teacherProvider.allClasses);
+          _sortClassesByTodaySchedule(providerClasses);
+          setState(() {
+            _classList = providerClasses;
+            _hasMoreData = false;
+            _isLoading = false;
+          });
+          if (kDebugMode) print('⚡ Grade classes from TeacherProvider (${providerClasses.length})');
+          return; // ✅ Provider hit — no API needed
+        }
+      }
+
+      // ─── Step 2: Try loading from cache → return early ───
       if (useCache) {
         final cacheKey = _buildClassCacheKey();
         if (cacheKey != null) {
@@ -176,12 +196,16 @@ class GradePageState extends State<GradePage> {
             );
             if (cached != null && mounted) {
               final cachedData = Map<String, dynamic>.from(cached);
-              setState(() {
-                _classList = List<dynamic>.from(cachedData['classes'] ?? []);
-                _hasMoreData = cachedData['hasMoreData'] ?? false;
-                _isLoading = false;
-              });
-              if (kDebugMode) print('⚡ Grade classes loaded from cache');
+              final cachedClasses = List<dynamic>.from(cachedData['classes'] ?? []);
+              if (cachedClasses.isNotEmpty) {
+                setState(() {
+                  _classList = cachedClasses;
+                  _hasMoreData = cachedData['hasMoreData'] ?? false;
+                  _isLoading = false;
+                });
+                if (kDebugMode) print('⚡ Grade classes loaded from cache');
+                return; // ✅ Cache hit — no API needed
+              }
             }
           } catch (e) {
             if (kDebugMode) print('⚠️ Grade class cache load failed: $e');
@@ -197,7 +221,7 @@ class GradePageState extends State<GradePage> {
       }
     }
 
-    // ─── Step 2: Fetch fresh from API ───
+    // ─── Step 3: No cache — fetch fresh from API ───
     try {
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -208,8 +232,7 @@ class GradePageState extends State<GradePage> {
 
       List<dynamic> loadedClasses = [];
 
-      final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-      if (_canEdit && role.contains('guru')) {
+      if (isGuru) {
         final response = await ApiTeacherService.getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
@@ -228,24 +251,8 @@ class GradePageState extends State<GradePage> {
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
       }
 
-      // Sort loadedClasses: Today's classes for teachers first
-      if (role.contains('guru') && _todaySchedules.isNotEmpty) {
-        final todayClassIds = _todaySchedules
-            .map((s) => (s['class_id'] ?? s['kelas_id'] ?? '').toString())
-            .where((id) => id.isNotEmpty)
-            .toSet();
-
-        loadedClasses.sort((a, b) {
-          final idA = a['id'].toString();
-          final idB = b['id'].toString();
-          final isTodayA = todayClassIds.contains(idA);
-          final isTodayB = todayClassIds.contains(idB);
-
-          if (isTodayA && !isTodayB) return -1;
-          if (!isTodayA && isTodayB) return 1;
-          return 0;
-        });
-      }
+      // Sort: Today's classes first
+      _sortClassesByTodaySchedule(loadedClasses);
 
       if (mounted) {
         setState(() {
@@ -258,7 +265,7 @@ class GradePageState extends State<GradePage> {
         });
       }
 
-      // ─── Step 3: Save to cache ───
+      // ─── Step 4: Save to cache ───
       if (resetPage) {
         final cacheKey = _buildClassCacheKey();
         if (cacheKey != null) {
@@ -279,6 +286,28 @@ class GradePageState extends State<GradePage> {
     }
   }
 
+  /// Sort classes so today's scheduled classes appear first
+  void _sortClassesByTodaySchedule(List<dynamic> classes) {
+    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
+    if (role.contains('guru') && _todaySchedules.isNotEmpty) {
+      final todayClassIds = _todaySchedules
+          .map((s) => (s['class_id'] ?? s['kelas_id'] ?? '').toString())
+          .where((id) => id.isNotEmpty)
+          .toSet();
+
+      classes.sort((a, b) {
+        final idA = a['id'].toString();
+        final idB = b['id'].toString();
+        final isTodayA = todayClassIds.contains(idA);
+        final isTodayB = todayClassIds.contains(idB);
+
+        if (isTodayA && !isTodayB) return -1;
+        if (!isTodayA && isTodayB) return 1;
+        return 0;
+      });
+    }
+  }
+
   Future<void> _loadMoreClasses() async {
     if (widget.teacher['role'] == 'guru') return;
     if (_isLoadingMore || !_hasMoreData) return;
@@ -290,7 +319,7 @@ class GradePageState extends State<GradePage> {
   }
 
   Future<void> _loadSubjects({bool useCache = true}) async {
-    // ─── Step 1: Try loading from cache ───
+    // ─── Step 1: Try loading from cache → return early ───
     if (useCache) {
       final cacheKey = _buildSubjectCacheKey();
       if (cacheKey != null) {
@@ -301,11 +330,15 @@ class GradePageState extends State<GradePage> {
           );
           if (cached != null && mounted) {
             final cachedData = Map<String, dynamic>.from(cached);
-            setState(() {
-              _subjectList = List<dynamic>.from(cachedData['subjects'] ?? []);
-              _isLoading = false;
-            });
-            if (kDebugMode) print('⚡ Grade subjects loaded from cache');
+            final cachedSubjects = List<dynamic>.from(cachedData['subjects'] ?? []);
+            if (cachedSubjects.isNotEmpty) {
+              setState(() {
+                _subjectList = cachedSubjects;
+                _isLoading = false;
+              });
+              if (kDebugMode) print('⚡ Grade subjects loaded from cache — skipping API');
+              return; // ✅ Cache hit — no API needed
+            }
           }
         } catch (e) {
           if (kDebugMode) print('⚠️ Grade subject cache load failed: $e');
@@ -320,7 +353,7 @@ class GradePageState extends State<GradePage> {
       });
     }
 
-    // ─── Step 2: Fetch fresh from API ───
+    // ─── Step 2: No cache — fetch fresh from API ───
     try {
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -449,8 +482,20 @@ class GradePageState extends State<GradePage> {
 
   Future<void> _loadTodaySchedules() async {
     try {
-      // 1. Load Days for ID mapping
-      final days = await ApiScheduleService.getHari();
+      // 1. Load Days — try cache first (shared with teaching_schedule)
+      List<dynamic> days = [];
+      try {
+        final cachedDays = await LocalCacheService.load('school_day_data', ttl: const Duration(hours: 24));
+        if (cachedDays != null) {
+          days = List<dynamic>.from(cachedDays);
+          if (kDebugMode) print('⚡ Grade: days from cache');
+        }
+      } catch (_) {}
+      if (days.isEmpty) {
+        days = await ApiScheduleService.getHari();
+        if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
+      }
+
       final Map<String, String> dayIdMap = {};
       for (var day in days) {
         dayIdMap[day['nama'] ?? day['name'] ?? ''] = day['id'].toString();
@@ -477,21 +522,38 @@ class GradePageState extends State<GradePage> {
         }
       });
 
-      // 3. Load Teacher Schedules
+      // 3. Load Teacher Schedules — try teaching_schedule's cache first
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
         listen: false,
       );
-      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
+      final academicYearId = academicYearProvider.selectedAcademicYear?['id']?.toString();
+      final semesterProvider = academicYearProvider.selectedAcademicYear;
+      final semester = semesterProvider?['semester']?.toString() ?? '1';
+      final teacherId = widget.teacher['id']?.toString() ?? '';
 
-      final schedules = await ApiScheduleService.getSchedulesPaginated(
-        limit: 100,
-        guruId: widget.teacher['id'],
-        tahunAjaran: academicYearId,
-      );
+      List<dynamic> allSchedules = [];
 
-      final List<dynamic> allSchedules = schedules['data'] ?? [];
+      // Try teaching_schedule's cached data
+      final scheduleCacheKey = 'schedule_teacher_${teacherId}_${semester}_$academicYearId';
+      try {
+        final cached = await LocalCacheService.load(scheduleCacheKey, ttl: const Duration(hours: 3));
+        if (cached != null) {
+          final cachedData = Map<String, dynamic>.from(cached);
+          allSchedules = List<dynamic>.from(cachedData['jadwal'] ?? []);
+          if (kDebugMode) print('⚡ Grade: schedules from teaching_schedule cache (${allSchedules.length})');
+        }
+      } catch (_) {}
+
+      // Fallback to API
+      if (allSchedules.isEmpty) {
+        final schedules = await ApiScheduleService.getSchedulesPaginated(
+          limit: 100,
+          guruId: widget.teacher['id'],
+          tahunAjaran: academicYearId,
+        );
+        allSchedules = schedules['data'] ?? [];
+      }
 
       if (mounted) {
         setState(() {
@@ -1467,7 +1529,7 @@ class GradeBookPageState extends State<GradeBookPage> {
     try {
       if (!mounted) return;
 
-      // ─── Step 1: Try loading from cache ───
+      // ─── Step 1: Try loading from cache → return early ───
       if (showLoading && useCache) {
         try {
           final cacheKey = _buildGradeCacheKey();
@@ -1477,14 +1539,20 @@ class GradeBookPageState extends State<GradeBookPage> {
           );
           if (cached != null && mounted) {
             final cachedData = Map<String, dynamic>.from(cached);
-            setState(() {
-              _processAndApplyGradeData(
-                List<dynamic>.from(cachedData['siswaData'] ?? []),
-                List<dynamic>.from(cachedData['nilaiItems'] ?? []),
-              );
-            });
-            _filterSiswa();
-            if (kDebugMode) print('⚡ Grade book loaded from cache');
+            final siswaData = List<dynamic>.from(cachedData['siswaData'] ?? []);
+            final nilaiItems = List<dynamic>.from(cachedData['nilaiItems'] ?? []);
+            if (siswaData.isNotEmpty) {
+              setState(() {
+                _processAndApplyGradeData(siswaData, nilaiItems);
+              });
+              _filterSiswa();
+              // Trigger tour
+              Future.delayed(const Duration(milliseconds: 1000), () {
+                if (mounted) _checkAndShowTour();
+              });
+              if (kDebugMode) print('⚡ Grade book loaded from cache — skipping API');
+              return; // ✅ Cache hit — no API needed
+            }
           }
         } catch (e) {
           if (kDebugMode) print('⚠️ Grade book cache load failed: $e');
@@ -1496,7 +1564,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         if (showLoading) setState(() => _isLoading = true);
       }
 
-      // ─── Step 2: Fetch fresh from API ───
+      // ─── Step 2: No cache — fetch fresh from API ───
       // 1. Load siswa berdasarkan kelas
       final siswaData = await ApiStudentService.getStudentByClass(
         widget.classData['id'],
