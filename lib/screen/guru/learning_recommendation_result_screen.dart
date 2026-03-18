@@ -53,13 +53,14 @@ class _LearningRecommendationResultScreenState
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.invalidate(_buildRecommendationsCacheKey());
+    await LocalCacheService.clearStartingWith('tour_recommendation_result_');
     _fetchRecommendations(useCache: false);
   }
 
   Future<void> _fetchRecommendations({bool useCache = true}) async {
     final cacheKey = _buildRecommendationsCacheKey();
 
-    // Step 1: Try cache for instant display
+    // Try cache — return early
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -69,18 +70,21 @@ class _LearningRecommendationResultScreenState
           _isLoading = false;
           _errorMessage = '';
         });
+        if (kDebugMode) print('📦 RecommendationResult: from cache (${cached.length})');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _checkAndShowTour();
+        });
+        return;
       }
     }
 
-    // Step 2: Show skeleton only if list is empty
-    if (_recommendations.isEmpty && mounted) {
+    if (mounted) {
       setState(() {
         _isLoading = true;
         _errorMessage = '';
       });
     }
 
-    // Step 3: Fetch fresh from API
     try {
       final teacherId = widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
       final classId = widget.classData['id']?.toString() ?? '';
@@ -89,8 +93,6 @@ class _LearningRecommendationResultScreenState
 
       if (kDebugMode) {
         print('📥 Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId');
-        print('📥 Student object: ${widget.student}');
-        print('📥 Student id=${widget.student['id']}, student_id=${widget.student['student_id']}, nama=${widget.student['nama']}');
       }
 
       final response = await ApiRecommendationService.getRecommendations(
@@ -99,13 +101,8 @@ class _LearningRecommendationResultScreenState
         studentId: studentId,
       );
 
-      if (kDebugMode) {
-        print('📥 Response: ${response.toString().length > 500 ? response.toString().substring(0, 500) : response}');
-      }
-
       if (response['success'] == true) {
         final data = response['data'];
-        // Handle both paginated (data.data) and direct list responses
         final List recommendations;
         if (data is List) {
           recommendations = data;
@@ -116,7 +113,7 @@ class _LearningRecommendationResultScreenState
         }
 
         if (kDebugMode) {
-          print('📥 Recommendations count: ${recommendations.length}, data type: ${data.runtimeType}');
+          print('📥 Recommendations count: ${recommendations.length}');
         }
 
         await LocalCacheService.save(cacheKey, recommendations);
@@ -160,12 +157,26 @@ class _LearningRecommendationResultScreenState
   }
 
   Future<void> _checkAndShowTour() async {
+    const tourCacheKey = 'tour_recommendation_result_screen_guru';
     try {
+      // Check cache first
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'guru',
         name: 'learning_recommendation_result_tour',
       );
+
+      await LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];

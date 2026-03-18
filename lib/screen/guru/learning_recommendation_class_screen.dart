@@ -65,6 +65,7 @@ class _LearningRecommendationClassScreenState
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('recommendation_');
+    await LocalCacheService.clearStartingWith('tour_recommendation_class_');
     _loadAllData(useCache: false);
   }
 
@@ -115,7 +116,7 @@ class _LearningRecommendationClassScreenState
     if (!mounted) return;
     final cacheKey = 'recommendation_summary_$classId';
 
-    // Try cache
+    // Try cache — return early
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null && cached is Map) {
@@ -125,10 +126,12 @@ class _LearningRecommendationClassScreenState
             _loadingSummaries[classId] = false;
           });
         }
+        if (kDebugMode) print('📦 ClassSummary $classId: from cache');
+        return;
       }
     }
 
-    if (!_classSummaries.containsKey(classId) && mounted) {
+    if (mounted) {
       setState(() => _loadingSummaries[classId] = true);
     }
 
@@ -153,7 +156,7 @@ class _LearningRecommendationClassScreenState
     if (!mounted) return;
     final cacheKey = 'recommendation_history_${classId}_$_effectiveTeacherId';
 
-    // Try cache
+    // Try cache — return early
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -165,10 +168,12 @@ class _LearningRecommendationClassScreenState
             _loadingHistory[classId] = false;
           });
         }
+        if (kDebugMode) print('📦 ClassHistory $classId: from cache');
+        return;
       }
     }
 
-    if (!_classHistory.containsKey(classId) && mounted) {
+    if (mounted) {
       setState(() => _loadingHistory[classId] = true);
     }
 
@@ -255,7 +260,7 @@ class _LearningRecommendationClassScreenState
     if (teacherIdForSchedule.isEmpty) return;
     final cacheKey = 'recommendation_schedules_$teacherIdForSchedule';
 
-    // Try cache
+    // Try cache — return early
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -265,6 +270,8 @@ class _LearningRecommendationClassScreenState
             _schedulesLoaded = true;
           });
         }
+        if (kDebugMode) print('📦 TeacherSchedules: from cache');
+        return;
       }
     }
 
@@ -582,12 +589,26 @@ class _LearningRecommendationClassScreenState
   // ==================== TOUR ====================
 
   Future<void> _checkAndShowTour() async {
+    const tourCacheKey = 'tour_recommendation_class_screen_guru';
     try {
+      // Check cache first
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'guru',
         name: 'learning_recommendation_class_tour',
       );
+
+      await LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];

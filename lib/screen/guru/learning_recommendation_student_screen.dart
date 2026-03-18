@@ -47,13 +47,14 @@ class _LearningRecommendationStudentScreenState
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.invalidate(_buildStudentsCacheKey());
+    await LocalCacheService.clearStartingWith('tour_recommendation_student_');
     _loadStudents(useCache: false);
   }
 
   Future<void> _loadStudents({bool useCache = true}) async {
     final cacheKey = _buildStudentsCacheKey();
 
-    // Step 1: Try cache for instant display
+    // Try cache — return early
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -63,18 +64,21 @@ class _LearningRecommendationStudentScreenState
           _isLoading = false;
           _errorMessage = '';
         });
+        if (kDebugMode) print('📦 RecommendationStudents: from cache (${cached.length})');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _checkAndShowTour();
+        });
+        return;
       }
     }
 
-    // Step 2: Show skeleton only if list is empty
-    if (_students.isEmpty && mounted) {
+    if (mounted) {
       setState(() {
         _isLoading = true;
         _errorMessage = '';
       });
     }
 
-    // Step 3: Fetch fresh from API
     try {
       final students = await ApiClassService.getStudentsByClassId(
         widget.classData['id'].toString(),
@@ -96,7 +100,6 @@ class _LearningRecommendationStudentScreenState
       }
     } catch (e) {
       if (!mounted) return;
-      // Only show error if no cached data
       if (_students.isEmpty) {
         setState(() {
           _errorMessage = e.toString();
@@ -107,12 +110,26 @@ class _LearningRecommendationStudentScreenState
   }
 
   Future<void> _checkAndShowTour() async {
+    const tourCacheKey = 'tour_recommendation_student_screen_guru';
     try {
+      // Check cache first
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'guru',
         name: 'learning_recommendation_student_tour',
       );
+
+      await LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
