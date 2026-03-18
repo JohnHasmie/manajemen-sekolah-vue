@@ -159,6 +159,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     if (filterKey != null) await LocalCacheService.invalidate(filterKey);
     final summaryKey = _buildSummaryCacheKey();
     if (summaryKey != null) await LocalCacheService.invalidate(summaryKey);
+    await LocalCacheService.clearStartingWith('tour_presence_report_');
     if (_selectedClassData == null) {
       _loadFilterData(useCache: false);
     } else {
@@ -185,6 +186,12 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
               _lessonHours = cachedLessonHours;
               _isLoadingClasses = false;
             });
+            if (kDebugMode) print('Filter data loaded from cache');
+            // Trigger tour from cache path
+            Future.delayed(const Duration(milliseconds: 1000), () {
+              if (mounted) _checkAndShowTour();
+            });
+            return;
           }
         }
       }
@@ -249,10 +256,10 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         });
       }
 
-      // Step 3: Save to cache
+      // Step 3: Save to cache (non-blocking)
       final cacheKey = _buildFilterDataCacheKey();
       if (cacheKey != null) {
-        await LocalCacheService.save(cacheKey, {
+        LocalCacheService.save(cacheKey, {
           'subjects': subjects,
           'classes': classes,
           'teachers': teachers,
@@ -455,6 +462,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
               _hasMoreData = cached['hasMoreData'] ?? false;
               _isLoadingSummary = false;
             });
+            if (kDebugMode) print('Summary data loaded from cache');
+            return;
           }
         }
       }
@@ -470,7 +479,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     // Step 2: Fetch fresh from API
     await _fetchData();
 
-    // Step 3: Save to cache (only default view, page 1)
+    // Step 3: Save to cache (only default view, page 1, non-blocking)
     if (mounted) {
       final cacheKey = _buildSummaryCacheKey();
       if (cacheKey != null && _absensiSummaryList.isNotEmpty) {
@@ -487,7 +496,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           'lessonHourName': item.lessonHourName,
           'academicYearId': item.academicYearId,
         }).toList();
-        await LocalCacheService.save(cacheKey, {
+        LocalCacheService.save(cacheKey, {
           'data': serialized,
           'hasMoreData': _hasMoreData,
         });
@@ -1249,7 +1258,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _loadFilterData,
+      onRefresh: _forceRefresh,
       color: _getPrimaryColor(),
       child: ListView.builder(
         padding: EdgeInsets.all(16),
@@ -2255,12 +2264,16 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         children: [
           Icon(icon, size: 10, color: color),
           SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: color,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -2952,11 +2965,27 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   Future<void> _checkAndShowTour() async {
     if (_isTourShowing) return;
     try {
+      // Check tour cache first
+      const tourCacheKey = 'tour_presence_report_admin';
+      final cachedTour = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cachedTour != null) {
+        if (cachedTour['should_show'] == false) return;
+        if (cachedTour['should_show'] == true && cachedTour['tour'] != null) {
+          _tourId = cachedTour['tour']['id']?.toString();
+          if (!mounted || _isTourShowing) return;
+          _showTour();
+          return;
+        }
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'admin_presence_report_tour',
       );
+
+      // Save tour status to cache (non-blocking)
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         if (_isTourShowing) return;
@@ -2996,6 +3025,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_presence_report_admin', {'should_show': false});
       },
       onSkip: () {
         setState(() {
@@ -3004,6 +3034,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_presence_report_admin', {'should_show': false});
         return true;
       },
       onClickOverlay: (target) {
