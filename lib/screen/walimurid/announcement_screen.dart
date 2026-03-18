@@ -136,7 +136,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       }
     }
 
-    // Step 1: Try cache for instant display
+    // Step 1: Try cache → return early
     if (useCache) {
       final cached = await LocalCacheService.load(_announcementCacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -146,19 +146,21 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
             _isLoading = false;
             _errorMessage = null;
           });
+          _checkAndShowTour();
         }
+        if (kDebugMode) print('📦 AnnouncementScreen: Data from cache (${cached.length})');
+        return;
       }
     }
 
-    // Step 2: Show loading only if no data yet
-    if (_announcementList.isEmpty && mounted) {
+    // Step 2: Show loading & fetch from API
+    if (mounted) {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
     }
 
-    // Step 3: Fetch fresh data from API
     try {
       final response = await _apiService.get('/announcement/user/current');
 
@@ -1057,12 +1059,25 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check cache first (24h TTL)
+      final tourCacheKey = 'tour_announcement_screen_$_userRole';
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (mounted) _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
-        role:
-            'walimurid', // Assuming this screen is primarily for parents, otherwise adjust role.
+        role: 'walimurid',
         name: 'announcement_screen_tour',
       );
+
+      // Cache the result
+      await LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
