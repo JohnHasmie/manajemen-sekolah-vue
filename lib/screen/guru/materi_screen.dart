@@ -294,6 +294,9 @@ class MateriPageState extends State<MateriPage> {
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('materi_');
+    await LocalCacheService.clearStartingWith('tour_materi_');
+    await LocalCacheService.clearStartingWith('teacher_classes_');
+    await LocalCacheService.clearStartingWith('teacher_profile_');
     setState(() {
       _isLoading = true;
       _subjectList.clear();
@@ -471,16 +474,79 @@ class MateriPageState extends State<MateriPage> {
       final ApiTeacherService apiTeacherService = ApiTeacherService();
 
       // ─── Step 4: No cache — fetch from API ───
-      // First resolve classes if not from provider
+      // Parallelize getTeacherClasses + getTeacherById when both needed
       List<dynamic> classes = resolvedClasses;
-      if (classes.isEmpty) {
-        classes = await ApiTeacherService.getTeacherClasses(teacherId);
-        if (!mounted) return;
-        classes.sort((a, b) {
-          String nameA = (a['name'] ?? a['nama'] ?? '').toString();
-          String nameB = (b['name'] ?? b['nama'] ?? '').toString();
-          return nameA.compareTo(nameB);
-        });
+      final bool needClasses = classes.isEmpty;
+      final bool needProfile = _teacherProfileId == null;
+
+      if (needClasses || needProfile) {
+        // Try dedicated caches first before hitting API
+        final classesCacheKey = 'teacher_classes_$teacherId';
+        final profileCacheKey = 'teacher_profile_$teacherId';
+
+        if (needClasses && useCache) {
+          try {
+            final cachedClasses = await LocalCacheService.load(classesCacheKey, ttl: const Duration(hours: 3));
+            if (cachedClasses != null && cachedClasses is List) {
+              classes = List<dynamic>.from(cachedClasses);
+              classes.sort((a, b) {
+                String nameA = (a['name'] ?? a['nama'] ?? '').toString();
+                String nameB = (b['name'] ?? b['nama'] ?? '').toString();
+                return nameA.compareTo(nameB);
+              });
+              if (kDebugMode) print('📦 TeacherClasses: from cache (${classes.length})');
+            }
+          } catch (_) {}
+        }
+
+        if (needProfile && useCache) {
+          try {
+            final cachedProfile = await LocalCacheService.load(profileCacheKey, ttl: const Duration(hours: 6));
+            if (cachedProfile != null && cachedProfile is Map) {
+              _teacherProfileId = cachedProfile['id']?.toString();
+              if (kDebugMode) print('📦 TeacherProfile: from cache (id=$_teacherProfileId)');
+            }
+          } catch (_) {}
+        }
+
+        // Only fetch from API what's still missing
+        final bool stillNeedClasses = classes.isEmpty;
+        final bool stillNeedProfile = _teacherProfileId == null;
+
+        if (stillNeedClasses || stillNeedProfile) {
+          final List<Future> teacherFutures = [];
+          if (stillNeedClasses) teacherFutures.add(ApiTeacherService.getTeacherClasses(teacherId));
+          if (stillNeedProfile) teacherFutures.add(apiTeacherService.getTeacherById(teacherId));
+
+          final results = await Future.wait(teacherFutures);
+          if (!mounted) return;
+
+          int idx = 0;
+          if (stillNeedClasses) {
+            classes = results[idx] as List<dynamic>;
+            idx++;
+            classes.sort((a, b) {
+              String nameA = (a['name'] ?? a['nama'] ?? '').toString();
+              String nameB = (b['name'] ?? b['nama'] ?? '').toString();
+              return nameA.compareTo(nameB);
+            });
+            // Save classes to dedicated cache
+            await LocalCacheService.save(classesCacheKey, classes);
+          }
+          if (stillNeedProfile && idx < results.length) {
+            try {
+              final teacherProfile = results[idx];
+              if (teacherProfile is Map<String, dynamic>) {
+                final profileData = teacherProfile['data'] ?? teacherProfile;
+                _teacherProfileId = profileData['id']?.toString();
+                // Save profile to dedicated cache
+                await LocalCacheService.save(profileCacheKey, profileData);
+              }
+            } catch (e) {
+              if (kDebugMode) print('Could not resolve teacher profile ID: $e');
+            }
+          }
+        }
       }
 
       // Determine selected class for subject filtering
@@ -495,17 +561,22 @@ class MateriPageState extends State<MateriPage> {
         }
       }
 
-      // Resolve teacher profile ID if needed
-      if (_teacherProfileId == null) {
-        try {
-          final teacherProfile = await apiTeacherService.getTeacherById(teacherId);
-          if (teacherProfile is Map<String, dynamic>) {
-            final profileData = teacherProfile['data'] ?? teacherProfile;
-            _teacherProfileId = profileData['id']?.toString();
-          }
-        } catch (e) {
-          if (kDebugMode) print('Could not resolve teacher profile ID: $e');
-        }
+      // ─── Show classes immediately while subjects are loading ───
+      if (classes.isNotEmpty && mounted) {
+        setState(() {
+          _classList = classes;
+          _selectedClassId = selectedClassId;
+          _selectedClassName = selectedClassName;
+        });
+      }
+
+      // Save classes cache early (regardless of subjects result)
+      if (cacheKey != null && classes.isNotEmpty) {
+        // Don't await — save in background
+        LocalCacheService.save(cacheKey, {
+          'classes': classes,
+          'teacherProfileId': _teacherProfileId,
+        });
       }
 
       // Fetch subjects filtered by selected class + materi in parallel
@@ -529,33 +600,21 @@ class MateriPageState extends State<MateriPage> {
         setState(() {
           _isLoading = false;
           _subjectList = [];
-          _classList = classes;
-          _selectedClassId = selectedClassId;
-          _selectedClassName = selectedClassName;
           _debugInfo = 'Guru ini belum memiliki mata pelajaran untuk kelas ini';
         });
         return;
       }
 
       setState(() {
-        _classList = classes;
         _materiList = materi;
-        _selectedClassId = selectedClassId;
-        _selectedClassName = selectedClassName;
         _isLoading = false;
       });
 
       _applySubjectList(subject);
 
-      // Save to cache (classes + per-class subjects)
-      if (cacheKey != null) {
-        await LocalCacheService.save(cacheKey, {
-          'classes': classes,
-          'teacherProfileId': _teacherProfileId,
-        });
-      }
+      // Save subjects cache in background
       if (selectedClassId != null && subject.isNotEmpty) {
-        await LocalCacheService.save('materi_subjects_${teacherId}_$selectedClassId', subject);
+        LocalCacheService.save('materi_subjects_${teacherId}_$selectedClassId', subject);
       }
       if (kDebugMode) print('Saved materi data to cache');
     } catch (e) {
@@ -616,8 +675,8 @@ class MateriPageState extends State<MateriPage> {
               }
               _debugInfo = '${cachedBab.length} bab materi, ${cachedSubBab.length} sub-bab ditemukan';
             });
-            // Load progress from DB (always fresh — this is user-specific state)
-            await _loadMateriProgress(subjectId);
+            // Load progress from DB non-blocking (always fresh — this is user-specific state)
+            _loadMateriProgress(subjectId);
             // Trigger tour check
             Future.delayed(const Duration(milliseconds: 1000), () {
               if (mounted) _checkAndShowTour();
@@ -643,6 +702,7 @@ class MateriPageState extends State<MateriPage> {
         if (kDebugMode) {
           print('Error: Master Subject ID not found for subject $subjectId');
         }
+        if (mounted) setState(() => _isLoadingBab = false);
         return;
       }
 
@@ -689,14 +749,14 @@ class MateriPageState extends State<MateriPage> {
             '${babMateri.length} bab materi, ${_subBabMateriList.length} sub-bab ditemukan';
       });
 
-      // Save to cache
-      await LocalCacheService.save(babCacheKey, {
+      // Save to cache (non-blocking)
+      LocalCacheService.save(babCacheKey, {
         'babMateri': babMateri,
         'subBabMateri': allSubBabs,
       });
 
-      // Load progress dari database
-      await _loadMateriProgress(subjectId);
+      // Load progress dari database (non-blocking — UI already shows bab structure)
+      _loadMateriProgress(subjectId);
 
       // Trigger tour
       Future.delayed(Duration(milliseconds: 1000), () {
@@ -1791,12 +1851,27 @@ class MateriPageState extends State<MateriPage> {
   }
 
   Future<void> _checkAndShowTour() async {
+    const tourCacheKey = 'tour_materi_screen_guru';
     try {
+      // Try cache first
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'guru',
         name: 'materi_screen_tour',
       );
+
+      // Save to cache
+      await LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -1966,47 +2041,38 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
   Future<void> _loadContentMateri() async {
     final contentCacheKey = 'materi_content_${widget.subBab['id']}';
 
-    // Step 1: Try cache for instant display
+    // Try cache — return early if hit
     try {
       final cached = await LocalCacheService.load(contentCacheKey, ttl: const Duration(hours: 6));
-      if (cached != null && mounted) {
+      if (cached != null && cached is List && mounted) {
         setState(() {
           _contentMateriList = List<dynamic>.from(cached);
           _isLoading = false;
         });
-        if (kDebugMode) print('Loaded content materi from cache');
+        if (kDebugMode) print('📦 ContentMateri ${widget.subBab['id']}: from cache');
+        return;
       }
     } catch (e) {
       if (kDebugMode) print('Content cache load error: $e');
     }
 
-    // Step 2: Show loading only if still empty
-    if (_contentMateriList.isEmpty && mounted) {
-      setState(() => _isLoading = true);
-    }
+    // No cache — fetch from API
+    if (mounted) setState(() => _isLoading = true);
 
-    // Step 3: Fetch fresh from API
     try {
       final kontenMateri = await ApiSubjectService.getContentMateri(
         subBabId: widget.subBab['id'].toString(),
       );
       if (!mounted) return;
 
-      if (kDebugMode) {
-        print('Content Materi loaded: ${kontenMateri.length} items for subBab ${widget.subBab['id']}');
-      }
-
       setState(() {
         _contentMateriList = kontenMateri;
         _isLoading = false;
       });
 
-      // Save to cache
       await LocalCacheService.save(contentCacheKey, kontenMateri);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading content materi: $e');
-      }
+      if (kDebugMode) print('Error loading content materi: $e');
       if (!mounted) return;
       setState(() => _isLoading = false);
     }
@@ -2015,31 +2081,25 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
   Future<void> _loadAiContent() async {
     final aiCacheKey = 'materi_ai_${widget.teacherId}_${widget.bab['id']}_${widget.subBab['id']}';
 
-    // Step 1: Try local cache for instant display
+    // Try local cache — return early if hit
     try {
       final cached = await LocalCacheService.load(aiCacheKey, ttl: const Duration(hours: 6));
-      if (cached != null && mounted) {
+      if (cached != null && cached is Map && mounted) {
         setState(() {
           _aiGeneratedData = Map<String, dynamic>.from(cached);
           _isLoadingAi = false;
         });
-        if (kDebugMode) print('Loaded AI content from local cache');
+        if (kDebugMode) print('📦 AI content ${widget.subBab['id']}: from cache');
+        return;
       }
     } catch (e) {
       if (kDebugMode) print('AI local cache load error: $e');
     }
 
-    // Step 2: Show loading only if no cached data
-    if (_aiGeneratedData == null && mounted) {
-      setState(() => _isLoadingAi = true);
-    }
+    // No cache — fetch from API
+    if (mounted) setState(() => _isLoadingAi = true);
 
-    // Step 3: Fetch fresh from API
     try {
-      if (kDebugMode) {
-        print('AI Cache Check: teacherId=${widget.teacherId}, chapterId=${widget.bab['id']}, subChapterId=${widget.subBab['id']}');
-      }
-
       Map<String, dynamic>? aiData;
 
       try {
@@ -2135,15 +2195,11 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
         _isLoadingAi = false;
       });
 
-      // Save to local cache
       if (aiData != null) {
         await LocalCacheService.save(aiCacheKey, aiData);
-        if (kDebugMode) print('Saved AI content to local cache');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading AI content: $e');
-      }
+      if (kDebugMode) print('Error loading AI content: $e');
       if (!mounted) return;
       setState(() => _isLoadingAi = false);
     }

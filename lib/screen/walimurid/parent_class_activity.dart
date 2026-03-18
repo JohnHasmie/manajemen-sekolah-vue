@@ -124,6 +124,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('parent_activity_');
+    await LocalCacheService.clearStartingWith('tour_parent_class_activity_');
     _loadUserData(useCache: false);
   }
 
@@ -158,7 +159,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Future<void> _loadStudentsForParent({bool useCache = true}) async {
-    // Step 1: Try cache for instant display
+    // Try cache — return early
     if (useCache) {
       final cached = await LocalCacheService.load(_studentsCacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -172,15 +173,15 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           _selectedStudentId = _studentList[0]['id'];
           await _loadActivities(useCache: true);
         }
+        if (kDebugMode) print('📦 ParentStudents: from cache (${cached.length})');
+        return;
       }
     }
 
-    // Step 2: Show loading only if no data yet
-    if (_studentList.isEmpty && mounted) {
+    if (mounted) {
       setState(() => _isLoading = true);
     }
 
-    // Step 3: Fetch fresh from API
     try {
       final prefs = await SharedPreferences.getInstance();
       final userData = json.decode(prefs.getString('user') ?? '{}');
@@ -204,10 +205,6 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
             (userData['siswa_id'] != null &&
                 student['id'] == userData['siswa_id']);
       }).toList();
-
-      if (kDebugMode) {
-        print('DEBUG: User Data: $userData');
-      }
 
       if (!mounted) return;
 
@@ -244,7 +241,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
     final cacheKey = _buildActivitiesCacheKey();
 
-    // Step 1: Try cache for instant display (without unread indicators)
+    // Try cache — return early (without unread indicators)
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -254,15 +251,18 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           _hasFreshData = false; // Don't show unread dots from stale cache
           _isLoading = false;
         });
+        if (kDebugMode) print('📦 ParentActivities: from cache (${cached.length})');
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (mounted && _studentList.isNotEmpty) _checkAndShowTour();
+        });
+        return;
       }
     }
 
-    // Step 2: Show loading only if no data yet
-    if (_activityList.isEmpty && mounted) {
+    if (mounted) {
       setState(() => _isLoading = true);
     }
 
-    // Step 3: Fetch fresh from API
     try {
       final selectedStudent = _studentList.firstWhere(
         (s) => s['id'] == _selectedStudentId,
@@ -318,16 +318,29 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Future<void> _checkAndShowTour() async {
+    const tourCacheKey = 'tour_parent_class_activity_screen_wali';
     try {
+      // Check cache first
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'wali',
         name: 'parent_class_activity_screen_tour',
       );
 
+      await LocalCacheService.save(tourCacheKey, status);
+
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
-
         if (!mounted) return;
         _showTour();
       }
