@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../../providers/academic_year_provider.dart';
+import '../../providers/teacher_provider.dart';
 
 class RaportScreen extends StatefulWidget {
   final Map<String, String> teacher;
@@ -66,13 +67,36 @@ class RaportScreenState extends State<RaportScreen> {
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('raport_');
+    await LocalCacheService.clearStartingWith('tour_raport_');
     _loadInitialData(useCache: false);
   }
 
   Future<void> _loadInitialData({bool useCache = true}) async {
     final classesCacheKey = _buildClassesCacheKey();
 
-    // Step 1: Try cache for instant display
+    // Step 1: Try TeacherProvider (populated by dashboard)
+    if (useCache) {
+      try {
+        final teacherProvider = Provider.of<TeacherProvider>(context, listen: false);
+        if (teacherProvider.isLoaded && teacherProvider.homeroomClasses.isNotEmpty) {
+          final providerClasses = List<dynamic>.from(teacherProvider.homeroomClasses);
+          if (mounted) {
+            setState(() {
+              _classes = providerClasses;
+              _selectedClass = _classes.first;
+              _isLoading = false;
+              _errorMessage = '';
+            });
+            _loadStudentsForClass();
+            _checkAndShowTour();
+          }
+          if (kDebugMode) print('📦 RaportScreen: Classes from TeacherProvider (${providerClasses.length})');
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // Step 2: Try local cache → return early
     if (useCache) {
       final cached = await LocalCacheService.load(classesCacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -80,22 +104,25 @@ class RaportScreenState extends State<RaportScreen> {
           setState(() {
             _classes = List<dynamic>.from(cached);
             _selectedClass = _classes.first;
+            _isLoading = false;
             _errorMessage = '';
           });
           _loadStudentsForClass();
+          _checkAndShowTour();
         }
+        if (kDebugMode) print('📦 RaportScreen: Classes from cache (${cached.length})');
+        return;
       }
     }
 
-    // Step 2: Show loading only if no data
-    if (_classes.isEmpty) {
+    // Step 3: Show loading & fetch from API
+    if (mounted) {
       setState(() {
         _isLoading = true;
         _errorMessage = '';
       });
     }
 
-    // Step 3: Fetch fresh data from API
     try {
       final academicYearId = _getAcademicYearId();
 
@@ -120,18 +147,10 @@ class RaportScreenState extends State<RaportScreen> {
         setState(() {
           _classes = freshClasses;
           if (_classes.isNotEmpty) {
-            // Preserve selected class - must use the NEW instance from freshClasses
-            final match = _selectedClass != null
-                ? _classes.cast<Map<String, dynamic>?>().firstWhere(
-                    (c) => c?['id'].toString() == _selectedClass!['id'].toString(),
-                    orElse: () => null,
-                  )
-                : null;
-            _selectedClass = match ?? _classes.first;
-            _loadStudentsForClass(useCache: useCache);
-          } else {
-            _isLoading = false;
+            _selectedClass = _classes.first;
+            _loadStudentsForClass();
           }
+          _isLoading = false;
         });
       }
 
@@ -158,7 +177,7 @@ class RaportScreenState extends State<RaportScreen> {
 
     final studentsCacheKey = _buildStudentsCacheKey();
 
-    // Step 1: Try cache for instant display
+    // Step 1: Try cache → return early
     if (useCache) {
       final cached = await LocalCacheService.load(studentsCacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
@@ -169,21 +188,22 @@ class RaportScreenState extends State<RaportScreen> {
             _isLoading = false;
           });
         }
+        if (kDebugMode) print('📦 RaportScreen: Students from cache (${cached.length})');
+        return;
       }
     }
 
-    // Step 2: Show loading only if no data
-    if (_students.isEmpty) {
+    // Step 2: Show loading & fetch from API
+    if (mounted) {
       setState(() {
         _isLoadingStudents = true;
       });
     }
 
-    // Step 3: Fetch fresh data from API
     try {
       final academicYearId = _getAcademicYearId();
       if (academicYearId == null) {
-        if (_students.isEmpty) {
+        if (mounted) {
           setState(() {
             _errorMessage = "Tahun ajaran tidak valid.";
             _isLoadingStudents = false;
@@ -193,11 +213,25 @@ class RaportScreenState extends State<RaportScreen> {
         return;
       }
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      // Use shared school_day_data cache for semester (24h TTL)
       String semester = '1';
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semester = '2';
+      final cachedDayData = await LocalCacheService.load('school_day_data', ttl: const Duration(hours: 24));
+      if (cachedDayData != null && cachedDayData is Map) {
+        if (cachedDayData.containsKey('semester') &&
+            cachedDayData['semester'].toString().toLowerCase() == 'genap') {
+          semester = '2';
+        }
+        if (kDebugMode) print('📦 RaportScreen: Semester from school_day_data cache');
+      } else {
+        final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+        if (dateBasedSemester.containsKey('semester') &&
+            dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+          semester = '2';
+        }
+        // Save to shared cache for cross-screen reuse
+        if (dateBasedSemester.isNotEmpty) {
+          await LocalCacheService.save('school_day_data', dateBasedSemester);
+        }
       }
 
       final response = await ApiRaportService.getRaports(
@@ -227,6 +261,27 @@ class RaportScreenState extends State<RaportScreen> {
     }
   }
 
+  /// Resolve semester using shared cache, falling back to API
+  Future<String> _resolveSemester() async {
+    final cachedDayData = await LocalCacheService.load('school_day_data', ttl: const Duration(hours: 24));
+    if (cachedDayData != null && cachedDayData is Map) {
+      if (cachedDayData.containsKey('semester') &&
+          cachedDayData['semester'].toString().toLowerCase() == 'genap') {
+        return '2';
+      }
+      return '1';
+    }
+    final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+    if (dateBasedSemester.isNotEmpty) {
+      await LocalCacheService.save('school_day_data', dateBasedSemester);
+    }
+    if (dateBasedSemester.containsKey('semester') &&
+        dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+      return '2';
+    }
+    return '1';
+  }
+
   Future<void> _exportToExcel() async {
     if (_selectedClass == null) return;
 
@@ -239,16 +294,11 @@ class RaportScreenState extends State<RaportScreen> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
-      String semesterId = '1';
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semesterId = '2';
-      }
-
       if (academicYearId == null) {
         throw Exception("Tahun ajaran tidak valid.");
       }
+
+      final semesterId = await _resolveSemester();
 
       await ExcelRaportService.exportRaportToExcel(
         classId: _selectedClass!['id'].toString(),
@@ -303,12 +353,7 @@ class RaportScreenState extends State<RaportScreen> {
       final academicYearId =
           academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
-      String semesterId = '1';
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semesterId = '2';
-      }
+      final semesterId = await _resolveSemester();
 
       await ExcelRaportService.exportSingleRaportPdf(
         studentClassId: student['student_class_id'].toString(),
@@ -564,8 +609,9 @@ class RaportScreenState extends State<RaportScreen> {
                         if (newValue != null) {
                           setState(() {
                             _selectedClass = newValue;
-                            _loadStudentsForClass();
+                            _students = [];
                           });
+                          _loadStudentsForClass();
                         }
                       },
                       items: _classes.map((cls) {
@@ -746,11 +792,25 @@ class RaportScreenState extends State<RaportScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check cache first (24h TTL)
+      const tourCacheKey = 'tour_raport_screen_guru';
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (mounted) _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'guru',
         name: 'raport_screen_tour',
       );
+
+      // Cache the result
+      await LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];

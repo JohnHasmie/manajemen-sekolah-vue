@@ -114,6 +114,27 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
     super.dispose();
   }
 
+  /// Resolve semester using shared school_day_data cache, falling back to API
+  Future<String> _resolveSemester() async {
+    final cachedDayData = await LocalCacheService.load('school_day_data', ttl: const Duration(hours: 24));
+    if (cachedDayData != null && cachedDayData is Map) {
+      if (cachedDayData.containsKey('semester') &&
+          cachedDayData['semester'].toString().toLowerCase() == 'genap') {
+        return '2';
+      }
+      return '1';
+    }
+    final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+    if (dateBasedSemester.isNotEmpty) {
+      await LocalCacheService.save('school_day_data', dateBasedSemester);
+    }
+    if (dateBasedSemester.containsKey('semester') &&
+        dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+      return '2';
+    }
+    return '1';
+  }
+
   Future<void> _loadData({bool useCache = true}) async {
     final detailCacheKey = _buildDetailCacheKey();
     final academicYearId = _getAcademicYearId() ?? '';
@@ -128,7 +149,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       return;
     }
 
-    // Step 1: Try cache for instant display
+    // Step 1: Try cache → return early
     if (useCache) {
       final cached = await LocalCacheService.load(detailCacheKey);
       if (cached != null && cached is Map<String, dynamic>) {
@@ -150,26 +171,24 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
             _isLoading = false;
             _errorMessage = '';
           });
+          _checkAndShowTour();
+          if (kDebugMode) print('📦 RaportDetailScreen: Data from cache');
+          return;
         }
       }
     }
 
-    // Step 2: Show loading only if no data yet
-    if (_subjects.isEmpty && mounted) {
+    // Step 2: Show loading & fetch from API
+    if (mounted) {
       setState(() {
         _isLoading = true;
         _errorMessage = '';
       });
     }
 
-    // Step 3: Fetch fresh data from API
     try {
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
-      String semester = '1';
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semester = '2';
-      }
+      // Use shared school_day_data cache for semester
+      final semester = await _resolveSemester();
 
       final existingDetail = await ApiRaportService.getRaportDetail(
         studentClassId: widget.studentClassId,
@@ -330,12 +349,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
     try {
       final academicYearId = _getAcademicYearId() ?? '';
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
-      String semesterId = '1'; // Default to Ganjil
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semesterId = '2';
-      }
+      final semesterId = await _resolveSemester();
 
       final payload = {
         'student_class_id': widget.studentClassId,
@@ -1263,11 +1277,25 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check cache first (24h TTL)
+      const tourCacheKey = 'tour_raport_detail_screen_guru';
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (mounted) _showTour();
+        }
+        return;
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'guru',
         name: 'raport_detail_screen_tour',
       );
+
+      // Cache the result
+      await LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
