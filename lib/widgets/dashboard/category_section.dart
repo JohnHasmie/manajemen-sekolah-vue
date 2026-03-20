@@ -1,9 +1,16 @@
+// Expandable category section for organizing dashboard navigation items.
+//
+// Like a Vue `<CollapsibleSection>` component or a Bootstrap accordion panel
+// in a Laravel dashboard sidebar. Groups related menu items under a collapsible
+// header with an animated expand/collapse transition. Each item renders as a
+// MenuItemCard (like a `<router-link>` card in Vue).
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/widgets/dashboard/menu_item_card.dart';
 
-/// Data class for menu items
+/// Data class for a single menu item in a [CategorySection].
+/// Like a route definition object `{ title, icon, path }` in a Vue router config.
 class MenuItem {
   final String title;
   final dynamic icon;
@@ -18,8 +25,15 @@ class MenuItem {
   });
 }
 
-/// Expandable category section for organized dashboard navigation
-/// Groups menu items into collapsible categories
+/// Expandable category section for organized dashboard navigation.
+///
+/// Like a Vue `<CollapsePanel>` or Bootstrap `<b-collapse>` component.
+/// Groups menu items into collapsible categories with an animated
+/// expand/collapse transition. Each category has a colored header with
+/// icon and title, and expands to show a list of [MenuItemCard] widgets.
+///
+/// Uses `AnimationController` for smooth rotation of the arrow icon and
+/// `AnimatedSize` for the expand/collapse content area (like Vue's `<transition>`).
 class CategorySection extends StatefulWidget {
   /// Title of the category
   final String title;
@@ -88,6 +102,8 @@ class _CategorySectionState extends State<CategorySection>
     super.dispose();
   }
 
+  /// Toggles the expanded/collapsed state with animation.
+  /// Like Vue's `this.isExpanded = !this.isExpanded` triggering a `<transition>`.
   void _toggleExpansion() {
     setState(() {
       _isExpanded = !_isExpanded;

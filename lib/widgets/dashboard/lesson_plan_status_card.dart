@@ -1,6 +1,21 @@
+// Lesson plan (RPP) status card for the dashboard showing approval breakdown.
+//
+// Like a Vue `<LessonPlanStatusCard>` dashboard widget that displays a summary
+// of lesson plan statuses (approved, rejected, pending). Similar to a Laravel
+// dashboard card showing document approval workflow counts.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// A dashboard card showing lesson plan (RPP) approval status breakdown.
+///
+/// Like a Vue `<LessonPlanStatusCard>` with props:
+/// - [approved] - count of approved lesson plans (green)
+/// - [rejected] - count of rejected lesson plans (red)
+/// - [pending] - count of pending lesson plans (yellow)
+/// - [onTap] - navigate to full lesson plan management screen
+///
+/// Computed property [total] sums all three counts. Displays a vertical
+/// list of status rows with colored dots (like a simple legend).
 class LessonPlanStatusCard extends StatelessWidget {
   final int approved;
   final int rejected;

@@ -1,3 +1,13 @@
+// Teacher presence (attendance) management screen.
+// Like `pages/teacher/Attendance.vue` in a Vue app.
+//
+// The largest screen in the app (~5600 lines). Provides two modes via tabs:
+// 1. "Results" mode -- view attendance summaries with search/filter
+// 2. "Input" mode -- take attendance for a class/subject/date
+//
+// Supports auto-detection of current lesson hour, class-based filtering,
+// bulk status setting, and multi-layer caching. In Laravel terms, this
+// combines AttendanceController@index, @store, and @summary.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -22,6 +32,9 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Data model for an attendance summary row.
+/// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
+/// that holds computed attendance counts for a subject on a specific date.
 // Model untuk Summary Absensi
 class AbsensiSummary {
   final String subjectId;
@@ -52,6 +65,11 @@ class AbsensiSummary {
       '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}-$classId-$lessonHourId';
 }
 
+/// Teacher attendance management page with two modes: view results and input.
+///
+/// This is a StatefulWidget with complex local state. Props (like Vue props):
+/// - [teacher] -- current teacher info
+/// - [initialDate] / [initialSubjectId] / etc. -- optional deep-link params
 class PresencePage extends StatefulWidget {
   final Map<String, dynamic> teacher;
   final DateTime? initialDate;
@@ -74,6 +92,18 @@ class PresencePage extends StatefulWidget {
   PresencePageState createState() => PresencePageState();
 }
 
+/// State for [PresencePage].
+///
+/// Like a Vue page component with `data() { return {...} }`.
+/// Uses `TickerProviderStateMixin` for the tab animation controller.
+///
+/// Key state variables:
+/// - Tab 0 ("Results"): [_absensiSummaryList], filters, search
+/// - Tab 1 ("Input"): [_studentList], [_absensiStatus] map, selected date/subject/class
+/// - [_lessonHours] / [_selectedLessonHourId] -- lesson period selection
+/// - Various filter states for both modes
+///
+/// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class PresencePageState extends State<PresencePage>
     with TickerProviderStateMixin {
   // Tab Controller for TabSwitcher
@@ -117,6 +147,10 @@ class PresencePageState extends State<PresencePage>
   final GlobalKey _tabSwitcherKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` lifecycle hook. Sets up tab controller, applies
+  /// initial params (deep linking), and loads all initial data (subjects,
+  /// classes, schedules, lesson hours). The multi-step initialization
+  /// detects the current schedule to auto-select subject/class.
   @override
   void initState() {
     super.initState();
@@ -215,6 +249,9 @@ class PresencePageState extends State<PresencePage>
     return data;
   }
 
+  /// Loads all initial data: subjects, classes, students, and optionally
+  /// detects the current lesson schedule. Like a Vue `mounted()` that
+  /// calls multiple `axios.get()` in sequence.
   Future<void> _loadInitialData({bool useCache = true}) async {
     try {
       final academicYearId = context
@@ -483,6 +520,8 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
+  /// Auto-detects the current lesson hour based on the device time.
+  /// Like a Vue `computed` that determines which lesson period is active now.
   void _detectCurrentLessonHour() {
     if (_lessonHours.isEmpty) return;
 
@@ -501,6 +540,8 @@ class PresencePageState extends State<PresencePage>
 
   // Load today's schedules and detect current one.
   // Uses cached schedule from teaching_schedule screen if available — NO extra API call.
+  /// Auto-detects the current subject/class based on today's schedule and time.
+  /// Like a smart default selector that pre-fills the form fields.
   Future<void> _detectCurrentSchedule() async {
     try {
       final teacherId = widget.teacher['id']?.toString() ?? '';
@@ -586,6 +627,10 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
+  /// Loads attendance summary data for the "Results" tab.
+  /// Fetches all attendance records, groups them by subject+date+class,
+  /// and calculates present/absent counts. Like a Laravel query with
+  /// `groupBy()` and `count()` aggregation.
   Future<void> _loadAbsensiSummary({bool useCache = true}) async {
     if (!mounted) return;
 
@@ -1341,6 +1386,8 @@ class PresencePageState extends State<PresencePage>
   }
 
   // ========== MODE 0: VIEW RESULTS ==========
+  /// Builds the "View Results" tab UI with attendance summary cards.
+  /// Like a Vue `<AttendanceResults>` component with filterable list.
   Widget _buildResultsMode() {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
@@ -2578,6 +2625,9 @@ class PresencePageState extends State<PresencePage>
   }
 
   // ========== MODE 2: INPUT ABSENSI (REDESIGNED) ==========
+  /// Builds the "Input Attendance" tab UI with student list and status selectors.
+  /// Like a Vue `<AttendanceInput>` component with date picker, class/subject
+  /// dropdowns, and per-student status buttons.
   Widget _buildInputMode() {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
@@ -3301,6 +3351,10 @@ class PresencePageState extends State<PresencePage>
     });
   }
 
+  /// Submits attendance records for all students to the API.
+  /// Like a Vue `methods.submitForm()` calling `axios.post('/api/attendance')`
+  /// for each student. Shows progress, handles errors, and displays
+  /// success/failure summary. In Laravel: `AttendanceController@store`.
   Future<void> _submitAbsensi() async {
     final languageProvider = context.read<LanguageProvider>();
 

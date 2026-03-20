@@ -1,9 +1,27 @@
-// components/enhanced_search_bar.dart
+// New enhanced search bar with a separate filter button and active-filter indicator.
+//
+// Like a Vue component `<SearchBarWithFilterButton>` where the search input
+// and filter button are visually separated. The filter button shows a red
+// badge dot when filters are active (similar to a notification badge in Vue).
+// This is the newer version of EnhancedSearchBar with a cleaner design.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
+/// A search bar with a separate filter icon button that shows an active-filter badge.
+///
+/// Like a Vue `<NewEnhancedSearchBar>` component with props:
+/// - [controller] - text controller (like `v-model`)
+/// - [onChanged] - keystroke callback (like `@input`)
+/// - [hintText] - placeholder text
+/// - [showFilter] - whether to show the filter button (like `v-if`)
+/// - [hasActiveFilter] - shows a red dot badge when true
+/// - [onFilterPressed] - opens the filter sheet (like `@click` on the filter icon)
+/// - [primaryColor] - theme color for the search icon and filter button
+/// - [margin] - optional outer margin override
+///
+/// This is a StatelessWidget because all state is managed by the parent.
 class NewEnhancedSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final Function(String) onChanged;

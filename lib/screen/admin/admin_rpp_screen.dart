@@ -1,3 +1,10 @@
+// Admin RPP (lesson plan) management screen.
+//
+// Like `pages/admin/lesson-plans.vue` - allows admins to review, approve, or reject
+// teacher-submitted lesson plans (RPP). Uses drill-down: Teacher list -> RPP list.
+// Supports pagination, status filtering, file download, and Excel export.
+//
+// In Laravel terms, this consumes RppController (GET /api/rpp, PATCH /api/rpp/{id}/approve).
 import 'dart:async';
 import 'dart:io';
 
@@ -21,6 +28,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin lesson plan (RPP) review screen with drill-down navigation.
+///
+/// Optionally accepts [teacherId]/[teacherName] to skip the teacher selection step.
+/// This is like a Vue page with optional route params (`/admin/rpp?teacherId=123`).
 class AdminRppScreen extends StatefulWidget {
   final String? teacherId;
   final String? teacherName;
@@ -31,6 +42,15 @@ class AdminRppScreen extends StatefulWidget {
   State<AdminRppScreen> createState() => _AdminRppScreenState();
 }
 
+/// Mutable state for [AdminRppScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_showTeacherList] - whether showing teacher list or RPP list (drill-down)
+/// - [_rppList] / [_teacherList] - paginated data lists
+/// - [_selectedStatusFilter] - filter by approval status (Pending/Approved/Rejected)
+/// - Pagination state for infinite scroll
+///
+/// setState() triggers re-render like Vue's reactivity system.
 class _AdminRppScreenState extends State<AdminRppScreen> {
   List<dynamic> _rppList = [];
   List<dynamic> _teacherList = [];
@@ -60,6 +80,8 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
   _selectedStatusFilter; // 'Pending', 'Approved', 'Rejected', or null for all
   bool _hasActiveFilter = false;
 
+  /// Like Vue's `mounted()` - sets up scroll listener for infinite scroll
+  /// and loads either teacher list or RPP list based on initial props.
   @override
   void initState() {
     super.initState();

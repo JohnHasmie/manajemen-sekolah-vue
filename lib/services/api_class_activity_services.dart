@@ -1,12 +1,28 @@
-// api_class_activity_services.dart - Perbaikan lengkap
+/// api_class_activity_services.dart - Manages class activities (kegiatan kelas) CRUD.
+/// Like Laravel's ClassActivityController / Vue's classActivity store module.
+///
+/// Class activities represent daily teaching events: what was taught, by whom,
+/// in which class, for which subject. Teachers create them; students/parents view them.
+/// Supports paginated listing, filtering, export, read-tracking, and schedule lookups.
+library;
+
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
 
+/// Service for class activity (kegiatan kelas) API interactions.
+/// Like a Laravel Resource Controller with additional custom actions
+/// (export, unread-count, mark-read). All methods are static.
+///
+/// In Vue terms, this is like a Pinia/Vuex store actions file that
+/// handles all API calls related to class activities.
 class ApiClassActivityService {
-  // Get Class Activities with Pagination & Filters (Recommended)
+  /// Fetches class activities with server-side pagination and multiple filters.
+  /// Like `ClassActivity::filter($request)->paginate()` in Laravel.
+  /// Similar to a Vuex action that calls the paginated index endpoint.
+  /// Returns a Map with 'data' (list) and 'pagination' metadata.
   static Future<Map<String, dynamic>> getClassActivityPaginated({
     int page = 1,
     int limit = 10,
@@ -92,10 +108,14 @@ class ApiClassActivityService {
     };
   }
 
+  /// Base URL from central config. Like `config('app.url')` in Laravel.
   static String get baseUrl => ApiService.baseUrl;
 
+  /// Auth headers with Bearer token. Like Laravel's `Http::withToken()`.
   static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
+  /// Parses JSON response and throws on non-2xx status.
+  /// Like a shared Axios interceptor or Laravel Http macro.
   static dynamic _handleResponse(http.Response response) {
     try {
       final responseBody = json.decode(response.body);
@@ -116,7 +136,9 @@ class ApiClassActivityService {
     }
   }
 
-  // Tambahkan di ApiService class
+  /// Exports class activities to a downloadable format.
+  /// Like Laravel's export endpoint that returns a file response.
+  /// Returns raw http.Response so the caller can handle the file bytes.
   static Future<http.Response> exportClassActivities(
     List<Map<String, dynamic>> activities,
   ) async {
@@ -128,7 +150,9 @@ class ApiClassActivityService {
     return response;
   }
 
-  // Get kegiatan by guru - DIPERBAIKI
+  /// Fetches activities created by a specific teacher.
+  /// Like `ClassActivity::where('teacher_id', $guruId)->get()` in Laravel.
+  /// [guruId] - The teacher's UUID.
   static Future<List<dynamic>> getActivityByGuru(String guruId) async {
     try {
       final headers = await _getHeaders();
@@ -160,7 +184,9 @@ class ApiClassActivityService {
     }
   }
 
-  // Get kegiatan by kelas (untuk siswa) - DIPERBAIKI
+  /// Fetches activities for a specific class, optionally filtered by student and academic year.
+  /// Used by students/parents to see what happened in their class.
+  /// Like `ClassActivity::where('class_id', $classId)->get()` in Laravel.
   static Future<List<dynamic>> getKegiatanByKelas(
     String classId, {
     String? siswaId,
@@ -206,7 +232,9 @@ class ApiClassActivityService {
     }
   }
 
-  // Tambah kegiatan - DIPERBAIKI
+  /// Creates a new class activity record.
+  /// Like `ClassActivity::create($data)` in Laravel or a Vuex `store` action.
+  /// [data] - Activity fields (teacher_id, class_id, subject_id, date, description, etc.).
   static Future<dynamic> tambahKegiatan(Map<String, dynamic> data) async {
     try {
       final headers = await _getHeaders();
@@ -226,7 +254,8 @@ class ApiClassActivityService {
     }
   }
 
-  // Update kegiatan - DIPERBAIKI
+  /// Updates an existing class activity by ID.
+  /// Like `ClassActivity::find($id)->update($data)` in Laravel.
   static Future<dynamic> updateKegiatan(
     String id,
     Map<String, dynamic> data,
@@ -249,7 +278,8 @@ class ApiClassActivityService {
     }
   }
 
-  // Delete kegiatan - DIPERBAIKI
+  /// Deletes a class activity by ID.
+  /// Like `ClassActivity::find($id)->delete()` in Laravel.
   static Future<dynamic> deleteKegiatan(String id) async {
     try {
       final headers = await _getHeaders();
@@ -268,7 +298,9 @@ class ApiClassActivityService {
     }
   }
 
-  // Get jadwal untuk form - DIPERBAIKI
+  /// Fetches the teacher's schedule to populate form dropdowns.
+  /// Like loading relationship data for a Laravel form (e.g., `Teacher::find($id)->schedules`).
+  /// Used to show which class/subject/day options are available when creating activities.
   static Future<List<dynamic>> getJadwalForForm({
     required String guruId,
     String? hari,
@@ -304,7 +336,9 @@ class ApiClassActivityService {
     }
   }
 
-  // Get siswa by kelas - DIPERBAIKI
+  /// Fetches students belonging to a specific class.
+  /// Like `Student::where('class_id', $classId)->get()` in Laravel.
+  /// Used to select which students an activity targets.
   static Future<List<dynamic>> getSiswaByKelas(String classId) async {
     try {
       final headers = await _getHeaders();
@@ -336,7 +370,8 @@ class ApiClassActivityService {
     }
   }
 
-  // Debug method untuk test connection
+  /// Tests API connectivity by hitting the health endpoint.
+  /// Like Laravel's `/api/health` route. Useful for debugging connection issues.
   static Future<dynamic> testConnection() async {
     try {
       final headers = await _getHeaders();
@@ -355,7 +390,9 @@ class ApiClassActivityService {
     }
   }
 
-  // Get filter options for kegiatan (guru, kelas, tanggal, bulan, tahun)
+  /// Fetches filter dropdown options for the activity list screen.
+  /// Like a Laravel endpoint returning distinct values for filter selects.
+  /// Similar to a Vue composable that loads filter metadata on mount.
   static Future<Map<String, dynamic>> getKegiatanFilterOptions({
     String? guruId,
     String? classId,
@@ -391,7 +428,8 @@ class ApiClassActivityService {
     }
   }
 
-  // Get unread class activity count
+  /// Gets the count of unread class activities for badge display.
+  /// Like a Laravel notification count endpoint. Returns 0 on error.
   static Future<int> getUnreadCount() async {
     try {
       final headers = await _getHeaders();
@@ -411,7 +449,8 @@ class ApiClassActivityService {
     }
   }
 
-  // Mark class activities as read
+  /// Marks specific class activities as read (like Laravel's notification markAsRead).
+  /// [activityIds] - List of activity UUIDs to mark. Returns true on success.
   static Future<bool> markAsRead(List<String> activityIds) async {
     try {
       final headers = await _getHeaders();

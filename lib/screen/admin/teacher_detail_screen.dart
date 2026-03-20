@@ -1,3 +1,9 @@
+// Teacher detail view screen - shows full profile info for a single teacher.
+//
+// Like `pages/admin/teachers/{id}.vue` - a detail/show page that displays
+// all teacher information (personal data, subjects taught, classes, schedule).
+//
+// In Laravel terms, this calls `GET /api/teachers/{id}` (TeacherController@show).
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
@@ -8,6 +14,10 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:provider/provider.dart';
 
+/// Teacher detail screen - displays full profile for a single teacher.
+///
+/// Takes a [teacher] map (basic data) and fetches full details from API.
+/// Like a Vue route page with `props: true` receiving the teacher object.
 class TeacherDetailScreen extends StatefulWidget {
   final Map<String, dynamic> teacher;
 
@@ -17,6 +27,12 @@ class TeacherDetailScreen extends StatefulWidget {
   TeacherDetailScreenState createState() => TeacherDetailScreenState();
 }
 
+/// Mutable state for [TeacherDetailScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_teacherDetail] - full teacher data from API (null until loaded)
+/// - [_subjects] - all subjects for reference/mapping
+/// - [_isLoading] / [_errorMessage] - loading and error states
 class TeacherDetailScreenState extends State<TeacherDetailScreen> {
   final ApiTeacherService apiTeacherService = ApiTeacherService();
   final ApiClassService apiClassService = ApiClassService();
@@ -27,12 +43,15 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  /// Like Vue's `mounted()` - fetches full teacher details from the API.
   @override
   void initState() {
     super.initState();
     _loadTeacherDetail();
   }
 
+  /// Fetches full teacher details by ID, including subjects and classes.
+  /// Like calling `GET /api/teachers/{id}?academic_year_id=...` in Vue.
   Future<void> _loadTeacherDetail() async {
     try {
       setState(() {

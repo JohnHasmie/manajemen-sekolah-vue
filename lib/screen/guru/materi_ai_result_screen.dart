@@ -1,3 +1,11 @@
+// AI-generated teaching material result screen.
+// Like `pages/teacher/Material/AiResult.vue` in a Vue app.
+//
+// Displays AI-generated teaching materials organized in tabs (ringkasan,
+// materi lengkap, latihan soal). Supports regeneration with custom prompts
+// and uses a polling mechanism for async AI processing.
+// In Laravel terms, this is like an AI job result viewer with polling
+// (similar to checking a Laravel Queue job status repeatedly).
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -9,6 +17,13 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Displays AI-generated teaching materials with tabbed content and
+/// regeneration capability.
+///
+/// Props (like Vue props):
+/// - [teacherId], [subjectId], [chapterId] -- context for AI generation
+/// - [subChapterId] -- optional sub-chapter filter
+/// - [title] -- display title for the material
 class MateriAiResultScreen extends StatefulWidget {
   final String teacherId;
   final String subjectId;
@@ -29,6 +44,16 @@ class MateriAiResultScreen extends StatefulWidget {
   MateriAiResultScreenState createState() => MateriAiResultScreenState();
 }
 
+/// State for [MateriAiResultScreen].
+///
+/// Like a Vue component with `data() { return { isLoading, aiData, isPolling, ... } }`.
+/// Uses `SingleTickerProviderStateMixin` for the tab animation controller.
+///
+/// Key state:
+/// - [_aiData] -- the AI-generated content (summary, full material, exercises)
+/// - [_isPolling] / [_pollingStatus] -- tracks async AI job progress
+/// - [_isRegenerating] -- whether a regeneration request is in progress
+/// - [_tabController] -- manages the 3-tab layout (like Vue `<el-tabs>`)
 class MateriAiResultScreenState extends State<MateriAiResultScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -41,6 +66,8 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
   Map<String, dynamic>? _aiData;
   final TextEditingController _promptController = TextEditingController();
 
+  /// Like Vue's `mounted()` -- sets up the tab controller and starts AI generation.
+  /// The polling view is shown immediately while the AI processes.
   @override
   void initState() {
     super.initState();
@@ -91,6 +118,10 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
     return prefs.getString('token');
   }
 
+  /// Triggers AI material generation and starts polling for results.
+  /// Like calling `axios.post('/api/ai/generate-material')` then polling
+  /// the job status endpoint. Similar to dispatching a Laravel Queue job
+  /// and checking `Job::find($id)->status` periodically.
   Future<void> _generateMateri({String prompt = ''}) async {
     setState(() {
       if (_aiData != null) {

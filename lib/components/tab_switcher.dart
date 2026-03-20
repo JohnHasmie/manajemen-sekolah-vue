@@ -1,7 +1,21 @@
-// components/tab_switcher.dart
+// Custom tab switcher component with icon + label tab buttons.
+//
+// Like a Vue `<v-tabs>` or `<b-tabs>` component that renders a horizontal
+// row of tab buttons. Each tab has an icon and label, and the active tab
+// is highlighted with the primary color. Similar to a Bootstrap tab bar
+// in a Laravel Blade layout.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// A horizontal tab switcher with icon and label for each tab.
+///
+/// Like a Vue `<TabSwitcher>` component with props:
+/// - [tabController] - Flutter's TabController (like Vue's `v-model` for active tab index)
+/// - [tabs] - list of [TabItem] objects defining label and icon for each tab
+/// - [primaryColor] - highlight color for the selected tab
+///
+/// Uses `tabController.animateTo(index)` when a tab is tapped, which triggers
+/// the associated `TabBarView` to switch pages (like Vue's `<v-tabs-items>`).
 class TabSwitcher extends StatelessWidget {
   final TabController tabController;
   final List<TabItem> tabs;
@@ -36,6 +50,8 @@ class TabSwitcher extends StatelessWidget {
     );
   }
 
+  /// Builds a single tab button with icon and label.
+  /// Highlights with [primaryColor] when selected.
   Widget _buildTabButton(int tabIndex, TabItem tab, Color primaryColor) {
     final isSelected = tabController.index == tabIndex;
 
@@ -75,6 +91,8 @@ class TabSwitcher extends StatelessWidget {
   }
 }
 
+/// Data class representing a single tab's label and icon.
+/// Like a simple object `{ label: 'Students', icon: Icons.people }` in Vue.
 class TabItem {
   final String label;
   final IconData icon;

@@ -1,7 +1,23 @@
+// Edit screen for AI-generated learning recommendations.
+// Like `pages/teacher/LearningRecommendation/Edit.vue` in a Vue app.
+//
+// Allows teachers to modify AI-generated recommendation titles, descriptions,
+// priorities, and materials using rich text editors (Quill). In Laravel terms,
+// this is like `RecommendationController@edit` + `@update`.
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// Form screen for editing AI-generated learning recommendations.
+///
+/// Uses Flutter Quill for rich text editing (like Vue Quill Editor / TinyMCE).
+/// Each recommendation has a title, priority, description, and materials --
+/// all editable via dedicated controllers.
+///
+/// Props (like Vue props):
+/// - [teacher] -- current teacher info
+/// - [student] -- the student whose recommendations are being edited
+/// - [recommendations] -- list of recommendation objects to edit
 class LearningRecommendationEditScreen extends StatefulWidget {
   final Map<String, String> teacher;
   final Map<String, dynamic> student;
@@ -19,6 +35,11 @@ class LearningRecommendationEditScreen extends StatefulWidget {
       _LearningRecommendationEditScreenState();
 }
 
+/// State for [LearningRecommendationEditScreen].
+///
+/// Like a Vue page component with `data() { return {...} }`. Manages
+/// multiple Quill controllers (one per editable field) and text controllers
+/// for titles. `setState()` triggers re-render like Vue reactivity.
 class _LearningRecommendationEditScreenState
     extends State<LearningRecommendationEditScreen> {
   bool _isSaving = false;
@@ -34,12 +55,15 @@ class _LearningRecommendationEditScreenState
   // State for Priorities
   final Map<String, String> _priorities = {};
 
+  /// Like Vue's `mounted()` -- initializes all form controllers from the
+  /// recommendation data passed via props.
   @override
   void initState() {
     super.initState();
     _initControllers();
   }
 
+  /// Like Vue's `beforeUnmount()` -- disposes all Quill and text controllers.
   @override
   void dispose() {
     for (var controller in _titleControllers.values) {
@@ -88,6 +112,8 @@ class _LearningRecommendationEditScreenState
     return quill.Document()..insert(0, text);
   }
 
+  /// Creates text/Quill controllers for each recommendation and its materials.
+  /// Like Vue `mounted()` setting up `this.$refs` for each editor instance.
   void _initControllers() {
     for (var rec in widget.recommendations) {
       final recId = rec['id']?.toString() ?? UniqueKey().toString();
@@ -119,6 +145,10 @@ class _LearningRecommendationEditScreenState
     }
   }
 
+  /// Saves edited recommendations and navigates back.
+  /// Like a Vue `methods.save()` calling `axios.put()` then `this.$router.back()`.
+  /// Returns `true` via `Navigator.pop()` to signal the parent that data changed
+  /// (like Vue `$emit('saved')`).
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
 

@@ -1,3 +1,11 @@
+/// api_schedule_services.dart - Manages teaching schedules (jadwal mengajar) with caching.
+/// Like Laravel's TeachingScheduleController / Vue's schedule store module.
+///
+/// Handles CRUD for teaching schedules, lesson hours, semesters, academic years,
+/// conflict detection, Excel import/export, and schedule filtering by teacher/class/day.
+/// Uses [LocalCacheService] with 30-minute TTL for paginated schedule data.
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,10 +15,19 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// Service for teaching schedule (jadwal mengajar) API calls with caching.
+/// Like a comprehensive Laravel Resource Controller with additional actions for
+/// conflicts, import/export, and filtered views. Uses local cache for performance.
+///
+/// In Vue terms, this is like a large Pinia store that manages schedule state,
+/// with computed getters for filtered/cached data and actions for CRUD + import/export.
 class ApiScheduleService {
+  /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
 
-  // Clear cache
+  /// Clears all schedule-related cache entries.
+  /// Called after any mutation to ensure fresh data on next load.
+  /// Like Laravel's `Cache::tags('schedules')->flush()`.
   static Future<void> invalidateCache() async {
     await LocalCacheService.clearStartingWith('schedule_');
     if (kDebugMode) {
@@ -18,8 +35,10 @@ class ApiScheduleService {
     }
   }
 
+  /// Auth headers with Bearer token. Like Laravel's `Http::withToken()`.
   static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
+  /// Parses JSON response and throws on non-2xx status.
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
 
@@ -32,7 +51,7 @@ class ApiScheduleService {
     }
   }
 
-  // Get Hari
+  /// Fetches the list of school days (hari). Like `Day::all()` in Laravel.
   static Future<List<dynamic>> getHari() async {
     final response = await http.get(
       Uri.parse('$baseUrl/day'),
@@ -43,7 +62,7 @@ class ApiScheduleService {
     return result is List ? result : [];
   }
 
-  // Get Semester
+  /// Fetches the list of semesters. Like `Semester::all()` in Laravel.
   static Future<List<dynamic>> getSemester() async {
     final response = await http.get(
       Uri.parse('$baseUrl/semester'),
@@ -54,7 +73,7 @@ class ApiScheduleService {
     return result is List ? result : [];
   }
 
-  // Get Academic Year
+  /// Fetches academic years. Like `AcademicYear::all()` in Laravel.
   static Future<List<dynamic>> getAcademicYear() async {
     final response = await http.get(
       Uri.parse('$baseUrl/academic-year'),
@@ -65,7 +84,7 @@ class ApiScheduleService {
     return result is List ? result : [];
   }
 
-  // Get Jam Pelajaran
+  /// Fetches lesson hour slots (jam pelajaran). Like `LessonHour::all()` in Laravel.
   static Future<List<dynamic>> getJamPelajaran() async {
     final response = await http.get(
       Uri.parse('$baseUrl/lesson-hour'),
@@ -76,7 +95,7 @@ class ApiScheduleService {
     return result is List ? result : [];
   }
 
-  // Add Jam Pelajaran
+  /// Creates a new lesson hour slot. Like `LessonHour::create($data)` in Laravel.
   static Future<dynamic> addJamPelajaran(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/lesson-hour'),
@@ -87,7 +106,8 @@ class ApiScheduleService {
     return _handleResponse(response);
   }
 
-  // Get Filter Options for Teaching Schedule Filters
+  /// Fetches filter dropdown options (teachers, classes, days, semesters) for schedule listing.
+  /// Like a Laravel endpoint that returns distinct values for Vue filter selects.
   static Future<Map<String, dynamic>> getScheduleFilterOptions({
     String? academicYearId,
   }) async {
@@ -121,7 +141,10 @@ class ApiScheduleService {
     }
   }
 
-  // Get Teaching Schedules with Pagination & Filters (Recommended)
+  /// Fetches teaching schedules with server-side pagination, filters, and local caching.
+  /// Like `TeachingSchedule::filter($request)->paginate()` in Laravel.
+  /// Cache TTL is 30 minutes. Set [skipCache] to true to force fresh data.
+  /// Similar to a Vuex action with localStorage caching for offline support.
   static Future<Map<String, dynamic>> getSchedulesPaginated({
     int page = 1,
     int limit = 10,
@@ -235,7 +258,8 @@ class ApiScheduleService {
     }
   }
 
-  // Jadwal Mengajar dengan struktur baru (Legacy - use getSchedulesPaginated instead)
+  /// Legacy method to fetch schedules as a flat list. Use [getSchedulesPaginated] instead.
+  /// Like a deprecated Laravel route kept for backward compatibility.
   static Future<List<dynamic>> getSchedule({
     String? teacherId,
     String? classId,
@@ -259,6 +283,8 @@ class ApiScheduleService {
     return result is List ? result : [];
   }
 
+  /// Creates a new teaching schedule entry. Invalidates cache after mutation.
+  /// Like `TeachingSchedule::create($data)` in Laravel.
   static Future<dynamic> addSchedule(Map<String, dynamic> data) async {
     if (kDebugMode) {
       print('DEBUG: addSchedule request body: ${json.encode(data)}');
@@ -282,6 +308,8 @@ class ApiScheduleService {
     return result;
   }
 
+  /// Updates an existing schedule entry. Invalidates cache.
+  /// Like `TeachingSchedule::find($id)->update($data)` in Laravel.
   static Future<void> updateSchedule(
     String id,
     Map<String, dynamic> data,
@@ -296,6 +324,8 @@ class ApiScheduleService {
     _handleResponse(response);
   }
 
+  /// Deletes a schedule entry. Invalidates cache.
+  /// Like `TeachingSchedule::find($id)->delete()` in Laravel.
   static Future<void> deleteSchedule(String id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/teaching-schedule/$id'),
@@ -306,7 +336,8 @@ class ApiScheduleService {
     await invalidateCache(); // Invalidate cache on delete
   }
 
-  // Tambahkan method untuk mendapatkan jam pelajaran berdasarkan filter
+  /// Fetches lesson hours filtered by day, semester, class, and academic year.
+  /// Like `LessonHour::where(...)->get()` in Laravel with multiple scopes.
   static Future<List<dynamic>> getJamPelajaranByFilter({
     String? hariId,
     String? semesterId,
@@ -328,7 +359,8 @@ class ApiScheduleService {
     return result is List ? result : [];
   }
 
-  // Get All Schedules (No Pagination)
+  /// Fetches all schedules without pagination (for exports or full-view displays).
+  /// Like `TeachingSchedule::all()` in Laravel. Use sparingly for large datasets.
   static Future<Map<String, dynamic>> getAllSchedules({
     String? semesterId,
     String? tahunAjaran,
@@ -371,6 +403,10 @@ class ApiScheduleService {
     }
   }
 
+  /// Checks for schedule conflicts before creating/updating a schedule.
+  /// Like a Laravel validation rule that queries for overlapping time slots.
+  /// Returns a list of conflicting schedules (empty if no conflicts).
+  /// [excludeScheduleId] - Exclude the current schedule when editing.
   static Future<List<dynamic>> getConflictingSchedules({
     required List<String> days_ids,
     required String classId,
@@ -408,9 +444,8 @@ class ApiScheduleService {
     }
   }
 
-  // Di class ApiScheduleService, tambahkan method berikut:
-
-  // Get Jadwal Mengajar by Guru ID
+  /// Fetches schedules for a specific teacher with optional filters.
+  /// Like `TeachingSchedule::where('teacher_id', $id)->get()` in Laravel.
   static Future<List<dynamic>> getScheduleByTeacher({
     required String teacherId,
     String? dayId,
@@ -438,7 +473,8 @@ class ApiScheduleService {
     }
   }
 
-  // Get Jadwal Mengajar for Current User
+  /// Fetches schedules for the currently authenticated user.
+  /// Like `auth()->user()->teachingSchedules` in Laravel.
   static Future<List<dynamic>> getCurrentUserSchedule({
     String? dayId,
     String? semesterId,
@@ -465,7 +501,8 @@ class ApiScheduleService {
     }
   }
 
-  // Tambahkan method ini di ApiScheduleService
+  /// Fetches schedules with server-side text-based filters (day name, semester name).
+  /// Like a Laravel endpoint with `where('day', $day)` using display names instead of IDs.
   static Future<List<dynamic>> getFilteredSchedule({
     required String teacherId,
     String? day,
@@ -508,9 +545,8 @@ class ApiScheduleService {
     }
   }
 
-  // Tambahkan method berikut di class ApiScheduleService
-
-  // Download template jadwal mengajar
+  /// Downloads the Excel import template for teaching schedules.
+  /// Like Laravel's file download response. Returns the local file path.
   static Future<String> downloadScheduleTemplate() async {
     try {
       final response = await http.get(
@@ -535,7 +571,8 @@ class ApiScheduleService {
     }
   }
 
-  // Import jadwal mengajar dari Excel
+  /// Imports schedules from an Excel file via multipart upload. Invalidates cache.
+  /// Like Laravel's `Excel::import()` with Maatwebsite package.
   static Future<Map<String, dynamic>> importSchedulesFromExcel(
     File file,
   ) async {
@@ -578,7 +615,8 @@ class ApiScheduleService {
     }
   }
 
-  // Debug Excel untuk jadwal mengajar
+  /// Debug endpoint to preview Excel file parsing without importing.
+  /// Like a Laravel debug/test route. Useful during development.
   static Future<Map<String, dynamic>> debugExcelSchedule(File file) async {
     try {
       var request = http.MultipartRequest(
@@ -613,7 +651,8 @@ class ApiScheduleService {
     }
   }
 
-  // Export jadwal mengajar ke Excel
+  /// Exports schedules to an Excel file with optional filters.
+  /// Like Laravel's `Excel::download()` -- saves the file locally and returns the path.
   static Future<String> exportSchedules({
     String? guruId,
     String? classId,
@@ -651,7 +690,8 @@ class ApiScheduleService {
     }
   }
 
-  // Get current semester based on server date (Ganjil/Genap)
+  /// Gets the current semester based on the server date (Ganjil/Genap).
+  /// Like a Laravel helper that determines the active semester from today's date.
   static Future<Map<String, dynamic>> getDateBasedSemester() async {
     try {
       final response = await http.get(

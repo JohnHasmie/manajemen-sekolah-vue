@@ -1,3 +1,11 @@
+// Class-level finance report screen - shows billing/payment status per student.
+//
+// Like `pages/admin/finance/class-report.vue` - displays a per-class finance report
+// showing each student's payment status, grouped by month and payment type.
+// Supports filtering by student name, payment type, month, and payment status.
+//
+// In Laravel terms, this consumes the billing endpoints filtered by class_id,
+// similar to `Bill::where('class_id', $id)->with('student')->get()`.
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -12,6 +20,10 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 
+/// Class finance report screen - shows billing/payment details for a specific class.
+///
+/// Takes [classId] and [className] as required props (like Vue route params).
+/// This is a [StatefulWidget] with local state for students, bills, and filters.
 class ClassFinanceReportScreen extends StatefulWidget {
   final String classId;
   final String className;
@@ -27,6 +39,15 @@ class ClassFinanceReportScreen extends StatefulWidget {
       _ClassFinanceReportScreenState();
 }
 
+/// Mutable state for [ClassFinanceReportScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_students] - list of students in the class
+/// - [_billsByStudent] - map of student ID -> their bills (like a Vue computed groupBy)
+/// - [_monthGroups] - bills grouped by month for display
+/// - Filter states: [_searchQuery], [_selectedPaymentTypeId], [_selectedStatus]
+///
+/// setState() triggers re-render like Vue's reactivity system.
 class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   final ApiService _apiService = ApiService();
   bool _isLoading = true;
@@ -44,12 +65,15 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   String _selectedStatus =
       'Semua'; // 'Semua', 'Lunas', 'Belum Dibayar', 'Belum Diverifikasi'
 
+  /// Like Vue's `mounted()` - loads students and billing data on screen open.
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
+  /// Fetches students, payment types, and bills for this class, then groups data.
+  /// Like a Vue method calling multiple API endpoints in sequence and computing derived data.
   Future<void> _loadData() async {
     try {
       setState(() {

@@ -1,4 +1,15 @@
-// keuangan.dart
+// Admin finance/billing management screen (keuangan).
+//
+// Like `pages/admin/finance.vue` - the main finance hub for managing:
+// 1. Payment types (jenis pembayaran) - recurring/one-time billing templates
+// 2. Bills (tagihan) - actual bills sent to students
+// 3. Pending payments - payments awaiting admin verification
+//
+// Uses a tab-based layout with 3 tabs. Supports CRUD operations, pagination,
+// search, filtering, and payment verification with receipt upload.
+//
+// In Laravel terms, this consumes PaymentTypeController, BillController,
+// and PaymentController endpoints.
 import 'dart:async';
 import 'dart:convert';
 
@@ -23,6 +34,9 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin finance management screen with tabbed layout for payment types, bills, and verifications.
+///
+/// This is a [StatefulWidget] - like a Vue page component with tabs (`<v-tabs>`).
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
 
@@ -30,6 +44,17 @@ class FinanceScreen extends StatefulWidget {
   FinanceScreenState createState() => FinanceScreenState();
 }
 
+/// Mutable state for [FinanceScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_currentTabIndex] - active tab (0=payment types, 1=bills, 2=pending payments)
+/// - [_jenisPembayaranList] - payment type templates (monthly, yearly, one-time)
+/// - [_tagihanList] - generated bills with pagination and filtering
+/// - [_pembayaranPendingList] - payments awaiting verification
+/// - [_dashboardData] - finance summary stats (total revenue, outstanding, etc.)
+/// - Pagination and search state for each tab
+///
+/// setState() triggers re-render like Vue's reactivity system.
 class FinanceScreenState extends State<FinanceScreen> {
   final ApiService _apiService = ApiService();
 
@@ -93,6 +118,8 @@ class FinanceScreenState extends State<FinanceScreen> {
   final List<dynamic> _allSiswaList = [];
   final TextEditingController _searchSiswaController = TextEditingController();
 
+  /// Like Vue's `mounted()` - sets up scroll listeners for both tabs'
+  /// infinite scroll, search debounce, and loads initial data.
   @override
   void initState() {
     super.initState();

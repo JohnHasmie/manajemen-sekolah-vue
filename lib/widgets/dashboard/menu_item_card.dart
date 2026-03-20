@@ -1,8 +1,22 @@
+// Professional menu item card for dashboard navigation.
+//
+// Like a Vue `<MenuItemCard>` or a `<router-link>` styled as a card in a
+// Laravel admin panel sidebar/dashboard. Each card has an icon, title,
+// optional badge count, and a right-arrow indicator. Similar to a Blade
+// component `<x-menu-card :title="..." :icon="..." :href="..." />`.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
-/// Professional menu item card for dashboard navigation
-/// Replaces the old _buildDashboardCard with improved styling
+/// A professional dashboard navigation card with icon, title, badge, and arrow.
+///
+/// Like a Vue `<MenuItemCard>` / `<router-link>` card with props:
+/// - [title] - menu item label
+/// - [icon] - can be `IconData` or emoji `String` (like a Vue dynamic component)
+/// - [onTap] - navigation callback (like `@click` / `$router.push`)
+/// - [badgeCount] - optional notification count badge (like a Vue `<v-badge>`)
+/// - [primaryColor] - accent color for the icon container
+///
+/// Replaces the old `buildDashboardCard` function with improved styling.
 class MenuItemCard extends StatelessWidget {
   /// Title of the menu item
   final String title;

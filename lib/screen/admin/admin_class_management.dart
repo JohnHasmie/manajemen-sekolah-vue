@@ -1,3 +1,10 @@
+// Admin class management screen - full CRUD for school classes.
+//
+// Like `pages/admin/classes.vue` - manages school classes (create, edit, delete)
+// with homeroom teacher assignment, student listing, and class promotion.
+// Supports infinite scroll pagination, search, filtering, Excel import/export.
+//
+// In Laravel terms, this consumes ClassController (GET/POST/PUT/DELETE /api/classes).
 import 'dart:async';
 import 'dart:io';
 
@@ -25,6 +32,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin class management screen with full CRUD, search, filters, and Excel import/export.
+///
+/// This is a [StatefulWidget] - like a Vue page component with local state for
+/// class list, pagination, filters, and FAB (Floating Action Button) animations.
 class AdminClassManagementScreen extends StatefulWidget {
   const AdminClassManagementScreen({super.key});
 
@@ -33,6 +44,16 @@ class AdminClassManagementScreen extends StatefulWidget {
       AdminClassManagementScreenState();
 }
 
+/// Mutable state for [AdminClassManagementScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_classes] / [_teachers] - data lists from API
+/// - [_currentPage] / [_hasMoreData] / [_isLoadingMore] - infinite scroll pagination
+/// - [_selectedGradeFilter] / [_selectedHomeroomFilter] - filter state
+/// - [_isFabOpen] - animated FAB menu state (add class, import Excel, promote)
+///
+/// Uses [SingleTickerProviderStateMixin] for FAB animation (like Vue `<transition>`).
+/// Listens to FCM sync triggers for real-time updates from other users.
 class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     with SingleTickerProviderStateMixin {
   List<dynamic> _classes = [];
@@ -76,6 +97,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   // Search debounce removed
 
+  /// Like Vue's `mounted()` lifecycle hook.
+  /// Sets up FAB animations, scroll listener for infinite scroll,
+  /// FCM sync listener, and loads initial data (school settings, teachers, classes).
   @override
   void initState() {
     super.initState();
@@ -106,6 +130,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     _loadData();
   }
 
+  /// Like Vue's `beforeUnmount()` - cleans up listeners, controllers, and timers.
   @override
   void dispose() {
     FCMService().syncTrigger.removeListener(_onSyncTriggered);

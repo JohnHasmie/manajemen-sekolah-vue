@@ -1,5 +1,19 @@
+// Empty state placeholder component shown when a list has no data.
+//
+// Like a Vue component `<EmptyState>` or a Blade partial
+// `@include('partials.empty-state')` shown with `@if($items->isEmpty())`.
+// Displays a large icon, title, subtitle, and an optional action button.
 import 'package:flutter/material.dart';
 
+/// A centered empty state widget displayed when no data is available.
+///
+/// Like a Vue `<EmptyState>` component with props:
+/// - [title] - main message (e.g., "No Students Found")
+/// - [subtitle] - secondary description
+/// - [icon] - large icon displayed in a circular gradient container
+/// - [buttonText] / [onPressed] - optional CTA button (like a "Add First Item" link)
+///
+/// Used across list screens as a fallback when the API returns zero results.
 class EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;

@@ -1,3 +1,11 @@
+// Teaching schedule screen -- the teacher's timetable/calendar view.
+// Like `pages/teacher/Schedule.vue` in a Vue app.
+//
+// Displays the teacher's weekly schedule with two view modes: card view
+// and table (grid) view. Supports filtering by day, semester, class,
+// real-time sync via FCM push notifications, and quick navigation to
+// related screens (attendance, class activity, materials).
+// In Laravel terms: `ScheduleController@index` with multiple view formats.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -21,6 +29,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Teacher's weekly schedule screen with card and table view modes.
+///
+/// A StatefulWidget with no constructor params -- it reads teacher data from
+/// SharedPreferences and TeacherProvider internally.
 class TeachingScheduleScreen extends StatefulWidget {
   const TeachingScheduleScreen({super.key});
 
@@ -28,6 +40,17 @@ class TeachingScheduleScreen extends StatefulWidget {
   TeachingScheduleScreenState createState() => TeachingScheduleScreenState();
 }
 
+/// State for [TeachingScheduleScreen].
+///
+/// Like a Vue page component with `data() { return {...} }`. Manages:
+/// - [_jadwalList] -- schedule entries from API
+/// - [_isTableView] -- toggle between card and table layout
+/// - [_isHomeroomView] -- special view for homeroom teachers
+/// - Filter state (day, semester, class)
+/// - Real-time sync via FCM push notifications
+/// - Onboarding tour
+///
+/// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   List<dynamic> _jadwalList = [];
   List<dynamic> _semesterList = [];
@@ -94,6 +117,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     'Sabtu': Color(0xFF06B6D4),
   };
 
+  /// Like Vue's `mounted()` -- sets academic year defaults, loads teacher data,
+  /// and subscribes to FCM real-time sync notifications (like a Vue event bus
+  /// or WebSocket listener for live updates).
   @override
   void initState() {
     super.initState();
@@ -145,6 +171,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     super.dispose();
   }
 
+  /// Loads the current teacher profile and triggers schedule loading.
+  /// Uses a multi-layer cache: SharedPreferences -> LocalCacheService -> API.
   Future<void> _loadUserData() async {
     if (kDebugMode) {
       print(
@@ -565,6 +593,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     _loadJadwal(useCache: false);
   }
 
+  /// Fetches the teacher's schedule from API with cache-first strategy.
+  /// Like `axios.get('/api/schedules')` in Vue with localStorage caching.
   Future<void> _loadJadwal({bool useCache = true}) async {
     if (_teacherId.isEmpty) {
       setState(() => _isLoading = false);
@@ -1190,6 +1220,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   // DITAMBAHKAN KEMBALI: Method untuk toggle view
+  /// Toggles between card view and table (grid) view.
+  /// Like a Vue `methods.toggleView()` that flips a boolean flag.
   void _toggleView() {
     setState(() {
       _isTableView = !_isTableView;
@@ -2202,6 +2234,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   // DITAMBAHKAN KEMBALI: Method untuk table view dengan format seperti Excel
+  /// Builds the table/grid view of the weekly schedule.
+  /// Like a Vue `<ScheduleTable>` component with days as columns and
+  /// time slots as rows.
   Widget _buildTableView(
     LanguageProvider languageProvider,
     List<dynamic> schedules,
@@ -2659,6 +2694,8 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   // DIPINDAH: Method untuk card view (sebelumnya _buildJadwalCard)
+  /// Builds the card view of schedule items grouped by day.
+  /// Like a Vue `<ScheduleCardList>` component with `v-for` over days.
   Widget _buildCardView(
     LanguageProvider languageProvider,
     List<dynamic> schedules,

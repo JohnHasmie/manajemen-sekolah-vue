@@ -1,6 +1,20 @@
+// Attendance overview card for the dashboard showing today's attendance summary.
+//
+// Like a Vue `<AttendanceSummaryCard>` dashboard widget. Displays present/absent/
+// sick/permitted counts with a colored distribution bar. Similar to a Laravel
+// dashboard stat card showing today's attendance breakdown.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// A compact dashboard card showing today's attendance summary with a distribution bar.
+///
+/// Like a Vue `<AttendanceOverviewCard>` with props:
+/// - [hadir] / [izin] / [sakit] / [alpha] - attendance counts by status
+/// - [total] - total expected attendance
+/// - [onTap] - navigate to full attendance screen
+///
+/// Shows a horizontal stacked bar (like a CSS flexbox progress bar) with
+/// color-coded segments for each attendance status, plus a legend.
 class AttendanceOverviewCard extends StatelessWidget {
   final int hadir;
   final int izin;
@@ -163,6 +177,7 @@ class AttendanceOverviewCard extends StatelessWidget {
     );
   }
 
+  /// Builds a single legend item (colored dot + label) for the attendance bar.
   Widget _buildLegend(Color color, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,

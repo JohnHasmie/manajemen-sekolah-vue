@@ -1,3 +1,10 @@
+// Notification list screen shared across all roles (admin, guru, wali).
+//
+// Like `pages/common/notifications.vue` - a shared notification inbox page
+// used by all user roles. Fetches notifications from the API, supports
+// mark-as-read, delete (swipe-to-dismiss), and navigation to related screens.
+//
+// In Laravel terms, this consumes the NotificationController endpoints.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +18,13 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
+/// Notification list screen - shared across admin, teacher (guru), and parent (wali) roles.
+///
+/// This is a [StatefulWidget] - like a Vue page component with its own local state
+/// (`data() { return { notifications: [], isLoading: true } }`).
+///
+/// Takes a [role] prop to determine color theming and which screens to navigate
+/// to when a notification is tapped (e.g., parent sees billing, teacher sees activities).
 class NotificationListScreen extends StatefulWidget {
   final String role; // 'guru', 'admin', 'wali'
 
@@ -20,6 +34,13 @@ class NotificationListScreen extends StatefulWidget {
   State<NotificationListScreen> createState() => _NotificationListScreenState();
 }
 
+/// The mutable state for [NotificationListScreen].
+///
+/// Key state variables (like Vue `data()` properties):
+/// - [_notifications] - the list of notification objects from the API
+/// - [_isLoading] - controls skeleton loading display
+///
+/// setState() is like Vue's reactivity - triggers a re-render when data changes.
 class _NotificationListScreenState extends State<NotificationListScreen> {
   final ApiNotificationService _apiService = ApiNotificationService();
   List<dynamic> _notifications = [];
@@ -29,12 +50,15 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     return ColorUtils.getRoleColor(widget.role);
   }
 
+  /// Like Vue's `mounted()` - fetches notifications when screen first appears.
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
+  /// Fetches notifications from the API. Like a Vue method `async loadData()`.
+  /// Also used as the `onRefresh` handler for pull-to-refresh (like a Vue `@pulldown` event).
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
@@ -51,6 +75,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     }
   }
 
+  /// Marks a single notification as read and removes it from the list.
+  /// Like calling `axios.patch('/api/notifications/{id}/read')` in Vue.
   Future<void> _markAsRead(String id) async {
     try {
       await _apiService.markAsRead(id);
@@ -73,6 +99,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     }
   }
 
+  /// Marks all notifications as read and clears the list.
+  /// Like a Vue "Mark all as read" button handler calling `POST /api/notifications/mark-all-read`.
   Future<void> _markAllRead() async {
     try {
       await _apiService.markAllRead();
@@ -138,6 +166,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     }
   }
 
+  /// Navigates to the appropriate screen based on notification type and user role.
+  /// Like a Vue method with switch/case that calls `router.push()` to different routes.
+  /// For example, a 'bill' notification for a parent navigates to ParentBillingScreen.
   void _handleTap(Map<String, dynamic> notif) {
     final type = notif['type'];
 
@@ -302,6 +333,10 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     }
   }
 
+  /// Main build method - like Vue's `<template>`.
+  /// Uses `Consumer<LanguageProvider>` to react to language changes -
+  /// similar to Vue's `computed` property that depends on a Vuex/Pinia store.
+  /// Shows skeleton loading, empty state, or the notification list with pull-to-refresh.
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(

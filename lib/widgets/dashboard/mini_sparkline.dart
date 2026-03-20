@@ -1,8 +1,25 @@
+// Mini sparkline chart widget using Flutter's CustomPaint (Canvas API).
+//
+// Like a Vue sparkline component (e.g., `vue-sparklines` or a tiny Chart.js
+// line chart) used in dashboard stat cards. Draws a smooth bezier curve
+// with optional area fill. In Laravel/Vue you might use `<sparkline>`
+// from a charting library; here we use Flutter's `CustomPainter`.
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Mini sparkline chart for dashboard statistics
-/// Displays a simple line chart with 5-7 data points
+/// A mini sparkline chart for dashboard statistics.
+///
+/// Like a Vue sparkline component displaying a simple line chart.
+/// Uses quadratic bezier curves for smooth lines.
+///
+/// Props:
+/// - [data] - list of numeric data points (ideally 5-7)
+/// - [color] - line and fill color
+/// - [height] / [width] - chart dimensions
+/// - [strokeWidth] - line thickness
+/// - [fillArea] - whether to fill the area under the line with translucent color
+///
+/// Used inside [EnhancedStatCard] for trend visualization.
 class MiniSparkline extends StatelessWidget {
   /// Data points to display (ideally 5-7 points)
   final List<double> data;
@@ -53,6 +70,8 @@ class MiniSparkline extends StatelessWidget {
   }
 }
 
+/// Custom painter that draws the sparkline curve and optional fill area.
+/// Uses quadratic bezier curves for smooth interpolation between data points.
 class _SparklinePainter extends CustomPainter {
   final List<double> data;
   final Color color;

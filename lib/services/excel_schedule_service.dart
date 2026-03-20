@@ -1,3 +1,7 @@
+// excel_schedule_service.dart - Export teaching schedule (jadwal mengajar) to Excel.
+// Like Laravel's Maatwebsite/Excel ScheduleExport with day-name translation.
+// Handles bilingual day names (Senin/Monday) based on the app's language setting.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,11 +13,22 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service for exporting teaching schedules (jadwal mengajar) to Excel.
+/// Similar to `Excel::download(new ScheduleExport($data), 'Jadwal.xlsx')` in Laravel.
+///
+/// Unique feature: translates day names based on the current language before
+/// sending to the backend, so the exported file matches the user's locale.
+///
+/// Supports flexible field name mapping for schedule data that can come from
+/// different API response formats (e.g., 'day_name' vs 'hari_nama', nested
+/// 'day.name' vs flat 'day_name'). Like Laravel's `$request->input('key', $fallback)`.
 class ExcelScheduleService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  // Export data jadwal mengajar ke Excel melalui backend
+  /// Export teaching schedule data to Excel via backend POST to `/teaching-schedule/export`.
+  /// Translates day names to the user's current language before sending.
+  /// [schedules] - list of schedule records. [context] - for SnackBar and i18n.
   static Future<void> exportSchedulesToExcel({
     required List<dynamic> schedules,
     required BuildContext context,
@@ -81,7 +96,8 @@ class ExcelScheduleService {
     }
   }
 
-  // Download template Excel melalui backend
+  /// Download a schedule import template from GET `/teaching-schedule/template`.
+  /// Like Laravel returning `Excel::download(new ScheduleTemplateExport)`.
   static Future<void> downloadTemplate(BuildContext context) async {
     final languageProvider = context.read<LanguageProvider>();
 
@@ -136,7 +152,7 @@ class ExcelScheduleService {
     }
   }
 
-  // Validasi data melalui backend
+  /// Server-side schedule validation via POST to `/teaching-schedule/validate`.
   static Future<List<Map<String, dynamic>>> validateScheduleDataBackend(
     List<dynamic> schedules,
   ) async {
@@ -159,7 +175,10 @@ class ExcelScheduleService {
     }
   }
 
-  // Helper method untuk validasi data sebelum export (local fallback)
+  /// Local fallback validation for schedule data. Handles multiple field name
+  /// conventions (e.g., 'teacher_name' vs 'guru_nama', nested 'day.name' vs
+  /// flat 'day_name'). Like a Laravel FormRequest with complex input normalization.
+  /// Validates: teacher, subject, class, day, lesson_hour, semester, academic_year.
   static List<Map<String, dynamic>> validateScheduleData(
     List<dynamic> schedules,
   ) {
@@ -254,6 +273,9 @@ class ExcelScheduleService {
     return validatedData;
   }
 
+  /// Translate a day name between English and Indonesian.
+  /// [targetLang] - 'id' for Indonesian, 'en' for English.
+  /// Like Laravel's `__('days.Monday')` localization but done as a simple map lookup.
   static String _translateDay(String dayName, String targetLang) {
     const enToId = {
       'Monday': 'Senin',

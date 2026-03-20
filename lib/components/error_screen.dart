@@ -1,5 +1,19 @@
+// Full-screen error display component with a retry button.
+//
+// Like a Laravel error view (`resources/views/errors/500.blade.php`)
+// or a Vue `<ErrorPage>` component shown when an API call fails.
+// Provides a retry callback to let the user attempt the failed operation again.
 import 'package:flutter/material.dart';
 
+/// A full-screen error widget with an error icon, message, and retry button.
+///
+/// Like a Blade error view `errors/500.blade.php` or a Vue `<ErrorScreen>` component.
+///
+/// Props (parameters):
+/// - [errorMessage] - the error description to display
+/// - [onRetry] - callback when "Try Again" is pressed (like reloading the page)
+///
+/// Used as the top-level body when data loading fails completely.
 class ErrorScreen extends StatelessWidget {
   final String errorMessage;
   final VoidCallback onRetry;
@@ -10,6 +24,7 @@ class ErrorScreen extends StatelessWidget {
     required this.onRetry,
   });
 
+  /// Builds the error screen with icon, message text, and retry button.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

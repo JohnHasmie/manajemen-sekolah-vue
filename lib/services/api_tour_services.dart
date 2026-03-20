@@ -1,11 +1,24 @@
+/// api_tour_services.dart - Manages onboarding tour/walkthrough state.
+/// Like Laravel's TourController / Vue's tour store module.
+///
+/// Tracks whether a user has seen the onboarding tour for their role,
+/// saves progress (last step reached), and marks tours as completed.
+/// Tours are platform-specific (mobile vs web) and role-specific.
+library;
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
 
+/// Service for onboarding tour API calls.
+/// Like a small Laravel controller with status/complete/save-progress actions.
+/// In Vue terms, this is a simple store module for managing first-time user guidance.
 class ApiTourService {
+  /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
 
+  /// Parses JSON response. Handles empty body (returns empty map).
   static dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return {};

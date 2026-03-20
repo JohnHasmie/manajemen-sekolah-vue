@@ -1,3 +1,9 @@
+// School level (jenjang) settings screen - configure school name, address, and level.
+//
+// Like `pages/admin/settings/school-info.vue` - a simple settings form for
+// editing the school's basic information (name, address, education level: SD/SMP/SMA/SMK).
+//
+// In Laravel terms, this calls `GET /api/settings/school` and `PUT /api/settings/school`.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
@@ -5,6 +11,9 @@ import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 
+/// School info settings screen - edit school name, address, and education level (jenjang).
+///
+/// This is a [StatefulWidget] - like a Vue form page with local state for form fields.
 class SchoolLevelSettingsScreen extends StatefulWidget {
   const SchoolLevelSettingsScreen({super.key});
 
@@ -13,6 +22,13 @@ class SchoolLevelSettingsScreen extends StatefulWidget {
       _SchoolLevelSettingsScreenState();
 }
 
+/// Mutable state for [SchoolLevelSettingsScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_schoolName] / [_schoolAddress] / [_selectedJenjang] - form field values
+/// - [_isLoading] - loading indicator state
+///
+/// setState() triggers re-render like Vue's reactivity system.
 class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
   String _schoolName = '';
   String _schoolAddress = '';
@@ -20,12 +36,14 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
   final List<String> _jenjangOptions = ['SD', 'SMP', 'SMA', 'SMK'];
   bool _isLoading = true;
 
+  /// Like Vue's `mounted()` - loads current school settings from the API.
   @override
   void initState() {
     super.initState();
     _loadSettings();
   }
 
+  /// Fetches school settings from API. Like calling `GET /api/settings/school` in Vue.
   Future<void> _loadSettings() async {
     try {
       final settings = await ApiSettingsService.getSchoolSettings();
@@ -52,6 +70,9 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
     }
   }
 
+  /// Shows a dialog to edit school info. Like a Vue `<v-dialog>` with form fields.
+  /// Uses `StatefulBuilder` inside the dialog - this is like having a nested Vue component
+  /// with its own local state inside a modal.
   Future<void> _showEditDialog() async {
     final nameController = TextEditingController(text: _schoolName);
     final addressController = TextEditingController(text: _schoolAddress);

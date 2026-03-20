@@ -1,9 +1,23 @@
+// Quick action button for common dashboard tasks in a horizontal scroll.
+//
+// Like a Vue `<QuickAction>` component displayed in a horizontal `<v-slide-group>`,
+// or a shortcut button row in a Laravel admin panel. Each button has an icon,
+// label, and optional notification badge. Similar to iOS-style quick action
+// buttons below a hero section.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/dashboard_typography.dart';
 
-/// Quick action button for common tasks
-/// Displayed in horizontal scroll below hero section
+/// A quick action button with icon, label, and optional badge.
+///
+/// Like a Vue `<QuickActionButton>` in a horizontal scrollable row:
+/// - [label] - button text below the icon
+/// - [icon] - Material icon
+/// - [onTap] - action callback (like `@click`)
+/// - [color] - accent color for the icon container
+/// - [badgeCount] - optional notification count badge (like Vue's `<v-badge>`)
+///
+/// Displayed in a horizontal scroll below the hero section on the dashboard.
 class QuickActionButton extends StatelessWidget {
   final String label;
   final IconData icon;

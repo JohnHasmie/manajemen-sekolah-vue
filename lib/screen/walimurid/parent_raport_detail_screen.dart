@@ -1,8 +1,20 @@
+// Parent view of a student's report card detail.
+// Like `pages/parent/Raport/Detail.vue` in a Vue app.
+//
+// Read-only view of a finalized report card showing grades, extracurriculars,
+// character assessment, and attendance. Supports Excel download.
+// This is a StatelessWidget -- all data is passed via constructor.
+// In Laravel terms: `RaportController@parentShow`.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/excel_raport_service.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 
+/// Read-only report card detail view for parents.
+///
+/// StatelessWidget -- no local state needed. All data comes via props.
+/// Like a Vue presentational component that only renders data.
+/// Props: [raportData], [studentName], [studentData], [userRole].
 class ParentRaportDetailScreen extends StatelessWidget {
   final Map<String, dynamic> raportData;
   final String studentName;

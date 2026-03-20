@@ -1,3 +1,9 @@
+// Student detail view screen - shows full profile info for a single student.
+//
+// Like `pages/admin/students/{id}.vue` - a detail/show page that displays
+// all student information (personal data, class, guardian, etc.).
+//
+// In Laravel terms, this calls `GET /api/students/{id}` (StudentController@show).
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
@@ -7,6 +13,11 @@ import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
+/// Student detail screen - displays full profile for a single student.
+///
+/// Takes a [student] map (basic data) and fetches full details from API.
+/// Optionally accepts [onEdit] callback to trigger refresh in parent screen.
+/// Like a Vue route page with `props: true` receiving the student object.
 class StudentDetailScreen extends StatefulWidget {
   final Map<String, dynamic> student;
   final VoidCallback? onEdit;
@@ -21,11 +32,17 @@ class StudentDetailScreen extends StatefulWidget {
   StudentDetailScreenState createState() => StudentDetailScreenState();
 }
 
+/// Mutable state for [StudentDetailScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_studentDetail] - full student data from API (null until loaded)
+/// - [_isLoading] / [_errorMessage] - loading and error states
 class StudentDetailScreenState extends State<StudentDetailScreen> {
   Map<String, dynamic>? _studentDetail;
   bool _isLoading = true;
   String? _errorMessage;
 
+  /// Like Vue's `mounted()` - fetches full student details from the API.
   @override
   void initState() {
     super.initState();
@@ -36,6 +53,8 @@ class StudentDetailScreenState extends State<StudentDetailScreen> {
     return ColorUtils.getRoleColor('admin');
   }
 
+  /// Fetches full student details by ID from the API.
+  /// Like calling `GET /api/students/{id}` in a Vue method.
   Future<void> _loadStudentDetail() async {
     try {
       setState(() {

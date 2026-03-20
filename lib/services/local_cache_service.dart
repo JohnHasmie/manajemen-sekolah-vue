@@ -1,10 +1,41 @@
+/// local_cache_service.dart - Provides TTL-based local caching via SharedPreferences.
+/// Like Laravel's Cache facade (with file/database driver) / Vue's localStorage helper.
+///
+/// This is the Flutter equivalent of Laravel's `Cache::put()` / `Cache::get()` with
+/// expiration. Uses SharedPreferences (key-value storage on device) instead of Redis.
+/// All API service classes use this to cache paginated responses for offline support
+/// and performance. Keys are prefixed with `api_cache_` to avoid collision.
+///
+/// Key differences from Laravel Cache:
+/// - No tags support -- uses prefix-based clearing (`clearStartingWith`)
+/// - TTL is checked on read (lazy expiration), not background eviction
+/// - Data is JSON-serialized into a single string value
+library;
+
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Local cache service using SharedPreferences with TTL (time-to-live).
+/// Think of this as a simplified `Cache` facade from Laravel, but client-side.
+///
+/// In Vue terms, this is like a reusable composable that wraps localStorage
+/// with automatic expiration and JSON serialization.
+///
+/// Usage pattern (from other services):
+/// ```dart
+/// final cached = await LocalCacheService.load('my_key');
+/// if (cached != null) return cached; // cache hit
+/// final data = await fetchFromApi();
+/// await LocalCacheService.save('my_key', data); // cache miss -> save
+/// ```
 class LocalCacheService {
+  /// Prefix for all cache keys to avoid collision with other SharedPreferences data.
+  /// Like Laravel's `cache.prefix` config.
   static const String _prefix = 'api_cache_';
+
+  /// Default time-to-live for cached data. Like Laravel's `cache.ttl` config.
   static const Duration _defaultTTL = Duration(hours: 24);
 
   /// Menghapus semua cache yang diawali dengan prefix kita

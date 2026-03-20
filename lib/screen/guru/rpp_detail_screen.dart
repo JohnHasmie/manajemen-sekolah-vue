@@ -1,3 +1,10 @@
+// RPP (lesson plan) detail view/edit screen.
+// Like `pages/teacher/LessonPlan/Detail.vue` in a Vue app.
+//
+// Displays a single RPP with all its sections (competencies, objectives,
+// activities, assessment). Supports inline editing, per-field AI regeneration,
+// saving, and export to Word/PDF. In Laravel terms: `LessonPlanController@show`
+// + `@update` with AI regeneration capabilities.
 import 'dart:convert';
 import 'dart:io';
 
@@ -14,6 +21,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
+/// RPP detail viewer with inline editing and AI regeneration.
+///
+/// Shows all RPP sections in a structured view. Teachers can edit content,
+/// regenerate individual fields or all fields via AI, and export to PDF/Word.
+///
+/// Props (like Vue props): [rppData] -- the RPP object, [isNew] -- whether
+/// this is a newly created RPP (shows "new" badge).
 class RPPDetailPage extends StatefulWidget {
   final Map<String, dynamic> rppData;
   final bool isNew;
@@ -24,6 +38,10 @@ class RPPDetailPage extends StatefulWidget {
   RPPDetailPageState createState() => RPPDetailPageState();
 }
 
+/// State for [RPPDetailPage].
+///
+/// Like a Vue component with `data() { return { isSaving, isEditing, rppData, ... } }`.
+/// Manages edit mode toggle, AI regeneration state per field, and export.
 class RPPDetailPageState extends State<RPPDetailPage> {
   bool _isSaving = false;
   bool _isEditing = false;
@@ -98,6 +116,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     );
   }
 
+  /// Like Vue's `mounted()` -- copies rppData to local mutable state and loads
+  /// regeneration limits from the API.
   @override
   void initState() {
     super.initState();
@@ -320,6 +340,9 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     );
   }
 
+  /// Regenerates a single RPP field using AI with optional custom prompt.
+  /// Like calling `axios.post('/api/rpp/{id}/regenerate-field')` in Vue.
+  /// Uses polling to wait for the AI job to complete.
   Future<void> _regenerateField(String fieldKey, String fieldLabel, String additionalText) async {
     final rppId = _rppId;
     if (kDebugMode) {
@@ -939,6 +962,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     return months[month - 1];
   }
 
+  /// Saves the RPP to the API.
+  /// Like `axios.put('/api/rpp/{id}')` in Vue.
   Future<void> _saveRPP() async {
     setState(() {
       _isSaving = true;

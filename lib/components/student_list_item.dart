@@ -1,7 +1,21 @@
+// Student list item component for displaying a single student in a list.
+//
+// Like a Vue component `<StudentCard>` used inside a `v-for` loop, or a
+// Blade partial `@include('students.list-item', ['student' => $student])`.
+// Shows student name, class, avatar initial, and a popup menu for edit/delete.
 import 'package:flutter/material.dart';
 
 import '../utils/color_utils.dart';
 
+/// A list tile widget that displays a single student's information.
+///
+/// Like a Vue `<StudentListItem>` component with props:
+/// - [student] - student data map from the API (like `:student` prop)
+/// - [index] - position in list, used for avatar color cycling
+/// - [onEdit] - callback when "Edit" is selected from the popup menu
+/// - [onDelete] - callback when "Hapus" is selected from the popup menu
+///
+/// Uses a `PopupMenuButton` for actions (like a Vue `<v-menu>` with items).
 class StudentListItem extends StatelessWidget {
   final dynamic student;
   final int index;

@@ -1,8 +1,26 @@
+// Class form dialog component for creating and editing school classes.
+//
+// Like a Vue component `<ClassFormModal>` that wraps a form inside a
+// Bootstrap modal, or a Blade partial `@include('classes.form-modal')`.
+// Accepts props (parameters) for initial values and callbacks, similar to
+// how you would pass `v-model` and `@submit` to a Vue form component.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 
+/// A modal dialog widget for creating or editing a class (kelas).
+///
+/// Like a Vue component `<ClassFormDialog>` with props:
+/// - [isEditMode] - controls create vs. edit mode (like a `v-if` toggle)
+/// - [initialName], [initialTeacherId], [initialGradeLevel] - pre-filled form data
+/// - [teachers] - list of selectable teachers (like `:options` on a `<v-select>`)
+/// - [gradeLevels] - list of grade levels for the dropdown
+/// - [onSave] - callback when form is submitted (like `@submit.prevent`)
+/// - [onCancel] - callback when cancel is pressed
+///
+/// This is a StatefulWidget because the form fields need local mutable state
+/// (similar to Vue's `data()` reactive properties).
 class ClassFormDialog extends StatefulWidget {
   final bool isEditMode;
   final String initialName;
@@ -29,11 +47,17 @@ class ClassFormDialog extends StatefulWidget {
   ClassFormDialogState createState() => ClassFormDialogState();
 }
 
+/// The mutable state for [ClassFormDialog].
+///
+/// Manages local form state (text controller, selected dropdown values),
+/// similar to Vue's `data()` return object with reactive properties.
 class ClassFormDialogState extends State<ClassFormDialog> {
   late final TextEditingController _nameController;
   late String? _selectedTeacherId;
   late int? _selectedGradeLevel;
 
+  /// Initializes form controllers with initial values from widget props.
+  /// Like Vue's `mounted()` hook where you set initial form field values.
   @override
   void initState() {
     super.initState();
@@ -42,6 +66,8 @@ class ClassFormDialogState extends State<ClassFormDialog> {
     _selectedGradeLevel = widget.initialGradeLevel;
   }
 
+  /// Syncs form state when parent passes new props.
+  /// Like Vue's `watch` on props to update local data.
   @override
   void didUpdateWidget(ClassFormDialog oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -62,6 +88,8 @@ class ClassFormDialogState extends State<ClassFormDialog> {
     super.dispose();
   }
 
+  /// Validates and submits the form. Like a Vue method bound to `@click` on
+  /// the save button, with validation similar to Laravel's `$request->validate()`.
   void _save() {
     final name = _nameController.text.trim();
     final selectedTeacherId = _selectedTeacherId;
@@ -96,6 +124,8 @@ class ClassFormDialogState extends State<ClassFormDialog> {
     return Color(0xFF4361EE); // Blue untuk admin
   }
 
+  /// Builds the dialog UI with a gradient header, form fields, and action buttons.
+  /// Like the `<template>` section of a Vue single-file component.
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -301,6 +331,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
     );
   }
 
+  /// Builds a styled text input field. Like a reusable `<FormInput>` Vue component.
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -330,6 +361,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
     );
   }
 
+  /// Builds a styled dropdown selector. Like a `<v-select>` Vue component.
   Widget _buildDropdown({
     required String? value,
     required String label,

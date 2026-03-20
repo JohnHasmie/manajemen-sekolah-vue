@@ -1,3 +1,10 @@
+// Parent view of student attendance (presence) records.
+// Like `pages/parent/Attendance.vue` in a Vue app.
+//
+// Read-only view of a child's attendance with monthly summary stats
+// (hadir/terlambat/izin/sakit/alpha), month/semester filters, and
+// auto-marking records as read when scrolled into view.
+// In Laravel terms: `AttendanceController@parentIndex`.
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -16,6 +23,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Parent's read-only view of a child's attendance with monthly summaries
+/// and read tracking.
+///
+/// Props (like Vue props): [parent] data, [studentId], optional [academicYearId].
 class PresenceParentPage extends StatefulWidget {
   final Map<String, dynamic> parent;
   final String studentId; // ID siswa yang merupakan anak dari wali murid
@@ -32,6 +43,15 @@ class PresenceParentPage extends StatefulWidget {
   PresenceParentPageState createState() => PresenceParentPageState();
 }
 
+/// State for [PresenceParentPage].
+///
+/// Like a Vue page component with `data() { return {...} }`. Key state:
+/// - [_absensiData] -- attendance records from API
+/// - [_student] -- the child's data (Siswa model)
+/// - [_monthlySummary] -- computed attendance counts per status type
+/// - Month/semester filters and visibility-based read tracking
+///
+/// `setState()` is like Vue's reactivity -- triggers a re-render.
 class PresenceParentPageState extends State<PresenceParentPage> {
   List<dynamic> _absensiData = [];
   Siswa? _student;

@@ -1,3 +1,16 @@
+/// api_recommendation_services.dart - Interfaces with the AI recommendation engine.
+/// Like a Laravel service that calls an external AI microservice / Vue's AI store module.
+///
+/// This service communicates with a separate AI API (KamillLabs Edu AI), not the main
+/// Laravel backend. It handles AI-powered teaching recommendations: generating them
+/// (async via job polling), listing, updating status, and getting class summaries.
+///
+/// Key patterns:
+/// - Async job processing: generate returns 202 with a job_id, then poll until done
+/// - Rate limiting: 429 responses throw [RateLimitException]
+/// - Separate auth headers (no X-School-ID, only Bearer token)
+library;
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -5,7 +18,16 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Service for AI-powered teaching recommendation API calls.
+/// Talks to a separate microservice (KamillLabs Edu AI), not the main Laravel backend.
+/// Like a Laravel service class that uses `Http::baseUrl()` to call an external API,
+/// or a Vue composable that wraps a dedicated Axios instance for an AI service.
+///
+/// Key difference from other services: uses [_aiBaseUrl] instead of [ApiService.baseUrl],
+/// and has its own [_getAiHeaders] without X-School-ID.
 class ApiRecommendationService {
+  /// Base URL for the AI microservice. Separate from the main Laravel API.
+  /// Like having a second `API_BASE_URL` in your Laravel `.env` file.
   static const String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
 
   /// Headers for KamillLabs AI API (Bearer token only, no X-School-ID)
@@ -19,6 +41,9 @@ class ApiRecommendationService {
     };
   }
 
+  /// Parses JSON response with special handling for 429 (rate limit) and 500 errors.
+  /// Unlike main API's handler, this throws [RateLimitException] for 429 responses.
+  /// Like a custom Axios interceptor that maps specific HTTP codes to exception types.
   static dynamic _handleResponse(http.Response response) {
     final body = json.decode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -326,7 +351,9 @@ class ApiRecommendationService {
   }
 }
 
-/// Exception for rate limit (429) responses
+/// Custom exception for HTTP 429 (Too Many Requests) responses.
+/// Like Laravel's `ThrottleRequestsException` -- carries the response body
+/// so the UI can display retry information or cooldown timers.
 class RateLimitException implements Exception {
   final String message;
   final Map<String, dynamic>? body;

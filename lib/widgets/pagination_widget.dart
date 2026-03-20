@@ -1,6 +1,21 @@
+// Pagination controls widget for navigating paginated API results.
+//
+// Like a Vue `<Pagination>` component (e.g., `laravel-vue-pagination` package)
+// or the pagination links rendered by `$items->links()` in a Blade template.
+// Displays "Showing X-Y of Z" info and first/prev/next/last page buttons.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/models/pagination_model.dart';
 
+/// A pagination control bar with page navigation buttons and item count info.
+///
+/// Like the `laravel-vue-pagination` Vue component or Blade's `{{ $items->links() }}`.
+///
+/// Props (parameters):
+/// - [pagination] - a [PaginationMeta] model (like Laravel's paginator meta:
+///   currentPage, totalPages, totalItems, perPage, hasNextPage, hasPrevPage)
+/// - [onPageChanged] - callback with page number (like `@pagination-change-page`)
+/// - [isLoading] - disables buttons while loading (like a Vue `v-loading` state)
+/// - [primaryColor] - accent color for active page indicator
 class PaginationWidget extends StatelessWidget {
   final PaginationMeta pagination;
   final Function(int) onPageChanged;
@@ -180,7 +195,8 @@ class PaginationWidget extends StatelessWidget {
   }
 }
 
-// Compact version for smaller spaces
+/// Compact pagination widget for smaller spaces, showing only prev/next and page info.
+/// Like a minimal `<SimplePagination>` Vue component with just arrows and "1/5" text.
 class CompactPaginationWidget extends StatelessWidget {
   final PaginationMeta pagination;
   final Function(int) onPageChanged;

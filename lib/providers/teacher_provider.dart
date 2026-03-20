@@ -1,11 +1,30 @@
+/// teacher_provider.dart - State management for teacher-related data caching.
+/// Like a Vuex store module - holds reactive global state that widgets can listen to.
+/// In Laravel terms, this is like a service class that caches the logged-in teacher's
+/// profile, assigned classes, and homeroom classes so multiple screens can share the data
+/// without redundant API calls (similar to Laravel's request-scoped caching).
+library;
+
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/services/api_teacher_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Provider that caches teacher-related data fetched by the dashboard.
-/// Other screens can consume this instead of making redundant API calls.
+/// Caches teacher-related data fetched by the dashboard so other screens
+/// can consume it without making redundant API calls.
+/// Like a Vuex store module - holds reactive global state that widgets can listen to.
+///
+/// Extends [ChangeNotifier] - Flutter's observable pattern (like Vue's `reactive()`).
+/// Widgets use `Provider.of<TeacherProvider>(context)` or `context.watch<TeacherProvider>()`
+/// to subscribe, similar to `mapState` / `useStore()` in Vuex.
+///
+/// Data flow:
+/// 1. Dashboard fetches teacher data from API and calls [setTeacherData] (primary path).
+/// 2. If a screen is opened directly (e.g., deep link), [ensureLoaded] acts as a fallback
+///    by reading from SharedPreferences and the API.
+/// 3. [refresh] forces a reload (e.g., on pull-to-refresh or academic year change).
+/// 4. [clear] wipes all cached state (e.g., on logout or school switch).
 class TeacherProvider extends ChangeNotifier {
   String? _userId;
   String? _teacherId;
@@ -16,7 +35,8 @@ class TeacherProvider extends ChangeNotifier {
   bool _isLoaded = false;
   bool _isLoading = false;
 
-  // Getters
+  /// Public getters - like Vuex getters, expose read-only access to private state.
+  /// Widgets subscribe to these via `context.watch<TeacherProvider>()`.
   String? get userId => _userId;
   String? get teacherId => _teacherId;
   String? get teacherName => _teacherName;
@@ -26,7 +46,14 @@ class TeacherProvider extends ChangeNotifier {
   bool get isLoaded => _isLoaded;
   bool get isLoading => _isLoading;
 
-  /// Set data directly (called from dashboard after it fetches)
+  /// Sets all teacher data at once (called from the dashboard after it fetches from API).
+  /// Like a Vuex mutation that hydrates the entire module state in one go.
+  ///
+  /// This is the primary data path - the dashboard fetches teacher info and pushes
+  /// it here so other screens don't need to re-fetch.
+  ///
+  /// Side effects: Sets [_isLoaded] to true, calls [notifyListeners] to trigger
+  /// UI rebuilds in all consuming widgets.
   void setTeacherData({
     required String userId,
     required String teacherId,
@@ -50,14 +77,28 @@ class TeacherProvider extends ChangeNotifier {
     }
   }
 
-  /// Update only homeroom classes (e.g. after dashboard resolves them)
+  /// Updates only the homeroom classes list (e.g., after the dashboard resolves them).
+  /// Like a targeted Vuex mutation that only touches one piece of state.
+  ///
+  /// [classes] - The resolved list of homeroom class maps.
   void setHomeroomClasses(List<dynamic> classes) {
     _homeroomClasses = classes;
     notifyListeners();
   }
 
-  /// Fetch teacher data if not already loaded.
-  /// This is a fallback for screens opened without going through dashboard.
+  /// Fetches and caches teacher data if not already loaded.
+  /// This is a fallback for screens opened without going through the dashboard
+  /// (e.g., deep links or direct navigation). Like a Laravel service method
+  /// with lazy initialization.
+  ///
+  /// [academicYearId] - Optional academic year context for scoped API calls.
+  ///
+  /// Flow:
+  /// 1. Reads user data from SharedPreferences (like Laravel's `Auth::user()`).
+  /// 2. Resolves the teacher ID - either from cached user data or via API call.
+  /// 3. Fetches the teacher's assigned classes and filters homeroom classes.
+  ///
+  /// No-op if already loaded or currently loading (guard clause prevents duplicate calls).
   Future<void> ensureLoaded({String? academicYearId}) async {
     if (_isLoaded || _isLoading) return;
     _isLoading = true;
@@ -133,14 +174,18 @@ class TeacherProvider extends ChangeNotifier {
     }
   }
 
-  /// Force refresh (e.g. on pull-to-refresh or academic year change)
+  /// Forces a full reload of teacher data (e.g., on pull-to-refresh or academic year change).
+  /// Resets [_isLoaded] flag so [ensureLoaded] will re-fetch from the API.
+  ///
+  /// [academicYearId] - Optional academic year to scope the refresh.
   Future<void> refresh({String? academicYearId}) async {
     _isLoaded = false;
     _isLoading = false;
     await ensureLoaded(academicYearId: academicYearId);
   }
 
-  /// Clear all cached data (e.g. on school switch or logout)
+  /// Clears all cached teacher data (e.g., on logout or school switch).
+  /// Resets everything to initial state. Like calling `Vuex commit('RESET_MODULE')`.
   void clear() {
     _userId = null;
     _teacherId = null;

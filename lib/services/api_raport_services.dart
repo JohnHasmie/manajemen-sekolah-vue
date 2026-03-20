@@ -1,6 +1,19 @@
+/// api_raport_services.dart - Manages student report cards (raport/rapor).
+/// Like Laravel's RaportController / Vue's raport store module.
+///
+/// Handles fetching raport lists, initial data for raport creation,
+/// raport detail views, and saving raport data. All methods are static.
+library;
+
 import 'api_services.dart';
 
+/// Service for raport (report card) API calls.
+/// Like a Laravel Resource Controller with show, store, and custom initial-data actions.
+/// In Vue terms, this is a store module that handles all raport-related API state.
 class ApiRaportService {
+  /// Fetches a list of raports filtered by class, academic year, and semester.
+  /// Like `Raport::where(...)->get()` in Laravel.
+  /// Returns the 'data' array, or empty list if unsuccessful.
   static Future<List<dynamic>> getRaports({
     required String classId,
     required String academicYearId,
@@ -21,6 +34,9 @@ class ApiRaportService {
     return [];
   }
 
+  /// Fetches initial data needed to populate a new raport form.
+  /// Like a Laravel controller method that returns form defaults and relationships.
+  /// Similar to a Vue `mounted()` hook that loads prerequisite data.
   static Future<Map<String, dynamic>?> getInitialData({
     required String studentClassId,
     required String academicYearId,
@@ -43,6 +59,9 @@ class ApiRaportService {
     return null;
   }
 
+  /// Fetches the full detail of an existing raport for viewing/editing.
+  /// Like `Raport::with('grades', 'student')->findOrFail($id)` in Laravel.
+  /// Returns null if no raport exists for the given parameters.
   static Future<Map<String, dynamic>?> getRaportDetail({
     required String studentClassId,
     required String academicYearId,
@@ -66,6 +85,9 @@ class ApiRaportService {
     return null;
   }
 
+  /// Creates or updates a raport record.
+  /// Like `Raport::updateOrCreate($data)` in Laravel.
+  /// Returns the saved raport data, or null if unsuccessful.
   static Future<Map<String, dynamic>?> saveRaport(
     Map<String, dynamic> data,
   ) async {

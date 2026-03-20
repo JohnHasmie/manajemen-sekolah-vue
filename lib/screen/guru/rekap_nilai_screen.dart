@@ -1,3 +1,11 @@
+// Grade recap (rekap nilai) screen for teachers -- final grade summary.
+// Like `pages/teacher/GradeRecap/Index.vue` in a Vue app.
+//
+// A multi-step screen: Step 0 (select class) -> Step 1 (select subject) ->
+// Step 2 (recap table with editable predikat/deskripsi per student per chapter).
+// Supports adding/removing chapters (bab), bulk grade selection, auto-
+// description generation, save to API, and Excel export.
+// In Laravel terms: `GradeRecapController@index`, `@store`, `@export`.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -21,6 +29,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Grade recap wizard: class selection -> subject selection -> recap table.
+///
+/// A StatefulWidget with complex spreadsheet-like editing capabilities.
+/// Props (like Vue props): [teacher] -- current teacher info.
 class RekapNilaiPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
 
@@ -30,6 +42,16 @@ class RekapNilaiPage extends StatefulWidget {
   State<RekapNilaiPage> createState() => _RekapNilaiPageState();
 }
 
+/// State for [RekapNilaiPage].
+///
+/// Like a Vue page component with `data() { return {...} }`. Manages:
+/// - Multi-step wizard (class -> subject -> recap table)
+/// - Editable table data with per-cell controllers (predikat, deskripsi, score)
+/// - Chapter (bab) management (add/remove columns)
+/// - Bulk grade operations and auto-description generation
+/// - Excel export and unsaved change tracking
+///
+/// `setState()` is like Vue's reactivity -- triggers UI rebuild.
 class _RekapNilaiPageState extends State<RekapNilaiPage> {
   // Services
   final ApiSubjectService apiSubjectService = ApiSubjectService();
@@ -77,6 +99,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   final GlobalKey _addBabKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` -- sets up scroll/search listeners and loads initial data.
   @override
   void initState() {
     super.initState();
@@ -554,6 +577,9 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     return rawGrades;
   }
 
+  /// Loads recap data (students, grades, chapters) for the selected class/subject.
+  /// Like `axios.get('/api/grade-recaps')` in Vue. Processes raw data into
+  /// an editable table structure.
   Future<void> _loadRecapData({bool useCache = true}) async {
     try {
       final provider = Provider.of<AcademicYearProvider>(
@@ -738,6 +764,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     }
   }
 
+  /// Transforms raw API data into structured table rows with per-student,
+  /// per-chapter grade cells. Like a Vue computed that pivots data for display.
   void _processTableData(
     List<dynamic> students,
     List<dynamic> chapters,
@@ -1717,6 +1745,9 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     });
   }
 
+  /// Saves all recap data to the API.
+  /// Like `axios.post('/api/grade-recaps/batch')` in Vue.
+  /// In Laravel terms: `GradeRecapController@batchUpdate`.
   Future<void> _saveRecaps() async {
     setState(() => _isSaving = true);
     try {
@@ -1778,6 +1809,8 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     }
   }
 
+  /// Exports the recap table to an Excel file.
+  /// Like clicking "Export to Excel" in a Vue data table component.
   Future<void> _exportToExcel() async {
     setState(() => _isExporting = true);
     try {

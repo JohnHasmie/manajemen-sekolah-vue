@@ -1,8 +1,22 @@
+// Schedule filter section with semester and academic year selectors.
+//
+// Like a Vue component `<ScheduleFilterBar>` placed at the top of a schedule
+// management page. Similar to Laravel Nova's filter panel where you pick
+// semester and academic year before viewing data.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
+/// A filter bar widget for selecting semester and academic year.
+///
+/// Like a Vue `<FilterSection>` component with props:
+/// - [selectedSemester] / [selectedAcademicYear] - current filter values (like `v-model`)
+/// - [semesterList] - available semesters from API (like `:options`)
+/// - [onSemesterChanged] / [onAcademicYearChanged] - callbacks (like `@change`)
+///
+/// Renders two filter cards side by side, each opening a bottom sheet or dialog
+/// for selection (similar to dropdown filters in Laravel Nova).
 class FilterSection extends StatelessWidget {
   final String selectedSemester;
   final String selectedAcademicYear;
@@ -19,6 +33,8 @@ class FilterSection extends StatelessWidget {
     required this.onAcademicYearChanged,
   });
 
+  /// Resolves a semester ID to its display name from the semester list.
+  /// Like a Laravel accessor `getSemesterNameAttribute()` on a model.
   String _getSemesterName(String semesterId, List<dynamic> semesterList) {
   try {
     final semester = semesterList.firstWhere(
@@ -31,6 +47,8 @@ class FilterSection extends StatelessWidget {
   }
 }
 
+  /// Opens a dialog for the user to type/select an academic year.
+  /// Like a Vue method that shows a `$bvModal.show('academic-year-picker')`.
   Future<void> _showAcademicYearDialog(BuildContext context) async {
     final TextEditingController controller = TextEditingController(
       text: selectedAcademicYear,
@@ -89,6 +107,8 @@ class FilterSection extends StatelessWidget {
     }
   }
 
+  /// Opens a bottom sheet to select a semester.
+  /// Like showing a `<v-bottom-sheet>` with a list of semester options.
   void _showSemesterFilter(BuildContext context) async {
     final selected = await showModalBottomSheet<String>(
       context: context,
@@ -115,6 +135,8 @@ class FilterSection extends StatelessWidget {
     }
   }
 
+  /// Builds a single tappable filter card showing label and current value.
+  /// Like a `<FilterChip>` Vue component with a dropdown arrow.
   Widget _buildFilterCard(
     BuildContext context,
     String label,

@@ -1,3 +1,8 @@
+/// data_dummy.dart - Static seed/mock data for development and testing.
+/// Like Laravel's `DatabaseSeeder` or factory definitions (`database/seeders/`, `database/factories/`).
+/// In Vue terms, this is like a mock data file you'd use with `json-server` or in Vuex for prototyping.
+library;
+
 import 'package:manajemensekolah/models/guru.dart';
 import 'package:manajemensekolah/models/kelas.dart';
 
@@ -8,6 +13,20 @@ import '../models/pengumuman.dart';
 import '../models/siswa.dart';
 import '../models/user.dart';
 
+/// Provides hardcoded sample data for all major models.
+/// Like Laravel's `DatabaseSeeder` - populates the app with realistic test data
+/// for development, UI prototyping, and offline testing.
+///
+/// Each static list contains pre-built model instances:
+/// - [users]: Sample accounts for each role (admin, guru, staff, wali).
+/// - [siswa]: Sample students with class assignments and guardian info.
+/// - [nilai]: Sample grades linking students to subjects and scores.
+/// - [absensi]: Sample attendance records from recent days.
+/// - [kegiatan]: Sample upcoming school activities/events.
+/// - [pengumuman]: Sample announcements in different categories.
+/// - [inventaris]: Sample school inventory items (as raw maps).
+/// - [daftarKelas]: Sample classrooms with homeroom teachers.
+/// - [daftarGuru]: Sample teacher list.
 class DataDummy {
   static List<User> users = [
     User(id: '1', nama: 'Admin Sekolah', email: 'admin@sekolah.com', password: 'admin123', role: 'admin'),

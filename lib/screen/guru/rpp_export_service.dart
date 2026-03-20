@@ -1,8 +1,23 @@
+// Service class for exporting RPP (lesson plan) documents to Word/PDF formats.
+// Like a Laravel Service class (e.g., `App\Services\RppExportService`) that
+// handles file generation and download logic, keeping it separate from the
+// controller/screen. In Vue terms, this is like a utility module in
+// `utils/rppExport.js` that the component imports and calls.
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 
+/// Handles exporting RPP content to Word (.docx) and PDF file formats.
+///
+/// This is a pure service class (no UI) -- like a Laravel Service or a
+/// Vue composable/utility. It writes files to the device's temporary
+/// directory and opens them with the system file viewer.
+///
+/// All methods are `static` -- no instance needed, similar to Laravel's
+/// static helper methods or a Vue utility function.
 class RPPExportService {
+  /// Exports RPP content as a Word-like HTML document and opens it.
+  /// Like calling a Laravel queue job that generates a .docx file.
   static Future<void> exportToWord(String content, String fileName) async {
     try {
       // Format content untuk Word-like structure
@@ -21,6 +36,8 @@ class RPPExportService {
     }
   }
 
+  /// Exports RPP content as a PDF file and opens it.
+  /// Currently a placeholder -- in production would use a proper PDF library.
   static Future<void> exportToPDF(String content, String fileName) async {
     try {
       // Implementasi PDF export yang lebih baik
@@ -38,6 +55,8 @@ class RPPExportService {
     }
   }
 
+  /// Converts plain text content into a basic HTML document for Word rendering.
+  /// Like a Laravel Blade template that wraps content in HTML structure.
   static String _formatForWord(String content) {
     final buffer = StringBuffer();
     final lines = content.split('\n');

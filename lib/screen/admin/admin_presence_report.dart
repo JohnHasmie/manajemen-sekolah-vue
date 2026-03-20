@@ -1,3 +1,12 @@
+// Admin presence/attendance report screen.
+//
+// Like `pages/admin/attendance-report.vue` - displays attendance summaries
+// across classes, subjects, and dates. Supports both list view and table view,
+// with filters by date range, subject, class, day, and lesson hour.
+// Can export reports to Excel.
+//
+// In Laravel terms, this consumes AttendanceController with complex query filters,
+// similar to `Attendance::with(['student','subject'])->filter(...)->paginate()`.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -23,7 +32,9 @@ import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-// Model for Attendance Summary
+/// Data model for a single attendance summary record.
+/// Like a Laravel Eloquent model or a TypeScript interface in Vue.
+/// Represents aggregated attendance data for one subject/class/date combination.
 class AttendanceSummary {
   final String subjectId;
   final String subjectName;
@@ -55,6 +66,10 @@ class AttendanceSummary {
       '$subjectId-$classId-${DateFormat('yyyy-MM-dd').format(date)}-$lessonHourId';
 }
 
+/// Admin attendance report screen with list and table views, multi-filter support.
+///
+/// This is a [StatefulWidget] - like a Vue page with extensive local state
+/// for filters, pagination, and two view modes (list vs table/grid).
 class AdminPresenceReportScreen extends StatefulWidget {
   const AdminPresenceReportScreen({super.key});
 
@@ -63,6 +78,16 @@ class AdminPresenceReportScreen extends StatefulWidget {
       _AdminPresenceReportScreenState();
 }
 
+/// Mutable state for [AdminPresenceReportScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_absensiSummaryList] - attendance summary records from API
+/// - [_showTableView] - toggles between card list and Syncfusion data grid
+/// - [_selectedSubjectIds] / [_selectedClassIds] / [_selectedDayIds] - multi-select filters
+/// - [_selectedDateFilter] - date range filter ('today', 'week', 'month')
+/// - [_studentList] / [_attendanceMap] - raw student attendance data for table view
+///
+/// setState() is like Vue's reactivity - triggers a re-render when data changes.
 class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   // Data untuk mode View Results
   List<AttendanceSummary> _absensiSummaryList = [];
@@ -112,6 +137,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   bool _isLoadingClasses = true;
   List<dynamic> _fullTeacherList = [];
 
+  /// Like Vue's `mounted()` - sets up scroll listener and loads filter data.
   @override
   void initState() {
     super.initState();

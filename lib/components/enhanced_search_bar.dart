@@ -1,5 +1,21 @@
+// Enhanced search bar component with optional inline filter dropdown.
+//
+// Like a Vue component `<SearchBarWithFilter>` that combines a text input
+// and a dropdown filter in one row. Similar to a Laravel Nova search field
+// with an adjacent filter selector.
 import 'package:flutter/material.dart';
 
+/// A search bar widget with an optional inline dropdown filter.
+///
+/// Like a Vue `<SearchBar>` component with props:
+/// - [controller] - the text controller (like `v-model` on an `<input>`)
+/// - [hintText] - placeholder text
+/// - [onChanged] - fires on every keystroke (like `@input`)
+/// - [filterOptions] / [selectedFilter] / [onFilterChanged] - optional dropdown
+///   filter, similar to a `<v-select>` placed next to the search input
+/// - [showFilter] - toggle filter visibility (like `v-if="showFilter"`)
+///
+/// This is a StatefulWidget to support the clear button visibility toggle.
 class EnhancedSearchBar extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
@@ -24,7 +40,10 @@ class EnhancedSearchBar extends StatefulWidget {
   State<EnhancedSearchBar> createState() => _EnhancedSearchBarState();
 }
 
+/// State for [EnhancedSearchBar].
 class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
+  /// Renders the search bar row: search icon, text field, clear button,
+  /// and optional filter dropdown. Like the `<template>` of a Vue SFC.
   @override
   Widget build(BuildContext context) {
     return Container(

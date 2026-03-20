@@ -1,9 +1,37 @@
+/// currency_formatter.dart - Indonesian Rupiah (IDR) currency input formatter.
+/// Like a Laravel Helper function for currency formatting, combined with a
+/// Vue input mask directive (e.g., `v-money` or `vue-currency-input`).
+/// Automatically formats numeric input as "Rp 10.000" while typing.
+library;
+
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+/// A [TextInputFormatter] that auto-formats text field input as Indonesian Rupiah.
+/// Like a Laravel Helper function combined with a Vue input mask/directive.
+///
+/// Attach to a `TextField` via its `inputFormatters` parameter:
+/// ```dart
+/// TextField(inputFormatters: [CurrencyInputFormatter()])
+/// ```
+///
+/// As the user types digits, this formatter strips non-numeric characters,
+/// parses the number, and reformats it with the "Rp " prefix and thousands
+/// separators (e.g., "Rp 1.500.000").
+///
+/// Also provides [parseCurrency] to reverse the formatting back to a numeric value
+/// for API submission.
 class CurrencyInputFormatter extends TextInputFormatter {
+  /// The currency symbol prefix prepended to all formatted values.
   static const String symbol = 'Rp ';
 
+  /// Called automatically by Flutter on every text change in the input field.
+  /// Strips non-digits, parses to integer, and reformats with "Rp " prefix
+  /// and Indonesian locale thousands separators (dots).
+  ///
+  /// [oldValue] - The previous text field state (not used here).
+  /// [newValue] - The new text field state to format.
+  /// Returns a [TextEditingValue] with formatted text and cursor at the end.
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,

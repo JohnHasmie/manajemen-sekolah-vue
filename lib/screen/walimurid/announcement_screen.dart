@@ -1,3 +1,12 @@
+// School announcements screen for parents (wali murid).
+// Like `pages/parent/Announcements.vue` in a Vue app.
+//
+// Displays a list of school announcements with read/unread tracking.
+// Automatically marks announcements as read when they become visible
+// (using a debounced visibility tracking pattern -- similar to an
+// Intersection Observer in Vue). Supports search, file attachments,
+// and detail view in a bottom sheet.
+// In Laravel terms: `AnnouncementController@index` with read tracking.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -20,6 +29,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// School announcements list with automatic read tracking.
+///
+/// A StatefulWidget with no constructor params -- reads user data from
+/// SharedPreferences. Implements a debounced "mark as read" pattern
+/// similar to how Gmail marks emails as read when scrolled past.
 class AnnouncementScreen extends StatefulWidget {
   const AnnouncementScreen({super.key});
 
@@ -27,6 +41,16 @@ class AnnouncementScreen extends StatefulWidget {
   AnnouncementScreenState createState() => AnnouncementScreenState();
 }
 
+/// State for [AnnouncementScreen].
+///
+/// Like a Vue page component with `data() { return {...} }`. Key state:
+/// - [_announcementList] -- list of announcements from API
+/// - [_processedIds] / [_pendingReadIds] -- visibility tracking sets
+/// - [_markReadDebounce] -- timer for batched "mark as read" API calls
+///
+/// The visibility tracking pattern: when an item becomes visible, its ID is
+/// queued. After 1 second of no new items, all queued IDs are sent to the
+/// API in one batch. Like a Vue Intersection Observer + debounced API call.
 class AnnouncementScreenState extends State<AnnouncementScreen> {
   final ApiService _apiService = ApiService();
   List<dynamic> _announcementList = [];
@@ -110,6 +134,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     }
   }
 
+  /// Like Vue's `mounted()` -- loads user role and announcement data.
   @override
   void initState() {
     super.initState();
@@ -123,6 +148,8 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     _loadData(useCache: false);
   }
 
+  /// Loads announcements from API with cache-first strategy.
+  /// Like `axios.get('/api/announcements')` in Vue.
   Future<void> _loadData({bool useCache = true}) async {
     // Load user role from SharedPreferences
     final prefs = await SharedPreferences.getInstance();

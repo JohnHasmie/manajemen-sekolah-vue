@@ -1,8 +1,23 @@
+// Compact overview card for the "Today's Overview" dashboard section.
+//
+// Like a Vue `<OverviewCard>` widget in a dashboard grid. Shows a key metric
+// (e.g., "5 Classes Today") with icon, value, title, and subtitle.
+// Similar to a Laravel Nova metric card or a Bootstrap info card in an
+// admin panel dashboard.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
-/// Compact overview card for "Today's Overview" section
-/// Shows contextual information based on user role
+/// A compact overview card for the "Today's Overview" dashboard section.
+///
+/// Like a Vue `<OverviewCard>` with props:
+/// - [title] - metric label (e.g., "Classes Today")
+/// - [value] - primary value (e.g., "5")
+/// - [subtitle] - additional context text
+/// - [icon] - Material icon for the card
+/// - [accentColor] - theme color for icon container and shadow
+/// - [onTap] - navigate to the related full screen
+///
+/// Shows contextual information based on user role.
 class OverviewCard extends StatelessWidget {
   final String title;
   final String value;

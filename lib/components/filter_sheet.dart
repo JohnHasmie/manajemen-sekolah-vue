@@ -1,9 +1,23 @@
-// components/filter_sheet.dart
+// Reusable filter bottom sheet component with chip-based multi-select sections.
+//
+// Like a Vue component `<FilterDrawer>` or a Laravel Nova filter panel that
+// slides up from the bottom. Contains multiple filter sections (e.g., status,
+// role, grade) each with selectable chip options. Similar to Vuetify's
+// `<v-bottom-sheet>` with `<v-chip-group>` inside.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
+/// A bottom sheet widget for applying filters using chip-based selection.
+///
+/// Like a Vue `<FilterSheet>` component with props:
+/// - [config] - defines filter sections and their options (like a filter schema)
+/// - [initialFilters] - currently applied filters map (like `v-model` for each filter)
+/// - [onApplyFilters] - callback when "Apply" is pressed (like `@apply`)
+/// - [primaryColor] - accent color for selected chips and buttons
+///
+/// Each section can be single-select or multi-select, configured via [FilterConfig].
 class FilterSheet extends StatefulWidget {
   final FilterConfig config;
   final Map<String, dynamic> initialFilters;
@@ -25,6 +39,8 @@ class FilterSheet extends StatefulWidget {
 class _FilterSheetState extends State<FilterSheet> {
   late Map<String, dynamic> _currentFilters;
 
+  /// Copies initial filter values to local state.
+  /// Like Vue's `created()` hook: `this.filters = { ...this.initialFilters }`.
   @override
   void initState() {
     super.initState();
@@ -144,6 +160,8 @@ class _FilterSheetState extends State<FilterSheet> {
     );
   }
 
+  /// Renders a single filter section with title and selectable chips.
+  /// Like a `<FilterGroup>` Vue component inside the sheet.
   Widget _buildFilterSection(FilterSection section, Color primaryColor) {
     final languageProvider = Provider.of<LanguageProvider>(
       context,
@@ -239,12 +257,17 @@ class _FilterSheetState extends State<FilterSheet> {
   }
 }
 
+/// Configuration object that defines the filter sections and their options.
+/// Like a filter schema/config object you might define in a Vue composable or
+/// a Laravel form request's `rules()` array -- it describes what filters exist.
 class FilterConfig {
   final List<FilterSection> sections;
 
   FilterConfig({required this.sections});
 }
 
+/// Defines a single filter section (e.g., "Status", "Grade Level").
+/// Like one group in a Laravel Nova filter panel.
 class FilterSection {
   final String key;
   final String title;
@@ -259,6 +282,8 @@ class FilterSection {
   });
 }
 
+/// A single selectable option within a [FilterSection].
+/// Like a `<option>` in an HTML `<select>`, with a display [label] and a [value].
 class FilterOption {
   final String label;
   final dynamic value;

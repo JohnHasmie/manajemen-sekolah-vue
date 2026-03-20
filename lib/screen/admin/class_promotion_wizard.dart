@@ -1,3 +1,11 @@
+// Class promotion wizard - multi-step form for promoting students to next grade.
+//
+// Like `pages/admin/class-promotion.vue` - a step-by-step wizard that allows
+// admins to promote students from one class to another across academic years.
+// Steps: 1) Select source class -> 2) Select students -> 3) Configure target -> 4) Confirm.
+//
+// In Laravel terms, this calls `POST /api/classes/promote` with selected student IDs
+// and target class/year configuration.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/providers/academic_year_provider.dart';
@@ -11,6 +19,11 @@ import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
+/// Multi-step wizard for promoting students to the next class/academic year.
+///
+/// Like a Vuetify `<v-stepper>` component with 4 steps.
+/// This is a [StatefulWidget] with step navigation, student selection, and
+/// target class configuration state.
 class ClassPromotionWizard extends StatefulWidget {
   const ClassPromotionWizard({super.key});
 
@@ -18,6 +31,13 @@ class ClassPromotionWizard extends StatefulWidget {
   State<ClassPromotionWizard> createState() => _ClassPromotionWizardState();
 }
 
+/// Mutable state for [ClassPromotionWizard].
+///
+/// Key state (like Vue `data()`):
+/// - [_currentStep] - active wizard step (0-based), controls which view is shown
+/// - [_classes] / [_academicYears] / [_students] - data lists from API
+/// - [_selectedSourceClassId] / [_selectedTargetYearId] / [_selectedTargetClassId] - user selections
+/// - [_selectedStudentIds] - Set of student IDs selected for promotion (like Vue `v-model` on checkboxes)
 class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   int _currentStep = 0;
   bool _isLoading = false;
@@ -47,6 +67,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     );
   }
 
+  /// Like Vue's `mounted()` - loads classes, academic years, teachers, and school settings.
   @override
   void initState() {
     super.initState();
@@ -61,6 +82,8 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     super.dispose();
   }
 
+  /// Loads classes and academic years for the wizard dropdowns.
+  /// Like calling `GET /api/classes` and `GET /api/academic-years` in Vue's `mounted()`.
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
     try {

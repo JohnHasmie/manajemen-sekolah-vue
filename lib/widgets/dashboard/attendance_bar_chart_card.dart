@@ -1,9 +1,26 @@
+// Attendance bar chart card for the dashboard, with weekly/daily toggle and page slider.
+//
+// Like a Vue `<AttendanceChartCard>` dashboard widget that displays attendance
+// data as a mini bar chart. Supports swiping between multiple classes (PageView)
+// and toggling between weekly and daily views. Similar to a Chart.js bar chart
+// inside a Laravel dashboard card.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/widgets/dashboard/mini_bar_chart.dart';
 import 'package:manajemensekolah/widgets/dashboard/schedule_slider_card.dart'; // For SmoothPageIndicator
 
+/// A swipeable attendance bar chart card for the dashboard.
+///
+/// Like a Vue `<AttendanceBarChartCard>` dashboard widget with props:
+/// - [title] / [icon] / [accentColor] - card header styling
+/// - [classesData] - list of class attendance data maps, each containing
+///   'subtitle', 'weekly_data', and 'daily_data' arrays
+/// - [hideSubtitle] - whether to hide the class name label
+/// - [onTap] - navigate to full attendance screen
+///
+/// Uses a `PageView` for swiping between classes (like a Vue carousel/swiper).
+/// Includes a weekly/daily toggle dropdown (like a Vue `<v-select>` filter).
 class AttendanceBarChartCard extends StatefulWidget {
   final String title;
   final IconData icon;

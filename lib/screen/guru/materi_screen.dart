@@ -1,3 +1,17 @@
+// Teaching material (materi) management screen for teachers.
+// Like `pages/teacher/Material/Index.vue` in a Vue app.
+//
+// A large screen that lets teachers browse subjects, chapters (bab), and
+// sub-chapters (sub-bab) in a tree structure. Teachers can check items
+// and generate AI materials or navigate to class activities. Includes
+// progress tracking (generated/used status per chapter).
+//
+// Contains two widget classes:
+// - [MateriPage] -- the main material browser with subject/chapter tree
+// - [SubBabDetailPage] -- detail view for a sub-chapter's content
+//
+// In Laravel terms, combines MaterialController@index, @show, and
+// ChapterController with progress tracking.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -18,6 +32,13 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Teaching material browser with subject, chapter, and sub-chapter navigation.
+///
+/// This is a StatefulWidget with complex local state for managing the chapter
+/// tree, checkboxes, progress tracking, and AI generation flow. In Vue terms,
+/// it is like a page component with deeply nested reactive data.
+///
+/// Props (like Vue props): [teacher], optional initial* for deep linking.
 class MateriPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
   final String? initialSubjectId;
@@ -38,6 +59,15 @@ class MateriPage extends StatefulWidget {
   MateriPageState createState() => MateriPageState();
 }
 
+/// State for [MateriPage].
+///
+/// Like a Vue page component with `data() { return {...} }`. Manages:
+/// - Subject/class selection dropdowns
+/// - Chapter (bab) and sub-chapter (sub-bab) tree with expand/collapse
+/// - Checkbox state for selecting items to generate AI content
+/// - Progress tracking (generated, used status) per chapter
+///
+/// `setState()` is like Vue's reactivity -- triggers UI rebuild.
 class MateriPageState extends State<MateriPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
@@ -107,6 +137,8 @@ class MateriPageState extends State<MateriPage> {
   }
 
   // Fungsi untuk navigate ke halaman class activity dengan bab yang dipilih
+  /// Navigates to ClassActivity screen with checked chapters for RPP generation.
+  /// Like a Vue `methods.navigateToGenerate()` that uses `this.$router.push()`.
   void _navigateToGenerateRPP() async {
     // Gunakan yang belum di-generate
     final checkedBab = _getCheckedNotGeneratedBab();
@@ -264,6 +296,8 @@ class MateriPageState extends State<MateriPage> {
   final GlobalKey _searchKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` -- resolves teacher profile, loads subjects and
+  /// chapters, applies initial selections if deep-linked, and shows tour.
   @override
   void initState() {
     super.initState();
@@ -373,6 +407,9 @@ class MateriPageState extends State<MateriPage> {
     }
   }
 
+  /// Main data loader -- fetches subjects for the selected class.
+  /// Like `axios.get('/api/subjects?classId=...')` in Vue.
+  /// Uses a multi-layer cache: TeacherProvider -> LocalCacheService -> API.
   Future<void> _loadData({bool useCache = true}) async {
     try {
       if (!mounted) return;
@@ -637,6 +674,9 @@ class MateriPageState extends State<MateriPage> {
     }
   }
 
+  /// Loads chapters (bab) and sub-chapters (sub-bab) for a subject.
+  /// Like `axios.get('/api/subjects/{id}/chapters')` in Vue.
+  /// Also loads progress data to mark generated/used chapters.
   Future<void> _loadBabMateri(String subjectId, {bool useCache = true}) async {
     final babCacheKey = 'materi_bab_${widget.teacher['id']}_$subjectId';
 
@@ -1995,7 +2035,12 @@ class MateriPageState extends State<MateriPage> {
   }
 }
 
-// Halaman detail untuk sub bab (diperbarui dengan design yang sama)
+/// Detail page for a sub-chapter (sub-bab) showing its content and AI materials.
+///
+/// Like a Vue `<SubChapterDetail>` component that shows content and allows
+/// AI material generation. Contains both static content and AI-generated content
+/// loaded asynchronously. Props include the sub-chapter data, parent chapter,
+/// teacher/subject IDs, and a checkbox callback.
 class SubBabDetailPage extends StatefulWidget {
   final Map<String, dynamic> subBab;
   final Map<String, dynamic> bab;

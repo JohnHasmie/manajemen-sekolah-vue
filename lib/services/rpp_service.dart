@@ -1,8 +1,31 @@
+// rpp_service.dart - AI-powered lesson plan (RPP) generation via OpenAI API.
+// Like a Laravel Service class that calls an external AI API to auto-generate
+// lesson plans. Similar to how you might use OpenAI in a Laravel app via
+// `Http::withToken($apiKey)->post('https://api.openai.com/...')`.
+// RPP = Rencana Pelaksanaan Pembelajaran (Lesson Plan, Indonesian curriculum).
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+/// Service that generates RPP (lesson plans) using the OpenAI GPT API.
+/// Like a Laravel service class (e.g., `App\Services\AIRPPService`) that:
+/// 1. Builds a structured prompt from teacher input
+/// 2. Calls the OpenAI chat completions endpoint
+/// 3. Parses the AI response into a structured RPP map
+/// 4. Falls back to a template if the AI call fails
+///
+/// The generated RPP follows Indonesia's Kurikulum 2013 (K13) format with
+/// three main components as per Mendikbud Circular No. 14/2019:
+/// A. Learning Objectives, B. Learning Activities, C. Assessment.
+///
+/// Note: This is an instance class (not static) unlike the Excel services,
+/// because it could potentially hold state for ongoing generation sessions.
 class RPPService {
+  /// Create a fallback/template RPP when the AI API call fails.
+  /// Like a Laravel factory default: provides placeholder content so the
+  /// user gets a skeleton RPP they can edit manually instead of nothing.
+  /// [customContent] - optional AI-generated content to use for objectives.
   Map<String, dynamic> _createFallbackRPP({
     required String judul,
     required String mataPelajaranId,
@@ -37,10 +60,25 @@ class RPPService {
     };
   }
 
+  /// OpenAI Chat Completions API endpoint.
+  /// Like setting `OPENAI_API_URL` in Laravel's `.env` file.
   static const String baseUrl = "https://api.openai.com/v1/chat/completions";
   // Ganti dengan API key OpenAI Anda
+  /// OpenAI API key. In production, this should come from a secure source
+  /// (like Laravel's `config('services.openai.key')` from `.env`).
   static const String apiKey = "your-openai-api-key";
 
+  /// Generate a complete RPP using the OpenAI GPT-3.5-turbo model.
+  /// Like a Laravel controller action that calls an AI service:
+  /// `$rpp = $aiService->generateRPP($request->validated());`
+  ///
+  /// [judul] - lesson plan title. [mataPelajaranId]/[mataPelajaranName] - subject info.
+  /// [kontenMateri] - list of material/content maps to include.
+  /// [tujuanPembelajaran] - optional custom learning objectives.
+  /// [alatMedia] - optional tools/media description.
+  ///
+  /// Returns a structured RPP map. Falls back to [_createFallbackRPP] on any error
+  /// (network failure, API error, parsing error) -- never throws.
   Future<Map<String, dynamic>> generateRPP({
     required String judul,
     required String mataPelajaranId,
@@ -106,6 +144,11 @@ class RPPService {
     }
   }
 
+  /// Build the prompt string for the OpenAI API call.
+  /// Constructs a detailed example-based prompt following the K13 RPP format.
+  /// Like a Laravel Blade template that generates the AI instruction text.
+  /// The prompt includes a complete example RPP and then asks the AI to
+  /// create a new one for the given subject and materials.
   String _buildPrompt({
     required String judul,
     required String mataPelajaranName,
@@ -191,6 +234,10 @@ class RPPService {
     return buffer.toString();
   }
 
+  /// Parse the raw AI text response into a structured RPP map.
+  /// Extracts sections by their headers (A. TUJUAN, B. KEGIATAN, C. PENILAIAN).
+  /// Like a Laravel service that parses unstructured text into a model's fields.
+  /// Falls back to [_createFallbackRPP] with the raw content if parsing fails.
   Map<String, dynamic> _parseAIResponse({
     required String content,
     required String judul,
@@ -237,6 +284,10 @@ class RPPService {
     }
   }
 
+  /// Extract text content for a specific section from the AI response.
+  /// Scans line-by-line from the section header until it hits the next section
+  /// or end of content. Like a simple text parser / regex extraction in PHP.
+  /// Returns empty string if the section is not found.
   String _extractSection(String content, String sectionTitle) {
     try {
       final lines = content.split('\n');

@@ -1,3 +1,9 @@
+// Admin data management hub screen - navigation menu to CRUD sub-screens.
+//
+// Like `pages/admin/data-management/index.vue` in a Vue app - a menu page
+// that links to Students, Teachers, Classes, and Subjects management screens.
+// In Laravel terms, this is like a resource index that links to individual
+// resource controllers (StudentController, TeacherController, etc.).
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/screen/admin/admin_class_management.dart';
 import 'package:manajemensekolah/screen/admin/student_management.dart';
@@ -7,11 +13,16 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:manajemensekolah/widgets/dashboard/menu_item_card.dart';
 
-/// Professional Admin Data Management Screen
-/// Redesigned using Kamil Edu design system
+/// Admin data management hub - a navigation menu linking to CRUD sub-screens.
+///
+/// This is a [StatelessWidget] (no local state, like a Vue component with no `data()`).
+/// Each menu item navigates to a full CRUD screen using `Navigator.push()`,
+/// which is Flutter's equivalent of Vue Router's `router.push('/admin/students')`.
 class AdminDataManagementScreen extends StatelessWidget {
   const AdminDataManagementScreen({super.key});
 
+  /// Builds the menu grid layout. Like Vue's `<template>` with a list of
+  /// `<MenuItemCard>` components. Each card uses `Navigator.push` (like `router.push`).
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,6 +93,8 @@ class AdminDataManagementScreen extends StatelessWidget {
     );
   }
 
+  /// Builds the gradient header with back button and title.
+  /// A reusable UI pattern across admin screens - like a Vue `<AppHeader>` component.
   Widget _buildGradientHeader(BuildContext context) {
     return Container(
       width: double.infinity,

@@ -1,10 +1,26 @@
+// Enhanced statistics card for the dashboard with trend indicators and sparklines.
+//
+// Like a Vue `<StatCard>` dashboard widget you would build with Chart.js or
+// ApexCharts for a Laravel admin panel. Displays a key metric with an icon,
+// optional trend badge (+12%, -5%), a progress bar, or a sparkline chart.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/widgets/dashboard/mini_sparkline.dart';
 
-/// Enhanced statistics card for professional dashboard
-/// Supports progress indicators, trends, and sparklines
+/// Enhanced statistics card for professional dashboard display.
+///
+/// Like a Vue `<EnhancedStatCard>` with props:
+/// - [title] / [value] / [subtitle] - text content
+/// - [icon] - can be `IconData` or emoji `String` (like a Vue dynamic component)
+/// - [accentColor] - theme color for the card accent
+/// - [trend] - optional trend badge text (e.g., "+12%", "-5%")
+/// - [progress] - optional progress bar value (0.0 to 1.0)
+/// - [sparklineData] - optional data points for a mini sparkline chart
+/// - [onTap] - navigation callback
+/// - [isLoading] - shows placeholder skeleton when true
+///
+/// Supports progress indicators, trends, and sparklines in a compact card.
 class EnhancedStatCard extends StatelessWidget {
   /// Main title of the statistic
   final String title;

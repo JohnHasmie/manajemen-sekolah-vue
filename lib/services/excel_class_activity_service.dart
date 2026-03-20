@@ -1,3 +1,7 @@
+// excel_class_activity_service.dart - Export class activity data to Excel via backend API.
+// Like Laravel's Maatwebsite/Excel export (`ClassActivityExport`) triggered from a controller.
+// The Flutter side sends data to the Laravel backend which generates the .xlsx file.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,11 +13,28 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service responsible for exporting class activity data (kegiatan kelas) to Excel.
+/// Similar to a Laravel Maatwebsite/Excel export class that implements `FromCollection`.
+///
+/// The export flow:
+/// 1. Format & validate data locally (like Laravel FormRequest validation)
+/// 2. POST data to the backend `/class-activity/export` endpoint
+/// 3. Backend generates the .xlsx using Maatwebsite/Excel
+/// 4. Save the returned binary file to device storage and open it
+///
+/// All methods are static -- no instance state needed (like a Laravel helper class).
 class ExcelClassActivityService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  // Export data kegiatan kelas ke Excel melalui backend
+  /// Export class activities to an Excel file via the backend API.
+  /// Like calling a Laravel controller action that returns a file download.
+  ///
+  /// [activities] - raw list of activity maps from the API/state.
+  /// [context] - BuildContext used for SnackBar feedback and i18n.
+  ///
+  /// Side effects: saves .xlsx to device documents dir and opens it.
+  /// Shows a success/error SnackBar (like Laravel's `return back()->with('message', ...)`).
   static Future<void> exportClassActivitiesToExcel({
     required List<dynamic> activities,
     required BuildContext context,
@@ -79,7 +100,10 @@ class ExcelClassActivityService {
     }
   }
 
-  // Validasi data yang lebih toleran
+  /// Validate and prepare activity data with tolerant defaults for missing fields.
+  /// Like a Laravel FormRequest that fills default values instead of rejecting.
+  /// Handles date type conversion (DateTime -> ISO string).
+  /// Returns a cleaned list ready for the backend export endpoint.
   static Future<List<Map<String, dynamic>>> _validateAndPrepareData(
     List<Map<String, dynamic>> activities,
   ) async {
@@ -126,7 +150,9 @@ class ExcelClassActivityService {
     return preparedData;
   }
 
-  // Method untuk memformat data kegiatan sebelum export
+  /// Format raw activity data into a consistent map structure before export.
+  /// Like a Laravel Resource/Transformer that normalizes API data.
+  /// Ensures all expected keys exist with empty-string fallbacks.
   static List<Map<String, dynamic>> formatActivitiesForExport(
     List<dynamic> rawActivities,
   ) {

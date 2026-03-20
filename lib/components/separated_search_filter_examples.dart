@@ -1,7 +1,11 @@
-/// EXAMPLES: How to use SeparatedSearchFilter component
-/// 
-/// This file shows different usage examples of the SeparatedSearchFilter component
-/// Copy the examples below to use in your pages
+// EXAMPLES: How to use the SeparatedSearchFilter component.
+//
+// Like a Vue Storybook file or a Laravel test/example file that demonstrates
+// different configurations of the SeparatedSearchFilter component.
+// All code is commented out -- copy-paste into your pages as needed.
+//
+// This file shows different usage examples of the SeparatedSearchFilter component.
+// Copy the examples below to use in your pages.
 
 /*
 

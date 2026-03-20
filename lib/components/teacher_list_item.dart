@@ -1,5 +1,20 @@
+// Teacher list item component for displaying a single teacher (guru) card.
+//
+// Like a Vue component `<TeacherCard>` used inside a `v-for` loop, or a
+// Blade partial `@include('teachers.card-item')`. Shows teacher name,
+// homeroom status badge, email, NIP, and a popup menu for edit/delete.
 import 'package:flutter/material.dart';
 
+/// A gradient card widget that displays a single teacher's information.
+///
+/// Like a Vue `<TeacherCard>` component with props:
+/// - [guru] - teacher data map from the API (contains 'nama', 'email', 'nip', etc.)
+/// - [index] - position in list
+/// - [onTap] - navigate to teacher detail (like `@click` / `$router.push`)
+/// - [onEdit] / [onDelete] - action callbacks from the popup menu
+///
+/// Shows a "Wali Kelas" (homeroom) or "Guru Biasa" (regular) badge based on
+/// `guru['is_wali_kelas']`. Uses a `PopupMenuButton` for edit/delete actions.
 class TeacherListItem extends StatelessWidget {
   final Map<String, dynamic> guru;
   final int index;
@@ -226,6 +241,8 @@ class TeacherListItem extends StatelessWidget {
     );
   }
 
+  /// Builds a small translucent action button with icon and label.
+  /// Like a reusable `<ActionBtn>` Vue component in the card footer.
   Widget _buildActionButton({
     required IconData icon,
     required String label,

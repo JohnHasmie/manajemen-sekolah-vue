@@ -1,3 +1,17 @@
+// Login screen for the Kamil Edu school management app.
+//
+// Like `pages/login.vue` in a Vue/Nuxt project - this is the authentication
+// entry point. Handles email/password login, Google Sign-In, OTP verification,
+// multi-school selection, and multi-role selection flows.
+//
+// In Laravel terms, this screen interacts with the `/api/login`, `/api/google-login`,
+// and `/api/verify-otp` endpoints, similar to a LoginController.
+//
+// The login flow may branch into:
+// 1. Direct login (single school, single role)
+// 2. School selection (user belongs to multiple schools)
+// 3. Role selection (user has multiple roles at a school)
+// 4. OTP verification (email-based 2FA)
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -10,6 +24,14 @@ import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// The login page widget. Like a Vue page component (`pages/login.vue`).
+///
+/// Takes an optional [initialError] to display an error message on load
+/// (e.g., when redirected here after a session expiry).
+///
+/// This is a [StatefulWidget] because it needs to manage form state,
+/// loading indicators, and multi-step login flows - similar to how a Vue
+/// component uses `data() { return { isLoading: false, ... } }`.
 class LoginScreen extends StatefulWidget {
   final String? initialError;
 
@@ -19,6 +41,20 @@ class LoginScreen extends StatefulWidget {
   LoginScreenState createState() => LoginScreenState();
 }
 
+/// The mutable state for [LoginScreen].
+///
+/// This is like a Vue component with its own local state (`data() { return {...} }`).
+/// Key state variables:
+/// - [_isLoading] - shows loading spinner, like a Vue `isLoading` data property
+/// - [_serverConnected] - tracks API health check status
+/// - [_showSchoolSelection] / [_showRoleSelection] - controls which sub-view to render
+///   (similar to Vue's `v-if` conditional rendering)
+/// - [_schoolList] / [_roleList] - data lists from API, like Vue computed/data properties
+/// - [_otpCode] - stored OTP for multi-step verification
+///
+/// The setState() calls throughout are like Vue's reactivity system -
+/// calling setState() triggers a re-render, similar to how changing a
+/// reactive `ref()` or `data` property in Vue automatically updates the DOM.
 class LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -41,6 +77,10 @@ class LoginScreenState extends State<LoginScreen> {
   String? _selectedSchoolId;
   String? _otpCode;
 
+  /// Called once when the widget is inserted into the tree.
+  /// Like Vue's `mounted()` lifecycle hook - this is where you do
+  /// initial setup such as API calls, event listeners, etc.
+  /// Here it checks server connectivity and shows any initial error message.
   @override
   void initState() {
     super.initState();
@@ -88,6 +128,9 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Pings the backend health-check endpoint to verify connectivity.
+  /// Like calling `axios.get('/api/health')` in a Vue app's mounted() hook.
+  /// Updates [_serverConnected] state which enables/disables login buttons.
   Future<void> _checkServerConnection() async {
     try {
       await ApiService.checkHealth();
@@ -110,6 +153,8 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Clears all persisted user data (SharedPreferences + local cache).
+  /// Like clearing Vuex/Pinia store and localStorage in a Vue app during logout.
   Future<void> _clearAllData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -120,6 +165,11 @@ class LoginScreenState extends State<LoginScreen> {
   }
 
 
+  /// Main email/password login handler.
+  /// Like a Vue method bound to `@click="login"` on the submit button.
+  /// Validates input, calls the API, and delegates to [_handleLoginResponse]
+  /// which may trigger school selection, role selection, or navigate to dashboard.
+  /// In Laravel terms, this calls `POST /api/login`.
   Future<void> login() async {
     if (!_serverConnected) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -214,7 +264,10 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Ganti method _saveLoginData dengan:
+  /// Persists login data (token + user info) to SharedPreferences and
+  /// sets up Firebase Analytics tracking. Like storing auth token in
+  /// localStorage and setting up user context in a Vue app's Vuex/Pinia store.
+  /// Also triggers a background FCM token refresh for push notifications.
   Future<void> _saveLoginData(Map<String, dynamic> responseData) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', responseData['token']);
@@ -267,6 +320,9 @@ class LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  /// Handles Google Sign-In flow: gets Google ID token, sends to backend.
+  /// Like implementing `socialite('google')` in Laravel + calling it from Vue.
+  /// On success, delegates to [_handleLoginResponse] for school/role selection.
   Future<void> _handleGoogleSignIn() async {
     if (!_serverConnected) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -365,6 +421,9 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Called when user picks a school from the multi-school selection list.
+  /// Re-authenticates with the selected school ID. Like a Vue method handling
+  /// a dropdown/select change that triggers a new API call with the chosen value.
   Future<void> _selectSchool(String? schoolId) async {
     if (schoolId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -427,6 +486,8 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Called when user picks a role (admin/guru/wali) from the role selection list.
+  /// Re-authenticates with the selected role. Similar to [_selectSchool] but for roles.
   Future<void> _selectRole(String role) async {
     if (kDebugMode) {
       print('🎯 Selecting role: $role');
@@ -485,6 +546,8 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Builds the role selection UI when user has multiple roles.
+  /// Like a Vue `<template v-if="showRoleSelection">` conditional block.
   Widget _buildRoleSelection() {
     return Column(
       children: [
@@ -608,6 +671,8 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Builds the school selection UI when user belongs to multiple schools.
+  /// Like a Vue `<template v-if="showSchoolSelection">` conditional block.
   Widget _buildSchoolSelection() {
     return Column(
       children: [
@@ -662,6 +727,8 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Builds the main login form with email/password fields and Google Sign-In button.
+  /// This is the default view, like the main `<template>` section of a Vue login page.
   Widget _buildLoginForm() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -770,6 +837,10 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// The main build method - like Vue's `<template>` section.
+  /// Renders either the login form, school selection, or role selection
+  /// based on the current state. Uses a ternary chain similar to
+  /// Vue's `v-if` / `v-else-if` / `v-else` directives.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -815,6 +886,12 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Central response handler for all login methods (email, Google, OTP).
+  /// Routes the response to the correct next step: OTP dialog, school selection,
+  /// role selection, or final navigation to dashboard.
+  /// Like a Vue method that processes API responses and updates component state.
+  /// This is the "router" of the login flow - similar to how Laravel's
+  /// LoginController might redirect to different views based on conditions.
   Future<void> _handleLoginResponse(Map<String, dynamic> responseData) async {
     // 1. Check OTP requirement
     if (responseData['require_otp'] == true ||
@@ -923,6 +1000,8 @@ class LoginScreenState extends State<LoginScreen> {
     Navigator.pushReplacementNamed(context, '/$userRole');
   }
 
+  /// Shows an OTP input dialog for email-based two-factor authentication.
+  /// Like a Vue modal component (`<v-dialog>`) for OTP entry.
   void _showOtpDialog(String email) {
     final otpController = TextEditingController();
     showDialog(
@@ -985,6 +1064,9 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Sends the OTP to the backend for verification.
+  /// Like calling `POST /api/verify-otp` from a Vue method.
+  /// On success, stores the OTP and delegates to [_handleLoginResponse].
   Future<void> _verifyOtp(String email, String otp) async {
     setState(() => _isLoading = true);
     try {

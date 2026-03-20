@@ -1,7 +1,23 @@
+// Flexible search and filter component with fully customizable styling.
+//
+// Like a highly configurable Vue `<SearchFilter>` component where you can
+// pass separate styling props for the search bar and filter button.
+// Similar to a Tailwind-styled search/filter combo in a Laravel Livewire view
+// where each part has its own color, size, and border-radius classes.
 import 'package:flutter/material.dart';
 
-/// A flexible search and filter component with separate styling
-/// Allows different widths and colors for search bar and filter button
+/// A flexible search and filter component with separate styling for each part.
+///
+/// Like a Vue `<SeparatedSearchFilter>` component with granular style props:
+/// - Search bar: [searchBackgroundColor], [searchIconColor], [searchBorderRadius], etc.
+/// - Filter button: [filterActiveColor], [filterInactiveColor], [filterBorderRadius], etc.
+/// - Layout: [spacing], [margin], [padding], [containerColor]
+///
+/// The search bar expands to fill available space (like `flex: 1` in CSS),
+/// while the filter button has a fixed width. Shows a red badge dot when
+/// [hasActiveFilter] is true.
+///
+/// See `separated_search_filter_examples.dart` for usage examples.
 class SeparatedSearchFilter extends StatelessWidget {
   final TextEditingController controller;
   final Function(String) onChanged;

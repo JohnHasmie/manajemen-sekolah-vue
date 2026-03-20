@@ -1,5 +1,18 @@
+// Simple search bar component with a text input and clear button.
+//
+// Like a basic Vue `<SearchInput>` component with `v-model` and a clear icon,
+// or a Blade partial `@include('partials.search-bar')`.
+// This is the simpler version; see EnhancedSearchBar for the version with filters.
 import 'package:flutter/material.dart';
 
+/// A simple search bar widget with an icon, text field, and clear button.
+///
+/// Like a Vue `<SearchBar>` component with props:
+/// - [controller] - the text controller (like `v-model`)
+/// - [hintText] - placeholder text (defaults to 'Cari...')
+/// - [onChanged] - keystroke callback (like `@input`)
+///
+/// Simpler alternative to [EnhancedSearchBar] when no filter dropdown is needed.
 class CustomSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;

@@ -1,3 +1,14 @@
+/// api_subject_services.dart - Manages subjects (mata pelajaran), materials, and AI-generated content.
+/// Like Laravel's SubjectController + MaterialController / Vue's subject store module.
+///
+/// This is one of the largest service files. It handles:
+/// - Subject CRUD with pagination, caching, and Excel import/export
+/// - Curriculum material hierarchy: Bab (chapter) > Sub-Bab (sub-chapter) > Content
+/// - Material progress tracking (checked/generated state per teacher)
+/// - AI-powered material generation via KamillLabs Edu AI microservice
+/// - RPP (lesson plan) generation, editing, and field-level regeneration
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,10 +19,17 @@ import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Service for subject, material, and AI content management API calls.
+/// Like a combined Laravel controller handling subjects, materials, and AI endpoints.
+/// Uses two different base URLs: main API for CRUD, AI API for generation.
+///
+/// In Vue terms, this is a large Pinia store combining subject state management
+/// with AI generation actions and curriculum material tree operations.
 class ApiSubjectService {
-  // static const String baseUrl = ApiService.baseUrl;
+  /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
 
+  /// Parses JSON response and throws on non-2xx status.
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
 
@@ -25,7 +43,9 @@ class ApiSubjectService {
     }
   }
 
-  // Get Filter Options for Subject Filters
+  /// Fetches filter dropdown options for subject listing, with 24-hour cache.
+  /// Like a Laravel endpoint returning distinct filter values for Vue selects.
+  /// Cache is scoped by school_id to prevent cross-school data leaks.
   static Future<Map<String, dynamic>> getSubjectFilterOptions() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -68,7 +88,9 @@ class ApiSubjectService {
     }
   }
 
-  // Get Subjects with Pagination & Filters (Recommended)
+  /// Fetches subjects with server-side pagination, filters, and local caching.
+  /// Like `Subject::filter($request)->paginate()` in Laravel.
+  /// Cache is scoped by school_id with 30-minute TTL.
   static Future<Map<String, dynamic>> getSubjectsPaginated({
     int page = 1,
     int limit = 10,
@@ -169,8 +191,9 @@ class ApiSubjectService {
     }
   }
 
-  // Legacy method (keep for backward compatibility)
-  // Now handles paginated response from backend
+  /// Legacy method to fetch all subjects as a flat list.
+  /// Kept for backward compatibility -- new code should use [getSubjectsPaginated].
+  /// Note: this is an instance method (not static) unlike most others.
   Future<List<dynamic>> getSubject({String? status}) async {
     String url = '/subject';
     if (status != null && status.isNotEmpty && status != 'all') {
@@ -187,6 +210,8 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
+  /// Creates a new subject. Invalidates subject cache.
+  /// Like `Subject::create($data)` in Laravel.
   static Future<dynamic> addSubject(Map<String, dynamic> data) async {
     final response = await ApiService().post('/subject', data);
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
@@ -206,6 +231,8 @@ class ApiSubjectService {
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 
+  /// Attaches a class to a subject (many-to-many pivot).
+  /// Like `$subject->classes()->attach($classId)` in Laravel.
   static Future<void> attachClass(String subjectId, String classId) async {
     await ApiService().post('/subject-class', {
       'subject_id': subjectId,
@@ -214,6 +241,8 @@ class ApiSubjectService {
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 
+  /// Detaches a class from a subject (removes pivot record).
+  /// Like `$subject->classes()->detach($classId)` in Laravel.
   static Future<void> detachClass(String subjectId, String classId) async {
     await ApiService().delete(
       '/subject-class?subject_id=$subjectId&class_id=$classId',
@@ -221,6 +250,8 @@ class ApiSubjectService {
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 
+  /// Fetches the master list of all available subjects (system-wide, not school-specific).
+  /// Like `MasterSubject::all()` in Laravel -- used for template/reference data.
   static Future<List<dynamic>> getAllMasterSubjects() async {
     final response = await http.get(
       Uri.parse('$baseUrl/master-subjects'),
@@ -230,6 +261,8 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
+  /// Fetches content materials for a specific sub-chapter (sub-bab).
+  /// Part of the material hierarchy: Subject > Bab > Sub-Bab > Content.
   static Future<List<dynamic>> getContentMateri({
     required String subBabId,
   }) async {
@@ -244,6 +277,8 @@ class ApiSubjectService {
     return [];
   }
 
+  /// Fetches chapters (bab) for a subject. Top level of the material hierarchy.
+  /// Like `Chapter::where('subject_id', $id)->get()` in Laravel.
   static Future<List<dynamic>> getBabMateri({String? subjectId}) async {
     String url = '$baseUrl/bab-material?';
     if (subjectId != null) url += 'subject_id=$subjectId&';
@@ -257,7 +292,8 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  // Sub Bab Materi
+  /// Fetches sub-chapters (sub-bab) for a given chapter.
+  /// Like `SubChapter::where('chapter_id', $babId)->get()` in Laravel.
   static Future<List<dynamic>> getSubBabMateri({required String babId}) async {
     final response = await http.get(
       Uri.parse('$baseUrl/sub-bab-material?chapter_id=$babId'),
@@ -491,6 +527,11 @@ class ApiSubjectService {
   }
 
   // ==================== GENERATE MATERI OLEH AI ====================
+  // The methods below call a separate AI microservice (KamillLabs Edu AI),
+  // not the main Laravel backend. Similar to having a second API_BASE_URL
+  // in your .env file for an external service.
+
+  /// Base URL for the AI microservice. Separate from the main Laravel API.
   static const String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
 
   /// Headers khusus untuk KamillLabs AI API (tanpa X-School-ID)
@@ -615,6 +656,8 @@ class ApiSubjectService {
   }
 
   // ==================== RPP REGENERATION METHODS ====================
+  // These methods handle AI-powered RPP (lesson plan) field regeneration.
+  // Each field can be regenerated up to 2 times (limit enforced server-side).
 
   /// Regenerate a specific RPP field (Section 5.6)
   /// POST /api/lesson-plans/{id}/regen/{field}
@@ -688,8 +731,11 @@ class ApiSubjectService {
   }
 
   // ==================== MATERI PROGRESS METHODS ====================
+  // These methods track which chapters/sub-chapters a teacher has covered
+  // and which ones have been AI-generated. Like a todo/checklist system.
 
-  // Get Materi Progress (checked state) for a teacher and subject
+  /// Fetches material progress (checked/generated state) for a teacher + subject combo.
+  /// Like `MaterialProgress::where('teacher_id', ...)->where('subject_id', ...)->get()`.
   static Future<List<dynamic>> getMateriProgress({
     required String guruId,
     required String mataPelajaranId,
@@ -708,7 +754,8 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  // Save or Update single materi progress (toggle checked state)
+  /// Saves or toggles the checked state for a single material progress item.
+  /// Like `MaterialProgress::updateOrCreate()` in Laravel.
   static Future<dynamic> saveMateriProgress(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/material-progress'),
@@ -719,7 +766,9 @@ class ApiSubjectService {
     return _handleResponse(response);
   }
 
-  // Batch save materi progress (for saving multiple checkboxes at once)
+  /// Batch-saves multiple material progress items at once.
+  /// Remaps frontend keys (guru_id, bab_id) to backend keys (teacher_id, chapter_id).
+  /// Like a Laravel batch upsert with key remapping middleware.
   static Future<dynamic> batchSaveMateriProgress(
     Map<String, dynamic> data,
   ) async {
@@ -747,7 +796,8 @@ class ApiSubjectService {
     return _handleResponse(response);
   }
 
-  // Mark materi as generated (after RPP/activity generation)
+  /// Marks specific materials as AI-generated (after RPP/activity generation).
+  /// Prevents accidental re-generation. Like setting a `generated_at` timestamp.
   static Future<dynamic> markMateriGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
@@ -771,7 +821,8 @@ class ApiSubjectService {
     return _handleResponse(response);
   }
 
-  // Reset generated status (to allow regeneration)
+  /// Resets the generated status to allow re-generation.
+  /// Like clearing the `generated_at` flag so the AI can regenerate content.
   static Future<dynamic> resetMateriGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {

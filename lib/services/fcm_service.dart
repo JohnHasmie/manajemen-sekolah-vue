@@ -1,3 +1,8 @@
+// fcm_service.dart - Firebase Cloud Messaging (push notifications) service.
+// Like Laravel's notification system (Notification + NotificationChannel) combined
+// with a Vue event bus for real-time UI updates. Handles push notification
+// receiving, display, tap navigation, token management, and cache invalidation.
+
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -14,7 +19,11 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Top-level handler untuk background messages
+/// Top-level background message handler. Must be a top-level function (not a
+/// class method) because it runs in a separate isolate when the app is killed.
+/// Like a Laravel Queue Worker that processes jobs independently of the main app.
+/// Handles cache invalidation for 'refresh_*' message types and shows local
+/// notifications for regular messages.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (kDebugMode) {
@@ -102,6 +111,22 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
+/// Singleton service managing Firebase Cloud Messaging (FCM) push notifications.
+/// Like Laravel's notification system combined with a broadcasting channel:
+/// - FCM = Laravel's `DatabaseNotification` + `BroadcastChannel`
+/// - Local notifications = the "mail" channel (shows visible alerts)
+/// - [syncTrigger] = a Vue reactive ref / Laravel Event that UI listens to
+///
+/// Handles three app states:
+/// 1. Foreground: show local notification + trigger cache invalidation
+/// 2. Background: handled by top-level [_firebaseMessagingBackgroundHandler]
+/// 3. Terminated: check initial message when app opens
+///
+/// Key properties:
+/// - [_fcmToken] : device token sent to backend (like a device ID in Laravel's `fcm_tokens` table)
+/// - [syncTrigger] : ValueNotifier that UI widgets listen to for real-time data refresh
+///   (similar to Vue's `watch()` or Laravel Echo's `.listen()`)
+/// - [_localNotifications] : plugin for showing OS-level notification banners
 class FCMService {
   static final FCMService _instance = FCMService._internal();
   factory FCMService() => _instance;
@@ -114,11 +139,17 @@ class FCMService {
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
-  // Notifier for UI components to listen to background changes
+  /// ValueNotifier that UI components observe for background data changes.
+  /// When a 'refresh_*' push notification arrives, this emits the message type
+  /// so screens can reload their data. Like Vue's `watch()` on a reactive store,
+  /// or listening to a Laravel Echo channel event.
   final ValueNotifier<Map<String, dynamic>?> syncTrigger =
       ValueNotifier<Map<String, dynamic>?>(null);
 
-  // Initialize FCM
+  /// Initialize FCM: request permissions, get token, set up message handlers.
+  /// Like registering a Laravel service provider that sets up notification
+  /// channels, broadcast drivers, and event listeners all at once.
+  /// Must be called once at app startup (in main.dart after Firebase.initializeApp).
   Future<void> initialize() async {
     try {
       if (kDebugMode) {
@@ -194,7 +225,10 @@ class FCMService {
     }
   }
 
-  // Initialize local notifications
+  /// Set up the local notifications plugin for showing OS-level notification
+  /// banners when the app is in the foreground. Like configuring a Laravel
+  /// notification channel (mail, SMS, etc.) -- here it's the device's notification tray.
+  /// Creates an Android notification channel with high importance.
   Future<void> _initializeLocalNotifications() async {
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -231,7 +265,14 @@ class FCMService {
         ?.createNotificationChannel(channel);
   }
 
-  // Setup message handlers
+  /// Register listeners for all three message reception scenarios.
+  /// Like setting up Laravel Echo listeners for different event types:
+  /// - `onMessage` (foreground) = Echo `.listen()` while app is active
+  /// - `onMessageOpenedApp` (background tap) = user clicks a notification
+  /// - `getInitialMessage` (terminated tap) = app opened from a killed state
+  ///
+  /// 'refresh_*' messages invalidate local caches and trigger UI sync
+  /// without showing a visible notification (silent push, like a Laravel job).
   void _setupMessageHandlers() {
     // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
@@ -314,7 +355,11 @@ class FCMService {
     });
   }
 
-  // Show local notification
+  /// Display a local notification banner when a message arrives in the foreground.
+  /// FCM only auto-displays notifications when the app is backgrounded; in the
+  /// foreground, we must explicitly show them using the local notifications plugin.
+  /// The message payload is encoded as JSON in the notification's `payload` field
+  /// so it can be parsed when the user taps the notification.
   Future<void> _showLocalNotification(RemoteMessage message) async {
     RemoteNotification? notification = message.notification;
     AndroidNotification? android = message.notification?.android;
@@ -345,7 +390,8 @@ class FCMService {
     }
   }
 
-  // Handle notification tap from local notification
+  /// Callback when a local notification is tapped. Parses the JSON payload
+  /// and delegates to [_handleNotificationTap] for navigation.
   void _onNotificationTapped(NotificationResponse response) {
     if (response.payload != null) {
       try {
@@ -359,7 +405,10 @@ class FCMService {
     }
   }
 
-  // Handle notification tap action
+  /// Route notification taps to the appropriate screen based on the `type` field.
+  /// Like a Laravel notification's `toArray()` method defining the action URL,
+  /// or a Vue router that maps notification types to route names.
+  /// Supported types: absensi, class_activity, pengumuman, tagihan, grade.
   void _handleNotificationTap(Map<String, dynamic> data) {
     if (kDebugMode) {
       print('🔔 Notification tapped with data: $data');
@@ -411,7 +460,9 @@ class FCMService {
     }
   }
 
-  // Send token to backend
+  /// Send the FCM device token to the backend so it can target this device.
+  /// Like storing a device token in Laravel's `fcm_tokens` table via
+  /// `POST /api/fcm-token`. Returns true on success, false on failure.
   Future<bool> sendTokenToBackend(String token) async {
     try {
       if (kDebugMode) {
@@ -433,7 +484,8 @@ class FCMService {
     }
   }
 
-  // Delete token from backend (on logout)
+  /// Delete the FCM token from the backend on logout so the device
+  /// stops receiving notifications. Like `DELETE /api/fcm-token/{token}` in Laravel.
   Future<void> deleteTokenFromBackend() async {
     try {
       if (_fcmToken != null) {
@@ -454,7 +506,8 @@ class FCMService {
     }
   }
 
-  // Get saved token from local storage
+  /// Retrieve the saved FCM token from SharedPreferences (local storage).
+  /// Like reading from Laravel's session or cache: `Cache::get('fcm_token')`.
   Future<String?> getSavedToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -467,7 +520,7 @@ class FCMService {
     }
   }
 
-  // Clear local token
+  /// Clear the locally stored FCM token. Called during logout cleanup.
   Future<void> clearLocalToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -480,7 +533,9 @@ class FCMService {
     }
   }
 
-  // Force refresh FCM token
+  /// Force-refresh the FCM token by deleting the old one and requesting a new one.
+  /// Useful when push notifications stop working. Like rotating an API key.
+  /// Side effects: saves new token locally and sends it to the backend.
   Future<String?> forceRefreshToken() async {
     try {
       if (kDebugMode) {
@@ -515,6 +570,9 @@ class FCMService {
     }
   }
 
+  /// Navigate to the announcement screen based on user role (admin vs parent/teacher).
+  /// Uses the global [navigatorKey] to push routes without a BuildContext.
+  /// Like a Laravel redirect that checks the user's role before choosing the view.
   Future<void> _navigateToAnnouncementScreen() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -547,6 +605,7 @@ class FCMService {
     }
   }
 
+  /// Navigate to the parent class activity screen from a notification tap.
   Future<void> _navigateToClassActivityScreen() async {
     try {
       if (navigatorKey.currentState != null) {
@@ -563,6 +622,7 @@ class FCMService {
     }
   }
 
+  /// Navigate to the parent grade screen from a notification tap.
   Future<void> _navigateToGradeScreen() async {
     try {
       if (navigatorKey.currentState != null) {
@@ -577,6 +637,9 @@ class FCMService {
     }
   }
 
+  /// Navigate to the parent presence/attendance screen for a specific student.
+  /// Reads user data from SharedPreferences and passes the student_id from
+  /// the notification payload. Like a Laravel redirect with route parameters.
   Future<void> _navigateToPresenceScreen(Map<String, dynamic> data) async {
     try {
       if (navigatorKey.currentState != null) {

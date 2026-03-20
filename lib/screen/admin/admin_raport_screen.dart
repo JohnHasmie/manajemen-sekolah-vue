@@ -1,3 +1,9 @@
+// Admin report card (raport) management screen.
+//
+// Like `pages/admin/report-cards.vue` - allows admins to select a class,
+// view student report cards, export to Excel, and publish/unpublish raports.
+//
+// In Laravel terms, this consumes RaportController with class-based filtering.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -18,6 +24,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin report card screen - select class, view students, export/publish raports.
+///
+/// This is a [StatefulWidget] - like a Vue page with local state for class selection
+/// and student list display. Uses cache-first loading pattern.
 class AdminRaportScreen extends StatefulWidget {
   const AdminRaportScreen({super.key});
 
@@ -25,6 +35,13 @@ class AdminRaportScreen extends StatefulWidget {
   State<AdminRaportScreen> createState() => _AdminRaportScreenState();
 }
 
+/// Mutable state for [AdminRaportScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_classes] - list of classes to choose from
+/// - [_selectedClass] - currently selected class for viewing students
+/// - [_students] - students in the selected class with raport status
+/// - [_isExporting] / [_isPublishing] - loading states for bulk actions
 class _AdminRaportScreenState extends State<AdminRaportScreen> {
   late LanguageProvider _languageProvider;
 
@@ -44,6 +61,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
   final GlobalKey _exportBtnKey = GlobalKey();
   final GlobalKey _publishBtnKey = GlobalKey();
 
+  /// Like Vue's `mounted()` - initializes language provider and loads class list.
   @override
   void initState() {
     super.initState();
@@ -79,6 +97,8 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
     }
   }
 
+  /// Loads the class list with cache-first pattern.
+  /// Like calling `GET /api/classes` in Vue's `mounted()` with localStorage fallback.
   Future<void> _loadInitialData({bool useCache = true}) async {
     // Step 1: Try cache for instant display
     if (useCache) {

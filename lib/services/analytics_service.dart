@@ -1,3 +1,8 @@
+// analytics_service.dart - User activity tracking via Firebase Analytics.
+// Like Laravel's event logging (Event/Listener) combined with a tracking
+// service, or similar to Vue's analytics plugin (vue-gtag). Centralizes all
+// analytics calls so the rest of the app never touches Firebase directly.
+
 import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -5,8 +10,19 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-/// Service untuk tracking user activities via Firebase Analytics.
-/// Berguna untuk closed testing - melihat siapa login dan ngapain aja.
+/// Singleton service that wraps Firebase Analytics for the entire app.
+/// Like Laravel's `App\Services\AnalyticsService` -- a single class you
+/// call from controllers (here: screens/providers) to log events.
+///
+/// Uses the Singleton pattern via a private constructor + factory,
+/// similar to Laravel's `app()->singleton(AnalyticsService::class, ...)`.
+///
+/// Key properties:
+/// - [_analytics] : The Firebase Analytics instance (like the GA client in Laravel).
+/// - [_observer]  : A navigator observer for automatic route/screen tracking.
+///
+/// All methods are static for convenience -- call `AnalyticsService.logLogin(...)`
+/// from anywhere, like calling a Laravel Facade (`Analytics::logLogin(...)`).
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
   factory AnalyticsService() => _instance;
@@ -15,7 +31,9 @@ class AnalyticsService {
   static FirebaseAnalytics? _analytics;
   static FirebaseAnalyticsObserver? _observer;
 
-  /// Initialize analytics - panggil setelah Firebase.initializeApp()
+  /// Initialize the analytics engine. Must be called after `Firebase.initializeApp()`.
+  /// Like registering a service provider in Laravel's `AppServiceProvider::boot()`.
+  /// Side effect: enables analytics collection globally.
   static Future<void> initialize() async {
     try {
       _analytics = FirebaseAnalytics.instance;
@@ -34,10 +52,15 @@ class AnalyticsService {
     }
   }
 
-  /// Get the navigator observer for automatic screen tracking
+  /// Get the navigator observer for automatic screen tracking.
+  /// Attach this to `MaterialApp.navigatorObservers` -- like adding
+  /// a middleware in Laravel that logs every route hit automatically.
   static FirebaseAnalyticsObserver? get observer => _observer;
 
-  /// Set user identity saat login - agar bisa track per tester
+  /// Set user identity on login so events are attributed to a specific tester.
+  /// Like Laravel's `Auth::login($user)` but for analytics context.
+  /// Parameters: [userId], [email], [role] are required; [name], [schoolName] optional.
+  /// Side effect: sets Firebase user properties (similar to session data in Laravel).
   static Future<void> setUser({
     required String userId,
     required String email,
@@ -73,7 +96,9 @@ class AnalyticsService {
     }
   }
 
-  /// Set user from SharedPreferences (untuk auto-set setelah app restart)
+  /// Restore user identity from SharedPreferences after app restart.
+  /// Like Laravel's session-based auth that persists across requests --
+  /// SharedPreferences is Flutter's equivalent of `session()` / cookies.
   static Future<void> setUserFromPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -95,7 +120,8 @@ class AnalyticsService {
     }
   }
 
-  /// Clear user saat logout
+  /// Clear user identity on logout. Like `Auth::logout()` in Laravel.
+  /// Side effect: resets the Firebase userId so subsequent events are anonymous.
   static Future<void> clearUser() async {
     try {
       await _analytics?.setUserId(id: null);
@@ -111,7 +137,9 @@ class AnalyticsService {
 
   // ==================== EVENT TRACKING ====================
 
-  /// Track login event
+  /// Track a login event with method, email, and role.
+  /// Like firing a Laravel Event: `event(new UserLoggedIn($user))`.
+  /// Logs both the built-in Firebase login event and a custom detail event.
   static Future<void> logLogin({
     required String method,
     required String email,
@@ -138,7 +166,8 @@ class AnalyticsService {
     }
   }
 
-  /// Track logout event
+  /// Track logout event and clear the user identity.
+  /// Side effect: also calls [clearUser] to disassociate future events.
   static Future<void> logLogout() async {
     try {
       await _analytics?.logEvent(name: 'user_logout');
@@ -153,7 +182,10 @@ class AnalyticsService {
     }
   }
 
-  /// Track screen view (manual - untuk screen yang tidak pakai Navigator)
+  /// Manually track a screen view for screens not using the Navigator.
+  /// The [observer] handles Navigator-based screens automatically; use this
+  /// for dialogs, bottom sheets, or tab switches. Like logging a page view
+  /// in a Vue SPA router guard (`router.afterEach`).
   static Future<void> logScreenView({
     required String screenName,
     String? screenClass,
@@ -173,7 +205,9 @@ class AnalyticsService {
     }
   }
 
-  /// Track feature usage - untuk tahu fitur mana yang sering dipakai tester
+  /// Track which features testers use most. Like a Laravel `feature_used`
+  /// event dispatched in controllers. [featureName] identifies the feature;
+  /// optional [parameters] carry extra metadata (e.g., filters applied).
   static Future<void> logFeatureUsed({
     required String featureName,
     Map<String, Object>? parameters,
@@ -196,7 +230,9 @@ class AnalyticsService {
     }
   }
 
-  /// Track API call - untuk tahu endpoint mana yang lambat
+  /// Track an API call's endpoint, HTTP method, status code, and duration.
+  /// Helps identify slow endpoints, similar to Laravel Telescope's request
+  /// monitoring or a custom HTTP middleware that logs response times.
   static Future<void> logApiCall({
     required String endpoint,
     required String method,
@@ -220,7 +256,9 @@ class AnalyticsService {
     }
   }
 
-  /// Track error event
+  /// Track an error event. Like Laravel's `Log::error()` or a custom
+  /// exception handler that reports to an external service.
+  /// [message] is truncated to 100 chars to respect Firebase limits.
   static Future<void> logError({
     required String errorType,
     required String message,
@@ -242,7 +280,8 @@ class AnalyticsService {
     }
   }
 
-  /// Track school switch
+  /// Track when a user switches schools (multi-tenancy context).
+  /// Like logging a tenant switch in a Laravel multi-tenant app.
   static Future<void> logSchoolSwitch({
     required String schoolName,
     required String role,
@@ -262,7 +301,9 @@ class AnalyticsService {
     }
   }
 
-  /// Track custom event (generic)
+  /// Track a custom/generic event by [name] with optional [parameters].
+  /// Catch-all for events that don't fit the specific methods above.
+  /// Like Laravel's `Event::dispatch($name, $payload)`.
   static Future<void> logEvent({
     required String name,
     Map<String, Object>? parameters,

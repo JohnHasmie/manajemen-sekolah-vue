@@ -1,6 +1,21 @@
+// Schedule card component displaying a single teaching schedule entry.
+//
+// Like a Vue component `<ScheduleCard>` used in a `v-for` loop, or a
+// Blade partial `@include('schedules.card-item')`. Each card shows subject,
+// teacher, class, day, and time with edit/delete actions. The card color
+// is determined by the day of the week.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// A gradient card widget that displays a single schedule entry.
+///
+/// Like a Vue `<ScheduleCard>` component with props:
+/// - [schedule] - the schedule data map from the API
+/// - [onEdit] - callback to edit this schedule (like `$emit('edit')`)
+/// - [onDelete] - callback to delete this schedule (like `$emit('delete')`)
+///
+/// The card background color is based on the day of the week, using
+/// [ColorUtils.getDayColor]. Used in [ScheduleList].
 class ScheduleCard extends StatelessWidget {
   final dynamic schedule;
   final VoidCallback onEdit;
@@ -13,6 +28,7 @@ class ScheduleCard extends StatelessWidget {
     required this.onDelete,
   });
 
+  /// Formats a time string to HH:MM. Like a Laravel accessor or a Vue filter.
   String _formatTime(String? timeString) {
     if (timeString == null || timeString.isEmpty) return '07:00';
 
@@ -108,6 +124,7 @@ class ScheduleCard extends StatelessWidget {
     );
   }
 
+  /// Builds the left time column showing start/end times and period number.
   Widget _buildTimeSection() {
     return SizedBox(
       width: 70,
@@ -157,6 +174,7 @@ class ScheduleCard extends StatelessWidget {
     );
   }
 
+  /// Builds the main content area showing subject, teacher, class, and day.
   Widget _buildContentSection(String displayDay) {
     return Expanded(
       child: Column(

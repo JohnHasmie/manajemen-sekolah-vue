@@ -1,3 +1,10 @@
+// Parent view of class activities (teaching journal entries).
+// Like `pages/parent/ClassActivity.vue` in a Vue app.
+//
+// Read-only view of class activities for the parent's children.
+// Supports student selector (for parents with multiple kids),
+// auto-marking activities as read when scrolled into view, and caching.
+// In Laravel terms: `ClassActivityController@parentIndex`.
 import 'dart:async';
 import 'dart:convert';
 
@@ -16,6 +23,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Parent's read-only view of class activities with read tracking.
+///
+/// Uses the same debounced visibility-based "mark as read" pattern as
+/// [AnnouncementScreen]. Props: optional [academicYearId].
 class ParentClassActivityScreen extends StatefulWidget {
   final String? academicYearId;
 
@@ -26,6 +37,11 @@ class ParentClassActivityScreen extends StatefulWidget {
       ParentClassActivityScreenState();
 }
 
+/// State for [ParentClassActivityScreen].
+///
+/// Like a Vue page component with `data() { return {...} }`.
+/// Key state: activity list, student selector, visibility tracking for
+/// auto-marking read items. Uses the same pattern as announcements.
 class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   List<dynamic> _activityList = [];
   List<dynamic> _studentList = [];

@@ -1,3 +1,7 @@
+// excel_subject_service.dart - Export and import subject (mata pelajaran) data via Excel.
+// Like Laravel's Maatwebsite/Excel SubjectExport with template download and validation.
+// Handles bilingual field names (name/nama, code/kode, description/deskripsi).
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,11 +13,20 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service for exporting subject (mata pelajaran) data to Excel and downloading
+/// import templates via the backend API.
+/// Similar to `Excel::download(new SubjectExport($data), 'Mata_Pelajaran.xlsx')` in Laravel.
+///
+/// Supports bilingual field name mapping (English/Indonesian) for data that may
+/// arrive in either format from the API. Like a Laravel Resource that normalizes
+/// `name`/`nama` and `code`/`kode` fields into a consistent structure.
 class ExcelSubjectService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  // Export data mata pelajaran ke Excel melalui backend
+  /// Export subject data to Excel via backend POST to `/subject/export`.
+  /// [subjects] - list of subject maps. [context] - for SnackBar and i18n.
+  /// Side effects: validates, downloads .xlsx, saves to device, opens file.
   static Future<void> exportSubjectsToExcel({
     required List<dynamic> subjects,
     required BuildContext context,
@@ -75,7 +88,7 @@ class ExcelSubjectService {
     }
   }
 
-  // Download template Excel melalui backend
+  /// Download a subject import template from GET `/subject/template`.
   static Future<void> downloadTemplate(BuildContext context) async {
     final languageProvider = context.read<LanguageProvider>();
 
@@ -130,7 +143,7 @@ class ExcelSubjectService {
     }
   }
 
-  // Validasi data melalui backend
+  /// Server-side subject validation via POST to `/subject/validate`.
   static Future<List<Map<String, dynamic>>> validateSubjectDataBackend(
     List<dynamic> subjects,
   ) async {
@@ -154,7 +167,9 @@ class ExcelSubjectService {
     }
   }
 
-  // Helper method untuk validasi data sebelum export (local fallback)
+  /// Local fallback validation. Checks required fields (code, name) with
+  /// bilingual key support ('code'/'kode', 'name'/'nama').
+  /// Includes subject ID if available for backend lookups.
   static List<Map<String, dynamic>> validateSubjectData(
     List<dynamic> subjects,
   ) {
@@ -202,7 +217,10 @@ class ExcelSubjectService {
     return validatedData;
   }
 
-  // Helper methods
+  /// Extract class names associated with a subject as a comma-separated string.
+  /// Handles multiple data shapes: pre-computed 'class_names' string, or
+  /// nested 'class_list'/'classes' arrays. Like a Laravel accessor that
+  /// resolves a relationship: `$subject->classes->pluck('name')->join(', ')`.
   static String _getClassNames(Map<String, dynamic> subject) {
     if (subject['class_names'] != null) {
       return subject['class_names'];

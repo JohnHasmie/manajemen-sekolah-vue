@@ -1,5 +1,24 @@
+// Confirmation dialog component for destructive actions (delete, etc.).
+//
+// Like a Vue component `<ConfirmModal>` or a SweetAlert2 confirmation popup
+// you would use in a Laravel/Vue app before deleting a record.
+// Returns `true` via Navigator.pop when confirmed, `false` when cancelled.
 import 'package:flutter/material.dart';
 
+/// A reusable confirmation dialog with a gradient header and confirm/cancel buttons.
+///
+/// Like a Vue `<ConfirmDialog>` component, or using SweetAlert2 in a Laravel app:
+/// ```js
+/// Swal.fire({ title: 'Delete?', confirmButtonText: 'Hapus' })
+/// ```
+///
+/// Props (parameters):
+/// - [title] - dialog title displayed in the gradient header
+/// - [content] - body message explaining the action
+/// - [confirmText] - label for the confirm button (defaults to 'Hapus')
+/// - [confirmColor] - color theme for the header and confirm button
+///
+/// Returns `bool` via `Navigator.pop(context, true/false)`.
 class ConfirmationDialog extends StatelessWidget {
   final String title;
   final String content;
@@ -14,6 +33,8 @@ class ConfirmationDialog extends StatelessWidget {
     this.confirmColor = Colors.red,
   });
 
+  /// Builds the dialog UI with gradient header, message body, and cancel/confirm buttons.
+  /// Like the `<template>` section of a Vue SFC modal component.
   @override
   Widget build(BuildContext context) {
     return Dialog(

@@ -1,7 +1,27 @@
+// Mini bar chart widget using Flutter's CustomPaint (Canvas API).
+//
+// Like a lightweight Chart.js bar chart in a Vue component, but rendered
+// directly on the Flutter canvas instead of using a charting library.
+// In Laravel/Vue you would use `<canvas>` with Chart.js; here we use
+// Flutter's `CustomPainter` which is the equivalent of the Canvas API.
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+/// A mini bar chart rendered via CustomPaint for dashboard stat cards.
+///
+/// Like a minimal Chart.js bar chart. Uses Flutter's `CustomPainter`
+/// (equivalent to HTML Canvas 2D API / Chart.js) to draw bars.
+///
+/// Props:
+/// - [data] - list of numeric values for each bar
+/// - [color] - bar fill color
+/// - [height] / [width] - chart dimensions
+/// - [barWidth] / [barSpacing] - bar geometry
+/// - [cornerRadius] - rounded corners on bars
+/// - [showLabels] - whether to draw value labels above bars
+///
+/// Used inside [AttendanceBarChartCard] and [FinanceBarChartCard].
 class MiniBarChart extends StatelessWidget {
   final List<double> data;
   final Color color;
@@ -50,6 +70,8 @@ class MiniBarChart extends StatelessWidget {
   }
 }
 
+/// Custom painter that draws the actual bar chart on the canvas.
+/// Like the Chart.js rendering engine -- receives data and paints bars.
 class _BarChartPainter extends CustomPainter {
   final List<double> data;
   final Color color;

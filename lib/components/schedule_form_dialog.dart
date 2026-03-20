@@ -1,3 +1,9 @@
+// Schedule form dialog for creating and editing teaching schedules.
+//
+// Like a Vue component `<ScheduleFormModal>` -- a large form inside a bottom
+// sheet with multiple dependent dropdowns (teacher -> subject, day -> time slots).
+// Similar to a Laravel Livewire form with cascading selects where choosing
+// a teacher filters available subjects, and choosing a day filters time slots.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/services/api_schedule_services.dart';
@@ -7,6 +13,21 @@ import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 
+/// A bottom sheet form for creating or editing a schedule entry.
+///
+/// Like a Vue `<ScheduleFormDialog>` with many props and cascading logic:
+/// - [teacherList], [subjectList], [classList], [hariList], [semesterList],
+///   [jamPelajaranList], [academicYearList] - dropdown data from the parent
+/// - [semester] / [academicYear] - currently selected filters
+/// - [schedule] - existing schedule for edit mode (null = create mode)
+/// - [apiService] / [apiTeacherService] - API services for fetching related data
+///
+/// Implements cascading dropdown logic:
+/// 1. Selecting a teacher filters available subjects (like Livewire's `updatedTeacherId`)
+/// 2. Selecting a day filters available time slots
+/// 3. Time slots show "occupied" status to prevent conflicts
+///
+/// Returns the schedule data map via `Navigator.pop(context, scheduleData)`.
 class ScheduleFormDialog extends StatefulWidget {
   final List<dynamic> teacherList;
   final List<dynamic> subjectList;
@@ -42,6 +63,11 @@ class ScheduleFormDialog extends StatefulWidget {
   ScheduleFormDialogState createState() => ScheduleFormDialogState();
 }
 
+/// State for [ScheduleFormDialog]. Manages all form field values, filtered
+/// dropdown lists, and occupied slot tracking.
+///
+/// Like Vue's `data()` holding all reactive form fields plus `computed`
+/// properties for filtered lists and `methods` for cascading fetches.
 class ScheduleFormDialogState extends State<ScheduleFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late String _selectedTeacher;
@@ -60,6 +86,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
   bool _isLoadingSubjects = false;
   bool _isLoadingJamPelajaran = false;
 
+  /// Initializes form state and loads lesson hour settings from the API.
+  /// Like Vue's `mounted()` hook calling `this.initForm()` and `this.loadSettings()`.
   @override
   void initState() {
     super.initState();
@@ -165,6 +193,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     });
   }
 
+  /// Fetches already-occupied time slots for the selected class/day/semester
+  /// to disable them in the dropdown. Like a Laravel query checking for conflicts.
   Future<void> _fetchOccupiedSlots() async {
     if (_selectedClass.isEmpty ||
         _selectedDayIds.isEmpty ||
@@ -209,6 +239,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     }
   }
 
+  /// Filters available subjects based on the selected teacher.
+  /// Like a Livewire `updatedTeacherId()` method that re-queries subjects.
   Future<void> _filterSubjectsByTeacher(String teacherId) async {
     try {
       setState(() => _isLoadingSubjects = true);
@@ -258,6 +290,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     }
   }
 
+  /// Filters available teaching hours (jam pelajaran) based on the selected day.
+  /// Like a Livewire `updatedDayId()` that re-queries available time slots.
   void _filterAvailableJamPelajaran() {
     setState(() => _isLoadingJamPelajaran = true);
 
@@ -1348,6 +1382,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     );
   }
 
+  /// Validates the form and returns schedule data via Navigator.pop.
+  /// Like a Vue method `submitForm()` that calls `$emit('save', formData)`.
   void _saveSchedule() {
     if (_formKey.currentState!.validate()) {
       final scheduleData = {

@@ -1,3 +1,11 @@
+// Time/lesson hour settings screen - configure lesson sessions per day.
+//
+// Like `pages/admin/settings/time.vue` - manages lesson hour schedules
+// for each school day (e.g., Monday has 8 sessions from 07:00 to 14:00).
+// Each day can have different session configurations.
+//
+// In Laravel terms, this consumes `GET /api/settings/lesson-hours` and
+// `PUT /api/settings/lesson-hours` with per-day session definitions.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
@@ -6,6 +14,10 @@ import 'package:manajemensekolah/services/api_settings_services.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 
+/// Time settings screen - configure lesson hour sessions for each school day.
+///
+/// This is a [StatefulWidget] with local state for days and their sessions.
+/// Shows a list of day cards; tapping a day opens a bottom sheet to manage sessions.
 class TimeSettingsScreen extends StatefulWidget {
   const TimeSettingsScreen({super.key});
 
@@ -13,17 +25,29 @@ class TimeSettingsScreen extends StatefulWidget {
   State<TimeSettingsScreen> createState() => _TimeSettingsScreenState();
 }
 
+/// Mutable state for [TimeSettingsScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_days] - list of school days (Monday-Saturday)
+/// - [_sessionsByDay] - map of day_id -> list of lesson hour sessions
+/// - [_isLoadingTime] - loading state
+///
+/// setState() triggers re-render like Vue's reactivity system.
 class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
   List<dynamic> _days = [];
   Map<String, List<dynamic>> _sessionsByDay = {};
   bool _isLoadingTime = true;
 
+  /// Like Vue's `mounted()` - loads days and their lesson hour sessions.
   @override
   void initState() {
     super.initState();
     _loadInitialData();
   }
 
+  /// Fetches school days and all lesson hour settings in parallel.
+  /// Uses `Future.wait` for concurrent API calls - like `Promise.all()` in JavaScript.
+  /// Groups sessions by day_id for display.
   Future<void> _loadInitialData() async {
     setState(() => _isLoadingTime = true);
     try {
@@ -61,6 +85,8 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     }
   }
 
+  /// Opens a bottom sheet to manage lesson sessions for a specific day.
+  /// Like clicking a day card to open a Vue modal/drawer with session CRUD.
   void _openDaySettings(dynamic day) {
     final dayId = day['id'].toString();
     final sessions = _sessionsByDay[dayId] ?? [];

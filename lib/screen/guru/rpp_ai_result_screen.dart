@@ -1,3 +1,10 @@
+// AI-generated RPP (lesson plan) result screen with rich text editing.
+// Like `pages/teacher/LessonPlan/AiResult.vue` in a Vue app.
+//
+// Displays and allows editing of AI-generated lesson plan content using
+// Flutter Quill rich text editors. Supports polling for async AI job results,
+// regeneration with custom prompts, saving to API, and PDF export.
+// In Laravel terms: `AiLessonPlanController@show` + `@update`.
 import 'dart:convert';
 import 'dart:io';
 
@@ -15,6 +22,14 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
+/// AI-generated lesson plan viewer/editor with rich text editing.
+///
+/// Supports two modes:
+/// 1. Direct mode -- [rppData] is provided, displays immediately
+/// 2. Polling mode -- [pollUrl]/[jobId] provided, polls for AI job completion
+///
+/// Uses Flutter Quill for rich text editing (like Vue Quill / TinyMCE).
+/// Props: [rppData], [teacherId], [onSaved] callback, polling fields.
 class RppAiResultScreen extends StatefulWidget {
   final Map<String, dynamic>? rppData;
   final String teacherId;
@@ -43,6 +58,11 @@ class RppAiResultScreen extends StatefulWidget {
   State<RppAiResultScreen> createState() => _RppAiResultScreenState();
 }
 
+/// State for [RppAiResultScreen].
+///
+/// Like a Vue component with `data() { return { isSaving, isPolling, ... } }`.
+/// Manages multiple Quill controllers for each RPP section (tujuan, kegiatan
+/// inti, penilaian, kompetensi) and text controllers for metadata fields.
 class _RppAiResultScreenState extends State<RppAiResultScreen> {
   bool _isSaving = false;
   bool _isRegenerating = false;
@@ -67,6 +87,8 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
   final TextEditingController _promptController = TextEditingController();
 
+  /// Like Vue's `mounted()` -- initializes controllers and starts polling
+  /// if in polling mode, or displays data directly otherwise.
   @override
   void initState() {
     super.initState();
@@ -81,6 +103,9 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
   }
 
+  /// Polls the AI job endpoint until completion or failure.
+  /// Like checking a Laravel Queue job status via `GET /api/ai-jobs/{id}`
+  /// every few seconds until it returns 'completed' or 'failed'.
   Future<void> _startPolling() async {
     // Validate we have a poll URL or job ID
     if (widget.pollUrl == null && widget.jobId == null) {

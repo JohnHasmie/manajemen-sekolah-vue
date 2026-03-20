@@ -1,3 +1,11 @@
+// Admin student management screen - full CRUD for students.
+//
+// Like `pages/admin/students.vue` - manages school students with create, edit,
+// delete, search, multi-filter (class, gender, grade level, guardian status),
+// infinite scroll pagination, and Excel import/export.
+//
+// In Laravel terms, this consumes StudentController
+// (GET /api/students, POST, PUT, DELETE with pagination and filters).
 import 'dart:async';
 import 'dart:io';
 
@@ -23,6 +31,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin student management screen with full CRUD, search, filters, and Excel import/export.
+///
+/// Optionally accepts [initialClassId] to pre-filter by class (e.g., when navigating
+/// from a class detail screen). Like a Vue route with optional query params.
 class StudentManagementScreen extends StatefulWidget {
   final String? initialClassId;
 
@@ -32,6 +44,16 @@ class StudentManagementScreen extends StatefulWidget {
   StudentManagementScreenState createState() => StudentManagementScreenState();
 }
 
+/// Mutable state for [StudentManagementScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_students] - paginated student list from API
+/// - [_classList] - available classes for filtering
+/// - [_selectedStatusFilter] / [_selectedClassIds] / [_selectedGenderFilter] etc. - filter states
+/// - Pagination: [_currentPage], [_hasMoreData], [_isLoadingMore] for infinite scroll
+///
+/// Listens to [AcademicYearProvider] changes to reload data when year changes.
+/// setState() triggers re-render like Vue's reactivity system.
 class StudentManagementScreenState extends State<StudentManagementScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
@@ -70,6 +92,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   final GlobalKey _fabKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` - sets up academic year listener, scroll listener
+  /// for infinite scroll, applies initial class filter if provided, and loads data.
   @override
   void initState() {
     super.initState();

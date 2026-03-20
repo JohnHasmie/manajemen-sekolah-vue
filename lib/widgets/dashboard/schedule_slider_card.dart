@@ -1,6 +1,20 @@
+// Schedule slider card for the dashboard showing today's upcoming classes.
+//
+// Like a Vue `<ScheduleCarousel>` dashboard widget with swipeable cards,
+// or a Bootstrap carousel in a Laravel dashboard. Each slide shows one
+// schedule entry with subject name, class, and time. Also exports the
+// reusable [SmoothPageIndicator] dot indicator widget.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// A swipeable dashboard card showing today's class schedule entries.
+///
+/// Like a Vue `<ScheduleSliderCard>` with props:
+/// - [schedules] - list of schedule data maps with subject, class, and time info
+/// - [onTap] - navigate to the full schedule screen
+///
+/// Uses `PageView` for swiping between schedule entries (like a Vue Swiper).
+/// Shows an empty state when no schedules exist for today.
 class ScheduleSliderCard extends StatefulWidget {
   final List<dynamic> schedules;
   final VoidCallback? onTap;
@@ -107,6 +121,8 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
     );
   }
 
+  /// Builds the content for a single schedule slide: icon, time badge,
+  /// subject name, and class name. Like a Vue `<ScheduleSlide>` template.
   Widget _buildScheduleContent(dynamic schedule) {
     final subjectName =
         schedule['subject']?['name'] ??
@@ -197,6 +213,11 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
   }
 }
 
+/// A smooth animated page indicator (dots) for PageView widgets.
+///
+/// Like a Vue carousel dot indicator or the `smooth_page_indicator` package.
+/// Animates the active dot to be wider than inactive dots using `AnimatedContainer`.
+/// Reused across multiple dashboard slider cards (schedule, material, attendance, finance).
 class SmoothPageIndicator extends StatelessWidget {
   final PageController controller;
   final int count;

@@ -1,3 +1,11 @@
+// Admin subject (mata pelajaran) management screen - full CRUD for subjects.
+//
+// Like `pages/admin/subjects.vue` - manages school subjects with create, edit,
+// delete, search, multi-filter (status, grade level, class), infinite scroll
+// pagination, and Excel import/export.
+//
+// In Laravel terms, this consumes SubjectController endpoints.
+// Also loads "master subjects" (a predefined list of subject templates).
 import 'dart:async';
 import 'dart:io';
 
@@ -23,6 +31,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin subject management screen with full CRUD, search, filters, and Excel import/export.
+///
+/// This is a [StatefulWidget] - like a Vue page with extensive local state for
+/// subject list, pagination, filters, and real-time sync via FCM.
 class SubjectManagementScreen extends StatefulWidget {
   const SubjectManagementScreen({super.key});
 
@@ -30,6 +42,16 @@ class SubjectManagementScreen extends StatefulWidget {
   SubjectManagementScreenState createState() => SubjectManagementScreenState();
 }
 
+/// Mutable state for [SubjectManagementScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_subjectList] - paginated subject list from API
+/// - [_availableMasterSubjects] - predefined subject templates for the create form
+/// - Filter states: [_selectedStatusFilter], [_selectedGradeLevelFilter], [_selectedClassNameFilter]
+/// - Pagination: [_currentPage], [_hasMoreData], [_isLoadingMore] for infinite scroll
+///
+/// Listens to FCM sync triggers for real-time updates.
+/// setState() triggers re-render like Vue's reactivity system.
 class SubjectManagementScreenState extends State<SubjectManagementScreen> {
   List<dynamic> _subjectList = [];
   bool _isLoading = true;
@@ -79,6 +101,9 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
   // Animations
 
+  /// Like Vue's `mounted()` - sets up scroll listener for infinite scroll,
+  /// loads filter options, master subjects, and the subject list.
+  /// Also subscribes to FCM sync triggers for real-time updates.
   @override
   void initState() {
     super.initState();

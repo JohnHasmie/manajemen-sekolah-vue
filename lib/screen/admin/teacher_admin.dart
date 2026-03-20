@@ -1,3 +1,11 @@
+// Admin teacher management screen - full CRUD for teachers.
+//
+// Like `pages/admin/teachers.vue` - manages school teachers with create, edit,
+// delete, search, multi-filter (class, gender, homeroom status, employment status),
+// infinite scroll pagination, and Excel import/export.
+//
+// In Laravel terms, this consumes TeacherController endpoints.
+// Listens for FCM sync triggers and academic year changes.
 import 'dart:async';
 import 'dart:io';
 
@@ -25,6 +33,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin teacher management screen with full CRUD, search, filters, and Excel import/export.
+///
+/// This is a [StatefulWidget] - like a Vue page component with extensive local state
+/// for teacher list, pagination, filters, and real-time sync via FCM.
 class TeacherAdminScreen extends StatefulWidget {
   const TeacherAdminScreen({super.key});
 
@@ -32,6 +44,16 @@ class TeacherAdminScreen extends StatefulWidget {
   TeacherAdminScreenState createState() => TeacherAdminScreenState();
 }
 
+/// Mutable state for [TeacherAdminScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_teachers] - paginated teacher list from API
+/// - [_subjects] / [_classes] - reference data for dropdowns in create/edit forms
+/// - Filter states: [_selectedClassId], [_selectedGender], [_selectedEmploymentStatus]
+/// - Pagination: [_currentPage], [_hasMoreData], [_isLoadingMore] for infinite scroll
+///
+/// Listens to AcademicYearProvider and FCM sync triggers.
+/// setState() triggers re-render like Vue's reactivity system.
 class TeacherAdminScreenState extends State<TeacherAdminScreen> {
   final ApiTeacherService _teacherService = ApiTeacherService();
   final ApiSubjectService _subjectService = ApiSubjectService();
@@ -74,6 +96,8 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
   final GlobalKey _fabKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` - sets up scroll listener, academic year listener,
+  /// FCM sync listener, and loads initial data (filter options + teachers).
   @override
   void initState() {
     super.initState();
@@ -109,6 +133,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
     }
   }
 
+  /// Like Vue's `beforeUnmount()` - cleans up all listeners and controllers.
   @override
   void dispose() {
     FCMService().syncTrigger.removeListener(_onSyncTriggered);

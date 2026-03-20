@@ -1,7 +1,21 @@
+// Class list item component for displaying a single class (kelas) card.
+//
+// Like a Vue component `<ClassCard>` used inside a `v-for` loop, or a
+// Blade partial `@include('classes.card-item', ['class' => $class])`.
+// Renders class info (name, grade, teacher, student count) with edit/delete actions.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 
+/// A gradient card widget that displays a single class's information.
+///
+/// Like a Vue component `<ClassCard>` with props:
+/// - [classData] - the class data map (like a `:class-data` prop from API response)
+/// - [index] - position in list (for alternating styles)
+/// - [onTap] - navigate to detail (like `@click` / `$router.push`)
+/// - [onEdit] / [onDelete] - action callbacks (like `$emit('edit')`)
+///
+/// Used in the class management list screen.
 class ClassListItem extends StatelessWidget {
   final Map<String, dynamic> classData;
   final int index;
@@ -22,6 +36,8 @@ class ClassListItem extends StatelessWidget {
     return Color(0xFF4361EE); // Blue untuk admin
   }
 
+  /// Builds the gradient class card with name, grade, teacher info, student count,
+  /// and edit/delete action buttons. Like the `<template>` of a Vue SFC.
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -268,6 +284,8 @@ class ClassListItem extends StatelessWidget {
     );
   }
 
+  /// Builds a small action button (edit/delete) with icon and label.
+  /// Like a reusable `<ActionBtn>` Vue component used in the card footer.
   Widget _buildActionButton({
     required IconData icon,
     required String label,

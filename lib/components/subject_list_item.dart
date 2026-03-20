@@ -1,6 +1,22 @@
+// Subject list item component for displaying a single subject (mata pelajaran).
+//
+// Like a Vue component `<SubjectCard>` used inside a `v-for` loop. Shows
+// subject name, code, description, associated class count, and a popup menu
+// with "Manage Classes", "Edit", and "Delete" actions. Similar to a Laravel
+// Nova resource list item with inline actions.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// A card widget that displays a single subject's information with actions.
+///
+/// Like a Vue `<SubjectListItem>` component with props:
+/// - [subject] - subject data map with 'nama', 'code'/'kode', 'description'
+/// - [index] - position in list, used for the numbered badge color
+/// - [onEdit] / [onDelete] - action callbacks (like `$emit('edit')`)
+/// - [onTap] - navigate to manage classes for this subject
+/// - [kelasCount] / [kelasNames] - optional class association info
+///
+/// Uses a `PopupMenuButton` with three options (like a Vue `<v-menu>`).
 class SubjectListItem extends StatelessWidget {
   final Map<String, dynamic> subject;
   final int index;

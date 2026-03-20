@@ -1,14 +1,43 @@
+/// language_utils.dart - Internationalization (i18n) provider, translation maps, and helpers.
+/// Like a combination of Laravel's `lang/` localization files + a Vuex store module for
+/// the current locale. Provides a reactive language state, translation dictionaries,
+/// and a convenient `.tr` extension for inline translation lookups.
+///
+/// Architecture:
+/// - [LanguageProvider]: Reactive state holder (like a Vuex store module) that tracks
+///   the current language and persists it to SharedPreferences (like Laravel's session).
+/// - [AppLocalizations]: Static translation dictionary (like Laravel's `lang/en/messages.php`
+///   and `lang/id/messages.php` merged into one class with `Map<String, String>` per key).
+/// - [LocalizedString] extension: Adds a `.tr` getter to any `Map<String, String>` for
+///   quick translation (like Laravel's `__('key')` or Vue-i18n's `$t('key')`).
+library;
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Manages the app's current language and notifies listeners on change.
+/// Like a Vuex store module - holds reactive global state that widgets can listen to.
+///
+/// Persists the selected language to SharedPreferences (like Laravel storing locale
+/// in the session). Supports English ('en') and Indonesian ('id').
+///
+/// Usage: Wrap the app with `ChangeNotifierProvider<LanguageProvider>`, then use
+/// `context.watch<LanguageProvider>()` to rebuild widgets when language changes.
 class LanguageProvider with ChangeNotifier {
   static const String ENGLISH = 'en';
   static const String INDONESIAN = 'id';
 
   String _currentLanguage = INDONESIAN;
 
+  /// The currently active language code ('en' or 'id').
   String get currentLanguage => _currentLanguage;
 
+  /// Changes the app language and persists the choice to SharedPreferences.
+  /// Like setting `App::setLocale()` in Laravel's middleware.
+  ///
+  /// [language] - The language code to switch to ('en' or 'id').
+  /// Side effects: Saves to SharedPreferences, calls [notifyListeners] to
+  /// trigger UI rebuilds across the app.
   Future<void> setLanguage(String language) async {
     _currentLanguage = language;
 
@@ -19,7 +48,9 @@ class LanguageProvider with ChangeNotifier {
     notifyListeners(); // Notify all listeners about the change
   }
 
-  // Load saved language
+  /// Loads the previously saved language preference from SharedPreferences.
+  /// Called once at app startup. Defaults to Indonesian if no preference is saved.
+  /// Like reading `session('locale')` in Laravel.
   Future<void> loadSavedLanguage() async {
     final prefs = await SharedPreferences.getInstance();
     final savedLanguage = prefs.getString('language') ?? INDONESIAN;
@@ -27,21 +58,41 @@ class LanguageProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Resolves a translation from a map of `{languageCode: text}`.
+  /// Like Laravel's `__('messages.welcome')` but using a map instead of file-based keys.
+  ///
+  /// [translations] - A map like `{'en': 'Hello', 'id': 'Halo'}`.
+  /// Returns the string for the current language, falling back to Indonesian.
   String getTranslatedText(Map<String, String> translations) {
     return translations[_currentLanguage] ?? translations[INDONESIAN] ?? '';
   }
 }
 
-// Singleton instance
+/// Global singleton instance of [LanguageProvider].
+/// Used by the `.tr` extension and injected into the Provider tree in `main.dart`.
 LanguageProvider languageProvider = LanguageProvider();
 
-// Extension untuk memudahkan penggunaan
+/// Convenience extension on `Map<String, String>` for inline translations.
+/// Like Laravel's `__()` helper or Vue-i18n's `$t()`.
+///
+/// Usage: `AppLocalizations.welcome.tr` returns "Selamat datang," or "Welcome,"
+/// depending on the current language.
 extension LocalizedString on Map<String, String> {
+  /// Returns the translated string for the current language.
   String get tr {
     return languageProvider.getTranslatedText(this);
   }
 }
 
+/// Static translation dictionary containing all app strings in English and Indonesian.
+/// Like Laravel's `resources/lang/en/messages.php` and `resources/lang/id/messages.php`
+/// combined into a single class. Each getter returns a `Map<String, String>` of
+/// `{languageCode: translatedText}`.
+///
+/// Organized by feature/screen: Dashboard, Class Management, Login, RPP (Lesson Plans),
+/// Finance, Settings, Parent screens, etc.
+///
+/// Usage: `AppLocalizations.welcome.tr` (via the [LocalizedString] extension).
 class AppLocalizations {
   // Dashboard
   static Map<String, String> get appTitle => {
@@ -1232,7 +1283,9 @@ class AppLocalizations {
   };
 }
 
-// Extension untuk memudahkan penggunaan terjemahan
+/// Convenience extension that provides pre-resolved translated strings as static getters.
+/// Instead of `AppLocalizations.editClass.tr`, you can use `AppLocalizationsExtension.editClass`.
+/// Like a facade pattern in Laravel that simplifies access to translated strings.
 extension AppLocalizationsExtension on AppLocalizations {
   // Class Management
   static String get editClass => AppLocalizations.editClass.tr;

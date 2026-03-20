@@ -1,3 +1,7 @@
+// excel_raport_service.dart - Export student report cards (raport) to Excel and PDF.
+// Like Laravel's Maatwebsite/Excel + DomPDF combined for generating raport documents.
+// Supports class-wide Excel export, individual student PDF, and certificate PDF.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,9 +13,22 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service for exporting student report cards (raport) in multiple formats.
+/// Like a Laravel controller with three export actions:
+/// - `exportRaportToExcel` -> `Excel::download(new RaportExport)` for a whole class
+/// - `exportSingleRaportPdf` -> `PDF::loadView('raport.single')->download()` for one student
+/// - `exportCertificateRaportPdf` -> `PDF::loadView('raport.certificate')->download()`
+///
+/// All exports are server-side: Flutter sends parameters, Laravel generates the file,
+/// Flutter saves and opens the binary response. Uses query parameters (GET) rather
+/// than POST body since the data is just IDs/filters.
 class ExcelRaportService {
   static String get baseUrl => ApiService.baseUrl;
 
+  /// Export an entire class's raport data to Excel via GET `/raports/export`.
+  /// [classId], [academicYearId], [semesterId] filter the data server-side.
+  /// [className] is used to build a sanitized filename.
+  /// Side effects: saves .xlsx to device, opens it, shows SnackBar feedback.
   static Future<void> exportRaportToExcel({
     required String classId,
     required String academicYearId,
@@ -98,6 +115,9 @@ class ExcelRaportService {
     }
   }
 
+  /// Export a single student's raport as PDF via GET `/raports/export-pdf`.
+  /// Like Laravel's `PDF::loadView('raport.single', $data)->download()`.
+  /// [studentClassId] identifies the student-class pivot record.
   static Future<void> exportSingleRaportPdf({
     required String studentClassId,
     required String academicYearId,
@@ -184,6 +204,8 @@ class ExcelRaportService {
     }
   }
 
+  /// Export a student's raport certificate as PDF via GET `/raports/export-certificate-pdf`.
+  /// Like Laravel's `PDF::loadView('raport.certificate', $data)->download()`.
   static Future<void> exportCertificateRaportPdf({
     required String studentClassId,
     required String academicYearId,

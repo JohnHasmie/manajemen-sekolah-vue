@@ -1,3 +1,11 @@
+// Admin announcement management screen - CRUD for school announcements.
+//
+// Like `pages/admin/announcements.vue` - manages school-wide announcements
+// with create, read, update, delete operations. Supports file attachments,
+// priority levels, target audience filtering, and infinite scroll pagination.
+//
+// In Laravel terms, this consumes the AnnouncementController endpoints
+// (GET /api/announcements, POST /api/announcements, etc.).
 import 'dart:async';
 import 'dart:io';
 
@@ -21,6 +29,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin announcement management screen.
+///
+/// This is a [StatefulWidget] - like a Vue page component with its own local state
+/// (`data() { return { announcements: [], isLoading: true, ... } }`).
 class AdminAnnouncementScreen extends StatefulWidget {
   const AdminAnnouncementScreen({super.key});
 
@@ -28,6 +40,19 @@ class AdminAnnouncementScreen extends StatefulWidget {
   AdminAnnouncementScreenState createState() => AdminAnnouncementScreenState();
 }
 
+/// The mutable state for [AdminAnnouncementScreen].
+///
+/// Key state variables (like Vue `data()` properties):
+/// - [_announcements] - paginated list of announcement objects
+/// - [_isLoading] / [_isLoadingMore] - loading states for initial load vs infinite scroll
+/// - [_currentPage] / [_hasMoreData] - pagination tracking (like Laravel's `paginate()`)
+/// - [_selectedPriorityFilter] / [_selectedTargetFilter] / [_selectedStatusFilter] - filter states
+/// - [_searchController] - search input with debounce (like Vue `watch` with debounce)
+///
+/// Implements auto-mark-as-read with debounced batching: when announcements scroll
+/// into view, they're batched and sent to the API after 1 second of inactivity.
+///
+/// setState() is like Vue's reactivity - triggers a re-render when data changes.
 class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   final ApiService _apiService = ApiService();
   File? _selectedFile;
@@ -69,6 +94,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   final GlobalKey _filterKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` lifecycle hook.
+  /// Sets up scroll listener for infinite scroll, search debounce,
+  /// loads filter options, and fetches initial announcement data.
   @override
   void initState() {
     super.initState();
@@ -87,6 +115,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   final Set<String> _pendingReadIds = {}; // IDs waitng to be sent to API
   Timer? _markReadDebounce;
 
+  /// Like Vue's `beforeUnmount()` / `unmounted()` lifecycle hook.
+  /// Cleans up controllers and cancels pending timers to prevent memory leaks.
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
@@ -159,6 +189,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     return 'announcement_list';
   }
 
+  /// Invalidates cache and reloads data from API. Like a Vue method for manual refresh.
   Future<void> _forceRefresh() async {
     final cacheKey = _buildAnnouncementCacheKey();
     if (cacheKey != null) {
@@ -169,6 +200,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     _loadData(resetPage: true, useCache: false);
   }
 
+  /// Detects when user scrolls near the bottom to trigger loading more items.
+  /// This implements "infinite scroll" - like a Vue `@scroll` handler or
+  /// an Intersection Observer that loads more data when reaching the bottom.
   void _onScroll() {
     // Detect when user scrolls near bottom
     if (_scrollController.position.pixels >=
@@ -179,6 +213,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     }
   }
 
+  /// Debounced search handler - waits 500ms after typing stops before searching.
+  /// Like a Vue `watch` on a search input with `debounce: 500`.
   void _onSearchChanged() {
     // Manual search triggered by button/enter
   }
@@ -190,6 +226,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     _loadData();
   }
 
+  /// Loads available filter options (priorities, targets, statuses) from the API.
+  /// Like fetching dropdown options in a Vue `mounted()` to populate `<select>` elements.
   Future<void> _loadFilterOptions() async {
     try {
       // ─── Cache-first: return early on hit ───
@@ -754,6 +792,10 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     );
   }
 
+  /// Loads announcements from the API with pagination, search, and filters.
+  /// Like calling `GET /api/announcements?page=1&search=...&status=...` in Vue.
+  /// Uses cache-first pattern: shows cached data instantly, then refreshes from API.
+  /// In Laravel terms, this is like `Announcement::paginate(10)->filter(...)`.
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
@@ -931,6 +973,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     }
   }
 
+  /// Loads the next page of announcements for infinite scroll.
+  /// Like incrementing `page` param in a Vue API call when user scrolls to bottom.
   Future<void> _loadMoreAnnouncements() async {
     if (_isLoadingMore || !_hasMoreData) return;
 
@@ -1714,6 +1758,8 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     }
   }
 
+  /// Deletes an announcement after confirmation dialog.
+  /// Like a Vue method calling `DELETE /api/announcements/{id}` with a confirm modal.
   Future<void> _deleteAnnouncement(
     Map<String, dynamic> announcementData,
   ) async {
@@ -2670,6 +2716,9 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   }
 
   @override
+  /// Main build method - like Vue's `<template>`.
+  /// Renders the announcement list with search bar, filter chips, FAB for creating,
+  /// and infinite scroll list of announcement cards.
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {

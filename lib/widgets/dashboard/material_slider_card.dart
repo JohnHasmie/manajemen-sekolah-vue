@@ -1,7 +1,22 @@
+// Teaching material slider card for the dashboard with progress tracking.
+//
+// Like a Vue `<MaterialProgressCard>` dashboard widget with a swipeable
+// carousel. Each slide shows a subject's chapter completion progress with
+// a progress bar and "next chapter" hint. Similar to a course progress
+// card in a Laravel LMS dashboard.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/widgets/dashboard/schedule_slider_card.dart';
 
+/// A swipeable dashboard card showing teaching material progress per subject.
+///
+/// Like a Vue `<MaterialSliderCard>` with props:
+/// - [materials] - list of material data maps with 'class_name', 'subject_name',
+///   'total_chapters', 'completed_chapters', 'next_chapter'
+/// - [onTap] - navigate to full materials screen
+///
+/// Uses `PageView` for swiping between subjects and shows a `LinearProgressIndicator`
+/// for chapter completion. Shows empty state when no materials exist.
 class MaterialSliderCard extends StatefulWidget {
   final List<dynamic> materials;
   final VoidCallback? onTap;

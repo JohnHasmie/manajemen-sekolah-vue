@@ -1,4 +1,17 @@
-// services/token_service.dart
+// Token management service for authentication state.
+//
+// Like Laravel's Auth guard + token management combined. In a Laravel app,
+// authentication state is managed by `Auth::check()`, `Auth::user()`, and
+// `Auth::logout()`. This service provides the Flutter equivalent:
+// - `isTokenValid()` = `Auth::check()` (validates the JWT/Sanctum token)
+// - `getUserData()` = `Auth::user()` (retrieves the cached user data)
+// - `getToken()` = reading the Bearer token from the session/cookie
+// - `logout()` = `Auth::logout()` (revokes token, clears session, cleans FCM)
+// - `isLoggedIn()` = `Auth::check()` with additional force-logout flag support
+//
+// Tokens are stored in SharedPreferences (like Laravel's session storage).
+// Supports both JWT tokens (decoded with jwt_decoder) and Laravel Sanctum
+// tokens (plain text with `id|hash` format).
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -9,6 +22,18 @@ import 'package:manajemensekolah/services/fcm_service.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Singleton service for managing authentication tokens and login state.
+///
+/// Like Laravel's Auth guard + token management. Uses the singleton pattern
+/// (similar to `app('auth')` in the Laravel container).
+///
+/// Key methods (Laravel equivalents):
+/// - [isTokenValid] - `Auth::check()` + token expiration validation
+/// - [getUserData] - `Auth::user()` (from SharedPreferences cache)
+/// - [getToken] - reads the stored Bearer token
+/// - [logout] - `Auth::logout()` + FCM cleanup + cache clearing
+/// - [isLoggedIn] - full login state check with force-logout flag
+/// - [clearForceLogout] - resets the force-logout flag after successful login
 class TokenService {
   static final TokenService _instance = TokenService._internal();
   factory TokenService() => _instance;
@@ -17,6 +42,10 @@ class TokenService {
   static const String _tokenKey = 'token';
   static const String _userKey = 'user';
 
+  /// Checks if the stored token is valid and not expired.
+  /// Like `Auth::check()` in Laravel -- returns false if no token, invalid
+  /// format, or expired. For Sanctum tokens (containing '|'), skips JWT
+  /// expiration check since Sanctum manages expiration server-side.
   Future<bool> isTokenValid() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -83,6 +112,8 @@ class TokenService {
     }
   }
 
+  /// Validates the token format: either a Sanctum token (contains '|')
+  /// or a standard JWT (3 dot-separated parts). Like middleware validation.
   bool _isValidJWTFormat(String token) {
     // Allow Sanctum tokens (id|hashed_token) or JWT (3 parts)
     if (token.contains('|')) return true;
@@ -92,6 +123,8 @@ class TokenService {
     return parts.length == 3;
   }
 
+  /// Retrieves the cached user data from SharedPreferences.
+  /// Like `Auth::user()` in Laravel -- returns the user as a Map, or null.
   Future<Map<String, dynamic>?> getUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -110,11 +143,16 @@ class TokenService {
     }
   }
 
+  /// Retrieves the raw token string from SharedPreferences.
+  /// Like reading the Bearer token from a Laravel session/cookie.
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_tokenKey);
   }
 
+  /// Logs out the user: revokes backend token, clears FCM, clears cache.
+  /// Like `Auth::logout()` in Laravel + clearing the session + revoking
+  /// the Sanctum token via `/auth/logout` API call.
   Future<void> logout() async {
     try {
       if (kDebugMode) {
@@ -171,6 +209,9 @@ class TokenService {
     }
   }
 
+  /// Full login state check: verifies token exists, user data exists, token
+  /// is valid, and no force-logout flag is set. Like `Auth::check()` in Laravel
+  /// with additional safeguards against stale sessions.
   Future<bool> isLoggedIn() async {
     try {
       // Check force logout flag first

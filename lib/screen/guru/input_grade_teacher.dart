@@ -1,3 +1,15 @@
+// Grade input / grade book screen for teachers.
+// Like `pages/teacher/GradeBook.vue` in a Vue app.
+//
+// This is a large, multi-step screen: Step 0 (select class) -> Step 1
+// (select subject) -> Step 2 (grade book table with inline editing).
+// It supports grading students by assignment type (tugas, ulangan, UTS, UAS),
+// Excel export, pagination, search, caching, and an onboarding tour.
+// In Laravel terms, this combines GradeController@index, @store, and @export.
+//
+// Contains two main widget classes:
+// - [GradePage] -- the class/subject selection wizard (Steps 0-1)
+// - [GradeBookPage] -- the actual grade table with inline editing (Step 2)
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -28,6 +40,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// The class/subject selection screen (Steps 0-1) before entering the grade book.
+///
+/// This StatefulWidget acts as a navigation wizard. In Vue terms, it is like
+/// a parent page component that conditionally renders child components based
+/// on `currentStep`. Props: [teacher] -- the logged-in teacher's data map.
 class GradePage extends StatefulWidget {
   final Map<String, dynamic> teacher;
 
@@ -37,6 +54,16 @@ class GradePage extends StatefulWidget {
   GradePageState createState() => GradePageState();
 }
 
+/// The mutable State for [GradePage] -- the class/subject selection wizard.
+///
+/// This is like a Vue page component with its own local state
+/// (`data() { return {...} }`). Key state:
+/// - [_currentStep] -- 0 for class list, 1 for subject list
+/// - [_classList] / [_subjectList] -- data arrays from API
+/// - [_selectedClass] / [_selectedSubject] -- currently selected items
+/// - [_todaySchedules] -- used to highlight today's scheduled classes/subjects
+///
+/// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class GradePageState extends State<GradePage> {
   // Services
   final ApiSubjectService apiSubjectService = ApiSubjectService();
@@ -85,6 +112,9 @@ class GradePageState extends State<GradePage> {
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
 
+  /// Like Vue's `mounted()` lifecycle hook. Sets up scroll/search listeners
+  /// and loads initial data. Uses `addPostFrameCallback` to ensure the widget
+  /// tree is built before accessing `context` (needed for Provider).
   @override
   void initState() {
     super.initState();
@@ -96,6 +126,7 @@ class GradePageState extends State<GradePage> {
     });
   }
 
+  /// Like Vue's `beforeUnmount()` -- disposes controllers to prevent memory leaks.
   @override
   void dispose() {
     _scrollController.dispose();
@@ -103,6 +134,8 @@ class GradePageState extends State<GradePage> {
     super.dispose();
   }
 
+  /// Infinite scroll handler -- triggers loading more items when near bottom.
+  /// Like a Vue Intersection Observer or `@scroll` handler.
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -120,6 +153,8 @@ class GradePageState extends State<GradePage> {
     // Manual search triggered by button/enter
   }
 
+  /// Executes search -- resets to page 1 and reloads data.
+  /// Like a Vue `methods.handleSearch()` triggered by a search button.
   void _handleSearch() {
     setState(() {
       _currentPage = 1;
@@ -161,6 +196,9 @@ class GradePageState extends State<GradePage> {
 
   // ==================== LOAD LOGIC ====================
 
+  /// Fetches the list of classes the teacher can grade.
+  /// Uses cache-first strategy via LocalCacheService/TeacherProvider.
+  /// Like a Vue `methods.fetchClasses()` calling `axios.get('/api/classes')`.
   Future<void> _loadClasses({bool resetPage = true, bool useCache = true}) async {
     final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
     final isGuru = _canEdit && role.contains('guru');
@@ -318,6 +356,8 @@ class GradePageState extends State<GradePage> {
     setState(() => _isLoadingMore = false);
   }
 
+  /// Fetches subjects available for the selected class.
+  /// Like calling `axios.get('/api/subjects?classId=...')` in Vue.
   Future<void> _loadSubjects({bool useCache = true}) async {
     // ─── Step 1: Try loading from cache → return early ───
     if (useCache) {
@@ -480,6 +520,8 @@ class GradePageState extends State<GradePage> {
 
   // ==================== PRIORITY LOGIC ====================
 
+  /// Loads today's teaching schedule to highlight currently scheduled classes.
+  /// Like a Vue `mounted()` helper that fetches schedule context data.
   Future<void> _loadTodaySchedules() async {
     try {
       // 1. Load Days — try cache first (shared with teaching_schedule)
@@ -673,6 +715,8 @@ class GradePageState extends State<GradePage> {
     );
   }
 
+  /// Builds the class list UI (Step 0). Like a Vue `<ClassList>` component
+  /// rendered with `v-if="currentStep === 0"`.
   Widget _buildStep0ClassList(LanguageProvider languageProvider) {
     // Filter locally if needed
     final searchTerm = _searchController.text.toLowerCase();
@@ -867,6 +911,8 @@ class GradePageState extends State<GradePage> {
     );
   }
 
+  /// Builds the subject list UI (Step 1). Like a Vue `<SubjectList>` component
+  /// rendered with `v-if="currentStep === 1"`.
   Widget _buildStep1SubjectList(LanguageProvider languageProvider) {
     final searchTerm = _searchController.text.toLowerCase();
     final filtered = _subjectList.where((item) {
@@ -1287,7 +1333,19 @@ class GradePageState extends State<GradePage> {
   }
 }
 
-// Halaman Grade Book/Tabel Nilai
+/// The grade book table page (Step 2) -- displays and edits student grades
+/// in a spreadsheet-like view.
+///
+/// This is like a Vue `<GradeBookTable>` component with complex inline editing.
+/// Think of it as a mini spreadsheet: rows are students, columns are assessment
+/// types (UH, Tugas, UTS, UAS, PTS, PAS). Supports inline grade editing,
+/// column management, filtering by grade type, and Excel export.
+///
+/// Props (like Vue props):
+/// - [teacher] -- the logged-in teacher
+/// - [subject] -- the selected subject
+/// - [classData] -- the selected class
+/// - [onBack] -- callback to navigate back (like Vue `$emit('back')`)
 class GradeBookPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
@@ -1306,6 +1364,14 @@ class GradeBookPage extends StatefulWidget {
   GradeBookPageState createState() => GradeBookPageState();
 }
 
+/// State for [GradeBookPage] -- holds the grade data and editing state.
+///
+/// Key state variables (like Vue `data()`):
+/// - [_siswaList] / [_filteredSiswaList] -- student list (all and filtered)
+/// - [_nilaiList] -- raw grade records from the API
+/// - [_assessmentHeaders] -- column headers organized by grade type
+/// - [_isEditMode] -- whether inline editing is active
+/// - [_jenisNilaiFilter] -- which grade types are visible (like Vue checkbox filters)
 class GradeBookPageState extends State<GradeBookPage> {
   List<Siswa> _siswaList = [];
   List<Siswa> _filteredSiswaList = [];
@@ -1375,6 +1441,7 @@ class GradeBookPageState extends State<GradeBookPage> {
     return 'grade_book_${subjectId}_${classId}_$academicYearId';
   }
 
+  /// Like Vue's `mounted()` -- loads grade data and sets up search listener.
   @override
   void initState() {
     super.initState();
@@ -1383,6 +1450,7 @@ class GradeBookPageState extends State<GradeBookPage> {
     _searchController.addListener(_filterSiswa);
   }
 
+  /// Like Vue's `beforeUnmount()` -- disposes all controllers and focus nodes.
   @override
   void dispose() {
     _horizontalScrollController.dispose();
@@ -1396,6 +1464,8 @@ class GradeBookPageState extends State<GradeBookPage> {
     super.dispose();
   }
 
+  /// Filters student list by search query. Like a Vue `computed` that filters
+  /// an array, or `watch` on a search input that filters `this.students`.
   void _filterSiswa() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -1414,6 +1484,9 @@ class GradeBookPageState extends State<GradeBookPage> {
   }
 
   /// Process raw grade items and apply to state (used by both cache and fresh load)
+  /// Processes raw API data into structured grade records per student.
+  /// Like a Vue `computed` or `watch` that transforms API response into
+  /// a table-friendly format. Maps student data with their grades.
   void _processAndApplyGradeData(List<dynamic> siswaData, List<dynamic> rawNilaiItems) {
     _siswaList = siswaData.map((s) => Siswa.fromJson(s)).toList();
     _filteredSiswaList = List.from(_siswaList);
@@ -1525,6 +1598,9 @@ class GradeBookPageState extends State<GradeBookPage> {
     _isLoading = false;
   }
 
+  /// Loads student list and grade data from API with caching.
+  /// Like `async mounted()` in Vue calling `axios.get('/api/grades')`.
+  /// Uses cache-first strategy; falls back to API on cache miss.
   Future<void> _loadData({bool showLoading = true, bool useCache = true}) async {
     try {
       if (!mounted) return;
@@ -2073,6 +2149,8 @@ class GradeBookPageState extends State<GradeBookPage> {
 
   Map<String, dynamic>? _editHeader;
 
+  /// Enters inline edit mode for a specific grade column.
+  /// Like clicking "Edit" on a table cell in a Vue data table component.
   void _enterEditMode(String jenis, Map<String, dynamic> header) {
     setState(() {
       _isEditMode = true;
@@ -2123,6 +2201,8 @@ class GradeBookPageState extends State<GradeBookPage> {
     });
   }
 
+  /// Saves a single grade value to the API (inline edit).
+  /// Like calling `axios.post('/api/grades')` after editing a cell.
   Future<void> _saveInlineGrade(
     Siswa siswa,
     String jenis,

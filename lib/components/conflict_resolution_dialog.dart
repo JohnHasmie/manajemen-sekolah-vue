@@ -1,7 +1,21 @@
+// Conflict resolution dialog for handling schedule conflicts.
+//
+// Like a Vue component `<ConflictResolverModal>` that appears when the
+// backend returns a 409 Conflict response (similar to Laravel validation
+// returning conflicting schedule errors). Lets the user pick which
+// conflicting schedule to delete before retrying.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:manajemensekolah/utils/language_utils.dart';
 
+/// A dialog that shows conflicting schedules and lets the user select one to delete.
+///
+/// Like a Vue component `<ConflictResolutionDialog>` with props:
+/// - [conflictingSchedules] - list of schedule maps that overlap (from API 409 response)
+/// - [onDeleteConfirmed] - callback with the selected schedule ID to delete
+/// - [onCancel] - callback when the user cancels
+///
+/// Uses radio buttons for single selection, similar to a Vue `<v-radio-group>`.
 class ConflictResolutionDialog extends StatefulWidget {
   final List<dynamic> conflictingSchedules;
   final Function(String) onDeleteConfirmed;
@@ -18,6 +32,8 @@ class ConflictResolutionDialog extends StatefulWidget {
   ConflictResolutionDialogState createState() => ConflictResolutionDialogState();
 }
 
+/// State for [ConflictResolutionDialog]. Tracks which schedule the user selected.
+/// Like Vue's `data() { return { selectedId: null } }`.
 class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
   String? _selectedScheduleToDelete;
 
@@ -144,6 +160,8 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
     );
   }
 
+  /// Builds a single schedule radio item showing subject, teacher, class, and time.
+  /// Like a `<ScheduleRadioItem>` Vue component inside a `v-for` loop.
   Widget _buildScheduleItem(dynamic schedule, LanguageProvider languageProvider) {
     final isSelected = _selectedScheduleToDelete == schedule['id'];
     

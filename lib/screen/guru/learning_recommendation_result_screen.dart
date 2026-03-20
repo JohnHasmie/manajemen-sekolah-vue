@@ -1,3 +1,9 @@
+// Displays AI-generated learning recommendations for a specific student.
+// Like `pages/teacher/LearningRecommendation/Result.vue` in a Vue app.
+//
+// Shows the recommendation cards with HTML content (rendered via
+// flutter_widget_from_html) and allows navigation to the edit screen.
+// In Laravel terms, this is like `RecommendationController@show`.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -11,6 +17,13 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Shows AI-generated learning recommendations for a student in a class.
+///
+/// Fetches recommendations from the API (with caching) and renders them
+/// as expandable cards with HTML content. Teachers can navigate to the
+/// edit screen to modify recommendations.
+///
+/// Props (like Vue props): [teacher], [student], [classData].
 class LearningRecommendationResultScreen extends StatefulWidget {
   final Map<String, String> teacher;
   final Map<String, dynamic> student;
@@ -28,6 +41,10 @@ class LearningRecommendationResultScreen extends StatefulWidget {
       _LearningRecommendationResultScreenState();
 }
 
+/// State for [LearningRecommendationResultScreen].
+///
+/// Like a Vue component with `data() { return { isLoading, recommendations, errorMessage } }`.
+/// Uses cache-first strategy then falls back to API.
 class _LearningRecommendationResultScreenState
     extends State<LearningRecommendationResultScreen> {
   bool _isLoading = true;
@@ -37,6 +54,7 @@ class _LearningRecommendationResultScreenState
   final GlobalKey _editButtonKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` -- fetches recommendations on screen load.
   @override
   void initState() {
     super.initState();
@@ -57,6 +75,9 @@ class _LearningRecommendationResultScreenState
     _fetchRecommendations(useCache: false);
   }
 
+  /// Fetches learning recommendations from API with cache-first strategy.
+  /// Like `axios.get('/api/recommendations')` in Vue with localStorage caching.
+  /// Handles rate limiting errors gracefully.
   Future<void> _fetchRecommendations({bool useCache = true}) async {
     final cacheKey = _buildRecommendationsCacheKey();
 

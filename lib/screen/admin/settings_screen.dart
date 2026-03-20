@@ -1,3 +1,10 @@
+// User profile/settings screen - displays user profile info and app settings.
+//
+// Like `pages/settings.vue` or `pages/profile.vue` - shared across all roles
+// (admin, guru, wali). Shows user profile data, language selection, and
+// app configuration options.
+//
+// In Laravel terms, this calls `GET /api/profile` to fetch user details.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -11,6 +18,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// User profile and settings screen - shared across all roles.
+///
+/// This is a [StatefulWidget] with local state for profile data and role-based theming.
+/// Uses cache-first pattern for instant profile display.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -18,6 +29,12 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
+/// Mutable state for [SettingsScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_profileData] - user profile from API (name, email, school, etc.)
+/// - [_role] - current user role for theming (determines primary color)
+/// - [_isLoading] - loading state for skeleton display
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoading = true;
   Map<String, dynamic> _profileData = {};
@@ -25,6 +42,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Color get _primaryColor => ColorUtils.getRoleColor(_role);
 
+  /// Like Vue's `mounted()` - loads the user's role from SharedPreferences
+  /// and fetches profile data with cache-first pattern.
   @override
   void initState() {
     super.initState();
@@ -57,6 +76,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadProfile(useCache: false);
   }
 
+  /// Loads user profile with cache-first pattern.
+  /// Like calling `GET /api/profile` in Vue with localStorage fallback for instant display.
   Future<void> _loadProfile({bool useCache = true}) async {
     // Step 1: Try cache for instant display
     if (useCache) {

@@ -1,3 +1,11 @@
+// Parent billing / payment screen for school fees.
+// Like `pages/parent/Billing.vue` in a Vue app.
+//
+// Displays a list of billing items per student with status tracking
+// (unpaid/pending/verified), payment upload with image/PDF, search,
+// filter, pagination, and read tracking. Parents can upload payment
+// proof and view payment details.
+// In Laravel terms: `BillingController@index` + `PaymentController@store`.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -22,6 +30,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Parent billing screen with payment status, upload, and filtering.
+///
+/// A StatefulWidget with no constructor params -- reads parent/student data
+/// from SharedPreferences. Supports multiple children (student selector).
 class ParentBillingScreen extends StatefulWidget {
   const ParentBillingScreen({super.key});
 
@@ -29,6 +41,15 @@ class ParentBillingScreen extends StatefulWidget {
   ParentBillingScreenState createState() => ParentBillingScreenState();
 }
 
+/// State for [ParentBillingScreen].
+///
+/// Like a Vue page component with `data() { return {...} }`. Key state:
+/// - [_billingList] -- billing items from API
+/// - [_students] / [_selectedStudentId] -- child selector (for parents with multiple kids)
+/// - [_processedIds] / [_pendingReadIds] -- read tracking (like announcement screen)
+/// - Pagination, search, and filter state
+///
+/// `setState()` is like Vue's reactivity -- triggers a re-render.
 class ParentBillingScreenState extends State<ParentBillingScreen> {
   final ApiService _apiService = ApiService();
   List<dynamic> _billingList = [];
@@ -81,6 +102,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
   final GlobalKey _studentSelectorKey = GlobalKey();
   final GlobalKey _billingListKey = GlobalKey();
 
+  /// Like Vue's `mounted()` -- sets up infinite scroll and loads initial data.
   @override
   void initState() {
     super.initState();
@@ -124,6 +146,8 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
     await _loadInitialData();
   }
 
+  /// Loads parent profile and student list, then fetches billing data.
+  /// Like a Vue `mounted()` that chains several async API calls.
   Future<void> _loadInitialData({bool useCache = true}) async {
     // Step 1: Try cache — return early on hit
     if (useCache) {
@@ -1834,6 +1858,9 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
     );
   }
 
+  /// Uploads payment proof (image/PDF) to the API.
+  /// Like `axios.post('/api/billing/{id}/payment', formData)` in Vue
+  /// with multipart file upload. In Laravel: `PaymentController@store`.
   Future<void> _uploadPayment({
     required String billingId,
     required String paymentMethod,

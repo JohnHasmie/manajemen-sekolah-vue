@@ -1,5 +1,18 @@
+// Full-screen loading indicator shown while data is being fetched.
+//
+// Like a Vue `<LoadingOverlay>` component or a Blade view with a centered
+// spinner that you show with `v-if="isLoading"`. Displays a circular
+// progress indicator inside a gradient circle with an optional message.
 import 'package:flutter/material.dart';
 
+/// A full-screen loading widget with a spinner and message.
+///
+/// Like a Vue `<LoadingScreen>` component shown with `v-if="isLoading"`.
+///
+/// Props (parameters):
+/// - [message] - loading text displayed below the spinner (defaults to 'Memuat data...')
+///
+/// Used as the body of a Scaffold while API data is being loaded.
 class LoadingScreen extends StatelessWidget {
   final String message;
 

@@ -1,3 +1,7 @@
+// excel_teacher_service.dart - Export and import teacher (guru) data via Excel.
+// Like Laravel's Maatwebsite/Excel TeacherExport with template download.
+// Simpler than other Excel services -- no local validation, delegates entirely to backend.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,12 +13,23 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service for exporting teacher data to Excel and downloading import templates.
+/// Similar to `Excel::download(new TeacherExport($teachers), 'Data_Guru.xlsx')` in Laravel.
+///
+/// This is one of the simpler Excel services -- it sends raw teacher data to
+/// the backend without local validation. The backend handles both file generation
+/// and data validation. Uses `context.mounted` checks before showing SnackBars
+/// (best practice for async BuildContext usage in Flutter).
 class ExcelTeacherService {
   static String get baseUrl => ApiService.baseUrl;
 
+  /// Convenience wrapper for getting auth headers. Like Laravel's `auth()->user()` token.
   static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
-  // Export teachers to Excel using backend API
+  /// Export teacher data to Excel via backend POST to `/teacher/export`.
+  /// [teachers] - list of teacher maps. [context] - for SnackBar and i18n.
+  /// Side effects: saves .xlsx to device, opens it. Uses `context.mounted`
+  /// guard before SnackBar (Flutter best practice for async context).
   static Future<void> exportTeachersToExcel({
     required List<dynamic> teachers,
     required BuildContext context,
@@ -71,7 +86,8 @@ class ExcelTeacherService {
     }
   }
 
-  // Download template using backend API
+  /// Download teacher import template from GET `/teacher/template/download`.
+  /// Like a Laravel route returning `Excel::download(new TeacherTemplateExport)`.
   static Future<void> downloadTemplate(BuildContext context) async {
     final languageProvider = context.read<LanguageProvider>();
 

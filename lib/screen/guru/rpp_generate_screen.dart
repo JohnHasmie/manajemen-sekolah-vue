@@ -1,3 +1,9 @@
+// RPP generation configuration screen -- set options before AI generates.
+// Like `pages/teacher/LessonPlan/Generate.vue` in a Vue app.
+//
+// Allows teachers to configure title, objectives, and media/tools before
+// triggering AI-powered RPP generation. Shows progress during generation.
+// In Laravel terms: the form before dispatching an `GenerateRppJob`.
 import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/screen/guru/rpp_detail_screen.dart';
@@ -5,6 +11,12 @@ import 'package:manajemensekolah/services/api_subject_services.dart';
 import 'package:manajemensekolah/services/rpp_service.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 
+/// Pre-generation form for AI RPP creation.
+///
+/// Props (like Vue props):
+/// - [guru] -- teacher data, [selectedMataPelajaran] -- subject ID
+/// - [mataPelajaranName] -- subject name for display
+/// - [checkedBab] / [checkedSubBab] -- selected chapters for generation
 class RPPGeneratePage extends StatefulWidget {
   final Map<String, dynamic> guru;
   final String selectedMataPelajaran;
@@ -25,6 +37,10 @@ class RPPGeneratePage extends StatefulWidget {
   RPPGeneratePageState createState() => RPPGeneratePageState();
 }
 
+/// State for [RPPGeneratePage].
+///
+/// Like a Vue component with `data() { return { isGenerating, progress, ... } }`.
+/// Manages form fields, auto-title generation, and the RPP generation process.
 class RPPGeneratePageState extends State<RPPGeneratePage> {
   final TextEditingController _judulController = TextEditingController();
   final TextEditingController _tujuanController = TextEditingController();
@@ -39,6 +55,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
   bool _objectivesChecked = true;
   bool _mediaChecked = true;
 
+  /// Like Vue's `mounted()` -- generates an auto-title from selected chapters.
   @override
   void initState() {
     super.initState();

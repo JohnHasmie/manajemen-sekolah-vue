@@ -1,3 +1,13 @@
+// Main dashboard screen - the home page after login for all roles (admin/guru/wali).
+//
+// Like `pages/dashboard.vue` or `pages/admin/index.vue` in a Vue/Nuxt project.
+// This is the largest screen in the app - it renders role-specific content:
+// - Admin: school stats, menu grid for management screens, finance overview
+// - Teacher (guru): today's schedule, class activities, lesson plans
+// - Parent (wali): child's grades, attendance, billing
+//
+// In Laravel terms, this consumes data from DashboardController which aggregates
+// stats from multiple models (Students, Classes, Teachers, Schedules, etc.).
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -58,6 +68,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
+///
+/// Takes a [role] prop ('admin', 'guru'/'teacher', 'wali'/'parent') which determines
+/// what menu items, stats, and content are shown. This is similar to a Vue page
+/// that renders different sections with `v-if="role === 'admin'"`.
 class Dashboard extends StatefulWidget {
   final String role;
 
@@ -67,6 +82,25 @@ class Dashboard extends StatefulWidget {
   State<Dashboard> createState() => _DashboardState();
 }
 
+/// The mutable state for [Dashboard].
+///
+/// This is like a Vue page component with extensive local state
+/// (`data() { return { stats: {}, userData: {}, isLoading: true, ... } }`).
+///
+/// Uses [TickerProviderStateMixin] to support animations (like Vue transitions).
+///
+/// Key state variables:
+/// - [_userData] - current user profile data (from SharedPreferences/API)
+/// - [_stats] - aggregated dashboard statistics (student count, class count, etc.)
+/// - [_todaysScheduleList] - today's teaching schedule for the slider
+/// - [_accessibleSchools] - schools the user can switch between
+/// - [_isStatsLoaded] - controls skeleton loading vs real content display
+///
+/// Key patterns:
+/// - Cache-first loading: loads from LocalCacheService first, then fetches fresh data
+/// - Provider pattern: uses Provider (like Vuex/Pinia) for shared state
+///   (AcademicYearProvider, TeacherProvider, LanguageProvider)
+/// - FCM sync: listens for push notification triggers to refresh data in real-time
 class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   String get _effectiveRole {
     if (widget.role == 'teacher') return 'guru';
@@ -123,6 +157,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   String? _tourId;
 
+  /// Like Vue's `mounted()` lifecycle hook.
+  /// Sets up animation controllers, listens for FCM sync triggers,
+  /// and kicks off the data initialization pipeline.
   @override
   void initState() {
     super.initState();
@@ -140,6 +177,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     _initializeData();
   }
 
+  /// Main data initialization pipeline - called from initState.
+  /// Loads cached data first for instant display, then fetches fresh data.
+  /// Like a Vue `mounted()` that calls multiple API endpoints in sequence.
+  /// Pattern: cache-first -> show UI -> background refresh -> update UI.
   Future<void> _initializeData() async {
     // Load cached data first (fast, synchronous-like)
     await _loadCachedUserData();
@@ -501,6 +542,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// Listener callback when the academic year changes via AcademicYearProvider.
+  /// Reloads stats with the new year context - like a Vue `watch` on a Vuex state.
   void _onYearChanged() {
     if (!mounted) return;
     // Don't show skeleton if we already have data — stale-while-revalidate
@@ -509,6 +552,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     _loadUserData();
   }
 
+  /// Fetches available roles for the current user (admin/guru/wali).
+  /// Enables the role-switching feature in the account bottom sheet.
   Future<void> _loadAvailableRoles() async {
     if (!mounted) return;
     setState(() {
@@ -533,6 +578,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// Switches the user's active role (e.g., admin -> guru) via the API.
+  /// Like calling `POST /api/switch-role` in Laravel, then navigating to
+  /// the new role's dashboard route. Clears cache to ensure fresh data.
   Future<void> _switchRole(String role) async {
     try {
       final response = await ApiService.switchRole(role);
@@ -580,6 +628,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// Loads user data from SharedPreferences (local storage).
+  /// Like reading from localStorage/Vuex persisted state in a Vue app.
+  /// Called early in init to display user info before API responds.
   Future<void> _loadCachedUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final userString = prefs.getString('user');
@@ -592,6 +643,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// Fetches fresh teacher-specific data (homeroom classes, schedules, materials)
+  /// for the 'guru' role. Updates the TeacherProvider (like a Vuex/Pinia store).
   Future<void> _loadFreshTeacherData() async {
     if (_effectiveRole != 'guru') return;
 
@@ -712,6 +765,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     await _loadFreshTeacherData();
   }
 
+  /// Fetches the list of schools this user can access (for school switching).
+  /// Like calling `GET /api/user/schools` from Vue to populate a dropdown.
   Future<void> _loadAccessibleSchools() async {
     if (!mounted) return;
     setState(() {
@@ -740,6 +795,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   String? _lastAcademicYearId;
 
   /// Load only cached stats (no network). Called early to avoid skeleton.
+  /// Like reading from Vuex persisted state before the API call resolves.
   Future<void> _loadCachedStats() async {
     try {
       // Restore last known academic year ID so cache key matches
@@ -880,6 +936,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// Fetches fresh dashboard statistics from the API.
+  /// Like calling `GET /api/dashboard/stats?role=admin` in Vue.
+  /// Updates [_stats], chart data, schedule list, and saves to cache.
   Future<void> _loadStats() async {
     // ─── Fetch fresh data from API (cache already loaded by _loadCachedStats) ───
     try {
@@ -1091,6 +1150,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// Switches the active school context via the API.
+  /// Like calling `POST /api/switch-school/{id}` in Laravel.
+  /// Clears all local cache/data and re-navigates to the appropriate dashboard.
   Future<void> _switchSchool(Map<String, dynamic> school) async {
     // Show Loading Indicator
     showDialog(
@@ -1247,6 +1309,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// Like Vue's `beforeUnmount()` / `unmounted()` lifecycle hook.
+  /// Cleans up listeners, animation controllers, and provider subscriptions
+  /// to prevent memory leaks. Always pair addListener with removeListener.
   @override
   void dispose() {
     FCMService().syncTrigger.removeListener(_handleSyncTrigger);
@@ -1262,6 +1327,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  /// Handles real-time sync triggers from FCM (Firebase Cloud Messaging).
+  /// Like a Vue WebSocket/Pusher listener that refreshes data when the
+  /// backend sends a push notification (e.g., new student added, schedule changed).
   void _handleSyncTrigger() {
     final trigger = FCMService().syncTrigger.value;
     if (trigger != null) {
@@ -1287,6 +1355,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// Main build method - like Vue's `<template>` section.
+  /// Renders a CustomScrollView with role-specific sliver sections:
+  /// app bar, hero stats, quick actions, overview cards, and menu grid.
+  /// Uses `Consumer<LanguageProvider>` to react to language changes
+  /// (like a Vue `computed` property depending on an i18n store).
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -1605,6 +1678,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
+  /// Builds the hero section with key stats (total students, teachers, etc.).
+  /// Like a Vue dashboard header component showing KPI cards.
   Widget _buildHeroSection() {
     final primaryColor = _getPrimaryColor();
 
@@ -1963,6 +2038,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
+  /// Builds quick action buttons (shortcuts to common tasks).
+  /// Like a Vue component rendering a row of action buttons based on role.
   Widget _buildQuickActions() {
     List<Widget> actions = _getQuickActions();
 
@@ -2017,6 +2094,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
+  /// Builds today's overview section with schedule slider, attendance, and charts.
+  /// Renders different content per role using conditional logic (like Vue `v-if`).
   Widget _buildTodaysOverview() {
     return Padding(
       key: _statsSectionKey,
@@ -2391,6 +2470,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   // ==================== END NEW UI COMPONENTS ====================
 
+  /// Builds the main navigation menu grid with role-specific items.
+  /// Like a Vue component rendering a grid of `<MenuItemCard>` with `v-for`,
+  /// where each card navigates to a different admin/teacher/parent feature screen.
   Widget _buildSliverGridMenu(BuildContext context) {
     // All roles now use professional MenuItemCard design
     return SliverPadding(
@@ -3205,6 +3287,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
+  /// Shows the account bottom sheet with profile info, school/role switching, and logout.
+  /// Like a Vue modal/drawer component for user account management.
   void _showAccountBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,

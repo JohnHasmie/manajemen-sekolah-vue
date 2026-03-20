@@ -1,3 +1,8 @@
+// excel_student_service.dart - Client-side Excel generation for student data.
+// Unlike other Excel services that delegate to the backend, this one builds
+// the .xlsx file locally using the Syncfusion XlsIO library.
+// Similar to using Laravel Maatwebsite/Excel but running entirely on the client.
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,8 +12,27 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 
+/// Service for generating student data Excel files entirely on the client side.
+/// Unlike the other `Excel*Service` classes that POST to the backend, this service
+/// uses `syncfusion_flutter_xlsio` to create .xlsx files locally -- like running
+/// Maatwebsite/Excel directly in the app instead of on the Laravel server.
+///
+/// Provides:
+/// 1. [exportStudentsToExcel] - Export current student data with styled headers
+/// 2. [downloadTemplate] - Generate a pre-formatted import template (.xlsx)
+/// 3. [downloadTemplateCSV] - Generate a CSV import template (simpler alternative)
+///
+/// The Syncfusion `Workbook` / `Worksheet` API is similar to PhpSpreadsheet
+/// in PHP: create workbook -> get sheet -> set cell values -> save as bytes.
 class ExcelService {
-  // Export data siswa ke Excel
+  /// Export student data to a locally-generated Excel file.
+  /// Creates a Workbook (like PhpSpreadsheet's `new Spreadsheet()`), adds
+  /// styled headers (blue background, white text), populates rows with student
+  /// data, auto-fits columns, and saves/opens the file.
+  ///
+  /// [students] - list of student maps from state/API.
+  /// [context] - for SnackBar and i18n access via LanguageProvider.
+  /// Side effects: writes .xlsx to device documents directory and opens it.
   static Future<void> exportStudentsToExcel({
     required List<dynamic> students,
     required BuildContext context,
@@ -126,7 +150,10 @@ class ExcelService {
     }
   }
 
-  // Download template Excel
+  /// Generate and download an Excel import template with headers, example data,
+  /// and formatting notes. Like a Laravel Maatwebsite/Excel export that creates
+  /// a template with `WithHeadings` and sample rows for user guidance.
+  /// Fields marked with `*` are required.
   static Future<void> downloadTemplate(BuildContext context) async {
     final languageProvider = context.read<LanguageProvider>();
 
@@ -215,7 +242,8 @@ class ExcelService {
     }
   }
 
-  // Download template CSV sebagai alternatif
+  /// Generate and download a CSV import template as a simpler alternative to Excel.
+  /// Like a plain-text version of the template for users without Excel software.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
     final languageProvider = context.read<LanguageProvider>();
 
@@ -260,7 +288,8 @@ class ExcelService {
     }
   }
 
-  // Helper methods
+  /// Convert gender code ('L'/'M' = male, 'P'/'F' = female) to localized text.
+  /// Like a Laravel accessor: `getGenderTextAttribute()`.
   static String _getGenderText(
     String? gender,
     LanguageProvider languageProvider,
@@ -283,6 +312,7 @@ class ExcelService {
     }
   }
 
+  /// Format a date string to 'YYYY-MM-DD' for export. Like Carbon's `format('Y-m-d')`.
   static String _formatDateForExport(String? date) {
     if (date == null) return '';
     try {
@@ -293,6 +323,9 @@ class ExcelService {
     }
   }
 
+  /// Parse a gender text string back to a code ('L' or 'P').
+  /// Handles multiple input formats: 'Laki-laki', 'Male', 'Pria', etc.
+  /// Defaults to 'L' if no match found.
   static String _parseGender(
     String? genderText,
     LanguageProvider languageProvider,
@@ -315,6 +348,8 @@ class ExcelService {
     }
   }
 
+  /// Parse various date formats into a standardized 'YYYY-MM-DD' string.
+  /// Returns the original text if parsing fails.
   static String _parseDate(String? dateText) {
     if (dateText == null || dateText.isEmpty) return '';
 

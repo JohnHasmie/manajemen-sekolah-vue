@@ -1,3 +1,9 @@
+// Student selection screen for learning recommendations.
+// Like `pages/teacher/LearningRecommendation/StudentList.vue` in a Vue app.
+//
+// Displays students in a selected class. Tapping a student navigates to
+// the recommendation result screen. Part of the recommendation flow:
+// ClassScreen -> StudentScreen (this) -> ResultScreen.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
@@ -11,6 +17,10 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'learning_recommendation_result_screen.dart';
 
+/// Lists students in a class for the learning recommendation flow.
+///
+/// Props (like Vue props): [teacher], [classData].
+/// Navigates to [LearningRecommendationResultScreen] on student tap.
 class LearningRecommendationStudentScreen extends StatefulWidget {
   final Map<String, String> teacher;
   final Map<String, dynamic> classData;
@@ -26,6 +36,9 @@ class LearningRecommendationStudentScreen extends StatefulWidget {
       _LearningRecommendationStudentScreenState();
 }
 
+/// State for [LearningRecommendationStudentScreen].
+///
+/// Like a Vue component with `data() { return { isLoading, students, errorMessage } }`.
 class _LearningRecommendationStudentScreenState
     extends State<LearningRecommendationStudentScreen> {
   bool _isLoading = true;
@@ -34,6 +47,7 @@ class _LearningRecommendationStudentScreenState
   final GlobalKey _studentListKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` -- loads the student list on screen mount.
   @override
   void initState() {
     super.initState();
@@ -51,6 +65,8 @@ class _LearningRecommendationStudentScreenState
     _loadStudents(useCache: false);
   }
 
+  /// Fetches students for the class with cache-first strategy.
+  /// Like `axios.get('/api/classes/{id}/students')` in Vue.
   Future<void> _loadStudents({bool useCache = true}) async {
     final cacheKey = _buildStudentsCacheKey();
 

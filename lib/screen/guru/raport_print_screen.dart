@@ -1,6 +1,16 @@
+// Report card print preview screen.
+// Like `pages/teacher/Raport/PrintPreview.vue` in a Vue app.
+//
+// Displays a formatted preview of a student's report card data.
+// PDF printing is planned but not yet implemented.
+// This is a StatelessWidget -- no local mutable state needed.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// Print preview for a student's report card.
+///
+/// StatelessWidget -- like a Vue presentational component with only props.
+/// Props (like Vue props): [raportData], [studentName], [className].
 class RaportPrintScreen extends StatelessWidget {
   final Map<String, dynamic> raportData;
   final String studentName;

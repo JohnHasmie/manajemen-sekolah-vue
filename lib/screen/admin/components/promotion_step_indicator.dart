@@ -1,6 +1,21 @@
+// Step indicator component for the class promotion wizard.
+//
+// Like a Vue `<StepIndicator>` component used in a multi-step form wizard.
+// Shows numbered circles connected by lines, with completed/active/pending states.
+// Similar to a Vuetify `<v-stepper>` or a Bootstrap stepper component.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 
+/// A horizontal step indicator that shows progress through a multi-step wizard.
+///
+/// This is a [StatelessWidget] - it receives all data via props (constructor params),
+/// just like a Vue component that only uses `props` with no local `data()`.
+///
+/// Props (constructor parameters):
+/// - [currentStep] - the 0-based index of the active step
+/// - [totalSteps] - total number of steps in the wizard
+/// - [steps] - list of step label strings
+/// - [primaryColor] - the theme color for active/completed steps
 class PromotionStepIndicator extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
@@ -15,6 +30,8 @@ class PromotionStepIndicator extends StatelessWidget {
     required this.primaryColor,
   });
 
+  /// Renders the step indicator with circles, connecting lines, and labels.
+  /// Uses `List.generate` to build the UI dynamically - like Vue's `v-for` directive.
   @override
   Widget build(BuildContext context) {
     return Container(

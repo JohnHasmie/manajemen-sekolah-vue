@@ -1,3 +1,14 @@
+/// api_teacher_services.dart - Manages teacher (guru) CRUD with caching and subject assignment.
+/// Like Laravel's TeacherController / Vue's teacher store module.
+///
+/// Handles paginated listing, CRUD, stats, Excel import/template download,
+/// subject assignment (attach/detach), teacher-class relationships, and
+/// looking up teachers by user ID. Uses cache with manual invalidation.
+///
+/// Note: mixes static methods and instance methods -- instance methods use
+/// [ApiService] instance, while static methods use raw http calls.
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,9 +18,16 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/local_cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// Service for teacher (guru) management API calls with caching.
+/// Like a Laravel Resource Controller + pivot table management (teacher-subject).
+/// Mixes static methods (for paginated/filtered queries) and instance methods
+/// (for basic CRUD via ApiService).
 class ApiTeacherService {
+  /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
 
+  /// Parses JSON response with Laravel validation error extraction (422).
+  /// Like a Laravel exception handler that returns the first validation error.
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
 
@@ -33,6 +51,7 @@ class ApiTeacherService {
     }
   }
 
+  /// Downloads the teacher Excel import template. Returns the local file path.
   static Future<String> downloadTemplate() async {
     try {
       final response = await http.get(
@@ -55,6 +74,7 @@ class ApiTeacherService {
     }
   }
 
+  /// Fetches filter dropdown options for teacher listing.
   static Future<Map<String, dynamic>> getTeacherFilterOptions({
     String? academicYearId,
   }) async {
@@ -81,6 +101,9 @@ class ApiTeacherService {
     }
   }
 
+  /// Finds a teacher record by their user account ID.
+  /// Like `Teacher::where('user_id', $userId)->first()` in Laravel.
+  /// Returns null if no teacher is linked to this user.
   static Future<Map<String, dynamic>?> getGuruByUserId(
     String userId, {
     String? academicYearId,
@@ -116,6 +139,8 @@ class ApiTeacherService {
     }
   }
 
+  /// Fetches teachers with server-side pagination, filters, and local caching.
+  /// Like `Teacher::filter($request)->paginate()` in Laravel.
   static Future<Map<String, dynamic>> getTeachersPaginated({
     int page = 1,
     int limit = 10,
@@ -198,6 +223,7 @@ class ApiTeacherService {
     }
   }
 
+  /// Fetches aggregated teacher statistics. Like a Laravel aggregate query endpoint.
   static Future<Map<String, dynamic>> getTeacherStats({
     String? gender,
     String? employmentStatus,
@@ -234,11 +260,15 @@ class ApiTeacherService {
     }
   }
 
+  /// Invalidates all teacher-related cache entries.
+  /// Like Laravel's `Cache::tags('teachers')->flush()`.
   static Future<void> _clearTeacherCache() async {
     await LocalCacheService.clearStartingWith('teacher_');
     if (kDebugMode) print('🧹 Teacher cache cleared due to changes');
   }
 
+  /// Fetches all teachers as a flat list (instance method).
+  /// Like `Teacher::all()` in Laravel. Use [getTeachersPaginated] for new code.
   Future<List<dynamic>> getTeacher() async {
     final result = await ApiService().get('/teacher');
     if (result is Map<String, dynamic>) {
@@ -247,6 +277,7 @@ class ApiTeacherService {
     return result is List ? result : [];
   }
 
+  /// Fetches a single teacher by ID. Like `Teacher::findOrFail($id)` in Laravel.
   Future<dynamic> getTeacherById(String id, {String? academicYearId}) async {
     String url = '/teacher/$id';
     if (academicYearId != null) {
@@ -255,22 +286,27 @@ class ApiTeacherService {
     return await ApiService().get(url);
   }
 
+  /// Creates a new teacher. Clears cache. Like `Teacher::create($data)` in Laravel.
   Future<dynamic> addTeacher(Map<String, dynamic> data) async {
     final result = await ApiService().post('/teacher', data);
     await _clearTeacherCache();
     return result;
   }
 
+  /// Updates a teacher by ID. Clears cache. Like `Teacher::find($id)->update()`.
   Future<void> updateTeacher(String id, Map<String, dynamic> data) async {
     await ApiService().put('/teacher/$id', data);
     await _clearTeacherCache();
   }
 
+  /// Deletes a teacher by ID. Clears cache. Like `Teacher::find($id)->delete()`.
   Future<void> deleteTeacher(String id) async {
     await ApiService().delete('/teacher/$id');
     await _clearTeacherCache();
   }
 
+  /// Fetches subjects assigned to a teacher, optionally filtered by class.
+  /// Like `$teacher->subjects()->get()` in Laravel (belongsToMany relationship).
   Future<List<dynamic>> getSubjectByTeacher(
     String guruId, {
     String? classId,
@@ -291,6 +327,8 @@ class ApiTeacherService {
     }
   }
 
+  /// Fetches classes assigned to a teacher.
+  /// Like `$teacher->classes()->get()` in Laravel.
   static Future<List<dynamic>> getTeacherClasses(
     String teacherId, {
     String? academicYearId,
@@ -317,6 +355,8 @@ class ApiTeacherService {
     }
   }
 
+  /// Fetches subjects by teacher with pagination -- for teacher detail views.
+  /// Like `$teacher->subjects()->paginate()` in Laravel.
   static Future<Map<String, dynamic>> getSubjectsByTeacherPaginated({
     required String teacherId,
     int page = 1,
@@ -373,6 +413,8 @@ class ApiTeacherService {
     }
   }
 
+  /// Assigns a subject to a teacher (pivot table).
+  /// Like `$teacher->subjects()->attach($subjectId)` in Laravel.
   Future<dynamic> addSubjectToTeacher(
     String teacherId,
     String subjectId,
@@ -384,6 +426,8 @@ class ApiTeacherService {
     return result;
   }
 
+  /// Removes a subject from a teacher (pivot table).
+  /// Like `$teacher->subjects()->detach($subjectId)` in Laravel.
   Future<void> removeSubjectFromTeacher(
     String teacherId,
     String subjectId,
@@ -392,6 +436,8 @@ class ApiTeacherService {
     await _clearTeacherCache();
   }
 
+  /// Imports teachers from an Excel file via multipart upload. Clears cache.
+  /// Like Laravel's `Excel::import()` with Maatwebsite package.
   static Future<Map<String, dynamic>> importTeachersFromExcel(File file) async {
     try {
       final request = http.MultipartRequest(

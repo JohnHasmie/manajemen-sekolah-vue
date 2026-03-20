@@ -1,3 +1,10 @@
+// Report card detail/editing screen for a specific student.
+// Like `pages/teacher/Raport/Detail.vue` in a Vue app.
+//
+// A tabbed form (4 tabs: Academic, Extracurricular, Character, Info) where
+// teachers fill in grades, descriptions, attendance counts, and promotion
+// decisions. Supports draft saving and finalization.
+// In Laravel terms: `RaportController@show` + `@update`.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
@@ -12,6 +19,13 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../../providers/academic_year_provider.dart';
 
+/// Report card detail form for a single student.
+///
+/// A complex multi-tab form with academic grades, extracurriculars,
+/// character assessment, and attendance/promotion info. Tracks unsaved
+/// changes and warns before navigation (like Vue `beforeRouteLeave`).
+///
+/// Props (like Vue props): [studentClassId], [studentName], [className].
 class RaportDetailScreen extends StatefulWidget {
   final String studentClassId;
   final String studentName;
@@ -28,6 +42,14 @@ class RaportDetailScreen extends StatefulWidget {
   State<RaportDetailScreen> createState() => _RaportDetailScreenState();
 }
 
+/// State for [RaportDetailScreen].
+///
+/// Like a Vue component with `data() { return {...} }` containing form
+/// controllers, tab state, and save/submit flags. Uses
+/// `SingleTickerProviderStateMixin` for the 4-tab TabController.
+///
+/// Key state: form controllers for sikap (character), attendance counts,
+/// notes, lists of subjects/extras/achievements, and unsaved change tracking.
 class _RaportDetailScreenState extends State<RaportDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -65,6 +87,8 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
   final GlobalKey _finalizeKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` -- sets up tab controller, loads raport data,
+  /// and adds listeners to track unsaved changes (like Vue `watch` on form fields).
   @override
   void initState() {
     super.initState();

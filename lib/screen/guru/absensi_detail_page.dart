@@ -1,4 +1,10 @@
-// screen/guru/absensi_detail_page.dart
+// Attendance detail screen for a specific subject on a specific date.
+// Like `pages/teacher/AttendanceDetail.vue` in a Vue app.
+//
+// This is a StatefulWidget (equivalent to a Vue component with local reactive
+// state via `data() { return {...} }`).  It loads a list of students and their
+// attendance status, allows the teacher to change each status via a dropdown,
+// and submits updates to the backend API.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +13,18 @@ import 'package:manajemensekolah/services/api_services.dart';
 import 'package:manajemensekolah/services/api_student_services.dart';
 import 'package:manajemensekolah/utils/error_utils.dart';
 
+/// Attendance detail page where a teacher can view and update each student's
+/// attendance status (hadir/terlambat/izin/sakit/alpha) for a given subject
+/// and date.
+///
+/// This is a StatefulWidget -- the Flutter equivalent of a Vue component that
+/// has mutable local state. The widget itself is immutable (like Vue `props`),
+/// while the State class holds the mutable data (like Vue `data()`).
+///
+/// Props (passed via constructor, immutable -- like Vue `props`):
+/// - [teacher] -- the logged-in teacher's data map
+/// - [subjectId] / [subjectName] -- which subject this attendance is for
+/// - [date] -- the date of the attendance record
 class AbsensiDetailPage extends StatefulWidget {
   final Map<String, dynamic> teacher;
   final String subjectId;
@@ -25,6 +43,19 @@ class AbsensiDetailPage extends StatefulWidget {
   State<AbsensiDetailPage> createState() => _AbsensiDetailPageState();
 }
 
+/// The mutable State for [AbsensiDetailPage].
+///
+/// This is like a Vue page component with its own local state
+/// (`data() { return {...} }`).  Key state variables:
+/// - [_absensiData] -- raw attendance records from the API
+/// - [_studentList] / [_filteredStudentList] -- all students and the search-filtered subset
+/// - [_absensiStatus] -- a Map<studentId, status> tracking each student's attendance choice
+/// - [_isLoading] / [_isSubmitting] -- loading flags (like Vue `data.loading`)
+/// - [_searchController] -- TextEditingController, similar to a Vue `v-model` on an input
+///
+/// `setState()` is like Vue's reactivity system -- when you call it, Flutter
+/// re-renders the widget tree, just like Vue re-renders when a reactive
+/// property changes.
 class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   List<dynamic> _absensiData = [];
   List<Siswa> _studentList = [];
@@ -34,6 +65,9 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   bool _isSubmitting = false;
   final TextEditingController _searchController = TextEditingController();
 
+  /// Called once when the widget is inserted into the tree.
+  /// Like Vue's `mounted()` lifecycle hook -- the place to kick off
+  /// initial data loading and set up listeners.
   @override
   void initState() {
     super.initState();
@@ -41,12 +75,19 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     _searchController.addListener(_filterSiswa);
   }
 
+  /// Called when the widget is removed from the tree.
+  /// Like Vue's `beforeUnmount()` -- clean up controllers to avoid memory leaks.
+  /// In Laravel terms, think of it as a destructor that releases resources.
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  /// Filters the student list based on the search query (name or NIS).
+  /// Like a Vue `computed` property that filters an array, or a Laravel
+  /// Collection `->filter()` call. Called automatically via the search
+  /// controller listener set up in [initState].
   void _filterSiswa() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -64,6 +105,10 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     });
   }
 
+  /// Loads student list and existing attendance data in parallel.
+  /// Like calling `Promise.all([getStudents(), getAbsensi()])` in Vue/JS,
+  /// or in Laravel: running two async queries concurrently.
+  /// Uses `Future.wait` for parallel API calls (same as `Promise.all`).
   Future<void> _loadData() async {
     try {
       // Load siswa dan absensi data
@@ -110,6 +155,10 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     }
   }
 
+  /// Builds a single student card with a dropdown to select attendance status.
+  /// Like a Vue `<StudentAttendanceRow>` component rendered inside a `v-for`.
+  /// Each dropdown change calls `setState()` which triggers a re-render
+  /// (equivalent to Vue reactivity updating the DOM).
   Widget _buildStudentItem(Siswa student) {
     final status = _absensiStatus[student.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
@@ -207,6 +256,10 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     );
   }
 
+  /// Submits attendance updates for all students to the backend API.
+  /// Like a Vue `methods.submitForm()` that calls `axios.post()` in a loop.
+  /// In Laravel terms, this is like calling `AttendanceController@store`
+  /// for each student. Shows success/error snackbar (like Vue `this.$toast`).
   Future<void> _updateAbsensi() async {
     setState(() {
       _isSubmitting = true;
@@ -304,6 +357,10 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     return colors[index];
   }
 
+  /// The main build method -- called every time `setState()` is invoked.
+  /// Like Vue's `render()` function or the `<template>` block that re-renders
+  /// whenever reactive data changes. Composes the full page layout:
+  /// header info, search bar, student list, and submit button.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

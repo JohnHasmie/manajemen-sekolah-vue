@@ -1,3 +1,7 @@
+// excel_rpp_service.dart - Export lesson plan (RPP) data to Excel via backend.
+// Like Laravel's Maatwebsite/Excel RppExport class with FormRequest validation.
+// RPP = Rencana Pelaksanaan Pembelajaran (Lesson Plan).
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,10 +13,21 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service for exporting RPP (Rencana Pelaksanaan Pembelajaran / Lesson Plan) to Excel.
+/// Similar to `Excel::download(new RppExport($data), 'Data_RPP.xlsx')` in Laravel.
+///
+/// Handles field name mapping between frontend and backend conventions
+/// (e.g., 'catatan_admin' -> 'note_admin', 'learning_objectives' -> 'learning_objective').
+/// This is like defining `$appends` or custom attribute mappings on a Laravel Resource.
+///
+/// Provides both server-side and local validation for RPP data, with status
+/// translation (Disetujui/Menunggu/Ditolak -> Approved/Pending/Rejected).
 class ExcelRppService {
   static String get baseUrl => ApiService.baseUrl;
 
-  // Export data RPP ke Excel melalui backend
+  /// Export RPP data to Excel via backend POST to `/rpp/export`.
+  /// [rppList] - list of RPP records. [context] - for SnackBar and i18n.
+  /// Side effects: validates locally, sends to backend, saves .xlsx, opens file.
   static Future<void> exportRppToExcel({
     required List<dynamic> rppList,
     required BuildContext context,
@@ -77,7 +92,8 @@ class ExcelRppService {
     }
   }
 
-  // Validasi data melalui backend
+  /// Server-side RPP validation via POST to `/rpp/validate`.
+  /// Like a Laravel FormRequest for RPP data.
   static Future<List<Map<String, dynamic>>> validateRppDataBackend(
     List<dynamic> rppData,
   ) async {
@@ -101,7 +117,10 @@ class ExcelRppService {
     }
   }
 
-  // Helper method untuk validasi data sebelum export (local fallback)
+  /// Local fallback validation for RPP data before export.
+  /// Validates required fields (title, subject_name, class_name) and maps
+  /// alternative field names to the backend's expected keys.
+  /// Like a Laravel FormRequest with field aliasing (`$request->input('catatan_admin', $request->input('note_admin'))`).
   static List<Map<String, dynamic>> validateRppData(List<dynamic> rppList) {
     final List<Map<String, dynamic>> validatedData = [];
     final List<String> errors = [];
@@ -168,7 +187,8 @@ class ExcelRppService {
     return validatedData;
   }
 
-  // Helper methods
+  /// Translate RPP approval status to localized text.
+  /// Maps: Disetujui->Approved, Menunggu->Pending, Ditolak->Rejected.
   static String _getStatusText(
     String? status,
     LanguageProvider languageProvider,

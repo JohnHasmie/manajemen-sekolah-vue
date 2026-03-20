@@ -1,4 +1,10 @@
-// admin_class_activity.dart
+// Admin class activity monitoring screen.
+//
+// Like `pages/admin/class-activities.vue` - allows admins to view class activities
+// (assignments, homework, exams) created by teachers. Uses a drill-down navigation:
+// Teacher list -> Subject list -> Activity list.
+//
+// In Laravel terms, this consumes ClassActivityController with teacher/subject filtering.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/empty_state.dart';
@@ -17,6 +23,11 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
+///
+/// This is a [StatefulWidget] with drill-down navigation:
+/// 1. Shows teacher list -> 2. Shows subjects for that teacher -> 3. Shows activities.
+/// Like a Vue page with nested views controlled by local state flags.
 class AdminClassActivityScreen extends StatefulWidget {
   const AdminClassActivityScreen({super.key});
 
@@ -25,6 +36,15 @@ class AdminClassActivityScreen extends StatefulWidget {
       AdminClassActivityScreenState();
 }
 
+/// Mutable state for [AdminClassActivityScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_showTeacherList] / [_showSubjectList] - flags controlling which drill-down view is shown
+/// - [_teacherList] / [_subjectList] / [_activityList] - data lists from API
+/// - [_selectedTeacherId] / [_selectedSubjectId] - current drill-down selections
+///
+/// Uses cache-first pattern with [LocalCacheService] for instant display.
+/// setState() triggers re-render, like Vue's reactivity system.
 class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
   List<dynamic> _teacherList = [];
   List<dynamic> _subjectList = [];
@@ -45,12 +65,14 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
   // Search
   final TextEditingController _searchController = TextEditingController();
 
+  /// Like Vue's `mounted()` - loads the initial teacher list on screen open.
   @override
   void initState() {
     super.initState();
     _loadTeachers();
   }
 
+  /// Like Vue's `beforeUnmount()` - cleans up the search controller.
   @override
   void dispose() {
     _searchController.dispose();
@@ -99,6 +121,9 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
     }
   }
 
+  /// Loads the teacher list (first drill-down level).
+  /// Uses cache-first pattern: shows cached data instantly, then fetches fresh from API.
+  /// Like a Vue method calling `GET /api/teachers` with localStorage caching.
   Future<void> _loadTeachers({bool useCache = true}) async {
     try {
       _errorMessage = null;

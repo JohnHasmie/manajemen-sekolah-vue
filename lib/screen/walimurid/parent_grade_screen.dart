@@ -1,3 +1,9 @@
+// Parent view of student grades.
+// Like `pages/parent/Grades.vue` in a Vue app.
+//
+// Read-only view of a child's grades with student selector,
+// auto-marking grades as read when scrolled into view, and caching.
+// In Laravel terms: `GradeController@parentIndex`.
 import 'dart:async';
 import 'dart:convert';
 
@@ -16,6 +22,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Parent's read-only view of student grades with read tracking.
+///
+/// Uses the same debounced visibility-based "mark as read" pattern.
+/// Props: optional [academicYearId].
 class ParentGradeScreen extends StatefulWidget {
   final String? academicYearId;
 
@@ -25,6 +35,10 @@ class ParentGradeScreen extends StatefulWidget {
   ParentGradeScreenState createState() => ParentGradeScreenState();
 }
 
+/// State for [ParentGradeScreen].
+///
+/// Like a Vue page component with `data() { return {...} }`.
+/// Key state: grade list, student selector, visibility-based read tracking.
 class ParentGradeScreenState extends State<ParentGradeScreen> {
   List<dynamic> _gradeList = [];
   List<dynamic> _studentList = [];

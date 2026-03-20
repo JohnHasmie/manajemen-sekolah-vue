@@ -1,3 +1,9 @@
+// Report card (raport) main screen for teachers.
+// Like `pages/teacher/Raport/Index.vue` in a Vue app.
+//
+// Allows homeroom teachers to select a class, view students, and navigate
+// to individual student report card details. Supports Excel export of all
+// student reports. In Laravel terms: `RaportController@index`.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/components/skeleton_loading.dart';
@@ -17,6 +23,10 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../../providers/academic_year_provider.dart';
 import '../../providers/teacher_provider.dart';
 
+/// Report card list screen -- shows classes and their students for raport entry.
+///
+/// Props (like Vue props): [teacher] -- current teacher info.
+/// Navigates to [RaportDetailScreen] when a student is tapped.
 class RaportScreen extends StatefulWidget {
   final Map<String, String> teacher;
 
@@ -26,6 +36,10 @@ class RaportScreen extends StatefulWidget {
   RaportScreenState createState() => RaportScreenState();
 }
 
+/// State for [RaportScreen].
+///
+/// Like a Vue component with `data() { return { classes, students, selectedClass, ... } }`.
+/// Manages class selection, student list loading, and Excel export state.
 class RaportScreenState extends State<RaportScreen> {
   final LanguageProvider _languageProvider = LanguageProvider();
 
@@ -43,6 +57,7 @@ class RaportScreenState extends State<RaportScreen> {
   final GlobalKey _exportKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` -- loads classes on screen init.
   @override
   void initState() {
     super.initState();
@@ -71,6 +86,11 @@ class RaportScreenState extends State<RaportScreen> {
     _loadInitialData(useCache: false);
   }
 
+  /// Loads homeroom classes using a 3-tier cache strategy:
+  /// 1. TeacherProvider (in-memory, fastest)
+  /// 2. LocalCacheService (disk cache with TTL)
+  /// 3. API call (network, slowest)
+  /// Like a Vue Vuex getter with localStorage fallback to axios.
   Future<void> _loadInitialData({bool useCache = true}) async {
     final classesCacheKey = _buildClassesCacheKey();
 

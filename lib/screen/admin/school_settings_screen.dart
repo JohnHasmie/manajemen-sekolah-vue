@@ -1,3 +1,10 @@
+// School settings hub - navigation to school info and time settings sub-screens.
+//
+// Like `pages/admin/settings/school.vue` - a menu page linking to:
+// 1. General settings (school name, address, level)
+// 2. Time settings (lesson hours per day)
+//
+// Includes a guided tour feature (tutorial coach marks) for first-time users.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/screen/admin/school_level_settings_screen.dart';
@@ -8,6 +15,10 @@ import 'package:manajemensekolah/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// School settings hub screen - navigates to sub-settings pages.
+///
+/// This is a [StatefulWidget] because it manages the guided tour state.
+/// Like a Vue page with `mounted()` that checks if a tour should be shown.
 class SchoolSettingsScreen extends StatefulWidget {
   const SchoolSettingsScreen({super.key});
 
@@ -15,11 +26,14 @@ class SchoolSettingsScreen extends StatefulWidget {
   State<SchoolSettingsScreen> createState() => _SchoolSettingsScreenState();
 }
 
+/// Mutable state for [SchoolSettingsScreen].
+/// Manages the guided tour feature. setState() triggers re-render like Vue's reactivity.
 class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
   String? _tourId;
   final GlobalKey _generalSettingsKey = GlobalKey();
   final GlobalKey _timeSettingsKey = GlobalKey();
 
+  /// Like Vue's `mounted()` - checks if a guided tour should be shown after a short delay.
   @override
   void initState() {
     super.initState();

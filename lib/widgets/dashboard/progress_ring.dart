@@ -1,8 +1,26 @@
+// Custom circular/semi-circular progress ring widget for dashboard stats.
+//
+// Like a Vue `<CircularProgress>` component (e.g., from Vuetify's
+// `<v-progress-circular>`) used in dashboard stat cards. Drawn with
+// Flutter's CustomPainter (Canvas API) and supports animated transitions.
+// Similar to a CSS circular progress bar with SVG stroke-dashoffset animation.
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Custom circular or semi-circular progress indicator
-/// for professional dashboard statistics visualization
+/// An animated circular or semi-circular progress ring indicator.
+///
+/// Like Vuetify's `<v-progress-circular>` or a CSS radial progress bar.
+///
+/// Props:
+/// - [value] - progress from 0.0 to 1.0 (like `:value="0.75"`)
+/// - [color] - arc color
+/// - [strokeWidth] - ring thickness
+/// - [size] - overall widget dimension
+/// - [animate] - whether to animate from 0 to value on mount
+/// - [isSemiCircle] - render as 180-degree arc instead of full 360-degree
+/// - [backgroundColor] - track color behind the progress arc
+///
+/// Uses `AnimationController` for smooth value transitions (like Vue `<transition>`).
 class ProgressRing extends StatefulWidget {
   /// Progress value from 0.0 to 1.0
   final double value;
@@ -113,6 +131,8 @@ class _ProgressRingState extends State<ProgressRing>
   }
 }
 
+/// Custom painter that draws the background track and progress arc.
+/// Like SVG circle stroke rendering with `stroke-dashoffset` for progress.
 class _ProgressRingPainter extends CustomPainter {
   final double progress;
   final Color color;

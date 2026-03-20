@@ -1,3 +1,10 @@
+// RPP (Rencana Pelaksanaan Pembelajaran / Lesson Plan) list screen.
+// Like `pages/teacher/LessonPlan/Index.vue` in a Vue app.
+//
+// Displays a list of RPPs with search, filter by status (draft/final),
+// CRUD operations, AI generation, and Word/PDF download. Also contains
+// the [RppFormDialog] for creating/editing RPPs.
+// In Laravel terms: `LessonPlanController@index`, `@store`, `@update`, `@destroy`.
 import 'dart:convert';
 import 'dart:io';
 
@@ -23,6 +30,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// RPP (lesson plan) list screen with CRUD, search, filter, and AI generation.
+///
+/// Props (like Vue props): [teacherId], [teacherName].
+/// Contains the main list view and navigation to detail/AI screens.
 class RppScreen extends StatefulWidget {
   final String teacherId;
   final String teacherName;
@@ -37,6 +48,10 @@ class RppScreen extends StatefulWidget {
   RppScreenState createState() => RppScreenState();
 }
 
+/// State for [RppScreen].
+///
+/// Like a Vue page component with `data() { return { rppList, isLoading, ... } }`.
+/// Manages the RPP list, search, status filter, and CRUD operations.
 class RppScreenState extends State<RppScreen> {
   List<dynamic> _rppList = [];
   bool _isLoading = true;
@@ -51,12 +66,14 @@ class RppScreenState extends State<RppScreen> {
   final GlobalKey _addRppKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` -- loads RPP list on screen init.
   @override
   void initState() {
     super.initState();
     _loadRpp();
   }
 
+  /// Like Vue's `beforeUnmount()` -- disposes search controller.
   @override
   void dispose() {
     _searchController.dispose();
@@ -399,6 +416,8 @@ class RppScreenState extends State<RppScreen> {
     _loadRpp(useCache: false);
   }
 
+  /// Fetches RPP list from API with cache-first strategy.
+  /// Like `axios.get('/api/rpp')` in Vue with localStorage caching.
   Future<void> _loadRpp({bool useCache = true}) async {
     final isFilteredOrSearched = _searchController.text.isNotEmpty || _selectedStatusFilter != null;
     final rppCacheKey = _buildRppCacheKey();
@@ -467,6 +486,8 @@ class RppScreenState extends State<RppScreen> {
     }
   }
 
+  /// Opens the RPP creation form dialog.
+  /// Like clicking a "Add New" button that opens a Vue modal/dialog.
   void _tambahRpp() {
     final languageProvider = context.read<LanguageProvider>();
     showModalBottomSheet(
@@ -643,6 +664,8 @@ class RppScreenState extends State<RppScreen> {
     );
   }
 
+  /// Deletes an RPP after confirmation dialog.
+  /// Like `axios.delete('/api/rpp/{id}')` in Vue with a confirm modal.
   Future<void> _deleteRpp(Map<String, dynamic> rpp) async {
     final languageProvider = context.read<LanguageProvider>();
     final confirmed = await showDialog<bool>(
@@ -1566,7 +1589,11 @@ class RppScreenState extends State<RppScreen> {
   }
 }
 
-// RppFormDialog tetap sama seperti sebelumnya
+/// Dialog form for creating or editing an RPP (lesson plan).
+///
+/// Like a Vue `<RppFormModal>` component. When [rppData] is null, it creates
+/// a new RPP; when provided, it edits the existing one.
+/// Props: [teacherId], [onSaved] callback, optional [rppData] for editing.
 class RppFormDialog extends StatefulWidget {
   final String teacherId;
   final VoidCallback onSaved;

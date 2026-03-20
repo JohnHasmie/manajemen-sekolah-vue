@@ -1,3 +1,11 @@
+// Learning recommendation class selection screen for teachers.
+// Like `pages/teacher/LearningRecommendation/ClassList.vue` in a Vue app.
+//
+// This is the entry point for the AI-powered learning recommendation flow.
+// Teachers select a class, then drill down to individual students to view
+// or generate personalized learning recommendations. The flow is:
+// ClassScreen -> StudentScreen -> ResultScreen -> (optional) EditScreen.
+// In Laravel terms, this is like `RecommendationController@classIndex`.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +21,15 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'learning_recommendation_student_screen.dart';
 
+/// Displays a list of classes with AI learning recommendation summaries.
+///
+/// This is a StatefulWidget -- like a Vue page component with local state.
+/// Each class card shows a summary (total students, recommendations generated)
+/// and can be expanded to show recommendation history grouped by date.
+///
+/// Props (like Vue props):
+/// - [teacher] -- current teacher info
+/// - [classes] -- list of classes assigned to this teacher
 class LearningRecommendationClassScreen extends StatefulWidget {
   final Map<String, String> teacher;
   final List<dynamic> classes;
@@ -28,6 +45,13 @@ class LearningRecommendationClassScreen extends StatefulWidget {
       _LearningRecommendationClassScreenState();
 }
 
+/// State for [LearningRecommendationClassScreen].
+///
+/// This is like a Vue page component with `data() { return {...} }`.
+/// Key state: summaries per class, recommendation history, teacher schedules,
+/// expanded card toggles, and generation-in-progress flags.
+///
+/// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class _LearningRecommendationClassScreenState
     extends State<LearningRecommendationClassScreen> {
   final GlobalKey _classListKey = GlobalKey();
@@ -54,6 +78,7 @@ class _LearningRecommendationClassScreenState
   // Expanded class cards
   final Map<String, bool> _expandedClass = {};
 
+  /// Like Vue's `mounted()` -- loads all data and schedules the onboarding tour.
   @override
   void initState() {
     super.initState();
@@ -69,6 +94,9 @@ class _LearningRecommendationClassScreenState
     _loadAllData(useCache: false);
   }
 
+  /// Loads all data in parallel: teacher profile, schedules, and per-class
+  /// summaries + histories. Like Vue `mounted()` calling multiple `axios.get()`
+  /// in `Promise.all()`.
   Future<void> _loadAllData({bool useCache = true}) async {
     await _resolveTeacherProfileId(useCache: useCache);
     _loadTeacherSchedules(useCache: useCache);

@@ -1,3 +1,11 @@
+/// api_announcement_services.dart - Handles school announcement CRUD with file uploads.
+/// Like Laravel's AnnouncementController / Vue's announcement store module.
+///
+/// Supports paginated listing, filtering by priority/role/status,
+/// creating and updating announcements with optional file attachments
+/// (multipart upload). Uses Laravel's `_method=PUT` trick for file updates.
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,10 +14,20 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:manajemensekolah/services/api_services.dart';
 
+/// Service for announcement-related API calls.
+/// Like a Laravel Resource Controller (index, store, update) combined with
+/// a Vue composable/store that handles announcement state.
+///
+/// Key patterns:
+/// - Multipart file uploads (similar to Laravel's `$request->file('file')`)
+/// - Paginated responses transformed from Laravel's `LengthAwarePaginator`
+/// - 401/403 error handling triggers automatic logout (like Laravel middleware)
 class ApiAnnouncementService {
+  /// Base URL from central config. Like `config('app.url')` in Laravel.
   static String get baseUrl => ApiService.baseUrl;
 
-  // Helper to safely print response bodies for debugging (truncated)
+  /// Safely prints truncated response bodies for debugging.
+  /// Only active in debug mode -- like Laravel's `Log::debug()`.
   static void _debugResponse(http.Response response, {String? label}) {
     try {
       final raw = response.body;
@@ -28,8 +46,12 @@ class ApiAnnouncementService {
     }
   }
 
+  /// Auth headers with Bearer token. Like Laravel's `Http::withToken()`.
   static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
+  /// Parses JSON response, handles 401/403 with auto-logout.
+  /// Like a Laravel middleware that catches auth exceptions globally,
+  /// or an Axios interceptor that redirects to /login on 401.
   static dynamic _handleResponse(http.Response response) {
     dynamic responseBody;
     try {
@@ -90,7 +112,9 @@ class ApiAnnouncementService {
     }
   }
 
-  // Get Filter Options for Announcement Filters
+  /// Fetches available filter options (priority, target, status) for announcement listing.
+  /// Like a Laravel endpoint that returns dropdown options for a Vue filter component.
+  /// Similar to a Vuex action that populates filter select options.
   static Future<Map<String, dynamic>> getAnnouncementFilterOptions() async {
     try {
       final response = await http.get(
@@ -124,7 +148,11 @@ class ApiAnnouncementService {
     }
   }
 
-  // Get Announcements with Pagination & Filters (Recommended)
+  /// Fetches announcements with server-side pagination and filters.
+  /// Like `Announcement::filter($request)->paginate()` in Laravel.
+  /// Transforms Laravel's standard `LengthAwarePaginator` JSON into a
+  /// frontend-friendly format with `pagination.has_next_page` etc.
+  /// Similar to a Vuex action that calls `api.get('/announcements', { params })`.
   static Future<Map<String, dynamic>> getAnnouncementsPaginated({
     int page = 1,
     int limit = 10,
@@ -207,8 +235,10 @@ class ApiAnnouncementService {
     }
   }
 
-  // Legacy method (keep for backward compatibility)
-  // Now handles paginated response from backend
+  /// Legacy method to fetch all announcements as a flat list.
+  /// Kept for backward compatibility -- new code should use [getAnnouncementsPaginated].
+  /// Handles both old (List) and new (paginated Map) response formats.
+  /// Like a deprecated Laravel route that still works but points to the new controller.
   static Future<List<dynamic>> getAnnouncements() async {
     final result = await ApiService().get('/announcement');
 
@@ -244,7 +274,11 @@ class ApiAnnouncementService {
     return result is List ? result : [];
   }
 
-  // Create Announcement (with optional file)
+  /// Creates a new announcement with optional file attachment.
+  /// Uses multipart/form-data upload -- like Laravel's `$request->file('file')`
+  /// on the backend. Similar to a Vue form submission with `FormData`.
+  /// [data] - String key-value pairs for the announcement fields.
+  /// [file] - Optional file attachment (image, PDF, doc).
   static Future<dynamic> createAnnouncement(
     Map<String, String> data,
     File? file,
@@ -291,7 +325,10 @@ class ApiAnnouncementService {
     }
   }
 
-  // Update Announcement (with optional file)
+  /// Updates an existing announcement with optional new file attachment.
+  /// Uses POST with `_method=PUT` (Laravel's method spoofing for multipart)
+  /// because HTML/HTTP multipart forms cannot send PUT directly with files.
+  /// This is the same pattern as `@method('PUT')` in a Laravel Blade form.
   static Future<dynamic> updateAnnouncement(
     String id,
     Map<String, String> data,
@@ -342,6 +379,8 @@ class ApiAnnouncementService {
     }
   }
 
+  /// Maps file extension to MIME type for multipart uploads.
+  /// Like Laravel's `$file->getMimeType()` but done client-side.
   static String _getMimeType(String path) {
     if (path.toLowerCase().endsWith('.jpg') ||
         path.toLowerCase().endsWith('.jpeg'))

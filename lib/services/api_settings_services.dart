@@ -1,13 +1,26 @@
+/// api_settings_services.dart - Manages user profile and school settings.
+/// Like Laravel's ProfileController + SchoolSettingsController / Vue's settings store.
+///
+/// Handles password changes, profile CRUD, lesson hour session management,
+/// and school-level configuration. All methods are static.
+library;
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/services/api_services.dart';
 
+/// Service for user profile and school settings API calls.
+/// Like a combined Laravel controller handling /profile and /school/settings routes.
+/// In Vue terms, this is a settings store module managing user prefs and school config.
 class ApiSettingsService {
+  /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
 
+  /// Auth headers with Bearer token.
   static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
 
+  /// Parses JSON response and throws on non-2xx status.
   static dynamic _handleResponse(http.Response response) {
     final responseBody = json.decode(response.body);
 
@@ -21,7 +34,9 @@ class ApiSettingsService {
     }
   }
 
-  // Update Password
+  /// Updates the current user's password.
+  /// Like Laravel's `Hash::check()` + `$user->update(['password' => ...])`.
+  /// Throws on validation failure (e.g., wrong old password).
   static Future<void> updatePassword({
     required String oldPassword,
     required String newPassword,
@@ -43,7 +58,7 @@ class ApiSettingsService {
     }
   }
 
-  // Get User Profile
+  /// Fetches the current user's profile. Like `auth()->user()` in Laravel.
   static Future<Map<String, dynamic>> getProfile() async {
     try {
       final response = await http.get(
@@ -58,7 +73,8 @@ class ApiSettingsService {
     }
   }
 
-  // Update User Profile
+  /// Updates the current user's profile fields.
+  /// Like `auth()->user()->update($data)` in Laravel.
   static Future<void> updateProfile({
     required String name,
     required String? phoneNumber,
@@ -81,7 +97,8 @@ class ApiSettingsService {
     }
   }
 
-  // Get Lesson Hour Settings (Now returns daily slots)
+  /// Fetches lesson hour settings (daily time slots for each period).
+  /// Like `LessonHourSetting::all()` in Laravel grouped by day.
   static Future<List<dynamic>> getLessonHourSettings() async {
     try {
       final response = await http.get(
@@ -100,7 +117,8 @@ class ApiSettingsService {
     }
   }
 
-  // Create Lesson Session (Slot)
+  /// Creates a new lesson session time slot for a specific day.
+  /// Like `LessonHourSetting::create($data)` in Laravel.
   static Future<void> createLessonSession({
     required String dayId,
     required int hourNumber,
@@ -125,7 +143,8 @@ class ApiSettingsService {
     }
   }
 
-  // Update Lesson Session
+  /// Updates an existing lesson session's time and hour number.
+  /// Like `LessonHourSetting::find($id)->update($data)` in Laravel.
   static Future<void> updateLessonSession({
     required String id,
     required String startTime,
@@ -149,7 +168,8 @@ class ApiSettingsService {
     }
   }
 
-  // Delete Lesson Session
+  /// Deletes a lesson session slot by ID.
+  /// Like `LessonHourSetting::find($id)->delete()` in Laravel.
   static Future<void> deleteLessonSession(String id) async {
     try {
       final response = await http.delete(
@@ -163,7 +183,8 @@ class ApiSettingsService {
     }
   }
 
-  // Get School Settings
+  /// Fetches the school's general settings (name, address, jenjang/level).
+  /// Like `School::find($schoolId)->settings` in Laravel.
   static Future<Map<String, dynamic>> getSchoolSettings() async {
     try {
       final response = await http.get(
@@ -179,7 +200,9 @@ class ApiSettingsService {
     }
   }
 
-  // Update School Settings (General)
+  /// Updates school-level settings (jenjang, name, address).
+  /// Like `School::find($id)->update($data)` in Laravel.
+  /// Only provided fields are updated (partial update).
   static Future<void> updateSchoolSettings({
     String? jenjang,
     String? schoolName,

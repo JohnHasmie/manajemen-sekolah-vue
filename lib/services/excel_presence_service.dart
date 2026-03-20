@@ -1,3 +1,7 @@
+// excel_presence_service.dart - Export student attendance/presence (absensi) data to Excel.
+// Like Laravel's Maatwebsite/Excel PresenceExport with backend validation.
+// Handles attendance statuses: hadir, terlambat, izin, sakit, alpha.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,11 +13,22 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service for exporting student attendance (absensi/presence) data to Excel.
+/// Similar to Laravel's `Excel::download(new AttendanceExport, 'Absensi.xlsx')`.
+///
+/// Supports filter-based export (by class, subject, date range) and validates
+/// attendance status against an allowlist (hadir/terlambat/izin/sakit/alpha).
+///
+/// Also provides helper methods for status labels, date formatting, and
+/// day name translation -- like Laravel model accessors or helper functions.
 class ExcelPresenceService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  // Export data absensi ke Excel melalui backend
+  /// Export attendance data to Excel via backend POST to `/attendance/export`.
+  /// [presenceData] - list of attendance records. [filters] - optional filters.
+  /// Checks content-type header to distinguish .xlsx binary from JSON error.
+  /// Side effects: saves file to device, opens it, shows SnackBar.
   static Future<void> exportPresenceToExcel({
     required List<dynamic> presenceData,
     required BuildContext context,
@@ -108,7 +123,8 @@ class ExcelPresenceService {
     }
   }
 
-  // Validasi data absensi melalui backend
+  /// Server-side validation via POST to `/attendance/validate`.
+  /// Like submitting to a Laravel FormRequest for authoritative validation.
   static Future<List<Map<String, dynamic>>> validatePresenceDataBackend(
     List<dynamic> presenceData,
   ) async {
@@ -131,7 +147,10 @@ class ExcelPresenceService {
     }
   }
 
-  // Helper method untuk validasi data sebelum export (local fallback)
+  /// Local fallback validation for attendance data.
+  /// Checks required fields and validates status against the allowlist:
+  /// ['hadir', 'terlambat', 'izin', 'sakit', 'alpha'].
+  /// Like a Laravel FormRequest with `Rule::in([...])` validation.
   static List<Map<String, dynamic>> validatePresenceData(
     List<dynamic> presenceData,
   ) {
@@ -207,7 +226,8 @@ class ExcelPresenceService {
     return validatedData;
   }
 
-  // Helper method untuk mendapatkan label status
+  /// Get a localized label for attendance status codes.
+  /// Like Laravel's `__('attendance.hadir')` translation helper.
   static String getStatusLabel(
     String status,
     LanguageProvider languageProvider,
@@ -243,12 +263,12 @@ class ExcelPresenceService {
     }
   }
 
-  // Helper method untuk format tanggal
+  /// Format a DateTime to 'YYYY-MM-DD' string for export. Like Carbon's `format('Y-m-d')`.
   static String formatDateForExport(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  // Helper method untuk mendapatkan nama hari
+  /// Get localized day name from a DateTime. Like Carbon's `translatedFormat('l')`.
   static String getDayName(DateTime date, LanguageProvider languageProvider) {
     final days = [
       languageProvider.getTranslatedText({'en': 'Sunday', 'id': 'Minggu'}),

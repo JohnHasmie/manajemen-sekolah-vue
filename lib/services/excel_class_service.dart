@@ -1,3 +1,7 @@
+// excel_class_service.dart - Export and import class (kelas) data via Excel.
+// Like Laravel's Maatwebsite/Excel ClassExport and ClassImport classes.
+// Handles export, template download (xlsx & csv), and data validation.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,11 +13,28 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service for exporting class data to Excel and downloading import templates.
+/// Similar to a Laravel controller that uses Maatwebsite/Excel:
+/// `return Excel::download(new ClassExport($classes), 'Data_Kelas.xlsx');`
+///
+/// Provides three main capabilities:
+/// 1. Export existing class data to .xlsx
+/// 2. Download .xlsx import template (with headers + example rows)
+/// 3. Download .csv import template (alternative format)
+/// 4. Validate class data both locally and via backend API
+///
+/// All methods are static and use [ApiService.getHeaders()] for auth tokens,
+/// like attaching `auth:sanctum` middleware in Laravel routes.
 class ExcelClassService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  // Export data kelas ke Excel melalui backend
+  /// Export class data to an Excel file via backend POST to `/class/export`.
+  /// Like `Excel::download(new ClassExport($data), 'file.xlsx')` in Laravel.
+  ///
+  /// [classes] - list of class data maps from state/API.
+  /// [context] - BuildContext for SnackBar and i18n access.
+  /// Side effects: validates data, saves .xlsx locally, opens the file.
   static Future<void> exportClassesToExcel({
     required List<dynamic> classes,
     required BuildContext context,
@@ -75,7 +96,9 @@ class ExcelClassService {
     }
   }
 
-  // Download template Excel melalui backend
+  /// Download an Excel import template from the backend GET `/class/template`.
+  /// Like a Laravel route that returns `Excel::download(new ClassTemplateExport)`.
+  /// Provides users with a pre-formatted .xlsx file to fill in and import.
   static Future<void> downloadTemplate(BuildContext context) async {
     final languageProvider = context.read<LanguageProvider>();
 
@@ -143,7 +166,8 @@ class ExcelClassService {
     }
   }
 
-  // Download template CSV melalui backend
+  /// Download a CSV import template from the backend GET `/class/template/csv`.
+  /// Alternative to the Excel template for users who prefer CSV format.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
     final languageProvider = context.read<LanguageProvider>();
 
@@ -199,7 +223,9 @@ class ExcelClassService {
     }
   }
 
-  // Validasi data melalui backend
+  /// Validate class data via backend POST to `/class/validate`.
+  /// Like submitting data to a Laravel FormRequest for server-side validation.
+  /// Returns the validated/cleaned data if successful, throws on failure.
   static Future<List<Map<String, dynamic>>> validateClassDataBackend(
     List<dynamic> classes,
   ) async {
@@ -223,7 +249,11 @@ class ExcelClassService {
     }
   }
 
-  // Helper method untuk validasi data sebelum export (local fallback)
+  /// Local fallback validation for class data before export.
+  /// Like a Laravel FormRequest but running client-side when the backend
+  /// validation endpoint is not used. Checks required fields (name, grade_level)
+  /// and handles polymorphic homeroom_teacher data (List from pivot vs Map legacy).
+  /// Throws an Exception with all accumulated errors if validation fails.
   static List<Map<String, dynamic>> validateClassData(List<dynamic> classes) {
     final List<Map<String, dynamic>> validatedData = [];
     final List<String> errors = [];
@@ -280,7 +310,8 @@ class ExcelClassService {
     return validatedData;
   }
 
-  // Helper methods
+  /// Convert a numeric grade level (1-12) to a human-readable Indonesian label.
+  /// E.g., 7 -> "Kelas 7 SMP". Like a Laravel accessor/mutator on a model.
   static String _getGradeLevelText(int? gradeLevel) {
     if (gradeLevel == null) return '';
 
@@ -314,6 +345,7 @@ class ExcelClassService {
     }
   }
 
+  /// Parse a grade level string to int (1-12). Returns null if invalid.
   static int? _parseGradeLevel(String? gradeLevelText) {
     if (gradeLevelText == null || gradeLevelText.isEmpty) return null;
 

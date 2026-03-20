@@ -1,9 +1,23 @@
+// Finance bar chart card for the dashboard, with swipeable semester pages.
+//
+// Like a Vue `<FinanceChartCard>` dashboard widget using Chart.js to display
+// monthly payment data per semester. Supports swiping between semesters
+// (PageView). Similar to a Laravel admin dashboard finance chart panel.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:manajemensekolah/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/widgets/dashboard/mini_bar_chart.dart';
 import 'package:manajemensekolah/widgets/dashboard/schedule_slider_card.dart'; // For SmoothPageIndicator
 
+/// A swipeable finance bar chart card showing monthly payment data per semester.
+///
+/// Like a Vue `<FinanceBarChartCard>` with props:
+/// - [title] / [icon] / [accentColor] - card header styling
+/// - [semestersData] - list of semester data maps, each with 'subtitle' and 'data' array
+/// - [onTap] - navigate to full finance screen
+///
+/// Uses a `PageView` for swiping between semesters and [MiniBarChart] for rendering.
+/// X-axis labels show month abbreviations, adjusted based on semester (ganjil/genap).
 class FinanceBarChartCard extends StatefulWidget {
   final String title;
   final IconData icon;

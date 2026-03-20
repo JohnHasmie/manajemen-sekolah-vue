@@ -1,3 +1,10 @@
+// Parent report card list screen -- shows children and their raport status.
+// Like `pages/parent/Raport/Index.vue` in a Vue app.
+//
+// Displays the parent's children with their report card availability
+// per semester. Tapping a student navigates to the detail screen.
+// Auto-detects current semester based on school calendar.
+// In Laravel terms: `RaportController@parentIndex`.
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -13,6 +20,10 @@ import 'package:manajemensekolah/utils/error_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Parent's report card list -- shows children with semester selector.
+///
+/// Props: optional [academicYearId].
+/// Navigates to [ParentRaportDetailScreen] on student tap.
 class ParentRaportScreen extends StatefulWidget {
   final String? academicYearId;
   const ParentRaportScreen({super.key, this.academicYearId});
@@ -21,6 +32,10 @@ class ParentRaportScreen extends StatefulWidget {
   State<ParentRaportScreen> createState() => _ParentRaportScreenState();
 }
 
+/// State for [ParentRaportScreen].
+///
+/// Like a Vue component with `data() { return { isLoading, studentsData, selectedSemesterId } }`.
+/// Auto-resolves the current semester and loads student raport data.
 class _ParentRaportScreenState extends State<ParentRaportScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
@@ -30,6 +45,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
   // We can select semester (1 for Ganjil, 2 for Genap)
   String _selectedSemesterId = '1';
 
+  /// Like Vue's `mounted()` -- loads report card data on screen init.
   @override
   void initState() {
     super.initState();
@@ -72,6 +88,8 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
     }
   }
 
+  /// Loads parent data and fetches raport for each child.
+  /// Resolves current semester automatically, then fetches from cache or API.
   Future<void> _loadData({bool useCache = true}) async {
     // Load parent data
     if (_parentData.isEmpty || _parentData['id'] == null) {

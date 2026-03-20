@@ -1,8 +1,25 @@
+// Skeleton loading (shimmer) components for list views.
+//
+// Like a Vue `<SkeletonLoader>` component or the `vue-content-loading` package.
+// In Laravel/Vue apps you might use a CSS skeleton loader while data loads;
+// in Flutter we use the `shimmer` package for the same animated placeholder effect.
+// These components replace `CircularProgressIndicator` for a better perceived
+// performance experience (content-first loading pattern).
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/utils/color_utils.dart';
 import 'package:shimmer/shimmer.dart';
 
-/// Reusable skeleton loading card that mimics a list item card layout.
+/// A single skeleton loading card that mimics a list item card layout.
+///
+/// Like a Vue `<SkeletonCard>` component shown with `v-if="isLoading"`.
+/// Uses the `shimmer` package for an animated shine effect, similar to
+/// Facebook/Instagram-style content placeholders.
+///
+/// Props:
+/// - [infoTagCount] - number of placeholder tag rows (customizes skeleton shape)
+/// - [showActions] - whether to show action button placeholders on the right
+/// - [baseColor] / [highlightColor] - customizable shimmer colors
+///
 /// Used across management screens (student, teacher, etc.) for consistent loading UX.
 class SkeletonListCard extends StatelessWidget {
   /// Number of info tag rows below the title
@@ -138,8 +155,11 @@ class SkeletonListCard extends StatelessWidget {
   }
 }
 
-/// A list of skeleton cards used as loading placeholder.
-/// Drop-in replacement for CircularProgressIndicator in list views.
+/// A list of [SkeletonListCard] widgets used as a loading placeholder.
+///
+/// Drop-in replacement for `CircularProgressIndicator` in list views.
+/// Like wrapping multiple `<SkeletonCard>` components in a `v-for` with
+/// a fixed count. Use this as the body of your list screen while loading.
 class SkeletonListLoading extends StatelessWidget {
   /// Number of skeleton cards to display
   final int itemCount;

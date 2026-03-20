@@ -1,3 +1,12 @@
+// Admin teaching schedule management screen - full CRUD for class schedules.
+//
+// Like `pages/admin/schedules.vue` - manages the school timetable with create,
+// edit, delete, search, multi-filter (teacher, class, day, semester, lesson hour),
+// infinite scroll pagination, Excel import/export, and a timetable grid view.
+//
+// In Laravel terms, this consumes ScheduleController endpoints.
+// Also handles conflict detection (double-booked teachers/rooms).
+// Supports two view modes: card list and Syncfusion data grid (timetable).
 import 'dart:async';
 import 'dart:io';
 
@@ -29,6 +38,11 @@ import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Admin teaching schedule management with full CRUD, timetable grid, and conflict detection.
+///
+/// This is a [StatefulWidget] - like a Vue page with extensive local state for
+/// schedule list, reference data (teachers, subjects, classes, days), pagination,
+/// filters, and two view modes (card list vs timetable grid).
 class TeachingScheduleManagementScreen extends StatefulWidget {
   const TeachingScheduleManagementScreen({super.key});
 
@@ -37,6 +51,18 @@ class TeachingScheduleManagementScreen extends StatefulWidget {
       TeachingScheduleManagementScreenState();
 }
 
+/// Mutable state for [TeachingScheduleManagementScreen].
+///
+/// Key state (like Vue `data()`):
+/// - [_scheduleList] - paginated schedule entries from API
+/// - [_teacherList] / [_subjectList] / [_classList] / [_hariList] / [_jamPelajaranList] - reference data
+/// - [_showTableView] - toggles between card list and timetable grid (Syncfusion DataGrid)
+/// - [_gridData] / [_timetableDataSource] - data source for the timetable grid view
+/// - Filter states: [_selectedGuruId], [_selectedClassId], [_selectedHariId], etc.
+/// - Pagination: [_currentPage], [_hasMoreData], [_isLoadingMore] for infinite scroll
+///
+/// Listens to AcademicYearProvider for year changes and FCM for real-time sync.
+/// setState() triggers re-render like Vue's reactivity system.
 class TeachingScheduleManagementScreenState
     extends State<TeachingScheduleManagementScreen> {
   final ApiService _apiService = ApiService();
@@ -104,6 +130,8 @@ class TeachingScheduleManagementScreenState
   String? _lastCachedAcademicYear;
   String? _lastCachedSemester;
 
+  /// Like Vue's `mounted()` - sets up scroll listener, academic year provider,
+  /// FCM sync listener, and loads all reference data + schedule list.
   @override
   void initState() {
     super.initState();

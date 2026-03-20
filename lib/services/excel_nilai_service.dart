@@ -1,3 +1,7 @@
+// excel_nilai_service.dart - Export student grade/score (nilai) data to Excel.
+// Like Laravel's Maatwebsite/Excel NilaiExport class with FormRequest validation.
+// "Nilai" means grades/scores in Indonesian school context.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,11 +13,22 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Service for exporting student grade data (nilai) to Excel via the backend.
+/// Similar to Laravel's `Excel::download(new NilaiExport($data), 'Data_Nilai.xlsx')`.
+///
+/// Supports optional [filters] for narrowing the export (class, subject, etc.),
+/// like query parameters on a Laravel export route: `/grade/export?class_id=1`.
+///
+/// Grade types supported: UH (daily quiz), Tugas (assignment), UTS/PTS (midterm),
+/// UAS/PAS (final exam).
 class ExcelNilaiService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
 
-  // Export data nilai ke Excel melalui backend
+  /// Export grade data to Excel via backend POST to `/grade/export`.
+  /// [nilaiData] - list of grade records. [filters] - optional filter map
+  /// (e.g., class_id, subject_id). [context] - for SnackBar and i18n.
+  /// Side effects: validates, downloads .xlsx, saves to device, opens file.
   static Future<void> exportNilaiToExcel({
     required List<dynamic> nilaiData,
     required BuildContext context,
@@ -75,7 +90,10 @@ class ExcelNilaiService {
     }
   }
 
-  // Helper method untuk validasi data sebelum export
+  /// Local validation for grade data before export.
+  /// Like a Laravel FormRequest: checks required fields (nis, student_name,
+  /// class_name, subject_name, type, grade) and ensures grade is 0-100.
+  /// Throws with accumulated error messages if any row fails validation.
   static List<Map<String, dynamic>> validateNilaiData(List<dynamic> nilaiData) {
     final List<Map<String, dynamic>> validatedData = [];
     final List<String> errors = [];
@@ -146,7 +164,9 @@ class ExcelNilaiService {
     return validatedData;
   }
 
-  // Helper method untuk mendapatkan label jenis nilai
+  /// Get a localized label for grade type codes (uh, tugas, uts, uas, pts, pas).
+  /// Like a Laravel accessor that maps enum values to display strings.
+  /// Uses [LanguageProvider] for i18n (en/id), similar to Laravel's `__()` helper.
   static String getJenisNilaiLabel(
     String jenis,
     LanguageProvider languageProvider,

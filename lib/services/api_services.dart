@@ -1,3 +1,19 @@
+/// api_services.dart - Core HTTP client and central API gateway for the entire app.
+/// Like Laravel's Http facade + AuthController / Vue's root Axios instance + auth store.
+///
+/// This is the foundational service that ALL other API services depend on.
+/// It provides:
+/// - Base URL configuration (from .env, like Laravel's `config('app.url')`)
+/// - Authenticated HTTP methods (GET, POST, PUT, DELETE) with Firebase performance tracing
+/// - Shared auth headers (Bearer token + X-School-ID, like Laravel Sanctum middleware)
+/// - Central response handling (JSON parsing, 401/403 auto-logout, 422 validation errors)
+/// - Authentication flows: login, OTP verification, Google OAuth, school/role switching
+/// - Domain-specific endpoints: grades (nilai), attendance (absensi), RPP, billing, FCM
+///
+/// In Vue terms, this is like combining your root Axios instance configuration,
+/// auth store, and several Vuex modules into one central service.
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,6 +28,19 @@ import 'package:manajemensekolah/screen/login_screen.dart';
 import 'package:manajemensekolah/services/performance_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// The central API service class -- the backbone of all HTTP communication.
+/// Like Laravel's `Http` facade combined with auth middleware and a service container.
+///
+/// Provides both static methods (for auth flows, one-off calls) and instance methods
+/// (for general CRUD via get/post/put/delete). Other service classes (ApiStudentService,
+/// ApiTeacherService, etc.) either extend this pattern or use `ApiService()` instances.
+///
+/// Key responsibilities:
+/// - [init] loads the base URL from `.env` (like Laravel's `.env` config loading)
+/// - [_getHeaders] injects Bearer token + X-School-ID (like Laravel Sanctum + tenant middleware)
+/// - [_handleResponse] centralizes error handling (like a global exception handler)
+/// - [login], [verifyOtp], [googleLogin] handle all auth flows
+/// - Grade, attendance, RPP, billing endpoints are grouped here for historical reasons
 class ApiService {
   // static const String baseUrl = 'http://10.0.2.2:3000/api'; // Android emulator
   // static const String baseUrl = 'http://localhost:3001/api'; // iOS simulator atau web
@@ -22,8 +51,13 @@ class ApiService {
   // static const String baseUrl = 'http://aieasytech.id/api';
   // static const String baseUrl = 'http://192.168.1.100:3000/api';
 
+  /// The base URL for all API calls. Loaded once from `.env` at app startup.
+  /// Like `config('app.url')` in Laravel or `VUE_APP_API_URL` in Vue.
   static late final String baseUrl;
 
+  /// Initializes the base URL from the `.env` file. Must be called before any API usage.
+  /// Like Laravel's bootstrap phase that loads `.env` via Dotenv.
+  /// Called from `main()` during app startup.
   static Future<void> init() async {
     final envBaseUrl = dotenv.env['API_BASE_URL'];
 
@@ -44,6 +78,11 @@ class ApiService {
     // }
   }
 
+  /// Performs an authenticated GET request with Firebase performance tracing.
+  /// Like `Http::get($url)` in Laravel or `axios.get()` in Vue.
+  /// [endpoint] - Relative path (e.g., '/student'). Appended to [baseUrl].
+  /// [params] - Optional query parameters (like `$request->query()` in Laravel).
+  /// Returns the parsed JSON response body.
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
     final metric = await PerformanceService.startHttpMetric(
       '$baseUrl$endpoint',
@@ -72,7 +111,9 @@ class ApiService {
     }
   }
 
-  // Instance method untuk POST request
+  /// Performs an authenticated POST request with Firebase performance tracing.
+  /// Like `Http::post($url, $data)` in Laravel or `axios.post()` in Vue.
+  /// [data] - Request body as a Map, JSON-encoded automatically.
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
     final metric = await PerformanceService.startHttpMetric(
       '$baseUrl$endpoint',
@@ -103,7 +144,8 @@ class ApiService {
     }
   }
 
-  // Instance method untuk PUT request
+  /// Performs an authenticated PUT request with Firebase performance tracing.
+  /// Like `Http::put($url, $data)` in Laravel or `axios.put()` in Vue.
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
     final metric = await PerformanceService.startHttpMetric(
       '$baseUrl$endpoint',
@@ -134,7 +176,8 @@ class ApiService {
     }
   }
 
-  // Dalam ApiService class
+  /// Fetches grades filtered by subject, with optional academic year and limit.
+  /// Like `Grade::where('subject_id', $id)->limit($limit)->get()` in Laravel.
   Future<List<dynamic>> getNilaiByMataPelajaran(
     String mataPelajaranId, {
     String? academicYearId,
@@ -163,7 +206,8 @@ class ApiService {
     }
   }
 
-  // Instance method untuk DELETE request
+  /// Performs an authenticated DELETE request with Firebase performance tracing.
+  /// Like `Http::delete($url)` in Laravel or `axios.delete()` in Vue.
   Future<dynamic> delete(String endpoint) async {
     final metric = await PerformanceService.startHttpMetric(
       '$baseUrl$endpoint',
@@ -188,7 +232,8 @@ class ApiService {
     }
   }
 
-  // File Download
+  /// Downloads a file as raw bytes. Like `Storage::download()` in Laravel.
+  /// Returns the file content as [Uint8List] for saving to disk.
   static Future<Uint8List> downloadFile(String endpoint) async {
     try {
       final response = await http.get(
@@ -209,14 +254,21 @@ class ApiService {
     }
   }
 
+  /// Retrieves the stored auth token from SharedPreferences.
+  /// Like `auth()->token()` in Laravel Sanctum.
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
   }
 
-  // Expose headers for other services
+  /// Public accessor for auth headers. Used by all other service classes.
+  /// Like a shared middleware that injects auth context into every request.
   static Future<Map<String, String>> getHeaders() => _getHeaders();
 
+  /// Builds request headers with Bearer token and X-School-ID.
+  /// Like combining Laravel Sanctum auth middleware + tenant identification middleware.
+  /// - Bearer token: from SharedPreferences (like session-based auth)
+  /// - X-School-ID: multi-tenant school identifier (like Laravel tenant middleware)
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -264,6 +316,15 @@ class ApiService {
     return headers;
   }
 
+  /// Central response handler for ALL API calls in the app.
+  /// Like Laravel's exception handler (`Handler::render()`) combined with
+  /// an Axios response interceptor. Handles:
+  /// - 204 No Content -> returns null
+  /// - 2xx Success -> returns parsed JSON body
+  /// - 401 Unauthorized -> auto-logout with redirect to login screen
+  /// - 403 Forbidden -> distinguishes school access denied vs real forbidden
+  /// - 422 Validation -> extracts first validation error message (Laravel format)
+  /// - 500+ Server errors -> throws without logging out
   static dynamic _handleResponse(http.Response response) {
     try {
       if (response.statusCode == 204) {
@@ -328,6 +389,10 @@ class ApiService {
     }
   }
 
+  /// Handles authentication failures by clearing stored data and redirecting to login.
+  /// Like Laravel's `auth()->logout()` + redirect, or Vue Router's navigation guard.
+  /// Clears SharedPreferences (token, user data) and uses the global navigator key
+  /// to push the LoginScreen with an error message.
   static Future<void> _handleAuthenticationErrorWithMessage(
     String errorMessage,
   ) async {
@@ -369,7 +434,8 @@ class ApiService {
     }
   }
 
-  // Public method untuk logout dengan custom message
+  /// Public method for other services to trigger logout with a custom message.
+  /// Like calling `Auth::logout()` from anywhere in a Laravel app.
   static Future<void> logoutWithMessage(String message) async {
     await _handleAuthenticationErrorWithMessage(message);
   }
@@ -390,7 +456,13 @@ class ApiService {
     }
   }
 
-  // Login dengan sekolah
+  /// Authenticates a user with email/password, optionally with school and role selection.
+  /// Like Laravel's `Auth::attempt()` but with a multi-step flow:
+  /// 1. May return `pilih_sekolah: true` -> user must select a school first
+  /// 2. May return `pilih_role: true` -> user must select a role
+  /// 3. May return `require_otp: true` -> OTP verification needed
+  /// 4. On success: returns `{token, user}` for storage
+  /// Similar to a Vuex `login` action that handles multiple auth flows.
   static Future<Map<String, dynamic>> login(
     String email,
     String password, {
@@ -479,6 +551,8 @@ class ApiService {
     }
   }
 
+  /// Verifies the OTP code sent to the user's email during login.
+  /// Like a Laravel OTP verification endpoint. Part of the multi-step auth flow.
   static Future<Map<String, dynamic>> verifyOtp(
     String email,
     String otp, {
@@ -529,6 +603,9 @@ class ApiService {
     }
   }
 
+  /// Authenticates via Google OAuth. Sends Google ID token for server-side verification.
+  /// Like Laravel Socialite's Google driver. Backend verifies the ID token
+  /// against Google's tokeninfo API for security.
   static Future<Map<String, dynamic>> googleLogin({
     required String email,
     String? displayName,
@@ -582,6 +659,8 @@ class ApiService {
     }
   }
 
+  /// Fetches the available roles for the current user (e.g., admin, guru, siswa).
+  /// Like `auth()->user()->roles` in Laravel with Spatie Permission.
   static Future<List<dynamic>> getUserRoles() async {
     final response = await http.get(
       Uri.parse('$baseUrl/user/roles'),
@@ -592,7 +671,8 @@ class ApiService {
     return result['available_roles'] is List ? result['available_roles'] : [];
   }
 
-  // Switch role reuse switchSchool logic
+  /// Switches the user's active role within the same school.
+  /// Reuses [switchSchool] logic. Like changing the active guard in Laravel.
   static Future<Map<String, dynamic>> switchRole(String role) async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
@@ -607,7 +687,8 @@ class ApiService {
     return switchSchool(schoolId.toString(), role: role);
   }
 
-  // Get sekolah yang bisa diakses user
+  /// Fetches the list of schools accessible to the current user.
+  /// Like a multi-tenant school selector. Returns school objects.
   static Future<List<dynamic>> getUserSchools() async {
     final response = await http.get(
       Uri.parse('$baseUrl/user/schools'),
@@ -618,7 +699,8 @@ class ApiService {
     return result is List ? result : [];
   }
 
-  // Dashboard Stats - single endpoint for all dashboard data
+  /// Fetches dashboard statistics (student count, teacher count, etc.) by role.
+  /// Like a Laravel dashboard controller that aggregates stats per user role.
   static Future<Map<String, dynamic>> getDashboardStats({
     required String role,
     String? academicYearId,
@@ -645,7 +727,8 @@ class ApiService {
     }
   }
 
-  // Switch sekolah
+  /// Gets the count of unread announcements for badge display.
+  /// Like a notification count endpoint. Returns 0 on error.
   static Future<int> getUnreadAnnouncementCount() async {
     try {
       final response = await http.get(
@@ -680,6 +763,9 @@ class ApiService {
     }
   }
 
+  /// Switches the user's active school context (multi-tenant).
+  /// Like changing the active tenant in a Laravel multi-tenancy setup.
+  /// Returns a new token scoped to the selected school.
   static Future<Map<String, dynamic>> switchSchool(
     String schoolId, {
     String? role,
@@ -698,7 +784,8 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  // Nilai
+  /// Fetches student grades (nilai) with multiple optional filters.
+  /// Like `Grade::filter($request)->get()` in Laravel.
   static Future<List<dynamic>> getNilai({
     String? siswaId,
     String? guruId,
@@ -726,6 +813,7 @@ class ApiService {
     return [];
   }
 
+  /// Creates a new grade entry. Like `Grade::create($data)` in Laravel.
   static Future<dynamic> tambahNilai(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/grade'),
@@ -736,7 +824,8 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  // RPP methods
+  /// Fetches RPP (lesson plans) with optional filters.
+  /// Like `Rpp::filter($request)->get()` in Laravel.
   static Future<List<dynamic>> getRPP({
     String? teacherId,
     String? status,
@@ -995,7 +1084,9 @@ class ApiService {
     }
   }
 
-  // Absensi
+  /// Fetches attendance (absensi) records with multiple optional filters.
+  /// Like `Attendance::filter($request)->get()` in Laravel.
+  /// Handles both formats: direct array or `{success, data, pagination}`.
   static Future<List<dynamic>> getAbsensi({
     String? teacherId,
     String? date,
@@ -1239,6 +1330,7 @@ class ApiService {
     }
   }
 
+  /// Creates a new attendance record. Like `Attendance::create($data)` in Laravel.
   static Future<dynamic> tambahAbsensi(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/attendance'),
@@ -1275,7 +1367,8 @@ class ApiService {
     }
   }
 
-  // Dalam class ApiService di api_services.dart
+  /// Fetches the school's available grade levels (e.g., 1-6 for SD, 7-9 for SMP).
+  /// Like `SchoolConfig::getGradeLevels()` in Laravel. Falls back to 1-12.
   Future<List<int>> getGradeLevels() async {
     try {
       final response = await http.get(
@@ -1332,6 +1425,9 @@ class ApiService {
     return await put('/grade/$id', sanitizedData);
   }
 
+  /// Sanitizes form data by removing null and 'undefined' string values.
+  /// Prevents sending invalid data to the Laravel backend.
+  /// Like a Laravel FormRequest's `prepareForValidation()` method.
   Map<String, dynamic> _sanitizeData(Map<String, dynamic> data) {
     final sanitized = Map<String, dynamic>.from(data);
     sanitized.removeWhere(
@@ -1356,6 +1452,9 @@ class ApiService {
     }
   }
 
+  /// Uploads a file with optional form data via multipart request.
+  /// Like Laravel's `$request->file()` handling. Auto-detects MIME type.
+  /// [fileField] - The form field name (defaults to 'bukti_bayar' for payment receipts).
   Future<dynamic> uploadFile(
     String endpoint,
     File file, {
@@ -1516,8 +1615,9 @@ class ApiService {
     }
   }
 
-  // Check server health - does NOT use _handleResponse to avoid
-  // triggering auto-logout redirects that cause login screen loops
+  /// Checks server health. Intentionally does NOT use [_handleResponse]
+  /// to avoid triggering auto-logout redirects that cause login screen loops.
+  /// Like a simple ping endpoint. Used before login to verify server availability.
   static Future<Map<String, dynamic>> checkHealth() async {
     try {
       final response = await http
@@ -1635,7 +1735,8 @@ class ApiService {
     }
   }
 
-  // Send FCM token to backend
+  /// Registers the device's FCM token with the backend for push notifications.
+  /// Like Laravel's notification channel registration. Called after Firebase init.
   static Future<Map<String, dynamic>> sendFCMToken(
     String token,
     String deviceType,
@@ -1674,7 +1775,8 @@ class ApiService {
     }
   }
 
-  // Delete FCM token from backend
+  /// Removes the device's FCM token from the backend (on logout).
+  /// Like unregistering from a Laravel notification channel.
   static Future<Map<String, dynamic>> deleteFCMToken(String token) async {
     try {
       final prefs = await SharedPreferences.getInstance();

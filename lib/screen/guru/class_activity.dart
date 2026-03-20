@@ -1,4 +1,13 @@
-// class_activity.dart
+// Class activity (journal) management screen for teachers.
+// Like `pages/teacher/ClassActivity.vue` in a Vue app.
+//
+// This is one of the largest screens in the app. It provides a multi-step
+// wizard flow: Step 0 (select class) -> Step 1 (select subject) -> Step 2
+// (view/manage activities). It supports CRUD operations on class activities,
+// tab switching between "umum" (general) and "khusus" (specific) targets,
+// pagination with infinite scroll, search/filter, caching, and an onboarding
+// tour. In Laravel terms, this is like a complex Livewire component that
+// combines ClassController, SubjectController, and ActivityController logic.
 import 'dart:async';
 import 'dart:convert';
 
@@ -25,6 +34,15 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+/// Teacher's class activity (teaching journal) management screen.
+///
+/// This is a StatefulWidget -- like a Vue page component with its own local
+/// state. The constructor parameters below are like Vue `props` -- immutable
+/// data passed from the parent (e.g., from navigation or deep link).
+///
+/// Supports deep linking via optional initial* parameters, allowing other
+/// screens to navigate here with pre-selected class/subject/chapter.
+/// In Vue Router terms, these are like route query params (`?classId=...`).
 class ClassActifityScreen extends StatefulWidget {
   final DateTime? initialDate;
   final String? initialSubjectId;
@@ -55,6 +73,23 @@ class ClassActifityScreen extends StatefulWidget {
   ClassActifityScreenState createState() => ClassActifityScreenState();
 }
 
+/// The mutable State for [ClassActifityScreen].
+///
+/// This is like a Vue page component with its own local state
+/// (`data() { return {...} }`). Uses `TickerProviderStateMixin` because it
+/// has a TabController for animations (like Vue transition hooks).
+///
+/// Key state variables (equivalent to Vue `data()` properties):
+/// - [_currentStep] -- wizard step (0=classes, 1=subjects, 2=activities)
+/// - [_classList] / [_subjectList] / [_activityList] -- data arrays from API
+/// - [_selectedClassId] / [_selectedSubjectId] -- current selections
+/// - [_isLoading] / [_isLoadingMore] -- loading states
+/// - [_currentPage] / [_hasMoreData] -- pagination state for infinite scroll
+/// - [_currentTarget] -- tab selection ('umum' or 'khusus')
+///
+/// The `TickerProviderStateMixin` is needed for TabController animations.
+/// In Vue, you would just use CSS transitions; in Flutter, animations
+/// need a "ticker" (frame callback provider).
 class ClassActifityScreenState extends State<ClassActifityScreen>
     with TickerProviderStateMixin {
   static const String _prefKeyLastCacheKey = 'class_activity_last_cache_key';
@@ -108,6 +143,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   final GlobalKey _fabKey = GlobalKey();
   String? _tourId;
 
+  /// Like Vue's `mounted()` lifecycle hook. Initializes the tab controller,
+  /// sets up scroll/tab listeners, and kicks off initial data loading.
+  /// In Laravel terms, this is like the controller constructor that sets up
+  /// dependencies before handling a request.
   @override
   void initState() {
     super.initState();
@@ -117,6 +156,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     _loadUserData();
   }
 
+  /// Like Vue's `beforeUnmount()` -- disposes controllers to prevent memory leaks.
+  /// Every controller created in initState should be disposed here.
   @override
   void dispose() {
     _tabController.dispose();
@@ -126,6 +167,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     super.dispose();
   }
 
+  /// Handles tab switch between "umum" (general) and "khusus" (specific).
+  /// Like a Vue `@change` handler on a `<el-tabs>` component.
+  /// Resets pagination and reloads activities for the new tab.
   void _handleTabSelection() {
     // TabController listener fires twice (animation start + end).
     // Only react once — after the animation settles.
@@ -138,6 +182,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     _resetAndLoadActivities();
   }
 
+  /// Infinite scroll listener -- loads more data when user scrolls near bottom.
+  /// Like a Vue `@scroll` directive or Intersection Observer pattern.
+  /// Triggers [_loadMoreActivities] when within 200px of the bottom.
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -147,6 +194,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     }
   }
 
+  /// Resets pagination to page 1 and reloads activities from scratch.
+  /// Called when filters change, tabs switch, or subject selection changes.
+  /// Like calling `this.currentPage = 1; this.fetchActivities()` in Vue.
   void _resetAndLoadActivities() {
     setState(() {
       _currentPage = 1;
@@ -166,6 +216,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     return 'class_activity_classes_${_teacherId}_$academicYearId';
   }
 
+  /// Clears all cached data and reloads from the API.
+  /// Like a Vue method that clears Vuex store and re-fetches,
+  /// or hitting a "refresh" button that bypasses browser cache.
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('class_activity_');
     final prefs = await SharedPreferences.getInstance();
@@ -184,6 +237,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     }
   }
 
+  /// Loads the next page of activities for infinite scroll.
+  /// Like a Vue method that increments `currentPage` and appends results.
   Future<void> _loadMoreActivities() async {
     if (_isLoadingMore || !_hasMoreData) return;
 
@@ -197,6 +252,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   // ========== VIEW BUILDERS ==========
 
+  /// Builds the class selection list (Step 0 of the wizard).
+  /// Like a Vue `<ClassList>` component rendered when `currentStep === 0`.
   Widget _buildClassList(LanguageProvider languageProvider) {
     if (_isLoading) {
       return SkeletonListLoading(itemCount: 4, infoTagCount: 1);
@@ -363,6 +420,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     );
   }
 
+  /// Builds the subject selection list (Step 1 of the wizard).
+  /// Like a Vue `<SubjectList>` component rendered when `currentStep === 1`.
   Widget _buildSubjectList(LanguageProvider languageProvider) {
     if (_isLoading) {
       return SkeletonListLoading(itemCount: 6, infoTagCount: 1);
@@ -554,6 +613,13 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     );
   }
 
+  /// Loads the current teacher's profile and their class list.
+  /// This is the entry-point data loader called from [initState].
+  /// Like a Vue `mounted()` that calls `await this.fetchTeacherProfile()`
+  /// then `await this.fetchClasses()`. Uses a multi-layer cache strategy:
+  /// 1. Try SharedPreferences (instant, last known data)
+  /// 2. Try LocalCacheService (with TTL)
+  /// 3. Fall back to API call
   Future<void> _loadUserData() async {
     if (kDebugMode) {
       print('===== _loadUserData STARTED =====');
@@ -740,7 +806,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     }
   }
 
-  /// Handle deep navigation from initial parameters (extracted to avoid duplication)
+  /// Handle deep navigation from initial parameters (extracted to avoid duplication).
+  /// Like Vue Router's `beforeRouteEnter` guard that reads query params and
+  /// auto-selects class/subject if they were passed via navigation.
   Future<void> _handleInitialNavigation() async {
     if (widget.initialClassId != null) {
       _selectedClassId = widget.initialClassId;
@@ -758,6 +826,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     }
   }
 
+  /// Fetches the list of classes assigned to the teacher.
+  /// Uses a cache-first strategy with LocalCacheService (like browser localStorage).
+  /// In Laravel terms, this is like `ClassController@index` with cache middleware.
   Future<void> _loadClasses(String teacherId, {bool isAdmin = false, bool useCache = true}) async {
     try {
       final academicYearId = context
