@@ -441,8 +441,9 @@ class MateriPageState extends State<MateriPage> {
       }
 
       // ─── Step 3: Try subjects cache (per class) → return early if hit ───
-      if (useCache && _subjectList.isEmpty && selectedClassId != null) {
-        final subjectCacheKey = 'materi_subjects_${teacherId}_$selectedClassId';
+      final effectiveClassKey = selectedClassId ?? 'no_class';
+      if (useCache && _subjectList.isEmpty) {
+        final subjectCacheKey = 'materi_subjects_${teacherId}_$effectiveClassKey';
         try {
           final cachedSubjects = await LocalCacheService.load(subjectCacheKey, ttl: const Duration(hours: 6));
           if (cachedSubjects != null && mounted) {
@@ -562,7 +563,7 @@ class MateriPageState extends State<MateriPage> {
       }
 
       // ─── Show classes immediately while subjects are loading ───
-      if (classes.isNotEmpty && mounted) {
+      if (mounted) {
         setState(() {
           _classList = classes;
           _selectedClassId = selectedClassId;
@@ -613,8 +614,8 @@ class MateriPageState extends State<MateriPage> {
       _applySubjectList(subject);
 
       // Save subjects cache in background
-      if (selectedClassId != null && subject.isNotEmpty) {
-        LocalCacheService.save('materi_subjects_${teacherId}_$selectedClassId', subject);
+      if (subject.isNotEmpty) {
+        LocalCacheService.save('materi_subjects_${teacherId}_$effectiveClassKey', subject);
       }
       if (kDebugMode) print('Saved materi data to cache');
     } catch (e) {
@@ -623,15 +624,16 @@ class MateriPageState extends State<MateriPage> {
       }
       if (!mounted) return;
 
-      if (_subjectList.isEmpty) {
-        setState(() {
-          _isLoading = false;
+      setState(() {
+        _isLoading = false;
+        _isLoadingBab = false;
+        if (_subjectList.isEmpty) {
           _debugInfo = 'Error: ${e.toString()}';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
-      }
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
+      );
     }
   }
 

@@ -126,11 +126,27 @@ class FinanceScreenState extends State<FinanceScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check tour cache first
+      const tourCacheKey = 'tour_finance_admin';
+      final cachedTour = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cachedTour != null) {
+        if (cachedTour['should_show'] == false) return;
+        if (cachedTour['should_show'] == true && cachedTour['tour'] != null) {
+          _tourId = cachedTour['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+          return;
+        }
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'admin_finance_screen_tour',
       );
+
+      // Save tour status to cache (non-blocking)
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -162,11 +178,13 @@ class FinanceScreenState extends State<FinanceScreen> {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_finance_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_finance_admin', {'should_show': false});
         return true;
       },
     ).show(context: context);
@@ -714,6 +732,7 @@ class FinanceScreenState extends State<FinanceScreen> {
     }
     // Also clear any finance-related cache keys
     await LocalCacheService.clearStartingWith('finance_');
+    await LocalCacheService.clearStartingWith('tour_finance_');
     _loadData(useCache: false);
   }
 
@@ -750,6 +769,8 @@ class FinanceScreenState extends State<FinanceScreen> {
               _isLoading = false;
               _errorMessage = '';
             });
+            if (kDebugMode) print('Finance data loaded from cache');
+            return;
           }
         }
       } catch (e) {
@@ -784,9 +805,9 @@ class FinanceScreenState extends State<FinanceScreen> {
         });
       }
 
-      // Save to cache
+      // Save to cache (non-blocking)
       if (cacheKey != null) {
-        await LocalCacheService.save(cacheKey, {
+        LocalCacheService.save(cacheKey, {
           'jenisPembayaran': _jenisPembayaranList,
           'tagihan': _tagihanList,
           'pendingPayments': _pembayaranPendingList,

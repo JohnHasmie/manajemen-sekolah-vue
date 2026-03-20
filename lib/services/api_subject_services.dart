@@ -251,7 +251,7 @@ class ApiSubjectService {
     final response = await http.get(
       Uri.parse(url),
       headers: await ApiService.getHeaders(),
-    );
+    ).timeout(const Duration(seconds: 30));
 
     final result = _handleResponse(response);
     return result is List ? result : [];
@@ -385,7 +385,7 @@ class ApiSubjectService {
     final response = await http.get(
       Uri.parse(url),
       headers: await ApiService.getHeaders(),
-    );
+    ).timeout(const Duration(seconds: 30));
 
     final result = _handleResponse(response);
     return result is List ? result : [];
@@ -702,7 +702,7 @@ class ApiSubjectService {
     final response = await http.get(
       Uri.parse(url),
       headers: await ApiService.getHeaders(),
-    );
+    ).timeout(const Duration(seconds: 30));
 
     final result = _handleResponse(response);
     return result is List ? result : [];

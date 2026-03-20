@@ -69,6 +69,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
   Future<void> _forceRefresh() async {
     final classesKey = _buildClassesCacheKey();
     if (classesKey != null) await LocalCacheService.invalidate(classesKey);
+    await LocalCacheService.clearStartingWith('tour_raport_screen_');
     if (_selectedClass != null) {
       final studentsKey = _buildStudentsCacheKey();
       if (studentsKey != null) await LocalCacheService.invalidate(studentsKey);
@@ -91,6 +92,8 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
               _classes = cachedList;
               _isLoading = false;
             });
+            if (kDebugMode) print('Classes loaded from cache');
+            return;
           }
         }
       }
@@ -121,10 +124,10 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
           _isLoading = false;
         });
 
-        // Step 3: Save to cache
+        // Step 3: Save to cache (non-blocking)
         final cacheKey = _buildClassesCacheKey();
         if (cacheKey != null) {
-          await LocalCacheService.save(cacheKey, {
+          LocalCacheService.save(cacheKey, {
             'data': classesResponse['data'] ?? [],
           });
         }
@@ -160,6 +163,12 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
               _students = cachedList;
               _isLoadingStudents = false;
             });
+            if (kDebugMode) print('Students loaded from cache');
+            // Trigger tour from cache path
+            Future.delayed(const Duration(milliseconds: 1000), () {
+              if (mounted && _students.isNotEmpty) _checkAndShowTour();
+            });
+            return;
           }
         }
       }
@@ -202,10 +211,10 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
           _isLoadingStudents = false;
         });
 
-        // Step 3: Save to cache
+        // Step 3: Save to cache (non-blocking)
         final cacheKey = _buildStudentsCacheKey();
         if (cacheKey != null) {
-          await LocalCacheService.save(cacheKey, {'data': studentsData});
+          LocalCacheService.save(cacheKey, {'data': studentsData});
         }
 
         // Show tour after students are loaded
@@ -970,11 +979,27 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check tour cache first
+      const tourCacheKey = 'tour_raport_screen_admin';
+      final cachedTour = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cachedTour != null) {
+        if (cachedTour['should_show'] == false) return;
+        if (cachedTour['should_show'] == true && cachedTour['tour'] != null) {
+          _tourId = cachedTour['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+          return;
+        }
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'admin_raport_screen_tour',
       );
+
+      // Save tour status to cache (non-blocking)
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -1004,11 +1029,13 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_raport_screen_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_raport_screen_admin', {'should_show': false});
         return true;
       },
     ).show(context: context);

@@ -304,7 +304,7 @@ class ApiTeacherService {
       final response = await http.get(
         Uri.parse(url),
         headers: await ApiService.getHeaders(),
-      );
+      ).timeout(const Duration(seconds: 30));
 
       final result = _handleResponse(response);
       if (result is Map<String, dynamic> && result['data'] is List) {
@@ -312,6 +312,7 @@ class ApiTeacherService {
       }
       return [];
     } catch (e) {
+      if (kDebugMode) print('Error getTeacherClasses: $e');
       return [];
     }
   }

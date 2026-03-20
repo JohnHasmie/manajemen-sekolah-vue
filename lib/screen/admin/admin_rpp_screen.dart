@@ -424,6 +424,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
   }
 
   Future<void> _forceRefresh() async {
+    await LocalCacheService.clearStartingWith('tour_rpp_screen_');
     if (_showTeacherList && widget.teacherId == null) {
       final cacheKey = _buildTeacherCacheKey();
       if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
@@ -491,6 +492,8 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                 _hasMoreData = cached['hasMoreData'] ?? true;
                 _isLoading = false;
               });
+              if (kDebugMode) print('Teacher list loaded from cache');
+              return;
             }
           }
         }
@@ -535,11 +538,11 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
             _isLoadingMore = false;
           });
 
-          // Step 3: Save to cache (only page 1 default view)
+          // Step 3: Save to cache (only page 1 default view, non-blocking)
           if (reset) {
             final cacheKey = _buildTeacherCacheKey();
             if (cacheKey != null) {
-              await LocalCacheService.save(cacheKey, {
+              LocalCacheService.save(cacheKey, {
                 'data': data,
                 'hasMoreData': _hasMoreData,
               });
@@ -590,6 +593,8 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                 _hasMoreData = cached['hasMoreData'] ?? true;
                 _isLoading = false;
               });
+              if (kDebugMode) print('RPP list loaded from cache');
+              return;
             }
           }
         }
@@ -644,11 +649,11 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
             _isLoadingMore = false;
           });
 
-          // Step 3: Save to cache (only page 1 default view)
+          // Step 3: Save to cache (only page 1 default view, non-blocking)
           if (reset) {
             final cacheKey = _buildRppCacheKey();
             if (cacheKey != null) {
-              await LocalCacheService.save(cacheKey, {
+              LocalCacheService.save(cacheKey, {
                 'data': data,
                 'hasMoreData': _hasMoreData,
               });
@@ -807,15 +812,17 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
         children: [
           Icon(icon, size: 10, color: color),
           SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: color,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -1464,7 +1471,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                         }
 
                         return RefreshIndicator(
-                          onRefresh: () => _loadTeachersPaginated(reset: true),
+                          onRefresh: _forceRefresh,
                           child: ListView.builder(
                             controller: _scrollController,
                             padding: EdgeInsets.only(top: 16, bottom: 16),
@@ -1508,7 +1515,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                               icon: Icons.description,
                             )
                           : RefreshIndicator(
-                              onRefresh: _loadRppByTeacher,
+                              onRefresh: _forceRefresh,
                               child: ListView.builder(
                                 controller: _scrollController,
                                 padding: EdgeInsets.only(top: 16, bottom: 16),
@@ -1543,11 +1550,27 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
+      // Check tour cache first
+      const tourCacheKey = 'tour_rpp_screen_admin';
+      final cachedTour = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cachedTour != null) {
+        if (cachedTour['should_show'] == false) return;
+        if (cachedTour['should_show'] == true && cachedTour['tour'] != null) {
+          _tourId = cachedTour['tour']['id']?.toString();
+          if (!mounted) return;
+          _showTour();
+          return;
+        }
+      }
+
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
         role: 'admin',
         name: 'admin_rpp_screen_tour',
       );
+
+      // Save tour status to cache (non-blocking)
+      LocalCacheService.save(tourCacheKey, status);
 
       if (status['should_show'] == true && status['tour'] != null) {
         _tourId = status['tour']['id'];
@@ -1579,11 +1602,13 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_rpp_screen_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_rpp_screen_admin', {'should_show': false});
         return true;
       },
     ).show(context: context);
