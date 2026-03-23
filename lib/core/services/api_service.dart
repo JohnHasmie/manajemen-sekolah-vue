@@ -178,14 +178,14 @@ class ApiService {
 
   /// Fetches grades filtered by subject, with optional academic year and limit.
   /// Like `Grade::where('subject_id', $id)->limit($limit)->get()` in Laravel.
-  Future<List<dynamic>> getNilaiByMataPelajaran(
-    String mataPelajaranId, {
+  Future<List<dynamic>> getGradesBySubject(
+    String subjectId, {
     String? academicYearId,
     int limit = 100, // Added limit
   }) async {
     try {
       // Use backend filtering
-      String url = '/grades?subject_id=$mataPelajaranId&limit=$limit';
+      String url = '/grades?subject_id=$subjectId&limit=$limit';
       if (academicYearId != null) {
         url += '&academic_year_id=$academicYearId';
       }
@@ -786,17 +786,17 @@ class ApiService {
 
   /// Fetches student grades (nilai) with multiple optional filters.
   /// Like `Grade::filter($request)->get()` in Laravel.
-  static Future<List<dynamic>> getNilai({
+  static Future<List<dynamic>> getGrades({
     String? siswaId,
-    String? guruId,
-    String? mataPelajaranId,
+    String? teacherId,
+    String? subjectId,
     String? jenis,
     String? academicYearId,
   }) async {
     String url = '$baseUrl/grades?';
     if (siswaId != null) url += 'student_id=$siswaId&';
-    if (guruId != null) url += 'teacher_id=$guruId&';
-    if (mataPelajaranId != null) url += 'subject_id=$mataPelajaranId&';
+    if (teacherId != null) url += 'teacher_id=$teacherId&';
+    if (subjectId != null) url += 'subject_id=$subjectId&';
     if (jenis != null) url += 'grade_type=$jenis&';
     if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
 
@@ -814,7 +814,7 @@ class ApiService {
   }
 
   /// Creates a new grade entry. Like `Grade::create($data)` in Laravel.
-  static Future<dynamic> tambahNilai(Map<String, dynamic> data) async {
+  static Future<dynamic> createGrade(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/grade'),
       headers: await _getHeaders(),
@@ -826,7 +826,7 @@ class ApiService {
 
   /// Fetches RPP (lesson plans) with optional filters.
   /// Like `Rpp::filter($request)->get()` in Laravel.
-  static Future<List<dynamic>> getRPP({
+  static Future<List<dynamic>> getLessonPlans({
     String? teacherId,
     String? status,
     String? search,
@@ -856,7 +856,7 @@ class ApiService {
   ///
   /// This is useful to retrieve the full RPP record (including AI-generated fields)
   /// when the list endpoint only returns a summary.
-  static Future<Map<String, dynamic>> getRppById(String id) async {
+  static Future<Map<String, dynamic>> getLessonPlanById(String id) async {
     final response = await http.get(
       Uri.parse('$baseUrl/rpp/$id'),
       headers: await _getHeaders(),
@@ -867,7 +867,7 @@ class ApiService {
   }
 
   // Get RPP with pagination & filters (recommended)
-  static Future<Map<String, dynamic>> getRppPaginated({
+  static Future<Map<String, dynamic>> getLessonPlansPaginated({
     int page = 1,
     int limit = 10,
     String? teacherId,
@@ -947,7 +947,7 @@ class ApiService {
   }
 
   // Get Tagihan with pagination & filters
-  static Future<Map<String, dynamic>> getTagihanPaginated({
+  static Future<Map<String, dynamic>> getBillsPaginated({
     int page = 1,
     int limit = 10,
     String? status,
@@ -997,7 +997,7 @@ class ApiService {
     };
   }
 
-  static Future<dynamic> tambahRPP(Map<String, dynamic> data) async {
+  static Future<dynamic> createLessonPlan(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/rpp'),
       headers: await _getHeaders(),
@@ -1020,7 +1020,7 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  static Future<dynamic> updateStatusRPP(
+  static Future<dynamic> updateLessonPlanStatus(
     String rppId,
     String status, {
     String? catatan,
@@ -1034,7 +1034,7 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  static Future<dynamic> deleteRPP(String rppId) async {
+  static Future<dynamic> deleteLessonPlan(String rppId) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/rpp/$rppId'),
       headers: await _getHeaders(),
@@ -1044,7 +1044,7 @@ class ApiService {
   }
 
   // Di api_services.dart - Perbaiki fungsi uploadFileRPP
-  static Future<dynamic> uploadFileRPP(File file) async {
+  static Future<dynamic> uploadLessonPlanFile(File file) async {
     try {
       var request = http.MultipartRequest(
         'POST',
@@ -1087,7 +1087,7 @@ class ApiService {
   /// Fetches attendance (absensi) records with multiple optional filters.
   /// Like `Attendance::filter($request)->get()` in Laravel.
   /// Handles both formats: direct array or `{success, data, pagination}`.
-  static Future<List<dynamic>> getAbsensi({
+  static Future<List<dynamic>> getAttendance({
     String? teacherId,
     String? date,
     String? subjectId,
@@ -1143,7 +1143,7 @@ class ApiService {
   }
 
   // Delete absences by summary (teacher, subject, class, date)
-  static Future<dynamic> deleteAbsensiSummary({
+  static Future<dynamic> deleteAttendanceSummary({
     required String teacherId,
     required String subjectId,
     required String date,
@@ -1164,7 +1164,7 @@ class ApiService {
   }
 
   // Paginated absensi (returns map with data + pagination)
-  static Future<Map<String, dynamic>> getAbsensiPaginated({
+  static Future<Map<String, dynamic>> getAttendancePaginated({
     int page = 1,
     int limit = 20,
     String? teacherId,
@@ -1234,7 +1234,7 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getAbsensiSummary({
+  static Future<List<dynamic>> getAttendanceSummary({
     String? teacherId,
     String? date,
     String? subjectId,
@@ -1261,11 +1261,11 @@ class ApiService {
   }
 
   // New method for paginated summary
-  static Future<Map<String, dynamic>> getAbsensiSummaryPaginated({
+  static Future<Map<String, dynamic>> getAttendanceSummaryPaginated({
     int page = 1,
     int limit = 10,
-    String? guruId,
-    String? mataPelajaranId,
+    String? teacherId,
+    String? subjectId,
     String? classId,
     String? tanggal,
     String? tanggalStart,
@@ -1283,9 +1283,9 @@ class ApiService {
         params['academic_year_id'] = academicYearId;
       }
 
-      if (guruId != null && guruId.isNotEmpty) params['teacher_id'] = guruId;
-      if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
-        params['mataPelajaranId'] = mataPelajaranId;
+      if (teacherId != null && teacherId.isNotEmpty) params['teacher_id'] = teacherId;
+      if (subjectId != null && subjectId.isNotEmpty) {
+        params['mataPelajaranId'] = subjectId;
       }
       if (classId != null && classId.isNotEmpty) params['classId'] = classId;
       if (tanggal != null && tanggal.isNotEmpty) params['tanggal'] = tanggal;
@@ -1331,7 +1331,7 @@ class ApiService {
   }
 
   /// Creates a new attendance record. Like `Attendance::create($data)` in Laravel.
-  static Future<dynamic> tambahAbsensi(Map<String, dynamic> data) async {
+  static Future<dynamic> createAttendance(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/attendance'),
       headers: await _getHeaders(),
@@ -1341,7 +1341,7 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  static Future<dynamic> deleteAbsensi({
+  static Future<dynamic> deleteAttendance({
     required String subjectId,
     required String classId,
     required String date,
@@ -1442,7 +1442,7 @@ class ApiService {
   }
 
   // Get mata pelajaran with kelas data
-  Future<List<dynamic>> getMataPelajaranWithKelas() async {
+  Future<List<dynamic>> getSubjectsWithClasses() async {
     try {
       final result = await get('/subject-with-class');
       return result is List ? result : [];
@@ -1641,7 +1641,7 @@ class ApiService {
   }
 
   // Manual payment entry by admin (for offline/cash payments)
-  Future<dynamic> inputPembayaranManual(Map<String, dynamic> data) async {
+  Future<dynamic> inputManualPayment(Map<String, dynamic> data) async {
     try {
       return await post('/payment/manual', data);
     } catch (e) {

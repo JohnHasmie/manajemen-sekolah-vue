@@ -642,7 +642,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final result = await ApiService.getRppPaginated(
+      final result = await ApiService.getLessonPlansPaginated(
         page: _currentPage,
         limit: _perPage,
         teacherId: _selectedTeacherId,
@@ -1867,7 +1867,7 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
     });
 
     try {
-      await ApiService.updateStatusRPP(
+      await ApiService.updateLessonPlanStatus(
         widget.rppId,
         selectedStatus,
         catatan: catatanController.text.isNotEmpty

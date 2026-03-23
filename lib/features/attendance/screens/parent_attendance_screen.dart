@@ -201,7 +201,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
           .map((s) => Student.fromJson(s))
           .firstWhere((s) => s.id == widget.studentId);
 
-      final absensiData = await ApiService.getAbsensi(
+      final absensiData = await ApiService.getAttendance(
         studentId: widget.studentId,
         academicYearId: widget.academicYearId,
       );

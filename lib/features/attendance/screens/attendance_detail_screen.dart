@@ -114,7 +114,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       // Load siswa dan absensi data
       final [studentData, absensiData] = await Future.wait([
         ApiStudentService.getStudent(),
-        ApiService.getAbsensi(
+        ApiService.getAttendance(
           teacherId: widget.teacher['id'],
           subjectId: widget.subjectId,
           date: DateFormat('yyyy-MM-dd').format(widget.date),
@@ -271,7 +271,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       for (var student in _studentList) {
         final status = _absensiStatus[student.id]!;
 
-        await ApiService.tambahAbsensi({
+        await ApiService.createAttendance({
           'siswa_id': student.id,
           'guru_id': widget.teacher['id'],
           'mata_pelajaran_id': widget.subjectId,

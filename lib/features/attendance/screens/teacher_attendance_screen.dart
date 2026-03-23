@@ -683,7 +683,7 @@ class PresencePageState extends State<PresencePage>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final absensiData = await ApiService.getAbsensiSummary(
+      final absensiData = await ApiService.getAttendanceSummary(
         teacherId: widget.teacher['id'],
         academicYearId: academicYearId,
       );
@@ -3427,7 +3427,7 @@ class PresencePageState extends State<PresencePage>
         try {
           final status = _absensiStatus[student.id] ?? 'hadir';
 
-          await ApiService.tambahAbsensi({
+          await ApiService.createAttendance({
             'student_id': student.id,
             'teacher_id': teacherId,
             'subject_id': _selectedSubjectId,
@@ -3696,7 +3696,7 @@ class PresencePageState extends State<PresencePage>
     if (confirmed != true) return;
 
     try {
-      await ApiService.deleteAbsensiSummary(
+      await ApiService.deleteAttendanceSummary(
         teacherId: widget.teacher['id'],
         subjectId: summary.subjectId,
         date: DateFormat('yyyy-MM-dd').format(summary.date),
@@ -3933,7 +3933,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       // Load siswa, absensi, dan kelas data
       final [studentData, absensiData, classData] = await Future.wait([
         ApiStudentService.getStudent(),
-        ApiService.getAbsensi(
+        ApiService.getAttendance(
           teacherId: widget.teacher['id'],
           subjectId: widget.subjectId,
           date: DateFormat('yyyy-MM-dd').format(widget.date),
@@ -4197,7 +4197,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       for (var student in _studentList) {
         final status = _absensiStatus[student.id]!;
 
-        await ApiService.tambahAbsensi({
+        await ApiService.createAttendance({
           'student_id': student.id,
           'teacher_id': widget.teacher['id'],
           'subject_id': widget.subjectId,
@@ -4559,7 +4559,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
   Future<void> _loadData() async {
     try {
       // 1. Load attendance data
-      final absensiData = await ApiService.getAbsensi(
+      final absensiData = await ApiService.getAttendance(
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         teacherId: widget.teacher['id'],
@@ -4722,7 +4722,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
               );
             }
 
-            await ApiService.tambahAbsensi({
+            await ApiService.createAttendance({
               'student_id': siswa.id,
               'teacher_id': widget.teacher['id'],
               'subject_id': widget.subjectId,

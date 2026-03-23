@@ -107,7 +107,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       }
 
       // 3. Fetch Bills
-      final billsResponse = await ApiService.getTagihanPaginated(
+      final billsResponse = await ApiService.getBillsPaginated(
         limit: 1000,
         classId: widget.classId,
       );

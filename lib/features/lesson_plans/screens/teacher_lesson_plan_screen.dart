@@ -450,7 +450,7 @@ class RppScreenState extends State<RppScreen> {
     try {
       final academicYearId = _getAcademicYearId();
 
-      final rppData = await ApiService.getRPP(
+      final rppData = await ApiService.getLessonPlans(
         teacherId: widget.teacherId,
         search: _searchController.text,
         status: _selectedStatusFilter,
@@ -716,7 +716,7 @@ class RppScreenState extends State<RppScreen> {
 
     if (confirmed == true) {
       try {
-        await ApiService.deleteRPP(rpp['id']);
+        await ApiService.deleteLessonPlan(rpp['id']);
         await LocalCacheService.clearStartingWith('rpp_');
         _loadRpp(useCache: false);
         if (mounted) {
@@ -763,7 +763,7 @@ class RppScreenState extends State<RppScreen> {
     }
 
     try {
-      final fullRpp = await ApiService.getRppById(id);
+      final fullRpp = await ApiService.getLessonPlanById(id);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -1877,7 +1877,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
       if (_selectedFile != null) {
         try {
           print('Starting file upload...');
-          final uploadResult = await ApiService.uploadFileRPP(_selectedFile!);
+          final uploadResult = await ApiService.uploadLessonPlanFile(_selectedFile!);
           print('Upload result: $uploadResult');
 
           filePath = uploadResult['file_path'];
@@ -1916,7 +1916,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
       } else {
         // Mode tambah baru
         rppData['teacher_id'] = widget.teacherId;
-        await ApiService.tambahRPP(rppData);
+        await ApiService.createLessonPlan(rppData);
         print('RPP created successfully');
       }
 

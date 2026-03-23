@@ -569,10 +569,10 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           ?.toString();
 
       // Call paginated API
-      final result = await ApiService.getAbsensiSummaryPaginated(
+      final result = await ApiService.getAttendanceSummaryPaginated(
         page: _currentPage,
         limit: _perPage,
-        mataPelajaranId: _selectedSubjectIds.isNotEmpty
+        subjectId: _selectedSubjectIds.isNotEmpty
             ? _selectedSubjectIds.first
             : null,
         classId: _selectedClassIds.isNotEmpty ? _selectedClassIds.first : null,
@@ -1444,7 +1444,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         attendanceParams['academicYearId'] = academicYearId;
       }
 
-      final attendanceResult = await ApiService.getAbsensiPaginated(
+      final attendanceResult = await ApiService.getAttendancePaginated(
         page: 1,
         limit: 1000,
         classId: classId,
@@ -2203,7 +2203,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     // 1. Fetch Data
     final students = await ApiClassService.getStudentsByClassId(classId);
 
-    final attendanceResult = await ApiService.getAbsensiPaginated(
+    final attendanceResult = await ApiService.getAttendancePaginated(
       page: 1,
       limit: 2000, // Ensure enough limit
       classId: classId,
@@ -2500,7 +2500,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           _isLoadingSummary = true;
         });
 
-        await ApiService.deleteAbsensi(
+        await ApiService.deleteAttendance(
           subjectId: summary.subjectId,
           classId: summary.classId,
           date: DateFormat('yyyy-MM-dd').format(summary.date),
@@ -3305,7 +3305,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
   Future<void> _loadData() async {
     try {
       // 1. Load attendance data
-      final absensiData = await ApiService.getAbsensi(
+      final absensiData = await ApiService.getAttendance(
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         classId: widget.classId,
@@ -3486,7 +3486,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
         try {
           final status = _tempAbsensiStatus[siswa.id] ?? 'alpha';
 
-          await ApiService.tambahAbsensi({
+          await ApiService.createAttendance({
             'student_id': siswa.id,
             'teacher_id': teacherId,
             'subject_id': widget.subjectId,

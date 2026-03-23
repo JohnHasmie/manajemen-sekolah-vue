@@ -264,7 +264,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     }
 
     try {
-      final grades = await ApiService.getNilai(
+      final grades = await ApiService.getGrades(
         siswaId: _selectedStudentId,
         academicYearId: widget.academicYearId,
       );

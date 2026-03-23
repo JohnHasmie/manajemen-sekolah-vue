@@ -1778,7 +1778,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         _isLoadingMore = !resetPage;
       });
 
-      final res = await ApiService.getTagihanPaginated(
+      final res = await ApiService.getBillsPaginated(
         page: _currentPage,
         limit: _perPage,
         status: _selectedStatusFilter,
@@ -1962,7 +1962,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         // Fallback: If generated_batches is empty, fetch more bills to calculate summary
         final List<dynamic> batches = data['generated_batches'] ?? [];
         if (batches.isEmpty) {
-          final res = await ApiService.getTagihanPaginated(limit: 500);
+          final res = await ApiService.getBillsPaginated(limit: 500);
           final List<dynamic>? billsData = res['data'] is List
               ? res['data']
               : (res is List ? res : null);
