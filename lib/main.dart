@@ -42,6 +42,7 @@ import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/dashboard/screens/dashboard_screen.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
@@ -89,6 +90,12 @@ void main() async {
       await ApiService.init();
       if (kDebugMode) {
         print('✅ ApiService initialized');
+      }
+
+      // Initialize Dio HTTP client with interceptors
+      createDioClient(ApiService.baseUrl);
+      if (kDebugMode) {
+        print('✅ Dio client initialized');
       }
 
       // Initialize Firebase
