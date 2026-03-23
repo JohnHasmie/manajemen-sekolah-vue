@@ -20,12 +20,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:firebase_performance/firebase_performance.dart';
 import 'package:manajemensekolah/main.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
-import 'package:manajemensekolah/core/services/performance_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The central API service class -- the backbone of all HTTP communication.
@@ -84,29 +84,14 @@ class ApiService {
   /// [params] - Optional query parameters (like `$request->query()` in Laravel).
   /// Returns the parsed JSON response body.
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
-    final metric = await PerformanceService.startHttpMetric(
-      '$baseUrl$endpoint',
-      HttpMethod.Get,
-    );
     try {
-      Uri uri = Uri.parse('$baseUrl$endpoint');
-      if (params != null && params.isNotEmpty) {
-        uri = uri.replace(queryParameters: params);
-      }
-      final response = await http
-          .get(uri, headers: await _getHeaders())
-          .timeout(const Duration(seconds: 30));
-      await PerformanceService.stopHttpMetric(
-        metric,
-        httpResponseCode: response.statusCode,
-        responsePayloadSize: response.contentLength,
+      final response = await dioClient.get(
+        endpoint,
+        queryParameters: params,
       );
-      return _handleResponse(response);
-    } catch (e) {
-      await PerformanceService.stopHttpMetric(metric, httpResponseCode: 0);
-      if (kDebugMode) {
-        print('❌ GET Error on $endpoint: $e');
-      }
+      return response.data;
+    } on DioException catch (e) {
+      if (e.error is Exception) throw e.error as Exception;
       rethrow;
     }
   }
@@ -115,31 +100,11 @@ class ApiService {
   /// Like `Http::post($url, $data)` in Laravel or `axios.post()` in Vue.
   /// [data] - Request body as a Map, JSON-encoded automatically.
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
-    final metric = await PerformanceService.startHttpMetric(
-      '$baseUrl$endpoint',
-      HttpMethod.Post,
-    );
     try {
-      final body = json.encode(data);
-      final response = await http
-          .post(
-            Uri.parse('$baseUrl$endpoint'),
-            headers: await _getHeaders(),
-            body: body,
-          )
-          .timeout(const Duration(seconds: 30));
-      await PerformanceService.stopHttpMetric(
-        metric,
-        httpResponseCode: response.statusCode,
-        requestPayloadSize: body.length,
-        responsePayloadSize: response.contentLength,
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      await PerformanceService.stopHttpMetric(metric, httpResponseCode: 0);
-      if (kDebugMode) {
-        print('❌ POST Error on $endpoint: $e');
-      }
+      final response = await dioClient.post(endpoint, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.error is Exception) throw e.error as Exception;
       rethrow;
     }
   }
@@ -147,31 +112,11 @@ class ApiService {
   /// Performs an authenticated PUT request with Firebase performance tracing.
   /// Like `Http::put($url, $data)` in Laravel or `axios.put()` in Vue.
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
-    final metric = await PerformanceService.startHttpMetric(
-      '$baseUrl$endpoint',
-      HttpMethod.Put,
-    );
     try {
-      final body = json.encode(data);
-      final response = await http
-          .put(
-            Uri.parse('$baseUrl$endpoint'),
-            headers: await _getHeaders(),
-            body: body,
-          )
-          .timeout(const Duration(seconds: 30));
-      await PerformanceService.stopHttpMetric(
-        metric,
-        httpResponseCode: response.statusCode,
-        requestPayloadSize: body.length,
-        responsePayloadSize: response.contentLength,
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      await PerformanceService.stopHttpMetric(metric, httpResponseCode: 0);
-      if (kDebugMode) {
-        print('❌ PUT Error on $endpoint: $e');
-      }
+      final response = await dioClient.put(endpoint, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.error is Exception) throw e.error as Exception;
       rethrow;
     }
   }
@@ -209,25 +154,11 @@ class ApiService {
   /// Performs an authenticated DELETE request with Firebase performance tracing.
   /// Like `Http::delete($url)` in Laravel or `axios.delete()` in Vue.
   Future<dynamic> delete(String endpoint) async {
-    final metric = await PerformanceService.startHttpMetric(
-      '$baseUrl$endpoint',
-      HttpMethod.Delete,
-    );
     try {
-      final response = await http
-          .delete(Uri.parse('$baseUrl$endpoint'), headers: await _getHeaders())
-          .timeout(const Duration(seconds: 30));
-      await PerformanceService.stopHttpMetric(
-        metric,
-        httpResponseCode: response.statusCode,
-        responsePayloadSize: response.contentLength,
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      await PerformanceService.stopHttpMetric(metric, httpResponseCode: 0);
-      if (kDebugMode) {
-        print('❌ DELETE Error on $endpoint: $e');
-      }
+      final response = await dioClient.delete(endpoint);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.error is Exception) throw e.error as Exception;
       rethrow;
     }
   }
@@ -236,20 +167,16 @@ class ApiService {
   /// Returns the file content as [Uint8List] for saving to disk.
   static Future<Uint8List> downloadFile(String endpoint) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: await _getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        endpoint,
+        options: Options(responseType: ResponseType.bytes),
       );
-
-      if (response.statusCode == 200) {
-        return response.bodyBytes;
-      } else {
-        throw Exception('Failed to download file: ${response.statusCode}');
-      }
-    } catch (e) {
+      return Uint8List.fromList(response.data!);
+    } on DioException catch (e) {
       if (kDebugMode) {
         print('❌ Download Error on $endpoint: $e');
       }
+      if (e.error is Exception) throw e.error as Exception;
       rethrow;
     }
   }
@@ -442,11 +369,8 @@ class ApiService {
 
   Future<List<dynamic>> getData(String endpoint) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/$endpoint'),
-        headers: await _getHeaders(),
-      );
-      final result = _handleResponse(response);
+      final response = await dioClient.get('/$endpoint');
+      final result = response.data;
       return result is List ? result : [];
     } catch (e) {
       if (kDebugMode) {
