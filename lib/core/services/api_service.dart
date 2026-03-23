@@ -23,7 +23,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/core/network/dio_client.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:manajemensekolah/main.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -408,65 +407,64 @@ class ApiService {
         print('📤 Login request: ${body.keys}');
       }
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/login'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode(body),
-      );
+      final response = await dioClient.post('/auth/login', data: body);
+      final responseData = response.data;
 
       if (kDebugMode) {
         print('📥 Login response status: ${response.statusCode}');
-        print('📥 Login response body: ${response.body}');
+        print('📥 Login response data: $responseData');
       }
 
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-
-        // Handle semua kemungkinan flow
-        if (responseData['pilih_sekolah'] == true) {
-          if (kDebugMode) {
-            print('🔄 Login flow: Need to select school');
-          }
-          return responseData;
+      // Handle semua kemungkinan flow
+      if (responseData['pilih_sekolah'] == true) {
+        if (kDebugMode) {
+          print('🔄 Login flow: Need to select school');
         }
+        return Map<String, dynamic>.from(responseData);
+      }
 
-        // PERBAIKAN: Handle jika setelah pilih sekolah, perlu pilih role
-        if (responseData['pilih_role'] == true) {
-          if (kDebugMode) {
-            print('🔄 Login flow: Need to select role after school selection');
-          }
-          return responseData;
+      // PERBAIKAN: Handle jika setelah pilih sekolah, perlu pilih role
+      if (responseData['pilih_role'] == true) {
+        if (kDebugMode) {
+          print('🔄 Login flow: Need to select role after school selection');
         }
+        return Map<String, dynamic>.from(responseData);
+      }
 
-        if (responseData['require_otp'] == true ||
-            responseData['otp_debug'] != null ||
-            responseData['message'] == 'OTP sent to email') {
-          if (kDebugMode) {
-            print('🔄 Login flow: OTP required');
-          }
-          return responseData;
+      if (responseData['require_otp'] == true ||
+          responseData['otp_debug'] != null ||
+          responseData['message'] == 'OTP sent to email') {
+        if (kDebugMode) {
+          print('🔄 Login flow: OTP required');
         }
+        return Map<String, dynamic>.from(responseData);
+      }
 
-        // Hanya validasi token untuk login sukses langsung
-        if (responseData['token'] == null) {
-          throw Exception('Server tidak mengembalikan token');
-        }
+      // Hanya validasi token untuk login sukses langsung
+      if (responseData['token'] == null) {
+        throw Exception('Server tidak mengembalikan token');
+      }
 
-        if (responseData['user'] == null) {
-          throw Exception('Server tidak mengembalikan data user');
-        }
+      if (responseData['user'] == null) {
+        throw Exception('Server tidak mengembalikan data user');
+      }
 
-        return responseData;
-      } else {
-        final errorResponse = json.decode(response.body);
+      return Map<String, dynamic>.from(responseData);
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('❌ ApiService login error: $e');
+      }
+      // Extract error message from DioException response if available
+      final responseData = e.response?.data;
+      if (responseData is Map) {
         throw Exception(
-          errorResponse['error'] ??
-              'Login failed with status: ${response.statusCode}',
+          responseData['error'] ??
+              responseData['message'] ??
+              'Login failed with status: ${e.response?.statusCode}',
         );
       }
+      if (e.error is Exception) throw e.error as Exception;
+      rethrow;
     } catch (e) {
       if (kDebugMode) {
         print('❌ ApiService login error: $e');
@@ -498,27 +496,27 @@ class ApiService {
         print('📤 Verify OTP request: ${body.keys}');
       }
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/verify-otp'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(body),
-      );
+      final response = await dioClient.post('/auth/verify-otp', data: body);
 
       if (kDebugMode) {
         print('📥 Verify OTP response status: ${response.statusCode}');
-        print('📥 Verify OTP response body: ${response.body}');
+        print('📥 Verify OTP response data: ${response.data}');
       }
 
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        return responseData;
-      } else {
-        final errorResponse = json.decode(response.body);
+      return Map<String, dynamic>.from(response.data);
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('❌ ApiService Verify OTP error: $e');
+      }
+      final responseData = e.response?.data;
+      if (responseData is Map) {
         throw Exception(
-          errorResponse['error'] ??
-              'OTP verification failed with status: ${response.statusCode}',
+          responseData['error'] ??
+              'OTP verification failed with status: ${e.response?.statusCode}',
         );
       }
+      if (e.error is Exception) throw e.error as Exception;
+      rethrow;
     } catch (e) {
       if (kDebugMode) {
         print('❌ ApiService Verify OTP error: $e');
@@ -549,32 +547,28 @@ class ApiService {
         print('📤 Google Login request: $email');
       }
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/google-login'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept':
-              'application/json', // Force JSON response to avoid 302 Redirect on validation error
-        },
-        body: json.encode(body),
-      );
+      final response = await dioClient.post('/auth/google-login', data: body);
 
       if (kDebugMode) {
         print('📥 Google Login response status: ${response.statusCode}');
-        print('📥 Google Login response body: ${response.body}');
+        print('📥 Google Login response data: ${response.data}');
       }
 
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        return responseData;
-      } else {
-        final errorResponse = json.decode(response.body);
+      return Map<String, dynamic>.from(response.data);
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('❌ ApiService Google login error: $e');
+      }
+      final responseData = e.response?.data;
+      if (responseData is Map) {
         throw Exception(
-          errorResponse['error'] ??
-              errorResponse['message'] ?? // Laravel often returns 'message' for validation errors
-              'Google Login failed with status: ${response.statusCode}',
+          responseData['error'] ??
+              responseData['message'] ??
+              'Google Login failed with status: ${e.response?.statusCode}',
         );
       }
+      if (e.error is Exception) throw e.error as Exception;
+      rethrow;
     } catch (e) {
       if (kDebugMode) {
         print('❌ ApiService Google login error: $e');
@@ -586,12 +580,8 @@ class ApiService {
   /// Fetches the available roles for the current user (e.g., admin, guru, siswa).
   /// Like `auth()->user()->roles` in Laravel with Spatie Permission.
   static Future<List<dynamic>> getUserRoles() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/user/roles'),
-      headers: await _getHeaders(),
-    );
-
-    final result = _handleResponse(response);
+    final response = await dioClient.get('/user/roles');
+    final result = response.data;
     return result['available_roles'] is List ? result['available_roles'] : [];
   }
 
@@ -614,12 +604,8 @@ class ApiService {
   /// Fetches the list of schools accessible to the current user.
   /// Like a multi-tenant school selector. Returns school objects.
   static Future<List<dynamic>> getUserSchools() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/user/schools'),
-      headers: await _getHeaders(),
-    );
-
-    final result = _handleResponse(response);
+    final response = await dioClient.get('/user/schools');
+    final result = response.data;
     return result is List ? result : [];
   }
 
@@ -630,17 +616,17 @@ class ApiService {
     String? academicYearId,
   }) async {
     try {
-      String url = '$baseUrl/dashboard/stats?role=$role';
+      final queryParams = <String, dynamic>{'role': role};
       if (academicYearId != null && academicYearId.isNotEmpty) {
-        url += '&academic_year_id=$academicYearId';
+        queryParams['academic_year_id'] = academicYearId;
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await _getHeaders(),
+      final response = await dioClient.get(
+        '/dashboard/stats',
+        queryParameters: queryParams,
       );
 
-      final result = _handleResponse(response);
+      final result = response.data;
       if (result is Map<String, dynamic> && result['success'] == true) {
         return Map<String, dynamic>.from(result['data'] ?? {});
       }
@@ -655,15 +641,9 @@ class ApiService {
   /// Like a notification count endpoint. Returns 0 on error.
   static Future<int> getUnreadAnnouncementCount() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/announcement/unread-count'),
-        headers: await _getHeaders(),
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return data['count'] ?? 0;
-      }
-      return 0;
+      final response = await dioClient.get('/announcement/unread-count');
+      final data = response.data;
+      return data['count'] ?? 0;
     } catch (e) {
       if (kDebugMode) print('Error fetching unread count: $e');
       return 0;
@@ -672,15 +652,8 @@ class ApiService {
 
   static Future<bool> markAnnouncementRead(List<String> ids) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/announcement/mark-read'),
-        headers: await _getHeaders(),
-        body: json.encode({'ids': ids}),
-      );
-      if (response.statusCode == 200) {
-        return true;
-      }
-      return false;
+      await dioClient.post('/announcement/mark-read', data: {'ids': ids});
+      return true;
     } catch (e) {
       if (kDebugMode) print('Error marking announcement read: $e');
       return false;
@@ -699,13 +672,8 @@ class ApiService {
       body['role'] = role;
     }
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/switch-school'),
-      headers: await _getHeaders(),
-      body: json.encode(body),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/auth/switch-school', data: body);
+    return Map<String, dynamic>.from(response.data);
   }
 
   /// Fetches student grades (nilai) with multiple optional filters.
@@ -717,19 +685,19 @@ class ApiService {
     String? jenis,
     String? academicYearId,
   }) async {
-    String url = '$baseUrl/grades?';
-    if (siswaId != null) url += 'student_id=$siswaId&';
-    if (teacherId != null) url += 'teacher_id=$teacherId&';
-    if (subjectId != null) url += 'subject_id=$subjectId&';
-    if (jenis != null) url += 'grade_type=$jenis&';
-    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
+    final queryParams = <String, dynamic>{};
+    if (siswaId != null) queryParams['student_id'] = siswaId;
+    if (teacherId != null) queryParams['teacher_id'] = teacherId;
+    if (subjectId != null) queryParams['subject_id'] = subjectId;
+    if (jenis != null) queryParams['grade_type'] = jenis;
+    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await _getHeaders(),
+    final response = await dioClient.get(
+      '/grades',
+      queryParameters: queryParams,
     );
 
-    final result = _handleResponse(response);
+    final result = response.data;
     if (result is List) return result;
     if (result is Map && result.containsKey('data') && result['data'] is List) {
       return result['data'];
@@ -739,13 +707,8 @@ class ApiService {
 
   /// Creates a new grade entry. Like `Grade::create($data)` in Laravel.
   static Future<dynamic> createGrade(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/grade'),
-      headers: await _getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/grade', data: data);
+    return response.data;
   }
 
   /// Fetches RPP (lesson plans) with optional filters.
@@ -756,18 +719,18 @@ class ApiService {
     String? search,
     String? academicYearId,
   }) async {
-    String url = '$baseUrl/rpp?';
-    if (teacherId != null) url += 'teacher_id=$teacherId&';
-    if (status != null) url += 'status=$status&';
-    if (search != null) url += 'search=$search&';
-    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
+    final queryParams = <String, dynamic>{};
+    if (teacherId != null) queryParams['teacher_id'] = teacherId;
+    if (status != null) queryParams['status'] = status;
+    if (search != null) queryParams['search'] = search;
+    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await _getHeaders(),
+    final response = await dioClient.get(
+      '/rpp',
+      queryParameters: queryParams,
     );
 
-    final result = _handleResponse(response);
+    final result = response.data;
 
     if (result is Map && result.containsKey('data')) {
       return result['data'] is List ? result['data'] : [];
@@ -781,12 +744,8 @@ class ApiService {
   /// This is useful to retrieve the full RPP record (including AI-generated fields)
   /// when the list endpoint only returns a summary.
   static Future<Map<String, dynamic>> getLessonPlanById(String id) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/rpp/$id'),
-      headers: await _getHeaders(),
-    );
-
-    final result = _handleResponse(response);
+    final response = await dioClient.get('/rpp/$id');
+    final result = response.data;
     return result is Map<String, dynamic> ? result : {};
   }
 
@@ -844,14 +803,12 @@ class ApiService {
       queryParams['tahun_ajaran'] = tahunAjaran;
     }
 
-    final queryString = Uri(queryParameters: queryParams).query;
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/rpp?$queryString'),
-      headers: await _getHeaders(),
+    final response = await dioClient.get(
+      '/rpp',
+      queryParameters: queryParams,
     );
 
-    final result = _handleResponse(response);
+    final result = response.data;
 
     if (result is Map<String, dynamic>) return result;
 
@@ -895,14 +852,12 @@ class ApiService {
       queryParams['class_id'] = classId;
     }
 
-    final queryString = Uri(queryParameters: queryParams).query;
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/bills?$queryString'),
-      headers: await _getHeaders(),
+    final response = await dioClient.get(
+      '/bills',
+      queryParameters: queryParams,
     );
 
-    final result = _handleResponse(response);
+    final result = response.data;
 
     if (result is Map<String, dynamic>) return result;
 
@@ -922,26 +877,16 @@ class ApiService {
   }
 
   static Future<dynamic> createLessonPlan(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/rpp'),
-      headers: await _getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/rpp', data: data);
+    return response.data;
   }
 
   static Future<dynamic> updateRPP(
     String rppId,
     Map<String, dynamic> data,
   ) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/rpp/$rppId'),
-      headers: await _getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.put('/rpp/$rppId', data: data);
+    return response.data;
   }
 
   static Future<dynamic> updateLessonPlanStatus(
@@ -949,61 +894,40 @@ class ApiService {
     String status, {
     String? catatan,
   }) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/rpp/$rppId/status'),
-      headers: await _getHeaders(),
-      body: json.encode({'status': status, 'catatan': catatan}),
+    final response = await dioClient.put(
+      '/rpp/$rppId/status',
+      data: {'status': status, 'catatan': catatan},
     );
-
-    return _handleResponse(response);
+    return response.data;
   }
 
   static Future<dynamic> deleteLessonPlan(String rppId) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/rpp/$rppId'),
-      headers: await _getHeaders(),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.delete('/rpp/$rppId');
+    return response.data;
   }
 
   // Di api_services.dart - Perbaiki fungsi uploadFileRPP
   static Future<dynamic> uploadLessonPlanFile(File file) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/upload/rpp'),
-      );
-
-      // Add headers
-      final headers = await _getHeaders();
-      request.headers.addAll(headers);
-
-      // Add file dengan cara yang benar
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file', // Nama field harus sesuai dengan backend
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
           file.path,
           filename: file.path.split('/').last,
         ),
-      );
+      });
 
-      // Send request dan dapatkan response
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
+      final response = await dioClient.post('/upload/rpp', data: formData);
 
-      print('Upload Response Status: ${response.statusCode}');
-      print('Upload Response Body: $responseBody');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(responseBody);
-      } else {
-        throw Exception(
-          'Upload failed with status: ${response.statusCode}. Response: $responseBody',
-        );
+      if (kDebugMode) {
+        print('Upload Response Status: ${response.statusCode}');
+        print('Upload Response Data: ${response.data}');
       }
+
+      return response.data;
     } catch (e) {
-      print('Upload error details: $e');
+      if (kDebugMode) {
+        print('Upload error details: $e');
+      }
       throw Exception('Upload error: $e');
     }
   }
@@ -1020,25 +944,25 @@ class ApiService {
     String? academicYearId,
     String? lessonHourId,
   }) async {
-    String url = '$baseUrl/attendance?';
-    if (teacherId != null) url += 'teacher_id=$teacherId&';
-    if (date != null) url += 'tanggal=$date&';
-    if (subjectId != null) url += 'mataPelajaranId=$subjectId&';
-    if (studentId != null) url += 'student_id=$studentId&';
-    if (classId != null) url += 'classId=$classId&';
-    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
-    if (lessonHourId != null) url += 'lesson_hour_id=$lessonHourId&';
+    final queryParams = <String, dynamic>{};
+    if (teacherId != null) queryParams['teacher_id'] = teacherId;
+    if (date != null) queryParams['tanggal'] = date;
+    if (subjectId != null) queryParams['mataPelajaranId'] = subjectId;
+    if (studentId != null) queryParams['student_id'] = studentId;
+    if (classId != null) queryParams['classId'] = classId;
+    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
+    if (lessonHourId != null) queryParams['lesson_hour_id'] = lessonHourId;
 
     if (kDebugMode) {
-      print('📍 Calling getAbsensi: $url');
+      print('📍 Calling getAbsensi: /attendance with params: $queryParams');
     }
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await _getHeaders(),
+    final response = await dioClient.get(
+      '/attendance',
+      queryParameters: queryParams,
     );
 
-    final result = _handleResponse(response);
+    final result = response.data;
 
     if (kDebugMode) {
       print('📦 Absensi response type: ${result.runtimeType}');
@@ -1124,14 +1048,11 @@ class ApiService {
         params['academic_year_id'] = academicYearId;
       }
 
-      final uri = Uri.parse(
-        '$baseUrl/attendance',
-      ).replace(queryParameters: params);
-      final response = await http.get(
-        uri,
-        headers: await _getHeaders(),
-      ); // Fixed headers
-      final result = _handleResponse(response);
+      final response = await dioClient.get(
+        '/attendance',
+        queryParameters: params,
+      );
+      final result = response.data;
 
       if (result is Map<String, dynamic>) return result;
 
@@ -1165,19 +1086,19 @@ class ApiService {
     String? classId,
     String? academicYearId,
   }) async {
-    String url = '$baseUrl/attendance/summary?';
-    if (teacherId != null) url += 'teacher_id=$teacherId&';
-    if (date != null) url += 'date=$date&';
-    if (subjectId != null) url += 'subjectId=$subjectId&';
-    if (classId != null) url += 'classId=$classId&';
-    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
+    final queryParams = <String, dynamic>{};
+    if (teacherId != null) queryParams['teacher_id'] = teacherId;
+    if (date != null) queryParams['date'] = date;
+    if (subjectId != null) queryParams['subjectId'] = subjectId;
+    if (classId != null) queryParams['classId'] = classId;
+    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await _getHeaders(),
+    final response = await dioClient.get(
+      '/attendance/summary',
+      queryParameters: queryParams,
     );
 
-    final result = _handleResponse(response);
+    final result = response.data;
     if (result is Map && result['data'] is List) {
       return result['data'];
     }
@@ -1226,12 +1147,11 @@ class ApiService {
         params['lesson_hour_ids'] = lessonHourIds.join(',');
       }
 
-      final uri = Uri.parse(
-        '$baseUrl/attendance/summary',
-      ).replace(queryParameters: params);
-
-      final response = await http.get(uri, headers: await _getHeaders());
-      final result = _handleResponse(response);
+      final response = await dioClient.get(
+        '/attendance/summary',
+        queryParameters: params,
+      );
+      final result = response.data;
 
       if (result is Map<String, dynamic>) return result;
 
@@ -1256,13 +1176,8 @@ class ApiService {
 
   /// Creates a new attendance record. Like `Attendance::create($data)` in Laravel.
   static Future<dynamic> createAttendance(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/attendance'),
-      headers: await _getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/attendance', data: data);
+    return response.data;
   }
 
   static Future<dynamic> deleteAttendance({
@@ -1272,19 +1187,18 @@ class ApiService {
     String? lessonHourId,
   }) async {
     try {
-      final params = <String, String>{
+      final params = <String, dynamic>{
         'subject_id': subjectId,
         'class_id': classId,
         'date': date,
       };
       if (lessonHourId != null) params['lesson_hour_id'] = lessonHourId;
 
-      final uri = Uri.parse(
-        '$baseUrl/attendance',
-      ).replace(queryParameters: params);
-      final response = await http.delete(uri, headers: await _getHeaders());
-
-      return _handleResponse(response);
+      final response = await dioClient.delete(
+        '/attendance',
+        queryParameters: params,
+      );
+      return response.data;
     } catch (e) {
       if (kDebugMode) print('ApiService.deleteAbsensi error: $e');
       rethrow;
@@ -1295,12 +1209,8 @@ class ApiService {
   /// Like `SchoolConfig::getGradeLevels()` in Laravel. Falls back to 1-12.
   Future<List<int>> getGradeLevels() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/school-configs/grade-levels'),
-        headers: await _getHeaders(),
-      );
-
-      final result = _handleResponse(response);
+      final response = await dioClient.get('/school-configs/grade-levels');
+      final result = response.data;
       return result is List
           ? result.cast<int>()
           : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -1386,17 +1296,8 @@ class ApiService {
     String fileField = 'bukti_bayar',
   }) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl$endpoint'),
-      );
-
-      // Add headers dengan authorization
-      final headers = await _getHeaders();
-      request.headers.addAll(headers);
-
       // Deteksi MIME type yang benar
-      String? mimeType;
+      String mimeType;
       final extension = file.path.toLowerCase().split('.').last;
 
       switch (extension) {
@@ -1414,61 +1315,55 @@ class ApiService {
           mimeType = 'image/jpeg'; // fallback
       }
 
-      print('Uploading file: ${file.path}');
-      print('File extension: $extension');
-      print('MIME type: $mimeType');
+      if (kDebugMode) {
+        print('Uploading file: ${file.path}');
+        print('File extension: $extension');
+        print('MIME type: $mimeType');
+      }
 
-      // Add file dengan MIME type yang benar
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          fileField,
+      final formMap = <String, dynamic>{
+        fileField: await MultipartFile.fromFile(
           file.path,
-          contentType: MediaType.parse(mimeType),
+          contentType: DioMediaType.parse(mimeType),
         ),
-      );
+      };
 
       // Add other data
       if (data != null) {
         data.forEach((key, value) {
-          request.fields[key] = value.toString();
+          formMap[key] = value.toString();
         });
       }
 
-      print('Request fields: ${request.fields}');
-      print('Request files: ${request.files.length}');
+      final formData = FormData.fromMap(formMap);
 
-      var response = await request.send();
-      var responseData = await response.stream.bytesToString();
-
-      print('Upload Response Status: ${response.statusCode}');
-      print('Upload Response Body: $responseData');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return json.decode(responseData);
-      } else {
-        throw Exception(
-          'Upload failed: ${response.statusCode} - $responseData',
-        );
+      if (kDebugMode) {
+        print('Request fields: ${formData.fields}');
+        print('Request files: ${formData.files.length}');
       }
+
+      final response = await dioClient.post(endpoint, data: formData);
+
+      if (kDebugMode) {
+        print('Upload Response Status: ${response.statusCode}');
+        print('Upload Response Data: ${response.data}');
+      }
+
+      return response.data;
     } catch (error) {
-      print('Upload error: $error');
+      if (kDebugMode) {
+        print('Upload error: $error');
+      }
       throw Exception('Upload error: $error');
     }
   }
 
   static Future<void> markAttendanceRead({required String studentId}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/attendance/mark-read'),
-        headers: await _getHeaders(),
-        body: jsonEncode({'student_id': studentId}),
+      await dioClient.post(
+        '/attendance/mark-read',
+        data: {'student_id': studentId},
       );
-
-      if (response.statusCode != 200) {
-        if (kDebugMode) {
-          print('❌ Error marking attendance as read: ${response.body}');
-        }
-      }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error marking attendance read: $e');
@@ -1481,20 +1376,10 @@ class ApiService {
     List<String>? billIds,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/bill/mark-read'),
-        headers: await _getHeaders(),
-        body: jsonEncode({
-          if (studentId != null) 'student_id': studentId,
-          if (billIds != null) 'bill_ids': billIds,
-        }),
-      );
-
-      if (response.statusCode != 200) {
-        if (kDebugMode) {
-          print('❌ Error marking bills as read: ${response.body}');
-        }
-      }
+      await dioClient.post('/bill/mark-read', data: {
+        if (studentId != null) 'student_id': studentId,
+        if (billIds != null) 'bill_ids': billIds,
+      });
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error marking bills read: $e');
@@ -1504,17 +1389,10 @@ class ApiService {
 
   static Future<void> markSingleBillRead({required String billId}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/bill/mark-single-read'),
-        headers: await _getHeaders(),
-        body: jsonEncode({'bill_id': billId}),
+      await dioClient.post(
+        '/bill/mark-single-read',
+        data: {'bill_id': billId},
       );
-
-      if (response.statusCode != 200) {
-        if (kDebugMode) {
-          print('❌ Error marking bill as read: ${response.body}');
-        }
-      }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error marking bill read: $e');
@@ -1524,12 +1402,8 @@ class ApiService {
 
   static Future<int> getUnreadBillingCount() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/bill/unread-count'),
-        headers: await _getHeaders(),
-      );
-
-      final result = _handleResponse(response);
+      final response = await dioClient.get('/bill/unread-count');
+      final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
       if (kDebugMode) {
@@ -1544,23 +1418,23 @@ class ApiService {
   /// Like a simple ping endpoint. Used before login to verify server availability.
   static Future<Map<String, dynamic>> checkHealth() async {
     try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/health'))
-          .timeout(const Duration(seconds: 10));
+      final response = await dioClient.get(
+        '/health',
+        options: Options(
+          receiveTimeout: const Duration(seconds: 10),
+          sendTimeout: const Duration(seconds: 10),
+        ),
+      );
 
-      if (response.statusCode == 200) {
-        try {
-          return json.decode(response.body) as Map<String, dynamic>;
-        } catch (_) {
-          return {'status': 'ok'};
-        }
-      } else {
-        throw Exception(
-          'Server returned status ${response.statusCode}',
-        );
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return data;
       }
-    } on Exception {
-      rethrow;
+      return {'status': 'ok'};
+    } on DioException catch (e) {
+      throw Exception(
+        'Server returned status ${e.response?.statusCode ?? 'unknown'}',
+      );
     }
   }
 
@@ -1674,23 +1548,22 @@ class ApiService {
       }
 
       if (kDebugMode) {
-        print('📤 Sending to: $baseUrl/fcm/token');
+        print('📤 Sending to: /fcm/token');
         print('📤 Device type: $deviceType');
         print('📤 FCM Token length: ${token.length}');
       }
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/fcm/token'),
-        headers: await _getHeaders(),
-        body: json.encode({'token': token, 'device_type': deviceType}),
+      final response = await dioClient.post(
+        '/fcm/token',
+        data: {'token': token, 'device_type': deviceType},
       );
 
       if (kDebugMode) {
         print('📥 FCM Response Status: ${response.statusCode}');
-        print('📥 FCM Response Body: ${response.body}');
+        print('📥 FCM Response Data: ${response.data}');
       }
 
-      return _handleResponse(response);
+      return Map<String, dynamic>.from(response.data);
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error sending FCM token: $e');
@@ -1710,13 +1583,12 @@ class ApiService {
         throw Exception('No auth token found');
       }
 
-      final response = await http.delete(
-        Uri.parse('$baseUrl/fcm/token'),
-        headers: await _getHeaders(),
-        body: json.encode({'token': token}),
+      final response = await dioClient.delete(
+        '/fcm/token',
+        data: {'token': token},
       );
 
-      return _handleResponse(response);
+      return Map<String, dynamic>.from(response.data);
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error deleting FCM token: $e');
@@ -1732,10 +1604,11 @@ class ApiService {
     String? teacherId,
     String? lessonHourId,
   }) async {
-    Map<String, dynamic> queryParams = {};
+    final queryParams = <String, dynamic>{};
     if (date != null && date.isNotEmpty) queryParams['tanggal'] = date;
-    if (classId != null && classId.isNotEmpty)
+    if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
+    }
     if (subjectId != null && subjectId.isNotEmpty) {
       queryParams['subject_id'] = subjectId;
     }
@@ -1746,15 +1619,13 @@ class ApiService {
       queryParams['lesson_hour_id'] = lessonHourId;
     }
 
-    String queryString = Uri(queryParameters: queryParams).query;
-
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/attendance/stats?$queryString'),
-        headers: await _getHeaders(),
+      final response = await dioClient.get(
+        '/attendance/stats',
+        queryParameters: queryParams,
       );
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result['data'] ?? {};
     } catch (e) {
       if (kDebugMode) print('Error fetching attendance stats: $e');
@@ -1768,7 +1639,7 @@ class ApiService {
     String? month,
     String? classId,
   }) async {
-    Map<String, dynamic> queryParams = {};
+    final queryParams = <String, dynamic>{};
     if (academicYearId != null && academicYearId.isNotEmpty) {
       queryParams['academic_year_id'] = academicYearId;
     }
@@ -1776,18 +1647,17 @@ class ApiService {
       queryParams['payment_type_id'] = paymentTypeId;
     }
     if (month != null && month.isNotEmpty) queryParams['month'] = month;
-    if (classId != null && classId.isNotEmpty)
+    if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
-
-    String queryString = Uri(queryParameters: queryParams).query;
+    }
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/finance/bills/stats?$queryString'),
-        headers: await _getHeaders(),
+      final response = await dioClient.get(
+        '/finance/bills/stats',
+        queryParameters: queryParams,
       );
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result['data'] ?? {};
     } catch (e) {
       if (kDebugMode) print('Error fetching finance bill stats: $e');
@@ -1797,12 +1667,8 @@ class ApiService {
 
   static Future<int> getUnreadGradeCount() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/grade/unread-count'),
-        headers: await _getHeaders(),
-      );
-
-      final result = _handleResponse(response);
+      final response = await dioClient.get('/grade/unread-count');
+      final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
       if (kDebugMode) print('Error fetching unread grade count: $e');
@@ -1813,11 +1679,7 @@ class ApiService {
   static Future<void> markGradeAsRead(List<String> gradeIds) async {
     if (gradeIds.isEmpty) return;
     try {
-      await http.post(
-        Uri.parse('$baseUrl/grade/mark-read'),
-        headers: await _getHeaders(),
-        body: json.encode({'grade_ids': gradeIds}),
-      );
+      await dioClient.post('/grade/mark-read', data: {'grade_ids': gradeIds});
     } catch (e) {
       if (kDebugMode) print('Error marking grades as read: $e');
     }
@@ -1825,12 +1687,8 @@ class ApiService {
 
   static Future<int> getUnreadPresenceCount() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/attendance/unread-count'),
-        headers: await _getHeaders(),
-      );
-
-      final result = _handleResponse(response);
+      final response = await dioClient.get('/attendance/unread-count');
+      final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
       if (kDebugMode) print('Error fetching unread presence count: $e');
@@ -1841,10 +1699,9 @@ class ApiService {
   static Future<void> markPresenceAsRead(List<String> attendanceIds) async {
     if (attendanceIds.isEmpty) return;
     try {
-      await http.post(
-        Uri.parse('$baseUrl/attendance/mark-read'),
-        headers: await _getHeaders(),
-        body: json.encode({'attendance_ids': attendanceIds}),
+      await dioClient.post(
+        '/attendance/mark-read',
+        data: {'attendance_ids': attendanceIds},
       );
     } catch (e) {
       if (kDebugMode) print('Error marking presence as read: $e');
@@ -1858,18 +1715,17 @@ class ApiService {
     String? role,
   }) async {
     try {
-      final params = <String, String>{};
+      final params = <String, dynamic>{};
       if (academicYearId != null) params['academic_year_id'] = academicYearId;
       if (month != null) params['month'] = month;
       if (week != null) params['week'] = week;
       if (role != null) params['role'] = role;
 
-      final uri = Uri.parse(
-        '$baseUrl/attendance/dashboard-chart',
-      ).replace(queryParameters: params);
-
-      final response = await http.get(uri, headers: await _getHeaders());
-      final result = _handleResponse(response);
+      final response = await dioClient.get(
+        '/attendance/dashboard-chart',
+        queryParameters: params,
+      );
+      final result = response.data;
 
       if (result is List) return result;
       return [];
@@ -1883,15 +1739,14 @@ class ApiService {
     String? academicYearId,
   }) async {
     try {
-      final params = <String, String>{};
+      final params = <String, dynamic>{};
       if (academicYearId != null) params['academic_year_id'] = academicYearId;
 
-      final uri = Uri.parse(
-        '$baseUrl/finance/dashboard-chart',
-      ).replace(queryParameters: params);
-
-      final response = await http.get(uri, headers: await _getHeaders());
-      final result = _handleResponse(response);
+      final response = await dioClient.get(
+        '/finance/dashboard-chart',
+        queryParameters: params,
+      );
+      final result = response.data;
 
       if (result is List) return result;
       return [];
