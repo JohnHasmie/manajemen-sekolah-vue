@@ -58,7 +58,7 @@ class TeachingScheduleManagementScreen extends StatefulWidget {
 /// - [_teacherList] / [_subjectList] / [_classList] / [_hariList] / [_jamPelajaranList] - reference data
 /// - [_showTableView] - toggles between card list and timetable grid (Syncfusion DataGrid)
 /// - [_gridData] / [_timetableDataSource] - data source for the timetable grid view
-/// - Filter states: [_selectedGuruId], [_selectedClassId], [_selectedHariId], etc.
+/// - Filter states: [_selectedTeacherId], [_selectedClassId], [_selectedHariId], etc.
 /// - Pagination: [_currentPage], [_hasMoreData], [_isLoadingMore] for infinite scroll
 ///
 /// Listens to AcademicYearProvider for year changes and FCM for real-time sync.
@@ -94,7 +94,7 @@ class TeachingScheduleManagementScreenState
   Map<String, dynamic>? _paginationMeta;
 
   // Filter state (Backend filtering)
-  String? _selectedGuruId; // Filter by teacher
+  String? _selectedTeacherId; // Filter by teacher
   String? _selectedClassId; // Filter by class
   String? _selectedHariId; // Filter by day
   String? _selectedFilterSemester;
@@ -422,7 +422,7 @@ class TeachingScheduleManagementScreenState
     // Only cache default first-page view (no filters/search) for fast reload
     if (_currentPage != 1) return null;
     if (_showTableView) return null;
-    if (_selectedGuruId != null ||
+    if (_selectedTeacherId != null ||
         _selectedClassId != null ||
         _selectedHariId != null ||
         _selectedJamPelajaran != null ||
@@ -548,7 +548,7 @@ class TeachingScheduleManagementScreenState
             : ApiScheduleService.getSchedulesPaginated(
                 page: _currentPage,
                 limit: _perPage,
-                guruId: _selectedGuruId,
+                teacherId: _selectedTeacherId,
                 classId: _selectedClassId,
                 hariId: _selectedHariId,
                 semesterId: semesterToUse,
@@ -685,7 +685,7 @@ class TeachingScheduleManagementScreenState
       final response = await ApiScheduleService.getSchedulesPaginated(
         page: _currentPage,
         limit: _perPage,
-        guruId: _selectedGuruId,
+        teacherId: _selectedTeacherId,
         classId: _selectedClassId,
         hariId: _selectedHariId,
         semesterId: semesterToUse,
@@ -1285,7 +1285,7 @@ class TeachingScheduleManagementScreenState
 
   void _clearAllFilters() {
     setState(() {
-      _selectedGuruId = null;
+      _selectedTeacherId = null;
       _selectedClassId = null;
       _selectedHariId = null;
       _selectedFilterSemester = null;
@@ -1905,11 +1905,11 @@ class TeachingScheduleManagementScreenState
 
       // Teacher filter
       bool matchesGuru = true;
-      if (_selectedGuruId != null) {
-        final guruId =
+      if (_selectedTeacherId != null) {
+        final teacherId =
             schedule['teacher_id']?.toString() ??
             schedule['guru_id']?.toString();
-        matchesGuru = guruId == _selectedGuruId;
+        matchesGuru = teacherId == _selectedTeacherId;
       }
 
       // Class filter

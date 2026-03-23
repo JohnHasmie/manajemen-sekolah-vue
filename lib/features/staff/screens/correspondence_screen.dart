@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 /// StatelessWidget with inline static data. In Vue this would be like having
 /// the data defined directly inside `data() { return { surat: [...] } }`.
 /// The `surat` list here is equivalent to a Vue component's reactive data property.
-class SuratMenyuratScreen extends StatelessWidget {
+class CorrespondenceScreen extends StatelessWidget {
   /// Hardcoded sample letter data. In production, this would come from an API.
   /// Like `data() { return { surat: [...] } }` in a Vue component.
   final List<Map<String, dynamic>> surat = [
@@ -35,7 +35,7 @@ class SuratMenyuratScreen extends StatelessWidget {
     },
   ];
   
-  SuratMenyuratScreen({super.key});
+  CorrespondenceScreen({super.key});
 
   /// Builds the letter list UI with a FAB for creating new letters.
   /// Like the `<template>` section of a Vue SFC with `v-for="item in surat"`.

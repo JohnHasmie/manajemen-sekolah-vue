@@ -194,7 +194,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       final RPPService rppService = RPPService();
       final generatedRPP = await rppService.generateRPP(
         judul: _judulController.text,
-        mataPelajaranId: widget.selectedMataPelajaran,
+        subjectId: widget.selectedMataPelajaran,
         mataPelajaranName: widget.mataPelajaranName,
         kontenMateri: allKontenMateri,
         tujuanPembelajaran: _objectivesChecked ? _tujuanController.text : '',

@@ -413,7 +413,7 @@ class GradePageState extends State<GradePage> {
       // 1. Fetch subjects taught by THIS teacher in this class
       final mySchedules = await ApiScheduleService.getSchedulesPaginated(
         limit: 100,
-        guruId: widget.teacher['id'],
+        teacherId: widget.teacher['id'],
         classId: _selectedClass!['id'].toString(),
         tahunAjaran: academicYearId,
       );
@@ -591,7 +591,7 @@ class GradePageState extends State<GradePage> {
       if (allSchedules.isEmpty) {
         final schedules = await ApiScheduleService.getSchedulesPaginated(
           limit: 100,
-          guruId: widget.teacher['id'],
+          teacherId: widget.teacher['id'],
           tahunAjaran: academicYearId,
         );
         allSchedules = schedules['data'] ?? [];

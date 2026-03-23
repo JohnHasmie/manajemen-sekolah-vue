@@ -13,8 +13,8 @@ import 'package:manajemensekolah/core/models/student.dart';
 /// StatelessWidget -- no mutable state. In Vue terms this is a presentational
 /// component that receives its data externally (here from [DataDummy]).
 /// The [Student] model is like a Laravel Eloquent Model / TypeScript interface.
-class DataSiswaScreen extends StatelessWidget {
-  const DataSiswaScreen({super.key});
+class StaffStudentDataScreen extends StatelessWidget {
+  const StaffStudentDataScreen({super.key});
 
   /// Builds the Scaffold with a ListView of student cards.
   /// Like the `<template>` of a Vue SFC that uses `v-for` over the student list.

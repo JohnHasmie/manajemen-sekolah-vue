@@ -26,9 +26,9 @@ class ApiClassActivityService {
   static Future<Map<String, dynamic>> getClassActivityPaginated({
     int page = 1,
     int limit = 10,
-    String? guruId,
+    String? teacherId,
     String? classId,
-    String? mataPelajaranId,
+    String? subjectId,
     String? target,
     String? tanggal,
     String? search,
@@ -42,14 +42,14 @@ class ApiClassActivityService {
       'limit': limit.toString(),
     };
 
-    if (guruId != null && guruId.isNotEmpty) {
-      queryParams['teacher_id'] = guruId;
+    if (teacherId != null && teacherId.isNotEmpty) {
+      queryParams['teacher_id'] = teacherId;
     }
     if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
     }
-    if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
-      queryParams['subject_id'] = mataPelajaranId;
+    if (subjectId != null && subjectId.isNotEmpty) {
+      queryParams['subject_id'] = subjectId;
     }
     if (target != null && target.isNotEmpty) {
       queryParams['target'] = target;
@@ -151,14 +151,14 @@ class ApiClassActivityService {
   }
 
   /// Fetches activities created by a specific teacher.
-  /// Like `ClassActivity::where('teacher_id', $guruId)->get()` in Laravel.
-  /// [guruId] - The teacher's UUID.
-  static Future<List<dynamic>> getActivityByGuru(String guruId) async {
+  /// Like `ClassActivity::where('teacher_id', $teacherId)->get()` in Laravel.
+  /// [teacherId] - The teacher's UUID.
+  static Future<List<dynamic>> getActivityByGuru(String teacherId) async {
     try {
       final headers = await _getHeaders();
 
       final response = await http.get(
-        Uri.parse('$baseUrl/class-activity/teacher/$guruId'),
+        Uri.parse('$baseUrl/class-activity/teacher/$teacherId'),
         headers: headers,
       );
 
@@ -302,7 +302,7 @@ class ApiClassActivityService {
   /// Like loading relationship data for a Laravel form (e.g., `Teacher::find($id)->schedules`).
   /// Used to show which class/subject/day options are available when creating activities.
   static Future<List<dynamic>> getJadwalForForm({
-    required String guruId,
+    required String teacherId,
     String? hari,
     String? tahunAjaran,
   }) async {
@@ -315,7 +315,7 @@ class ApiClassActivityService {
       };
 
       final uri = Uri.parse(
-        '$baseUrl/schedule/teacher/$guruId',
+        '$baseUrl/schedule/teacher/$teacherId',
       ).replace(queryParameters: params.isNotEmpty ? params : null);
 
       final response = await http.get(uri, headers: headers);
@@ -394,22 +394,22 @@ class ApiClassActivityService {
   /// Like a Laravel endpoint returning distinct values for filter selects.
   /// Similar to a Vue composable that loads filter metadata on mount.
   static Future<Map<String, dynamic>> getKegiatanFilterOptions({
-    String? guruId,
+    String? teacherId,
     String? classId,
     String? tanggal,
     String? bulan,
     String? tahun,
-    String? mataPelajaranId,
+    String? subjectId,
   }) async {
     try {
       final params = <String, String>{};
-      if (guruId != null && guruId.isNotEmpty) params['teacher_id'] = guruId;
+      if (teacherId != null && teacherId.isNotEmpty) params['teacher_id'] = teacherId;
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
       if (tanggal != null && tanggal.isNotEmpty) params['date'] = tanggal;
       if (bulan != null && bulan.isNotEmpty) params['month'] = bulan;
       if (tahun != null && tahun.isNotEmpty) params['year'] = tahun;
-      if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
-        params['subject_id'] = mataPelajaranId;
+      if (subjectId != null && subjectId.isNotEmpty) {
+        params['subject_id'] = subjectId;
       }
 
       final uri = Uri.parse(

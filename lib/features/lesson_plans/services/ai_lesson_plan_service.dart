@@ -28,7 +28,7 @@ class RPPService {
   /// [customContent] - optional AI-generated content to use for objectives.
   Map<String, dynamic> _createFallbackRPP({
     required String judul,
-    required String mataPelajaranId,
+    required String subjectId,
     required String mataPelajaranName,
     List<Map<String, dynamic>> kontenMateri = const [],
     String customContent = '',
@@ -36,7 +36,7 @@ class RPPService {
     return {
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
       'title': judul,
-      'subject_id': mataPelajaranId,
+      'subject_id': subjectId,
       'subject_name': mataPelajaranName,
       'learning_objectives': customContent.isNotEmpty
           ? customContent
@@ -72,7 +72,7 @@ class RPPService {
   /// Like a Laravel controller action that calls an AI service:
   /// `$rpp = $aiService->generateRPP($request->validated());`
   ///
-  /// [judul] - lesson plan title. [mataPelajaranId]/[mataPelajaranName] - subject info.
+  /// [judul] - lesson plan title. [subjectId]/[mataPelajaranName] - subject info.
   /// [kontenMateri] - list of material/content maps to include.
   /// [tujuanPembelajaran] - optional custom learning objectives.
   /// [alatMedia] - optional tools/media description.
@@ -81,7 +81,7 @@ class RPPService {
   /// (network failure, API error, parsing error) -- never throws.
   Future<Map<String, dynamic>> generateRPP({
     required String judul,
-    required String mataPelajaranId,
+    required String subjectId,
     required String mataPelajaranName,
     required List<Map<String, dynamic>> kontenMateri,
     String tujuanPembelajaran = '',
@@ -127,7 +127,7 @@ class RPPService {
         return _parseAIResponse(
           content: content,
           judul: judul,
-          mataPelajaranId: mataPelajaranId,
+          subjectId: subjectId,
           mataPelajaranName: mataPelajaranName,
         );
       } else {
@@ -137,7 +137,7 @@ class RPPService {
       // Fallback: Buat RPP sederhana jika AI gagal
       return _createFallbackRPP(
         judul: judul,
-        mataPelajaranId: mataPelajaranId,
+        subjectId: subjectId,
         mataPelajaranName: mataPelajaranName,
         kontenMateri: kontenMateri,
       );
@@ -241,14 +241,14 @@ class RPPService {
   Map<String, dynamic> _parseAIResponse({
     required String content,
     required String judul,
-    required String mataPelajaranId,
+    required String subjectId,
     required String mataPelajaranName,
   }) {
     try {
       return {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
         'title': judul,
-        'subject_id': mataPelajaranId,
+        'subject_id': subjectId,
         'subject_name': mataPelajaranName,
         'learning_objectives': _extractSection(
           content,
@@ -276,7 +276,7 @@ class RPPService {
     } catch (e) {
       return _createFallbackRPP(
         judul: judul,
-        mataPelajaranId: mataPelajaranId,
+        subjectId: subjectId,
         mataPelajaranName: mataPelajaranName,
         kontenMateri: [],
         customContent: content,

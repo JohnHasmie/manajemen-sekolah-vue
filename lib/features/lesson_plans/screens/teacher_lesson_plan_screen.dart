@@ -1708,11 +1708,11 @@ class _RppFormDialogState extends State<RppFormDialog> {
     }
   }
 
-  Future<void> _loadKelasByMataPelajaran(String mataPelajaranId) async {
+  Future<void> _loadKelasByMataPelajaran(String subjectId) async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
-        '/class-by-mata-pelajaran?mata_pelajaran_id=$mataPelajaranId',
+        '/class-by-mata-pelajaran?mata_pelajaran_id=$subjectId',
       );
       setState(() {
         // Backend might return {success: true, data: [...]} or direct array
@@ -1726,7 +1726,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
       });
       if (kDebugMode) {
         print(
-          'Loaded ${_kelasList.length} kelas for mata pelajaran $mataPelajaranId',
+          'Loaded ${_kelasList.length} kelas for mata pelajaran $subjectId',
         );
         if (_kelasList.isNotEmpty) {
           print('DEBUG CLASS ITEM: ${_kelasList.first}');
@@ -2580,11 +2580,11 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
     }
   }
 
-  Future<void> _loadKelasByMataPelajaran(String mataPelajaranId) async {
+  Future<void> _loadKelasByMataPelajaran(String subjectId) async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
-        '/class-by-mata-pelajaran?mata_pelajaran_id=$mataPelajaranId',
+        '/class-by-mata-pelajaran?mata_pelajaran_id=$subjectId',
       );
       setState(() {
         if (result is Map && result['data'] is List) {

@@ -308,11 +308,11 @@ class ApiTeacherService {
   /// Fetches subjects assigned to a teacher, optionally filtered by class.
   /// Like `$teacher->subjects()->get()` in Laravel (belongsToMany relationship).
   Future<List<dynamic>> getSubjectByTeacher(
-    String guruId, {
+    String teacherId, {
     String? classId,
   }) async {
     try {
-      String url = '/teacher/$guruId/subjects';
+      String url = '/teacher/$teacherId/subjects';
       if (classId != null && classId.isNotEmpty) {
         url += '?class_id=$classId';
       }

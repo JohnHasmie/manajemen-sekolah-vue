@@ -895,14 +895,14 @@ class MateriPageState extends State<MateriPage> {
   }
 
   // Load materi progress from database
-  Future<void> _loadMateriProgress(String mataPelajaranId) async {
+  Future<void> _loadMateriProgress(String subjectId) async {
     try {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null) return;
 
       final progress = await ApiSubjectService.getMateriProgress(
-        guruId: teacherId,
-        mataPelajaranId: mataPelajaranId,
+        teacherId: teacherId,
+        subjectId: subjectId,
         classId: _selectedClassId,
       );
       if (!mounted) return;
@@ -910,7 +910,7 @@ class MateriPageState extends State<MateriPage> {
       if (kDebugMode) {
         print('=== LOADING MATERI PROGRESS ===');
         print('Teacher ID: $teacherId');
-        print('Subject ID: $mataPelajaranId');
+        print('Subject ID: $subjectId');
         print('API Response Items: ${progress.length}');
         if (progress.isNotEmpty) {
           print('First item sample: ${progress.first}');

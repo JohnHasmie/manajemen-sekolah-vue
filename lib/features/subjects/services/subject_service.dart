@@ -447,9 +447,9 @@ class ApiSubjectService {
     return _handleResponse(response);
   }
 
-  static Future<List<dynamic>> getRPPByTeacher(String guruId) async {
+  static Future<List<dynamic>> getRPPByTeacher(String teacherId) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/rpp?teacher_id=$guruId'),
+      Uri.parse('$baseUrl/rpp?teacher_id=$teacherId'),
       headers: await ApiService.getHeaders(),
     );
 
@@ -737,12 +737,12 @@ class ApiSubjectService {
   /// Fetches material progress (checked/generated state) for a teacher + subject combo.
   /// Like `MaterialProgress::where('teacher_id', ...)->where('subject_id', ...)->get()`.
   static Future<List<dynamic>> getMateriProgress({
-    required String guruId,
-    required String mataPelajaranId,
+    required String teacherId,
+    required String subjectId,
     String? classId,
   }) async {
     String url =
-        '$baseUrl/material-progress?teacher_id=$guruId&subject_id=$mataPelajaranId';
+        '$baseUrl/material-progress?teacher_id=$teacherId&subject_id=$subjectId';
     if (classId != null) url += '&class_id=$classId';
 
     final response = await http.get(

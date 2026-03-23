@@ -148,7 +148,7 @@ class ApiScheduleService {
   static Future<Map<String, dynamic>> getSchedulesPaginated({
     int page = 1,
     int limit = 10,
-    String? guruId,
+    String? teacherId,
     String? classId,
     String? hariId,
     String? semesterId,
@@ -164,8 +164,8 @@ class ApiScheduleService {
       'limit': limit.toString(),
     };
 
-    if (guruId != null && guruId.isNotEmpty) {
-      queryParams['teacher_id'] = guruId;
+    if (teacherId != null && teacherId.isNotEmpty) {
+      queryParams['teacher_id'] = teacherId;
     }
     if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
@@ -654,7 +654,7 @@ class ApiScheduleService {
   /// Exports schedules to an Excel file with optional filters.
   /// Like Laravel's `Excel::download()` -- saves the file locally and returns the path.
   static Future<String> exportSchedules({
-    String? guruId,
+    String? teacherId,
     String? classId,
     String? hariId,
     String? semesterId,
@@ -662,7 +662,7 @@ class ApiScheduleService {
   }) async {
     try {
       String url = '$baseUrl/teaching-schedule/export?';
-      if (guruId != null) url += 'teacher_id=$guruId&';
+      if (teacherId != null) url += 'teacher_id=$teacherId&';
       if (classId != null) url += 'class_id=$classId&';
       if (hariId != null) url += 'day_id=$hariId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';

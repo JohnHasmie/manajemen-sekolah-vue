@@ -1004,7 +1004,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       // 1. Fetch MY subjects (subjects I teach in this class)
       final mySchedules = await ApiScheduleService.getSchedulesPaginated(
         limit: 100,
-        guruId: _teacherId,
+        teacherId: _teacherId,
         classId: _selectedClassId,
         tahunAjaran: academicYearId,
       );
@@ -1434,8 +1434,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                 await ApiClassActivityService.getClassActivityPaginated(
                   page: 1,
                   limit: 1,
-                  guruId: _teacherId,
-                  mataPelajaranId:
+                  teacherId: _teacherId,
+                  subjectId:
                       activity['subject_id'] ?? activity['mata_pelajaran_id'],
                   chapterId: chapterId,
                   subChapterId: subChapterId,
@@ -2898,9 +2898,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       final response = await ApiClassActivityService.getClassActivityPaginated(
         page: _currentPage,
         limit: _perPage,
-        guruId: _teacherId,
+        teacherId: _teacherId,
         classId: _selectedClassId,
-        mataPelajaranId: _selectedSubjectId,
+        subjectId: _selectedSubjectId,
         target: _currentTarget,
         search: _searchController.text.isNotEmpty
             ? _searchController.text

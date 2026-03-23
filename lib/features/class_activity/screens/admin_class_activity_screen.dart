@@ -352,8 +352,8 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           ?.toString();
 
       final response = await ApiClassActivityService.getClassActivityPaginated(
-        guruId: _selectedTeacherId,
-        mataPelajaranId: subjectId,
+        teacherId: _selectedTeacherId,
+        subjectId: subjectId,
         academicYearId: academicYearId,
       );
 

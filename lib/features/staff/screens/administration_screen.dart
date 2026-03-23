@@ -13,8 +13,8 @@ import 'package:flutter/material.dart';
 /// This is a StatelessWidget because it has no mutable state.
 /// In Vue terms, this is like a pure presentational component with only
 /// `props` and `<template>` -- no `data()` or `methods` that change state.
-class AdministrasiScreen extends StatelessWidget {
-  const AdministrasiScreen({super.key});
+class AdministrationScreen extends StatelessWidget {
+  const AdministrationScreen({super.key});
 
   /// Builds the main scaffold with an AppBar and a 2-column grid of admin cards.
   /// Like the `<template>` section of a Vue SFC (Single File Component).

@@ -213,7 +213,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       if (allSchedules.isEmpty) {
         final schedules = await ApiScheduleService.getSchedulesPaginated(
           limit: 100,
-          guruId: widget.teacher['id'],
+          teacherId: widget.teacher['id'],
           tahunAjaran: academicYearId,
         );
         allSchedules = schedules['data'] ?? [];

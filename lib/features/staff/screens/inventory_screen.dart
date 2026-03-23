@@ -12,9 +12,9 @@ import 'package:manajemensekolah/data/data_dummy.dart';
 /// StatelessWidget -- no mutable state. In Vue terms, a presentational
 /// component. The FAB (FloatingActionButton) is like a Vue `<button @click>`
 /// that would open an "Add Item" form.
-class InventarisScreen extends StatelessWidget {
+class InventoryScreen extends StatelessWidget {
 
-  const InventarisScreen({super.key});
+  const InventoryScreen({super.key});
 
   /// Builds the main scaffold with inventory list and a FAB for adding items.
   @override
