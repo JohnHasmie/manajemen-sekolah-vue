@@ -52,6 +52,10 @@ class TeachingScheduleScreen extends StatefulWidget {
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
+  // Static in-memory cache for instant display on revisit (no async needed)
+  static List<dynamic>? _memCachedJadwal;
+  static List<Map<String, String>>? _memCachedClasses;
+
   List<dynamic> _jadwalList = [];
   List<dynamic> _semesterList = [];
   bool _isLoading = true;
@@ -123,6 +127,15 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Instantly restore from static in-memory cache (synchronous, no async)
+    if (_memCachedJadwal != null && _memCachedClasses != null) {
+      _jadwalList = _memCachedJadwal!;
+      _availableClasses = _memCachedClasses!;
+      _isLoading = false;
+      if (kDebugMode) print('⚡ Instant restore from static memory cache');
+    }
+
     _setDefaultAcademicPeriod();
     _loadUserData();
 
@@ -232,9 +245,12 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           }
         });
 
-        await _loadDayData();
-        await _loadSemesterData();
-        await _loadAcademicYearData();
+        // Load reference data in parallel, then fetch schedule
+        await Future.wait([
+          _loadDayData(),
+          _loadSemesterData(),
+          _loadAcademicYearData(),
+        ]);
         _loadJadwal();
         return;
       }
@@ -355,9 +371,12 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           if (kDebugMode) print('❌ Failed to resolve Teacher ID');
         }
 
-        await _loadDayData();
-        await _loadSemesterData();
-        await _loadAcademicYearData();
+        // Load reference data in parallel, then fetch schedule
+        await Future.wait([
+          _loadDayData(),
+          _loadSemesterData(),
+          _loadAcademicYearData(),
+        ]);
         _loadJadwal();
       } else {
         setState(() => _isLoading = false);
@@ -585,6 +604,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   Future<void> _forceRefresh() async {
+    // Clear static in-memory cache
+    _memCachedJadwal = null;
+    _memCachedClasses = null;
+
     final cacheKey = _buildScheduleCacheKey();
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
@@ -698,6 +721,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         _availableClasses = classes;
         _isLoading = false;
       });
+
+      // Update static in-memory cache for instant restore on revisit
+      _memCachedJadwal = jadwal;
+      _memCachedClasses = classes;
 
       // Save to cache and persist the cache key for early loading next time
       if (cacheKey != null) {
@@ -1814,129 +1841,104 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                     ),
                     SizedBox(height: 16),
 
-                    // Info Guru
-                    Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _teacherNama,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                    // Role switcher: only show when user is also wali kelas
+                    if (_homeroomClassesList.isNotEmpty)
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: GestureDetector(
+                          onTapDown: (TapDownDetails details) {
+                            showMenu(
+                              context: context,
+                              position: RelativeRect.fromLTRB(
+                                details.globalPosition.dx,
+                                details.globalPosition.dy,
+                                details.globalPosition.dx,
+                                details.globalPosition.dy,
+                              ),
+                              items: [
+                                PopupMenuItem(
+                                  value: 'guru',
+                                  child: Text(
+                                    'Guru (Lihat Jadwal Mengajar)',
                                   ),
                                 ),
-                                if (_homeroomClassesList.isEmpty)
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Teacher',
-                                      'id': 'Guru',
-                                    }),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  GestureDetector(
-                                    onTapDown: (TapDownDetails details) {
-                                      showMenu(
-                                        context: context,
-                                        position: RelativeRect.fromLTRB(
-                                          details.globalPosition.dx,
-                                          details.globalPosition.dy,
-                                          details.globalPosition.dx,
-                                          details.globalPosition.dy,
-                                        ),
-                                        items: [
-                                          PopupMenuItem(
-                                            value: 'guru',
-                                            child: Text(
-                                              'Guru (Lihat Jadwal Mengajar)',
-                                            ),
-                                          ),
-                                          ..._homeroomClassesList.map(
-                                            (c) => PopupMenuItem(
-                                              value: c,
-                                              child: Text(
-                                                'Wali Kelas - ${c['name'] ?? c['nama']}',
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ).then((value) {
-                                        if (value != null) {
-                                          setState(() {
-                                            if (value == 'guru') {
-                                              _isHomeroomView = false;
-                                            } else {
-                                              _isHomeroomView = true;
-                                              _selectedHomeroomClass =
-                                                  value as Map<String, dynamic>;
-                                            }
-                                          });
-                                          _loadJadwal();
-                                        }
-                                      });
-                                    },
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          _isHomeroomView &&
-                                                  _selectedHomeroomClass != null
-                                              ? 'Wali Kelas - ${(_selectedHomeroomClass!['name'] ?? _selectedHomeroomClass!['nama'] ?? '').toString()}'
-                                              : 'Guru',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                            decoration:
-                                                TextDecoration.underline,
-                                            decorationColor: Colors.white
-                                                .withValues(alpha: 0.5),
-                                          ),
-                                        ),
-                                        SizedBox(width: 6),
-                                        Icon(
-                                          Icons
-                                              .arrow_drop_down, // Changed icon to indicate list
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
-                                      ],
+                                ..._homeroomClassesList.map(
+                                  (c) => PopupMenuItem(
+                                    value: c,
+                                    child: Text(
+                                      'Wali Kelas - ${c['name'] ?? c['nama']}',
                                     ),
                                   ),
+                                ),
                               ],
-                            ),
+                            ).then((value) {
+                              if (value != null) {
+                                setState(() {
+                                  if (value == 'guru') {
+                                    _isHomeroomView = false;
+                                  } else {
+                                    _isHomeroomView = true;
+                                    _selectedHomeroomClass =
+                                        value as Map<String, dynamic>;
+                                  }
+                                });
+                                _loadJadwal();
+                              }
+                            });
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  _isHomeroomView ? Icons.class_ : Icons.person,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _teacherNama,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      _isHomeroomView && _selectedHomeroomClass != null
+                                          ? 'Wali Kelas - ${(_selectedHomeroomClass!['name'] ?? _selectedHomeroomClass!['nama'] ?? '').toString()}'
+                                          : 'Guru',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.swap_horiz_rounded,
+                                color: Colors.white.withValues(alpha: 0.8),
+                                size: 20,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
                     SizedBox(height: 16),
 
                     // Search Bar with Filter using SeparatedSearchFilter
@@ -2062,41 +2064,41 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                                   ..._buildFilterChips(languageProvider).map((
                                     filter,
                                   ) {
-                                    return Container(
-                                      margin: EdgeInsets.only(right: 6),
-                                      child: Chip(
-                                        label: Text(
-                                          filter['label'],
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        deleteIcon: Icon(
-                                          Icons.close,
-                                          size: 16,
-                                          color: Colors.white,
-                                        ),
-                                        onDeleted: filter['onRemove'],
-                                        backgroundColor: Colors.white
-                                            .withValues(alpha: 0.2),
-                                        side: BorderSide(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                          width: 1,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
+                                    return GestureDetector(
+                                      onTap: filter['onRemove'],
+                                      child: Container(
+                                        margin: EdgeInsets.only(right: 6),
                                         padding: EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
+                                          horizontal: 10,
+                                          vertical: 6,
                                         ),
-                                        labelPadding: EdgeInsets.only(left: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: Colors.white.withValues(alpha: 0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              filter['label'],
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            SizedBox(width: 4),
+                                            Icon(
+                                              Icons.close,
+                                              size: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     );
                                   }),
