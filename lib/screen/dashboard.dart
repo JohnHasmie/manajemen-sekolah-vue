@@ -1386,7 +1386,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(12, 12, 12, 10),
                   child: Text(
-                    'Menu',
+                    AppLocalizations.menu.tr,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -2059,7 +2059,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Quick Access',
+                AppLocalizations.quickAccess.tr,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -2105,7 +2105,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            "Today's Overview",
+            AppLocalizations.todaysOverview.tr,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -2134,7 +2134,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       return [
         if (_financeChartData.isNotEmpty)
           FinanceBarChartCard(
-            title: 'Keuangan',
+            title: AppLocalizations.finance.tr,
             icon: Icons.account_balance_wallet_outlined,
             accentColor: ColorUtils.success600,
             semestersData: _financeChartData,
@@ -2148,7 +2148,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
         if (_attendanceChartData.isNotEmpty)
           AttendanceBarChartCard(
-            title: 'Absensi',
+            title: AppLocalizations.attendance.tr,
             icon: Icons.ssid_chart_outlined,
             accentColor: ColorUtils.warning600,
             classesData: _attendanceChartData,
@@ -2170,9 +2170,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             },
           ),
         OverviewCard(
-          title: 'Active Teachers',
+          title: AppLocalizations.activeTeachers.tr,
           value: _stats['total_guru']?.toString() ?? '0',
-          subtitle: 'Currently teaching',
+          subtitle: AppLocalizations.currentlyTeaching.tr,
           icon: Icons.people_alt_outlined,
           accentColor: ColorUtils.success600,
           onTap: () {
@@ -2180,9 +2180,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           },
         ),
         OverviewCard(
-          title: 'Announcements',
+          title: AppLocalizations.announcements.tr,
           value: _stats['pengumuman_terbaru']?.toString() ?? '0',
-          subtitle: 'Recent updates',
+          subtitle: AppLocalizations.recentUpdates.tr,
           icon: Icons.campaign_outlined,
           accentColor: ColorUtils.info600,
           onTap: () {
@@ -2258,9 +2258,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } else {
       return [
         OverviewCard(
-          title: 'My Children',
+          title: AppLocalizations.myChildren.tr,
           value: _stats['anak_terdaftar']?.toString() ?? '0',
-          subtitle: 'Registered students',
+          subtitle: AppLocalizations.registeredStudents.tr,
           icon: Icons.family_restroom_outlined,
           accentColor: ColorUtils.corporateBlue600,
           onTap: () {
@@ -2268,9 +2268,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           },
         ),
         OverviewCard(
-          title: 'New Grades',
+          title: AppLocalizations.newGrades.tr,
           value: _stats['unread_grades']?.toString() ?? '0',
-          subtitle: 'Recent updates',
+          subtitle: AppLocalizations.recentUpdates.tr,
           icon: Icons.grade_outlined,
           accentColor: ColorUtils.success600,
           onTap: () {
@@ -2279,7 +2279,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ),
         if (_attendanceChartData.isNotEmpty)
           AttendanceBarChartCard(
-            title: 'Kehadiran Anak',
+            title: AppLocalizations.childAttendance.tr,
             icon: Icons.ssid_chart_outlined,
             accentColor: ColorUtils.warning600,
             classesData: _attendanceChartData,
@@ -2303,9 +2303,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           )
         else
           OverviewCard(
-            title: 'Attendance',
+            title: AppLocalizations.attendance.tr,
             value: _stats['unread_presence']?.toString() ?? '0',
-            subtitle: 'New records',
+            subtitle: AppLocalizations.newRecords.tr,
             icon: Icons.calendar_month_outlined,
             accentColor: ColorUtils.warning600,
             onTap: () {
@@ -2313,9 +2313,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             },
           ),
         OverviewCard(
-          title: 'Announcements',
+          title: AppLocalizations.announcements.tr,
           value: _stats['pengumuman_terbaru']?.toString() ?? '0',
-          subtitle: 'Latest info',
+          subtitle: AppLocalizations.latestInformation.tr,
           icon: Icons.announcement_outlined,
           accentColor: ColorUtils.info600,
           onTap: () {
@@ -2332,7 +2332,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     if (_effectiveRole == 'admin') {
       return [
         QuickActionButton(
-          label: 'Data',
+          label: AppLocalizations.data.tr,
           icon: Icons.folder_outlined,
           color: primaryColor,
           onTap: () => Navigator.push(
@@ -2343,7 +2343,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
         ),
         QuickActionButton(
-          label: 'Jadwal',
+          label: AppLocalizations.schedule.tr,
           icon: Icons.schedule_outlined,
           color: ColorUtils.info600,
           onTap: () => Navigator.push(
@@ -2354,7 +2354,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
         ),
         QuickActionButton(
-          label: 'Keuangan',
+          label: AppLocalizations.finance.tr,
           icon: Icons.account_balance_wallet_outlined,
           color: ColorUtils.success600,
           badgeCount: _unverifiedPaymentCount > 0
@@ -2366,7 +2366,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
         ),
         QuickActionButton(
-          label: 'Pengumuman',
+          label: AppLocalizations.announcements.tr,
           icon: Icons.announcement_outlined,
           color: ColorUtils.warning600,
           badgeCount: _stats['unread_announcements'],
@@ -2384,7 +2384,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } else if (_effectiveRole == 'guru') {
       return [
         QuickActionButton(
-          label: 'Jadwal',
+          label: AppLocalizations.schedule.tr,
           icon: Icons.schedule_outlined,
           color: primaryColor,
           onTap: () => Navigator.push(
@@ -2393,7 +2393,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
         ),
         QuickActionButton(
-          label: 'Absensi',
+          label: AppLocalizations.attendance.tr,
           icon: Icons.how_to_reg_outlined,
           color: ColorUtils.warning600,
           onTap: () => Navigator.push(
@@ -2404,7 +2404,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
         ),
         QuickActionButton(
-          label: 'Aktivitas',
+          label: AppLocalizations.activity.tr,
           icon: Icons.local_activity_outlined,
           color: ColorUtils.info600,
           onTap: () => Navigator.push(
@@ -2413,7 +2413,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
         ),
         QuickActionButton(
-          label: 'Nilai',
+          label: AppLocalizations.inputGrades.tr,
           icon: Icons.edit_note_outlined,
           color: ColorUtils.success600,
           onTap: () async {
@@ -2439,7 +2439,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } else {
       return [
         QuickActionButton(
-          label: 'Pengumuman',
+          label: AppLocalizations.announcements.tr,
           icon: Icons.announcement_outlined,
           color: primaryColor,
           badgeCount: _stats['unread_announcements'],
@@ -2452,7 +2452,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           },
         ),
         QuickActionButton(
-          label: 'Tagihan',
+          label: AppLocalizations.billing.tr,
           icon: Icons.account_balance_wallet_outlined,
           color: ColorUtils.error600,
           badgeCount: _stats['unread_billing'],
@@ -2490,21 +2490,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     if (_effectiveRole == 'admin') {
       return [
         CategorySection(
-          title: '📊 MANAJEMEN DATA',
+          title: '📊 ${AppLocalizations.categoryDataManagement.tr}',
           icon: Icons.folder_shared,
           accentColor: ColorUtils.slate700,
           primaryColor: primaryColor,
           items: _getAdminDataManagementItems(context),
         ),
         CategorySection(
-          title: '📢 AKADEMIK & KOMUNIKASI',
+          title: '📢 ${AppLocalizations.categoryAcademicCommunication.tr}',
           icon: Icons.school,
           accentColor: ColorUtils.slate700,
           primaryColor: primaryColor,
           items: _getAdminAcademicItems(context),
         ),
         CategorySection(
-          title: '💰 KEUANGAN & PENGATURAN',
+          title: '💰 ${AppLocalizations.categoryFinanceSettings.tr}',
           icon: Icons.settings,
           accentColor: ColorUtils.slate700,
           primaryColor: primaryColor,
@@ -2514,14 +2514,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } else if (_effectiveRole == 'guru') {
       return [
         CategorySection(
-          title: '📚 MENGAJAR',
+          title: '📚 ${AppLocalizations.categoryTeaching.tr}',
           icon: Icons.school,
           accentColor: ColorUtils.slate700,
           primaryColor: primaryColor,
           items: _getTeacherTeachingItems(context),
         ),
         CategorySection(
-          title: '✏️ PENILAIAN & PERENCANAAN',
+          title: '✏️ ${AppLocalizations.categoryAssessmentPlanning.tr}',
           icon: Icons.edit_note,
           accentColor: ColorUtils.slate700,
           primaryColor: primaryColor,
@@ -2554,7 +2554,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   List<MenuItem> _getAdminDataManagementItems(BuildContext context) {
     return [
       MenuItem(
-        title: 'Kelola Data',
+        title: AppLocalizations.manageData.tr,
         icon: Icons.folder_shared_outlined,
         onTap: () => Navigator.push(
           context,
@@ -2643,7 +2643,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ),
       ),
       MenuItem(
-        title: 'Raport Siswa',
+        title: AppLocalizations.studentReport.tr,
         icon: Icons.assignment_turned_in_outlined,
         onTap: () => Navigator.push(
           context,
@@ -2787,10 +2787,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         },
       ),
       MenuItem(
-        title: languageProvider.getTranslatedText({
-          'en': 'Grade Recap',
-          'id': 'Rekap Nilai',
-        }),
+        title: AppLocalizations.gradeRecap.tr,
         icon: Icons.assessment_outlined,
         onTap: () async {
           final Map<String, String> teacherData = {
@@ -2818,10 +2815,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         },
       ),
       MenuItem(
-        title: languageProvider.getTranslatedText({
-          'en': 'Report Card',
-          'id': 'Raport',
-        }),
+        title: AppLocalizations.reportCard.tr,
         icon: Icons.contact_page_outlined,
         onTap: () async {
           final Map<String, String> teacherData = {
@@ -2893,10 +2887,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       ),
       if (_homeroomClasses.isNotEmpty)
         MenuItem(
-          title: languageProvider.getTranslatedText({
-            'en': 'Learning Recommendation',
-            'id': 'Rekomendasi Belajar',
-          }),
+          title: AppLocalizations.learningRecommendation.tr,
           icon: Icons.auto_awesome_outlined,
           onTap: () async {
             final Map<String, String> teacherData = {
@@ -3038,7 +3029,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         },
       ),
       MenuItem(
-        title: 'E-Raport',
+        title: AppLocalizations.eRaport.tr,
         icon: Icons.assignment_turned_in_outlined,
         onTap: () async {
           final academicYearId = Provider.of<AcademicYearProvider>(
@@ -3623,19 +3614,18 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     switch (role.toLowerCase()) {
       case 'admin':
       case 'administrator':
-        return 'Administrator';
+        return AppLocalizations.adminRole.tr;
       case 'guru':
       case 'teacher':
-        return 'Teacher';
+        return AppLocalizations.teacherRole.tr;
       case 'wali':
       case 'parent':
       case 'walimurid':
       case 'wali murid':
-        return 'Parent';
+        return AppLocalizations.parentRole.tr;
       case 'staff':
-        return 'Staff';
+        return AppLocalizations.staffRole.tr;
       default:
-        // Capitalize first letter if no match found
         if (role.isNotEmpty) {
           return role[0].toUpperCase() + role.substring(1);
         }
@@ -3654,7 +3644,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             Icon(Icons.school_rounded, color: _getPrimaryColor()),
             SizedBox(width: 8),
             Text(
-              'Pilih Sekolah',
+              AppLocalizations.selectSchool.tr,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade800,
@@ -3755,7 +3745,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Batal', style: TextStyle(color: Colors.grey.shade600)),
+            child: Text(AppLocalizations.cancel.tr, style: TextStyle(color: Colors.grey.shade600)),
           ),
         ],
       ),
@@ -3816,11 +3806,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) {
-      return 'Good Morning';
+      return AppLocalizations.goodMorning.tr;
     } else if (hour < 17) {
-      return 'Good Afternoon';
+      return AppLocalizations.goodAfternoon.tr;
     } else {
-      return 'Good Evening';
+      return AppLocalizations.goodEvening.tr;
     }
   }
 
@@ -3829,7 +3819,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     if (_effectiveRole == 'admin') {
       return [
         _buildDashboardCard(
-          'Kelola Data',
+          AppLocalizations.manageData.tr,
           Icons.folder_shared_outlined,
           () => Navigator.push(
             context,

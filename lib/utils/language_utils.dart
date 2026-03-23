@@ -1281,6 +1281,156 @@ class AppLocalizations {
     'en': 'Failed to change password',
     'id': 'Gagal mengubah kata sandi',
   };
+
+  // Dashboard Section Headers
+  static Map<String, String> get quickAccess => {
+    'en': 'Quick Access',
+    'id': 'Akses Cepat',
+  };
+
+  static Map<String, String> get todaysOverview => {
+    'en': "Today's Overview",
+    'id': 'Ringkasan Hari Ini',
+  };
+
+  static Map<String, String> get menu => {'en': 'Menu', 'id': 'Menu'};
+
+  // Greetings
+  static Map<String, String> get goodMorning => {
+    'en': 'Good Morning',
+    'id': 'Selamat Pagi',
+  };
+
+  static Map<String, String> get goodAfternoon => {
+    'en': 'Good Afternoon',
+    'id': 'Selamat Siang',
+  };
+
+  static Map<String, String> get goodEvening => {
+    'en': 'Good Evening',
+    'id': 'Selamat Malam',
+  };
+
+  // Quick Action Labels
+  static Map<String, String> get data => {'en': 'Data', 'id': 'Data'};
+
+  static Map<String, String> get attendance => {
+    'en': 'Attendance',
+    'id': 'Absensi',
+  };
+
+  static Map<String, String> get activity => {
+    'en': 'Activity',
+    'id': 'Aktivitas',
+  };
+
+  // Overview Card Titles & Subtitles
+  static Map<String, String> get activeTeachers => {
+    'en': 'Active Teachers',
+    'id': 'Guru Aktif',
+  };
+
+  static Map<String, String> get currentlyTeaching => {
+    'en': 'Currently teaching',
+    'id': 'Sedang mengajar',
+  };
+
+  static Map<String, String> get recentUpdates => {
+    'en': 'Recent updates',
+    'id': 'Pembaruan terbaru',
+  };
+
+  static Map<String, String> get myChildren => {
+    'en': 'My Children',
+    'id': 'Anak Saya',
+  };
+
+  static Map<String, String> get registeredStudents => {
+    'en': 'Registered students',
+    'id': 'Siswa terdaftar',
+  };
+
+  static Map<String, String> get newGrades => {
+    'en': 'New Grades',
+    'id': 'Nilai Baru',
+  };
+
+  static Map<String, String> get newRecords => {
+    'en': 'New records',
+    'id': 'Catatan baru',
+  };
+
+  static Map<String, String> get latestInformation => {
+    'en': 'Latest info',
+    'id': 'Info terbaru',
+  };
+
+  static Map<String, String> get childAttendance => {
+    'en': 'Child Attendance',
+    'id': 'Kehadiran Anak',
+  };
+
+  // Category Section Titles
+  static Map<String, String> get categoryDataManagement => {
+    'en': 'DATA MANAGEMENT',
+    'id': 'MANAJEMEN DATA',
+  };
+
+  static Map<String, String> get categoryAcademicCommunication => {
+    'en': 'ACADEMIC & COMMUNICATION',
+    'id': 'AKADEMIK & KOMUNIKASI',
+  };
+
+  static Map<String, String> get categoryFinanceSettings => {
+    'en': 'FINANCE & SETTINGS',
+    'id': 'KEUANGAN & PENGATURAN',
+  };
+
+  static Map<String, String> get categoryTeaching => {
+    'en': 'TEACHING',
+    'id': 'MENGAJAR',
+  };
+
+  static Map<String, String> get categoryAssessmentPlanning => {
+    'en': 'ASSESSMENT & PLANNING',
+    'id': 'PENILAIAN & PERENCANAAN',
+  };
+
+  // Menu Items
+  static Map<String, String> get manageData => {
+    'en': 'Manage Data',
+    'id': 'Kelola Data',
+  };
+
+  static Map<String, String> get studentReport => {
+    'en': 'Student Report Card',
+    'id': 'Raport Siswa',
+  };
+
+  static Map<String, String> get gradeRecap => {
+    'en': 'Grade Recap',
+    'id': 'Rekap Nilai',
+  };
+
+  static Map<String, String> get reportCard => {
+    'en': 'Report Card',
+    'id': 'Raport',
+  };
+
+  static Map<String, String> get learningRecommendation => {
+    'en': 'Learning Recommendation',
+    'id': 'Rekomendasi Belajar',
+  };
+
+  static Map<String, String> get eRaport => {
+    'en': 'E-Report Card',
+    'id': 'E-Raport',
+  };
+
+  static Map<String, String> get selectSchool => {
+    'en': 'Select School',
+    'id': 'Pilih Sekolah',
+  };
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.
