@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manajemensekolah/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/error_utils.dart';
 
 void main() {
   group('ErrorUtils Tests', () {
