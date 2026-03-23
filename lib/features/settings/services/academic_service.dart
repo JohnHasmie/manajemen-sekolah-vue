@@ -6,9 +6,7 @@
 /// All methods are static -- no instance needed, similar to a Laravel facade.
 library;
 
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 
 /// Service class for academic year management API calls.
@@ -22,40 +20,12 @@ class ApiAcademicServices {
   /// Like accessing `config('app.url')` in Laravel.
   static String get baseUrl => ApiService.baseUrl;
 
-  /// Retrieves auth headers (Bearer token + X-School-ID).
-  /// Like Laravel's `Http::withToken()` or an Axios interceptor in Vue.
-  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
-
-  /// Decodes the HTTP response and throws on non-2xx status.
-  /// Like a shared response handler in a Laravel Http macro or
-  /// an Axios response interceptor in Vue.
-  static dynamic _handleResponse(http.Response response) {
-    var responseBody;
-    try {
-      responseBody = json.decode(response.body);
-    } catch (e) {
-      responseBody = {'error': 'Failed to parse response'};
-    }
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
-    } else {
-      throw Exception(
-        responseBody['error'] ??
-            'Request failed with status: ${response.statusCode}',
-      );
-    }
-  }
-
   /// Fetches all academic years from the backend.
   /// Like `AcademicYear::all()` in Laravel or a Vuex `fetchAcademicYears` action.
   /// Returns a list of academic year maps, or an empty list on unexpected format.
   static Future<List<dynamic>> getAcademicYears() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/academic-years'),
-      headers: await _getHeaders(),
-    );
-    final result = _handleResponse(response);
+    final response = await dioClient.get('/academic-years');
+    final result = response.data;
     return result is List ? result : [];
   }
 
@@ -63,15 +33,14 @@ class ApiAcademicServices {
   /// Like `AcademicYear::where('status', 'active')->first()` in Laravel.
   /// Returns null if no active year (HTTP 204 or empty body).
   static Future<Map<String, dynamic>?> getActiveAcademicYear() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/academic-year/active'),
-      headers: await _getHeaders(),
-    );
+    final response = await dioClient.get('/academic-year/active');
 
     // Handle 204 or empty
-    if (response.statusCode == 204 || response.body.isEmpty) return null;
+    if (response.statusCode == 204 || response.data == null || response.data == '') {
+      return null;
+    }
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is Map<String, dynamic> ? result : null;
   }
 
@@ -85,12 +54,11 @@ class ApiAcademicServices {
     bool current = false,
     String status = 'inactive',
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/academic-years'),
-      headers: await _getHeaders(),
-      body: json.encode({'year': year, 'current': current, 'status': status}),
+    final response = await dioClient.post(
+      '/academic-years',
+      data: {'year': year, 'current': current, 'status': status},
     );
-    return _handleResponse(response);
+    return response.data;
   }
 
   /// Promotes a batch of students to a target class for a given academic year.
@@ -105,17 +73,16 @@ class ApiAcademicServices {
     required String academicYearId,
     String status = 'promoted',
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/promotion/promote'),
-      headers: await _getHeaders(),
-      body: json.encode({
+    final response = await dioClient.post(
+      '/promotion/promote',
+      data: {
         'student_ids': studentIds,
         'target_class_id': targetClassId,
         'academic_year_id': academicYearId,
         'status': status,
-      }),
+      },
     );
-    return _handleResponse(response);
+    return response.data;
   }
 
   /// Updates the status of an academic year (e.g. 'active' / 'inactive').
@@ -124,22 +91,18 @@ class ApiAcademicServices {
     String id,
     String status,
   ) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/academic-years/$id/status'),
-      headers: await _getHeaders(),
-      body: json.encode({'status': status}),
+    final response = await dioClient.put(
+      '/academic-years/$id/status',
+      data: {'status': status},
     );
-    return _handleResponse(response);
+    return response.data;
   }
 
   /// Sets a specific academic year as the "current" one across the system.
   /// Like calling a Laravel `SetCurrentAcademicYear` action that unsets
   /// all others and marks this one as current.
   static Future<dynamic> setCurrentAcademicYear(String id) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/academic-years/$id/set-current'),
-      headers: await _getHeaders(),
-    );
-    return _handleResponse(response);
+    final response = await dioClient.put('/academic-years/$id/set-current');
+    return response.data;
   }
 }

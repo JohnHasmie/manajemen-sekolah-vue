@@ -5,9 +5,7 @@
 /// and school-level configuration. All methods are static.
 library;
 
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 
 /// Service for user profile and school settings API calls.
@@ -16,23 +14,6 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 class ApiSettingsService {
   /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
-
-  /// Auth headers with Bearer token.
-  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
-
-  /// Parses JSON response and throws on non-2xx status.
-  static dynamic _handleResponse(http.Response response) {
-    final responseBody = json.decode(response.body);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
-    } else {
-      throw Exception(
-        responseBody['error'] ??
-            'Request failed with status: ${response.statusCode}',
-      );
-    }
-  }
 
   /// Updates the current user's password.
   /// Like Laravel's `Hash::check()` + `$user->update(['password' => ...])`.
@@ -43,16 +24,14 @@ class ApiSettingsService {
     required String confirmPassword,
   }) async {
     try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/profile/password'),
-        headers: await _getHeaders(),
-        body: json.encode({
+      await dioClient.put(
+        '/profile/password',
+        data: {
           'old_password': oldPassword,
           'new_password': newPassword,
           'confirm_password': confirmPassword,
-        }),
+        },
       );
-      _handleResponse(response);
     } catch (e) {
       rethrow;
     }
@@ -61,12 +40,8 @@ class ApiSettingsService {
   /// Fetches the current user's profile. Like `auth()->user()` in Laravel.
   static Future<Map<String, dynamic>> getProfile() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/profile'),
-        headers: await _getHeaders(),
-      );
-      final result = _handleResponse(response);
-      return result;
+      final response = await dioClient.get('/profile');
+      return response.data;
     } catch (e) {
       print('Error getting profile: $e');
       rethrow;
@@ -81,16 +56,14 @@ class ApiSettingsService {
     required String? address,
   }) async {
     try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/profile'),
-        headers: await _getHeaders(),
-        body: json.encode({
+      await dioClient.put(
+        '/profile',
+        data: {
           'name': name,
           'phone_number': phoneNumber,
           'address': address,
-        }),
+        },
       );
-      _handleResponse(response);
     } catch (e) {
       print('Error updating profile: $e');
       rethrow;
@@ -101,12 +74,9 @@ class ApiSettingsService {
   /// Like `LessonHourSetting::all()` in Laravel grouped by day.
   static Future<List<dynamic>> getLessonHourSettings() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/lesson-hour-settings'),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get('/lesson-hour-settings');
 
-      final result = _handleResponse(response);
+      final result = response.data;
       if (result is List) {
         return result;
       }
@@ -126,17 +96,15 @@ class ApiSettingsService {
     required String endTime,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/lesson-hour-settings'),
-        headers: await _getHeaders(),
-        body: json.encode({
+      await dioClient.post(
+        '/lesson-hour-settings',
+        data: {
           'day_id': dayId,
           'hour_number': hourNumber,
           'start_time': startTime,
           'end_time': endTime,
-        }),
+        },
       );
-      _handleResponse(response);
     } catch (e) {
       print('Error creating lesson session: $e');
       rethrow;
@@ -152,16 +120,14 @@ class ApiSettingsService {
     required int hourNumber,
   }) async {
     try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/lesson-hour-settings/$id'),
-        headers: await _getHeaders(),
-        body: json.encode({
+      await dioClient.put(
+        '/lesson-hour-settings/$id',
+        data: {
           'start_time': startTime,
           'end_time': endTime,
           'hour_number': hourNumber,
-        }),
+        },
       );
-      _handleResponse(response);
     } catch (e) {
       print('Error updating lesson session: $e');
       rethrow;
@@ -172,11 +138,7 @@ class ApiSettingsService {
   /// Like `LessonHourSetting::find($id)->delete()` in Laravel.
   static Future<void> deleteLessonSession(String id) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/lesson-hour-settings/$id'),
-        headers: await _getHeaders(),
-      );
-      _handleResponse(response);
+      await dioClient.delete('/lesson-hour-settings/$id');
     } catch (e) {
       print('Error deleting lesson session: $e');
       rethrow;
@@ -187,13 +149,8 @@ class ApiSettingsService {
   /// Like `School::find($schoolId)->settings` in Laravel.
   static Future<Map<String, dynamic>> getSchoolSettings() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/school/settings'),
-        headers: await _getHeaders(),
-      );
-
-      final result = _handleResponse(response);
-      return result;
+      final response = await dioClient.get('/school/settings');
+      return response.data;
     } catch (e) {
       print('Error getting school settings: $e');
       rethrow;
@@ -214,12 +171,7 @@ class ApiSettingsService {
       if (schoolName != null) body['school_name'] = schoolName;
       if (address != null) body['address'] = address;
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/school/settings'),
-        headers: await _getHeaders(),
-        body: json.encode(body),
-      );
-      _handleResponse(response);
+      await dioClient.post('/school/settings', data: body);
     } catch (e) {
       print('Error updating school settings: $e');
       rethrow;

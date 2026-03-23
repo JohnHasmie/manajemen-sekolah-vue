@@ -5,7 +5,7 @@
 /// raport detail views, and saving raport data. All methods are static.
 library;
 
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 
 /// Service for raport (report card) API calls.
 /// Like a Laravel Resource Controller with show, store, and custom initial-data actions.
@@ -19,17 +19,17 @@ class ApiRaportService {
     required String academicYearId,
     required String semesterId,
   }) async {
-    final response = await ApiService().get(
+    final response = await dioClient.get(
       '/raports',
-      params: {
+      queryParameters: {
         'class_id': classId,
         'academic_year_id': academicYearId,
         'semester_id': semesterId,
       },
     );
 
-    if (response != null && response['success'] == true) {
-      return response['data'] as List<dynamic>;
+    if (response.data != null && response.data['success'] == true) {
+      return response.data['data'] as List<dynamic>;
     }
     return [];
   }
@@ -42,19 +42,19 @@ class ApiRaportService {
     required String academicYearId,
     required String semesterId,
   }) async {
-    final response = await ApiService().get(
+    final response = await dioClient.get(
       '/raport/initial-data',
-      params: {
+      queryParameters: {
         'student_class_id': studentClassId,
         'academic_year_id': academicYearId,
         'semester_id': semesterId,
       },
     );
 
-    if (response != null &&
-        response['success'] == true &&
-        response['data'] != null) {
-      return response['data'] as Map<String, dynamic>;
+    if (response.data != null &&
+        response.data['success'] == true &&
+        response.data['data'] != null) {
+      return response.data['data'] as Map<String, dynamic>;
     }
     return null;
   }
@@ -68,19 +68,19 @@ class ApiRaportService {
     required String semesterId,
   }) async {
     // Note: The backend route is /raport/show but we use show method in controller
-    final response = await ApiService().get(
+    final response = await dioClient.get(
       '/raport/show',
-      params: {
+      queryParameters: {
         'student_class_id': studentClassId,
         'academic_year_id': academicYearId,
         'semester_id': semesterId,
       },
     );
 
-    if (response != null &&
-        response['success'] == true &&
-        response['data'] != null) {
-      return response['data'] as Map<String, dynamic>;
+    if (response.data != null &&
+        response.data['success'] == true &&
+        response.data['data'] != null) {
+      return response.data['data'] as Map<String, dynamic>;
     }
     return null;
   }
@@ -91,10 +91,10 @@ class ApiRaportService {
   static Future<Map<String, dynamic>?> saveRaport(
     Map<String, dynamic> data,
   ) async {
-    final response = await ApiService().post('/raport', data);
+    final response = await dioClient.post('/raport', data: data);
 
-    if (response != null && response['success'] == true) {
-      return response['data'] as Map<String, dynamic>;
+    if (response.data != null && response.data['success'] == true) {
+      return response.data['data'] as Map<String, dynamic>;
     }
     return null;
   }

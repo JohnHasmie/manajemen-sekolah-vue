@@ -7,13 +7,16 @@
 ///
 /// Similar to how you might use Sentry or Bugsnag in a Laravel/Vue app,
 /// but with a custom backend endpoint.
+///
+/// NOTE: This service uses its own Dio instance (not the global dioClient)
+/// because it targets a different microservice on port 5009, not the main API.
 library;
 
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -80,16 +83,20 @@ class LogService {
 
       final token = prefs.getString('token');
 
-      await http
-          .post(
-            Uri.parse(_logApiUrl),
-            headers: {
-              'Content-Type': 'application/json',
-              if (token != null) 'Authorization': 'Bearer $token',
-            },
-            body: json.encode(body),
-          )
-          .timeout(const Duration(seconds: 5));
+      // Use a standalone Dio instance (not dioClient) because this targets
+      // a different microservice on port 5009 with its own base URL.
+      final logDio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+          headers: {
+            'Content-Type': 'application/json',
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      await logDio.post(_logApiUrl, data: body);
     } catch (e) {
       if (kDebugMode) {
         print('❌ Failed to send error log: $e');

@@ -6,10 +6,9 @@
 /// Supports paginated listing, filtering, export, read-tracking, and schedule lookups.
 library;
 
-import 'dart:convert';
-
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 
 /// Service for class activity (kegiatan kelas) API interactions.
@@ -77,16 +76,13 @@ class ApiClassActivityService {
     // Build URI with query parameters
     String queryString = Uri(queryParameters: queryParams).query;
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/class-activity?$queryString'),
-      headers: await _getHeaders(),
-    );
+    final response = await dioClient.get('/class-activity?$queryString');
 
     print('GET /class-activity?$queryString - Status: ${response.statusCode}');
     if (kDebugMode && response.statusCode != 200) {
-      print('Response Body (Error): ${response.body}');
+      print('Response Body (Error): ${response.data}');
     }
-    final result = _handleResponse(response);
+    final result = response.data;
 
     // Return full response with pagination metadata
     if (result is Map<String, dynamic>) {
@@ -111,41 +107,16 @@ class ApiClassActivityService {
   /// Base URL from central config. Like `config('app.url')` in Laravel.
   static String get baseUrl => ApiService.baseUrl;
 
-  /// Auth headers with Bearer token. Like Laravel's `Http::withToken()`.
-  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
-
-  /// Parses JSON response and throws on non-2xx status.
-  /// Like a shared Axios interceptor or Laravel Http macro.
-  static dynamic _handleResponse(http.Response response) {
-    try {
-      final responseBody = json.decode(response.body);
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return responseBody;
-      } else {
-        throw Exception(
-          responseBody['error'] ??
-              'Request failed with status: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error parsing response: $e');
-      }
-      throw Exception('Failed to parse server response');
-    }
-  }
-
   /// Exports class activities to a downloadable format.
   /// Like Laravel's export endpoint that returns a file response.
-  /// Returns raw http.Response so the caller can handle the file bytes.
-  static Future<http.Response> exportClassActivities(
+  /// Returns raw Response so the caller can handle the file bytes.
+  static Future<Response> exportClassActivities(
     List<Map<String, dynamic>> activities,
   ) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/export/class-activities'),
-      headers: await _getHeaders(),
-      body: json.encode({'activities': activities}),
+    final response = await dioClient.post<List<int>>(
+      '/export/class-activities',
+      data: {'activities': activities},
+      options: Options(responseType: ResponseType.bytes),
     );
     return response;
   }
@@ -155,14 +126,11 @@ class ApiClassActivityService {
   /// [teacherId] - The teacher's UUID.
   static Future<List<dynamic>> getActivityByGuru(String teacherId) async {
     try {
-      final headers = await _getHeaders();
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/class-activity/teacher/$teacherId'),
-        headers: headers,
+      final response = await dioClient.get(
+        '/class-activity/teacher/$teacherId',
       );
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       // Handle jika response adalah array langsung
       if (result is List) {
@@ -193,29 +161,28 @@ class ApiClassActivityService {
     String? academicYearId,
   }) async {
     try {
-      final headers = await _getHeaders();
+      final params = <String, String>{};
+      if (siswaId != null) params['student_id'] = siswaId;
+      if (academicYearId != null) params['academic_year_id'] = academicYearId;
 
-      final params = {
-        if (siswaId != null) 'student_id': siswaId,
-        if (academicYearId != null) 'academic_year_id': academicYearId,
-      };
-
-      final uri = Uri.parse(
-        '$baseUrl/class-activity/class/$classId',
-      ).replace(queryParameters: params.isNotEmpty ? params : null);
-
-      if (kDebugMode) {
-        print('📤 Request: GET $uri');
+      String url = '/class-activity/class/$classId';
+      if (params.isNotEmpty) {
+        final qs = Uri(queryParameters: params).query;
+        url += '?$qs';
       }
 
-      final response = await http.get(uri, headers: headers);
+      if (kDebugMode) {
+        print('📤 Request: GET $url');
+      }
+
+      final response = await dioClient.get(url);
 
       if (kDebugMode) {
         print('📥 Response Status: ${response.statusCode}');
-        print('📥 Response Body: ${response.body}');
+        print('📥 Response Body: ${response.data}');
       }
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is List) {
         return result;
@@ -237,15 +204,8 @@ class ApiClassActivityService {
   /// [data] - Activity fields (teacher_id, class_id, subject_id, date, description, etc.).
   static Future<dynamic> tambahKegiatan(Map<String, dynamic> data) async {
     try {
-      final headers = await _getHeaders();
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/class-activity'),
-        headers: headers,
-        body: json.encode(data),
-      );
-
-      return _handleResponse(response);
+      final response = await dioClient.post('/class-activity', data: data);
+      return response.data;
     } catch (e) {
       if (kDebugMode) {
         print('Error tambah kegiatan: $e');
@@ -261,15 +221,8 @@ class ApiClassActivityService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final headers = await _getHeaders();
-
-      final response = await http.put(
-        Uri.parse('$baseUrl/class-activity/$id'),
-        headers: headers,
-        body: json.encode(data),
-      );
-
-      return _handleResponse(response);
+      final response = await dioClient.put('/class-activity/$id', data: data);
+      return response.data;
     } catch (e) {
       if (kDebugMode) {
         print('Error update kegiatan: $e');
@@ -282,14 +235,8 @@ class ApiClassActivityService {
   /// Like `ClassActivity::find($id)->delete()` in Laravel.
   static Future<dynamic> deleteKegiatan(String id) async {
     try {
-      final headers = await _getHeaders();
-
-      final response = await http.delete(
-        Uri.parse('$baseUrl/class-activity/$id'),
-        headers: headers,
-      );
-
-      return _handleResponse(response);
+      final response = await dioClient.delete('/class-activity/$id');
+      return response.data;
     } catch (e) {
       if (kDebugMode) {
         print('Error delete kegiatan: $e');
@@ -307,19 +254,18 @@ class ApiClassActivityService {
     String? tahunAjaran,
   }) async {
     try {
-      final headers = await _getHeaders();
+      final params = <String, String>{};
+      if (hari != null && hari != 'Semua Hari') params['day'] = hari;
+      if (tahunAjaran != null) params['academic_year'] = tahunAjaran;
 
-      final params = {
-        if (hari != null && hari != 'Semua Hari') 'day': hari,
-        if (tahunAjaran != null) 'academic_year': tahunAjaran,
-      };
+      String url = '/schedule/teacher/$teacherId';
+      if (params.isNotEmpty) {
+        final qs = Uri(queryParameters: params).query;
+        url += '?$qs';
+      }
 
-      final uri = Uri.parse(
-        '$baseUrl/schedule/teacher/$teacherId',
-      ).replace(queryParameters: params.isNotEmpty ? params : null);
-
-      final response = await http.get(uri, headers: headers);
-      final result = _handleResponse(response);
+      final response = await dioClient.get(url);
+      final result = response.data;
 
       if (result is List) {
         return result;
@@ -341,19 +287,14 @@ class ApiClassActivityService {
   /// Used to select which students an activity targets.
   static Future<List<dynamic>> getSiswaByKelas(String classId) async {
     try {
-      final headers = await _getHeaders();
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/student/class/$classId'),
-        headers: headers,
-      );
+      final response = await dioClient.get('/student/class/$classId');
 
       if (kDebugMode) {
         print('API Response Status: ${response.statusCode}');
-        print('API Response Body: ${response.body}');
+        print('API Response Body: ${response.data}');
       }
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is List) {
         return result;
@@ -374,14 +315,8 @@ class ApiClassActivityService {
   /// Like Laravel's `/api/health` route. Useful for debugging connection issues.
   static Future<dynamic> testConnection() async {
     try {
-      final headers = await _getHeaders();
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/health'),
-        headers: headers,
-      );
-
-      return _handleResponse(response);
+      final response = await dioClient.get('/health');
+      return response.data;
     } catch (e) {
       if (kDebugMode) {
         print('Error test connection: $e');
@@ -412,12 +347,14 @@ class ApiClassActivityService {
         params['subject_id'] = subjectId;
       }
 
-      final uri = Uri.parse(
-        '$baseUrl/class-activity/filter-options',
-      ).replace(queryParameters: params.isNotEmpty ? params : null);
+      String url = '/class-activity/filter-options';
+      if (params.isNotEmpty) {
+        final qs = Uri(queryParameters: params).query;
+        url += '?$qs';
+      }
 
-      final response = await http.get(uri, headers: await _getHeaders());
-      final result = _handleResponse(response);
+      final response = await dioClient.get(url);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) return result;
 
@@ -432,13 +369,9 @@ class ApiClassActivityService {
   /// Like a Laravel notification count endpoint. Returns 0 on error.
   static Future<int> getUnreadCount() async {
     try {
-      final headers = await _getHeaders();
-      final response = await http.get(
-        Uri.parse('$baseUrl/class-activity/unread-count'),
-        headers: headers,
-      );
+      final response = await dioClient.get('/class-activity/unread-count');
 
-      final result = _handleResponse(response);
+      final result = response.data;
       if (result is Map && result.containsKey('count')) {
         return int.tryParse(result['count'].toString()) ?? 0;
       }
@@ -453,14 +386,12 @@ class ApiClassActivityService {
   /// [activityIds] - List of activity UUIDs to mark. Returns true on success.
   static Future<bool> markAsRead(List<String> activityIds) async {
     try {
-      final headers = await _getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/class-activity/mark-read'),
-        headers: headers,
-        body: json.encode({'activity_ids': activityIds}),
+      final response = await dioClient.post(
+        '/class-activity/mark-read',
+        data: {'activity_ids': activityIds},
       );
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result is Map && result['success'] == true;
     } catch (e) {
       if (kDebugMode) print('Error markAsRead: $e');

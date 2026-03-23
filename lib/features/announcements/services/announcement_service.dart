@@ -6,12 +6,12 @@
 /// (multipart upload). Uses Laravel's `_method=PUT` trick for file updates.
 library;
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 
 /// Service for announcement-related API calls.
@@ -21,111 +21,22 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 /// Key patterns:
 /// - Multipart file uploads (similar to Laravel's `$request->file('file')`)
 /// - Paginated responses transformed from Laravel's `LengthAwarePaginator`
-/// - 401/403 error handling triggers automatic logout (like Laravel middleware)
 class ApiAnnouncementService {
   /// Base URL from central config. Like `config('app.url')` in Laravel.
   static String get baseUrl => ApiService.baseUrl;
-
-  /// Safely prints truncated response bodies for debugging.
-  /// Only active in debug mode -- like Laravel's `Log::debug()`.
-  static void _debugResponse(http.Response response, {String? label}) {
-    try {
-      final raw = response.body;
-      final safe = raw.length > 1000
-          ? '${raw.substring(0, 1000)}... [truncated]'
-          : raw;
-      if (kDebugMode) {
-        print(
-          '${label ?? 'HTTP Response'} - Status: ${response.statusCode} - Body: $safe',
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error printing response debug: $e');
-      }
-    }
-  }
-
-  /// Auth headers with Bearer token. Like Laravel's `Http::withToken()`.
-  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
-
-  /// Parses JSON response, handles 401/403 with auto-logout.
-  /// Like a Laravel middleware that catches auth exceptions globally,
-  /// or an Axios interceptor that redirects to /login on 401.
-  static dynamic _handleResponse(http.Response response) {
-    dynamic responseBody;
-    try {
-      responseBody = json.decode(response.body);
-    } catch (e) {
-      // If server returns non-json (or empty), log raw body for debugging
-      try {
-        final raw = response.body;
-        final safe = raw.length > 1000
-            ? '${raw.substring(0, 1000)}... [truncated]'
-            : raw;
-        if (kDebugMode) {
-          print(
-            '❌ Invalid JSON response (status ${response.statusCode}): $safe',
-          );
-        }
-      } catch (_) {}
-
-      throw Exception('Invalid server response: ${response.statusCode}');
-    }
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
-    } else {
-      final serverMessage =
-          responseBody is Map && responseBody.containsKey('error')
-          ? responseBody['error']
-          : null;
-
-      // If unauthorized → force logout + redirect
-      if (response.statusCode == 401) {
-        try {
-          ApiService.logoutWithMessage(
-            'Session expired or unauthorized. Please login again.',
-          );
-        } catch (_) {}
-      } else if (response.statusCode == 403) {
-        // Check if this is a school context error (SEC-18) vs real forbidden
-        final is403SchoolContext =
-            responseBody is Map &&
-            (responseBody['error'] ?? '').toString().contains(
-              'Anda tidak memiliki akses ke sekolah ini',
-            );
-        if (is403SchoolContext) {
-          throw Exception('SCHOOL_ACCESS_DENIED: ${responseBody['error']}');
-        } else {
-          try {
-            ApiService.logoutWithMessage(
-              'Access forbidden. Please login again.',
-            );
-          } catch (_) {}
-        }
-      }
-
-      throw Exception(
-        serverMessage ?? 'Request failed with status: ${response.statusCode}',
-      );
-    }
-  }
 
   /// Fetches available filter options (priority, target, status) for announcement listing.
   /// Like a Laravel endpoint that returns dropdown options for a Vue filter component.
   /// Similar to a Vuex action that populates filter select options.
   static Future<Map<String, dynamic>> getAnnouncementFilterOptions() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/announcement/filter-options'),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get('/announcement/filter-options');
 
-      // Debug print response body
-      _debugResponse(response, label: 'GET /announcement/filter-options');
+      if (kDebugMode) {
+        print('GET /announcement/filter-options - Status: ${response.statusCode}');
+      }
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         return result;
@@ -184,15 +95,13 @@ class ApiAnnouncementService {
     String queryString = Uri(queryParameters: queryParams).query;
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/announcement?$queryString'),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get('/announcement?$queryString');
 
-      // Debug response body (truncated)
-      _debugResponse(response, label: 'GET /announcement?$queryString');
+      if (kDebugMode) {
+        print('GET /announcement?$queryString - Status: ${response.statusCode}');
+      }
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         // Transform Laravel Standard Pagination to Frontend Expected Format
@@ -284,41 +193,24 @@ class ApiAnnouncementService {
     File? file,
   ) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/announcement'),
-      );
-
-      final headers = await _getHeaders();
-      request.headers.addAll(headers);
-
-      request.fields.addAll(data);
+      final Map<String, dynamic> formMap = Map<String, dynamic>.from(data);
 
       if (file != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'file',
-            file.path,
-            contentType: MediaType.parse(_getMimeType(file.path)),
-          ),
+        formMap['file'] = await MultipartFile.fromFile(
+          file.path,
+          contentType: MediaType.parse(_getMimeType(file.path)),
         );
       }
 
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
+      final formData = FormData.fromMap(formMap);
 
-      _debugResponse(
-        http.Response(responseBody, response.statusCode),
-        label: 'POST /announcement',
-      );
+      final response = await dioClient.post('/announcement', data: formData);
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(responseBody);
-      } else {
-        throw Exception(
-          'Failed to create announcement: ${response.statusCode} - $responseBody',
-        );
+      if (kDebugMode) {
+        print('POST /announcement - Status: ${response.statusCode}');
       }
+
+      return response.data;
     } catch (e) {
       if (kDebugMode) print('Error creating announcement: $e');
       rethrow;
@@ -336,43 +228,29 @@ class ApiAnnouncementService {
   ) async {
     try {
       // Use POST with _method=PUT for file uploads in Laravel
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/announcement/$id'),
-      );
-
       data['_method'] = 'PUT';
 
-      final headers = await _getHeaders();
-      request.headers.addAll(headers);
-
-      request.fields.addAll(data);
+      final Map<String, dynamic> formMap = Map<String, dynamic>.from(data);
 
       if (file != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'file',
-            file.path,
-            contentType: MediaType.parse(_getMimeType(file.path)),
-          ),
+        formMap['file'] = await MultipartFile.fromFile(
+          file.path,
+          contentType: MediaType.parse(_getMimeType(file.path)),
         );
       }
 
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
+      final formData = FormData.fromMap(formMap);
 
-      _debugResponse(
-        http.Response(responseBody, response.statusCode),
-        label: 'POST (PUT) /announcement/$id',
+      final response = await dioClient.post(
+        '/announcement/$id',
+        data: formData,
       );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(responseBody);
-      } else {
-        throw Exception(
-          'Failed to update announcement: ${response.statusCode} - $responseBody',
-        );
+      if (kDebugMode) {
+        print('POST (PUT) /announcement/$id - Status: ${response.statusCode}');
       }
+
+      return response.data;
     } catch (e) {
       if (kDebugMode) print('Error updating announcement: $e');
       rethrow;

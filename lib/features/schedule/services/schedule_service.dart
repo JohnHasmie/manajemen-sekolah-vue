@@ -6,11 +6,11 @@
 /// Uses [LocalCacheService] with 30-minute TTL for paginated schedule data.
 library;
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -35,75 +35,42 @@ class ApiScheduleService {
     }
   }
 
-  /// Auth headers with Bearer token. Like Laravel's `Http::withToken()`.
-  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
-
-  /// Parses JSON response and throws on non-2xx status.
-  static dynamic _handleResponse(http.Response response) {
-    final responseBody = json.decode(response.body);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
-    } else {
-      throw Exception(
-        'Status: ${response.statusCode}, Body: ${json.encode(responseBody)}',
-      );
-    }
-  }
-
   /// Fetches the list of school days (hari). Like `Day::all()` in Laravel.
   static Future<List<dynamic>> getHari() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/day'),
-      headers: await _getHeaders(),
-    );
+    final response = await dioClient.get('/day');
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   /// Fetches the list of semesters. Like `Semester::all()` in Laravel.
   static Future<List<dynamic>> getSemester() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/semester'),
-      headers: await _getHeaders(),
-    );
+    final response = await dioClient.get('/semester');
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   /// Fetches academic years. Like `AcademicYear::all()` in Laravel.
   static Future<List<dynamic>> getAcademicYear() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/academic-year'),
-      headers: await _getHeaders(),
-    );
+    final response = await dioClient.get('/academic-year');
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   /// Fetches lesson hour slots (jam pelajaran). Like `LessonHour::all()` in Laravel.
   static Future<List<dynamic>> getJamPelajaran() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/lesson-hour'),
-      headers: await _getHeaders(),
-    );
+    final response = await dioClient.get('/lesson-hour');
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   /// Creates a new lesson hour slot. Like `LessonHour::create($data)` in Laravel.
   static Future<dynamic> addJamPelajaran(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/lesson-hour'),
-      headers: await _getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/lesson-hour', data: data);
+    return response.data;
   }
 
   /// Fetches filter dropdown options (teachers, classes, days, semesters) for schedule listing.
@@ -112,17 +79,14 @@ class ApiScheduleService {
     String? academicYearId,
   }) async {
     try {
-      String url = '$baseUrl/teaching-schedule/filter-options';
+      String url = '/teaching-schedule/filter-options';
       if (academicYearId != null) {
         url += '?academic_year_id=$academicYearId';
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         return result;
@@ -213,9 +177,8 @@ class ApiScheduleService {
       }
 
       // 2. Fetch from API
-      final response = await http.get(
-        Uri.parse('$baseUrl/teaching-schedule?$queryString'),
-        headers: await _getHeaders(),
+      final response = await dioClient.get(
+        '/teaching-schedule?$queryString',
       );
 
       if (kDebugMode) {
@@ -224,7 +187,7 @@ class ApiScheduleService {
         );
       }
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         // 3. Save to Cache
@@ -267,19 +230,16 @@ class ApiScheduleService {
     String? semesterId,
     String? academicYear,
   }) async {
-    String url = '$baseUrl/teaching-schedule?';
+    String url = '/teaching-schedule?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
     if (classId != null) url += 'class_id=$classId&';
     if (dayId != null) url += 'day_id=$dayId&';
     if (semesterId != null) url += 'semester_id=$semesterId&';
     if (academicYear != null) url += 'academic_year_id=$academicYear&';
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await _getHeaders(),
-    );
+    final response = await dioClient.get(url);
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
@@ -287,25 +247,23 @@ class ApiScheduleService {
   /// Like `TeachingSchedule::create($data)` in Laravel.
   static Future<dynamic> addSchedule(Map<String, dynamic> data) async {
     if (kDebugMode) {
-      print('DEBUG: addSchedule request body: ${json.encode(data)}');
+      print('DEBUG: addSchedule request body: $data');
     }
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/teaching-schedule'),
-      headers: await _getHeaders(),
-      body: json.encode(data),
+    final response = await dioClient.post(
+      '/teaching-schedule',
+      data: data,
     );
 
     if (kDebugMode) {
-      print('DEBUG: addSchedule response: ${response.statusCode} - ${response.body}');
+      print('DEBUG: addSchedule response: ${response.statusCode} - ${response.data}');
     }
 
     // Always invalidate cache after POST, even if response is an error
     // (backend may have saved the data despite returning 500)
     await invalidateCache();
 
-    final result = _handleResponse(response);
-    return result;
+    return response.data;
   }
 
   /// Updates an existing schedule entry. Invalidates cache.
@@ -314,25 +272,14 @@ class ApiScheduleService {
     String id,
     Map<String, dynamic> data,
   ) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/teaching-schedule/$id'),
-      headers: await _getHeaders(),
-      body: json.encode(data),
-    );
-
+    await dioClient.put('/teaching-schedule/$id', data: data);
     await invalidateCache();
-    _handleResponse(response);
   }
 
   /// Deletes a schedule entry. Invalidates cache.
   /// Like `TeachingSchedule::find($id)->delete()` in Laravel.
   static Future<void> deleteSchedule(String id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/teaching-schedule/$id'),
-      headers: await _getHeaders(),
-    );
-
-    _handleResponse(response);
+    await dioClient.delete('/teaching-schedule/$id');
     await invalidateCache(); // Invalidate cache on delete
   }
 
@@ -344,18 +291,15 @@ class ApiScheduleService {
     String? classId,
     String? academicYear,
   }) async {
-    String url = '$baseUrl/lesson-hour-filter?';
+    String url = '/lesson-hour-filter?';
     if (hariId != null) url += 'day_id=$hariId&';
     if (semesterId != null) url += 'semester_id=$semesterId&';
     if (classId != null) url += 'class_id=$classId&';
     if (academicYear != null) url += 'academic_year_id=$academicYear&';
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await _getHeaders(),
-    );
+    final response = await dioClient.get(url);
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
@@ -370,37 +314,34 @@ class ApiScheduleService {
       if (tahunAjaran != null) 'academic_year_id': tahunAjaran,
     };
 
-    final uri = Uri.parse(
-      '$baseUrl/teaching-schedule/all',
-    ).replace(queryParameters: queryParameters);
+    String url = '/teaching-schedule/all';
+    if (queryParameters.isNotEmpty) {
+      final qs = Uri(queryParameters: queryParameters).query;
+      url += '?$qs';
+    }
 
-    print('DEBUG: Calling getAllSchedules with URI: $uri');
-    final response = await http.get(uri, headers: await _getHeaders());
+    print('DEBUG: Calling getAllSchedules with URL: $url');
+    final response = await dioClient.get(url);
 
     print('DEBUG: getAllSchedules Response Status: ${response.statusCode}');
-    if (response.statusCode == 200) {
-      final dynamic data = json.decode(response.body);
+    final dynamic data = response.data;
 
-      if (data is List) {
-        print(
-          'DEBUG: getAllSchedules received List, wrapping in data object. Count: ${data.length}',
-        );
-        return {'data': data};
-      } else if (data is Map<String, dynamic>) {
-        print(
-          'DEBUG: getAllSchedules received Map. Data count: ${(data['data'] as List?)?.length ?? 0}',
-        );
-        return data;
-      }
-
+    if (data is List) {
       print(
-        'DEBUG: getAllSchedules received unexpected type: ${data.runtimeType}',
+        'DEBUG: getAllSchedules received List, wrapping in data object. Count: ${data.length}',
       );
-      return {'data': []};
-    } else {
-      print('DEBUG: getAllSchedules Error: ${response.body}');
-      throw Exception('Failed to load all schedules');
+      return {'data': data};
+    } else if (data is Map<String, dynamic>) {
+      print(
+        'DEBUG: getAllSchedules received Map. Data count: ${(data['data'] as List?)?.length ?? 0}',
+      );
+      return data;
     }
+
+    print(
+      'DEBUG: getAllSchedules received unexpected type: ${data.runtimeType}',
+    );
+    return {'data': []};
   }
 
   /// Checks for schedule conflicts before creating/updating a schedule.
@@ -417,7 +358,7 @@ class ApiScheduleService {
     String? excludeScheduleId, // Untuk edit, exclude jadwal yang sedang diedit
   }) async {
     try {
-      String url = '$baseUrl/teaching-schedule/conflicts?';
+      String url = '/teaching-schedule/conflicts?';
       url += 'days_ids=${days_ids.join(',')}&';
       url += 'class_id=$classId&';
       url += 'teacher_id=$teacherId&'; // Added to URL
@@ -429,12 +370,9 @@ class ApiScheduleService {
         url += 'exclude_id=$excludeScheduleId&';
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result is List ? result : [];
     } catch (e) {
       if (kDebugMode) {
@@ -453,17 +391,14 @@ class ApiScheduleService {
     String? academicYear,
   }) async {
     try {
-      String url = '$baseUrl/teaching-schedule/teacher/$teacherId?';
+      String url = '/teaching-schedule/teacher/$teacherId?';
       if (dayId != null && dayId.isNotEmpty) url += 'day_id=$dayId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
       if (academicYear != null) url += 'academic_year_id=$academicYear&';
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result is List ? result : [];
     } catch (e) {
       if (kDebugMode) {
@@ -481,17 +416,14 @@ class ApiScheduleService {
     String? academicYear,
   }) async {
     try {
-      String url = '$baseUrl/teaching-schedule/current?';
+      String url = '/teaching-schedule/current?';
       if (dayId != null && dayId.isNotEmpty) url += 'day_id=$dayId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
       if (academicYear != null) url += 'academic_year_id=$academicYear&';
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result is List ? result : [];
     } catch (e) {
       if (kDebugMode) {
@@ -510,7 +442,7 @@ class ApiScheduleService {
     String? academicYear,
   }) async {
     try {
-      String url = '$baseUrl/teaching-schedule/filtered?';
+      String url = '/teaching-schedule/filtered?';
       url += 'teacher_id=$teacherId&limit=100&';
 
       if (day != null && day != 'Semua Hari') {
@@ -525,12 +457,9 @@ class ApiScheduleService {
         url += 'academic_year_id=$academicYear&';
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic> && result.containsKey('data')) {
         return result['data'] is List ? result['data'] : [];
@@ -549,23 +478,19 @@ class ApiScheduleService {
   /// Like Laravel's file download response. Returns the local file path.
   static Future<String> downloadScheduleTemplate() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/teaching-schedule/template'),
-        headers: await _getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        '/teaching-schedule/template',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath =
-            '${directory.path}/template_import_jadwal_mengajar.xlsx';
-        final file = File(filePath);
+      final bytes = response.data!;
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath =
+          '${directory.path}/template_import_jadwal_mengajar.xlsx';
+      final file = File(filePath);
 
-        await file.writeAsBytes(response.bodyBytes);
-        return filePath;
-      } else {
-        throw Exception('Download failed with status: ${response.statusCode}');
-      }
+      await file.writeAsBytes(bytes);
+      return filePath;
     } catch (e) {
       throw Exception('Failed to download template: $e');
     }
@@ -577,38 +502,23 @@ class ApiScheduleService {
     File file,
   ) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/teaching-schedule/import'),
-      );
-
-      // Add headers
-      request.headers.addAll(await _getHeaders());
-
-      // Add file
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
           file.path,
           filename: file.path.split('/').last,
         ),
+      });
+
+      final response = await dioClient.post(
+        '/teaching-schedule/import',
+        data: formData,
       );
 
-      // Send request
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
-
       print('Import Schedule Response Status: ${response.statusCode}');
-      print('Import Schedule Response Body: $responseBody');
+      print('Import Schedule Response Body: ${response.data}');
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        await invalidateCache(); // Force refresh data after import
-        return json.decode(responseBody);
-      } else {
-        throw Exception(
-          'Import failed with status: ${response.statusCode}. Response: $responseBody',
-        );
-      }
+      await invalidateCache(); // Force refresh data after import
+      return response.data;
     } catch (e) {
       print('Import schedule error details: $e');
       throw Exception('Import error: $e');
@@ -619,33 +529,19 @@ class ApiScheduleService {
   /// Like a Laravel debug/test route. Useful during development.
   static Future<Map<String, dynamic>> debugExcelSchedule(File file) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/debug/excel-teaching-schedule'),
-      );
-
-      // Add headers
-      final headers = await ApiService.getHeaders();
-      request.headers.addAll(headers);
-
-      // Add file
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
           file.path,
           filename: file.path.split('/').last,
         ),
+      });
+
+      final response = await dioClient.post(
+        '/debug/excel-teaching-schedule',
+        data: formData,
       );
 
-      // Send request
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(responseBody);
-      } else {
-        throw Exception('Debug failed with status: ${response.statusCode}');
-      }
+      return response.data;
     } catch (e) {
       throw Exception('Debug error: $e');
     }
@@ -661,30 +557,26 @@ class ApiScheduleService {
     String? tahunAjaran,
   }) async {
     try {
-      String url = '$baseUrl/teaching-schedule/export?';
+      String url = '/teaching-schedule/export?';
       if (teacherId != null) url += 'teacher_id=$teacherId&';
       if (classId != null) url += 'class_id=$classId&';
       if (hariId != null) url += 'day_id=$hariId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
       if (tahunAjaran != null) url += 'academic_year_id=$tahunAjaran&';
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await _getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        url,
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath =
-            '${directory.path}/jadwal_mengajar_export_${DateTime.now().millisecondsSinceEpoch}.xlsx';
-        final file = File(filePath);
+      final bytes = response.data!;
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath =
+          '${directory.path}/jadwal_mengajar_export_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      final file = File(filePath);
 
-        await file.writeAsBytes(response.bodyBytes);
-        return filePath;
-      } else {
-        throw Exception('Export failed with status: ${response.statusCode}');
-      }
+      await file.writeAsBytes(bytes);
+      return filePath;
     } catch (e) {
       throw Exception('Failed to export schedules: $e');
     }
@@ -694,12 +586,9 @@ class ApiScheduleService {
   /// Like a Laravel helper that determines the active semester from today's date.
   static Future<Map<String, dynamic>> getDateBasedSemester() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/semester/current-date-based'),
-        headers: await _getHeaders(),
-      );
+      final response = await dioClient.get('/semester/current-date-based');
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result is Map<String, dynamic> ? result : {};
     } catch (e) {
       if (kDebugMode) {

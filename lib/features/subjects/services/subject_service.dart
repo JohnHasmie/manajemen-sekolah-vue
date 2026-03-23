@@ -12,8 +12,10 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -28,20 +30,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiSubjectService {
   /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
-
-  /// Parses JSON response and throws on non-2xx status.
-  static dynamic _handleResponse(http.Response response) {
-    final responseBody = json.decode(response.body);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
-    } else {
-      throw Exception(
-        responseBody['error'] ??
-            'Request failed with status: ${response.statusCode}',
-      );
-    }
-  }
 
   /// Fetches filter dropdown options for subject listing, with 24-hour cache.
   /// Like a Laravel endpoint returning distinct filter values for Vue selects.
@@ -65,12 +53,9 @@ class ApiSubjectService {
       );
       if (cachedData != null) return cachedData;
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/subject/filter-options'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/subject/filter-options');
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         await LocalCacheService.save(cacheKey, result);
@@ -152,14 +137,11 @@ class ApiSubjectService {
       if (kDebugMode) {
         print('🌐 Fetching subjects from API for School: $schoolId');
       }
-      final response = await http.get(
-        Uri.parse('$baseUrl/subject?$queryString'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/subject?$queryString');
 
       print('GET /subject?$queryString - Status: ${response.statusCode}');
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         await LocalCacheService.save(cacheKey, result); // Save to cache
@@ -253,11 +235,8 @@ class ApiSubjectService {
   /// Fetches the master list of all available subjects (system-wide, not school-specific).
   /// Like `MasterSubject::all()` in Laravel -- used for template/reference data.
   static Future<List<dynamic>> getAllMasterSubjects() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/master-subjects'),
-      headers: await ApiService.getHeaders(),
-    );
-    final result = _handleResponse(response);
+    final response = await dioClient.get('/master-subjects');
+    final result = response.data;
     return result is List ? result : [];
   }
 
@@ -266,12 +245,11 @@ class ApiSubjectService {
   static Future<List<dynamic>> getContentMateri({
     required String subBabId,
   }) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/content-material?sub_chapter_id=$subBabId'),
-      headers: await ApiService.getHeaders(),
+    final response = await dioClient.get(
+      '/content-material?sub_chapter_id=$subBabId',
     );
 
-    final result = _handleResponse(response);
+    final result = response.data;
     if (result is List) return result;
     if (result is Map && result['data'] is List) return result['data'];
     return [];
@@ -280,61 +258,42 @@ class ApiSubjectService {
   /// Fetches chapters (bab) for a subject. Top level of the material hierarchy.
   /// Like `Chapter::where('subject_id', $id)->get()` in Laravel.
   static Future<List<dynamic>> getBabMateri({String? subjectId}) async {
-    String url = '$baseUrl/bab-material?';
+    String url = '/bab-material?';
     if (subjectId != null) url += 'subject_id=$subjectId&';
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await ApiService.getHeaders(),
-    ).timeout(const Duration(seconds: 30));
+    final response = await dioClient.get(url);
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   /// Fetches sub-chapters (sub-bab) for a given chapter.
   /// Like `SubChapter::where('chapter_id', $babId)->get()` in Laravel.
   static Future<List<dynamic>> getSubBabMateri({required String babId}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/sub-bab-material?chapter_id=$babId'),
-      headers: await ApiService.getHeaders(),
+    final response = await dioClient.get(
+      '/sub-bab-material?chapter_id=$babId',
     );
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   // Tambah Bab Materi
   static Future<dynamic> addBabMateri(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/bab-material'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/bab-material', data: data);
+    return response.data;
   }
 
   // Tambah Sub Bab Materi
   static Future<dynamic> addSubBabMateri(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/sub-bab-material'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/sub-bab-material', data: data);
+    return response.data;
   }
 
   // Tambah Konten Materi
   static Future<dynamic> addContentMateri(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/content-material'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/content-material', data: data);
+    return response.data;
   }
 
   // Update Bab Materi
@@ -342,13 +301,7 @@ class ApiSubjectService {
     String id,
     Map<String, dynamic> data,
   ) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/bab-material/$id'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    _handleResponse(response);
+    await dioClient.put('/bab-material/$id', data: data);
   }
 
   // Update Sub Bab Materi
@@ -356,13 +309,7 @@ class ApiSubjectService {
     String id,
     Map<String, dynamic> data,
   ) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/sub-bab-material/$id'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    _handleResponse(response);
+    await dioClient.put('/sub-bab-material/$id', data: data);
   }
 
   // Update Konten Materi
@@ -370,43 +317,22 @@ class ApiSubjectService {
     String id,
     Map<String, dynamic> data,
   ) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/content-material/$id'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    _handleResponse(response);
+    await dioClient.put('/content-material/$id', data: data);
   }
 
   // Delete Bab Materi
   static Future<void> deleteBabMateri(String id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/bab-material/$id'),
-      headers: await ApiService.getHeaders(),
-    );
-
-    _handleResponse(response);
+    await dioClient.delete('/bab-material/$id');
   }
 
   // Delete Sub Bab Materi
   static Future<void> deleteSubBabMateri(String id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/sub-bab-material/$id'),
-      headers: await ApiService.getHeaders(),
-    );
-
-    _handleResponse(response);
+    await dioClient.delete('/sub-bab-material/$id');
   }
 
   // Delete Konten Materi
   static Future<void> deleteContentMateri(String id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/content-material/$id'),
-      headers: await ApiService.getHeaders(),
-    );
-
-    _handleResponse(response);
+    await dioClient.delete('/content-material/$id');
   }
 
   // Materi
@@ -414,86 +340,51 @@ class ApiSubjectService {
     String? teacherId,
     String? subjectId,
   }) async {
-    String url = '$baseUrl/materials?';
+    String url = '/materials?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
     if (subjectId != null) url += 'subject_id=$subjectId&';
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await ApiService.getHeaders(),
-    ).timeout(const Duration(seconds: 30));
+    final response = await dioClient.get(url);
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   static Future<dynamic> addMateri(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/materials'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/materials', data: data);
+    return response.data;
   }
 
   static Future<dynamic> saveRPP(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/rpp'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/rpp', data: data);
+    return response.data;
   }
 
   static Future<List<dynamic>> getRPPByTeacher(String teacherId) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/rpp?teacher_id=$teacherId'),
-      headers: await ApiService.getHeaders(),
-    );
+    final response = await dioClient.get('/rpp?teacher_id=$teacherId');
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   static Future<Map<String, dynamic>> importSubjectFromExcel(File file) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/subject/import'),
-      );
-
-      // Add headers
-      final headers = await ApiService.getHeaders();
-      request.headers.addAll(headers);
-
-      // Add file
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
           file.path,
           filename: file.path.split('/').last,
         ),
-      );
+      });
 
-      // Send request
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
+      final response = await dioClient.post('/subject/import', data: formData);
 
       print('Import Response Status: ${response.statusCode}');
-      print('Import Response Body: $responseBody');
+      print('Import Response Body: ${response.data}');
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        await LocalCacheService.clearStartingWith(
-          'subject_',
-        ); // Invalidate cache
-        return json.decode(responseBody);
-      } else {
-        throw Exception(
-          'Import failed with status: ${response.statusCode}. Response: $responseBody',
-        );
-      }
+      await LocalCacheService.clearStartingWith(
+        'subject_',
+      ); // Invalidate cache
+      return response.data;
     } catch (e) {
       print('Import error details: $e');
       throw Exception('Import error: $e');
@@ -502,24 +393,22 @@ class ApiSubjectService {
 
   static Future<String> downloadTemplate() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/subject/template'),
-        headers: await ApiService.getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        '/subject/template',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Save file locally
-        final directory = await getExternalStorageDirectory();
-        final filePath = '${directory?.path}/template_import_kelas.xlsx';
-        final file = File(filePath);
+      final bytes = response.data!;
 
-        await file.writeAsBytes(response.bodyBytes);
+      // Save file locally
+      final directory = await getExternalStorageDirectory();
+      final filePath = '${directory?.path}/template_import_kelas.xlsx';
+      final file = File(filePath);
 
-        print('Template downloaded to: $filePath');
-        return filePath;
-      } else {
-        throw Exception('Download failed with status: ${response.statusCode}');
-      }
+      await file.writeAsBytes(bytes);
+
+      print('Template downloaded to: $filePath');
+      return filePath;
     } catch (e) {
       print('Download template error: $e');
       throw Exception('Failed to download template: $e');
@@ -555,6 +444,21 @@ class ApiSubjectService {
         )
         .timeout(const Duration(seconds: 60));
     return response;
+  }
+
+  /// Parses JSON response and throws on non-2xx status.
+  /// Only used for AI API calls that still use raw http.
+  static dynamic _handleResponse(http.Response response) {
+    final responseBody = json.decode(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return responseBody;
+    } else {
+      throw Exception(
+        responseBody['error'] ??
+            'Request failed with status: ${response.statusCode}',
+      );
+    }
   }
 
   static Future<dynamic> generateMaterial(Map<String, dynamic> data) async {
@@ -742,28 +646,20 @@ class ApiSubjectService {
     String? classId,
   }) async {
     String url =
-        '$baseUrl/material-progress?teacher_id=$teacherId&subject_id=$subjectId';
+        '/material-progress?teacher_id=$teacherId&subject_id=$subjectId';
     if (classId != null) url += '&class_id=$classId';
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await ApiService.getHeaders(),
-    ).timeout(const Duration(seconds: 30));
+    final response = await dioClient.get(url);
 
-    final result = _handleResponse(response);
+    final result = response.data;
     return result is List ? result : [];
   }
 
   /// Saves or toggles the checked state for a single material progress item.
   /// Like `MaterialProgress::updateOrCreate()` in Laravel.
   static Future<dynamic> saveMateriProgress(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/material-progress'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-
-    return _handleResponse(response);
+    final response = await dioClient.post('/material-progress', data: data);
+    return response.data;
   }
 
   /// Batch-saves multiple material progress items at once.
@@ -787,13 +683,11 @@ class ApiSubjectService {
       }).toList(),
     };
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/material-progress/batch'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(requestData),
+    final response = await dioClient.post(
+      '/material-progress/batch',
+      data: requestData,
     );
-
-    return _handleResponse(response);
+    return response.data;
   }
 
   /// Marks specific materials as AI-generated (after RPP/activity generation).
@@ -812,13 +706,11 @@ class ApiSubjectService {
       }).toList(),
     };
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/material-progress/mark-generated'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(requestData),
+    final response = await dioClient.post(
+      '/material-progress/mark-generated',
+      data: requestData,
     );
-
-    return _handleResponse(response);
+    return response.data;
   }
 
   /// Resets the generated status to allow re-generation.
@@ -837,12 +729,19 @@ class ApiSubjectService {
       }).toList(),
     };
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/material-progress/reset-generated'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(requestData),
+    final response = await dioClient.post(
+      '/material-progress/reset-generated',
+      data: requestData,
     );
+    return response.data;
+  }
 
-    return _handleResponse(response);
+  static Future<Directory?> getExternalStorageDirectory() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      return directory;
+    } catch (e) {
+      return null;
+    }
   }
 }

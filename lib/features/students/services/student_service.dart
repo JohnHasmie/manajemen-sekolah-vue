@@ -6,11 +6,11 @@
 /// and student-by-class queries. Uses cache with manual invalidation.
 library;
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,52 +22,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// Key patterns:
 /// - Laravel validation error parsing (422 with 'errors' map)
-/// - Auto-logout on 401 (like Laravel auth middleware)
 /// - Excel import with row-level error extraction
 class ApiStudentService {
   /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
-
-  /// Parses JSON response, extracts Laravel validation errors (422),
-  /// and triggers logout on 401. Like a Laravel exception handler
-  /// that formats errors differently by status code.
-  static dynamic _handleResponse(http.Response response) {
-    final responseBody = json.decode(response.body);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
-    } else {
-      String? errorMessage = responseBody['error'] ?? responseBody['message'];
-
-      if (errorMessage == null && responseBody['errors'] != null) {
-        final errors = responseBody['errors'];
-        if (errors is Map && errors.isNotEmpty) {
-          final firstKey = errors.keys.first;
-          final firstError = errors[firstKey];
-          if (firstError is List && firstError.isNotEmpty) {
-            errorMessage = firstError.first;
-          } else {
-            errorMessage = firstError.toString();
-          }
-        }
-      }
-
-      errorMessage ??= 'Request failed with status: ${response.statusCode}';
-
-      if (response.statusCode == 401) {
-        _handleAuthenticationError();
-      }
-
-      throw Exception(errorMessage);
-    }
-  }
-
-  static void _handleAuthenticationError() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token'); // Clear invalid token
-    // You can also navigate to login page here
-    // Navigator.of(context).pushReplacementNamed('/login');
-  }
 
   /// Imports students from an Excel file via multipart upload.
   /// Like Laravel's `Excel::import()` with Maatwebsite. Handles row-level errors
@@ -75,81 +33,51 @@ class ApiStudentService {
   /// Clears student cache after successful import. Side effect: modifies DB.
   static Future<Map<String, dynamic>> importStudentsFromExcel(File file) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/students/import'),
-      );
-
-      // Add headers
-      final headers = await ApiService.getHeaders();
-      request.headers.addAll(headers);
-
-      // Add file
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
           file.path,
           filename: file.path.split('/').last,
         ),
-      );
+      });
 
-      // Send request
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
+      final response = await dioClient.post(
+        '/students/import',
+        data: formData,
+      );
 
       if (kDebugMode) {
         print('Import Response Status: ${response.statusCode}');
       }
       if (kDebugMode) {
-        print('Import Response Body: $responseBody');
+        print('Import Response Body: ${response.data}');
       }
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final body = json.decode(responseBody);
+      final body = response.data;
 
-        // Check for specific import result structure
-        if (body is Map && body['results'] != null) {
-          final results = body['results'];
-          if (results['failed'] is int && results['failed'] > 0) {
-            // Handle failures
-            List<dynamic> errors = results['errors'] ?? [];
-            String errorMsg = errors.isNotEmpty
-                ? errors.first.toString()
-                : 'Import failed';
+      // Check for specific import result structure
+      if (body is Map && body['results'] != null) {
+        final results = body['results'];
+        if (results['failed'] is int && results['failed'] > 0) {
+          // Handle failures
+          List<dynamic> errors = results['errors'] ?? [];
+          String errorMsg = errors.isNotEmpty
+              ? errors.first.toString()
+              : 'Import failed';
 
-            // Optional: Clean up "Row X: " prefix if desired, but user likely just wants the error.
-            // Let's try to strip "Row \d+: " to match user expectation exactly if possible,
-            // but keeping it is safer for context.
-            // User said: "seharusbya keluar Data siswa dengan nama 'Indri' sudah ada"
-            // Backend sends: "Row 2: Data siswa dengan nama 'Indri' sudah ada."
-            // I will try to remove the prefix for cleaner UI.
-            final rowPrefixRegex = RegExp(r'^Row \d+: ');
-            if (errorMsg.startsWith(rowPrefixRegex)) {
-              errorMsg = errorMsg.replaceFirst(rowPrefixRegex, '');
-            }
-
-            throw Exception(errorMsg);
+          // Strip "Row N: " prefix for cleaner UI messages
+          final rowPrefixRegex = RegExp(r'^Row \d+: ');
+          if (errorMsg.startsWith(rowPrefixRegex)) {
+            errorMsg = errorMsg.replaceFirst(rowPrefixRegex, '');
           }
+
+          throw Exception(errorMsg);
         }
-
-        // Clear cache after successful import
-        await _clearStudentCache();
-
-        return body;
-      } else {
-        String msg = 'Import failed with status: ${response.statusCode}';
-        try {
-          final body = json.decode(responseBody);
-          if (body is Map) {
-            if (body['message'] != null) {
-              msg = body['message'];
-            } else if (body['error'] != null) {
-              msg = body['error'];
-            }
-          }
-        } catch (_) {}
-        throw Exception(msg);
       }
+
+      // Clear cache after successful import
+      await _clearStudentCache();
+
+      return body;
     } catch (e) {
       if (kDebugMode) {
         print('Import error details: $e');
@@ -162,25 +90,22 @@ class ApiStudentService {
   /// Like Laravel's file download response. Returns the saved file path.
   static Future<String> downloadTemplate() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/student/template'),
-        headers: await ApiService.getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        '/student/template',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        final directory = await getExternalStorageDirectory();
-        final filePath = '${directory?.path}/template_import_siswa.xlsx';
-        final file = File(filePath);
+      final bytes = response.data!;
+      final directory = await getExternalStorageDirectory();
+      final filePath = '${directory?.path}/template_import_siswa.xlsx';
+      final file = File(filePath);
 
-        await file.writeAsBytes(response.bodyBytes);
+      await file.writeAsBytes(bytes);
 
-        if (kDebugMode) {
-          print('Template downloaded to: $filePath');
-        }
-        return filePath;
-      } else {
-        throw Exception('Download failed with status: ${response.statusCode}');
+      if (kDebugMode) {
+        print('Template downloaded to: $filePath');
       }
+      return filePath;
     } catch (e) {
       if (kDebugMode) {
         print('Download template error: $e');
@@ -223,7 +148,7 @@ class ApiStudentService {
     String? userId,
     String? guardianEmail,
   }) async {
-    String url = '$baseUrl/student';
+    String url = '/student';
     List<String> queryParams = [];
 
     if (academicYearId != null) {
@@ -240,12 +165,9 @@ class ApiStudentService {
       url += '?${queryParams.join('&')}';
     }
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await ApiService.getHeaders(),
-    );
+    final response = await dioClient.get(url);
 
-    final result = _handleResponse(response);
+    final result = response.data;
     if (result is Map<String, dynamic> && result.containsKey('data')) {
       return result['data'];
     }
@@ -254,11 +176,8 @@ class ApiStudentService {
 
   /// Fetches a single student by UUID. Like `Student::findOrFail($id)` in Laravel.
   static Future<dynamic> getStudentById(String id) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/student/$id'),
-      headers: await ApiService.getHeaders(),
-    );
-    final result = _handleResponse(response);
+    final response = await dioClient.get('/student/$id');
+    final result = response.data;
     if (result is Map<String, dynamic> && result.containsKey('data')) {
       return result['data'];
     }
@@ -269,12 +188,9 @@ class ApiStudentService {
   /// Like a Laravel endpoint returning distinct values for Vue filter selects.
   static Future<Map<String, dynamic>> getStudentFilterOptions() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/student/filter-options'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/student/filter-options');
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         return result;
@@ -357,12 +273,9 @@ class ApiStudentService {
     }
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/student?$queryString'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/student?$queryString');
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         await LocalCacheService.save(cacheKey, result);
@@ -410,12 +323,9 @@ class ApiStudentService {
     String queryString = Uri(queryParameters: queryParams).query;
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/student/stats?$queryString'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/student/stats?$queryString');
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result['data'] ?? {};
     } catch (e) {
       if (kDebugMode) print('Error fetching student stats: $e');
@@ -440,12 +350,8 @@ class ApiStudentService {
   /// Creates a new student record. Clears cache after success.
   /// Like `Student::create($data)` in Laravel.
   static Future<dynamic> addStudent(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/student'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-    final result = _handleResponse(response);
+    final response = await dioClient.post('/student', data: data);
+    final result = response.data;
     await _clearStudentCache();
     return result;
   }
@@ -456,23 +362,14 @@ class ApiStudentService {
     String id,
     Map<String, dynamic> data,
   ) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/student/$id'),
-      headers: await ApiService.getHeaders(),
-      body: json.encode(data),
-    );
-    _handleResponse(response);
+    await dioClient.put('/student/$id', data: data);
     await _clearStudentCache();
   }
 
   /// Deletes a student by ID. Clears cache after success.
   /// Like `Student::find($id)->delete()` in Laravel.
   static Future<void> deleteStudent(String id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/student/$id'),
-      headers: await ApiService.getHeaders(),
-    );
-    _handleResponse(response);
+    await dioClient.delete('/student/$id');
     await _clearStudentCache();
   }
 
@@ -483,16 +380,13 @@ class ApiStudentService {
     String? academicYearId,
   }) async {
     try {
-      String url = '$baseUrl/student/class/$classId';
+      String url = '/student/class/$classId';
       if (academicYearId != null) {
         url += '?academic_year_id=$academicYearId';
       }
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
       if (result is Map<String, dynamic>) {
         return (result['data'] as List?) ?? [];
       }

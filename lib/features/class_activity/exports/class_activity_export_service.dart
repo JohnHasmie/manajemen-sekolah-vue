@@ -2,7 +2,6 @@
 // Like Laravel's Maatwebsite/Excel export (`ClassActivityExport`) triggered from a controller.
 // The Flutter side sends data to the Laravel backend which generates the .xlsx file.
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -61,7 +60,12 @@ class ExcelClassActivityService {
 
         // Simpan file yang didownload
         final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+        // Dio response.data can be bytes or parsed JSON depending on responseType
+        if (response.data is List<int>) {
+          await file.writeAsBytes(response.data);
+        } else {
+          throw Exception('Unexpected response format for file download');
+        }
 
         // Buka file
         await OpenFile.open(filePath);
@@ -78,7 +82,7 @@ class ExcelClassActivityService {
           ),
         );
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData = response.data;
         throw Exception(
           errorData['message'] ??
               'Failed to export data. Status: ${response.statusCode}',

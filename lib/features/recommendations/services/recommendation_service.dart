@@ -9,13 +9,14 @@
 /// - Async job processing: generate returns 202 with a job_id, then poll until done
 /// - Rate limiting: 429 responses throw [RateLimitException]
 /// - Separate auth headers (no X-School-ID, only Bearer token)
+/// - Uses its own Dio instance (_aiDio) instead of dioClient, because the AI API
+///   has a different base URL and does not need X-School-ID headers.
 library;
 
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service for AI-powered teaching recommendation API calls.
@@ -23,47 +24,35 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Like a Laravel service class that uses `Http::baseUrl()` to call an external API,
 /// or a Vue composable that wraps a dedicated Axios instance for an AI service.
 ///
-/// Key difference from other services: uses [_aiBaseUrl] instead of [ApiService.baseUrl],
-/// and has its own [_getAiHeaders] without X-School-ID.
+/// Key difference from other services: uses [_aiBaseUrl] instead of the global dioClient,
+/// and has its own auth interceptor without X-School-ID.
 class ApiRecommendationService {
   /// Base URL for the AI microservice. Separate from the main Laravel API.
   /// Like having a second `API_BASE_URL` in your Laravel `.env` file.
   static const String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
 
-  /// Headers for KamillLabs AI API (Bearer token only, no X-School-ID)
-  static Future<Map<String, String>> _getAiHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
+  /// Lazily-initialized Dio instance dedicated to the AI microservice.
+  /// Configured with Bearer-token-only auth (no X-School-ID).
+  static Dio? _aiDioInstance;
 
-  /// Parses JSON response with special handling for 429 (rate limit) and 500 errors.
-  /// Unlike main API's handler, this throws [RateLimitException] for 429 responses.
-  /// Like a custom Axios interceptor that maps specific HTTP codes to exception types.
-  static dynamic _handleResponse(http.Response response) {
-    final body = json.decode(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return body;
-    } else if (response.statusCode == 429) {
-      final message = body['message'] ?? 'Rate limit exceeded';
-      throw RateLimitException(message, body);
-    } else if (response.statusCode == 422) {
-      final message = body['message'] ?? 'Validation error';
-      throw Exception(message);
-    } else if (response.statusCode == 500) {
-      if (kDebugMode) {
-        print('🔴 Server Error 500: ${response.body}');
-      }
-      throw Exception('Server sedang bermasalah. Coba lagi nanti.');
-    } else {
-      throw Exception(
-        body['message'] ?? body['error'] ?? 'Request failed (${response.statusCode})',
-      );
-    }
+  /// Returns the AI-specific Dio instance, creating it on first call.
+  /// Like a Laravel Http::withOptions() macro for the AI service.
+  static Dio get _aiDio {
+    _aiDioInstance ??= Dio(
+      BaseOptions(
+        baseUrl: _aiBaseUrl,
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ),
+    )..interceptors.addAll([
+        _AiAuthInterceptor(),
+        if (kDebugMode) _AiLoggingInterceptor(),
+      ]);
+    return _aiDioInstance!;
   }
 
   // ==================== RECOMMENDATIONS ====================
@@ -78,35 +67,30 @@ class ApiRecommendationService {
     bool forceRegenerate = false,
     bool? includeOnTrack,
   }) async {
-    final response = await http
-        .post(
-          Uri.parse('$_aiBaseUrl/recommendations/generate'),
-          headers: await _getAiHeaders(),
-          body: json.encode({
-            'teacher_id': teacherId,
-            'class_id': classId,
-            'subject_id': subjectId,
-            if (triggerSource != null) 'trigger_source': triggerSource,
-            if (forceRegenerate) 'force_regenerate': true,
-            if (includeOnTrack != null) 'include_on_track': includeOnTrack,
-          }),
-        )
-        .timeout(const Duration(seconds: 60));
+    final requestData = {
+      'teacher_id': teacherId,
+      'class_id': classId,
+      'subject_id': subjectId,
+      if (triggerSource != null) 'trigger_source': triggerSource,
+      if (forceRegenerate) 'force_regenerate': true,
+      if (includeOnTrack != null) 'include_on_track': includeOnTrack,
+    };
+
+    // Use validateStatus to accept 202 and 429 without throwing
+    final response = await _aiDio.post(
+      '/recommendations/generate',
+      data: requestData,
+      options: Options(validateStatus: (s) => s != null && s < 500),
+    );
 
     if (kDebugMode) {
       print('🤖 Generate recommendations: ${response.statusCode}');
-      print('🤖 Request body sent: ${json.encode({
-        'teacher_id': teacherId,
-        'class_id': classId,
-        'subject_id': subjectId,
-        if (triggerSource != null) 'trigger_source': triggerSource,
-        if (forceRegenerate) 'force_regenerate': true,
-        if (includeOnTrack != null) 'include_on_track': includeOnTrack,
-      })}');
-      print('🤖 Response body: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}');
+      print('🤖 Request body sent: $requestData');
+      final bodyStr = response.data.toString();
+      print('🤖 Response body: ${bodyStr.length > 500 ? bodyStr.substring(0, 500) : bodyStr}');
     }
 
-    final body = json.decode(response.body);
+    final body = response.data;
 
     if (response.statusCode == 202) {
       // Async processing - return job info
@@ -137,25 +121,23 @@ class ApiRecommendationService {
     required String studentId,
     bool forceRegenerate = false,
   }) async {
-    final response = await http
-        .post(
-          Uri.parse('$_aiBaseUrl/recommendations/generate-student'),
-          headers: await _getAiHeaders(),
-          body: json.encode({
-            'teacher_id': teacherId,
-            'class_id': classId,
-            'subject_id': subjectId,
-            'student_id': studentId,
-            if (forceRegenerate) 'force_regenerate': true,
-          }),
-        )
-        .timeout(const Duration(seconds: 60));
+    final response = await _aiDio.post(
+      '/recommendations/generate-student',
+      data: {
+        'teacher_id': teacherId,
+        'class_id': classId,
+        'subject_id': subjectId,
+        'student_id': studentId,
+        if (forceRegenerate) 'force_regenerate': true,
+      },
+      options: Options(validateStatus: (s) => s != null && s < 500),
+    );
 
     if (kDebugMode) {
       print('🤖 Generate student recommendation: ${response.statusCode}');
     }
 
-    final body = json.decode(response.body);
+    final body = response.data;
 
     if (response.statusCode == 202) {
       return {
@@ -189,7 +171,7 @@ class ApiRecommendationService {
     int page = 1,
     int perPage = 15,
   }) async {
-    final params = <String, String>{
+    final params = <String, dynamic>{
       'page': page.toString(),
       'per_page': perPage.toString(),
     };
@@ -201,19 +183,19 @@ class ApiRecommendationService {
     if (priority != null) params['priority'] = priority;
     if (category != null) params['category'] = category;
 
-    final uri = Uri.parse('$_aiBaseUrl/recommendations')
-        .replace(queryParameters: params);
-
-    final response = await http
-        .get(uri, headers: await _getAiHeaders())
-        .timeout(const Duration(seconds: 30));
+    final response = await _aiDio.get(
+      '/recommendations',
+      queryParameters: params,
+      options: Options(receiveTimeout: const Duration(seconds: 30)),
+    );
 
     if (kDebugMode) {
-      print('📋 List recommendations: ${response.statusCode} - URL: $uri');
-      print('📋 Response body: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}');
+      print('📋 List recommendations: ${response.statusCode} - URL: ${response.requestOptions.uri}');
+      final bodyStr = response.data.toString();
+      print('📋 Response body: ${bodyStr.length > 500 ? bodyStr.substring(0, 500) : bodyStr}');
     }
 
-    final body = _handleResponse(response);
+    final body = response.data;
     return {
       'success': true,
       'data': body['data'] ?? [],
@@ -225,18 +207,16 @@ class ApiRecommendationService {
   static Future<Map<String, dynamic>> getRecommendationDetail(
     String recommendationId,
   ) async {
-    final response = await http
-        .get(
-          Uri.parse('$_aiBaseUrl/recommendations/$recommendationId'),
-          headers: await _getAiHeaders(),
-        )
-        .timeout(const Duration(seconds: 30));
+    final response = await _aiDio.get(
+      '/recommendations/$recommendationId',
+      options: Options(receiveTimeout: const Duration(seconds: 30)),
+    );
 
     if (kDebugMode) {
       print('📋 Recommendation detail: ${response.statusCode}');
     }
 
-    return _handleResponse(response);
+    return response.data;
   }
 
   /// Update recommendation status
@@ -245,50 +225,51 @@ class ApiRecommendationService {
     required String status, // pending, in_progress, completed, dismissed
     String? teacherNotes,
   }) async {
-    final response = await http
-        .patch(
-          Uri.parse('$_aiBaseUrl/recommendations/$recommendationId/status'),
-          headers: await _getAiHeaders(),
-          body: json.encode({
-            'status': status,
-            if (teacherNotes != null) 'teacher_notes': teacherNotes,
-          }),
-        )
-        .timeout(const Duration(seconds: 30));
+    final response = await _aiDio.patch(
+      '/recommendations/$recommendationId/status',
+      data: {
+        'status': status,
+        if (teacherNotes != null) 'teacher_notes': teacherNotes,
+      },
+      options: Options(receiveTimeout: const Duration(seconds: 30)),
+    );
 
     if (kDebugMode) {
       print('📋 Update status: ${response.statusCode}');
     }
 
-    return _handleResponse(response);
+    return response.data;
   }
 
   /// Get class summary (aggregated recommendations by category/priority/status)
   static Future<Map<String, dynamic>> getClassSummary(String classId) async {
-    final response = await http
-        .get(
-          Uri.parse('$_aiBaseUrl/recommendations/class/$classId/summary'),
-          headers: await _getAiHeaders(),
-        )
-        .timeout(const Duration(seconds: 30));
+    try {
+      final response = await _aiDio.get(
+        '/recommendations/class/$classId/summary',
+        options: Options(receiveTimeout: const Duration(seconds: 30)),
+      );
 
-    if (kDebugMode) {
-      print('📊 Class summary: ${response.statusCode} - ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}');
-    }
+      if (kDebugMode) {
+        final bodyStr = response.data.toString();
+        print('📊 Class summary: ${response.statusCode} - ${bodyStr.length > 200 ? bodyStr.substring(0, 200) : bodyStr}');
+      }
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return response.data;
+    } catch (e) {
+      if (kDebugMode) {
+        print('📊 Class summary error: $e');
+      }
+      // Return empty summary on error (class may have no recommendations yet)
+      return {
+        'success': true,
+        'data': {
+          'total_recommendations': 0,
+          'by_status': {},
+          'by_priority': {},
+          'by_category': {},
+        },
+      };
     }
-    // Return empty summary on error (class may have no recommendations yet)
-    return {
-      'success': true,
-      'data': {
-        'total_recommendations': 0,
-        'by_status': {},
-        'by_priority': {},
-        'by_category': {},
-      },
-    };
   }
 
   // ==================== AI JOB POLLING ====================
@@ -301,44 +282,45 @@ class ApiRecommendationService {
     int maxAttempts = 60,
     void Function(String status, int attempt)? onProgress,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-      final response = await http
-          .get(
-            Uri.parse('$_aiBaseUrl/ai-jobs/$jobId'),
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 15));
-
-      if (kDebugMode) {
-        print('🔄 Poll attempt $attempt: ${response.statusCode} - ${response.body.length > 300 ? response.body.substring(0, 300) : response.body}');
-      }
-
-      if (response.statusCode == 200) {
-        final body = json.decode(response.body);
-        final data = body['data'] ?? body;
-        final status = data['status']?.toString().toLowerCase() ?? '';
+      try {
+        final response = await _aiDio.get(
+          '/ai-jobs/$jobId',
+          options: Options(receiveTimeout: const Duration(seconds: 15)),
+        );
 
         if (kDebugMode) {
-          print('📌 Job $jobId: status=$status, progress=${data['progress'] ?? 'N/A'}, error=${data['error'] ?? 'none'}');
+          final bodyStr = response.data.toString();
+          print('🔄 Poll attempt $attempt: ${response.statusCode} - ${bodyStr.length > 300 ? bodyStr.substring(0, 300) : bodyStr}');
         }
 
-        onProgress?.call(status, attempt);
+        if (response.statusCode == 200) {
+          final body = response.data;
+          final data = body['data'] ?? body;
+          final status = data['status']?.toString().toLowerCase() ?? '';
 
-        if (status == 'completed' || status == 'done') {
-          return data;
-        } else if (status == 'failed' || status == 'error') {
-          throw Exception(data['error'] ?? 'AI job failed');
+          if (kDebugMode) {
+            print('📌 Job $jobId: status=$status, progress=${data['progress'] ?? 'N/A'}, error=${data['error'] ?? 'none'}');
+          }
+
+          onProgress?.call(status, attempt);
+
+          if (status == 'completed' || status == 'done') {
+            return data;
+          } else if (status == 'failed' || status == 'error') {
+            throw Exception(data['error'] ?? 'AI job failed');
+          }
+          // still processing - wait and retry
         }
-        // still processing - wait and retry
-      } else {
-        if (kDebugMode) {
-          print('⚠️ Poll error: ${response.statusCode} - ${response.body}');
+      } catch (e) {
+        if (e is DioException) {
+          if (kDebugMode) {
+            print('⚠️ Poll error: ${e.response?.statusCode ?? 'N/A'} - ${e.message}');
+          }
+          // Don't rethrow DioException for polling - just retry
+        } else {
+          // Rethrow non-Dio exceptions (e.g., job failed)
+          rethrow;
         }
       }
 
@@ -348,6 +330,47 @@ class ApiRecommendationService {
     }
 
     throw TimeoutException('AI job timed out after $maxAttempts attempts');
+  }
+}
+
+/// Auth interceptor for the AI microservice.
+/// Only injects Bearer token (no X-School-ID), since the AI service
+/// doesn't use multi-tenant school headers.
+class _AiAuthInterceptor extends Interceptor {
+  @override
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token != null) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
+    } catch (_) {
+      // Continue without auth if SharedPreferences fails
+    }
+    handler.next(options);
+  }
+}
+
+/// Debug logging interceptor for AI API calls.
+class _AiLoggingInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (kDebugMode) {
+      print('🤖 AI ${options.method} ${options.uri}');
+    }
+    handler.next(options);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (kDebugMode) {
+      print('🤖 AI Error ${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}');
+    }
+    handler.next(err);
   }
 }
 

@@ -9,8 +9,9 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -28,53 +29,22 @@ class ApiClassService {
   /// Base URL from central config. Like `config('app.url')` in Laravel.
   static String get baseUrl => ApiService.baseUrl;
 
-  /// Parses JSON response and throws on non-2xx status.
-  /// Like an Axios response interceptor or Laravel Http macro.
-  static dynamic _handleResponse(http.Response response) {
-    final responseBody = json.decode(response.body);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
-    } else {
-      throw Exception(
-        responseBody['error'] ??
-            'Request failed with status: ${response.statusCode}',
-      );
-    }
-  }
-
   /// Imports classes from an Excel file via multipart upload.
   /// Like Laravel's `Excel::import()` with Maatwebsite. Clears cache after success.
   /// Similar to a Vue file upload action that triggers a backend import job.
   static Future<Map<String, dynamic>> importClassesFromExcel(File file) async {
     try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/class/import'),
-      );
-
-      final headers = await ApiService.getHeaders();
-      request.headers.addAll(headers);
-
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
           file.path,
           filename: file.path.split('/').last,
         ),
-      );
+      });
 
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
+      final response = await dioClient.post('/class/import', data: formData);
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        await _clearClassCache();
-        return json.decode(responseBody);
-      } else {
-        throw Exception(
-          'Import failed with status: ${response.statusCode}. Response: $responseBody',
-        );
-      }
+      await _clearClassCache();
+      return response.data;
     } catch (e) {
       throw Exception('Import error: $e');
     }
@@ -84,21 +54,18 @@ class ApiClassService {
   /// Like Laravel's file download response. Returns the local file path.
   static Future<String> downloadTemplate() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/class/template'),
-        headers: await ApiService.getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        '/class/template',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/template_import_kelas.xlsx';
-        final file = File(filePath);
+      final bytes = response.data!;
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/template_import_kelas.xlsx';
+      final file = File(filePath);
 
-        await file.writeAsBytes(response.bodyBytes);
-        return filePath;
-      } else {
-        throw Exception('Download failed with status: ${response.statusCode}');
-      }
+      await file.writeAsBytes(bytes);
+      return filePath;
     } catch (e) {
       throw Exception('Failed to download template: $e');
     }
@@ -108,12 +75,9 @@ class ApiClassService {
   /// Like a Laravel endpoint returning distinct filter values for a Vue filter component.
   static Future<Map<String, dynamic>> getClassFilterOptions() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/class/filter-options'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/class/filter-options');
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         return result;
@@ -188,12 +152,9 @@ class ApiClassService {
     }
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/class?$queryString'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/class?$queryString');
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         await LocalCacheService.save(cacheKey, result);

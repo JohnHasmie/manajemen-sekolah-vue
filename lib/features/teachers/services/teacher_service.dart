@@ -9,11 +9,11 @@
 /// [ApiService] instance, while static methods use raw http calls.
 library;
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -26,49 +26,21 @@ class ApiTeacherService {
   /// Base URL from central config.
   static String get baseUrl => ApiService.baseUrl;
 
-  /// Parses JSON response with Laravel validation error extraction (422).
-  /// Like a Laravel exception handler that returns the first validation error.
-  static dynamic _handleResponse(http.Response response) {
-    final responseBody = json.decode(response.body);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
-    } else {
-      if (response.statusCode == 422 && responseBody['errors'] != null) {
-        final errors = responseBody['errors'] as Map<String, dynamic>;
-        final firstError = errors.values.first;
-        final errorMessage = firstError is List
-            ? firstError.first
-            : firstError.toString();
-        throw Exception(errorMessage);
-      }
-
-      throw Exception(
-        responseBody['message'] ??
-            responseBody['error'] ??
-            'Request failed with status: ${response.statusCode}',
-      );
-    }
-  }
-
   /// Downloads the teacher Excel import template. Returns the local file path.
   static Future<String> downloadTemplate() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/teacher/template'),
-        headers: await ApiService.getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        '/teacher/template',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/template_import_guru.xlsx';
-        final file = File(filePath);
+      final bytes = response.data!;
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/template_import_guru.xlsx';
+      final file = File(filePath);
 
-        await file.writeAsBytes(response.bodyBytes);
-        return filePath;
-      } else {
-        throw Exception('Download failed with status: ${response.statusCode}');
-      }
+      await file.writeAsBytes(bytes);
+      return filePath;
     } catch (e) {
       throw Exception('Failed to download template: $e');
     }
@@ -79,17 +51,14 @@ class ApiTeacherService {
     String? academicYearId,
   }) async {
     try {
-      String url = '$baseUrl/teacher/filter-options';
+      String url = '/teacher/filter-options';
       if (academicYearId != null) {
         url += '?academic_year_id=$academicYearId';
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result is Map<String, dynamic>
           ? result
           : {
@@ -109,17 +78,14 @@ class ApiTeacherService {
     String? academicYearId,
   }) async {
     try {
-      String url = '$baseUrl/teacher?user_id=$userId';
+      String url = '/teacher?user_id=$userId';
       if (academicYearId != null) {
         url += '&academic_year_id=$academicYearId';
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       // Handle List response (when not paginated)
       if (result is List && result.isNotEmpty) {
@@ -192,12 +158,9 @@ class ApiTeacherService {
     }
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/teacher?$queryString'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/teacher?$queryString');
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         await LocalCacheService.save(cacheKey, result);
@@ -247,12 +210,9 @@ class ApiTeacherService {
     String queryString = Uri(queryParameters: queryParams).query;
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/teacher/stats?$queryString'),
-        headers: await ApiService.getHeaders(),
-      );
+      final response = await dioClient.get('/teacher/stats?$queryString');
 
-      final result = _handleResponse(response);
+      final result = response.data;
       return result['data'] ?? {};
     } catch (e) {
       if (kDebugMode) print('Error fetching teacher stats: $e');
@@ -334,17 +294,14 @@ class ApiTeacherService {
     String? academicYearId,
   }) async {
     try {
-      String url = '$baseUrl/teacher/$teacherId/classes';
+      String url = '/teacher/$teacherId/classes';
       if (academicYearId != null) {
         url += '?academic_year_id=$academicYearId';
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: await ApiService.getHeaders(),
-      ).timeout(const Duration(seconds: 30));
+      final response = await dioClient.get(url);
 
-      final result = _handleResponse(response);
+      final result = response.data;
       if (result is Map<String, dynamic> && result['data'] is List) {
         return result['data'];
       }
@@ -385,12 +342,11 @@ class ApiTeacherService {
     String queryString = Uri(queryParameters: queryParams).query;
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/teacher/$teacherId/subjects?$queryString'),
-        headers: await ApiService.getHeaders(),
+      final response = await dioClient.get(
+        '/teacher/$teacherId/subjects?$queryString',
       );
 
-      final result = _handleResponse(response);
+      final result = response.data;
 
       if (result is Map<String, dynamic>) {
         return result;
@@ -440,30 +396,17 @@ class ApiTeacherService {
   /// Like Laravel's `Excel::import()` with Maatwebsite package.
   static Future<Map<String, dynamic>> importTeachersFromExcel(File file) async {
     try {
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse('${ApiService.baseUrl}/teacher/import'),
-      );
-
-      final headers = await ApiService.getHeaders();
-      request.headers.addAll(headers);
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file',
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
           file.path,
           filename: 'import_teacher.xlsx',
         ),
-      );
+      });
 
-      final response = await request.send();
-      final responseData = await response.stream.bytesToString();
+      final response = await dioClient.post('/teacher/import', data: formData);
 
-      if (response.statusCode == 200) {
-        await _clearTeacherCache();
-        return json.decode(responseData);
-      } else {
-        throw Exception('Failed to import teachers: $responseData');
-      }
+      await _clearTeacherCache();
+      return response.data;
     } catch (e) {
       throw Exception('Failed to import teachers: $e');
     }
