@@ -1,41 +1,30 @@
 /// attendance_summary.dart - Aggregated attendance summary per subject per date.
-/// Like a Laravel Attendance summary Resource/DTO - presents pre-aggregated attendance data.
-/// In Vue terms, this is the shape returned by a "GET /attendance/summary" API call.
+/// Uses freezed for immutability, copyWith, == and toString.
+/// Custom fromJson maps Indonesian API field names to English properties.
 library;
 
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'attendance_summary.freezed.dart';
+
 /// Holds a summarized attendance snapshot for one subject on one date.
-/// Like a Laravel Eloquent Model but simpler - just a data class with fromJson.
-///
-/// Key properties:
-/// - [subjectId] / [subjectName]: The subject this summary belongs to.
-/// - [totalStudents]: Total number of students expected.
-/// - [present]: Count of students who were present.
-/// - [absent]: Count of students who were absent (sick + excused + alpha combined).
-class AttendanceSummary {
-  final String id;
-  final String subjectId;
-  final String subjectName;
-  final DateTime date;
-  final int totalStudents;
-  final int present;
-  final int absent;
+@freezed
+class AttendanceSummary with _$AttendanceSummary {
+  const factory AttendanceSummary({
+    @Default('') String id,
+    @Default('') String subjectId,
+    @Default('') String subjectName,
+    required DateTime date,
+    @Default(0) int totalStudents,
+    @Default(0) int present,
+    @Default(0) int absent,
+  }) = _AttendanceSummary;
 
-  AttendanceSummary({
-    required this.id,
-    required this.subjectId,
-    required this.subjectName,
-    required this.date,
-    required this.totalStudents,
-    required this.present,
-    required this.absent,
-  });
-
-  /// Constructs an [AttendanceSummary] from a JSON map returned by the backend API.
-  /// JSON keys are Indonesian (matching the Laravel backend field names).
+  /// Custom fromJson mapping Indonesian API keys to English properties.
   factory AttendanceSummary.fromJson(Map<String, dynamic> json) {
     return AttendanceSummary(
-      id: json['id'] ?? '',
-      subjectId: json['mata_pelajaran_id'] ?? '',
+      id: (json['id'] ?? '').toString(),
+      subjectId: (json['mata_pelajaran_id'] ?? '').toString(),
       subjectName: json['mata_pelajaran_nama'] ?? '',
       date: DateTime.parse(json['tanggal']),
       totalStudents: json['total_siswa'] ?? 0,

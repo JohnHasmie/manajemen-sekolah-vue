@@ -1,68 +1,31 @@
 /// student.dart - Student data model with JSON serialization.
-/// Like Laravel's Student Eloquent Model but simpler - just a data class with fromJson/toJson
-/// (similar to a Laravel Resource or DTO).
-/// In Vue terms, this is the TypeScript interface for a student object,
-/// with helper methods to parse/serialize from/to the API's JSON shape.
+/// Uses freezed for immutability, copyWith, == and toString generation.
+/// Custom fromJson handles two API response shapes for className.
 library;
 
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'student.freezed.dart';
+
 /// Represents a student record with personal info and class assignment.
-/// Like a Laravel Eloquent Model but simpler - just a data class with fromJson/toJson.
-///
-/// Key properties:
-/// - [name]: Student's full name.
-/// - [className]: Resolved class name (e.g., "7A"). Comes from either `kelas_nama`
-///   or the nested `class.name` in the API response (like a Laravel accessor).
-/// - [studentNumber]: Student identification number (NIS).
-/// - [address]: Home address.
-/// - [guardianName]: Guardian/parent name (like a flattened `belongsTo` relationship).
-/// - [phoneNumber]: Contact phone number.
-/// - [classId]: Optional foreign key to the class (nullable for unassigned students).
-/// - [studentClassId]: Optional pivot table ID linking student to class
-///   (like Laravel's pivot ID in a `belongsToMany`).
-class Student {
-  final String id;
-  final String name;
-  final String className;
-  final String studentNumber;
-  final String address;
-  final String guardianName;
-  final String phoneNumber;
-  final String? classId;
-  final String? studentClassId;
+/// Like a Laravel Eloquent Model but immutable (similar to a Laravel Resource/DTO).
+@freezed
+class Student with _$Student {
+  const Student._();
 
-  Student({
-    required this.id,
-    required this.name,
-    required this.className,
-    required this.studentNumber,
-    required this.address,
-    required this.guardianName,
-    required this.phoneNumber,
-    this.classId,
-    this.studentClassId,
-  });
+  const factory Student({
+    required String id,
+    @Default('') String name,
+    @Default('') String className,
+    @Default('') String studentNumber,
+    @Default('') String address,
+    @Default('') String guardianName,
+    @Default('') String phoneNumber,
+    String? classId,
+    String? studentClassId,
+  }) = _Student;
 
-  /// Constructs a [Student] from a JSON map returned by the backend API.
-  /// Handles two different API response shapes for the class name:
-  /// 1. Flat: `{ "kelas_nama": "7A" }` (from list endpoints)
-  /// 2. Nested: `{ "class": { "name": "7A" } }` (from detail endpoints)
-  factory Student.fromJson(Map<String, dynamic> json) {
-    return Student(
-      id: json['id'].toString(),
-      name: json['name'] ?? '',
-      // Try flat key first, fall back to nested class object
-      className: json['kelas_nama'] ?? json['class']?['name'] ?? '',
-      studentNumber: json['student_number'] ?? '',
-      address: json['address'] ?? '',
-      guardianName: json['guardian_name'] ?? '',
-      phoneNumber: json['phone_number'] ?? '',
-      classId: json['class_id'],
-      studentClassId: json['student_class_id'],
-    );
-  }
-
-  /// Serializes this student to a JSON map for sending to the API.
-  /// Uses snake_case keys to match the Laravel backend convention.
+  /// Serializes to API-compatible JSON with snake_case keys.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -76,4 +39,22 @@ class Student {
       'student_class_id': studentClassId,
     };
   }
+
+  /// Custom fromJson to handle two API response shapes:
+  /// 1. Flat: `{ "kelas_nama": "7A" }` (from list endpoints)
+  /// 2. Nested: `{ "class": { "name": "7A" } }` (from detail endpoints)
+  factory Student.fromJson(Map<String, dynamic> json) {
+    return Student(
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      className: json['kelas_nama'] ?? json['class']?['name'] ?? '',
+      studentNumber: json['student_number'] ?? '',
+      address: json['address'] ?? '',
+      guardianName: json['guardian_name'] ?? '',
+      phoneNumber: json['phone_number'] ?? '',
+      classId: json['class_id']?.toString(),
+      studentClassId: json['student_class_id']?.toString(),
+    );
+  }
+
 }
