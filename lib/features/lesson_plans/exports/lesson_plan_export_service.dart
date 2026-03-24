@@ -174,30 +174,4 @@ class ExcelRppService {
     return validatedData;
   }
 
-  /// Translate RPP approval status to localized text.
-  /// Maps: Disetujui->Approved, Menunggu->Pending, Ditolak->Rejected.
-  static String _getStatusText(
-    String? status,
-    LanguageProvider languageProvider,
-  ) {
-    switch (status) {
-      case 'Disetujui':
-        return languageProvider.getTranslatedText({
-          'en': 'Approved',
-          'id': 'Disetujui',
-        });
-      case 'Menunggu':
-        return languageProvider.getTranslatedText({
-          'en': 'Pending',
-          'id': 'Menunggu',
-        });
-      case 'Ditolak':
-        return languageProvider.getTranslatedText({
-          'en': 'Rejected',
-          'id': 'Ditolak',
-        });
-      default:
-        return status ?? '-';
-    }
-  }
 }

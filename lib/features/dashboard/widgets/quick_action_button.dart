@@ -6,7 +6,6 @@
 // buttons below a hero section.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/dashboard_typography.dart';
 
 /// A quick action button with icon, label, and optional badge.
 ///

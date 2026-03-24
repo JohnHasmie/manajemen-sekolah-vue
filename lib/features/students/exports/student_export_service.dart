@@ -323,42 +323,4 @@ class ExcelService {
     }
   }
 
-  /// Parse a gender text string back to a code ('L' or 'P').
-  /// Handles multiple input formats: 'Laki-laki', 'Male', 'Pria', etc.
-  /// Defaults to 'L' if no match found.
-  static String _parseGender(
-    String? genderText,
-    LanguageProvider languageProvider,
-  ) {
-    if (genderText == null) return 'L';
-
-    final maleOptions = ['L', 'Laki-laki', 'Male', 'Laki', 'Pria'];
-    final femaleOptions = ['P', 'Perempuan', 'Female', 'Wanita'];
-
-    if (maleOptions.any(
-      (option) => genderText.toLowerCase().contains(option.toLowerCase()),
-    )) {
-      return 'L';
-    } else if (femaleOptions.any(
-      (option) => genderText.toLowerCase().contains(option.toLowerCase()),
-    )) {
-      return 'P';
-    } else {
-      return 'L'; // Default to Male
-    }
-  }
-
-  /// Parse various date formats into a standardized 'YYYY-MM-DD' string.
-  /// Returns the original text if parsing fails.
-  static String _parseDate(String? dateText) {
-    if (dateText == null || dateText.isEmpty) return '';
-
-    try {
-      // Try to parse various date formats
-      final date = DateTime.parse(dateText);
-      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return dateText; // Return as is if parsing fails
-    }
-  }
 }

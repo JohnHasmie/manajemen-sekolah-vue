@@ -71,7 +71,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   final int _perPage = 10; // Fixed 10 items per load
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
 
   // Filter States (Backend filtering)
   String? _selectedPriorityFilter; // 'Important', 'Normal', or null for all
@@ -79,11 +78,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   _selectedTargetFilter; // 'Teacher', 'Student', 'Parent', 'All', or null
   String? _selectedStatusFilter; // 'Active', 'Scheduled', 'Expired', or null
   bool _hasActiveFilter = false;
-
-  // Filter Options (from backend)
-  List<dynamic> _availablePrioritasOptions = [];
-  List<dynamic> _availableTargetOptions = [];
-  List<dynamic> _availableStatusOptions = [];
 
   // Search debounce
   Timer? _searchDebounce;
@@ -238,12 +232,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           ttl: const Duration(hours: 6),
         );
         if (cached != null && mounted) {
-          final cachedData = Map<String, dynamic>.from(cached);
-          setState(() {
-            _availablePrioritasOptions = List<dynamic>.from(cachedData['prioritas_options'] ?? []);
-            _availableTargetOptions = List<dynamic>.from(cachedData['target_options'] ?? []);
-            _availableStatusOptions = List<dynamic>.from(cachedData['status_options'] ?? []);
-          });
           if (kDebugMode) print('⚡ Announcement filter options loaded from cache');
           return;
         }
@@ -257,12 +245,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
       if (!mounted) return;
 
       if (response['success'] == true && response['data'] != null) {
-        setState(() {
-          _availablePrioritasOptions =
-              response['data']['prioritas_options'] ?? [];
-          _availableTargetOptions = response['data']['target_options'] ?? [];
-          _availableStatusOptions = response['data']['status_options'] ?? [];
-        });
         // Non-blocking cache save
         LocalCacheService.save(cacheKey, {
           'prioritas_options': response['data']['prioritas_options'] ?? [],
@@ -815,7 +797,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
             if (cachedList.isNotEmpty) {
               setState(() {
                 _announcements = cachedList;
-                _paginationMeta = cached['pagination'];
                 _hasMoreData = cached['pagination']?['has_next_page'] ?? false;
                 _isLoading = false;
               });
@@ -916,7 +897,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
         setState(() {
           _announcements = fetchedList;
-          _paginationMeta = response['pagination'];
           _hasMoreData = response['pagination']?['has_next_page'] ?? false;
           _isLoading = false;
           _errorMessage = null;
@@ -1068,7 +1048,6 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           if (newItems is List) {
             _announcements.addAll(newItems);
           }
-          _paginationMeta = response['pagination'];
           _hasMoreData = response['pagination']?['has_next_page'] ?? false;
           _isLoadingMore = false;
         });

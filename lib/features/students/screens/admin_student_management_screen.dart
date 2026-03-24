@@ -70,7 +70,6 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   final int _perPage = 10;
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
 
   String? _selectedStatusFilter;
   List<String> _selectedClassIds = [];
@@ -79,10 +78,8 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   String? _selectedGuardian;
   bool _hasActiveFilter = false;
 
-  Map<String, dynamic>? _filterOptions;
   List<String> _availableGradeLevels = [];
   List<dynamic> _availableClass = [];
-  List<Map<String, String>> _availableGenderOptions = [];
 
   // Timer? _searchDebounce; // Removed debounce
 
@@ -157,19 +154,10 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
   void _applyFilterOptions(Map<String, dynamic> data) {
     setState(() {
-      _filterOptions = data;
       _availableGradeLevels = List<String>.from(
         data['grade_levels'] ?? [],
       );
       _availableClass = data['kelas'] ?? [];
-      _availableGenderOptions = List<Map<String, String>>.from(
-        (data['gender_options'] ?? []).map(
-          (item) => {
-            'value': item['value'].toString(),
-            'label': item['label'].toString(),
-          },
-        ),
-      );
     });
     if (kDebugMode) {
       print(
@@ -353,9 +341,6 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                 setState(() {
                   _students = List<dynamic>.from(cachedData['students'] ?? []);
                   _classList = List<dynamic>.from(cachedData['classList'] ?? []);
-                  _paginationMeta = cachedData['pagination'] != null
-                      ? Map<String, dynamic>.from(cachedData['pagination'])
-                      : null;
                   _hasMoreData = cachedData['pagination']?['has_next_page'] ?? false;
                   _isLoading = false;
                   _errorMessage = null;
@@ -411,7 +396,6 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
       setState(() {
         _students = response['data'] ?? [];
-        _paginationMeta = response['pagination'];
         _classList = classData;
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
@@ -515,7 +499,6 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
       setState(() {
         _students.addAll(response['data'] ?? []);
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoadingMore = false;
       });
@@ -534,25 +517,6 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         _currentPage--;
       });
     }
-  }
-
-  void _applyFilter({
-    String? classId,
-    String? gradeLevel,
-    String? gender,
-    String? guardianName,
-  }) {
-    setState(() {
-      if (classId != null) {
-        _selectedClassIds = [classId];
-      }
-      _selectedGradeLevel = gradeLevel;
-      _selectedGenderFilter = gender;
-      _selectedGuardian = guardianName;
-      _currentPage = 1;
-    });
-    _loadData();
-    _checkActiveFilter();
   }
 
   void _checkActiveFilter() {

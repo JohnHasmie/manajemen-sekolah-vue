@@ -77,7 +77,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   final int _perPage = 10; // Fixed 10 items per load
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
 
   // Filter States (Backend filtering)
   String? _selectedGradeFilter; // '1' to '12', or null for all
@@ -708,9 +707,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                 final cachedData = Map<String, dynamic>.from(cached);
                 setState(() {
                   _classes = List<dynamic>.from(cachedData['classes'] ?? []);
-                  _paginationMeta = cachedData['pagination'] != null
-                      ? Map<String, dynamic>.from(cachedData['pagination'])
-                      : null;
                   _hasMoreData = cachedData['pagination']?['has_next_page'] ?? false;
                   _isLoading = false;
                   _errorMessage = null;
@@ -761,7 +757,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
       setState(() {
         _classes = response['data'] ?? [];
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
       });
@@ -855,7 +850,6 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       setState(() {
         // Append new data to existing list
         _classes.addAll(response['data'] ?? []);
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoadingMore = false;
       });

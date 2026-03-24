@@ -6,7 +6,6 @@
 // how you would pass `v-model` and `@submit` to a Vue form component.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A modal dialog widget for creating or editing a class (kelas).

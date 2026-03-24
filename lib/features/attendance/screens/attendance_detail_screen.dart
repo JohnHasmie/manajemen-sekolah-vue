@@ -162,7 +162,6 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   Widget _buildStudentItem(Student student) {
     final status = _absensiStatus[student.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
-    final String statusText = _getStatusText(status);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -326,21 +325,6 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         return Colors.purple;
       default:
         return Colors.green;
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'izin':
-        return 'Izin';
-      case 'sakit':
-        return 'Sakit';
-      case 'alpha':
-        return 'Alpha';
-      case 'terlambat':
-        return 'Terlambat';
-      default:
-        return 'Hadir';
     }
   }
 

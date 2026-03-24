@@ -71,7 +71,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
   final int _perPage = 10;
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
 
   String? _selectedClassId;
   String? _selectedHomeroomFilter;
@@ -84,8 +83,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
   List<dynamic> _availableClass = [];
   List<dynamic> _availableGenders = [];
   List<dynamic> _availableEmploymentStatus = [];
-
-  final String _lastSearchQuery = '';
 
   // Search debounce
   Timer? _searchDebounce;
@@ -924,9 +921,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                   _teachers = List<dynamic>.from(cachedData['teachers'] ?? []);
                   _subjects = List<dynamic>.from(cachedData['subjects'] ?? []);
                   _classes = List<dynamic>.from(cachedData['classes'] ?? []);
-                  _paginationMeta = cachedData['pagination'] != null
-                      ? Map<String, dynamic>.from(cachedData['pagination'])
-                      : null;
                   _hasMoreData = cachedData['pagination']?['has_next_page'] ?? false;
                   _isLoading = false;
                   _errorMessage = null;
@@ -992,7 +986,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         _teachers = response['data'] ?? [];
         _subjects = subjectData;
         _classes = classData;
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
       });
@@ -1103,7 +1096,6 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       setState(() {
         // Append new data to existing list
         _teachers.addAll(response['data'] ?? []);
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoadingMore = false;
       });

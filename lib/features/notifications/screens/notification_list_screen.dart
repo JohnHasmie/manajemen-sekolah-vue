@@ -329,7 +329,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       if (diff.inDays < 7) return '${diff.inDays} hari lalu';
       return DateFormat('dd MMM yyyy, HH:mm').format(date);
     } catch (_) {
-      return dateStr ?? '';
+      return dateStr;
     }
   }
 

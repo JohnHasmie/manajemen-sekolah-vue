@@ -68,7 +68,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
   final int _perPage = 10; // Fixed 10 items per load
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
 
   // Filter States (Backend filtering)
   String? _selectedStatusFilter; // 'active', 'inactive', atau null untuk semua
@@ -92,9 +91,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
   String? _tourId;
 
   List<dynamic> _availableMasterSubjects = [];
-
-  // Filter Options (from backend)
-  List<dynamic> _availableStatusOptions = [];
 
   // Search debounce
   Timer? _searchDebounce;
@@ -177,9 +173,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       if (!mounted) return;
 
       if (response['success'] == true && response['data'] != null) {
-        setState(() {
-          _availableStatusOptions = response['data']['status_options'] ?? [];
-        });
         if (kDebugMode) {
           print('✅ Filter options loaded');
         }
@@ -850,9 +843,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                 _applySubjectExtractedData(subjects);
                 setState(() {
                   _subjectList = subjects;
-                  _paginationMeta = cachedData['pagination'] != null
-                      ? Map<String, dynamic>.from(cachedData['pagination'])
-                      : null;
                   _hasMoreData = cachedData['pagination']?['has_next_page'] ?? false;
                   _isLoading = false;
                   _errorMessage = '';
@@ -897,7 +887,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
       setState(() {
         _subjectList = data;
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
         _errorMessage = '';
@@ -1002,7 +991,6 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
             final bInt = int.tryParse(b) ?? 0;
             return aInt.compareTo(bInt);
           });
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoadingMore = false;
       });

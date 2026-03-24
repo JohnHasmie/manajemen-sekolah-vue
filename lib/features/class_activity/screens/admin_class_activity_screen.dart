@@ -806,7 +806,6 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
     final languageProvider = context.read<LanguageProvider>();
     final isAssignment = activity['jenis'] == 'tugas';
     final isSpecificTarget = activity['target'] == 'khusus';
-    final primaryColor = _getPrimaryColor();
 
     showDialog(
       context: context,

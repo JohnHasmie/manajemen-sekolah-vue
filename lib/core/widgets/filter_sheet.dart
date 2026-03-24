@@ -163,11 +163,6 @@ class _FilterSheetState extends State<FilterSheet> {
   /// Renders a single filter section with title and selectable chips.
   /// Like a `<FilterGroup>` Vue component inside the sheet.
   Widget _buildFilterSection(FilterSection section, Color primaryColor) {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
-
     return Padding(
       padding: const EdgeInsets.only(left: 4, right: 4),
       child: Column(

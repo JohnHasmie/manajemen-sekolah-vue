@@ -70,7 +70,6 @@ class TeachingScheduleManagementScreenState
   final ApiTeacherService apiTeacherService = ApiTeacherService();
 
   List<dynamic> _scheduleList = [];
-  List<dynamic> _teacherList = [];
   List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
   List<dynamic> _hariList = [];
@@ -91,7 +90,6 @@ class TeachingScheduleManagementScreenState
   final int _perPage = 10; // Fixed 10 items per load
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
 
   // Filter state (Backend filtering)
   String? _selectedTeacherId; // Filter by teacher
@@ -457,7 +455,6 @@ class TeachingScheduleManagementScreenState
     required List<dynamic> jamPelajaran,
   }) {
     _scheduleList = scheduleResponse['data'] ?? [];
-    _teacherList = teacher;
     _subjectList = subject;
     _classList = classData;
     _hariList = hari;
@@ -466,7 +463,6 @@ class TeachingScheduleManagementScreenState
     }
     _semesterList = semester;
     _jamPelajaranList = jamPelajaran;
-    _paginationMeta = scheduleResponse['pagination'];
     _hasMoreData = scheduleResponse['pagination']?['has_next_page'] ?? false;
     _isLoading = false;
   }
@@ -702,7 +698,6 @@ class TeachingScheduleManagementScreenState
       setState(() {
         // Append new data to existing list
         _scheduleList.addAll(response['data'] ?? []);
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoadingMore = false;
       });

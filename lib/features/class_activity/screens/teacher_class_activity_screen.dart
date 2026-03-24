@@ -126,7 +126,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   final int _perPage = 10;
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
 
   // Scroll controller for infinite scroll
   final ScrollController _scrollController = ScrollController();
@@ -2920,7 +2919,6 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         } else {
           _activityList.addAll(response['data'] ?? []);
         }
-        _paginationMeta = response['pagination'];
         _hasMoreData = response['pagination']?['has_next_page'] ?? false;
         _isLoading = false;
       });

@@ -88,10 +88,6 @@ class GradePageState extends State<GradePage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  bool get _isReadOnly {
-    return Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
-  }
-
   bool get _canEdit {
     final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
     bool canEditRole = role == 'guru' || role == 'teacher';
@@ -3911,11 +3907,6 @@ class GradeInputFormState extends State<GradeInputForm> {
   final TextEditingController _titleController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
 
-  bool get _canEdit {
-    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-    return role == 'guru' || role == 'teacher';
-  }
-
   bool get _isReadOnly {
     return Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
   }
@@ -4540,11 +4531,6 @@ class GradeInputFormNew extends StatefulWidget {
 class GradeInputFormNewState extends State<GradeInputFormNew> {
   final _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime.now();
-
-  bool get _canEdit {
-    final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-    return role == 'guru' || role == 'teacher';
-  }
 
   bool get _isReadOnly {
     return Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;

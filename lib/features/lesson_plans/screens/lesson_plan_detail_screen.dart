@@ -958,24 +958,6 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     return text.trim();
   }
 
-  String _getMonthName(int month) {
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    return months[month - 1];
-  }
-
   /// Saves the RPP to the API.
   /// Like `axios.put('/api/rpp/{id}')` in Vue.
   Future<void> _saveRPP() async {

@@ -69,23 +69,16 @@ class MateriPage extends StatefulWidget {
 ///
 /// `setState()` is like Vue's reactivity -- triggers UI rebuild.
 class MateriPageState extends State<MateriPage> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-
   String? _selectedSubject;
   String? _selectedClassId;
   String? _selectedClassName;
   List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
-  List<dynamic> _materiList = [];
   List<dynamic> _babMateriList = [];
   List<dynamic> _subBabMateriList = [];
-  List<dynamic> _contentMateriList = [];
 
   // Search dan Filter
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _filterOptions = ['All', 'Today', 'This Week'];
   String _selectedFilter = 'All';
 
   // State untuk expanded/collapsed
@@ -227,69 +220,8 @@ class MateriPageState extends State<MateriPage> {
     }
   }
 
-  // Mark selected materials as generated
-  Future<void> _markSelectedAsGenerated(
-    List<Map<String, dynamic>> babs,
-    List<Map<String, dynamic>> subBabs,
-  ) async {
-    try {
-      final String? teacherId = widget.teacher['id'];
-      if (teacherId == null || _selectedSubject == null) return;
-
-      final List<Map<String, dynamic>> items = [];
-
-      // Add babs
-      for (var bab in babs) {
-        items.add({'bab_id': bab['id'], 'sub_bab_id': null});
-      }
-
-      // Add sub-babs
-      for (var subBab in subBabs) {
-        items.add({'bab_id': subBab['bab_id'], 'sub_bab_id': subBab['id']});
-      }
-
-      if (items.isEmpty) return;
-
-      await ApiSubjectService.markMateriGenerated({
-        'teacher_id': teacherId,
-        'subject_id': _selectedSubject,
-        'items': items,
-      });
-      if (!mounted) return;
-
-      // Update local state
-      setState(() {
-        for (var bab in babs) {
-          _generatedBab[bab['id']] = true;
-        }
-        for (var subBab in subBabs) {
-          _generatedSubBab[subBab['id']] = true;
-        }
-      });
-
-      if (kDebugMode) {
-        print('Marked ${items.length} items as generated');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error marking as generated: $e');
-      }
-    }
-  }
-
   bool _isLoading = false;
   bool _isLoadingBab = false;
-  String _debugInfo = '';
-
-  // Color scheme matching teaching schedule
-  final Map<String, Color> _dayColorMap = {
-    'Senin': Color(0xFF6366F1),
-    'Selasa': Color(0xFF10B981),
-    'Rabu': Color(0xFFF59E0B),
-    'Kamis': Color(0xFFEF4444),
-    'Jumat': Color(0xFF8B5CF6),
-    'Sabtu': Color(0xFF06B6D4),
-  };
 
   // Tour properties
   final GlobalKey _filterKey = GlobalKey();
@@ -397,9 +329,6 @@ class MateriPageState extends State<MateriPage> {
         _selectedSubject = null;
       }
 
-      if (subjects.isEmpty) {
-        _debugInfo = 'Tidak ada mata pelajaran untuk kelas ini';
-      }
     });
 
     if (_selectedSubject != null) {
@@ -627,7 +556,6 @@ class MateriPageState extends State<MateriPage> {
       if (!mounted) return;
 
       final subject = results[0] as List<dynamic>;
-      final materi = results[1] as List<dynamic>;
 
       if (kDebugMode) {
         print('Mata pelajaran found: ${subject.length} (class: $selectedClassId)');
@@ -638,13 +566,11 @@ class MateriPageState extends State<MateriPage> {
         setState(() {
           _isLoading = false;
           _subjectList = [];
-          _debugInfo = 'Guru ini belum memiliki mata pelajaran untuk kelas ini';
         });
         return;
       }
 
       setState(() {
-        _materiList = materi;
         _isLoading = false;
       });
 
@@ -664,9 +590,6 @@ class MateriPageState extends State<MateriPage> {
       setState(() {
         _isLoading = false;
         _isLoadingBab = false;
-        if (_subjectList.isEmpty) {
-          _debugInfo = 'Error: ${e.toString()}';
-        }
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
@@ -715,7 +638,6 @@ class MateriPageState extends State<MateriPage> {
               for (var subBab in cachedSubBab) {
                 _checkedSubBab[subBab['id'].toString()] = false;
               }
-              _debugInfo = '${cachedBab.length} bab materi, ${cachedSubBab.length} sub-bab ditemukan';
             });
             // Load progress from DB non-blocking (always fresh — this is user-specific state)
             _loadMateriProgress(subjectId);
@@ -787,8 +709,6 @@ class MateriPageState extends State<MateriPage> {
           _checkedSubBab[subBab['id'].toString()] = false;
         }
 
-        _debugInfo =
-            '${babMateri.length} bab materi, ${_subBabMateriList.length} sub-bab ditemukan';
       });
 
       // Save to cache (non-blocking)
@@ -813,9 +733,6 @@ class MateriPageState extends State<MateriPage> {
       if (!mounted) return;
       setState(() => _isLoadingBab = false);
       if (_babMateriList.isEmpty) {
-        setState(() {
-          _debugInfo = 'Error: $e';
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
         );
@@ -1620,7 +1537,6 @@ class MateriPageState extends State<MateriPage> {
                     _selectedSubject = newValue;
                     _babMateriList = [];
                     _subBabMateriList = [];
-                    _contentMateriList = [];
                     _isLoadingBab = true;
                     _searchController.clear();
                   });

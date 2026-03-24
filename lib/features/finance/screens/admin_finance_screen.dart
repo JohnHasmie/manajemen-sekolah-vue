@@ -103,7 +103,6 @@ class FinanceScreenState extends State<FinanceScreen> {
   final int _perPage = 10;
   bool _hasMoreData = true;
   bool _isLoadingMore = false;
-  Map<String, dynamic>? _paginationMeta;
   Timer? _searchDebounce;
 
   // Search dan filter
@@ -115,7 +114,6 @@ class FinanceScreenState extends State<FinanceScreen> {
   // Variabel untuk modal pemilihan tujuan
   List<dynamic> _selectedKelas = [];
   Map<String, List<dynamic>> _selectedSiswaByKelas = {};
-  final List<dynamic> _allSiswaList = [];
   final TextEditingController _searchSiswaController = TextEditingController();
 
   /// Like Vue's `mounted()` - sets up scroll listeners for both tabs'
@@ -1770,7 +1768,6 @@ class FinanceScreenState extends State<FinanceScreen> {
         _currentPage = 1;
         _tagihanList = [];
         _hasMoreData = true;
-        _paginationMeta = null;
       }
 
       setState(() {
@@ -1792,7 +1789,6 @@ class FinanceScreenState extends State<FinanceScreen> {
         if (mounted) {
           setState(() {
             _tagihanList.addAll(pageData);
-            _paginationMeta = pagination;
             _hasMoreData =
                 pagination['has_next_page'] ?? (pageData.length == _perPage);
           });
@@ -1804,7 +1800,6 @@ class FinanceScreenState extends State<FinanceScreen> {
         if (mounted) {
           setState(() {
             _tagihanList.addAll(pageData);
-            _paginationMeta = pagination;
             _hasMoreData =
                 pagination['has_next_page'] ?? (pageData.length == _perPage);
           });

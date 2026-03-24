@@ -73,7 +73,6 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
   late String _selectedTeacher;
   late String _selectedSubject;
   late String _selectedClass;
-  late String _selectedDay;
   List<String> _selectedDayIds = [];
   late String _selectedSemester;
   late String _selectedAcademicYear; // New: Local state for AC
@@ -81,7 +80,6 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
   List<dynamic> _filteredSubjectList = [];
   List<dynamic> _availableJamPelajaranList = [];
-  List<dynamic> _lessonHourSettings = [];
   List<dynamic> _occupiedSlots = [];
   bool _isLoadingSubjects = false;
   bool _isLoadingJamPelajaran = false;
@@ -97,11 +95,8 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
   Future<void> _loadSettings() async {
     try {
-      final settings = await ApiSettingsService.getLessonHourSettings();
+      await ApiSettingsService.getLessonHourSettings();
       if (mounted) {
-        setState(() {
-          _lessonHourSettings = settings;
-        });
         // Re-filter if we already have potential candidates
         if (_availableJamPelajaranList.isNotEmpty &&
             _selectedDayIds.isNotEmpty) {
@@ -121,7 +116,6 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     _selectedTeacher = '';
     _selectedSubject = '';
     _selectedClass = '';
-    _selectedDay = '';
     _selectedDayIds = [];
     _selectedSemester = widget.semester;
     _selectedAcademicYear = widget.academicYear;
