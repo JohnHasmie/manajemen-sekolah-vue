@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/attendance_overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/lesson_plan_status_card.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/material_slider_card.dart';
+import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
@@ -586,6 +587,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       final response = await ApiService.switchRole(role);
 
       // Update token dan user data
+      await SecureStorageService().saveToken(response['token']);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', response['token']);
 
@@ -608,6 +610,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       if (_userData['user_id'] != null)
         updatedUserData['user_id'] = _userData['user_id'];
 
+      await SecureStorageService().saveUserData(updatedUserData);
       await prefs.setString('user', json.encode(updatedUserData));
 
       if (!mounted) return;
@@ -699,6 +702,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             });
 
             // Persist the clean state with separate IDs immediately
+            await SecureStorageService().saveUserData(_userData);
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('user', json.encode(_userData));
 
@@ -1242,6 +1246,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
 
     // Update token
+    if (response['token'] != null) {
+      await SecureStorageService().saveToken(response['token']);
+    }
     final prefs = await SharedPreferences.getInstance();
     if (response['token'] != null) {
       await prefs.setString('token', response['token']);
@@ -1279,6 +1286,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           schoolInfo['school_name'] ?? schoolInfo['nama_sekolah'];
     }
 
+    await SecureStorageService().saveUserData(updatedUserData);
     await prefs.setString('user', json.encode(updatedUserData));
 
     if (!mounted) return;

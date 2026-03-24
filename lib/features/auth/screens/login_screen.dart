@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -269,11 +270,16 @@ class LoginScreenState extends State<LoginScreen> {
   /// localStorage and setting up user context in a Vue app's Vuex/Pinia store.
   /// Also triggers a background FCM token refresh for push notifications.
   Future<void> _saveLoginData(Map<String, dynamic> responseData) async {
+    // Save to secure storage (encrypted)
+    final secureStorage = SecureStorageService();
+    await secureStorage.saveToken(responseData['token']);
+    await secureStorage.saveUserData(responseData['user'] as Map<String, dynamic>);
+    await secureStorage.setForceLogout(false);
+
+    // Also save to SharedPreferences (bridge for legacy reads)
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', responseData['token']);
     await prefs.setString('user', json.encode(responseData['user']));
-
-    // Clear force logout flag
     await prefs.setBool('force_logout', false);
 
     // Track login in Firebase Analytics
@@ -920,6 +926,7 @@ class LoginScreenState extends State<LoginScreen> {
       // Special handling for Google Login: Save token immediately if present
       // This allows using switchSchool endpoint later
       if (responseData['token'] != null) {
+        await SecureStorageService().saveToken(responseData['token']);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', responseData['token']);
         if (kDebugMode) print('🔐 Token saved during school selection phase');
@@ -949,6 +956,7 @@ class LoginScreenState extends State<LoginScreen> {
       // Special handling for Google Login: Save token immediately if present
       // This allows using switchSchool endpoint later
       if (responseData['token'] != null) {
+        await SecureStorageService().saveToken(responseData['token']);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', responseData['token']);
         if (kDebugMode) print('🔐 Token saved during role selection phase');

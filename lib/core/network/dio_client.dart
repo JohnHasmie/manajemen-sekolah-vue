@@ -14,6 +14,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/api_exceptions.dart';
+import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/main.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -56,33 +57,27 @@ Dio createDioClient(String baseUrl) {
 /// Like Laravel Sanctum auth middleware + multi-tenant school middleware combined.
 /// Replaces the duplicated _getHeaders() method found in 13+ service files.
 class AuthInterceptor extends Interceptor {
+  final SecureStorageService _secureStorage = SecureStorageService();
+
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      final userJson = prefs.getString('user');
+      final token = await _secureStorage.getToken();
+      final userData = await _secureStorage.getUserData();
 
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
 
       // Inject school ID for multi-tenant requests
-      if (userJson != null) {
-        try {
-          final user = json.decode(userJson);
-          if (user['school_id'] != null) {
-            options.headers['X-School-ID'] = user['school_id'].toString();
-          }
-        } catch (_) {
-          // Ignore JSON parse errors for school_id
-        }
+      if (userData != null && userData['school_id'] != null) {
+        options.headers['X-School-ID'] = userData['school_id'].toString();
       }
     } catch (_) {
-      // If SharedPreferences fails, continue without auth headers
+      // If secure storage fails, continue without auth headers
     }
 
     handler.next(options);
@@ -277,6 +272,9 @@ class ErrorInterceptor extends Interceptor {
         print('🔴 Dio ErrorInterceptor: $errorMessage');
       }
 
+      // Clear secure storage (tokens, user data)
+      await SecureStorageService().clearAll();
+      // Also clear SharedPreferences (cache, prefs)
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
