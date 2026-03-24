@@ -13,7 +13,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -649,27 +649,27 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
         print('Downloading file from: $url');
       }
 
-      final response = await http.get(Uri.parse(url));
+      final dio = Dio();
+      final response = await dio.get<List<int>>(
+        url,
+        options: Options(responseType: ResponseType.bytes),
+      );
 
-      if (response.statusCode == 200) {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(response.bodyBytes);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(response.data!);
 
-        final result = await OpenFile.open(file.path);
+      final result = await OpenFile.open(file.path);
 
-        if (result.type != ResultType.done) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Could not open file: ${result.message}'),
-                backgroundColor: ColorUtils.error600,
-              ),
-            );
-          }
+      if (result.type != ResultType.done) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open file: ${result.message}'),
+              backgroundColor: ColorUtils.error600,
+            ),
+          );
         }
-      } else {
-        throw Exception('Failed to download file: ${response.statusCode}');
       }
     } catch (e) {
       if (mounted) {

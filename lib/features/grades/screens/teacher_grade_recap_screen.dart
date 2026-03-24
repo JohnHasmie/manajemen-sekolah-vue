@@ -10,7 +10,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
@@ -492,25 +492,21 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
     // ─── Step 2: No cache — fetch fresh from API ───
     try {
-      final response = await http.get(
-        Uri.parse(
-          '${ApiService.baseUrl}/class/${_selectedClass!['id']}/subjects?teacher_id=${widget.teacher['id']}',
-        ),
-        headers: await ApiService.getHeaders(),
+      final response = await dioClient.get(
+        '/class/${_selectedClass!['id']}/subjects',
+        queryParameters: {'teacher_id': widget.teacher['id']},
       );
 
-      if (response.statusCode == 200) {
-        final allSubjects = json.decode(response.body) as List;
-        if (mounted) {
-          setState(() {
-            _subjectList = allSubjects;
-            _isLoading = false;
-          });
-        }
-
-        // Save to cache
-        await LocalCacheService.save(subjectCacheKey, allSubjects);
+      final allSubjects = response.data is List ? response.data as List : [];
+      if (mounted) {
+        setState(() {
+          _subjectList = allSubjects;
+          _isLoading = false;
+        });
       }
+
+      // Save to cache
+      await LocalCacheService.save(subjectCacheKey, allSubjects);
     } catch (e) {
       if (mounted) {
         if (_subjectList.isEmpty) {

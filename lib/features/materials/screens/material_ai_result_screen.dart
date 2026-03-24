@@ -10,7 +10,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/core/widgets/loading_screen.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -153,12 +152,16 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
 
       if (kDebugMode) {
         print('📥 Generate Material Response: ${response.statusCode}');
-        print('📥 Body: ${response.body}');
+        print('📥 Body: ${response.data}');
       }
+
+      // Dio auto-decodes JSON, so response.data is already a Map/List
+      final resultBody = response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : <String, dynamic>{};
 
       if (response.statusCode == 202) {
         // Async mode - start polling
-        final resultBody = json.decode(response.body);
         final pollUrl = (resultBody['poll_url'] ??
                 resultBody['polling_url'] ??
                 resultBody['status_url'])
@@ -184,8 +187,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
       }
 
       if (response.statusCode == 429) {
-        final errorBody = json.decode(response.body);
-        final message = errorBody['message'] ??
+        final message = resultBody['message'] ??
             'Batas pembuatan materi AI harian/bulanan telah tercapai.';
         if (mounted) {
           setState(() {
@@ -198,15 +200,13 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final resultBody = json.decode(response.body);
         final data = resultBody['data'] ?? resultBody;
         _applyResult(data, cached: resultBody['cached'] == true);
         return;
       }
 
       // Other errors
-      final errorBody = json.decode(response.body);
-      throw Exception(errorBody['message'] ?? 'Gagal generate materi');
+      throw Exception(resultBody['message'] ?? 'Gagal generate materi');
     } catch (e) {
       if (!mounted) return;
       if (kDebugMode) print('❌ Generate error: $e');
@@ -259,15 +259,10 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
       try {
         if (kDebugMode) print('🔄 Poll attempt #$attempts');
 
-        final response = await http
-            .get(
-              Uri.parse(fullUrl),
-              headers: {
-                'Accept': 'application/json',
-                'Authorization': 'Bearer $token',
-              },
-            )
-            .timeout(const Duration(seconds: 15));
+        // Use the AI service's pollAiJob which returns a Dio Response
+        // (with validateStatus: (_) => true, so it won't throw on non-2xx)
+        final jobIdForPoll = jobId ?? fullUrl.split('/').last;
+        final response = await ApiSubjectService.pollAiJob(jobIdForPoll, token);
 
         if (!mounted) return;
 
@@ -276,7 +271,9 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
         }
 
         if (response.statusCode == 200) {
-          final resultBody = json.decode(response.body);
+          final resultBody = response.data is Map<String, dynamic>
+              ? response.data as Map<String, dynamic>
+              : <String, dynamic>{};
           final jobData = resultBody['data'] ?? resultBody;
           final status = jobData['status'] ?? resultBody['status'];
 

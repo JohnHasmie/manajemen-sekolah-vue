@@ -2,12 +2,11 @@
 // Like Laravel's Maatwebsite/Excel PresenceExport with backend validation.
 // Handles attendance statuses: hadir, terlambat, izin, sakit, alpha.
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,12 +21,10 @@ import 'package:provider/provider.dart';
 /// Also provides helper methods for status labels, date formatting, and
 /// day name translation -- like Laravel model accessors or helper functions.
 class ExcelPresenceService {
-  // static const String baseUrl = ApiService.baseUrl;
-  static String get baseUrl => ApiService.baseUrl;
+  static String get baseUrl => '/attendance';
 
   /// Export attendance data to Excel via backend POST to `/attendance/export`.
   /// [presenceData] - list of attendance records. [filters] - optional filters.
-  /// Checks content-type header to distinguish .xlsx binary from JSON error.
   /// Side effects: saves file to device, opens it, shows SnackBar.
   static Future<void> exportPresenceToExcel({
     required List<dynamic> presenceData,
@@ -44,65 +41,39 @@ class ExcelPresenceService {
         throw Exception('No attendance data to export');
       }
 
-      // Get auth token
-
-      // Kirim request ke backend
-      final response = await http.post(
-        Uri.parse('$baseUrl/attendance/export'),
-        headers: await ApiService.getHeaders(),
-        body: jsonEncode({'presenceData': presenceData, 'filters': filters}),
+      final response = await dioClient.post<List<int>>(
+        '$baseUrl/export',
+        data: {'presenceData': presenceData, 'filters': filters},
+        options: Options(responseType: ResponseType.bytes),
       );
 
       print('Response status: ${response.statusCode}');
-      print('Response headers: ${response.headers}');
 
-      if (response.statusCode == 200) {
-        // Cek jika response adalah file Excel (bukan JSON)
-        final contentType = response.headers['content-type'];
-        if (contentType?.contains(
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            ) ==
-            true) {
-          // Simpan file Excel
-          final Directory directory = await getApplicationDocumentsDirectory();
-          final String filePath =
-              '${directory.path}/Data_Absensi_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      // Simpan file Excel
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String filePath =
+          '${directory.path}/Data_Absensi_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-          final File file = File(filePath);
-          await file.writeAsBytes(response.bodyBytes);
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-          print('File saved to: $filePath');
+      print('File saved to: $filePath');
 
-          // Buka file
-          final result = await OpenFile.open(filePath);
-          print('Open file result: $result');
+      // Buka file
+      final result = await OpenFile.open(filePath);
+      print('Open file result: $result');
 
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Presence data exported successfully',
-                    'id': 'Data absensi berhasil diexport',
-                  }),
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          // Response bukan file Excel, mungkin error JSON
-          final responseBody = response.body;
-          print('Unexpected response: $responseBody');
-          throw Exception('Server returned unexpected response format');
-        }
-      } else {
-        // Handle error response
-        final errorData = jsonDecode(response.body);
-        print('Error response: $errorData');
-        throw Exception(
-          errorData['message'] ??
-              'Failed to export data (Status: ${response.statusCode})',
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Presence data exported successfully',
+                'id': 'Data absensi berhasil diexport',
+              }),
+            ),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
@@ -129,15 +100,14 @@ class ExcelPresenceService {
     List<dynamic> presenceData,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/attendance/validate'),
-        headers: await ApiService.getHeaders(),
-        body: jsonEncode({'presenceData': presenceData}),
+      final response = await dioClient.post(
+        '$baseUrl/validate',
+        data: {'presenceData': presenceData},
       );
 
-      final responseData = jsonDecode(response.body);
+      final responseData = response.data;
 
-      if (response.statusCode == 200 && responseData['success']) {
+      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'Validation failed');

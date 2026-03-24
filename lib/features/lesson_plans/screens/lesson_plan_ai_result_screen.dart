@@ -5,13 +5,11 @@
 // Flutter Quill rich text editors. Supports polling for async AI job results,
 // regeneration with custom prompts, saving to API, and PDF export.
 // In Laravel terms: `AiLessonPlanController@show` + `@update`.
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
@@ -122,11 +120,21 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
 
     // Per docs Section 2.2: GET /api/ai-jobs/{id}
-    final pollPath =
-        widget.pollUrl ?? '/api/ai-jobs/${widget.jobId}';
-    final fullUrl = 'https://edu-ai-api.kamillabs.com$pollPath';
+    // Extract the job ID for polling via ApiSubjectService.pollAiJob
+    final jobIdForPoll = widget.jobId ??
+        (widget.pollUrl != null ? widget.pollUrl!.split('/').last : null);
 
-    if (kDebugMode) print('🔄 Starting polling at: $fullUrl');
+    if (jobIdForPoll == null) {
+      if (mounted) {
+        setState(() {
+          _isPolling = false;
+          _pollingError = 'Tidak dapat menentukan job ID untuk polling.';
+        });
+      }
+      return;
+    }
+
+    if (kDebugMode) print('🔄 Starting polling for job: $jobIdForPoll');
 
     int attempts = 0;
     const maxAttempts = 60; // 5 minutes (60 * 5s)
@@ -138,26 +146,22 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       try {
         if (kDebugMode) print('🔄 Poll attempt #$attempts');
 
-        final response = await http
-            .get(
-              Uri.parse(fullUrl),
-              headers: {
-                'Accept': 'application/json',
-                if (widget.token != null)
-                  'Authorization': 'Bearer ${widget.token}',
-              },
-            )
-            .timeout(const Duration(seconds: 15));
+        final response = await ApiSubjectService.pollAiJob(
+          jobIdForPoll,
+          widget.token ?? '',
+        );
 
         if (!mounted) return;
 
         if (kDebugMode) {
           print('📥 Poll response status: ${response.statusCode}');
-          print('📥 Poll response body: ${response.body}');
+          print('📥 Poll response data: ${response.data}');
         }
 
         if (response.statusCode == 200) {
-          final resultBody = json.decode(response.body);
+          final resultBody = response.data is Map<String, dynamic>
+              ? response.data as Map<String, dynamic>
+              : <String, dynamic>{};
           // Per docs: response is { success, data: { status, result, error_message } }
           final jobData = resultBody['data'] ?? resultBody;
           final status = jobData['status'] ?? resultBody['status'];

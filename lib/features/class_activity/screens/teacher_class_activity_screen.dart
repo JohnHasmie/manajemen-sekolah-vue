@@ -13,7 +13,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/tab_switcher.dart';
@@ -22,7 +22,6 @@ import 'package:manajemensekolah/features/class_activity/services/class_activity
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -1021,23 +1020,20 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
       if (isHomeroom || isAdmin) {
         // 2. If Homeroom or Admin, fetch ALL subjects assigned to this class
-        final response = await http.get(
-          Uri.parse('${ApiService.baseUrl}/class/$_selectedClassId/subjects'),
-          headers: await ApiService.getHeaders(),
+        final response = await dioClient.get(
+          '/class/$_selectedClassId/subjects',
         );
 
-        if (response.statusCode == 200) {
-          final allSubjects = json.decode(response.body) as List;
-          final uniqueSubjects = <String, Map<String, dynamic>>{};
+        final allSubjects = response.data is List ? response.data as List : [];
+        final uniqueSubjects = <String, Map<String, dynamic>>{};
 
-          for (var subject in allSubjects) {
-            final subjectId = subject['id'].toString();
-            var s = Map<String, dynamic>.from(subject);
-            s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
-            uniqueSubjects[subjectId] = s;
-          }
-          subjects = uniqueSubjects.values.toList();
+        for (var subject in allSubjects) {
+          final subjectId = subject['id'].toString();
+          var s = Map<String, dynamic>.from(subject);
+          s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
+          uniqueSubjects[subjectId] = s;
         }
+        subjects = uniqueSubjects.values.toList();
       } else {
         // 3. If Not Homeroom, only show MY subjects
         final uniqueSubjects = <String, Map<String, dynamic>>{};

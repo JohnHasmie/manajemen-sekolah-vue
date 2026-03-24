@@ -2,12 +2,11 @@
 // Like Laravel's Maatwebsite/Excel ScheduleExport with day-name translation.
 // Handles bilingual day names (Senin/Monday) based on the app's language setting.
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,8 +22,7 @@ import 'package:provider/provider.dart';
 /// different API response formats (e.g., 'day_name' vs 'hari_nama', nested
 /// 'day.name' vs flat 'day_name'). Like Laravel's `$request->input('key', $fallback)`.
 class ExcelScheduleService {
-  // static const String baseUrl = ApiService.baseUrl;
-  static String get baseUrl => ApiService.baseUrl;
+  static String get baseUrl => '/teaching-schedule';
 
   /// Export teaching schedule data to Excel via backend POST to `/teaching-schedule/export`.
   /// Translates day names to the user's current language before sending.
@@ -45,42 +43,35 @@ class ExcelScheduleService {
         item['day_name'] = _translateDay(item['day_name'], currentLang);
       }
 
-      // Kirim request ke backend
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/teaching-schedule/export'),
-        headers: await ApiService.getHeaders(),
-        body: jsonEncode({'schedules': validatedData}),
+      final response = await dioClient.post<List<int>>(
+        '$baseUrl/export',
+        data: {'schedules': validatedData},
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory untuk menyimpan file
-        final Directory directory = await getApplicationDocumentsDirectory();
-        final String filePath =
-            '${directory.path}/Data_Jadwal_Mengajar_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      // Get directory untuk menyimpan file
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String filePath =
+          '${directory.path}/Data_Jadwal_Mengajar_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-        // Simpan file yang didownload
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Simpan file yang didownload
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Buka file
-        await OpenFile.open(filePath);
+      // Buka file
+      await OpenFile.open(filePath);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Schedule data exported successfully',
-                'id': 'Data jadwal mengajar berhasil diexport',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Schedule data exported successfully',
+              'id': 'Data jadwal mengajar berhasil diexport',
+            }),
           ),
-        );
-      } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? 'Failed to export data');
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -102,41 +93,34 @@ class ExcelScheduleService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      // Kirim request ke backend
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/teaching-schedule/template'),
-        headers: await ApiService.getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        '$baseUrl/template',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory untuk menyimpan file
-        final Directory directory = await getApplicationDocumentsDirectory();
-        final String filePath =
-            '${directory.path}/Template_Import_Jadwal_Mengajar.xlsx';
+      // Get directory untuk menyimpan file
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String filePath =
+          '${directory.path}/Template_Import_Jadwal_Mengajar.xlsx';
 
-        // Simpan file yang didownload
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Simpan file yang didownload
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Buka file
-        await OpenFile.open(filePath);
+      // Buka file
+      await OpenFile.open(filePath);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Template downloaded successfully',
-                'id': 'Template berhasil diunduh',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Template downloaded successfully',
+              'id': 'Template berhasil diunduh',
+            }),
           ),
-        );
-      } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? 'Failed to download template');
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -157,15 +141,14 @@ class ExcelScheduleService {
     List<dynamic> schedules,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/teaching-schedule/validate'),
-        headers: await ApiService.getHeaders(),
-        body: jsonEncode({'schedules': schedules}),
+      final response = await dioClient.post(
+        '$baseUrl/validate',
+        data: {'schedules': schedules},
       );
 
-      final responseData = jsonDecode(response.body);
+      final responseData = response.data;
 
-      if (response.statusCode == 200 && responseData['success']) {
+      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'Validation failed');

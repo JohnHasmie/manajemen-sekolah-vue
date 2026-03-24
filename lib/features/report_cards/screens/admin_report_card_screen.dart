@@ -4,18 +4,15 @@
 // view student report cards, export to Excel, and publish/unpublish raports.
 //
 // In Laravel terms, this consumes RaportController with class-based filtering.
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/report_cards/screens/parent_report_card_detail_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/report_cards/services/report_card_service.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -343,33 +340,25 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
         semesterId = '2';
       }
 
-      final headers = await ApiService.getHeaders();
-      final url = Uri.parse('${ApiService.baseUrl}/raports/publish');
-
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: jsonEncode({
+      await dioClient.post(
+        '/raports/publish',
+        data: {
           'class_id': _selectedClass!['id'],
           'academic_year_id': academicYearId,
           'semester_id': semesterId,
-        }),
+        },
       );
 
-      if (response.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Raport berhasil dipublikasi dan dikirim ke wali murid!',
-              ),
-              backgroundColor: Colors.green,
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Raport berhasil dipublikasi dan dikirim ke wali murid!',
             ),
-          );
-          _loadStudents(useCache: false); // Reload status
-        }
-      } else {
-        throw Exception('Gagal mengirim raport: ${response.statusCode}');
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadStudents(useCache: false); // Reload status
       }
     } catch (e) {
       if (mounted) {

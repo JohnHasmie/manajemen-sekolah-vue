@@ -2,12 +2,11 @@
 // Like Laravel's Maatwebsite/Excel TeacherExport with template download.
 // Simpler than other Excel services -- no local validation, delegates entirely to backend.
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,10 +20,7 @@ import 'package:provider/provider.dart';
 /// and data validation. Uses `context.mounted` checks before showing SnackBars
 /// (best practice for async BuildContext usage in Flutter).
 class ExcelTeacherService {
-  static String get baseUrl => ApiService.baseUrl;
-
-  /// Convenience wrapper for getting auth headers. Like Laravel's `auth()->user()` token.
-  static Future<Map<String, String>> _getHeaders() => ApiService.getHeaders();
+  static String get baseUrl => '/teacher';
 
   /// Export teacher data to Excel via backend POST to `/teacher/export`.
   /// [teachers] - list of teacher maps. [context] - for SnackBar and i18n.
@@ -37,39 +33,35 @@ class ExcelTeacherService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/teacher/export'),
-        headers: await _getHeaders(),
-        body: jsonEncode({'teachers': teachers}),
+      final response = await dioClient.post<List<int>>(
+        '$baseUrl/export',
+        data: {'teachers': teachers},
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Save file locally
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath =
-            '${directory.path}/Data_Guru_${DateTime.now().millisecondsSinceEpoch}.xlsx';
-        final file = File(filePath);
+      // Save file locally
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath =
+          '${directory.path}/Data_Guru_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      final file = File(filePath);
 
-        await file.writeAsBytes(response.bodyBytes);
+      await file.writeAsBytes(response.data!);
 
-        // Open the file
-        await OpenFile.open(filePath);
+      // Open the file
+      await OpenFile.open(filePath);
 
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Teacher data exported successfully',
-                'id': 'Data guru berhasil diexport',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Teacher data exported successfully',
+              'id': 'Data guru berhasil diexport',
+            }),
           ),
-        );
-      } else {
-        throw Exception('Export failed with status: ${response.statusCode}');
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,37 +84,33 @@ class ExcelTeacherService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/teacher/template/download'),
-        headers: await _getHeaders(),
+      final response = await dioClient.get<List<int>>(
+        '$baseUrl/template/download',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Save file locally
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/Template_Import_Guru.xlsx';
-        final file = File(filePath);
+      // Save file locally
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/Template_Import_Guru.xlsx';
+      final file = File(filePath);
 
-        await file.writeAsBytes(response.bodyBytes);
+      await file.writeAsBytes(response.data!);
 
-        // Open the file
-        await OpenFile.open(filePath);
+      // Open the file
+      await OpenFile.open(filePath);
 
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Template downloaded successfully',
-                'id': 'Template berhasil diunduh',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Template downloaded successfully',
+              'id': 'Template berhasil diunduh',
+            }),
           ),
-        );
-      } else {
-        throw Exception('Download failed with status: ${response.statusCode}');
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

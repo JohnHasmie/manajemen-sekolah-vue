@@ -2,12 +2,11 @@
 // Like Laravel's Maatwebsite/Excel + DomPDF combined for generating raport documents.
 // Supports class-wide Excel export, individual student PDF, and certificate PDF.
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,7 +22,7 @@ import 'package:provider/provider.dart';
 /// Flutter saves and opens the binary response. Uses query parameters (GET) rather
 /// than POST body since the data is just IDs/filters.
 class ExcelRaportService {
-  static String get baseUrl => ApiService.baseUrl;
+  static String get baseUrl => '/raports';
 
   /// Export an entire class's raport data to Excel via GET `/raports/export`.
   /// [classId], [academicYearId], [semesterId] filter the data server-side.
@@ -39,67 +38,44 @@ class ExcelRaportService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      final headers = await ApiService.getHeaders();
-
-      final url = Uri.parse('$baseUrl/raports/export').replace(
+      final response = await dioClient.get<List<int>>(
+        '$baseUrl/export',
         queryParameters: {
           'class_id': classId,
           'academic_year_id': academicYearId,
           'semester_id': semesterId,
         },
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      final response = await http.get(url, headers: headers);
+      // Get directory
+      final Directory directory = await getApplicationDocumentsDirectory();
 
-      if (response.statusCode == 200) {
-        // Get directory
-        final Directory directory = await getApplicationDocumentsDirectory();
+      String formattedClass = className.replaceAll(
+        RegExp(r'[^a-zA-Z0-9]'),
+        '_',
+      );
+      final String filePath =
+          '${directory.path}/Raport_${formattedClass}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-        String formattedClass = className.replaceAll(
-          RegExp(r'[^a-zA-Z0-9]'),
-          '_',
-        );
-        final String filePath =
-            '${directory.path}/Raport_${formattedClass}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      // Save file
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Save file
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Open the file
+      await OpenFile.open(filePath);
 
-        // Open the file
-        await OpenFile.open(filePath);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Raport exported successfully',
-                'id': 'Raport berhasil diexport',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Raport exported successfully',
+              'id': 'Raport berhasil diexport',
+            }),
           ),
-        );
-      } else {
-        String errorMessage = 'Failed to export data';
-        try {
-          final errorData = jsonDecode(response.body);
-          if (errorData['message'] != null) {
-            errorMessage = errorData['message'];
-          } else if (errorData['error'] != null) {
-            final err = errorData['error'];
-            if (err is Map) {
-              errorMessage = err.values.first.toString();
-              if (err.values.first is List) {
-                errorMessage = err.values.first[0].toString();
-              }
-            } else {
-              errorMessage = err.toString();
-            }
-          }
-        } catch (_) {}
-        throw Exception(errorMessage);
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -128,67 +104,44 @@ class ExcelRaportService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      final headers = await ApiService.getHeaders();
-
-      final url = Uri.parse('$baseUrl/raports/export-pdf').replace(
+      final response = await dioClient.get<List<int>>(
+        '$baseUrl/export-pdf',
         queryParameters: {
           'student_class_id': studentClassId,
           'academic_year_id': academicYearId,
           'semester_id': semesterId,
         },
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      final response = await http.get(url, headers: headers);
+      // Get directory
+      final Directory directory = await getApplicationDocumentsDirectory();
 
-      if (response.statusCode == 200) {
-        // Get directory
-        final Directory directory = await getApplicationDocumentsDirectory();
+      String formattedName = studentName.replaceAll(
+        RegExp(r'[^a-zA-Z0-9]'),
+        '_',
+      );
+      final String filePath =
+          '${directory.path}/Raport_${formattedName}_${DateTime.now().millisecondsSinceEpoch}.pdf';
 
-        String formattedName = studentName.replaceAll(
-          RegExp(r'[^a-zA-Z0-9]'),
-          '_',
-        );
-        final String filePath =
-            '${directory.path}/Raport_${formattedName}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      // Save file
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Save file
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Open the file
+      await OpenFile.open(filePath);
 
-        // Open the file
-        await OpenFile.open(filePath);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'PDF downloaded successfully',
-                'id': 'PDF berhasil diunduh',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'PDF downloaded successfully',
+              'id': 'PDF berhasil diunduh',
+            }),
           ),
-        );
-      } else {
-        String errorMessage = 'Failed to download PDF';
-        try {
-          final errorData = jsonDecode(response.body);
-          if (errorData['message'] != null) {
-            errorMessage = errorData['message'];
-          } else if (errorData['error'] != null) {
-            final err = errorData['error'];
-            if (err is Map) {
-              errorMessage = err.values.first.toString();
-              if (err.values.first is List) {
-                errorMessage = err.values.first[0].toString();
-              }
-            } else {
-              errorMessage = err.toString();
-            }
-          }
-        } catch (_) {}
-        throw Exception(errorMessage);
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -216,67 +169,44 @@ class ExcelRaportService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      final headers = await ApiService.getHeaders();
-
-      final url = Uri.parse('$baseUrl/raports/export-certificate-pdf').replace(
+      final response = await dioClient.get<List<int>>(
+        '$baseUrl/export-certificate-pdf',
         queryParameters: {
           'student_class_id': studentClassId,
           'academic_year_id': academicYearId,
           'semester_id': semesterId,
         },
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      final response = await http.get(url, headers: headers);
+      // Get directory
+      final Directory directory = await getApplicationDocumentsDirectory();
 
-      if (response.statusCode == 200) {
-        // Get directory
-        final Directory directory = await getApplicationDocumentsDirectory();
+      String formattedName = studentName.replaceAll(
+        RegExp(r'[^a-zA-Z0-9]'),
+        '_',
+      );
+      final String filePath =
+          '${directory.path}/Sertifikat_Raport_${formattedName}_${DateTime.now().millisecondsSinceEpoch}.pdf';
 
-        String formattedName = studentName.replaceAll(
-          RegExp(r'[^a-zA-Z0-9]'),
-          '_',
-        );
-        final String filePath =
-            '${directory.path}/Sertifikat_Raport_${formattedName}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      // Save file
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Save file
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Open the file
+      await OpenFile.open(filePath);
 
-        // Open the file
-        await OpenFile.open(filePath);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Certificate PDF downloaded successfully',
-                'id': 'Sertifikat PDF berhasil diunduh',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Certificate PDF downloaded successfully',
+              'id': 'Sertifikat PDF berhasil diunduh',
+            }),
           ),
-        );
-      } else {
-        String errorMessage = 'Failed to download Certificate PDF';
-        try {
-          final errorData = jsonDecode(response.body);
-          if (errorData['message'] != null) {
-            errorMessage = errorData['message'];
-          } else if (errorData['error'] != null) {
-            final err = errorData['error'];
-            if (err is Map) {
-              errorMessage = err.values.first.toString();
-              if (err.values.first is List) {
-                errorMessage = err.values.first[0].toString();
-              }
-            } else {
-              errorMessage = err.toString();
-            }
-          }
-        } catch (_) {}
-        throw Exception(errorMessage);
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

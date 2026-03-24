@@ -2,12 +2,11 @@
 // Like Laravel's Maatwebsite/Excel RekapNilaiExport that aggregates scores per chapter.
 // "Rekap Nilai" = grade summary/recapitulation across chapters for a class+subject.
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -24,7 +23,7 @@ import 'package:provider/provider.dart';
 /// Unlike other Excel services, this one has no local validation since the
 /// data is pre-aggregated by the UI/provider before export.
 class ExcelRekapNilaiService {
-  static String get baseUrl => ApiService.baseUrl;
+  static String get baseUrl => '/grade-recaps';
 
   /// Export grade recapitulation to Excel via backend POST to `/grade-recaps/export`.
   /// [tableData] - rows of student scores. [chapters] - chapter metadata for headers.
@@ -40,8 +39,6 @@ class ExcelRekapNilaiService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      final headers = await ApiService.getHeaders();
-
       final Map<String, dynamic> payload = {
         'tableData': tableData,
         'chapters': chapters,
@@ -49,54 +46,44 @@ class ExcelRekapNilaiService {
         'subjectName': subjectName,
       };
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/grade-recaps/export'),
-        headers: headers,
-        body: jsonEncode(payload),
+      final response = await dioClient.post<List<int>>(
+        '$baseUrl/export',
+        data: payload,
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory
-        final Directory directory = await getApplicationDocumentsDirectory();
+      // Get directory
+      final Directory directory = await getApplicationDocumentsDirectory();
 
-        String formattedSubject = subjectName.replaceAll(
-          RegExp(r'[^a-zA-Z0-9]'),
-          '_',
-        );
-        String formattedClass = className.replaceAll(
-          RegExp(r'[^a-zA-Z0-9]'),
-          '_',
-        );
-        final String filePath =
-            '${directory.path}/Rekap_Nilai_${formattedClass}_${formattedSubject}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      String formattedSubject = subjectName.replaceAll(
+        RegExp(r'[^a-zA-Z0-9]'),
+        '_',
+      );
+      String formattedClass = className.replaceAll(
+        RegExp(r'[^a-zA-Z0-9]'),
+        '_',
+      );
+      final String filePath =
+          '${directory.path}/Rekap_Nilai_${formattedClass}_${formattedSubject}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-        // Save file
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Save file
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Open the file
-        await OpenFile.open(filePath);
+      // Open the file
+      await OpenFile.open(filePath);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Grade Rekap exported successfully',
-                'id': 'Rekap nilai berhasil diexport',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Grade Rekap exported successfully',
+              'id': 'Rekap nilai berhasil diexport',
+            }),
           ),
-        );
-      } else {
-        String errorMessage = 'Failed to export data';
-        try {
-          final errorData = jsonDecode(response.body);
-          errorMessage =
-              errorData['message'] ?? errorData['error'] ?? errorMessage;
-        } catch (_) {}
-        throw Exception(errorMessage);
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

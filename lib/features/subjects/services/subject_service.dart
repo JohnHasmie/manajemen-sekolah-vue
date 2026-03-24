@@ -14,7 +14,6 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -419,43 +418,70 @@ class ApiSubjectService {
   // The methods below call a separate AI microservice (KamillLabs Edu AI),
   // not the main Laravel backend. Similar to having a second API_BASE_URL
   // in your .env file for an external service.
+  //
+  // Uses a dedicated Dio instance (_aiDio) with:
+  // - AI microservice base URL
+  // - Auth header injection (Bearer token only, no X-School-ID)
+  // - validateStatus: (_) => true — so callers can inspect non-2xx status
+  //   codes without Dio throwing (matching the old http package behavior).
 
   /// Base URL for the AI microservice. Separate from the main Laravel API.
   static const String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
 
-  /// Headers khusus untuk KamillLabs AI API (tanpa X-School-ID)
-  static Future<Map<String, String>> _getAiHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
+  /// Lazy-initialized Dio instance for KamillLabs AI API calls.
+  /// Like a second Axios instance in Vue pointing to a different base URL.
+  /// Does NOT throw on non-2xx so callers can check statusCode themselves.
+  static Dio? _aiDioInstance;
+  static Dio get _aiDio {
+    _aiDioInstance ??= Dio(
+      BaseOptions(
+        baseUrl: _aiBaseUrl,
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 60),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        // Don't throw on non-2xx — callers inspect statusCode directly
+        validateStatus: (_) => true,
+      ),
+    )..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            final prefs = await SharedPreferences.getInstance();
+            final token = prefs.getString('token');
+            if (token != null) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+            handler.next(options);
+          },
+        ),
+      );
+    return _aiDioInstance!;
   }
 
-  static Future<http.Response> generateMaterialRaw(
+  /// Returns a raw Dio Response so callers can inspect statusCode (202, 429, etc.).
+  static Future<Response<dynamic>> generateMaterialRaw(
       Map<String, dynamic> data) async {
-    final response = await http
-        .post(
-          Uri.parse('$_aiBaseUrl/generated-materials/generate'),
-          headers: await _getAiHeaders(),
-          body: json.encode(data),
-        )
-        .timeout(const Duration(seconds: 60));
+    final response = await _aiDio.post(
+      '/generated-materials/generate',
+      data: data,
+    );
     return response;
   }
 
-  /// Parses JSON response and throws on non-2xx status.
-  /// Only used for AI API calls that still use raw http.
-  static dynamic _handleResponse(http.Response response) {
-    final responseBody = json.decode(response.body);
+  /// Parses Dio AI response and throws on non-2xx status.
+  static dynamic _handleAiResponse(Response<dynamic> response) {
+    final responseBody = response.data;
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
+    if (response.statusCode != null &&
+        response.statusCode! >= 200 &&
+        response.statusCode! < 300) {
       return responseBody;
     } else {
       throw Exception(
-        responseBody['error'] ??
+        responseBody is Map ? (responseBody['error'] ?? 'Request failed with status: ${response.statusCode}') :
             'Request failed with status: ${response.statusCode}',
       );
     }
@@ -463,20 +489,22 @@ class ApiSubjectService {
 
   static Future<dynamic> generateMaterial(Map<String, dynamic> data) async {
     final response = await generateMaterialRaw(data);
-    return _handleResponse(response);
+    return _handleAiResponse(response);
   }
 
-  /// Poll AI job status from KamillLabs Edu AI
-  static Future<http.Response> pollAiJob(String jobId, String token) async {
-    final response = await http
-        .get(
-          Uri.parse('$_aiBaseUrl/ai-jobs/$jobId'),
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(const Duration(seconds: 15));
+  /// Poll AI job status from KamillLabs Edu AI.
+  /// Returns raw Dio Response so callers can inspect statusCode.
+  static Future<Response<dynamic>> pollAiJob(String jobId, String token) async {
+    final response = await _aiDio.get(
+      '/ai-jobs/$jobId',
+      options: Options(
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        receiveTimeout: const Duration(seconds: 15),
+      ),
+    );
     return response;
   }
 
@@ -485,14 +513,13 @@ class ApiSubjectService {
     if (kDebugMode) {
       print('🔍 Getting material: $_aiBaseUrl/generated-materials/$materialId');
     }
-    final response = await http.get(
-      Uri.parse('$_aiBaseUrl/generated-materials/$materialId'),
-      headers: await _getAiHeaders(),
+    final response = await _aiDio.get(
+      '/generated-materials/$materialId',
     );
     if (kDebugMode) {
-      print('🔍 Get material response: ${response.statusCode} - ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}');
+      print('🔍 Get material response: ${response.statusCode}');
     }
-    return _handleResponse(response);
+    return _handleAiResponse(response);
   }
 
   /// Check cache for generated material
@@ -501,20 +528,22 @@ class ApiSubjectService {
     required String chapterId,
     String? subChapterId,
   }) async {
-    String url =
-        '$_aiBaseUrl/generated-materials/check-cache?teacher_id=$teacherId&chapter_id=$chapterId';
-    if (subChapterId != null) url += '&sub_chapter_id=$subChapterId';
+    final queryParams = <String, dynamic>{
+      'teacher_id': teacherId,
+      'chapter_id': chapterId,
+      if (subChapterId != null) 'sub_chapter_id': subChapterId,
+    };
     if (kDebugMode) {
-      print('🔍 Check cache URL: $url');
+      print('🔍 Check cache params: $queryParams');
     }
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await _getAiHeaders(),
+    final response = await _aiDio.get(
+      '/generated-materials/check-cache',
+      queryParameters: queryParams,
     );
     if (kDebugMode) {
-      print('🔍 Check cache response: ${response.statusCode} - ${response.body}');
+      print('🔍 Check cache response: ${response.statusCode} - ${response.data}');
     }
-    return _handleResponse(response);
+    return _handleAiResponse(response);
   }
 
   /// List generated materials with filters (fallback when check-cache fails)
@@ -523,40 +552,38 @@ class ApiSubjectService {
     String? subjectId,
     String? chapterId,
   }) async {
-    String url =
-        '$_aiBaseUrl/generated-materials?teacher_id=$teacherId';
-    if (subjectId != null) url += '&subject_id=$subjectId';
-    if (chapterId != null) url += '&chapter_id=$chapterId';
+    final queryParams = <String, dynamic>{
+      'teacher_id': teacherId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (chapterId != null) 'chapter_id': chapterId,
+    };
     if (kDebugMode) {
-      print('🔍 List materials URL: $url');
+      print('🔍 List materials params: $queryParams');
     }
-    final response = await http.get(
-      Uri.parse(url),
-      headers: await _getAiHeaders(),
+    final response = await _aiDio.get(
+      '/generated-materials',
+      queryParameters: queryParams,
     );
     if (kDebugMode) {
       print('🔍 List materials response: ${response.statusCode}');
     }
-    return _handleResponse(response);
+    return _handleAiResponse(response);
   }
 
   /// Regenerate quiz for generated material
   static Future<dynamic> regenerateQuiz(String materialId) async {
-    final response = await http.post(
-      Uri.parse('$_aiBaseUrl/generated-materials/$materialId/regenerate-quiz'),
-      headers: await _getAiHeaders(),
+    final response = await _aiDio.post(
+      '/generated-materials/$materialId/regenerate-quiz',
     );
-    return _handleResponse(response);
+    return _handleAiResponse(response);
   }
 
   /// Regenerate references for generated material
   static Future<dynamic> regenerateReferences(String materialId) async {
-    final response = await http.post(
-      Uri.parse(
-          '$_aiBaseUrl/generated-materials/$materialId/regenerate-reference'),
-      headers: await _getAiHeaders(),
+    final response = await _aiDio.post(
+      '/generated-materials/$materialId/regenerate-reference',
     );
-    return _handleResponse(response);
+    return _handleAiResponse(response);
   }
 
   // ==================== RPP REGENERATION METHODS ====================
@@ -565,8 +592,9 @@ class ApiSubjectService {
 
   /// Regenerate a specific RPP field (Section 5.6)
   /// POST /api/lesson-plans/{id}/regen/{field}
-  /// Max 2 regenerations per field
-  static Future<http.Response> regenRppFieldRaw(
+  /// Max 2 regenerations per field.
+  /// Returns raw Dio Response so callers can inspect statusCode (200, 202, 429).
+  static Future<Response<dynamic>> regenRppFieldRaw(
     String rppId,
     String field, {
     String? additionalText,
@@ -575,20 +603,16 @@ class ApiSubjectService {
     if (additionalText != null && additionalText.trim().isNotEmpty) {
       body['additional_text'] = additionalText.trim();
     }
-    final url = '$_aiBaseUrl/lesson-plans/$rppId/regen/$field';
     if (kDebugMode) {
-      print('🔄 Regen RPP field URL: $url');
-      print('🔄 Regen RPP body: ${json.encode(body)}');
+      print('🔄 Regen RPP field: /lesson-plans/$rppId/regen/$field');
+      print('🔄 Regen RPP body: $body');
     }
-    final response = await http
-        .post(
-          Uri.parse(url),
-          headers: await _getAiHeaders(),
-          body: json.encode(body),
-        )
-        .timeout(const Duration(seconds: 60));
+    final response = await _aiDio.post(
+      '/lesson-plans/$rppId/regen/$field',
+      data: body,
+    );
     if (kDebugMode) {
-      print('🔄 Regen RPP response: ${response.statusCode} - ${response.body.length > 300 ? response.body.substring(0, 300) : response.body}');
+      print('🔄 Regen RPP response: ${response.statusCode}');
     }
     return response;
   }
@@ -596,16 +620,19 @@ class ApiSubjectService {
   /// Get RPP regen limits per field (Section 5.7)
   /// GET /api/lesson-plans/{id}/regen-limits
   static Future<dynamic> getRppRegenLimits(String rppId) async {
-    if (kDebugMode) print('🔄 Regen limits URL: $_aiBaseUrl/lesson-plans/$rppId/regen-limits');
-    final response = await http.get(
-      Uri.parse('$_aiBaseUrl/lesson-plans/$rppId/regen-limits'),
-      headers: await _getAiHeaders(),
+    if (kDebugMode) print('🔄 Regen limits: /lesson-plans/$rppId/regen-limits');
+    final response = await _aiDio.get(
+      '/lesson-plans/$rppId/regen-limits',
     );
     if (kDebugMode) print('🔄 Regen limits response: ${response.statusCode}');
-    if (response.body.trimLeft().startsWith('<!DOCTYPE') || response.body.trimLeft().startsWith('<html')) {
-      throw Exception('Server AI tidak tersedia (${response.statusCode})');
+    // Check for HTML error page from proxy/CDN
+    if (response.data is String) {
+      final bodyStr = response.data as String;
+      if (bodyStr.trimLeft().startsWith('<!DOCTYPE') || bodyStr.trimLeft().startsWith('<html')) {
+        throw Exception('Server AI tidak tersedia (${response.statusCode})');
+      }
     }
-    return _handleResponse(response);
+    return _handleAiResponse(response);
   }
 
   /// Update RPP fields / auto-save (Section 5.5)
@@ -614,24 +641,21 @@ class ApiSubjectService {
     String rppId,
     Map<String, dynamic> fields,
   ) async {
-    final response = await http
-        .patch(
-          Uri.parse('$_aiBaseUrl/lesson-plans/$rppId'),
-          headers: await _getAiHeaders(),
-          body: json.encode(fields),
-        )
-        .timeout(const Duration(seconds: 30));
-    return _handleResponse(response);
+    final response = await _aiDio.patch(
+      '/lesson-plans/$rppId',
+      data: fields,
+      options: Options(sendTimeout: const Duration(seconds: 30)),
+    );
+    return _handleAiResponse(response);
   }
 
   /// Get RPP detail from AI API (Section 5.4)
   /// GET /api/lesson-plans/{id}
   static Future<dynamic> getRppDetail(String rppId) async {
-    final response = await http.get(
-      Uri.parse('$_aiBaseUrl/lesson-plans/$rppId'),
-      headers: await _getAiHeaders(),
+    final response = await _aiDio.get(
+      '/lesson-plans/$rppId',
     );
-    return _handleResponse(response);
+    return _handleAiResponse(response);
   }
 
   // ==================== MATERI PROGRESS METHODS ====================

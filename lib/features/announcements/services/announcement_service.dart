@@ -10,7 +10,6 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 
@@ -198,7 +197,7 @@ class ApiAnnouncementService {
       if (file != null) {
         formMap['file'] = await MultipartFile.fromFile(
           file.path,
-          contentType: MediaType.parse(_getMimeType(file.path)),
+          contentType: DioMediaType.parse(_getMimeType(file.path)),
         );
       }
 
@@ -235,7 +234,7 @@ class ApiAnnouncementService {
       if (file != null) {
         formMap['file'] = await MultipartFile.fromFile(
           file.path,
-          contentType: MediaType.parse(_getMimeType(file.path)),
+          contentType: DioMediaType.parse(_getMimeType(file.path)),
         );
       }
 

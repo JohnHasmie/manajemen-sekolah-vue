@@ -2,12 +2,11 @@
 // Like Laravel's Maatwebsite/Excel RppExport class with FormRequest validation.
 // RPP = Rencana Pelaksanaan Pembelajaran (Lesson Plan).
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,7 +22,7 @@ import 'package:provider/provider.dart';
 /// Provides both server-side and local validation for RPP data, with status
 /// translation (Disetujui/Menunggu/Ditolak -> Approved/Pending/Rejected).
 class ExcelRppService {
-  static String get baseUrl => ApiService.baseUrl;
+  static String get baseUrl => '/rpp';
 
   /// Export RPP data to Excel via backend POST to `/rpp/export`.
   /// [rppList] - list of RPP records. [context] - for SnackBar and i18n.
@@ -38,45 +37,35 @@ class ExcelRppService {
       // Validasi data terlebih dahulu
       final validatedData = validateRppData(rppList);
 
-      // Kirim request ke backend menggunakan ApiService untuk handle auth headers
-      // Note: ApiService.post returns decoded JSON, so we need to handle it differently
-      // or we can just add headers manually here if we want to keep using http.post for blob response
-
-      final headers = await ApiService.getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/rpp/export'),
-        headers: headers,
-        body: jsonEncode({'rppList': validatedData}),
+      final response = await dioClient.post<List<int>>(
+        '$baseUrl/export',
+        data: {'rppList': validatedData},
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory untuk menyimpan file
-        final Directory directory = await getApplicationDocumentsDirectory();
-        final String filePath =
-            '${directory.path}/Data_RPP_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      // Get directory untuk menyimpan file
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String filePath =
+          '${directory.path}/Data_RPP_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-        // Simpan file yang didownload
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Simpan file yang didownload
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Buka file
-        await OpenFile.open(filePath);
+      // Buka file
+      await OpenFile.open(filePath);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'RPP data exported successfully',
-                'id': 'Data RPP berhasil diexport',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'RPP data exported successfully',
+              'id': 'Data RPP berhasil diexport',
+            }),
           ),
-        );
-      } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? 'Failed to export RPP data');
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -98,16 +87,14 @@ class ExcelRppService {
     List<dynamic> rppData,
   ) async {
     try {
-      final headers = await ApiService.getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/rpp/validate'),
-        headers: headers,
-        body: jsonEncode({'rppData': rppData}),
+      final response = await dioClient.post(
+        '$baseUrl/validate',
+        data: {'rppData': rppData},
       );
 
-      final responseData = jsonDecode(response.body);
+      final responseData = response.data;
 
-      if (response.statusCode == 200 && responseData['success']) {
+      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'RPP validation failed');

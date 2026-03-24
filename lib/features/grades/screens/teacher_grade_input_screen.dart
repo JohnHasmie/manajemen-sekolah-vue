@@ -18,7 +18,7 @@ import 'package:file_saver/file_saver.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/models/student.dart';
@@ -428,26 +428,21 @@ class GradePageState extends State<GradePage> {
 
       if (isHomeroom || isAdmin) {
         // 2. Homeroom or Admin: Get ALL subjects assigned to this class
-        final response = await http.get(
-          Uri.parse(
-            '${ApiService.baseUrl}/class/${_selectedClass!['id']}/subjects',
-          ),
-          headers: await ApiService.getHeaders(),
+        final response = await dioClient.get(
+          '/class/${_selectedClass!['id']}/subjects',
         );
 
-        if (response.statusCode == 200) {
-          final allSubjects = json.decode(response.body) as List;
-          final uniqueSubjects = <String, Map<String, dynamic>>{};
+        final allSubjects = response.data is List ? response.data as List : [];
+        final uniqueSubjects = <String, Map<String, dynamic>>{};
 
-          for (var subject in allSubjects) {
-            final subjectId = subject['id'].toString();
-            var s = Map<String, dynamic>.from(subject);
-            // Editable if Admin OR if I teach it
-            s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
-            uniqueSubjects[subjectId] = s;
-          }
-          subjects = uniqueSubjects.values.toList();
+        for (var subject in allSubjects) {
+          final subjectId = subject['id'].toString();
+          var s = Map<String, dynamic>.from(subject);
+          // Editable if Admin OR if I teach it
+          s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
+          uniqueSubjects[subjectId] = s;
         }
+        subjects = uniqueSubjects.values.toList();
       } else {
         // 3. Regular Teacher (Non-Homeroom): Only SHOW what I teach
         final uniqueSubjects = <String, Map<String, dynamic>>{};

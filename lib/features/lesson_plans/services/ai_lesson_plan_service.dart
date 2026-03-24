@@ -4,9 +4,7 @@
 // `Http::withToken($apiKey)->post('https://api.openai.com/...')`.
 // RPP = Rencana Pelaksanaan Pembelajaran (Lesson Plan, Indonesian curriculum).
 
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
 /// Service that generates RPP (lesson plans) using the OpenAI GPT API.
 /// Like a Laravel service class (e.g., `App\Services\AIRPPService`) that:
@@ -97,14 +95,18 @@ class RPPService {
         alatMedia: alatMedia,
       );
 
-      // Panggil API OpenAI
-      final response = await http.post(
-        Uri.parse(baseUrl),
+      // Panggil API OpenAI via Dio
+      final dio = Dio(BaseOptions(
+        baseUrl: baseUrl,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $apiKey',
         },
-        body: json.encode({
+      ));
+
+      final response = await dio.post(
+        '',
+        data: {
           'model': 'gpt-3.5-turbo',
           'messages': [
             {
@@ -116,23 +118,20 @@ class RPPService {
           ],
           'temperature': 0.7,
           'max_tokens': 3000,
-        }),
+        },
       );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final content = data['choices'][0]['message']['content'];
+      // Dio auto-decodes JSON; response.data is already a Map
+      final data = response.data;
+      final content = data['choices'][0]['message']['content'];
 
-        // Parse response AI menjadi struktur RPP
-        return _parseAIResponse(
-          content: content,
-          judul: judul,
-          subjectId: subjectId,
-          mataPelajaranName: mataPelajaranName,
-        );
-      } else {
-        throw Exception('Failed to generate RPP: ${response.statusCode}');
-      }
+      // Parse response AI menjadi struktur RPP
+      return _parseAIResponse(
+        content: content,
+        judul: judul,
+        subjectId: subjectId,
+        mataPelajaranName: mataPelajaranName,
+      );
     } catch (e) {
       // Fallback: Buat RPP sederhana jika AI gagal
       return _createFallbackRPP(

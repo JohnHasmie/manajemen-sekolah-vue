@@ -21,7 +21,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dio/dio.dart';
-import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/main.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
@@ -242,78 +241,9 @@ class ApiService {
     return headers;
   }
 
-  /// Central response handler for ALL API calls in the app.
-  /// Like Laravel's exception handler (`Handler::render()`) combined with
-  /// an Axios response interceptor. Handles:
-  /// - 204 No Content -> returns null
-  /// - 2xx Success -> returns parsed JSON body
-  /// - 401 Unauthorized -> auto-logout with redirect to login screen
-  /// - 403 Forbidden -> distinguishes school access denied vs real forbidden
-  /// - 422 Validation -> extracts first validation error message (Laravel format)
-  /// - 500+ Server errors -> throws without logging out
-  static dynamic _handleResponse(http.Response response) {
-    try {
-      if (response.statusCode == 204) {
-        return null;
-      }
-
-      final responseBody = json.decode(response.body);
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return responseBody;
-      } else {
-        // Handle Laravel validation errors (422)
-        if (response.statusCode == 422) {
-          if (responseBody['errors'] != null) {
-            final errors = responseBody['errors'] as Map<String, dynamic>;
-            final firstError = errors.values.first;
-            final errorMessage = firstError is List
-                ? firstError.first
-                : firstError.toString();
-            throw Exception(errorMessage);
-          } else if (responseBody['message'] != null) {
-            throw Exception(responseBody['message']);
-          }
-        }
-
-        final errorMessage =
-            responseBody['error'] ??
-            responseBody['message'] ??
-            'Request failed with status: ${response.statusCode}';
-
-        // Handle specific authentication errors (should logout)
-        if (response.statusCode == 401) {
-          _handleAuthenticationErrorWithMessage(
-            'Session expired. Please login again.',
-          );
-        } else if (response.statusCode == 403) {
-          // Differentiate: school context error vs genuine forbidden
-          final is403SchoolContext =
-              responseBody is Map &&
-              (responseBody['error'] ?? '').toString().contains(
-                'Anda tidak memiliki akses ke sekolah ini',
-              );
-          if (is403SchoolContext) {
-            // Don't logout — just signal that school context is invalid
-            // so the calling screen can handle gracefully
-            throw Exception('SCHOOL_ACCESS_DENIED: ${responseBody['error']}');
-          } else {
-            _handleAuthenticationErrorWithMessage(
-              'Access forbidden. Please login again.',
-            );
-          }
-        }
-        // For 500+ errors, just throw the exception without logging out
-        // The UI will handle displaying the error to the user
-
-        throw Exception(errorMessage);
-      }
-    } catch (e) {
-      // FormatException = server returned non-JSON (e.g. HTML error page)
-      // Don't logout - just rethrow so UI can handle it
-      rethrow;
-    }
-  }
+  // NOTE: _handleResponse(http.Response) has been removed.
+  // All response handling (401 auto-logout, 403, 422 validation, etc.)
+  // is now done by Dio's ErrorInterceptor in dio_client.dart.
 
   /// Handles authentication failures by clearing stored data and redirecting to login.
   /// Like Laravel's `auth()->logout()` + redirect, or Vue Router's navigation guard.

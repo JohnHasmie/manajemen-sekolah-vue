@@ -11,7 +11,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
@@ -1818,33 +1818,24 @@ class _RppFormDialogState extends State<RppFormDialog> {
         ),
       );
 
-      final response = await http.get(Uri.parse(fullUrl));
+      final dio = Dio();
+      final response = await dio.get<List<int>>(
+        fullUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
 
-      if (response.statusCode == 200) {
-        final dir = await getTemporaryDirectory();
-        // Extract filename
-        final fileName = cleanPath.split('/').last;
-        final file = File('${dir.path}/$fileName');
+      final dir = await getTemporaryDirectory();
+      // Extract filename
+      final fileName = cleanPath.split('/').last;
+      final file = File('${dir.path}/$fileName');
 
-        await file.writeAsBytes(response.bodyBytes);
+      await file.writeAsBytes(response.data!);
 
-        if (kDebugMode) {
-          print('File saved to: ${file.path}');
-        }
-
-        await OpenFile.open(file.path);
-      } else if (response.statusCode == 404) {
-        throw Exception(
-          languageProvider.getTranslatedText({
-            'en': 'File not found on server',
-            'id': 'File tidak ditemukan di server',
-          }),
-        );
-      } else {
-        throw Exception(
-          '${languageProvider.getTranslatedText({'en': 'Failed to download file', 'id': 'Gagal mengunduh file'})}: ${response.statusCode}',
-        );
+      if (kDebugMode) {
+        print('File saved to: ${file.path}');
       }
+
+      await OpenFile.open(file.path);
     } catch (e) {
       if (kDebugMode) {
         print('Error opening file: $e');
@@ -2714,28 +2705,33 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
         print('📦 Payload: ${json.encode(requestBody)}');
       }
 
-      // Panggilan API asli ke KamillLabs Edu AI
-      final response = await http
-          .post(
-            Uri.parse(
-              'https://edu-ai-api.kamillabs.com/api/lesson-plans/generate',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: json.encode(requestBody),
-          )
-          .timeout(const Duration(seconds: 60));
+      // Panggilan API asli ke KamillLabs Edu AI via Dio
+      final aiDio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        validateStatus: (_) => true, // Don't throw on non-2xx
+      ));
+
+      final response = await aiDio.post(
+        'https://edu-ai-api.kamillabs.com/api/lesson-plans/generate',
+        data: requestBody,
+      );
 
       if (kDebugMode) print('📥 Response Status: ${response.statusCode}');
 
+      // Dio auto-decodes JSON, so response.data is already a Map
+      final resultBody = response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : <String, dynamic>{};
+
       if (response.statusCode == 202) {
         // Async Mode - navigate to result screen with polling
-        final resultBody = json.decode(response.body);
-
-        if (kDebugMode) print('📋 Full 202 Response: ${response.body}');
+        if (kDebugMode) print('📋 Full 202 Response: ${response.data}');
 
         // Try multiple field names for poll_url and job_id
         final pollUrl =
@@ -2776,9 +2772,8 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
 
       if (response.statusCode == 429) {
         if (kDebugMode) print('⚠️ Rate limit reached');
-        final errorBody = json.decode(response.body);
         final message =
-            errorBody['message'] ??
+            resultBody['message'] ??
             'Batas pembuatan RPP AI harian/bulanan telah tercapai.';
         if (mounted) {
           showDialog(
@@ -2824,13 +2819,11 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       }
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        if (kDebugMode) print('❌ API Error Body: ${response.body}');
-        final errorBody = json.decode(response.body);
-        final message = errorBody['message'] ?? 'Gagal generate RPP';
+        if (kDebugMode) print('❌ API Error Body: ${response.data}');
+        final message = resultBody['message'] ?? 'Gagal generate RPP';
         throw Exception(message);
       }
 
-      final resultBody = json.decode(response.body);
       final rppResponse = resultBody['data'] ?? resultBody;
 
       await _processAndNavigate(rppResponse);

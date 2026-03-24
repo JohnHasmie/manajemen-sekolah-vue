@@ -8,12 +8,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/report_cards/screens/parent_report_card_detail_screen.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
@@ -153,38 +152,30 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
 
     if (yearId == null) throw Exception("Tahun ajaran belum dipilih.");
 
-    final headers = await ApiService.getHeaders();
-    final url = Uri.parse(
-      '${ApiService.baseUrl}/parent/raports?academic_year_id=$yearId&semester_id=$_selectedSemesterId',
+    final response = await dioClient.get(
+      '/parent/raports',
+      queryParameters: {
+        'academic_year_id': yearId,
+        'semester_id': _selectedSemesterId,
+      },
     );
 
-    final response = await http.get(url, headers: headers);
+    // Dio auto-decodes JSON and throws on non-2xx (handled by ErrorInterceptor)
+    final jsonResponse = response.data;
+    if (jsonResponse is Map<String, dynamic> && jsonResponse['success'] == true) {
+      final freshData = jsonResponse['data'] ?? [];
+      if (!mounted) return;
 
-    if (response.statusCode == 200) {
-      final jsonResponse = jsonDecode(response.body);
-      if (jsonResponse['success']) {
-        final freshData = jsonResponse['data'] ?? [];
-        if (!mounted) return;
+      // Save to cache (non-blocking)
+      LocalCacheService.save(_buildCacheKey(), freshData);
 
-        // Save to cache (non-blocking)
-        LocalCacheService.save(_buildCacheKey(), freshData);
-
-        setState(() {
-          _studentsData = freshData;
-        });
-      } else {
-        throw Exception(jsonResponse['message'] ?? 'Gagal memuat e-raport.');
-      }
+      setState(() {
+        _studentsData = freshData;
+      });
     } else {
-      String errorMsg =
-          'Gagal mengambil data dari server (Status: ${response.statusCode}).';
-      try {
-        final errJson = jsonDecode(response.body);
-        errorMsg = errJson['message'] ?? errJson['error'] ?? errorMsg;
-      } catch (e) {
-        // use default errorMsg
-      }
-      throw Exception(errorMsg);
+      throw Exception(
+        jsonResponse is Map ? (jsonResponse['message'] ?? 'Gagal memuat e-raport.') : 'Gagal memuat e-raport.',
+      );
     }
   }
 

@@ -5,13 +5,12 @@
 // activities, assessment). Supports inline editing, per-field AI regeneration,
 // saving, and export to Word/PDF. In Laravel terms: `LessonPlanController@show`
 // + `@update` with AI regeneration capabilities.
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart'; // Required for kDebugMode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:manajemensekolah/features/lesson_plans/screens/lesson_plan_ai_result_screen.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -364,26 +363,32 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       if (!mounted) return;
 
       // Check if response is HTML (server error page from proxy/CDN)
-      if (response.body.trimLeft().startsWith('<!DOCTYPE') || response.body.trimLeft().startsWith('<html')) {
-        if (kDebugMode) print('🔄 Got HTML response (status ${response.statusCode}) - server error');
-        setState(() => _regeneratingField = null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Server AI sedang tidak tersedia (${response.statusCode}). Coba lagi nanti.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
+      // Dio returns data as String when content-type is text/html
+      if (response.data is String) {
+        final bodyStr = (response.data as String).trimLeft();
+        if (bodyStr.startsWith('<!DOCTYPE') || bodyStr.startsWith('<html')) {
+          if (kDebugMode) print('🔄 Got HTML response (status ${response.statusCode}) - server error');
+          setState(() => _regeneratingField = null);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Server AI sedang tidak tersedia (${response.statusCode}). Coba lagi nanti.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
       }
+
+      // Dio auto-decodes JSON, so response.data is already a Map
+      final body = response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : <String, dynamic>{};
 
       if (response.statusCode == 429) {
-        final errorBody = json.decode(response.body);
-        _showLimitReachedDialog(errorBody['message'] ?? fieldLabel);
+        _showLimitReachedDialog(body['message'] ?? fieldLabel);
         setState(() => _regeneratingField = null);
         return;
       }
-
-      final body = json.decode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Direct response with updated field
@@ -467,8 +472,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
         if (!mounted) return;
 
+        // Dio auto-decodes JSON, so response.data is already a Map
+        final body = response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : <String, dynamic>{};
+
         if (response.statusCode == 200 || response.statusCode == 201) {
-          final body = json.decode(response.body);
           final data = body['data'] ?? body;
           if (data[fieldKey] != null) {
             _rppData[fieldKey] = data[fieldKey];
@@ -477,7 +486,6 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           }
           successCount++;
         } else if (response.statusCode == 202) {
-          final body = json.decode(response.body);
           final jobId = (body['job_id'] ?? body['data']?['id'])?.toString();
           if (jobId != null) {
             await _pollRegenJobSync(jobId, fieldKey);
@@ -517,7 +525,10 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
       try {
         final response = await ApiSubjectService.pollAiJob(jobId, token);
-        final body = json.decode(response.body);
+        // Dio auto-decodes JSON
+        final body = response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : <String, dynamic>{};
         final jobData = body['data'] ?? body;
         final status = jobData['status'] ?? body['status'];
 
@@ -574,7 +585,10 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
       try {
         final response = await ApiSubjectService.pollAiJob(jobId, token);
-        final body = json.decode(response.body);
+        // Dio auto-decodes JSON
+        final body = response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : <String, dynamic>{};
         final jobData = body['data'] ?? body;
         final status = jobData['status'] ?? body['status'];
 
@@ -1214,23 +1228,24 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     });
 
     try {
-      final response = await http.get(Uri.parse(filePath));
+      // Use a plain Dio instance for downloading external file URLs (not API calls)
+      final dio = Dio();
+      final response = await dio.get<List<int>>(
+        filePath,
+        options: Options(responseType: ResponseType.bytes),
+      );
 
-      if (response.statusCode == 200) {
-        final directory = await getTemporaryDirectory();
-        final fileName = _getFileName(filePath);
-        final localFile = File('${directory.path}/$fileName');
-        await localFile.writeAsBytes(response.bodyBytes, flush: true);
+      final directory = await getTemporaryDirectory();
+      final fileName = _getFileName(filePath);
+      final localFile = File('${directory.path}/$fileName');
+      await localFile.writeAsBytes(response.data!, flush: true);
 
-        await OpenFile.open(localFile.path);
+      await OpenFile.open(localFile.path);
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('File berhasil diunduh')),
-          );
-        }
-      } else {
-        throw Exception('Gagal mengunduh file (${response.statusCode})');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('File berhasil diunduh')),
+        );
       }
     } catch (e) {
       if (kDebugMode) print('Download file error: $e');

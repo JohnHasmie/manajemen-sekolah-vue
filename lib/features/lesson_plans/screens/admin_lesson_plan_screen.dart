@@ -10,7 +10,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -2664,29 +2664,29 @@ class RppAdminDetailPage extends StatelessWidget {
 
       print('Downloading from: $fileUrl');
 
-      final response = await http.get(Uri.parse(fileUrl));
+      final dio = Dio();
+      final response = await dio.get<List<int>>(
+        fileUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
 
-      if (response.statusCode == 200) {
-        final directory = await getApplicationDocumentsDirectory();
-        final fileName = filePath.split('/').last;
-        final file = File('${directory.path}/$fileName');
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = filePath.split('/').last;
+      final file = File('${directory.path}/$fileName');
 
-        await file.writeAsBytes(response.bodyBytes);
+      await file.writeAsBytes(response.data!);
 
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Download berhasil! Membuka file...')),
+      );
+
+      final result = await OpenFile.open(file.path);
+
+      if (result.type != ResultType.done) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download berhasil! Membuka file...')),
+          SnackBar(content: Text('Gagal membuka file: ${result.message}')),
         );
-
-        final result = await OpenFile.open(file.path);
-
-        if (result.type != ResultType.done) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal membuka file: ${result.message}')),
-          );
-        }
-      } else {
-        throw Exception('Server returned ${response.statusCode}');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();

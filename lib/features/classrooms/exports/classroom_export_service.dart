@@ -2,12 +2,11 @@
 // Like Laravel's Maatwebsite/Excel ClassExport and ClassImport classes.
 // Handles export, template download (xlsx & csv), and data validation.
 
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,11 +22,10 @@ import 'package:provider/provider.dart';
 /// 3. Download .csv import template (alternative format)
 /// 4. Validate class data both locally and via backend API
 ///
-/// All methods are static and use [ApiService.getHeaders()] for auth tokens,
+/// All methods are static and use [dioClient] for auth tokens,
 /// like attaching `auth:sanctum` middleware in Laravel routes.
 class ExcelClassService {
-  // static const String baseUrl = ApiService.baseUrl;
-  static String get baseUrl => ApiService.baseUrl;
+  static String get baseUrl => '/class';
 
   /// Export class data to an Excel file via backend POST to `/class/export`.
   /// Like `Excel::download(new ClassExport($data), 'file.xlsx')` in Laravel.
@@ -45,42 +43,35 @@ class ExcelClassService {
       // Validasi data terlebih dahulu
       final validatedData = validateClassData(classes);
 
-      // Kirim request ke backend
-      final headers = await ApiService.getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/class/export'),
-        headers: headers,
-        body: jsonEncode({'classes': validatedData}),
+      final response = await dioClient.post<List<int>>(
+        '$baseUrl/export',
+        data: {'classes': validatedData},
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory untuk menyimpan file
-        final Directory directory = await getApplicationDocumentsDirectory();
-        final String filePath =
-            '${directory.path}/Data_Kelas_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      // Get directory untuk menyimpan file
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String filePath =
+          '${directory.path}/Data_Kelas_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-        // Simpan file yang didownload
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Simpan file yang didownload
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Buka file
-        await OpenFile.open(filePath);
+      // Buka file
+      await OpenFile.open(filePath);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Class data exported successfully',
-                'id': 'Data kelas berhasil diexport',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Class data exported successfully',
+              'id': 'Data kelas berhasil diexport',
+            }),
           ),
-        );
-      } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? 'Failed to export data');
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -103,54 +94,33 @@ class ExcelClassService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      // Kirim request ke backend
-      final headers = await ApiService.getHeaders();
-      final response = await http.get(
-        Uri.parse('$baseUrl/class/template'),
-        headers: headers,
+      final response = await dioClient.get<List<int>>(
+        '$baseUrl/template',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory untuk menyimpan file
-        final Directory directory = await getApplicationDocumentsDirectory();
-        final String filePath = '${directory.path}/Template_Import_Kelas.xlsx';
+      // Get directory untuk menyimpan file
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String filePath = '${directory.path}/Template_Import_Kelas.xlsx';
 
-        // Simpan file yang didownload
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Simpan file yang didownload
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Buka file
-        await OpenFile.open(filePath);
+      // Buka file
+      await OpenFile.open(filePath);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Template downloaded successfully',
-                'id': 'Template berhasil diunduh',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'Template downloaded successfully',
+              'id': 'Template berhasil diunduh',
+            }),
           ),
-        );
-      } else {
-        print('Download failed. Status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-
-        String errorMessage;
-        try {
-          final errorData = jsonDecode(response.body);
-          errorMessage =
-              errorData['message'] ??
-              errorData['error'] ??
-              'Failed to download template';
-        } catch (e) {
-          errorMessage =
-              'Failed to download template (Status: ${response.statusCode})';
-        }
-
-        throw Exception(errorMessage);
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -172,42 +142,33 @@ class ExcelClassService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      // Kirim request ke backend
-      final headers = await ApiService.getHeaders();
-      final response = await http.get(
-        Uri.parse('$baseUrl/class/template/csv'),
-        headers: headers,
+      final response = await dioClient.get<List<int>>(
+        '$baseUrl/template/csv',
+        options: Options(responseType: ResponseType.bytes),
       );
 
-      if (response.statusCode == 200) {
-        // Get directory untuk menyimpan file
-        final Directory directory = await getApplicationDocumentsDirectory();
-        final String filePath = '${directory.path}/Template_Import_Kelas.csv';
+      // Get directory untuk menyimpan file
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String filePath = '${directory.path}/Template_Import_Kelas.csv';
 
-        // Simpan file yang didownload
-        final File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      // Simpan file yang didownload
+      final File file = File(filePath);
+      await file.writeAsBytes(response.data!);
 
-        // Buka file
-        await OpenFile.open(filePath);
+      // Buka file
+      await OpenFile.open(filePath);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
-                'en': 'CSV Template downloaded successfully',
-                'id': 'Template CSV berhasil diunduh',
-              }),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.getTranslatedText({
+              'en': 'CSV Template downloaded successfully',
+              'id': 'Template CSV berhasil diunduh',
+            }),
           ),
-        );
-      } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(
-          errorData['message'] ?? 'Failed to download CSV template',
-        );
-      }
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -230,16 +191,14 @@ class ExcelClassService {
     List<dynamic> classes,
   ) async {
     try {
-      final headers = await ApiService.getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/class/validate'),
-        headers: headers,
-        body: jsonEncode({'classes': classes}),
+      final response = await dioClient.post(
+        '$baseUrl/validate',
+        data: {'classes': classes},
       );
 
-      final responseData = jsonDecode(response.body);
+      final responseData = response.data;
 
-      if (response.statusCode == 200 && responseData['success']) {
+      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'Validation failed');
