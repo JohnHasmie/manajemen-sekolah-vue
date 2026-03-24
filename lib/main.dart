@@ -42,6 +42,7 @@ import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/dashboard/screens/dashboard_screen.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -143,7 +144,11 @@ void main() async {
       // Setup error handling (non-blocking)
       _setupErrorHandling();
 
-      runApp(SchoolManagementApp());
+      runApp(
+        ProviderScope(
+          child: SchoolManagementApp(),
+        ),
+      );
     },
     (error, stack) {
       LogService.sendError(error, stack);
