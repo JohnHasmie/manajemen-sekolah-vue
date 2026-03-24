@@ -915,7 +915,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       }
     } finally {
       // Trigger tour
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _checkAndShowTour();
         }
@@ -2378,17 +2378,22 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'admin',
-        name: 'subject_management_tour',
+      const tourCacheKey = 'tour_subject_management_admin';
+
+      // Only use cache (pre-fetched by dashboard), no API call
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
       );
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id'];
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

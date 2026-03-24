@@ -167,7 +167,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         });
         // Load cached billing then return early
         await _loadTagihan(useCache: true);
-        Future.delayed(const Duration(milliseconds: 1000), () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _students.isNotEmpty) _checkAndShowTour();
         });
         return;
@@ -248,7 +248,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         });
       }
     } finally {
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _students.isNotEmpty) _checkAndShowTour();
       });
     }
@@ -256,31 +256,18 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      // Check cache first — return early on hit
+      // Cache-only: tour status pre-fetched from dashboard
       const tourCacheKey = 'tour_parent_billing_screen_wali';
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
           _tourId = cached['tour']['id'];
-          if (mounted) _showTour();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
         }
-        return;
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'wali',
-        name: 'parent_billing_screen_tour',
-      );
-
-      // Save to cache (non-blocking)
-      LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

@@ -81,7 +81,7 @@ class _LearningRecommendationStudentScreenState
           _errorMessage = '';
         });
         if (kDebugMode) print('📦 RecommendationStudents: from cache (${cached.length})');
-        Future.delayed(const Duration(milliseconds: 500), () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _checkAndShowTour();
         });
         return;
@@ -110,7 +110,7 @@ class _LearningRecommendationStudentScreenState
       });
 
       if (students.isNotEmpty) {
-        Future.delayed(const Duration(milliseconds: 500), () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _checkAndShowTour();
         });
       }
@@ -128,29 +128,17 @@ class _LearningRecommendationStudentScreenState
   Future<void> _checkAndShowTour() async {
     const tourCacheKey = 'tour_recommendation_student_screen_guru';
     try {
-      // Check cache first
+      // Cache-only: tour status pre-fetched from dashboard
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
           _tourId = cached['tour']['id']?.toString();
-          if (!mounted) return;
-          _showTour();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
         }
-        return;
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'guru',
-        name: 'learning_recommendation_student_tour',
-      );
-
-      await LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-        if (!mounted) return;
-        _showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

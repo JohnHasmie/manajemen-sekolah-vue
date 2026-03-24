@@ -66,14 +66,6 @@ class ApiService {
       }
       return;
     }
-
-    // if (kIsWeb) {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // } else if (Platform.isAndroid) {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // } else {
-    //   baseUrl = 'http://127.0.0.1:8000/api';
-    // }
   }
 
   /// Performs an authenticated GET request with Firebase performance tracing.

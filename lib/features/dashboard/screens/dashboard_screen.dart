@@ -146,6 +146,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   // Stats Pagination state
 
+  // Tour state — pre-fetched early so tour shows without delay
+  Map<String, dynamic>? _pendingTourStatus;
+  bool _tourShown = false;
+
   // Global Keys for Tour
   final GlobalKey _profileHeaderKey = GlobalKey();
   final GlobalKey _heroSectionKey = GlobalKey();
@@ -195,8 +199,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     setState(() {});
 
+    // ─── Pre-fetch tour status early (non-blocking) so tour shows fast ───
+    final tourFuture = _prefetchTourStatus();
+    _prefetchChildScreenTours(); // Pre-cache tours for child screens (non-blocking)
+
     // ─── Load cached stats immediately (before any network call) ───
     await _loadCachedStats();
+
+    // Try showing tour right after cached stats (UI targets exist now)
+    _tryShowPendingTour();
 
     try {
       // Fetch fresh data in background
@@ -238,15 +249,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       }
     }
 
-    // Delay a bit to ensure UI renders before checking/showing the tour
-    Future.delayed(Duration(milliseconds: 1000), () {
-      if (mounted) {
-        _checkAndShowTour();
-      }
-    });
+    // Ensure tour future is complete, then try showing if not yet shown
+    await tourFuture;
+    _tryShowPendingTour();
   }
 
-  Future<void> _checkAndShowTour() async {
+  /// Pre-fetch tour status early (called in parallel with data loading).
+  Future<void> _prefetchTourStatus() async {
     try {
       final status = await ApiTourService.getTourStatus(
         platform: 'mobile',
@@ -255,14 +264,467 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       );
 
       if (status['should_show'] == true && status['tour'] != null) {
+        _pendingTourStatus = status;
         _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
+        // Try showing immediately if UI is ready
+        _tryShowPendingTour();
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      if (kDebugMode) print('Error pre-fetching tour status: $e');
     }
+  }
+
+  /// Pre-fetch tour statuses for child screens (student management, teacher admin)
+  /// so they're cached and ready when the user navigates to those screens.
+  Future<void> _prefetchChildScreenTours() async {
+    try {
+      final futures = <Future>[];
+
+      // ─── Admin tours ───
+      if (_effectiveRole == 'admin') {
+        // Student management tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'student_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_student_management_admin', status);
+            if (kDebugMode) print('Pre-cached student management tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache student tour failed: $e');
+          }),
+        );
+
+        // Teacher admin tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'teacher_admin_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_teacher_admin_screen_admin', status);
+            if (kDebugMode) print('Pre-cached teacher admin tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache teacher tour failed: $e');
+          }),
+        );
+
+        // Class management tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_class_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_management_admin', status);
+            if (kDebugMode) print('Pre-cached class management tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache class management tour failed: $e');
+          }),
+        );
+
+        // Subject management tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'subject_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_subject_management_admin', status);
+            if (kDebugMode) print('Pre-cached subject management tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache subject management tour failed: $e');
+          }),
+        );
+
+        // Teaching schedule management tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'teaching_schedule_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_schedule_management_admin', status);
+            if (kDebugMode) print('Pre-cached schedule management tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache schedule management tour failed: $e');
+          }),
+        );
+
+        // Announcement tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_announcement_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_admin', status);
+            if (kDebugMode) print('Pre-cached announcement tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache announcement tour failed: $e');
+          }),
+        );
+
+        // Class activity tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_class_activity_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_activity_admin', status);
+            if (kDebugMode) print('Pre-cached class activity tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache class activity tour failed: $e');
+          }),
+        );
+
+        // Presence report tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_presence_report_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_presence_report_admin', status);
+            if (kDebugMode) print('Pre-cached presence report tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache presence report tour failed: $e');
+          }),
+        );
+
+        // RPP screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_rpp_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rpp_screen_admin', status);
+            if (kDebugMode) print('Pre-cached RPP screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache RPP screen tour failed: $e');
+          }),
+        );
+
+        // Raport screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_raport_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_screen_admin', status);
+            if (kDebugMode) print('Pre-cached raport screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache raport screen tour failed: $e');
+          }),
+        );
+
+        // Finance screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_finance_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_finance_admin', status);
+            if (kDebugMode) print('Pre-cached finance screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache finance screen tour failed: $e');
+          }),
+        );
+
+        // School settings tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_school_settings_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_school_settings_admin', status);
+            if (kDebugMode) print('Pre-cached school settings tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache school settings tour failed: $e');
+          }),
+        );
+      } // end admin tours
+
+      // ─── Guru tours ───
+      if (_effectiveRole == 'guru') {
+        // Input grade tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'input_grade_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_input_grade_screen_guru', status);
+            if (kDebugMode) print('Pre-cached input grade tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache input grade tour failed: $e');
+          }),
+        );
+
+        // Teaching schedule tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'teaching_schedule_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_teaching_schedule_screen_guru', status);
+            if (kDebugMode) print('Pre-cached teaching schedule tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache teaching schedule tour failed: $e');
+          }),
+        );
+
+        // Class activity tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'class_activity_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_activity_screen_guru', status);
+            if (kDebugMode) print('Pre-cached class activity tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache class activity tour failed: $e');
+          }),
+        );
+
+        // Presence teacher tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'presence_teacher_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_presence_teacher_screen_guru', status);
+            if (kDebugMode) print('Pre-cached presence teacher tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache presence teacher tour failed: $e');
+          }),
+        );
+
+        // Materi screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'materi_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_materi_screen_guru', status);
+            if (kDebugMode) print('Pre-cached materi screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache materi screen tour failed: $e');
+          }),
+        );
+
+        // Rekap nilai tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'rekap_nilai_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rekap_nilai_screen_guru', status);
+            if (kDebugMode) print('Pre-cached rekap nilai tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache rekap nilai tour failed: $e');
+          }),
+        );
+
+        // Raport screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'raport_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_screen_guru', status);
+            if (kDebugMode) print('Pre-cached raport screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache raport screen tour failed: $e');
+          }),
+        );
+
+        // Raport detail screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'raport_detail_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_detail_screen_guru', status);
+            if (kDebugMode) print('Pre-cached raport detail screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache raport detail screen tour failed: $e');
+          }),
+        );
+
+        // RPP screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'rpp_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rpp_screen_guru', status);
+            if (kDebugMode) print('Pre-cached RPP screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache RPP screen tour failed: $e');
+          }),
+        );
+
+        // Announcement screen tour (guru)
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'walimurid',
+            name: 'announcement_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_screen_guru', status);
+            if (kDebugMode) print('Pre-cached announcement screen tour status (guru)');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache announcement screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation class screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_class_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_class_screen_guru', status);
+            if (kDebugMode) print('Pre-cached recommendation class screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache recommendation class screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation student screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_student_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_student_screen_guru', status);
+            if (kDebugMode) print('Pre-cached recommendation student screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache recommendation student screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation result screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_result_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_result_screen_guru', status);
+            if (kDebugMode) print('Pre-cached recommendation result screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache recommendation result screen tour failed: $e');
+          }),
+        );
+      } // end guru tours
+
+      // ─── Wali tours ───
+      if (_effectiveRole == 'wali') {
+        // Announcement screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'walimurid',
+            name: 'announcement_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_screen_wali', status);
+            if (kDebugMode) print('Pre-cached announcement screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache announcement screen tour failed: $e');
+          }),
+        );
+
+        // Parent class activity screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_class_activity_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_class_activity_screen_wali', status);
+            if (kDebugMode) print('Pre-cached parent class activity screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache parent class activity screen tour failed: $e');
+          }),
+        );
+
+        // Parent grade screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_grade_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_grade_screen_wali', status);
+            if (kDebugMode) print('Pre-cached parent grade screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache parent grade screen tour failed: $e');
+          }),
+        );
+
+        // Parent billing screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_billing_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_billing_screen_wali', status);
+            if (kDebugMode) print('Pre-cached parent billing screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache parent billing screen tour failed: $e');
+          }),
+        );
+
+        // Parent presence screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_presence_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_presence_screen_wali', status);
+            if (kDebugMode) print('Pre-cached parent presence screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache parent presence screen tour failed: $e');
+          }),
+        );
+      } // end wali tours
+
+      await Future.wait(futures);
+    } catch (e) {
+      if (kDebugMode) print('Pre-cache child tours failed: $e');
+    }
+  }
+
+  /// Show the pending tour if: status is fetched, UI targets exist, and not already shown.
+  void _tryShowPendingTour() {
+    if (_tourShown || _pendingTourStatus == null || !mounted) return;
+
+    // Wait for next frame to ensure widget tree is laid out
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_tourShown || !mounted) return;
+      _tourShown = true;
+      _showTour();
+    });
   }
 
   void _showTour() {

@@ -218,7 +218,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
         });
       }
     } finally {
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _checkAndShowTour();
         }
@@ -1086,31 +1086,18 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      // Check cache first (24h TTL)
+      // Cache-only: tour status pre-fetched from dashboard
       final tourCacheKey = 'tour_announcement_screen_$_userRole';
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
           _tourId = cached['tour']['id']?.toString();
-          if (mounted) _showTour();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
         }
-        return;
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'walimurid',
-        name: 'announcement_screen_tour',
-      );
-
-      // Cache the result
-      await LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

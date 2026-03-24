@@ -642,7 +642,7 @@ class MateriPageState extends State<MateriPage> {
             // Load progress from DB non-blocking (always fresh — this is user-specific state)
             _loadMateriProgress(subjectId);
             // Trigger tour check
-            Future.delayed(const Duration(milliseconds: 1000), () {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _checkAndShowTour();
             });
             if (kDebugMode) print('⚡ Loaded bab materi from cache — skipping API');
@@ -721,7 +721,7 @@ class MateriPageState extends State<MateriPage> {
       _loadMateriProgress(subjectId);
 
       // Trigger tour
-      Future.delayed(Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _checkAndShowTour();
         }
@@ -1809,33 +1809,18 @@ class MateriPageState extends State<MateriPage> {
   }
 
   Future<void> _checkAndShowTour() async {
-    const tourCacheKey = 'tour_materi_screen_guru';
     try {
-      // Try cache first
+      const tourCacheKey = 'tour_materi_screen_guru';
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
           _tourId = cached['tour']['id']?.toString();
-          if (!mounted) return;
-          _showTour();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
         }
-        return;
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'guru',
-        name: 'materi_screen_tour',
-      );
-
-      // Save to cache
-      await LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

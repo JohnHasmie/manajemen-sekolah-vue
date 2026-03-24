@@ -112,7 +112,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
     }
 
     // Check and show tour
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _checkAndShowTour();
       }
@@ -1573,33 +1573,17 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      // Check tour cache first
       const tourCacheKey = 'tour_rpp_screen_admin';
-      final cachedTour = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
-      if (cachedTour != null) {
-        if (cachedTour['should_show'] == false) return;
-        if (cachedTour['should_show'] == true && cachedTour['tour'] != null) {
-          _tourId = cachedTour['tour']['id']?.toString();
-          if (!mounted) return;
-          _showTour();
-          return;
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
         }
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'admin',
-        name: 'admin_rpp_screen_tour',
-      );
-
-      // Save tour status to cache (non-blocking)
-      LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

@@ -144,40 +144,24 @@ class FinanceScreenState extends State<FinanceScreen> {
       }
     });
 
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _checkAndShowTour();
     });
   }
 
   Future<void> _checkAndShowTour() async {
     try {
-      // Check tour cache first
       const tourCacheKey = 'tour_finance_admin';
-      final cachedTour = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
-      if (cachedTour != null) {
-        if (cachedTour['should_show'] == false) return;
-        if (cachedTour['should_show'] == true && cachedTour['tour'] != null) {
-          _tourId = cachedTour['tour']['id']?.toString();
-          if (!mounted) return;
-          _showTour();
-          return;
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
         }
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'admin',
-        name: 'admin_finance_screen_tour',
-      );
-
-      // Save tour status to cache (non-blocking)
-      LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');
@@ -939,26 +923,25 @@ class FinanceScreenState extends State<FinanceScreen> {
 
   Future<void> _loadTagihanForSiswa(List<dynamic> siswaList) async {
     try {
+      // Fetch all bills in a single API call instead of one per student
+      final tagihanResponse = await _apiService.get('/bills?limit=10000');
+
+      List<dynamic> allBills = [];
+      if (tagihanResponse is Map<String, dynamic> &&
+          tagihanResponse.containsKey('data')) {
+        allBills = tagihanResponse['data'] is List
+            ? tagihanResponse['data']
+            : [];
+      } else if (tagihanResponse is List) {
+        allBills = tagihanResponse;
+      }
+
+      // Group bills by student_id client-side
       Map<String, List<dynamic>> tagihanBySiswa = {};
-
-      for (var siswa in siswaList) {
-        final siswaId = siswa['id']?.toString();
-        if (siswaId != null) {
-          final tagihanResponse = await _apiService.get(
-            '/bills?student_id=$siswaId',
-          );
-
-          List<dynamic> tagihanSiswa = [];
-          if (tagihanResponse is Map<String, dynamic> &&
-              tagihanResponse.containsKey('data')) {
-            tagihanSiswa = tagihanResponse['data'] is List
-                ? tagihanResponse['data']
-                : [];
-          } else if (tagihanResponse is List) {
-            tagihanSiswa = tagihanResponse;
-          }
-
-          tagihanBySiswa[siswaId] = tagihanSiswa;
+      for (var bill in allBills) {
+        final studentId = bill['student_id']?.toString();
+        if (studentId != null) {
+          tagihanBySiswa.putIfAbsent(studentId, () => []).add(bill);
         }
       }
 

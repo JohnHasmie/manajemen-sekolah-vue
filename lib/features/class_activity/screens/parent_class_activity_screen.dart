@@ -268,7 +268,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           _isLoading = false;
         });
         if (kDebugMode) print('📦 ParentActivities: from cache (${cached.length})');
-        Future.delayed(const Duration(milliseconds: 1000), () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _studentList.isNotEmpty) _checkAndShowTour();
         });
         return;
@@ -327,7 +327,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         );
       }
     } finally {
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _studentList.isNotEmpty) _checkAndShowTour();
       });
     }
@@ -336,29 +336,17 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   Future<void> _checkAndShowTour() async {
     const tourCacheKey = 'tour_parent_class_activity_screen_wali';
     try {
-      // Check cache first
+      // Cache-only: tour status pre-fetched from dashboard
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
           _tourId = cached['tour']['id']?.toString();
-          if (!mounted) return;
-          _showTour();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
         }
-        return;
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'wali',
-        name: 'parent_class_activity_screen_tour',
-      );
-
-      await LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-        if (!mounted) return;
-        _showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

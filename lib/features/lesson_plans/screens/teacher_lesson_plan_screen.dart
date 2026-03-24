@@ -478,7 +478,7 @@ class RppScreenState extends State<RppScreen> {
         });
       }
     } finally {
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _checkAndShowTour();
         }
@@ -1429,31 +1429,18 @@ class RppScreenState extends State<RppScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      // Check cache first (24h TTL)
+      // Cache-only: tour status pre-fetched from dashboard
       const tourCacheKey = 'tour_rpp_screen_guru';
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
           _tourId = cached['tour']['id']?.toString();
-          if (mounted) _showTour();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
         }
-        return;
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'guru',
-        name: 'rpp_screen_tour',
-      );
-
-      // Cache the result
-      await LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

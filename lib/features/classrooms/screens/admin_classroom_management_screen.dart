@@ -713,7 +713,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                 });
                 if (kDebugMode) print('⚡ Classes loaded from cache');
                 // Cache hit → return early, no background API refresh
-                Future.delayed(const Duration(milliseconds: 1000), () {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _checkAndShowTour();
                 });
                 return;
@@ -793,7 +793,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       );
     } finally {
       // Trigger tour
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _checkAndShowTour();
         }
@@ -2696,35 +2696,22 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   Future<void> _checkAndShowTour() async {
     try {
-      // ─── Cache-first: skip API if tour already dismissed ───
       const tourCacheKey = 'tour_class_management_admin';
-      try {
-        final cached = await LocalCacheService.load(
-          tourCacheKey,
-          ttl: const Duration(hours: 24),
-        );
-        if (cached != null && cached['should_show'] == false) {
-          if (kDebugMode) print('⚡ Class management tour skipped (cached)');
-          return;
-        }
-      } catch (e) {
-        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
-      }
 
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'admin',
-        name: 'admin_class_management_tour',
+      // Only use cache (pre-fetched by dashboard), no API call
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
       );
-
-      // Non-blocking cache save
-      LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id'];
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

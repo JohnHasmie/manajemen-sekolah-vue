@@ -926,10 +926,8 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                   _errorMessage = null;
                 });
                 if (kDebugMode) print('⚡ Teachers loaded from cache');
-                // Cache hit → return early, no background API refresh
-                Future.delayed(const Duration(milliseconds: 1000), () {
-                  if (mounted) _checkAndShowTour();
-                });
+                // Cache hit → trigger tour immediately (cache pre-fetched by dashboard)
+                _checkAndShowTour();
                 return;
               }
             } catch (e) {
@@ -1026,12 +1024,8 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         ),
       );
     } finally {
-      // Trigger tour
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (mounted) {
-          _checkAndShowTour();
-        }
-      });
+      // Trigger tour (cache pre-fetched by dashboard, no delay needed)
+      _checkAndShowTour();
     }
   }
 
@@ -2919,35 +2913,22 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      // ─── Cache-first: skip API if tour already dismissed ───
       const tourCacheKey = 'tour_teacher_admin_screen_admin';
-      try {
-        final cached = await LocalCacheService.load(
-          tourCacheKey,
-          ttl: const Duration(hours: 24),
-        );
-        if (cached != null && cached['should_show'] == false) {
-          if (kDebugMode) print('⚡ Teacher admin tour skipped (cached)');
-          return;
-        }
-      } catch (e) {
-        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
-      }
 
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'admin',
-        name: 'teacher_admin_tour',
+      // Only use cache (pre-fetched by dashboard), no API call
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
       );
-
-      // Non-blocking cache save
-      LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id'];
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

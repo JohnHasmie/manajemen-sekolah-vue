@@ -2927,7 +2927,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       if (_currentPage == 1 &&
           !widget.autoShowActivityDialog &&
           _currentStep == 2) {
-        Future.delayed(Duration(milliseconds: 1000), () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             _checkAndShowTour();
           }
@@ -2959,17 +2959,17 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   Future<void> _checkAndShowTour() async {
     if (_currentStep != 2) return;
     try {
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'guru',
-        name: 'class_activity_tour',
-      );
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
+      const tourCacheKey = 'tour_class_activity_screen_guru';
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

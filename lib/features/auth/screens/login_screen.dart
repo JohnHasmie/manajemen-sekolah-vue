@@ -771,25 +771,42 @@ class LoginScreenState extends State<LoginScreen> {
         ],
 
         SizedBox(height: 30),
-        TextField(
-          controller: emailController,
-          decoration: InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.email),
-            border: OutlineInputBorder(),
+        AutofillGroup(
+          child: Column(
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+              ),
+              SizedBox(height: 15),
+              TextField(
+                controller: passwordController,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                onSubmitted: (_) {
+                  // Only submit if user explicitly pressed Enter/Done, not from autofill
+                  if (!_isLoading &&
+                      emailController.text.trim().isNotEmpty &&
+                      passwordController.text.isNotEmpty) {
+                    login();
+                  }
+                },
+              ),
+            ],
           ),
-          keyboardType: TextInputType.emailAddress,
-        ),
-        SizedBox(height: 15),
-        TextField(
-          controller: passwordController,
-          decoration: InputDecoration(
-            labelText: 'Password',
-            prefixIcon: Icon(Icons.lock),
-            border: OutlineInputBorder(),
-          ),
-          obscureText: true,
-          onSubmitted: (_) => login(),
         ),
         SizedBox(height: 20),
         SizedBox(

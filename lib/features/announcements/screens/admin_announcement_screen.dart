@@ -802,7 +802,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
               });
               if (kDebugMode) print('⚡ Announcements loaded from cache');
               // Cache hit → return early, no background API refresh
-              Future.delayed(const Duration(milliseconds: 1000), () {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) _checkAndShowTour();
               });
               return;
@@ -945,7 +945,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
       );
     } finally {
       // Trigger tour after initial load
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _checkAndShowTour();
         }
@@ -3101,35 +3101,17 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      // ─── Cache-first: skip API if tour already dismissed ───
       const tourCacheKey = 'tour_announcement_admin';
-      try {
-        final cached = await LocalCacheService.load(
-          tourCacheKey,
-          ttl: const Duration(hours: 24),
-        );
-        if (cached != null && cached['should_show'] == false) {
-          if (kDebugMode) print('⚡ Announcement tour skipped (cached)');
-          return;
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id'];
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) showTour();
+            });
+          }
         }
-      } catch (e) {
-        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
-      }
-
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'admin',
-        name: 'admin_announcement_tour',
-      );
-
-      // Non-blocking cache save
-      LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        showTour();
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

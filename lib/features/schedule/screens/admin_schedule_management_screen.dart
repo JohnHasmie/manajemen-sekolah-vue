@@ -503,7 +503,7 @@ class TeachingScheduleManagementScreenState
                 _updateGridData();
                 if (kDebugMode) print('⚡ Schedules loaded from cache');
                 // Cache hit → return early, no background API refresh
-                Future.delayed(const Duration(milliseconds: 1000), () {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _checkAndShowTour();
                 });
                 // Update semester selection from cached semester list
@@ -644,7 +644,7 @@ class TeachingScheduleManagementScreenState
       setState(() => _isLoading = false);
     } finally {
       // Trigger tour
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _checkAndShowTour();
         }
@@ -859,10 +859,14 @@ class TeachingScheduleManagementScreenState
             final h = (jp['hour_number'] ?? jp['jam_ke'])?.toString();
             return h == _selectedJamPelajaran;
           })
-          .map(
-            (jam) =>
-                '${jam['start_time'] ?? jam['jam_mulai'] ?? ''}-${jam['end_time'] ?? jam['jam_selesai'] ?? ''}',
-          )
+          .map((jam) {
+            String start = (jam['start_time'] ?? jam['jam_mulai'] ?? '').toString();
+            String end = (jam['end_time'] ?? jam['jam_selesai'] ?? '').toString();
+            if (start.length > 5) start = start.substring(0, 5);
+            if (end.length > 5) end = end.substring(0, 5);
+            return '$start-$end';
+          })
+          .toSet()
           .toList();
     }
 
@@ -881,7 +885,7 @@ class TeachingScheduleManagementScreenState
   }
 
   List<String> _generateTimeSlots() {
-    return _jamPelajaranList.map((jam) {
+    final slots = _jamPelajaranList.map((jam) {
       String start = (jam['start_time'] ?? jam['jam_mulai'] ?? '').toString();
       String end = (jam['end_time'] ?? jam['jam_selesai'] ?? '').toString();
 
@@ -890,7 +894,16 @@ class TeachingScheduleManagementScreenState
       if (end.length > 5) end = end.substring(0, 5);
 
       return '$start-$end';
-    }).toList();
+    }).toSet().toList(); // Deduplicate time slots
+
+    // Sort chronologically by start time
+    slots.sort((a, b) {
+      final startA = a.split('-').first;
+      final startB = b.split('-').first;
+      return startA.compareTo(startB);
+    });
+
+    return slots;
   }
 
   // Method baru untuk menghasilkan data timetable dalam format yang diinginkan
@@ -3188,36 +3201,22 @@ class TeachingScheduleManagementScreenState
   Future<void> _checkAndShowTour() async {
     if (_isTourShowing) return;
     try {
-      // ─── Cache-first: skip API if tour already dismissed ───
       const tourCacheKey = 'tour_schedule_management_admin';
-      try {
-        final cached = await LocalCacheService.load(
-          tourCacheKey,
-          ttl: const Duration(hours: 24),
-        );
-        if (cached != null && cached['should_show'] == false) {
-          if (kDebugMode) print('⚡ Schedule management tour skipped (cached)');
-          return;
-        }
-      } catch (e) {
-        if (kDebugMode) print('⚠️ Tour cache load failed: $e');
-      }
 
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'admin',
-        name: 'teaching_schedule_management_tour',
+      // Only use cache (pre-fetched by dashboard), no API call
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
       );
-
-      // Non-blocking cache save
-      LocalCacheService.save(tourCacheKey, status);
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        if (_isTourShowing) return; // Prevent multiple tours
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id'];
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && !_isTourShowing) _showTour();
+            });
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');

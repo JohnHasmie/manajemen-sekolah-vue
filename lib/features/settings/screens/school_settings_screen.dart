@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/settings/screens/school_level_settings_screen.dart';
 import 'package:manajemensekolah/features/settings/screens/time_settings_screen.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
@@ -37,24 +38,24 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _checkAndShowTour();
     });
   }
 
   Future<void> _checkAndShowTour() async {
     try {
-      final status = await ApiTourService.getTourStatus(
-        platform: 'mobile',
-        role: 'admin',
-        name: 'admin_school_settings_tour',
-      );
-
-      if (status['should_show'] == true && status['tour'] != null) {
-        _tourId = status['tour']['id'];
-
-        if (!mounted) return;
-        _showTour();
+      const tourCacheKey = 'tour_school_settings_admin';
+      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      if (cached != null && cached is Map) {
+        if (cached['should_show'] == true && cached['tour'] != null) {
+          _tourId = cached['tour']['id']?.toString();
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showTour();
+            });
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) print('Error checking tour status: $e');
@@ -80,11 +81,13 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_school_settings_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
           ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
         }
+        LocalCacheService.save('tour_school_settings_admin', {'should_show': false});
         return true;
       },
     )..show(context: context);
