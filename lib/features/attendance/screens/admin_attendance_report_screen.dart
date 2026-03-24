@@ -2214,8 +2214,9 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
 
     final List<dynamic> attendanceData = attendanceResult['data'] ?? [];
 
-    if (attendanceData.isEmpty)
+    if (attendanceData.isEmpty) {
       return; // Skip empty months? Or export empty file?
+    }
 
     // 2. Map Data
     // Subject Map
@@ -2233,8 +2234,9 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         final id = s['id']?.toString();
         // Nested check
         if (id != null && id == sId) return true;
-        if (s['student'] != null && s['student']['id']?.toString() == sId)
+        if (s['student'] != null && s['student']['id']?.toString() == sId) {
           return true;
+        }
         return false;
       }, orElse: () => null);
 

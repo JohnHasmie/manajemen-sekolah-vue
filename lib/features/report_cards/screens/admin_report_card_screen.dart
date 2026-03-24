@@ -585,14 +585,14 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
               gradient: LinearGradient(
                 colors: [
                   _getPrimaryColor(),
-                  _getPrimaryColor().withOpacity(0.8),
+                  _getPrimaryColor().withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _getPrimaryColor().withOpacity(0.3),
+                  color: _getPrimaryColor().withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -606,7 +606,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
@@ -635,7 +635,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                         'Unduh dan publikasikan raport kelas',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -689,7 +689,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     offset: const Offset(0, -4),
                     blurRadius: 10,
                   ),
@@ -880,7 +880,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                         border: Border.all(color: Colors.grey[200]!),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
+                            color: Colors.black.withValues(alpha: 0.02),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -894,7 +894,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                           child: Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: _getPrimaryColor().withOpacity(
+                                backgroundColor: _getPrimaryColor().withValues(alpha: 
                                   0.1,
                                 ),
                                 child: Text(
@@ -935,7 +935,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.1),
+                                  color: statusColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(

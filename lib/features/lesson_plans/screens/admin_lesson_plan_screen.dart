@@ -1104,8 +1104,9 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
 
         // Apply filters for RPP list (Teacher list is filtered by backend)
         final filteredRpp = _rppList.where((rpp) {
-          if (_showTeacherList)
+          if (_showTeacherList) {
             return true; // Don't filter if showing teachers (not used)
+          }
 
           final searchTerm = _searchController.text.toLowerCase();
           final matchesSearch =

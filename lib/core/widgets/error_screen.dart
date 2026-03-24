@@ -41,8 +41,8 @@ class ErrorScreen extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.red.withOpacity(0.1),
-                    Colors.red.withOpacity(0.05),
+                    Colors.red.withValues(alpha: 0.1),
+                    Colors.red.withValues(alpha: 0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -50,7 +50,7 @@ class ErrorScreen extends StatelessWidget {
               child: Icon(
                 Icons.error_outline_rounded,
                 size: 50,
-                color: Colors.red.withOpacity(0.6),
+                color: Colors.red.withValues(alpha: 0.6),
               ),
             ),
             SizedBox(height: 20),

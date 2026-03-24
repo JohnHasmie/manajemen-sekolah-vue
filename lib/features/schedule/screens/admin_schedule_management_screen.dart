@@ -940,10 +940,11 @@ class TeachingScheduleManagementScreenState
         }
       }
       if (daysIds.isEmpty) {
-        if (schedule['day_id'] != null)
+        if (schedule['day_id'] != null) {
           daysIds.add(schedule['day_id']);
-        else if (schedule['hari_id'] != null)
+        } else if (schedule['hari_id'] != null) {
           daysIds.add(schedule['hari_id']);
+        }
       }
 
       for (var rawDayId in daysIds) {
@@ -1880,10 +1881,11 @@ class TeachingScheduleManagementScreenState
       final dayNames = (() {
         // Construct day names string for search
         final daysIds = [];
-        if (schedule['days_ids'] is List)
+        if (schedule['days_ids'] is List) {
           daysIds.addAll(schedule['days_ids']);
-        else if (schedule['day_id'] != null)
+        } else if (schedule['day_id'] != null) {
           daysIds.add(schedule['day_id']);
+        }
 
         return daysIds
             .map((id) {
@@ -2849,10 +2851,11 @@ class TeachingScheduleManagementScreenState
 
     // Fallback to legacy
     if (daysIds.isEmpty) {
-      if (schedule['hari_id'] != null)
+      if (schedule['hari_id'] != null) {
         daysIds.add(schedule['hari_id']);
-      else if (schedule['day_id'] != null)
+      } else if (schedule['day_id'] != null) {
         daysIds.add(schedule['day_id']);
+      }
     }
 
     // if (kDebugMode) {

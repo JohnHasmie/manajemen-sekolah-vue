@@ -270,7 +270,7 @@ class ColorUtils {
   /// Common UI element colors.
   static Color get borderColor => Colors.grey[300]!;
   static Color get dividerColor => Colors.grey[200]!;
-  static Color get shadowColor => Colors.black.withOpacity(0.1);
+  static Color get shadowColor => Colors.black.withValues(alpha: 0.1);
   static Color get disabledColor => Colors.grey[400]!;
 
   /// Semantic color variants (light for backgrounds, dark for text/icons).
@@ -344,12 +344,12 @@ class ColorUtils {
   static List<BoxShadow> corporateShadow({double elevation = 1.0}) {
     return [
       BoxShadow(
-        color: slate900.withOpacity(0.04 * elevation),
+        color: slate900.withValues(alpha: 0.04 * elevation),
         blurRadius: 6 * elevation,
         offset: Offset(0, 2 * elevation),
       ),
       BoxShadow(
-        color: slate900.withOpacity(0.02 * elevation),
+        color: slate900.withValues(alpha: 0.02 * elevation),
         blurRadius: 12 * elevation,
         offset: Offset(0, 4 * elevation),
       ),
@@ -365,8 +365,8 @@ class ColorUtils {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        color.withOpacity(opacity),
-        color.withOpacity(opacity * 0.5),
+        color.withValues(alpha: opacity),
+        color.withValues(alpha: opacity * 0.5),
       ],
     );
   }
@@ -382,12 +382,12 @@ class ColorUtils {
       ),
       boxShadow: [
         BoxShadow(
-          color: accentColor.withOpacity(0.08),
+          color: accentColor.withValues(alpha: 0.08),
           blurRadius: 12,
           offset: Offset(0, 4),
         ),
         BoxShadow(
-          color: slate900.withOpacity(0.04),
+          color: slate900.withValues(alpha: 0.04),
           blurRadius: 6,
           offset: Offset(0, 2),
         ),
@@ -401,10 +401,10 @@ class ColorUtils {
     bool isExpanded = true,
   }) {
     return BoxDecoration(
-      color: accentColor.withOpacity(0.05),
+      color: accentColor.withValues(alpha: 0.05),
       borderRadius: BorderRadius.circular(8),
       border: Border.all(
-        color: accentColor.withOpacity(0.2),
+        color: accentColor.withValues(alpha: 0.2),
         width: 1,
       ),
     );

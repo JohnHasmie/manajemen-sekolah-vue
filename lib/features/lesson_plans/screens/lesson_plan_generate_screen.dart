@@ -303,7 +303,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Color(0xFF4F46E5).withOpacity(0.1),
+                  color: Color(0xFF4F46E5).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

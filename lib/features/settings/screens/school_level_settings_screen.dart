@@ -202,8 +202,9 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                             )
                             .toList(),
                         onChanged: (value) {
-                          if (value != null)
+                          if (value != null) {
                             setDialogState(() => tempJenjang = value);
+                          }
                         },
                       ),
                     ],
@@ -276,8 +277,9 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                   );
                                 }
                               } catch (e) {
-                                if (kDebugMode)
+                                if (kDebugMode) {
                                   print('Update settings error: $e');
+                                }
                                 if (mounted) {
                                   messenger.showSnackBar(
                                     SnackBar(

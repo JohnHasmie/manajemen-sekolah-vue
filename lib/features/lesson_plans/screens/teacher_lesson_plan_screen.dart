@@ -2835,8 +2835,9 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
         );
       }
     } finally {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('🏁 _submitForm finished (isAutoGenerating: false)');
+      }
       if (mounted) {
         setState(() {
           _isAutoGenerating = false;

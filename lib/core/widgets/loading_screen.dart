@@ -35,7 +35,7 @@ class LoadingScreen extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     Color(0xFF4361EE),
-                    Color(0xFF4361EE).withOpacity(0.7),
+                    Color(0xFF4361EE).withValues(alpha: 0.7),
                   ],
                 ),
                 shape: BoxShape.circle,

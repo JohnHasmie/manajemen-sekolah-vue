@@ -24,10 +24,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Usage: Wrap the app with `ChangeNotifierProvider<LanguageProvider>`, then use
 /// `context.watch<LanguageProvider>()` to rebuild widgets when language changes.
 class LanguageProvider with ChangeNotifier {
-  static const String ENGLISH = 'en';
-  static const String INDONESIAN = 'id';
+  static const String english = 'en';
+  static const String indonesian = 'id';
 
-  String _currentLanguage = INDONESIAN;
+  String _currentLanguage = indonesian;
 
   /// The currently active language code ('en' or 'id').
   String get currentLanguage => _currentLanguage;
@@ -53,7 +53,7 @@ class LanguageProvider with ChangeNotifier {
   /// Like reading `session('locale')` in Laravel.
   Future<void> loadSavedLanguage() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedLanguage = prefs.getString('language') ?? INDONESIAN;
+    final savedLanguage = prefs.getString('language') ?? indonesian;
     _currentLanguage = savedLanguage;
     notifyListeners();
   }
@@ -64,7 +64,7 @@ class LanguageProvider with ChangeNotifier {
   /// [translations] - A map like `{'en': 'Hello', 'id': 'Halo'}`.
   /// Returns the string for the current language, falling back to Indonesian.
   String getTranslatedText(Map<String, String> translations) {
-    return translations[_currentLanguage] ?? translations[INDONESIAN] ?? '';
+    return translations[_currentLanguage] ?? translations[indonesian] ?? '';
   }
 }
 

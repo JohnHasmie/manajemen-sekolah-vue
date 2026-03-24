@@ -1719,8 +1719,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                     ),
                     Consumer<AcademicYearProvider>(
                       builder: (context, academicYearProvider, child) {
-                        if (academicYearProvider.isReadOnly)
+                        if (academicYearProvider.isReadOnly) {
                           return SizedBox.shrink();
+                        }
                         return Column(
                           children: [
                             SizedBox(height: 8),

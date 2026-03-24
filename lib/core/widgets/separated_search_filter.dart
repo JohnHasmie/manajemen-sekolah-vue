@@ -87,7 +87,7 @@ class SeparatedSearchFilter extends StatelessWidget {
     final effectiveSearchHintColor = searchHintColor ?? Colors.grey;
     
     final effectiveFilterActiveColor = filterActiveColor ?? Colors.green;
-    final effectiveFilterInactiveColor = filterInactiveColor ?? Colors.green.withOpacity(0.8);
+    final effectiveFilterInactiveColor = filterInactiveColor ?? Colors.green.withValues(alpha: 0.8);
     final effectiveFilterIconColor = filterIconColor ?? Colors.white;
 
     Widget searchBar = Container(
@@ -96,7 +96,7 @@ class SeparatedSearchFilter extends StatelessWidget {
         borderRadius: BorderRadius.circular(searchBorderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -144,7 +144,7 @@ class SeparatedSearchFilter extends StatelessWidget {
         elevation: 2,
         shadowColor: (hasActiveFilter 
             ? effectiveFilterActiveColor 
-            : effectiveFilterInactiveColor).withOpacity(0.3),
+            : effectiveFilterInactiveColor).withValues(alpha: 0.3),
         child: InkWell(
           onTap: onFilterPressed,
           borderRadius: BorderRadius.circular(filterBorderRadius),

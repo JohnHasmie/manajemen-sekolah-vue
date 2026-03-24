@@ -102,8 +102,8 @@ class ScheduleCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                cardColor.withOpacity(0.9),
-                cardColor.withOpacity(0.7),
+                cardColor.withValues(alpha: 0.9),
+                cardColor.withValues(alpha: 0.7),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
@@ -157,7 +157,7 @@ class ScheduleCard extends StatelessWidget {
             '${schedule['jam_ke'] ?? ''}',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -170,7 +170,7 @@ class ScheduleCard extends StatelessWidget {
       width: 1,
       height: 60,
       margin: EdgeInsets.symmetric(horizontal: 16),
-      color: Colors.white.withOpacity(0.3),
+      color: Colors.white.withValues(alpha: 0.3),
     );
   }
 
@@ -219,14 +219,14 @@ class ScheduleCard extends StatelessWidget {
         Icon(
           icon,
           size: 16,
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
         ),
         SizedBox(width: 4),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 14,
               fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -246,7 +246,7 @@ class ScheduleCard extends StatelessWidget {
           tooltip: 'Edit Schedule',
         ),
         IconButton(
-          icon: Icon(Icons.delete, color: Colors.white.withOpacity(0.8)),
+          icon: Icon(Icons.delete, color: Colors.white.withValues(alpha: 0.8)),
           onPressed: onDelete,
           tooltip: 'Delete Schedule',
         ),

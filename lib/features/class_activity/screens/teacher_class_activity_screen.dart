@@ -700,8 +700,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       if (userId.isNotEmpty) {
         if (isAdmin) {
           // Admin Case: Load ALL classes
-          if (kDebugMode)
+          if (kDebugMode) {
             print('User is Admin/Super Admin. Loading all classes.');
+          }
           await _loadClasses(userId, isAdmin: true);
         } else {
           // Teacher Case: Resolve Teacher ID
@@ -771,13 +772,15 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               await _loadClasses(userId, isAdmin: true);
 
               if (_classList.isNotEmpty) {
-                if (kDebugMode)
+                if (kDebugMode) {
                   print('✅ Fallback successful: Loaded classes as Admin');
+                }
               } else {
-                if (kDebugMode)
+                if (kDebugMode) {
                   print(
                     '❌ Fallback failed: No classes loaded or not authorized',
                   );
+                }
                 setState(() => _isLoading = false);
               }
             }

@@ -317,8 +317,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     // Filter Columns (Months & Payment Types)
     List<MonthGroup> filteredGroups = _monthGroups
         .where((m) {
-          if (_selectedMonthKey != null && m.monthKey != _selectedMonthKey)
+          if (_selectedMonthKey != null && m.monthKey != _selectedMonthKey) {
             return false;
+          }
           return true;
         })
         .map((m) {
@@ -920,8 +921,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             ),
                           ],
                           onChanged: (value) {
-                            if (value != null)
+                            if (value != null) {
                               paymentMethodController.text = value;
+                            }
                           },
                         ),
                         SizedBox(height: 12),

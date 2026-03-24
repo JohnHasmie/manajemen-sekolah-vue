@@ -1180,7 +1180,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: Offset(0, 2),
           ),
@@ -1206,7 +1206,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: Offset(0, 2),
           ),

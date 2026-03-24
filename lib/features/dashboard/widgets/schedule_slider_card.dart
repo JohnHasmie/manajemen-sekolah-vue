@@ -47,12 +47,12 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: [
           BoxShadow(
-            color: ColorUtils.corporateBlue600.withOpacity(0.12),
+            color: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
             blurRadius: 16,
             offset: Offset(0, 4),
           ),
           BoxShadow(
-            color: ColorUtils.slate900.withOpacity(0.06),
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),

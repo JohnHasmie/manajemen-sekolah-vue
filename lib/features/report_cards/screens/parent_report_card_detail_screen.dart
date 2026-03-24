@@ -238,7 +238,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundColor: ColorUtils.corporateBlue600.withOpacity(0.1),
+              backgroundColor: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
               child: Text(
                 studentName.isNotEmpty ? studentName[0].toUpperCase() : '?',
                 style: TextStyle(
@@ -469,7 +469,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Text(
@@ -515,11 +515,11 @@ class ParentRaportDetailScreen extends StatelessWidget {
     if (decision.isEmpty) return const SizedBox.shrink();
 
     return Card(
-      color: ColorUtils.corporateBlue600.withOpacity(0.05),
+      color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: ColorUtils.corporateBlue600.withOpacity(0.3)),
+        side: BorderSide(color: ColorUtils.corporateBlue600.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),

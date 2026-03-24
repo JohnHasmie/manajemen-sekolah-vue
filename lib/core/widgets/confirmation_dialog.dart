@@ -53,7 +53,7 @@ class ConfirmationDialog extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   confirmColor,
-                  confirmColor.withOpacity(0.8),
+                  confirmColor.withValues(alpha: 0.8),
                 ],
               ),
               borderRadius: BorderRadius.only(
@@ -67,7 +67,7 @@ class ConfirmationDialog extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(

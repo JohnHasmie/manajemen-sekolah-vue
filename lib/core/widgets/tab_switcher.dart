@@ -56,7 +56,7 @@ class TabSwitcher extends StatelessWidget {
     final isSelected = tabController.index == tabIndex;
 
     return Material(
-      color: isSelected ? primaryColor.withOpacity(0.85) : Colors.transparent,
+      color: isSelected ? primaryColor.withValues(alpha: 0.85) : Colors.transparent,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),

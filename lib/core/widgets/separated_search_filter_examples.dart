@@ -121,10 +121,10 @@ SeparatedSearchFilter(
   hasActiveFilter: _hasActiveFilter,
   onFilterPressed: _showFilterSheet,
   // Semi-transparent for gradient backgrounds
-  searchBackgroundColor: Colors.white.withOpacity(0.9),
+  searchBackgroundColor: Colors.white.withValues(alpha: 0.9),
   searchIconColor: Colors.grey.shade700,
   filterActiveColor: Colors.purple.shade600,
-  filterInactiveColor: Colors.white.withOpacity(0.8),
+  filterInactiveColor: Colors.white.withValues(alpha: 0.8),
   filterIconColor: _hasActiveFilter ? Colors.white : Colors.purple.shade600,
   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
 )

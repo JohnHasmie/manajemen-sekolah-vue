@@ -51,7 +51,7 @@ class TeacherListItem extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     Color(0xFF4361EE),
-                    Color(0xFF4361EE).withOpacity(0.7),
+                    Color(0xFF4361EE).withValues(alpha: 0.7),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -73,7 +73,7 @@ class TeacherListItem extends StatelessWidget {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -106,9 +106,9 @@ class TeacherListItem extends StatelessWidget {
                                   Container(
                                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                                     ),
                                     child: Text(
                                       isHomeroomTeacher ? 'Wali Kelas' : 'Guru Biasa',
@@ -167,7 +167,7 @@ class TeacherListItem extends StatelessWidget {
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Icon(Icons.email, size: 12, color: Colors.white),
@@ -178,7 +178,7 @@ class TeacherListItem extends StatelessWidget {
                                 guru['email']?.toString() ?? 'No email',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -196,7 +196,7 @@ class TeacherListItem extends StatelessWidget {
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Icon(Icons.badge, size: 12, color: Colors.white),
@@ -207,7 +207,7 @@ class TeacherListItem extends StatelessWidget {
                                 guru['nip']?.toString() ?? 'No NIP',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -253,9 +253,9 @@ class TeacherListItem extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.3)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

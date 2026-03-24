@@ -799,7 +799,7 @@ class LoginScreenState extends State<LoginScreen> {
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 15),
               backgroundColor: const Color(0xFF0D47A1),
-              disabledBackgroundColor: const Color(0xFF0D47A1).withOpacity(0.6),
+              disabledBackgroundColor: const Color(0xFF0D47A1).withValues(alpha: 0.6),
             ),
             child: _isLoading
                 ? const SizedBox(

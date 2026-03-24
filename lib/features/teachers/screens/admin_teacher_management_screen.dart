@@ -2084,10 +2084,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                                         }
                                         _loadData();
                                       } catch (error) {
-                                        if (kDebugMode)
+                                        if (kDebugMode) {
                                           print(
                                             'Save/Update teacher error: $error',
                                           );
+                                        }
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(
                                             context,

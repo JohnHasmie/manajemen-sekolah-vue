@@ -198,7 +198,7 @@ class _FilterSheetState extends State<FilterSheet> {
                     _toggleOption(section.key, option.value, selected);
                   },
                   backgroundColor: Colors.grey.shade100,
-                  selectedColor: primaryColor.withOpacity(0.2),
+                  selectedColor: primaryColor.withValues(alpha: 0.2),
                   checkmarkColor: primaryColor,
                   labelStyle: TextStyle(
                     color: isSelected ? primaryColor : Colors.grey.shade700,

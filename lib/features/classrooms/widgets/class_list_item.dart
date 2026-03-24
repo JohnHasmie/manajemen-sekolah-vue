@@ -58,13 +58,13 @@ class ClassListItem extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         _getPrimaryColor(),
-                        _getPrimaryColor().withOpacity(0.7),
+                        _getPrimaryColor().withValues(alpha: 0.7),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: _getPrimaryColor().withOpacity(0.2),
+                        color: _getPrimaryColor().withValues(alpha: 0.2),
                         blurRadius: 12,
                         offset: Offset(0, 4),
                       ),
@@ -80,7 +80,7 @@ class ClassListItem extends StatelessWidget {
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -114,7 +114,7 @@ class ClassListItem extends StatelessWidget {
                                         'Grade ${classData['grade_level'] ?? 'N/A'}',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.white.withOpacity(0.8),
+                                          color: Colors.white.withValues(alpha: 0.8),
                                         ),
                                       ),
                                     ],
@@ -123,9 +123,9 @@ class ClassListItem extends StatelessWidget {
                                 Container(
                                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                                   ),
                                   child: Text(
                                     'Active',
@@ -148,7 +148,7 @@ class ClassListItem extends StatelessWidget {
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Icon(Icons.person, 
@@ -168,7 +168,7 @@ class ClassListItem extends StatelessWidget {
                                         }),
                                         style: TextStyle(
                                           fontSize: 10,
-                                          color: Colors.white.withOpacity(0.8),
+                                          color: Colors.white.withValues(alpha: 0.8),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -201,7 +201,7 @@ class ClassListItem extends StatelessWidget {
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Icon(Icons.people, 
@@ -221,7 +221,7 @@ class ClassListItem extends StatelessWidget {
                                         }),
                                         style: TextStyle(
                                           fontSize: 10,
-                                          color: Colors.white.withOpacity(0.8),
+                                          color: Colors.white.withValues(alpha: 0.8),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -297,9 +297,9 @@ class ClassListItem extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.3)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

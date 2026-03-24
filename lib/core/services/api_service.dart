@@ -701,8 +701,9 @@ class ApiService {
       'limit': limit.toString(),
     };
 
-    if (teacherId != null && teacherId.isNotEmpty)
+    if (teacherId != null && teacherId.isNotEmpty) {
       queryParams['teacher_id'] = teacherId;
+    }
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (subjectId != null && subjectId.isNotEmpty) {
@@ -959,14 +960,16 @@ class ApiService {
         'page': page.toString(),
         'limit': limit.toString(),
       };
-      if (teacherId != null && teacherId.isNotEmpty)
+      if (teacherId != null && teacherId.isNotEmpty) {
         params['teacher_id'] = teacherId;
+      }
       if (date != null && date.isNotEmpty) params['date'] = date;
       if (subjectId != null && subjectId.isNotEmpty) {
         params['subject_id'] = subjectId;
       }
-      if (studentId != null && studentId.isNotEmpty)
+      if (studentId != null && studentId.isNotEmpty) {
         params['student_id'] = studentId;
+      }
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
       if (tanggalStart != null && tanggalStart.isNotEmpty) {
         params['tanggalStart'] = tanggalStart;

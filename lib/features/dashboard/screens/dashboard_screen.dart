@@ -596,8 +596,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       if (response['user'] != null) {
         updatedUserData = Map<String, dynamic>.from(response['user']);
         // Backfill essential fields if missing
-        if (updatedUserData['nama'] == null)
+        if (updatedUserData['nama'] == null) {
           updatedUserData['nama'] = _userData['name'] ?? _userData['nama'];
+        }
       } else {
         updatedUserData = Map<String, dynamic>.from(_userData);
       }
@@ -605,10 +606,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       updatedUserData['role'] = role;
 
       // Preserve existing teacher/student IDs if switching within same account
-      if (_userData['teacher_id'] != null)
+      if (_userData['teacher_id'] != null) {
         updatedUserData['teacher_id'] = _userData['teacher_id'];
-      if (_userData['user_id'] != null)
+      }
+      if (_userData['user_id'] != null) {
         updatedUserData['user_id'] = _userData['user_id'];
+      }
 
       await SecureStorageService().saveUserData(updatedUserData);
       await prefs.setString('user', json.encode(updatedUserData));
@@ -667,8 +670,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final String userId = (_userData['user_id'] ?? _userData['id'])
             .toString();
 
-        if (kDebugMode)
+        if (kDebugMode) {
           print('🔍 Fetching data for User ID: $userId, Year: $academicYearId');
+        }
 
         try {
           // Fetch Teacher Record
@@ -708,10 +712,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
             // Fetch Homeroom Classes using specialized Teacher ID endpoint
             // This is more robust as it handles both User/Teacher IDs and returns is_homeroom flag.
-            if (kDebugMode)
+            if (kDebugMode) {
               print(
                 '🔍 Fetching Classes via Teacher endpoint for ID: $teacherId',
               );
+            }
             final classesResponse = await ApiTeacherService.getTeacherClasses(
               teacherId,
               academicYearId: academicYearId,
@@ -751,8 +756,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               }
             }
           } else {
-            if (kDebugMode)
+            if (kDebugMode) {
               print('⚠️ No Teacher Record found for User ID: $userId');
+            }
           }
         } catch (e) {
           if (kDebugMode) print('❌ Error in _loadFreshTeacherData: $e');
@@ -1435,8 +1441,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Widget _buildHeroStatSkeleton() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.15),
-      highlightColor: Colors.white.withOpacity(0.35),
+      baseColor: Colors.white.withValues(alpha: 0.15),
+      highlightColor: Colors.white.withValues(alpha: 0.35),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1444,7 +1450,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             width: 35,
             height: 35,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -1453,7 +1459,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             width: 28,
             height: 17,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -1462,7 +1468,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             width: 36,
             height: 9,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -1699,7 +1705,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.3),
+            color: primaryColor.withValues(alpha: 0.3),
             blurRadius: 16,
             offset: Offset(0, 6),
           ),
@@ -1718,7 +1724,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
               ),
             ),
@@ -1731,7 +1737,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
+                  color: Colors.white.withValues(alpha: 0.06),
                 ),
               ),
             ),
@@ -1744,7 +1750,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 height: 6,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
               ),
             ),
@@ -1761,10 +1767,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         width: 1,
                       ),
                     ),
@@ -1774,13 +1780,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         Container(
                           padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.calendar_today_outlined,
                             size: 12,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                         SizedBox(width: 8),
@@ -1807,7 +1813,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   semester,
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                     fontWeight: FontWeight.w500,
                                     height: 1.1,
                                   ),
@@ -1837,7 +1843,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         _getGreeting(),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.3,
                         ),
@@ -2013,9 +2019,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         Container(
           padding: EdgeInsets.all(9),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
           ),
           child: Icon(icon, color: Colors.white, size: 17),
         ),
@@ -2034,7 +2040,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.85),
+            color: Colors.white.withValues(alpha: 0.85),
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
@@ -3074,7 +3080,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.grey.withValues(alpha: 0.3),
                 blurRadius: 5,
                 offset: Offset(0, 4),
               ),
@@ -3107,7 +3113,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -3148,7 +3154,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: _getPrimaryColor().withOpacity(0.1),
+                          color: _getPrimaryColor().withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: _buildIconWidget(icon),
@@ -3261,9 +3267,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         child: Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
@@ -3304,7 +3310,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 20,
                       offset: Offset(0, -5),
                     ),
@@ -3411,12 +3417,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 margin: EdgeInsets.only(bottom: 8),
                                 decoration: BoxDecoration(
                                   color: isCurrent
-                                      ? _getPrimaryColor().withOpacity(0.1)
+                                      ? _getPrimaryColor().withValues(alpha: 0.1)
                                       : Colors.grey.shade50,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isCurrent
-                                        ? _getPrimaryColor().withOpacity(0.3)
+                                        ? _getPrimaryColor().withValues(alpha: 0.3)
                                         : Colors.transparent,
                                   ),
                                 ),
@@ -3466,10 +3472,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                               width: double.infinity,
                               padding: EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: _getPrimaryColor().withOpacity(0.1),
+                                color: _getPrimaryColor().withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
-                                  color: _getPrimaryColor().withOpacity(0.3),
+                                  color: _getPrimaryColor().withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Row(
@@ -3691,12 +3697,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         margin: EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
                           color: isCurrent
-                              ? _getPrimaryColor().withOpacity(0.1)
+                              ? _getPrimaryColor().withValues(alpha: 0.1)
                               : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isCurrent
-                                ? _getPrimaryColor().withOpacity(0.3)
+                                ? _getPrimaryColor().withValues(alpha: 0.3)
                                 : Colors.transparent,
                           ),
                         ),
@@ -3784,7 +3790,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.8)],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
     );
   }
 
@@ -3792,7 +3798,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withOpacity(0.7)],
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.7)],
     );
   }
 

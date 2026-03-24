@@ -149,7 +149,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                       end: Alignment.bottomRight,
                       colors: [
                         _getPrimaryColor(),
-                        _getPrimaryColor().withOpacity(0.7),
+                        _getPrimaryColor().withValues(alpha: 0.7),
                       ],
                     ),
                     borderRadius: BorderRadius.only(
@@ -163,7 +163,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(

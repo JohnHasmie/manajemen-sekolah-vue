@@ -260,13 +260,21 @@ class ApiAnnouncementService {
   /// Like Laravel's `$file->getMimeType()` but done client-side.
   static String _getMimeType(String path) {
     if (path.toLowerCase().endsWith('.jpg') ||
-        path.toLowerCase().endsWith('.jpeg'))
+        path.toLowerCase().endsWith('.jpeg')) {
       return 'image/jpeg';
-    if (path.toLowerCase().endsWith('.png')) return 'image/png';
-    if (path.toLowerCase().endsWith('.pdf')) return 'application/pdf';
-    if (path.toLowerCase().endsWith('.doc')) return 'application/msword';
-    if (path.toLowerCase().endsWith('.docx'))
+    }
+    if (path.toLowerCase().endsWith('.png')) {
+      return 'image/png';
+    }
+    if (path.toLowerCase().endsWith('.pdf')) {
+      return 'application/pdf';
+    }
+    if (path.toLowerCase().endsWith('.doc')) {
+      return 'application/msword';
+    }
+    if (path.toLowerCase().endsWith('.docx')) {
       return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    }
     return 'application/octet-stream';
   }
 }

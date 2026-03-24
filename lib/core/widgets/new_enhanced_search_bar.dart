@@ -55,7 +55,7 @@ class NewEnhancedSearchBar extends StatelessWidget {
               margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -67,7 +67,7 @@ class NewEnhancedSearchBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -94,11 +94,11 @@ class NewEnhancedSearchBar extends StatelessWidget {
                 const SizedBox(width: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: hasActiveFilter ? color : color.withOpacity(0.8),
+                    color: hasActiveFilter ? color : color.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: color.withOpacity(0.3),
+                        color: color.withValues(alpha: 0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),

@@ -311,8 +311,9 @@ class ApiStudentService {
     String? status,
   }) async {
     Map<String, dynamic> queryParams = {};
-    if (classId != null && classId.isNotEmpty)
+    if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
+    }
     if (gender != null && gender.isNotEmpty) queryParams['gender'] = gender;
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (academicYearId != null && academicYearId.isNotEmpty) {

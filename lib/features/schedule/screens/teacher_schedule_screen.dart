@@ -280,8 +280,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
           if (looksLikeTeacher) {
             resolvedTeacherId = userId;
-            if (kDebugMode)
+            if (kDebugMode) {
               print('Use ID from prefs directly: $resolvedTeacherId');
+            }
           } else {
             String? academicYearId;
             try {
@@ -2249,9 +2250,9 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     for (var schedule in schedules) {
       final daysIds = [];
       if (schedule['days_ids'] != null) {
-        if (schedule['days_ids'] is List)
+        if (schedule['days_ids'] is List) {
           daysIds.addAll(schedule['days_ids']);
-        else if (schedule['days_ids'] is String) {
+        } else if (schedule['days_ids'] is String) {
           try {
             final parsed = (schedule['days_ids'] as String)
                 .replaceAll('[', '')
@@ -2262,10 +2263,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         }
       }
       if (daysIds.isEmpty) {
-        if (schedule['day_id'] != null)
+        if (schedule['day_id'] != null) {
           daysIds.add(schedule['day_id']);
-        else if (schedule['hari_id'] != null)
+        } else if (schedule['hari_id'] != null) {
           daysIds.add(schedule['hari_id']);
+        }
       }
 
       for (var rawDayId in daysIds) {
