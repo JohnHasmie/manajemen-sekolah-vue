@@ -23,6 +23,7 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/finance/screens/class_finance_report_screen.dart';
 import 'package:manajemensekolah/features/settings/services/academic_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -2827,7 +2828,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         builder: (context, setDialogState) {
           // Fetch Academic Years once
           if (isLoadingYears && academicYears.isEmpty) {
-            ApiAcademicServices.getAcademicYears()
+            getIt<ApiAcademicServices>().getAcademicYears()
                 .then((years) {
                   if (context.mounted) {
                     setDialogState(() {

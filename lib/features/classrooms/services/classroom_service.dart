@@ -26,13 +26,10 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// - Cache invalidation on any mutation (create/update/delete/import)
 /// - Fallback pagination structure for backward compatibility
 class ApiClassService {
-  /// Base URL from central config. Like `config('app.url')` in Laravel.
-  static String get baseUrl => ApiService.baseUrl;
-
   /// Imports classes from an Excel file via multipart upload.
   /// Like Laravel's `Excel::import()` with Maatwebsite. Clears cache after success.
   /// Similar to a Vue file upload action that triggers a backend import job.
-  static Future<Map<String, dynamic>> importClassesFromExcel(File file) async {
+  Future<Map<String, dynamic>> importClassesFromExcel(File file) async {
     try {
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
@@ -52,7 +49,7 @@ class ApiClassService {
 
   /// Downloads the Excel import template to the device's documents directory.
   /// Like Laravel's file download response. Returns the local file path.
-  static Future<String> downloadTemplate() async {
+  Future<String> downloadTemplate() async {
     try {
       final response = await dioClient.get<List<int>>(
         '/class/template',
@@ -73,7 +70,7 @@ class ApiClassService {
 
   /// Fetches filter dropdown options (grade levels, homeroom teachers) for class listing.
   /// Like a Laravel endpoint returning distinct filter values for a Vue filter component.
-  static Future<Map<String, dynamic>> getClassFilterOptions() async {
+  Future<Map<String, dynamic>> getClassFilterOptions() async {
     try {
       final response = await dioClient.get('/class/filter-options');
 
@@ -96,7 +93,7 @@ class ApiClassService {
   /// Like `SchoolClass::filter($request)->paginate()` in Laravel.
   /// Cache is scoped by school_id to prevent cross-school data leaks.
   /// Set [useCache] to false to force a fresh API call (like cache-busting).
-  static Future<Map<String, dynamic>> getClassPaginated({
+  Future<Map<String, dynamic>> getClassPaginated({
     int page = 1,
     int limit = 10,
     String? gradeLevel,
@@ -183,14 +180,14 @@ class ApiClassService {
   /// Invalidates all class-related cache entries.
   /// Called after any mutation (create/update/delete/import) to ensure fresh data.
   /// Like Laravel's `Cache::tags('classes')->flush()`.
-  static Future<void> _clearClassCache() async {
+  Future<void> _clearClassCache() async {
     await LocalCacheService.clearStartingWith('class_');
     AppLogger.info('classroom', 'Class cache cleared due to changes');
   }
 
   /// Legacy method to fetch all classes as a flat list.
   /// Like `SchoolClass::all()` in Laravel. New code should use [getClassPaginated].
-  static Future<List<dynamic>> getClass({String? academicYearId}) async {
+  Future<List<dynamic>> getClass({String? academicYearId}) async {
     try {
       String url = '/class';
       if (academicYearId != null) {
@@ -210,7 +207,7 @@ class ApiClassService {
   }
 
   /// Fetches a single class by its UUID. Like `SchoolClass::findOrFail($id)` in Laravel.
-  static Future<dynamic> getClassById(String id) async {
+  Future<dynamic> getClassById(String id) async {
     try {
       final result = await ApiService().get('/class/$id');
       return result;
@@ -221,7 +218,7 @@ class ApiClassService {
 
   /// Creates a new class with validation. Clears cache after success.
   /// Like `SchoolClass::create()` in Laravel with form request validation.
-  static Future<dynamic> addClass(Map<String, dynamic> data) async {
+  Future<dynamic> addClass(Map<String, dynamic> data) async {
     try {
       if (data['name'] == null || data['name'].toString().isEmpty) {
         throw Exception('Nama kelas harus diisi');
@@ -241,7 +238,7 @@ class ApiClassService {
 
   /// Updates an existing class by ID. Clears cache after success.
   /// Like `SchoolClass::find($id)->update($data)` in Laravel.
-  static Future<dynamic> updateClass(
+  Future<dynamic> updateClass(
     String id,
     Map<String, dynamic> data,
   ) async {
@@ -264,7 +261,7 @@ class ApiClassService {
 
   /// Deletes a class by ID. Clears cache after success.
   /// Like `SchoolClass::find($id)->delete()` in Laravel.
-  static Future<void> deleteClass(String id) async {
+  Future<void> deleteClass(String id) async {
     try {
       await ApiService().delete('/class/$id');
       await _clearClassCache();
@@ -275,7 +272,7 @@ class ApiClassService {
 
   /// Fetches all students in a given class.
   /// Like `Student::where('class_id', $classId)->get()` in Laravel.
-  static Future<List<dynamic>> getStudentsByClassId(String classId) async {
+  Future<List<dynamic>> getStudentsByClassId(String classId) async {
     try {
       final result = await ApiService().get('/student/class/$classId');
 
@@ -294,7 +291,7 @@ class ApiClassService {
 
   /// Promotes students to the next class/grade level. Clears cache after success.
   /// Like a Laravel job that batch-processes student promotions at year-end.
-  static Future<dynamic> promoteStudents(Map<String, dynamic> data) async {
+  Future<dynamic> promoteStudents(Map<String, dynamic> data) async {
     try {
       final result = await ApiService().post('/promotion/promote', data);
       await _clearClassCache();

@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -95,7 +96,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
   Future<void> _loadSettings() async {
     try {
-      await ApiSettingsService.getLessonHourSettings();
+      await getIt<ApiSettingsService>().getLessonHourSettings();
       if (mounted) {
         // Re-filter if we already have potential candidates
         if (_availableJamPelajaranList.isNotEmpty &&

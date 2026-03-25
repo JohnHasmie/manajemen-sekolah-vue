@@ -21,6 +21,7 @@ import 'package:manajemensekolah/features/schedule/widgets/schedule_form_dialog.
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
@@ -561,7 +562,7 @@ class TeachingScheduleManagementScreenState
           AppLogger.error('schedule', e);
           throw e;
         }),
-        ApiClassService.getClass().catchError((e) {
+        getIt<ApiClassService>().getClass().catchError((e) {
           AppLogger.error('schedule', e);
           throw e;
         }),

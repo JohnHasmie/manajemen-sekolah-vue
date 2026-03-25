@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/class_activity/services/class_activity_service.dart';
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -837,7 +838,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       List<dynamic> classes = [];
 
       if (isAdmin) {
-        final response = await ApiClassService.getClassPaginated(
+        final response = await getIt<ApiClassService>().getClassPaginated(
           limit: 100,
           academicYearId: academicYearId,
         );

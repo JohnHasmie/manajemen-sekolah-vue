@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -46,7 +47,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
   /// Fetches school settings from API. Like calling `GET /api/settings/school` in Vue.
   Future<void> _loadSettings() async {
     try {
-      final settings = await ApiSettingsService.getSchoolSettings();
+      final settings = await getIt<ApiSettingsService>().getSchoolSettings();
       setState(() {
         _schoolName = settings['school_name'] ?? '';
         _schoolAddress = settings['address'] ?? '';
@@ -258,7 +259,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                               final navigator = Navigator.of(context);
                               final messenger = ScaffoldMessenger.of(context);
                               try {
-                                await ApiSettingsService.updateSchoolSettings(
+                                await getIt<ApiSettingsService>().updateSchoolSettings(
                                   schoolName: name,
                                   address: addressController.text.trim(),
                                   jenjang: tempJenjang,

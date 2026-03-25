@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -244,7 +245,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
               AppLogger.error('attendance', 'Error loading subjects: $e');
               return [];
             }),
-        ApiClassService.getClass(
+        getIt<ApiClassService>().getClass(
               academicYearId: context
                   .read<AcademicYearProvider>()
                   .selectedAcademicYear?['id']
@@ -1425,7 +1426,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
       }
 
       // 1. Fetch Students
-      final students = await ApiClassService.getStudentsByClassId(classId);
+      final students = await getIt<ApiClassService>().getStudentsByClassId(classId);
 
       // 2. Fetch Attendance
       // We use a large limit to get all records for the range.
@@ -2197,7 +2198,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         academicYearProvider.selectedAcademicYear?['year']?.toString() ?? '-';
 
     // 1. Fetch Data
-    final students = await ApiClassService.getStudentsByClassId(classId);
+    final students = await getIt<ApiClassService>().getStudentsByClassId(classId);
 
     final attendanceResult = await ApiService.getAttendancePaginated(
       page: 1,

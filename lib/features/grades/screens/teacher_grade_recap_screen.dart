@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/grades/services/grade_recap_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
@@ -414,7 +415,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         );
         _hasMoreData = false;
       } else {
-        final response = await ApiClassService.getClassPaginated(
+        final response = await getIt<ApiClassService>().getClassPaginated(
           page: _currentPage,
           limit: _perPage,
           academicYearId: academicYearId,
@@ -654,7 +655,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         _loadWithCache(
           cacheKey: studentCacheKey,
           ttl: const Duration(hours: 6),
-          apiFetcher: () => ApiClassService.getStudentsByClassId(classId),
+          apiFetcher: () => getIt<ApiClassService>().getStudentsByClassId(classId),
           useCache: useCache,
         ),
         _loadWithCache(
@@ -674,7 +675,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         _loadWithCache(
           cacheKey: recapsCacheKey,
           ttl: const Duration(hours: 3),
-          apiFetcher: () => ApiGradeRecapService.getGradeRecaps(
+          apiFetcher: () => getIt<ApiGradeRecapService>().getGradeRecaps(
             classId: classId,
             subjectId: subjectId,
             academicYearId: academicYearId,
@@ -1784,7 +1785,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         });
       }
 
-      await ApiGradeRecapService.batchSaveGradeRecap(payload);
+      await getIt<ApiGradeRecapService>().batchSaveGradeRecap(payload);
 
       if (mounted) {
         setState(() => _hasUnsavedChanges = false);

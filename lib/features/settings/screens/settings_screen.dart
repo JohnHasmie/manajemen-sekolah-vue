@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
@@ -98,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     // Step 3: Fetch fresh from API
     try {
-      final data = await ApiSettingsService.getProfile();
+      final data = await getIt<ApiSettingsService>().getProfile();
       if (!mounted) return;
 
       await LocalCacheService.save(_profileCacheKey, data);
@@ -273,7 +274,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             final messenger = ScaffoldMessenger.of(context);
                             final lang = context.read<LanguageProvider>();
                             try {
-                              await ApiSettingsService.updateProfile(
+                              await getIt<ApiSettingsService>().updateProfile(
                                 name: nameController.text,
                                 phoneNumber: phoneController.text,
                                 address: addressController.text,
@@ -780,7 +781,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
     setState(() => _isLoading = true);
     try {
-      await ApiSettingsService.updatePassword(
+      await getIt<ApiSettingsService>().updatePassword(
         oldPassword: _oldPasswordController.text,
         newPassword: _newPasswordController.text,
         confirmPassword: _confirmPasswordController.text,

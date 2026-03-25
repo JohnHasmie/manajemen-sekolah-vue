@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/announcements/services/announcement_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -236,7 +237,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
       }
 
       final response =
-          await ApiAnnouncementService.getAnnouncementFilterOptions();
+          await getIt<ApiAnnouncementService>().getAnnouncementFilterOptions();
 
       if (!mounted) return;
 
@@ -870,7 +871,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
       }
 
       // Load with pagination and backend filtering
-      final response = await ApiAnnouncementService.getAnnouncementsPaginated(
+      final response = await getIt<ApiAnnouncementService>().getAnnouncementsPaginated(
         page: _currentPage,
         limit: _perPage,
         prioritas: mappedPrioritas,
@@ -1013,7 +1014,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
         }
       }
 
-      final response = await ApiAnnouncementService.getAnnouncementsPaginated(
+      final response = await getIt<ApiAnnouncementService>().getAnnouncementsPaginated(
         page: _currentPage,
         limit: _perPage,
         prioritas: mappedPrioritas,
@@ -1412,7 +1413,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                                       }
 
                                       if (isEdit) {
-                                        await ApiAnnouncementService.updateAnnouncement(
+                                        await getIt<ApiAnnouncementService>().updateAnnouncement(
                                           announcementData['id'],
                                           data,
                                           _selectedFile,
@@ -1437,7 +1438,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                                           Navigator.pop(context);
                                         }
                                       } else {
-                                        await ApiAnnouncementService.createAnnouncement(
+                                        await getIt<ApiAnnouncementService>().createAnnouncement(
                                           data,
                                           _selectedFile,
                                         );

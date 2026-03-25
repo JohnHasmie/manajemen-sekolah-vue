@@ -7,6 +7,7 @@ import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -63,7 +64,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
           subjectId: widget.subjectId,
           date: DateFormat('yyyy-MM-dd').format(widget.date),
         ),
-        ApiClassService.getClass(),
+        getIt<ApiClassService>().getClass(),
       ]);
 
       setState(() {

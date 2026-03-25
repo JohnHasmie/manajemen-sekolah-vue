@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/students/screens/student_detail_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/students/exports/student_export_service.dart';
@@ -382,7 +383,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         useCache: useCache,
       );
 
-      final classData = await ApiClassService.getClass();
+      final classData = await getIt<ApiClassService>().getClass();
 
       if (!mounted) return;
 

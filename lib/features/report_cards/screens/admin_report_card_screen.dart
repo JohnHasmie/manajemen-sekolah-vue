@@ -11,6 +11,7 @@ import 'package:manajemensekolah/features/report_cards/screens/parent_report_car
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/report_cards/services/report_card_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
@@ -130,7 +131,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final classesResponse = await ApiClassService.getClassPaginated(
+      final classesResponse = await getIt<ApiClassService>().getClassPaginated(
         limit: 100,
         academicYearId: academicYearId,
       );
@@ -216,7 +217,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
 
       if (academicYearId == null) throw Exception("Tahun ajaran tidak valid.");
 
-      final studentsData = await ApiRaportService.getRaports(
+      final studentsData = await getIt<ApiRaportService>().getRaports(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
@@ -397,14 +398,14 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
         semesterId = '2';
       }
 
-      Map<String, dynamic>? detail = await ApiRaportService.getRaportDetail(
+      Map<String, dynamic>? detail = await getIt<ApiRaportService>().getRaportDetail(
         studentClassId: student['student_class_id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
       );
 
       if (detail == null) {
-        final initialData = await ApiRaportService.getInitialData(
+        final initialData = await getIt<ApiRaportService>().getInitialData(
           studentClassId: student['student_class_id'].toString(),
           academicYearId: academicYearId,
           semesterId: semesterId,

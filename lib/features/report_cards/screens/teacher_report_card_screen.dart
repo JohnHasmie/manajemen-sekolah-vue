@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/report_cards/screens/report_card_detail_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/report_cards/services/report_card_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
@@ -146,7 +147,7 @@ class RaportScreenState extends State<RaportScreen> {
     try {
       final academicYearId = _getAcademicYearId();
 
-      final classesResponse = await ApiClassService.getClassPaginated(
+      final classesResponse = await getIt<ApiClassService>().getClassPaginated(
         waliclassId: widget.teacher['id'],
         academicYearId: academicYearId,
         limit: 100,
@@ -254,7 +255,7 @@ class RaportScreenState extends State<RaportScreen> {
         }
       }
 
-      final response = await ApiRaportService.getRaports(
+      final response = await getIt<ApiRaportService>().getRaports(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semester,

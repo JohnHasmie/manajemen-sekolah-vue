@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/teachers/screens/teacher_detail_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -950,7 +951,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
 
       // Load subjects and classes (untuk dropdown/reference)
       final subjectData = await _subjectService.getSubject();
-      final classData = await ApiClassService.getClass(
+      final classData = await getIt<ApiClassService>().getClass(
         academicYearId: selectedYearId,
       );
 

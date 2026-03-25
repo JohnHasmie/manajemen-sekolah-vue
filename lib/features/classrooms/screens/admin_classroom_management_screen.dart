@@ -20,6 +20,7 @@ import 'package:manajemensekolah/features/classrooms/screens/class_promotion_wiz
 import 'package:manajemensekolah/features/students/screens/admin_student_management_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/classrooms/exports/classroom_export_service.dart';
@@ -183,7 +184,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         AppLogger.error('classroom', 'School settings cache load failed: $e');
       }
 
-      final settings = await ApiSettingsService.getSchoolSettings();
+      final settings = await getIt<ApiSettingsService>().getSchoolSettings();
       if (!mounted) return;
 
       setState(() {
@@ -731,7 +732,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiClassService.getClassPaginated(
+      final response = await getIt<ApiClassService>().getClassPaginated(
         page: _currentPage,
         limit: _perPage,
         gradeLevel: _selectedGradeFilter,
@@ -824,7 +825,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiClassService.getClassPaginated(
+      final response = await getIt<ApiClassService>().getClassPaginated(
         page: _currentPage,
         limit: _perPage,
         gradeLevel: _selectedGradeFilter,
@@ -877,7 +878,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       );
 
       if (result != null && result.files.single.path != null) {
-        await ApiClassService.importClassesFromExcel(
+        await getIt<ApiClassService>().importClassesFromExcel(
           File(result.files.single.path!),
         );
 
@@ -910,7 +911,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     if (classData != null) {
       try {
         // Show loading indicator if needed, or just await (fast usually)
-        final freshData = await ApiClassService.getClassById(
+        final freshData = await getIt<ApiClassService>().getClassById(
           classData['id'].toString(),
         );
         if (freshData != null && freshData is Map<String, dynamic>) {
@@ -1234,7 +1235,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                               ?.toString();
 
                                       if (isEdit) {
-                                        await ApiClassService.updateClass(
+                                        await getIt<ApiClassService>().updateClass(
                                           classData!['id'].toString(),
                                           {
                                             'name': nameController.text,
@@ -1263,7 +1264,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                           Navigator.pop(context);
                                         }
                                       } else {
-                                        await ApiClassService.addClass({
+                                        await getIt<ApiClassService>().addClass({
                                           'name': nameController.text,
                                           'grade_level': selectedGradeLevel,
                                           'homeroom_teacher_id':
@@ -1549,7 +1550,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
     if (confirmed == true) {
       try {
-        await ApiClassService.deleteClass(classData['id'].toString());
+        await getIt<ApiClassService>().deleteClass(classData['id'].toString());
         _loadData();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

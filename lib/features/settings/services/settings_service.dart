@@ -2,24 +2,20 @@
 /// Like Laravel's ProfileController + SchoolSettingsController / Vue's settings store.
 ///
 /// Handles password changes, profile CRUD, lesson hour session management,
-/// and school-level configuration. All methods are static.
+/// and school-level configuration.
 library;
 
 import 'package:manajemensekolah/core/network/dio_client.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for user profile and school settings API calls.
 /// Like a combined Laravel controller handling /profile and /school/settings routes.
 /// In Vue terms, this is a settings store module managing user prefs and school config.
 class ApiSettingsService {
-  /// Base URL from central config.
-  static String get baseUrl => ApiService.baseUrl;
-
   /// Updates the current user's password.
   /// Like Laravel's `Hash::check()` + `$user->update(['password' => ...])`.
   /// Throws on validation failure (e.g., wrong old password).
-  static Future<void> updatePassword({
+  Future<void> updatePassword({
     required String oldPassword,
     required String newPassword,
     required String confirmPassword,
@@ -39,7 +35,7 @@ class ApiSettingsService {
   }
 
   /// Fetches the current user's profile. Like `auth()->user()` in Laravel.
-  static Future<Map<String, dynamic>> getProfile() async {
+  Future<Map<String, dynamic>> getProfile() async {
     try {
       final response = await dioClient.get('/profile');
       return response.data;
@@ -51,7 +47,7 @@ class ApiSettingsService {
 
   /// Updates the current user's profile fields.
   /// Like `auth()->user()->update($data)` in Laravel.
-  static Future<void> updateProfile({
+  Future<void> updateProfile({
     required String name,
     required String? phoneNumber,
     required String? address,
@@ -73,7 +69,7 @@ class ApiSettingsService {
 
   /// Fetches lesson hour settings (daily time slots for each period).
   /// Like `LessonHourSetting::all()` in Laravel grouped by day.
-  static Future<List<dynamic>> getLessonHourSettings() async {
+  Future<List<dynamic>> getLessonHourSettings() async {
     try {
       final response = await dioClient.get('/lesson-hour-settings');
 
@@ -90,7 +86,7 @@ class ApiSettingsService {
 
   /// Creates a new lesson session time slot for a specific day.
   /// Like `LessonHourSetting::create($data)` in Laravel.
-  static Future<void> createLessonSession({
+  Future<void> createLessonSession({
     required String dayId,
     required int hourNumber,
     required String startTime,
@@ -114,7 +110,7 @@ class ApiSettingsService {
 
   /// Updates an existing lesson session's time and hour number.
   /// Like `LessonHourSetting::find($id)->update($data)` in Laravel.
-  static Future<void> updateLessonSession({
+  Future<void> updateLessonSession({
     required String id,
     required String startTime,
     required String endTime,
@@ -137,7 +133,7 @@ class ApiSettingsService {
 
   /// Deletes a lesson session slot by ID.
   /// Like `LessonHourSetting::find($id)->delete()` in Laravel.
-  static Future<void> deleteLessonSession(String id) async {
+  Future<void> deleteLessonSession(String id) async {
     try {
       await dioClient.delete('/lesson-hour-settings/$id');
     } catch (e) {
@@ -148,7 +144,7 @@ class ApiSettingsService {
 
   /// Fetches the school's general settings (name, address, jenjang/level).
   /// Like `School::find($schoolId)->settings` in Laravel.
-  static Future<Map<String, dynamic>> getSchoolSettings() async {
+  Future<Map<String, dynamic>> getSchoolSettings() async {
     try {
       final response = await dioClient.get('/school/settings');
       return response.data;
@@ -161,7 +157,7 @@ class ApiSettingsService {
   /// Updates school-level settings (jenjang, name, address).
   /// Like `School::find($id)->update($data)` in Laravel.
   /// Only provided fields are updated (partial update).
-  static Future<void> updateSchoolSettings({
+  Future<void> updateSchoolSettings({
     String? jenjang,
     String? schoolName,
     String? address,

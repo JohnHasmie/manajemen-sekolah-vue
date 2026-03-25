@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -53,7 +54,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     try {
       final futures = await Future.wait([
         ApiScheduleService.getHari(),
-        ApiSettingsService.getLessonHourSettings(),
+        getIt<ApiSettingsService>().getLessonHourSettings(),
       ]);
 
       final allSessions = futures[1];
@@ -371,7 +372,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
 
   Future<void> _refreshSessions() async {
     try {
-      final allSettings = await ApiSettingsService.getLessonHourSettings();
+      final allSettings = await getIt<ApiSettingsService>().getLessonHourSettings();
       final dayId = widget.day['id'].toString();
       final updated = allSettings
           .where((s) => s['day_id'].toString() == dayId)
@@ -669,14 +670,14 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                   int.tryParse(hourController.text) ?? 0;
                               try {
                                 if (isEdit) {
-                                  await ApiSettingsService.updateLessonSession(
+                                  await getIt<ApiSettingsService>().updateLessonSession(
                                     id: session['id'].toString(),
                                     startTime: startStr,
                                     endTime: endStr,
                                     hourNumber: hourNum,
                                   );
                                 } else {
-                                  await ApiSettingsService.createLessonSession(
+                                  await getIt<ApiSettingsService>().createLessonSession(
                                     dayId: widget.day['id'].toString(),
                                     hourNumber: hourNum,
                                     startTime: startStr,
@@ -742,7 +743,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
         ),
       );
       for (var s in sourceSessions) {
-        await ApiSettingsService.createLessonSession(
+        await getIt<ApiSettingsService>().createLessonSession(
           dayId: widget.day['id'].toString(),
           hourNumber: s['hour_number'],
           startTime: s['start_time'],
@@ -1026,7 +1027,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
     if (confirm != true) return;
 
     try {
-      await ApiSettingsService.deleteLessonSession(id);
+      await getIt<ApiSettingsService>().deleteLessonSession(id);
       await _refreshSessions();
     } catch (e) {
       AppLogger.error('settings', e);

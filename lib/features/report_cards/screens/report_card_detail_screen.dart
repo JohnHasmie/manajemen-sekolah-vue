@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/report_cards/screens/report_card_print_screen.dart';
 import 'package:manajemensekolah/features/report_cards/services/report_card_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -214,13 +215,13 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       // Use shared school_day_data cache for semester
       final semester = await _resolveSemester();
 
-      final existingDetail = await ApiRaportService.getRaportDetail(
+      final existingDetail = await getIt<ApiRaportService>().getRaportDetail(
         studentClassId: widget.studentClassId,
         academicYearId: academicYearId,
         semesterId: semester,
       );
 
-      final initialData = await ApiRaportService.getInitialData(
+      final initialData = await getIt<ApiRaportService>().getInitialData(
         studentClassId: widget.studentClassId,
         academicYearId: academicYearId,
         semesterId: semester,
@@ -394,7 +395,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
         'achievements': _achievements,
       };
 
-      final response = await ApiRaportService.saveRaport(payload);
+      final response = await getIt<ApiRaportService>().saveRaport(payload);
 
       if (response != null) {
         // Invalidate cache after save

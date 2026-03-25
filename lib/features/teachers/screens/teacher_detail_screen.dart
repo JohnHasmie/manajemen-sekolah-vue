@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -35,7 +36,7 @@ class TeacherDetailScreen extends StatefulWidget {
 /// - [_isLoading] / [_errorMessage] - loading and error states
 class TeacherDetailScreenState extends State<TeacherDetailScreen> {
   final ApiTeacherService apiTeacherService = ApiTeacherService();
-  final ApiClassService apiClassService = ApiClassService();
+  final ApiClassService apiClassService = getIt<ApiClassService>();
   final ApiSubjectService apiSubjectService = ApiSubjectService();
 
   Map<String, dynamic>? _teacherDetail;

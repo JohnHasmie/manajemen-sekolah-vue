@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -96,7 +97,7 @@ class _LearningRecommendationStudentScreenState
     }
 
     try {
-      final students = await ApiClassService.getStudentsByClassId(
+      final students = await getIt<ApiClassService>().getStudentsByClassId(
         widget.classData['id'].toString(),
       );
       if (!mounted) return;

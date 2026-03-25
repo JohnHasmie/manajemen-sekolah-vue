@@ -12,6 +12,7 @@ import 'package:manajemensekolah/features/classrooms/widgets/promotion_step_indi
 import 'package:manajemensekolah/features/settings/services/academic_service.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
@@ -87,7 +88,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
     try {
-      final yearsData = await ApiAcademicServices.getAcademicYears();
+      final yearsData = await getIt<ApiAcademicServices>().getAcademicYears();
 
       final academicYearProvider = Provider.of<AcademicYearProvider>(
         context,
@@ -97,21 +98,21 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
 
       List<dynamic> classesData = [];
       if (selectedYear != null) {
-        final response = await ApiClassService.getClassPaginated(
+        final response = await getIt<ApiClassService>().getClassPaginated(
           limit: 1000,
           academicYearId: selectedYear['id'].toString(),
         );
         classesData = response['data'] ?? [];
       } else {
-        final activeYear = await ApiAcademicServices.getActiveAcademicYear();
+        final activeYear = await getIt<ApiAcademicServices>().getActiveAcademicYear();
         if (activeYear != null) {
-          final response = await ApiClassService.getClassPaginated(
+          final response = await getIt<ApiClassService>().getClassPaginated(
             limit: 1000,
             academicYearId: activeYear['id'].toString(),
           );
           classesData = response['data'] ?? [];
         } else {
-          classesData = await ApiClassService.getClass();
+          classesData = await getIt<ApiClassService>().getClass();
         }
       }
 
@@ -140,7 +141,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   Future<void> _loadStudents(String classId) async {
     setState(() => _isLoading = true);
     try {
-      final students = await ApiClassService.getStudentsByClassId(classId);
+      final students = await getIt<ApiClassService>().getStudentsByClassId(classId);
       setState(() {
         _students = students;
         _selectedStudentIds = students
@@ -168,7 +169,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   Future<void> _loadTargetClasses(String yearId) async {
     setState(() => _isLoading = true);
     try {
-      final response = await ApiClassService.getClassPaginated(
+      final response = await getIt<ApiClassService>().getClassPaginated(
         limit: 1000,
         academicYearId: yearId,
       );
@@ -296,7 +297,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
 
   Future<void> _loadSchoolSettings() async {
     try {
-      final settings = await ApiSettingsService.getSchoolSettings();
+      final settings = await getIt<ApiSettingsService>().getSchoolSettings();
       if (!mounted) return;
       setState(() {
         _schoolJenjang = settings['jenjang'];
@@ -1711,7 +1712,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         'academic_year_id': _selectedTargetYearId,
       };
 
-      await ApiClassService.promoteStudents(data);
+      await getIt<ApiClassService>().promoteStudents(data);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1918,7 +1919,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                                       selectedHomeroomTeacherId,
                                   'academic_year_id': _selectedTargetYearId,
                                 };
-                                await ApiClassService.addClass(data);
+                                await getIt<ApiClassService>().addClass(data);
                                 Navigator.pop(context);
                                 if (_selectedTargetYearId != null) {
                                   _loadTargetClasses(_selectedTargetYearId!);

@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -267,7 +268,7 @@ class GradePageState extends State<GradePage> {
         _hasMoreData = false;
       } else {
         // Admin: Load ALL classes
-        final response = await ApiClassService.getClassPaginated(
+        final response = await getIt<ApiClassService>().getClassPaginated(
           page: _currentPage,
           limit: _perPage,
           academicYearId: academicYearId,
