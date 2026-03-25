@@ -4,7 +4,6 @@
 // Blade partial `@include('classes.card-item', ['class' => $class])`.
 // Renders class info (name, grade, teacher, student count) with edit/delete actions.
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A gradient card widget that displays a single class's information.
@@ -40,8 +39,6 @@ class ClassListItem extends StatelessWidget {
   /// and edit/delete action buttons. Like the `<template>` of a Vue SFC.
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
         return GestureDetector(
           onTap: onTap,
           child: Container(
@@ -280,8 +277,6 @@ class ClassListItem extends StatelessWidget {
             ),
           ),
         );
-      },
-    );
   }
 
   /// Builds a small action button (edit/delete) with icon and label.

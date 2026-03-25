@@ -16,7 +16,6 @@ import 'package:manajemensekolah/features/teachers/services/teacher_service.dart
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -446,7 +445,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = context.watch<LanguageProvider>();
+    final languageProvider = ref.watch(languageRiverpod);
     final steps = [
       languageProvider.getTranslatedText({'en': 'Source', 'id': 'Asal'}),
       languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),

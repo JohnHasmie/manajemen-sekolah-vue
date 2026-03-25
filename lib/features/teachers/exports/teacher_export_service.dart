@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Service for exporting teacher data to Excel and downloading import templates.
 /// Similar to `Excel::download(new TeacherExport($teachers), 'Data_Guru.xlsx')` in Laravel.
@@ -30,7 +29,7 @@ class ExcelTeacherService {
     required List<dynamic> teachers,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.post<List<int>>(
@@ -81,7 +80,7 @@ class ExcelTeacherService {
   /// Download teacher import template from GET `/teacher/template/download`.
   /// Like a Laravel route returning `Excel::download(new TeacherTemplateExport)`.
   static Future<void> downloadTemplate(BuildContext context) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.get<List<int>>(

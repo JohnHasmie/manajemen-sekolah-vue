@@ -13,8 +13,7 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -268,8 +267,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         return Scaffold(
           backgroundColor: ColorUtils.slate50,
           body: Column(
@@ -648,7 +646,5 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
             ],
           ),
         );
-      },
-    );
   }
 }

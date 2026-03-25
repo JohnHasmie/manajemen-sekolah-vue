@@ -1,5 +1,5 @@
 // Admin teaching schedule management screen - full CRUD for class schedules.
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/schedules.vue` - manages the school timetable with create,
@@ -36,7 +36,6 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -1076,8 +1075,8 @@ class TeachingScheduleManagementScreenState
   Future<void> _deleteSchedule(String id) async {
     final confirmed = await showDialog(
       context: context,
-      builder: (context) => Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
+      builder: (context) {
+        final languageProvider = ref.watch(languageRiverpod);
           return ConfirmationDialog(
             title: languageProvider.getTranslatedText({
               'en': 'Delete Schedule',
@@ -1094,7 +1093,6 @@ class TeachingScheduleManagementScreenState
             confirmColor: Colors.red,
           );
         },
-      ),
     );
 
     if (confirmed == true) {
@@ -2204,8 +2202,7 @@ class TeachingScheduleManagementScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         final filteredSchedules = _getFilteredSchedules();
 
         return Scaffold(
@@ -2618,8 +2615,6 @@ class TeachingScheduleManagementScreenState
                   child: Icon(Icons.add, color: Colors.white, size: 20),
                 ),
         );
-      },
-    );
   }
 
   Widget _buildScheduleCard(Map<String, dynamic> schedule, int index) {

@@ -25,7 +25,6 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
@@ -1998,7 +1997,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = context.watch<LanguageProvider>();
+    final languageProvider = ref.watch(languageRiverpod);
     final primaryColor = _getPrimaryColor();
     final isEditMode = widget.rppData != null;
 
@@ -3065,7 +3064,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = context.watch<LanguageProvider>();
+    final languageProvider = ref.watch(languageRiverpod);
     final primaryColor = _getPrimaryColor();
 
     return Container(

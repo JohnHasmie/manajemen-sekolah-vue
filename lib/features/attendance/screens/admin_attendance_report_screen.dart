@@ -12,7 +12,6 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/models/student.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -28,8 +27,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -158,8 +156,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   }
 
   String? _buildFilterDataCacheKey() {
-    final yearId = context
-        .read<AcademicYearProvider>()
+    final yearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString() ?? 'default';
     return 'presence_filter_data_$yearId';
@@ -176,8 +173,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         _showTableView) {
       return null;
     }
-    final yearId = context
-        .read<AcademicYearProvider>()
+    final yearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString() ?? 'default';
     return 'presence_summary_$yearId';
@@ -248,8 +244,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
               return [];
             }),
         getIt<ApiClassService>().getClass(
-              academicYearId: context
-                  .read<AcademicYearProvider>()
+              academicYearId: ref.read(academicYearRiverpod)
                   .selectedAcademicYear?['id']
                   ?.toString(),
             )
@@ -564,8 +559,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         tanggalEnd = DateFormat('yyyy-MM-dd').format(endOfMonth);
       }
 
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -1391,8 +1385,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
 
     try {
       final classId = _selectedClassIds.first;
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -2536,8 +2529,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         final filteredSummaries = _getFilteredSummaries();
 
         return Scaffold(
@@ -2964,8 +2956,6 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
             ],
           ),
         );
-      },
-    );
   }
 
   Future<void> _checkAndShowTour() async {
@@ -3811,8 +3801,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         final stats = _calculateStatistics();
         final totalTidakHadir = stats['alpha']!;
 
@@ -4196,8 +4185,6 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
             ],
           ),
         );
-      },
-    );
   }
 }
 

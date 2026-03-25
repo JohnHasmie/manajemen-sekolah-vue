@@ -24,8 +24,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -851,8 +850,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         return Scaffold(
           backgroundColor: ColorUtils.slate50,
           body: Column(
@@ -1075,8 +1073,6 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
             ],
           ),
         );
-      },
-    );
   }
 
   Future<void> _checkAndShowTour() async {

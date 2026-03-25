@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Service for exporting student report cards (raport) in multiple formats.
 /// Like a Laravel controller with three export actions:
@@ -35,7 +34,7 @@ class ExcelRaportService {
     required String className,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.get<List<int>>(
@@ -101,7 +100,7 @@ class ExcelRaportService {
     required String studentName,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.get<List<int>>(
@@ -166,7 +165,7 @@ class ExcelRaportService {
     required String studentName,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.get<List<int>>(

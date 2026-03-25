@@ -1,5 +1,5 @@
 // Admin teacher management screen - full CRUD for teachers.
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/teachers.vue` - manages school teachers with create, edit,
@@ -32,7 +32,6 @@ import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -1460,8 +1459,8 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (context) => Consumer<LanguageProvider>(
-          builder: (context, languageProvider, child) {
+        builder: (context) {
+          final languageProvider = ref.watch(languageRiverpod);
             return StatefulBuilder(
               builder: (context, setState) {
                 return Padding(
@@ -2084,7 +2083,6 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
               },
             );
           },
-        ),
       );
     }
 
@@ -2489,8 +2487,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         if (_errorMessage != null) {
           return ErrorScreen(errorMessage: _errorMessage!, onRetry: _loadData);
         }
@@ -2865,8 +2862,6 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                   child: Icon(Icons.add, color: Colors.white, size: 20),
                 ),
         );
-      },
-    );
   }
 
   Future<void> _checkAndShowTour() async {

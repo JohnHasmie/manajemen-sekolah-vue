@@ -15,8 +15,7 @@ import 'package:manajemensekolah/features/attendance/exports/attendance_export_s
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -613,8 +612,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         final stats = _calculateStatistics();
         final totalTidakHadir = stats['alpha']!;
 
@@ -998,7 +996,5 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
             ],
           ),
         );
-      },
-    );
   }
 }

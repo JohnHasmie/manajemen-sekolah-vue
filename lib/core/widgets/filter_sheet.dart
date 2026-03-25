@@ -7,7 +7,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 
 /// A bottom sheet widget for applying filters using chip-based selection.
 ///
@@ -49,10 +48,6 @@ class _FilterSheetState extends State<FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
     final primaryColor = widget.primaryColor ?? ColorUtils.getRoleColor("guru");
 
     return Container(

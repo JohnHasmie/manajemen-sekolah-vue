@@ -17,7 +17,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/tab_switcher.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/class_activity/services/class_activity_service.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -29,8 +28,7 @@ import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -210,8 +208,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
 
   String? _buildClassesCacheKey() {
     if (_teacherId.isEmpty) return null;
-    final academicYearId = context
-        .read<AcademicYearProvider>()
+    final academicYearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString();
     return 'class_activity_classes_${_teacherId}_$academicYearId';
@@ -799,8 +796,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   /// In Laravel terms, this is like `ClassController@index` with cache middleware.
   Future<void> _loadClasses(String teacherId, {bool isAdmin = false, bool useCache = true}) async {
     try {
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -879,8 +875,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
 
   Future<void> _loadSchedule(String teacherId) async {
     try {
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -940,8 +935,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
 
     // Step 3: Fetch fresh from API
     try {
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -1974,8 +1968,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   }
 
   Widget _buildActivityList() {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         if (_isLoading && _activityList.isEmpty) {
           return SkeletonListLoading(itemCount: 5, infoTagCount: 2);
         }
@@ -2076,8 +2069,6 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
             ),
           ],
         );
-      },
-    );
   }
 
   Widget _buildActivityInfoTag(IconData icon, String label, {Color? tagColor}) {
@@ -2817,8 +2808,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
         }
       });
 
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 

@@ -25,8 +25,7 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -2517,8 +2516,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         final filteredBilling = _getFilteredBilling();
 
         return Scaffold(
@@ -2686,7 +2684,5 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
             ],
           ),
         );
-      },
-    );
   }
 }

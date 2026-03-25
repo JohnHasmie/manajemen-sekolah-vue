@@ -5,7 +5,6 @@
 // returning conflicting schedule errors). Lets the user pick which
 // conflicting schedule to delete before retrying.
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A dialog that shows conflicting schedules and lets the user select one to delete.
@@ -39,8 +38,6 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -156,8 +153,6 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
             ),
           ),
         );
-      },
-    );
   }
 
   /// Builds a single schedule radio item showing subject, teacher, class, and time.

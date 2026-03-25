@@ -5,7 +5,6 @@
 // Accepts props (parameters) for initial values and callbacks, similar to
 // how you would pass `v-model` and `@submit` to a Vue form component.
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A modal dialog widget for creating or editing a class (kelas).
@@ -127,8 +126,6 @@ class ClassFormDialogState extends State<ClassFormDialog> {
   /// Like the `<template>` section of a Vue single-file component.
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -326,8 +323,6 @@ class ClassFormDialogState extends State<ClassFormDialog> {
             ),
           ),
         );
-      },
-    );
   }
 
   /// Builds a styled text input field. Like a reusable `<FormInput>` Vue component.
