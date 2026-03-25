@@ -46,6 +46,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer,
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/log_service.dart';
@@ -88,23 +90,21 @@ void main() async {
         LogService.sendError(e, stack);
       }
 
+      // Initialize PreferencesService (SharedPreferences wrapper)
+      await PreferencesService().init();
+      AppLogger.info('init', 'PreferencesService initialized');
+
       // Initialize ApiService FIRST (before anything else)
       await ApiService.init();
-      if (kDebugMode) {
-        print('✅ ApiService initialized');
-      }
+      AppLogger.info('init', 'ApiService initialized');
 
       // Initialize Dio HTTP client with interceptors
       createDioClient(ApiService.baseUrl);
-      if (kDebugMode) {
-        print('✅ Dio client initialized');
-      }
+      AppLogger.info('init', 'Dio client initialized');
 
       // Setup dependency injection
       await setupServiceLocator();
-      if (kDebugMode) {
-        print('✅ Service locator initialized');
-      }
+      AppLogger.info('init', 'Service locator initialized');
 
       // Initialize Firebase
       try {

@@ -9,6 +9,7 @@ library;
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 
@@ -21,6 +22,7 @@ final GetIt getIt = GetIt.instance;
 /// Like Laravel's `AppServiceProvider::register()`.
 Future<void> setupServiceLocator() async {
   // Core services
+  getIt.registerLazySingleton<PreferencesService>(() => PreferencesService());
   getIt.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
   getIt.registerLazySingleton<TokenService>(() => TokenService());
   getIt.registerLazySingleton<Dio>(() => dioClient);
