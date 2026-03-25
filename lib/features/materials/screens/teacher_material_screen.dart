@@ -1,4 +1,6 @@
 // Teaching material (materi) management screen for teachers.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Like `pages/teacher/Material/Index.vue` in a Vue app.
 //
 // A large screen that lets teachers browse subjects, chapters (bab), and
@@ -20,7 +22,6 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/screens/teacher_class_activity_screen.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/materials/screens/material_ai_result_screen.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -41,7 +42,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 /// it is like a page component with deeply nested reactive data.
 ///
 /// Props (like Vue props): [teacher], optional initial* for deep linking.
-class MateriPage extends StatefulWidget {
+class MateriPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final String? initialSubjectId;
   final String? initialSubjectName;
@@ -70,7 +71,7 @@ class MateriPage extends StatefulWidget {
 /// - Progress tracking (generated, used status) per chapter
 ///
 /// `setState()` is like Vue's reactivity -- triggers UI rebuild.
-class MateriPageState extends State<MateriPage> {
+class MateriPageState extends ConsumerState<MateriPage> {
   String? _selectedSubject;
   String? _selectedClassId;
   String? _selectedClassName;
@@ -352,10 +353,7 @@ class MateriPageState extends State<MateriPage> {
       final cacheKey = _buildMateriCacheKey();
 
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
-      final teacherProvider = Provider.of<TeacherProvider>(
-        context,
-        listen: false,
-      );
+      final teacherProvider = ref.read(teacherRiverpod);
 
       // Resolve teacher profile ID from provider (skip /api/teacher/{id})
       if (teacherProvider.isLoaded && teacherProvider.teacherId != null) {
@@ -1908,7 +1906,7 @@ class MateriPageState extends State<MateriPage> {
 /// AI material generation. Contains both static content and AI-generated content
 /// loaded asynchronously. Props include the sub-chapter data, parent chapter,
 /// teacher/subject IDs, and a checkbox callback.
-class SubBabDetailPage extends StatefulWidget {
+class SubBabDetailPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subBab;
   final Map<String, dynamic> bab;
   final String teacherId;
@@ -1930,7 +1928,7 @@ class SubBabDetailPage extends StatefulWidget {
   SubBabDetailPageState createState() => SubBabDetailPageState();
 }
 
-class SubBabDetailPageState extends State<SubBabDetailPage>
+class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     with SingleTickerProviderStateMixin {
   late bool _isChecked;
   List<dynamic> _contentMateriList = [];

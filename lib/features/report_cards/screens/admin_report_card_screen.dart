@@ -1,4 +1,6 @@
 // Admin report card (raport) management screen.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/report-cards.vue` - allows admins to select a class,
 // view student report cards, export to Excel, and publish/unpublish raports.
@@ -6,7 +8,6 @@
 // In Laravel terms, this consumes RaportController with class-based filtering.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/report_cards/screens/parent_report_card_detail_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -18,7 +19,6 @@ import 'package:manajemensekolah/features/report_cards/exports/report_card_expor
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -26,11 +26,11 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 ///
 /// This is a [StatefulWidget] - like a Vue page with local state for class selection
 /// and student list display. Uses cache-first loading pattern.
-class AdminRaportScreen extends StatefulWidget {
+class AdminRaportScreen extends ConsumerStatefulWidget {
   const AdminRaportScreen({super.key});
 
   @override
-  State<AdminRaportScreen> createState() => _AdminRaportScreenState();
+  ConsumerState createState() => _AdminRaportScreenState();
 }
 
 /// Mutable state for [AdminRaportScreen].
@@ -40,7 +40,7 @@ class AdminRaportScreen extends StatefulWidget {
 /// - [_selectedClass] - currently selected class for viewing students
 /// - [_students] - students in the selected class with raport status
 /// - [_isExporting] / [_isPublishing] - loading states for bulk actions
-class _AdminRaportScreenState extends State<AdminRaportScreen> {
+class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
   late LanguageProvider _languageProvider;
 
   bool _isLoading = true;
@@ -63,12 +63,12 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
   @override
   void initState() {
     super.initState();
-    _languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    _languageProvider = ref.read(languageRiverpod);
     _loadInitialData();
   }
 
   String? _buildClassesCacheKey() {
-    final yearId = Provider.of<AcademicYearProvider>(context, listen: false)
+    final yearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString() ?? 'default';
     return 'raport_classes_$yearId';
@@ -76,7 +76,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
 
   String? _buildStudentsCacheKey() {
     if (_selectedClass == null) return null;
-    final yearId = Provider.of<AcademicYearProvider>(context, listen: false)
+    final yearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString() ?? 'default';
     return 'raport_students_${_selectedClass!['id']}_$yearId';
@@ -124,10 +124,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
 
     // Step 2: Fetch fresh from API
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -201,10 +198,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
 
     // Step 2: Fetch fresh from API
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -259,10 +253,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
 
     setState(() => _isExporting = true);
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -327,10 +318,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
 
     setState(() => _isPublishing = true);
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -384,10 +372,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
     );
 
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId =
           academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
 
@@ -507,10 +492,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
     );
 
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId =
           academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
 

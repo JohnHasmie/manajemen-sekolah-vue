@@ -1,4 +1,6 @@
 // Report card (raport) main screen for teachers.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Like `pages/teacher/Raport/Index.vue` in a Vue app.
 //
 // Allows homeroom teachers to select a class, view students, and navigate
@@ -17,18 +19,15 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Report card list screen -- shows classes and their students for raport entry.
 ///
 /// Props (like Vue props): [teacher] -- current teacher info.
 /// Navigates to [RaportDetailScreen] when a student is tapped.
-class RaportScreen extends StatefulWidget {
+class RaportScreen extends ConsumerStatefulWidget {
   final Map<String, String> teacher;
 
   const RaportScreen({super.key, required this.teacher});
@@ -41,7 +40,7 @@ class RaportScreen extends StatefulWidget {
 ///
 /// Like a Vue component with `data() { return { classes, students, selectedClass, ... } }`.
 /// Manages class selection, student list loading, and Excel export state.
-class RaportScreenState extends State<RaportScreen> {
+class RaportScreenState extends ConsumerState<RaportScreen> {
   final LanguageProvider _languageProvider = LanguageProvider();
 
   bool _isLoading = true;
@@ -66,7 +65,7 @@ class RaportScreenState extends State<RaportScreen> {
   }
 
   String? _getAcademicYearId() {
-    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final provider = ref.read(academicYearRiverpod);
     return (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString();
   }
 
@@ -98,7 +97,7 @@ class RaportScreenState extends State<RaportScreen> {
     // Step 1: Try TeacherProvider (populated by dashboard)
     if (useCache) {
       try {
-        final teacherProvider = Provider.of<TeacherProvider>(context, listen: false);
+        final teacherProvider = ref.read(teacherRiverpod);
         if (teacherProvider.isLoaded && teacherProvider.homeroomClasses.isNotEmpty) {
           final providerClasses = List<dynamic>.from(teacherProvider.homeroomClasses);
           if (mounted) {
@@ -308,10 +307,7 @@ class RaportScreenState extends State<RaportScreen> {
 
     setState(() => _isExporting = true);
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -367,10 +363,7 @@ class RaportScreenState extends State<RaportScreen> {
     );
 
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId =
           academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
 

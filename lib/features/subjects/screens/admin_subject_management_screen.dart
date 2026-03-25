@@ -1,4 +1,6 @@
 // Admin subject (mata pelajaran) management screen - full CRUD for subjects.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/subjects.vue` - manages school subjects with create, edit,
 // delete, search, multi-filter (status, grade level, class), infinite scroll
@@ -18,7 +20,6 @@ import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -37,7 +38,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 ///
 /// This is a [StatefulWidget] - like a Vue page with extensive local state for
 /// subject list, pagination, filters, and real-time sync via FCM.
-class SubjectManagementScreen extends StatefulWidget {
+class SubjectManagementScreen extends ConsumerStatefulWidget {
   const SubjectManagementScreen({super.key});
 
   @override
@@ -54,7 +55,7 @@ class SubjectManagementScreen extends StatefulWidget {
 ///
 /// Listens to FCM sync triggers for real-time updates.
 /// setState() triggers re-render like Vue's reactivity system.
-class SubjectManagementScreenState extends State<SubjectManagementScreen> {
+class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen> {
   List<dynamic> _subjectList = [];
   bool _isLoading = true;
   String _errorMessage = '';
@@ -284,7 +285,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Temporary state for bottom sheet
     String? tempSelectedStatus = _selectedStatusFilter;
@@ -768,10 +769,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       return null;
     }
 
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
     return 'subject_list_$yearId';
   }
@@ -1007,7 +1005,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
   }
 
   Future<void> _importFromExcel() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -1675,7 +1673,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
+                ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Subject successfully deleted',
                   'id': 'Mata pelajaran berhasil dihapus',
                 }),
@@ -1692,7 +1690,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${context.read<LanguageProvider>().getTranslatedText({'en': 'Failed to delete: ', 'id': 'Gagal menghapus: '})}${ErrorUtils.getFriendlyMessage(error)}',
+                '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to delete: ', 'id': 'Gagal menghapus: '})}${ErrorUtils.getFriendlyMessage(error)}',
               ),
               backgroundColor: Colors.red.shade400,
               behavior: SnackBarBehavior.floating,
@@ -2029,7 +2027,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
   }
 
   Widget _buildSubjectCard(Map<String, dynamic> subject, int index) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final kelasCount = subject['jumlah_kelas'] ?? 0;
     final isActive = subject['is_active'] ?? true;
     final avatarColor = ColorUtils.getColorForIndex(index);
@@ -2386,7 +2384,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -2413,7 +2411,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -2603,7 +2601,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 }
 
 // Halaman Manajemen Kelas untuk Mata Pelajaran (Updated dengan style yang sama)
-class SubjectClassManagementPage extends StatefulWidget {
+class SubjectClassManagementPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subject;
 
   const SubjectClassManagementPage({super.key, required this.subject});
@@ -2614,7 +2612,7 @@ class SubjectClassManagementPage extends StatefulWidget {
 }
 
 class SubjectClassManagementPageState
-    extends State<SubjectClassManagementPage> {
+    extends ConsumerState<SubjectClassManagementPage> {
   final ApiService apiService = ApiService();
   List<dynamic> availableClasses = [];
   List<dynamic> assignedClasses0 = [];
@@ -3282,7 +3280,7 @@ class SubjectClassManagementPageState
     final assignedCount = assignedClasses0.length;
 
     // Terjemahan filter options
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final translatedFilterOptions = [
       languageProvider.getTranslatedText({'en': 'All', 'id': 'Semua'}),
       languageProvider.getTranslatedText({'en': 'Assigned', 'id': 'Terdaftar'}),
@@ -3438,7 +3436,7 @@ class SubjectClassManagementPageState
               ],
             ),
       floatingActionButton:
-          Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly
+          ref.read(academicYearRiverpod).isReadOnly
           ? null
           : FloatingActionButton(
               onPressed: showQuickAddClassDialog,

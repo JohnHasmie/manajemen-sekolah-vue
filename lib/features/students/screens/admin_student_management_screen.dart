@@ -1,4 +1,6 @@
 // Admin student management screen - full CRUD for students.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/students.vue` - manages school students with create, edit,
 // delete, search, multi-filter (class, gender, grade level, guardian status),
@@ -36,7 +38,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 ///
 /// Optionally accepts [initialClassId] to pre-filter by class (e.g., when navigating
 /// from a class detail screen). Like a Vue route with optional query params.
-class StudentManagementScreen extends StatefulWidget {
+class StudentManagementScreen extends ConsumerStatefulWidget {
   final String? initialClassId;
 
   const StudentManagementScreen({super.key, this.initialClassId});
@@ -55,7 +57,7 @@ class StudentManagementScreen extends StatefulWidget {
 ///
 /// Listens to [AcademicYearProvider] changes to reload data when year changes.
 /// setState() triggers re-render like Vue's reactivity system.
-class StudentManagementScreenState extends State<StudentManagementScreen>
+class StudentManagementScreenState extends ConsumerState<StudentManagementScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
 
@@ -99,10 +101,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     // _searchController.addListener(_onSearchChanged); // Removed auto-search listener
 
     // Listen to academic year changes
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     academicYearProvider.addListener(_onAcademicYearChanged);
 
     _scrollController.addListener(_onScroll);
@@ -196,7 +195,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': 'Preparing export...',
               'id': 'Menyiapkan export...',
             }),
@@ -230,7 +229,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': 'Failed to export: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
@@ -242,7 +241,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   }
 
   Future<void> _importFromExcel() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -308,10 +307,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       return null;
     }
 
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
     return 'student_list_$yearId';
   }
@@ -361,10 +357,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       }
 
       // ─── Step 2: Fetch fresh data from API ───
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -421,7 +414,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en':
                   'Failed to load student/class data: ${ErrorUtils.getFriendlyMessage(e)}',
               'id':
@@ -463,10 +456,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     try {
       _currentPage++;
 
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -616,7 +606,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   }
 
   void _showFilterSheet() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     String? tempSelectedStatus = _selectedStatusFilter;
     List<String> tempSelectedClass = List.from(_selectedClassIds);
@@ -1913,15 +1903,15 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     final confirmed = await showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: context.read<LanguageProvider>().getTranslatedText({
+        title: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Delete Student',
           'id': 'Hapus Siswa',
         }),
-        content: context.read<LanguageProvider>().getTranslatedText({
+        content: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Are you sure you want to delete this student?',
           'id': 'Yakin ingin menghapus siswa ini?',
         }),
-        confirmText: context.read<LanguageProvider>().getTranslatedText({
+        confirmText: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Delete',
           'id': 'Hapus',
         }),
@@ -1937,7 +1927,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
+                ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Student successfully deleted',
                   'id': 'Siswa berhasil dihapus',
                 }),
@@ -1952,7 +1942,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
+                ref.read(languageRiverpod).getTranslatedText({
                   'en':
                       'Failed to delete student: ${ErrorUtils.getFriendlyMessage(e)}',
                   'id':
@@ -1968,10 +1958,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   }
 
   void _navigateToStudentDetail(Map<String, dynamic> student) {
-    final isReadOnly = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    ).isReadOnly;
+    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -2008,12 +1995,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   }
 
   Widget _buildStudentCard(Map<String, dynamic> student, int index) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final avatarColor = ColorUtils.getColorForIndex(index);
-    final isReadOnly = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    ).isReadOnly;
+    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
     final className = student['class']?['name'] ?? '-';
     final genderText = _getGenderText(student['gender'], languageProvider);
 
@@ -2584,7 +2568,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
             ],
           ),
           floatingActionButton:
-              Provider.of<AcademicYearProvider>(context).isReadOnly
+              ref.read(academicYearRiverpod).isReadOnly
               ? null
               : FloatingActionButton(
                   key: _fabKey,
@@ -2624,7 +2608,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -2653,7 +2637,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

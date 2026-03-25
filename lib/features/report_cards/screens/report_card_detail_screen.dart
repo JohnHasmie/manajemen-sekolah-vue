@@ -1,4 +1,6 @@
 // Report card detail/editing screen for a specific student.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Like `pages/teacher/Raport/Detail.vue` in a Vue app.
 //
 // A tabbed form (4 tabs: Academic, Extracurricular, Character, Info) where
@@ -14,10 +16,8 @@ import 'package:manajemensekolah/features/schedule/services/schedule_service.dar
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Report card detail form for a single student.
@@ -27,7 +27,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// changes and warns before navigation (like Vue `beforeRouteLeave`).
 ///
 /// Props (like Vue props): [studentClassId], [studentName], [className].
-class RaportDetailScreen extends StatefulWidget {
+class RaportDetailScreen extends ConsumerStatefulWidget {
   final String studentClassId;
   final String studentName;
   final String className;
@@ -40,7 +40,7 @@ class RaportDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<RaportDetailScreen> createState() => _RaportDetailScreenState();
+  ConsumerState createState() => _RaportDetailScreenState();
 }
 
 /// State for [RaportDetailScreen].
@@ -51,7 +51,7 @@ class RaportDetailScreen extends StatefulWidget {
 ///
 /// Key state: form controllers for sikap (character), attendance counts,
 /// notes, lists of subjects/extras/achievements, and unsaved change tracking.
-class _RaportDetailScreenState extends State<RaportDetailScreen>
+class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
@@ -113,7 +113,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
   }
 
   String? _getAcademicYearId() {
-    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final provider = ref.read(academicYearRiverpod);
     return (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString();
   }
 

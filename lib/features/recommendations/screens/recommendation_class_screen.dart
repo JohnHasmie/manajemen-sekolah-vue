@@ -14,8 +14,8 @@ import 'package:manajemensekolah/features/teachers/services/teacher_service.dart
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_student_screen.dart';
@@ -31,7 +31,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 /// Props (like Vue props):
 /// - [teacher] -- current teacher info
 /// - [classes] -- list of classes assigned to this teacher
-class LearningRecommendationClassScreen extends StatefulWidget {
+class LearningRecommendationClassScreen extends ConsumerStatefulWidget {
   final Map<String, String> teacher;
   final List<dynamic> classes;
 
@@ -42,7 +42,7 @@ class LearningRecommendationClassScreen extends StatefulWidget {
   });
 
   @override
-  State<LearningRecommendationClassScreen> createState() =>
+  ConsumerState<LearningRecommendationClassScreen> createState() =>
       _LearningRecommendationClassScreenState();
 }
 
@@ -54,7 +54,7 @@ class LearningRecommendationClassScreen extends StatefulWidget {
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class _LearningRecommendationClassScreenState
-    extends State<LearningRecommendationClassScreen> {
+    extends ConsumerState<LearningRecommendationClassScreen> {
   final GlobalKey _classListKey = GlobalKey();
   String? _tourId;
 
@@ -637,7 +637,7 @@ class _LearningRecommendationClassScreenState
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -667,7 +667,7 @@ class _LearningRecommendationClassScreenState
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

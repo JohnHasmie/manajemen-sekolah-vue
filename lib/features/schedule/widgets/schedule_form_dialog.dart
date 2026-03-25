@@ -1,4 +1,6 @@
 // Schedule form dialog for creating and editing teaching schedules.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like a Vue component `<ScheduleFormModal>` -- a large form inside a bottom
 // sheet with multiple dependent dropdowns (teacher -> subject, day -> time slots).
@@ -29,7 +31,7 @@ import 'package:provider/provider.dart';
 /// 3. Time slots show "occupied" status to prevent conflicts
 ///
 /// Returns the schedule data map via `Navigator.pop(context, scheduleData)`.
-class ScheduleFormDialog extends StatefulWidget {
+class ScheduleFormDialog extends ConsumerStatefulWidget {
   final List<dynamic> teacherList;
   final List<dynamic> subjectList;
   final List<dynamic> classList;
@@ -69,7 +71,7 @@ class ScheduleFormDialog extends StatefulWidget {
 ///
 /// Like Vue's `data()` holding all reactive form fields plus `computed`
 /// properties for filtered lists and `methods` for cascading fetches.
-class ScheduleFormDialogState extends State<ScheduleFormDialog> {
+class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late String _selectedTeacher;
   late String _selectedSubject;
@@ -345,7 +347,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': message,
               'id': message.replaceAll(
                 'Failed to load teacher subjects',

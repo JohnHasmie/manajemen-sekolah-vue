@@ -1,25 +1,25 @@
 // Teacher detail view screen - shows full profile info for a single teacher.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/teachers/{id}.vue` - a detail/show page that displays
 // all teacher information (personal data, subjects taught, classes, schedule).
 //
 // In Laravel terms, this calls `GET /api/teachers/{id}` (TeacherController@show).
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Teacher detail screen - displays full profile for a single teacher.
 ///
 /// Takes a [teacher] map (basic data) and fetches full details from API.
 /// Like a Vue route page with `props: true` receiving the teacher object.
-class TeacherDetailScreen extends StatefulWidget {
+class TeacherDetailScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
 
   const TeacherDetailScreen({super.key, required this.teacher});
@@ -34,7 +34,7 @@ class TeacherDetailScreen extends StatefulWidget {
 /// - [_teacherDetail] - full teacher data from API (null until loaded)
 /// - [_subjects] - all subjects for reference/mapping
 /// - [_isLoading] / [_errorMessage] - loading and error states
-class TeacherDetailScreenState extends State<TeacherDetailScreen> {
+class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
   final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
   final ApiClassService apiClassService = getIt<ApiClassService>();
   final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
@@ -63,10 +63,7 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
       String? academicYearId;
       if (mounted) {
         try {
-          final academicYearProvider = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          );
+          final academicYearProvider = ref.read(academicYearRiverpod);
           academicYearId = academicYearProvider.selectedAcademicYear?['id']
               ?.toString();
         } catch (e) {

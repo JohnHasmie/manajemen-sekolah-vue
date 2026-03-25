@@ -1,4 +1,6 @@
 // Student detail view screen - shows full profile info for a single student.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/students/{id}.vue` - a detail/show page that displays
 // all student information (personal data, class, guardian, etc.).
@@ -10,7 +12,6 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 
@@ -19,7 +20,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 /// Takes a [student] map (basic data) and fetches full details from API.
 /// Optionally accepts [onEdit] callback to trigger refresh in parent screen.
 /// Like a Vue route page with `props: true` receiving the student object.
-class StudentDetailScreen extends StatefulWidget {
+class StudentDetailScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> student;
   final VoidCallback? onEdit;
 
@@ -38,7 +39,7 @@ class StudentDetailScreen extends StatefulWidget {
 /// Key state (like Vue `data()`):
 /// - [_studentDetail] - full student data from API (null until loaded)
 /// - [_isLoading] / [_errorMessage] - loading and error states
-class StudentDetailScreenState extends State<StudentDetailScreen> {
+class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
   Map<String, dynamic>? _studentDetail;
   bool _isLoading = true;
   String? _errorMessage;
@@ -249,7 +250,7 @@ class StudentDetailScreenState extends State<StudentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final student = _studentDetail ?? widget.student;
     final classes = student['classes'] as List<dynamic>? ?? [];
 

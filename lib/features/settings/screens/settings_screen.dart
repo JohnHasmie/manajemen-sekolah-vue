@@ -1,4 +1,6 @@
 // User profile/settings screen - displays user profile info and app settings.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/settings.vue` or `pages/profile.vue` - shared across all roles
 // (admin, guru, wali). Shows user profile data, language selection, and
@@ -15,7 +17,6 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -23,11 +24,11 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 ///
 /// This is a [StatefulWidget] with local state for profile data and role-based theming.
 /// Uses cache-first pattern for instant profile display.
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState createState() => _SettingsScreenState();
 }
 
 /// Mutable state for [SettingsScreen].
@@ -36,7 +37,7 @@ class SettingsScreen extends StatefulWidget {
 /// - [_profileData] - user profile from API (name, email, school, etc.)
 /// - [_role] - current user role for theming (determines primary color)
 /// - [_isLoading] - loading state for skeleton display
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isLoading = true;
   Map<String, dynamic> _profileData = {};
   String _role = 'admin';
@@ -117,7 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToLoadProfile)}: ${ErrorUtils.getFriendlyMessage(e)}',
+              '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToLoadProfile)}: ${ErrorUtils.getFriendlyMessage(e)}',
             ),
             backgroundColor: ColorUtils.error600,
             behavior: SnackBarBehavior.floating,
@@ -181,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            context.read<LanguageProvider>().getTranslatedText(
+                            ref.read(languageRiverpod).getTranslatedText(
                               AppLocalizations.editProfile,
                             ),
                             style: TextStyle(
@@ -211,7 +212,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _buildDialogTextField(
                       controller: nameController,
-                      label: context.read<LanguageProvider>().getTranslatedText(
+                      label: ref.read(languageRiverpod).getTranslatedText(
                         AppLocalizations.fullName,
                       ),
                       icon: Icons.person_outline_rounded,
@@ -219,7 +220,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     SizedBox(height: 12),
                     _buildDialogTextField(
                       controller: phoneController,
-                      label: context.read<LanguageProvider>().getTranslatedText(
+                      label: ref.read(languageRiverpod).getTranslatedText(
                         AppLocalizations.phoneNumber,
                       ),
                       icon: Icons.phone_outlined,
@@ -228,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     SizedBox(height: 12),
                     _buildDialogTextField(
                       controller: addressController,
-                      label: context.read<LanguageProvider>().getTranslatedText(
+                      label: ref.read(languageRiverpod).getTranslatedText(
                         AppLocalizations.address,
                       ),
                       icon: Icons.location_on_outlined,
@@ -259,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           child: Text(
-                            context.read<LanguageProvider>().getTranslatedText(
+                            ref.read(languageRiverpod).getTranslatedText(
                               AppLocalizations.cancel,
                             ),
                             style: TextStyle(color: ColorUtils.slate600),
@@ -272,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onPressed: () async {
                             final navigator = Navigator.of(context);
                             final messenger = ScaffoldMessenger.of(context);
-                            final lang = context.read<LanguageProvider>();
+                            final lang = ref.read(languageRiverpod);
                             try {
                               await getIt<ApiSettingsService>().updateProfile(
                                 name: nameController.text,
@@ -319,7 +320,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             elevation: 0,
                           ),
                           child: Text(
-                            context.read<LanguageProvider>().getTranslatedText(
+                            ref.read(languageRiverpod).getTranslatedText(
                               AppLocalizations.save,
                             ),
                             style: TextStyle(
@@ -496,7 +497,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   backgroundColor: _primaryColor,
                   iconTheme: IconThemeData(color: Colors.white),
                   title: Text(
-                    context.watch<LanguageProvider>().getTranslatedText(
+                    ref.watch(languageRiverpod).getTranslatedText(
                       AppLocalizations.userProfile,
                     ),
                     style: TextStyle(
@@ -652,15 +653,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Personal Information Card
                         _buildSectionCard(
                           sectionIcon: Icons.person_outline_rounded,
-                          sectionTitle: context
-                              .read<LanguageProvider>()
+                          sectionTitle: ref.read(languageRiverpod)
                               .getTranslatedText(
                                 AppLocalizations.personalInformation,
                               ),
                           children: [
                             _buildInfoRow(
-                              context
-                                  .read<LanguageProvider>()
+                              ref.read(languageRiverpod)
                                   .getTranslatedText(AppLocalizations.fullName),
                               _profileData['name'] ?? '',
                               Icons.person_rounded,
@@ -690,23 +689,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Account Information Card
                         _buildSectionCard(
                           sectionIcon: Icons.manage_accounts_rounded,
-                          sectionTitle: context
-                              .read<LanguageProvider>()
+                          sectionTitle: ref.read(languageRiverpod)
                               .getTranslatedText(
                                 AppLocalizations.accountInformation,
                               ),
                           children: [
                             _buildInfoRow(
-                              context
-                                  .read<LanguageProvider>()
+                              ref.read(languageRiverpod)
                                   .getTranslatedText(AppLocalizations.role),
                               role,
                               Icons.badge_rounded,
                             ),
                             SizedBox(height: 12),
                             _buildInfoRow(
-                              context
-                                  .read<LanguageProvider>()
+                              ref.read(languageRiverpod)
                                   .getTranslatedText(AppLocalizations.school),
                               _profileData['school_name'] ?? '',
                               Icons.school_rounded,
@@ -727,8 +723,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               size: 20,
                             ),
                             label: Text(
-                              context
-                                  .watch<LanguageProvider>()
+                              ref.watch(languageRiverpod)
                                   .getTranslatedText(
                                     AppLocalizations.changePassword,
                                   ),
@@ -758,7 +753,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class _ChangePasswordDialog extends StatefulWidget {
+class _ChangePasswordDialog extends ConsumerStatefulWidget {
   final Color primaryColor;
   const _ChangePasswordDialog({required this.primaryColor});
 
@@ -766,7 +761,7 @@ class _ChangePasswordDialog extends StatefulWidget {
   __ChangePasswordDialogState createState() => __ChangePasswordDialogState();
 }
 
-class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
   final _formKey = GlobalKey<FormState>();
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -792,7 +787,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText(
+            ref.read(languageRiverpod).getTranslatedText(
               AppLocalizations.passwordChangedSuccess,
             ),
           ),
@@ -806,7 +801,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${context.read<LanguageProvider>().getTranslatedText(AppLocalizations.failedToChangePassword)}: ${ErrorUtils.getFriendlyMessage(e)}',
+            '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToChangePassword)}: ${ErrorUtils.getFriendlyMessage(e)}',
           ),
           backgroundColor: ColorUtils.error600,
           behavior: SnackBarBehavior.floating,
@@ -830,7 +825,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       validator:
           validator ??
           (val) => val == null || val.isEmpty
-              ? context.read<LanguageProvider>().getTranslatedText(
+              ? ref.read(languageRiverpod).getTranslatedText(
                   AppLocalizations.required,
                 )
               : null,
@@ -921,7 +916,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.read<LanguageProvider>().getTranslatedText(
+                          ref.read(languageRiverpod).getTranslatedText(
                             AppLocalizations.changePassword,
                           ),
                           style: TextStyle(
@@ -954,7 +949,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                   children: [
                     _buildPasswordField(
                       controller: _oldPasswordController,
-                      label: context.read<LanguageProvider>().getTranslatedText(
+                      label: ref.read(languageRiverpod).getTranslatedText(
                         AppLocalizations.oldPassword,
                       ),
                       obscure: _obscureOld,
@@ -964,14 +959,14 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     SizedBox(height: 12),
                     _buildPasswordField(
                       controller: _newPasswordController,
-                      label: context.read<LanguageProvider>().getTranslatedText(
+                      label: ref.read(languageRiverpod).getTranslatedText(
                         AppLocalizations.newPassword,
                       ),
                       obscure: _obscureNew,
                       onToggle: () =>
                           setState(() => _obscureNew = !_obscureNew),
                       validator: (val) {
-                        final lang = context.read<LanguageProvider>();
+                        final lang = ref.read(languageRiverpod);
                         if (val == null || val.isEmpty) {
                           return lang.getTranslatedText(
                             AppLocalizations.required,
@@ -1004,7 +999,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     SizedBox(height: 12),
                     _buildPasswordField(
                       controller: _confirmPasswordController,
-                      label: context.read<LanguageProvider>().getTranslatedText(
+                      label: ref.read(languageRiverpod).getTranslatedText(
                         AppLocalizations.confirmPassword,
                       ),
                       obscure: _obscureConfirm,
@@ -1012,8 +1007,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                           setState(() => _obscureConfirm = !_obscureConfirm),
                       validator: (val) {
                         if (val != _newPasswordController.text) {
-                          return context
-                              .read<LanguageProvider>()
+                          return ref.read(languageRiverpod)
                               .getTranslatedText(
                                 AppLocalizations.passwordMismatch,
                               );
@@ -1048,7 +1042,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                           ),
                         ),
                         child: Text(
-                          context.read<LanguageProvider>().getTranslatedText(
+                          ref.read(languageRiverpod).getTranslatedText(
                             AppLocalizations.cancel,
                           ),
                           style: TextStyle(color: ColorUtils.slate600),
@@ -1077,8 +1071,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                                 ),
                               )
                             : Text(
-                                context
-                                    .read<LanguageProvider>()
+                                ref.read(languageRiverpod)
                                     .getTranslatedText(AppLocalizations.save),
                                 style: TextStyle(
                                   color: Colors.white,

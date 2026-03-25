@@ -1,4 +1,6 @@
 // Admin teaching schedule management screen - full CRUD for class schedules.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/schedules.vue` - manages the school timetable with create,
 // edit, delete, search, multi-filter (teacher, class, day, semester, lesson hour),
@@ -45,7 +47,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// This is a [StatefulWidget] - like a Vue page with extensive local state for
 /// schedule list, reference data (teachers, subjects, classes, days), pagination,
 /// filters, and two view modes (card list vs timetable grid).
-class TeachingScheduleManagementScreen extends StatefulWidget {
+class TeachingScheduleManagementScreen extends ConsumerStatefulWidget {
   const TeachingScheduleManagementScreen({super.key});
 
   @override
@@ -66,7 +68,7 @@ class TeachingScheduleManagementScreen extends StatefulWidget {
 /// Listens to AcademicYearProvider for year changes and FCM for real-time sync.
 /// setState() triggers re-render like Vue's reactivity system.
 class TeachingScheduleManagementScreenState
-    extends State<TeachingScheduleManagementScreen> {
+    extends ConsumerState<TeachingScheduleManagementScreen> {
   final ApiService _apiService = ApiService();
   final ApiSubjectService _apiSubjectService = getIt<ApiSubjectService>();
   final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
@@ -142,10 +144,7 @@ class TeachingScheduleManagementScreenState
     // Listen to academic year changes
 
     // Set default academic year from provider
-    _academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    _academicYearProvider = ref.read(academicYearRiverpod);
     if (_academicYearProvider?.selectedAcademicYear != null) {
       _selectedAcademicYear = _academicYearProvider!.selectedAcademicYear!['id']
           .toString();
@@ -712,7 +711,7 @@ class TeachingScheduleManagementScreenState
   }
 
   Future<void> _importFromExcel() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -789,7 +788,7 @@ class TeachingScheduleManagementScreenState
     } catch (e) {
       AppLogger.error('schedule', e);
       _showErrorSnackBar(
-        '${context.read<LanguageProvider>().getTranslatedText({'en': 'Export failed: ', 'id': 'Export gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '${ref.read(languageRiverpod).getTranslatedText({'en': 'Export failed: ', 'id': 'Export gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -801,7 +800,7 @@ class TeachingScheduleManagementScreenState
     } catch (e) {
       AppLogger.error('schedule', e);
       _showErrorSnackBar(
-        '${context.read<LanguageProvider>().getTranslatedText({'en': 'Download template failed: ', 'id': 'Gagal download template: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '${ref.read(languageRiverpod).getTranslatedText({'en': 'Download template failed: ', 'id': 'Gagal download template: '})}${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -809,10 +808,7 @@ class TeachingScheduleManagementScreenState
   void _updateGridData() {
     _gridData = _generateTimetableData();
 
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     // Filter days based on selection
     var filteredHariList = _hariList;
     if (_selectedHariId != null) {
@@ -915,10 +911,7 @@ class TeachingScheduleManagementScreenState
     }
 
     // Convert to grid data format
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     // Instead of exhaustive looping with placeholders, only add found schedules
     for (var schedule in _getFilteredSchedules()) {
@@ -1015,7 +1008,7 @@ class TeachingScheduleManagementScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': message,
               'id': message.replaceAll('successfully', 'berhasil'),
             }),
@@ -1404,10 +1397,7 @@ class TeachingScheduleManagementScreenState
   }
 
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     showModalBottomSheet(
       context: context,
@@ -1955,7 +1945,7 @@ class TeachingScheduleManagementScreenState
   }
 
   Widget _buildTableView() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Ensure data source is ready
     if (_timetableDataSource == null) {
@@ -2326,10 +2316,7 @@ class TeachingScheduleManagementScreenState
                             ],
                           ),
                         ),
-                        if (!Provider.of<AcademicYearProvider>(
-                          context,
-                          listen: false,
-                        ).isReadOnly)
+                        if (!ref.read(academicYearRiverpod).isReadOnly)
                           PopupMenuItem<String>(
                             value: 'import',
                             child: Row(
@@ -2619,10 +2606,7 @@ class TeachingScheduleManagementScreenState
             ],
           ),
           floatingActionButton:
-              Provider.of<AcademicYearProvider>(
-                context,
-                listen: false,
-              ).isReadOnly
+              ref.read(academicYearRiverpod).isReadOnly
               ? null
               : FloatingActionButton(
                   key: _fabKey,
@@ -2645,10 +2629,7 @@ class TeachingScheduleManagementScreenState
     final className = schedule['kelas_nama'] ?? '-';
     final dayLabel = _formatScheduleDays(schedule);
     final timeLabel = _formatTime(schedule);
-    final isReadOnly = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    ).isReadOnly;
+    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
@@ -2822,7 +2803,7 @@ class TeachingScheduleManagementScreenState
     Map<String, dynamic> schedule, [
     LanguageProvider? provider,
   ]) {
-    final languageProvider = provider ?? context.read<LanguageProvider>();
+    final LanguageProvider languageProvider = provider ?? ref.read(languageRiverpod);
     final daysIds = [];
     if (schedule['days_ids'] != null) {
       if (schedule['days_ids'] is List) {
@@ -2899,11 +2880,8 @@ class TeachingScheduleManagementScreenState
   }
 
   void _showScheduleDetail(Map<String, dynamic> schedule) {
-    final languageProvider = context.read<LanguageProvider>();
-    final isReadOnly = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    ).isReadOnly;
+    final languageProvider = ref.read(languageRiverpod);
+    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
 
     showDialog(
       context: context,
@@ -3216,7 +3194,7 @@ class TeachingScheduleManagementScreenState
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     setState(() {
       _isTourShowing = true;
@@ -3258,7 +3236,7 @@ class TeachingScheduleManagementScreenState
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

@@ -12,8 +12,8 @@ import 'package:manajemensekolah/features/recommendations/services/recommendatio
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -25,7 +25,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 /// edit screen to modify recommendations.
 ///
 /// Props (like Vue props): [teacher], [student], [classData].
-class LearningRecommendationResultScreen extends StatefulWidget {
+class LearningRecommendationResultScreen extends ConsumerStatefulWidget {
   final Map<String, String> teacher;
   final Map<String, dynamic> student;
   final Map<String, dynamic> classData;
@@ -38,7 +38,7 @@ class LearningRecommendationResultScreen extends StatefulWidget {
   });
 
   @override
-  State<LearningRecommendationResultScreen> createState() =>
+  ConsumerState<LearningRecommendationResultScreen> createState() =>
       _LearningRecommendationResultScreenState();
 }
 
@@ -47,7 +47,7 @@ class LearningRecommendationResultScreen extends StatefulWidget {
 /// Like a Vue component with `data() { return { isLoading, recommendations, errorMessage } }`.
 /// Uses cache-first strategy then falls back to API.
 class _LearningRecommendationResultScreenState
-    extends State<LearningRecommendationResultScreen> {
+    extends ConsumerState<LearningRecommendationResultScreen> {
   bool _isLoading = true;
   List<dynamic> _recommendations = [];
   String _errorMessage = '';
@@ -198,7 +198,7 @@ class _LearningRecommendationResultScreenState
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -228,7 +228,7 @@ class _LearningRecommendationResultScreenState
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
