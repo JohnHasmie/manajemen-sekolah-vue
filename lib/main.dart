@@ -35,19 +35,22 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:manajemensekolah/components/error_handler.dart';
-import 'package:manajemensekolah/components/token_service.dart';
+import 'package:manajemensekolah/core/widgets/error_handler.dart';
+import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
-import 'package:manajemensekolah/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/providers/teacher_provider.dart';
-import 'package:manajemensekolah/screen/dashboard.dart';
-import 'package:manajemensekolah/screen/login_screen.dart';
-import 'package:manajemensekolah/services/api_services.dart';
-import 'package:manajemensekolah/services/analytics_service.dart';
-import 'package:manajemensekolah/services/fcm_service.dart';
-import 'package:manajemensekolah/services/log_service.dart';
-import 'package:manajemensekolah/services/performance_service.dart';
-import 'package:manajemensekolah/utils/language_utils.dart';
+import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/core/providers/teacher_provider.dart';
+import 'package:manajemensekolah/features/dashboard/screens/dashboard_screen.dart';
+import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/services/analytics_service.dart';
+import 'package:manajemensekolah/core/services/fcm_service.dart';
+import 'package:manajemensekolah/core/services/log_service.dart';
+import 'package:manajemensekolah/core/services/performance_service.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -91,6 +94,18 @@ void main() async {
         print('✅ ApiService initialized');
       }
 
+      // Initialize Dio HTTP client with interceptors
+      createDioClient(ApiService.baseUrl);
+      if (kDebugMode) {
+        print('✅ Dio client initialized');
+      }
+
+      // Setup dependency injection
+      await setupServiceLocator();
+      if (kDebugMode) {
+        print('✅ Service locator initialized');
+      }
+
       // Initialize Firebase
       try {
         await Firebase.initializeApp(
@@ -129,7 +144,11 @@ void main() async {
       // Setup error handling (non-blocking)
       _setupErrorHandling();
 
-      runApp(SchoolManagementApp());
+      runApp(
+        ProviderScope(
+          child: SchoolManagementApp(),
+        ),
+      );
     },
     (error, stack) {
       LogService.sendError(error, stack);

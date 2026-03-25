@@ -1,0 +1,4793 @@
+// Main dashboard screen - the home page after login for all roles (admin/guru/wali).
+//
+// Like `pages/dashboard.vue` or `pages/admin/index.vue` in a Vue/Nuxt project.
+// This is the largest screen in the app - it renders role-specific content:
+// - Admin: school stats, menu grid for management screens, finance overview
+// - Teacher (guru): today's schedule, class activities, lesson plans
+// - Parent (wali): child's grades, attendance, billing
+//
+// In Laravel terms, this consumes data from DashboardController which aggregates
+// stats from multiple models (Students, Classes, Teachers, Schedules, etc.).
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/attendance_overview_card.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/lesson_plan_status_card.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/material_slider_card.dart';
+import 'package:manajemensekolah/core/services/secure_storage_service.dart';
+import 'package:manajemensekolah/core/services/token_service.dart';
+import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/core/providers/teacher_provider.dart';
+import 'package:manajemensekolah/features/announcements/screens/admin_announcement_screen.dart';
+import 'package:manajemensekolah/features/class_activity/screens/admin_class_activity_screen.dart';
+import 'package:manajemensekolah/features/settings/screens/data_management_screen.dart';
+import 'package:manajemensekolah/features/attendance/screens/admin_attendance_report_screen.dart';
+import 'package:manajemensekolah/features/report_cards/screens/admin_report_card_screen.dart';
+import 'package:manajemensekolah/features/lesson_plans/screens/admin_lesson_plan_screen.dart';
+import 'package:manajemensekolah/features/finance/screens/admin_finance_screen.dart';
+import 'package:manajemensekolah/features/settings/screens/school_settings_screen.dart';
+import 'package:manajemensekolah/features/settings/screens/settings_screen.dart';
+import 'package:manajemensekolah/features/schedule/screens/admin_schedule_management_screen.dart';
+import 'package:manajemensekolah/features/notifications/screens/notification_list_screen.dart';
+import 'package:manajemensekolah/features/class_activity/screens/teacher_class_activity_screen.dart';
+import 'package:manajemensekolah/features/grades/screens/teacher_grade_input_screen.dart';
+import 'package:manajemensekolah/features/recommendations/screens/recommendation_class_screen.dart';
+import 'package:manajemensekolah/features/materials/screens/teacher_material_screen.dart';
+import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_screen.dart';
+import 'package:manajemensekolah/features/report_cards/screens/teacher_report_card_screen.dart';
+import 'package:manajemensekolah/features/grades/screens/teacher_grade_recap_screen.dart';
+import 'package:manajemensekolah/features/lesson_plans/screens/teacher_lesson_plan_screen.dart';
+import 'package:manajemensekolah/features/schedule/screens/teacher_schedule_screen.dart';
+import 'package:manajemensekolah/features/announcements/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/finance/screens/parent_billing_screen.dart';
+import 'package:manajemensekolah/features/class_activity/screens/parent_class_activity_screen.dart';
+import 'package:manajemensekolah/features/grades/screens/parent_grade_screen.dart';
+import 'package:manajemensekolah/features/report_cards/screens/parent_report_card_screen.dart';
+import 'package:manajemensekolah/features/attendance/screens/parent_attendance_screen.dart';
+import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
+import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/students/services/student_service.dart';
+import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
+import 'package:manajemensekolah/core/services/tour_service.dart';
+import 'package:manajemensekolah/core/services/fcm_service.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/attendance_bar_chart_card.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/category_section.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/finance_bar_chart_card.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/menu_item_card.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/overview_card.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/quick_action_button.dart';
+import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+
+/// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
+///
+/// Takes a [role] prop ('admin', 'guru'/'teacher', 'wali'/'parent') which determines
+/// what menu items, stats, and content are shown. This is similar to a Vue page
+/// that renders different sections with `v-if="role === 'admin'"`.
+class Dashboard extends StatefulWidget {
+  final String role;
+
+  const Dashboard({super.key, required this.role});
+
+  @override
+  State<Dashboard> createState() => _DashboardState();
+}
+
+/// The mutable state for [Dashboard].
+///
+/// This is like a Vue page component with extensive local state
+/// (`data() { return { stats: {}, userData: {}, isLoading: true, ... } }`).
+///
+/// Uses [TickerProviderStateMixin] to support animations (like Vue transitions).
+///
+/// Key state variables:
+/// - [_userData] - current user profile data (from SharedPreferences/API)
+/// - [_stats] - aggregated dashboard statistics (student count, class count, etc.)
+/// - [_todaysScheduleList] - today's teaching schedule for the slider
+/// - [_accessibleSchools] - schools the user can switch between
+/// - [_isStatsLoaded] - controls skeleton loading vs real content display
+///
+/// Key patterns:
+/// - Cache-first loading: loads from LocalCacheService first, then fetches fresh data
+/// - Provider pattern: uses Provider (like Vuex/Pinia) for shared state
+///   (AcademicYearProvider, TeacherProvider, LanguageProvider)
+/// - FCM sync: listens for push notification triggers to refresh data in real-time
+class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
+  String get _effectiveRole {
+    if (widget.role == 'teacher') return 'guru';
+    if (widget.role == 'parent') return 'wali';
+    return widget.role;
+  }
+
+  late AnimationController _animationController;
+  Map<String, dynamic> _userData = {};
+  List<dynamic> _accessibleSchools = [];
+  bool _isLoadingSchools = false;
+  List<dynamic> _availableRoles = [];
+  List<Map<String, dynamic>> _attendanceChartData = [];
+  List<Map<String, dynamic>> _financeChartData = [];
+
+  String? _currentSemesterLabel;
+
+  // Data statistik
+  Map<String, dynamic> _stats = {
+    'total_siswa': 0,
+    'total_guru': 0,
+    'total_kelas': 0,
+    'total_mapel': 0,
+    'kelas_hari_ini': 0,
+    'total_materi': 0,
+    'total_rpp': 0,
+    'anak_terdaftar': 0,
+    'pengumuman_terbaru': 0,
+    'unread_billing': 0,
+  };
+
+  // State for Schedule Slider
+  List<dynamic> _todaysScheduleList = [];
+  List<dynamic> _materialOverview = [];
+  List<dynamic> _homeroomClasses = [];
+
+  // Finance Badge State
+  int _unverifiedPaymentCount = 0;
+
+  // Skeleton loading state
+  bool _isStatsLoaded = false;
+  bool _statsAlreadyFetched = false;
+
+  // Stats Pagination state
+
+  // Tour state — pre-fetched early so tour shows without delay
+  Map<String, dynamic>? _pendingTourStatus;
+  bool _tourShown = false;
+
+  // Global Keys for Tour
+  final GlobalKey _profileHeaderKey = GlobalKey();
+  final GlobalKey _heroSectionKey = GlobalKey();
+  final GlobalKey _quickActionsKey = GlobalKey();
+  final GlobalKey _statsSectionKey = GlobalKey();
+  final GlobalKey _scheduleSectionKey = GlobalKey();
+  final GlobalKey _menuGridKey = GlobalKey();
+
+  String? _tourId;
+
+  /// Like Vue's `mounted()` lifecycle hook.
+  /// Sets up animation controllers, listens for FCM sync triggers,
+  /// and kicks off the data initialization pipeline.
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 800),
+    );
+
+    _animationController.forward();
+
+    // Listen to background sync triggers (e.g. from FCM)
+    FCMService().syncTrigger.addListener(_handleSyncTrigger);
+
+    _initializeData();
+  }
+
+  /// Main data initialization pipeline - called from initState.
+  /// Loads cached data first for instant display, then fetches fresh data.
+  /// Like a Vue `mounted()` that calls multiple API endpoints in sequence.
+  /// Pattern: cache-first -> show UI -> background refresh -> update UI.
+  Future<void> _initializeData() async {
+    // Load cached data first (fast, synchronous-like)
+    await _loadCachedUserData();
+
+    // Listen for changes immediately after loading cache
+    // This ensures we catch the notification from fetchAcademicYears below
+    if (mounted) {
+      Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      ).addListener(_onYearChanged);
+    }
+
+    setState(() {});
+
+    // ─── Pre-fetch tour status early (non-blocking) so tour shows fast ───
+    final tourFuture = _prefetchTourStatus();
+    _prefetchChildScreenTours(); // Pre-cache tours for child screens (non-blocking)
+
+    // ─── Load cached stats immediately (before any network call) ───
+    await _loadCachedStats();
+
+    // Try showing tour right after cached stats (UI targets exist now)
+    _tryShowPendingTour();
+
+    try {
+      // Fetch fresh data in background
+      // This might return early if year isn't loaded yet, which is fine
+      // because _onYearChanged will call it again.
+      _loadFreshTeacherData();
+      await _loadAccessibleSchools();
+      await _loadAvailableRoles();
+
+      // Fetch academic years
+      if (mounted) {
+        await Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        ).fetchAcademicYears();
+      }
+
+      // Only load stats if _onYearChanged hasn't already triggered it
+      if (!_statsAlreadyFetched) {
+        await _loadStats();
+      }
+      await _loadSemesterLabel();
+      _preCacheSchoolData(); // Non-blocking pre-cache for child screens
+    } catch (e) {
+      if (kDebugMode) print('❌ Error during initialization: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat data dashboard: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.orange.shade800,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {});
+      }
+    }
+
+    // Ensure tour future is complete, then try showing if not yet shown
+    await tourFuture;
+    _tryShowPendingTour();
+  }
+
+  /// Pre-fetch tour status early (called in parallel with data loading).
+  Future<void> _prefetchTourStatus() async {
+    try {
+      final status = await ApiTourService.getTourStatus(
+        platform: 'mobile',
+        role: _effectiveRole,
+        name: 'dashboard_tour',
+      );
+
+      if (status['should_show'] == true && status['tour'] != null) {
+        _pendingTourStatus = status;
+        _tourId = status['tour']['id'];
+        // Try showing immediately if UI is ready
+        _tryShowPendingTour();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error pre-fetching tour status: $e');
+    }
+  }
+
+  /// Pre-fetch tour statuses for child screens (student management, teacher admin)
+  /// so they're cached and ready when the user navigates to those screens.
+  Future<void> _prefetchChildScreenTours() async {
+    try {
+      final futures = <Future>[];
+
+      // ─── Admin tours ───
+      if (_effectiveRole == 'admin') {
+        // Student management tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'student_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_student_management_admin', status);
+            if (kDebugMode) print('Pre-cached student management tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache student tour failed: $e');
+          }),
+        );
+
+        // Teacher admin tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'teacher_admin_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_teacher_admin_screen_admin', status);
+            if (kDebugMode) print('Pre-cached teacher admin tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache teacher tour failed: $e');
+          }),
+        );
+
+        // Class management tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_class_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_management_admin', status);
+            if (kDebugMode) print('Pre-cached class management tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache class management tour failed: $e');
+          }),
+        );
+
+        // Subject management tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'subject_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_subject_management_admin', status);
+            if (kDebugMode) print('Pre-cached subject management tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache subject management tour failed: $e');
+          }),
+        );
+
+        // Teaching schedule management tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'teaching_schedule_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_schedule_management_admin', status);
+            if (kDebugMode) print('Pre-cached schedule management tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache schedule management tour failed: $e');
+          }),
+        );
+
+        // Announcement tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_announcement_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_admin', status);
+            if (kDebugMode) print('Pre-cached announcement tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache announcement tour failed: $e');
+          }),
+        );
+
+        // Class activity tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_class_activity_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_activity_admin', status);
+            if (kDebugMode) print('Pre-cached class activity tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache class activity tour failed: $e');
+          }),
+        );
+
+        // Presence report tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_presence_report_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_presence_report_admin', status);
+            if (kDebugMode) print('Pre-cached presence report tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache presence report tour failed: $e');
+          }),
+        );
+
+        // RPP screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_rpp_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rpp_screen_admin', status);
+            if (kDebugMode) print('Pre-cached RPP screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache RPP screen tour failed: $e');
+          }),
+        );
+
+        // Raport screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_raport_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_screen_admin', status);
+            if (kDebugMode) print('Pre-cached raport screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache raport screen tour failed: $e');
+          }),
+        );
+
+        // Finance screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_finance_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_finance_admin', status);
+            if (kDebugMode) print('Pre-cached finance screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache finance screen tour failed: $e');
+          }),
+        );
+
+        // School settings tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_school_settings_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_school_settings_admin', status);
+            if (kDebugMode) print('Pre-cached school settings tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache school settings tour failed: $e');
+          }),
+        );
+      } // end admin tours
+
+      // ─── Guru tours ───
+      if (_effectiveRole == 'guru') {
+        // Input grade tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'input_grade_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_input_grade_screen_guru', status);
+            if (kDebugMode) print('Pre-cached input grade tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache input grade tour failed: $e');
+          }),
+        );
+
+        // Teaching schedule tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'teaching_schedule_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_teaching_schedule_screen_guru', status);
+            if (kDebugMode) print('Pre-cached teaching schedule tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache teaching schedule tour failed: $e');
+          }),
+        );
+
+        // Class activity tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'class_activity_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_activity_screen_guru', status);
+            if (kDebugMode) print('Pre-cached class activity tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache class activity tour failed: $e');
+          }),
+        );
+
+        // Presence teacher tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'presence_teacher_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_presence_teacher_screen_guru', status);
+            if (kDebugMode) print('Pre-cached presence teacher tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache presence teacher tour failed: $e');
+          }),
+        );
+
+        // Materi screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'materi_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_materi_screen_guru', status);
+            if (kDebugMode) print('Pre-cached materi screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache materi screen tour failed: $e');
+          }),
+        );
+
+        // Rekap nilai tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'rekap_nilai_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rekap_nilai_screen_guru', status);
+            if (kDebugMode) print('Pre-cached rekap nilai tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache rekap nilai tour failed: $e');
+          }),
+        );
+
+        // Raport screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'raport_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_screen_guru', status);
+            if (kDebugMode) print('Pre-cached raport screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache raport screen tour failed: $e');
+          }),
+        );
+
+        // Raport detail screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'raport_detail_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_detail_screen_guru', status);
+            if (kDebugMode) print('Pre-cached raport detail screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache raport detail screen tour failed: $e');
+          }),
+        );
+
+        // RPP screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'rpp_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rpp_screen_guru', status);
+            if (kDebugMode) print('Pre-cached RPP screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache RPP screen tour failed: $e');
+          }),
+        );
+
+        // Announcement screen tour (guru)
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'walimurid',
+            name: 'announcement_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_screen_guru', status);
+            if (kDebugMode) print('Pre-cached announcement screen tour status (guru)');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache announcement screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation class screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_class_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_class_screen_guru', status);
+            if (kDebugMode) print('Pre-cached recommendation class screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache recommendation class screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation student screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_student_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_student_screen_guru', status);
+            if (kDebugMode) print('Pre-cached recommendation student screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache recommendation student screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation result screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_result_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_result_screen_guru', status);
+            if (kDebugMode) print('Pre-cached recommendation result screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache recommendation result screen tour failed: $e');
+          }),
+        );
+      } // end guru tours
+
+      // ─── Wali tours ───
+      if (_effectiveRole == 'wali') {
+        // Announcement screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'walimurid',
+            name: 'announcement_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_screen_wali', status);
+            if (kDebugMode) print('Pre-cached announcement screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache announcement screen tour failed: $e');
+          }),
+        );
+
+        // Parent class activity screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_class_activity_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_class_activity_screen_wali', status);
+            if (kDebugMode) print('Pre-cached parent class activity screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache parent class activity screen tour failed: $e');
+          }),
+        );
+
+        // Parent grade screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_grade_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_grade_screen_wali', status);
+            if (kDebugMode) print('Pre-cached parent grade screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache parent grade screen tour failed: $e');
+          }),
+        );
+
+        // Parent billing screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_billing_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_billing_screen_wali', status);
+            if (kDebugMode) print('Pre-cached parent billing screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache parent billing screen tour failed: $e');
+          }),
+        );
+
+        // Parent presence screen tour
+        futures.add(
+          ApiTourService.getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_presence_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_presence_screen_wali', status);
+            if (kDebugMode) print('Pre-cached parent presence screen tour status');
+          }).catchError((e) {
+            if (kDebugMode) print('Pre-cache parent presence screen tour failed: $e');
+          }),
+        );
+      } // end wali tours
+
+      await Future.wait(futures);
+    } catch (e) {
+      if (kDebugMode) print('Pre-cache child tours failed: $e');
+    }
+  }
+
+  /// Show the pending tour if: status is fetched, UI targets exist, and not already shown.
+  void _tryShowPendingTour() {
+    if (_tourShown || _pendingTourStatus == null || !mounted) return;
+
+    // Wait for next frame to ensure widget tree is laid out
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_tourShown || !mounted) return;
+      _tourShown = true;
+      _showTour();
+    });
+  }
+
+  void _showTour() {
+    List<TargetFocus> targets = _createTourTargets();
+    if (targets.isEmpty) return;
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "LEWATI",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+      },
+      onClickTarget: (target) {
+        // Log skip inside step if necessary
+      },
+      onSkip: () {
+        if (_tourId != null) {
+          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+        }
+        return true;
+      },
+    ).show(context: context);
+  }
+
+  List<TargetFocus> _createTourTargets() {
+    List<TargetFocus> targets = [];
+
+    targets.add(
+      TargetFocus(
+        identify: "ProfileHeader",
+        keyTarget: _profileHeaderKey,
+        alignSkip: Alignment.bottomRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Profil Pengguna",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Di sini Anda dapat melihat ringkasan identitas dan mengakses menu pengaturan akun dengan menekan ikon profil di kanan.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "HeroSection",
+        keyTarget: _heroSectionKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 20,
+        alignSkip: Alignment.topRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Informasi Semester",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Kartu ini menunjukkan Tahun Ajaran dan Semester yang aktif. Ketuk bagian ini untuk mengganti Tahun Ajaran secara cepat.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "StatsSection",
+        keyTarget: _statsSectionKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        alignSkip: Alignment.topRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Statistik Ringkas",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Perkembangan kelas, siswa, atau berbagai indikator penting lainnya dapat Anda pantau di ringkasan statistik ini.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    if (_effectiveRole == 'guru') {
+      targets.add(
+        TargetFocus(
+          identify: "ScheduleSection",
+          keyTarget: _scheduleSectionKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 12,
+          alignSkip: Alignment.topRight,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Jadwal Hari Ini",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "Daftar kelas yang harus Anda ajar hari ini. Cukup geser untuk melihat kelas-kelas berikutnya, dan bisa langsung ceklis absen atau jurnal.",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    targets.add(
+      TargetFocus(
+        identify: "MenuGrid",
+        keyTarget: _menuGridKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        alignSkip: Alignment.topRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Menu Utama",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Semua fitur sistem berkumpul di sini sesuai dengan akses role Anda.",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
+  }
+
+  Future<void> _loadSemesterLabel() async {
+    try {
+      final result = await ApiScheduleService.getDateBasedSemester();
+      if (mounted && result.containsKey('label')) {
+        setState(() {
+          _currentSemesterLabel = result['label'];
+        });
+      }
+      // Cache for other screens (teaching_schedule, etc.)
+      if (result.isNotEmpty) {
+        LocalCacheService.save('school_current_semester', result);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading semester label: $e');
+      }
+    }
+  }
+
+  /// Pre-cache school reference data (semester list, day list) for child screens.
+  /// Called once during dashboard init so sub-screens don't need to re-fetch.
+  Future<void> _preCacheSchoolData() async {
+    try {
+      // Cache semester list if not already cached
+      final cachedSemester = await LocalCacheService.load(
+        'school_semester_data',
+        ttl: const Duration(hours: 12),
+      );
+      if (cachedSemester == null) {
+        final semesterData = await ApiScheduleService.getSemester();
+        if (semesterData.isNotEmpty) {
+          LocalCacheService.save('school_semester_data', semesterData);
+          if (kDebugMode) print('📦 Pre-cached semester data');
+        }
+      }
+
+      // Cache day list if not already cached
+      final cachedDays = await LocalCacheService.load(
+        'school_day_data',
+        ttl: const Duration(hours: 24),
+      );
+      if (cachedDays == null) {
+        final dayData = await ApiScheduleService.getHari();
+        if (dayData.isNotEmpty) {
+          LocalCacheService.save('school_day_data', dayData);
+          if (kDebugMode) print('📦 Pre-cached day data');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Pre-cache school data failed (non-critical): $e');
+    }
+  }
+
+  /// Listener callback when the academic year changes via AcademicYearProvider.
+  /// Reloads stats with the new year context - like a Vue `watch` on a Vuex state.
+  void _onYearChanged() {
+    if (!mounted) return;
+    // Don't show skeleton if we already have data — stale-while-revalidate
+    _statsAlreadyFetched = true;
+    _loadStats();
+    _loadUserData();
+  }
+
+  /// Fetches available roles for the current user (admin/guru/wali).
+  /// Enables the role-switching feature in the account bottom sheet.
+  Future<void> _loadAvailableRoles() async {
+    if (!mounted) return;
+
+    try {
+      final roles = await ApiService.getUserRoles();
+      if (!mounted) return;
+      setState(() {
+        _availableRoles = roles;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading roles: $e');
+      }
+    }
+  }
+
+  /// Switches the user's active role (e.g., admin -> guru) via the API.
+  /// Like calling `POST /api/switch-role` in Laravel, then navigating to
+  /// the new role's dashboard route. Clears cache to ensure fresh data.
+  Future<void> _switchRole(String role) async {
+    try {
+      final response = await ApiService.switchRole(role);
+
+      // Update token dan user data
+      await SecureStorageService().saveToken(response['token']);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', response['token']);
+
+      // Prefer response data if available, otherwise manual fallback
+      Map<String, dynamic> updatedUserData;
+      if (response['user'] != null) {
+        updatedUserData = Map<String, dynamic>.from(response['user']);
+        // Backfill essential fields if missing
+        if (updatedUserData['nama'] == null) {
+          updatedUserData['nama'] = _userData['name'] ?? _userData['nama'];
+        }
+      } else {
+        updatedUserData = Map<String, dynamic>.from(_userData);
+      }
+
+      updatedUserData['role'] = role;
+
+      // Preserve existing teacher/student IDs if switching within same account
+      if (_userData['teacher_id'] != null) {
+        updatedUserData['teacher_id'] = _userData['teacher_id'];
+      }
+      if (_userData['user_id'] != null) {
+        updatedUserData['user_id'] = _userData['user_id'];
+      }
+
+      await SecureStorageService().saveUserData(updatedUserData);
+      await prefs.setString('user', json.encode(updatedUserData));
+
+      if (!mounted) return;
+
+      // Navigate ke dashboard dengan role baru
+      Navigator.pushReplacementNamed(context, '/$role');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal pindah role: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Loads user data from SharedPreferences (local storage).
+  /// Like reading from localStorage/Vuex persisted state in a Vue app.
+  /// Called early in init to display user info before API responds.
+  Future<void> _loadCachedUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userString = prefs.getString('user');
+    if (userString != null) {
+      if (!mounted) return;
+      final localUserData = json.decode(userString);
+      setState(() {
+        _userData = localUserData;
+      });
+    }
+  }
+
+  /// Fetches fresh teacher-specific data (homeroom classes, schedules, materials)
+  /// for the 'guru' role. Updates the TeacherProvider (like a Vuex/Pinia store).
+  Future<void> _loadFreshTeacherData() async {
+    if (_effectiveRole != 'guru') return;
+
+    try {
+      String? academicYearId;
+      if (mounted) {
+        final academicYearProvider = Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        );
+        academicYearId = academicYearProvider.selectedAcademicYear?['id']
+            ?.toString();
+      }
+
+      if (academicYearId != null && _userData['id'] != null) {
+        // Use user_id if we have it (saved from previous fetch), otherwise use current id
+        final String userId = (_userData['user_id'] ?? _userData['id'])
+            .toString();
+
+        if (kDebugMode) {
+          print('🔍 Fetching data for User ID: $userId, Year: $academicYearId');
+        }
+
+        try {
+          // Fetch Teacher Record
+          final teacherData = await ApiTeacherService.getGuruByUserId(
+            userId,
+            academicYearId: academicYearId,
+          );
+
+          if (teacherData != null && mounted) {
+            final String teacherId = teacherData['id']?.toString() ?? '';
+            if (kDebugMode) {
+              print('✅ Teacher Record Found: ID=$teacherId');
+              print('👤 User Data Role: ${widget.role}');
+              print('🗓️ Academic Year ID: $academicYearId');
+            }
+
+            setState(() {
+              // EXTREMELY IMPORTANT: We MUST NOT overwrite 'id' with teacher ID.
+              // 'id' in our app context usually refers to User ID.
+              // If we do, subsequent fresh fetches of Teacher Record will fail.
+              final String originalUserId = userId;
+
+              _userData = {
+                ..._userData,
+                ...teacherData,
+                'id': originalUserId, // Force 'id' back to User ID
+                'user_id': originalUserId,
+                'teacher_id': teacherId,
+                'guru_id': teacherId, // for backward compatibility
+              };
+            });
+
+            // Persist the clean state with separate IDs immediately
+            await SecureStorageService().saveUserData(_userData);
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('user', json.encode(_userData));
+
+            // Fetch Homeroom Classes using specialized Teacher ID endpoint
+            // This is more robust as it handles both User/Teacher IDs and returns is_homeroom flag.
+            if (kDebugMode) {
+              print(
+                '🔍 Fetching Classes via Teacher endpoint for ID: $teacherId',
+              );
+            }
+            final classesResponse = await ApiTeacherService.getTeacherClasses(
+              teacherId,
+              academicYearId: academicYearId,
+            );
+
+            if (mounted) {
+              final List<dynamic> fetchedClasses = classesResponse;
+              // Filter only classes where the teacher is actually the Wali Kelas
+              // Using flexible truthiness check: true, 1, or "true"
+              final List<dynamic> homeroomOnly = fetchedClasses.where((cls) {
+                final isH = cls['is_homeroom'];
+                return isH == true || isH == 1 || isH.toString() == 'true';
+              }).toList();
+
+              if (kDebugMode) {
+                print('📋 Total Classes Found: ${fetchedClasses.length}');
+                print('🏠 Homeroom Classes: ${homeroomOnly.length}');
+                for (var cls in homeroomOnly) {
+                  print('   - Class: ${cls['name']} (ID: ${cls['id']})');
+                }
+              }
+              setState(() {
+                _homeroomClasses = homeroomOnly;
+              });
+
+              // Populate TeacherProvider so other screens can reuse
+              if (mounted) {
+                Provider.of<TeacherProvider>(context, listen: false)
+                    .setTeacherData(
+                  userId: userId,
+                  teacherId: teacherId,
+                  teacherName: _userData['nama'] ?? 'Guru',
+                  teacherData: _userData,
+                  allClasses: fetchedClasses,
+                  homeroomClasses: homeroomOnly,
+                );
+              }
+            }
+          } else {
+            if (kDebugMode) {
+              print('⚠️ No Teacher Record found for User ID: $userId');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) print('❌ Error in _loadFreshTeacherData: $e');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error loading fresh teacher data: $e');
+    }
+  }
+
+  // Obsolete - removed in favor of split loading
+  Future<void> _loadUserData() async {
+    await _loadCachedUserData();
+    await _loadFreshTeacherData();
+  }
+
+  /// Fetches the list of schools this user can access (for school switching).
+  /// Like calling `GET /api/user/schools` from Vue to populate a dropdown.
+  Future<void> _loadAccessibleSchools() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingSchools = true;
+    });
+
+    try {
+      final schools = await ApiService.getUserSchools();
+      if (!mounted) return;
+      setState(() {
+        _accessibleSchools = schools;
+        _isLoadingSchools = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading schools: $e');
+      }
+      if (!mounted) return;
+      setState(() {
+        _isLoadingSchools = false;
+      });
+    }
+  }
+
+  /// Last known academic year ID — loaded from prefs so cache key works before provider.
+  String? _lastAcademicYearId;
+
+  /// Load only cached stats (no network). Called early to avoid skeleton.
+  /// Like reading from Vuex persisted state before the API call resolves.
+  Future<void> _loadCachedStats() async {
+    try {
+      // Restore last known academic year ID so cache key matches
+      final prefs = await SharedPreferences.getInstance();
+      _lastAcademicYearId = prefs.getString('dashboard_last_year_id');
+
+      if (_lastAcademicYearId == null) return; // First launch, no cache yet
+
+      final cachedStats = await LocalCacheService.load(
+        _dashboardCacheKey('stats'),
+        ttl: const Duration(hours: 6),
+      );
+      if (cachedStats == null || !mounted) return;
+
+      final cachedAttendance = await LocalCacheService.load(
+        _dashboardCacheKey('attendance_chart'),
+        ttl: const Duration(hours: 6),
+      );
+      final cachedFinance = await LocalCacheService.load(
+        _dashboardCacheKey('finance_chart'),
+        ttl: const Duration(hours: 6),
+      );
+
+      if (kDebugMode) print('⚡ Dashboard displaying cached stats (yearId=$_lastAcademicYearId)');
+
+      _applyStatsData(
+        Map<String, dynamic>.from(cachedStats),
+        attendanceChart: cachedAttendance != null
+            ? List<Map<String, dynamic>>.from(
+                (cachedAttendance as List).map((e) => Map<String, dynamic>.from(e)),
+              )
+            : null,
+        financeChart: cachedFinance != null
+            ? List<Map<String, dynamic>>.from(
+                (cachedFinance as List).map((e) => Map<String, dynamic>.from(e)),
+              )
+            : null,
+      );
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Early cache load failed (non-critical): $e');
+    }
+  }
+
+  /// Cache key builder for dashboard data.
+  /// Uses provider year if available, otherwise falls back to last persisted year ID.
+  String _dashboardCacheKey(String suffix) {
+    String? academicYearId;
+    if (mounted) {
+      final provider = Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      );
+      academicYearId = provider.selectedAcademicYear?['id']?.toString();
+    }
+    // Use provider value if available, otherwise fallback to last known
+    final yearKey = academicYearId ?? _lastAcademicYearId ?? 'default';
+
+    // Persist whenever we get a real ID from the provider
+    if (academicYearId != null && academicYearId != _lastAcademicYearId) {
+      _lastAcademicYearId = academicYearId;
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('dashboard_last_year_id', academicYearId!);
+      });
+    }
+
+    return 'dashboard_${_effectiveRole}_${yearKey}_$suffix';
+  }
+
+  /// Apply dashboard stats data to state from a raw map (cache or fresh)
+  void _applyStatsData(Map<String, dynamic> dashboardData, {
+    List<Map<String, dynamic>>? attendanceChart,
+    List<Map<String, dynamic>>? financeChart,
+  }) {
+    if (!mounted) return;
+
+    if (_effectiveRole == 'guru') {
+      final todaysSchedule = dashboardData['todays_schedule'];
+      final todaysScheduleList = todaysSchedule is List
+          ? List<dynamic>.from(todaysSchedule)
+          : <dynamic>[];
+
+      final materialOverviewRaw = dashboardData['material_overview'];
+      final materialOverviewList = materialOverviewRaw is List
+          ? List<dynamic>.from(materialOverviewRaw)
+          : <dynamic>[];
+
+      setState(() {
+        _isStatsLoaded = true;
+        _todaysScheduleList = todaysScheduleList;
+        _materialOverview = materialOverviewList;
+        _stats = {
+          'total_siswa': dashboardData['total_siswa'] ?? 0,
+          'total_kelas': dashboardData['total_kelas'] ?? 0,
+          'kelas_hari_ini': dashboardData['kelas_hari_ini'] ?? 0,
+          'total_materi': dashboardData['total_materi'] ?? 0,
+          'total_rpp': dashboardData['total_rpp'] ?? 0,
+          'rpp_approved': dashboardData['rpp_approved'] ?? 0,
+          'rpp_rejected': dashboardData['rpp_rejected'] ?? 0,
+          'rpp_pending': dashboardData['rpp_pending'] ?? 0,
+          'attendance_summary': dashboardData['attendance_summary'] ?? {},
+          'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+          'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
+        };
+      });
+    } else if (_effectiveRole == 'admin') {
+      setState(() {
+        _isStatsLoaded = true;
+        if (attendanceChart != null) {
+          _attendanceChartData = attendanceChart;
+        }
+        if (financeChart != null) {
+          _financeChartData = financeChart;
+        }
+        _stats = {
+          'total_siswa': dashboardData['total_siswa'] ?? 0,
+          'total_guru': dashboardData['total_guru'] ?? 0,
+          'total_kelas': dashboardData['total_kelas'] ?? 0,
+          'total_mapel': dashboardData['total_mapel'] ?? 0,
+          'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+          'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
+        };
+      });
+    } else if (_effectiveRole == 'wali') {
+      setState(() {
+        _isStatsLoaded = true;
+        if (attendanceChart != null) {
+          _attendanceChartData = attendanceChart;
+        }
+        _stats = {
+          'anak_terdaftar': dashboardData['anak_terdaftar'] ?? 0,
+          'unread_announcements': dashboardData['unread_announcements'] ?? 0,
+          'unread_class_activities': dashboardData['unread_class_activities'] ?? 0,
+          'unread_grades': dashboardData['unread_grades'] ?? 0,
+          'unread_presence': dashboardData['unread_presence'] ?? 0,
+          'unread_billing': dashboardData['unread_billing'] ?? 0,
+        };
+      });
+    }
+  }
+
+  /// Fetches fresh dashboard statistics from the API.
+  /// Like calling `GET /api/dashboard/stats?role=admin` in Vue.
+  /// Updates [_stats], chart data, schedule list, and saves to cache.
+  Future<void> _loadStats() async {
+    // ─── Fetch fresh data from API (cache already loaded by _loadCachedStats) ───
+    try {
+      String? academicYearId;
+      if (mounted) {
+        final academicYearProvider = Provider.of<AcademicYearProvider>(
+          context,
+          listen: false,
+        );
+        academicYearId = academicYearProvider.selectedAcademicYear?['id']
+            ?.toString();
+      }
+
+      final dashboardData = await ApiService.getDashboardStats(
+        role: _effectiveRole,
+        academicYearId: academicYearId,
+      );
+
+      if (kDebugMode) print('📊 Dashboard fresh stats loaded');
+
+      // Fetch chart data for admin/wali
+      List<Map<String, dynamic>>? freshAttendance;
+      List<Map<String, dynamic>>? freshFinance;
+
+      if (_effectiveRole == 'admin' || _effectiveRole == 'wali') {
+        final now = DateTime.now();
+        final currentMonthNames = [
+          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+        ];
+        final currentMonthStr = currentMonthNames[now.month - 1];
+        int weekNum = (now.day / 7).ceil();
+        if (weekNum > 5) weekNum = 5;
+        final currentWeekStr = 'Pekan $weekNum';
+
+        final attendanceDataList = await ApiService.getAttendanceDashboardChart(
+          academicYearId: academicYearId,
+          month: currentMonthStr,
+          week: currentWeekStr,
+          role: _effectiveRole == 'wali' ? _effectiveRole : null,
+        );
+        freshAttendance = List<Map<String, dynamic>>.from(attendanceDataList);
+
+        if (_effectiveRole == 'admin') {
+          final financeDataList = await ApiService.getFinanceDashboardChart(
+            academicYearId: academicYearId,
+          );
+          freshFinance = List<Map<String, dynamic>>.from(financeDataList);
+        }
+      }
+
+      if (!mounted) return;
+
+      // ─── Step 3: Apply fresh data & save to cache ───
+      _applyStatsData(
+        dashboardData,
+        attendanceChart: freshAttendance,
+        financeChart: freshFinance,
+      );
+
+      // Save fresh data to cache (non-blocking)
+      LocalCacheService.save(_dashboardCacheKey('stats'), dashboardData);
+      if (freshAttendance != null) {
+        LocalCacheService.save(_dashboardCacheKey('attendance_chart'), freshAttendance);
+      }
+      if (freshFinance != null) {
+        LocalCacheService.save(_dashboardCacheKey('finance_chart'), freshFinance);
+      }
+
+      // Load Finance Stats for Admin
+      if (_effectiveRole == 'admin') {
+        await _loadFinanceStats();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading fresh stats: $e');
+      }
+      // Only show fallback if we don't already have cached data displayed
+      if (!_isStatsLoaded && mounted) {
+        if (kDebugMode) print('🔄 Menggunakan fallback data (no cache available)');
+        setState(() {
+          _isStatsLoaded = true;
+          if (_effectiveRole == 'guru') {
+            _stats = {
+              'total_siswa': 24,
+              'total_kelas': 1,
+              'kelas_hari_ini': 2,
+              'total_materi': 5,
+              'total_rpp': 3,
+            };
+          } else if (_effectiveRole == 'admin') {
+            _stats = {
+              'total_siswa': 150,
+              'total_guru': 25,
+              'total_kelas': 12,
+              'total_mapel': 15,
+            };
+          } else if (_effectiveRole == 'wali') {
+            _stats = {
+              'anak_terdaftar': 2,
+              'pengumuman_terbaru': 3,
+              'unread_grades': 0,
+              'unread_presence': 0,
+            };
+          }
+        });
+      }
+    }
+  }
+
+  // Method untuk mendapatkan data siswa untuk parent/wali murid
+  Future<List<dynamic>> _getStudentDataForParent(String parentId) async {
+    try {
+      if (kDebugMode) {
+        print('👤 Mencari data siswa untuk parent: $parentId');
+      }
+
+      final userData = _userData;
+      final guardianEmail = userData['email'];
+
+      final allStudents = await ApiStudentService.getStudent(
+        userId: parentId,
+        guardianEmail: guardianEmail,
+      );
+
+      if (kDebugMode) {
+        print(
+          '🎒 Total siswa ditemukan untuk user $parentId (Email: $guardianEmail): ${allStudents.length}',
+        );
+      }
+
+      if (kDebugMode) {
+        print(
+          '📧 Email wali: ${userData['email']}, Nama wali: ${userData['name']}',
+        );
+      }
+
+      // Cek berdasarkan siswa_id di user data
+      if (userData['siswa_id'] != null && userData['siswa_id'].isNotEmpty) {
+        if (kDebugMode) {
+          print('🔍 Mencari siswa dengan ID: ${userData['siswa_id']}');
+        }
+        final student = allStudents.firstWhere(
+          (student) => student['id'] == userData['siswa_id'],
+          orElse: () => null,
+        );
+        if (student != null) {
+          if (kDebugMode) {
+            print('✅ Siswa ditemukan via siswa_id: ${student['nama']}');
+          }
+          return [student];
+        }
+      }
+
+      // Cek berdasarkan email atau nama wali atau user_id (Parent User)
+      final studentsWithThisParent = allStudents.where((student) {
+        final emailMatch = student['guardian_email'] == userData['email'];
+        // Fix: Use 'name' instead of 'nama' (based on debug logs)
+        final nameMatch = student['guardian_name'] == userData['name'];
+        final userIdMatch = student['user_id'].toString() == parentId;
+
+        if (kDebugMode) {
+          // Verbose debug only if needed, or just log matches
+          if (emailMatch || nameMatch || userIdMatch) {
+            print(
+              '✅ Siswa cocok: ${student['name']} (By: ${emailMatch ? 'Email' : ''} ${nameMatch ? 'Name' : ''} ${userIdMatch ? 'UserID' : ''})',
+            );
+          } else {
+            // print('❌ Skip: ${student['name']} (GuardEmail: ${student['guardian_email']}, GuardName: ${student['guardian_name']}, UserID: ${student['user_id']})');
+          }
+        }
+
+        return emailMatch || nameMatch || userIdMatch;
+      }).toList();
+
+      if (studentsWithThisParent.isNotEmpty) {
+        return studentsWithThisParent;
+      }
+
+      if (kDebugMode) {
+        print('⚠️ Tidak ada data siswa ditemukan untuk parent ini');
+      }
+      return []; // Fix: Return empty list instead of allStudents for security/correctness
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error getting student data for parent: $e');
+      }
+      return [];
+    }
+  }
+
+  // Load Finance Stats (Admin Only)
+  Future<void> _loadFinanceStats() async {
+    try {
+      final financeStats = await ApiService.getFinanceDashboardStats();
+      if (mounted && financeStats.containsKey('pembayaran_pending')) {
+        setState(() {
+          _unverifiedPaymentCount =
+              int.tryParse(financeStats['pembayaran_pending'].toString()) ?? 0;
+        });
+        if (kDebugMode) {
+          print('💰 Unverified Payments: $_unverifiedPaymentCount');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading finance stats: $e');
+      }
+    }
+  }
+
+  /// Switches the active school context via the API.
+  /// Like calling `POST /api/switch-school/{id}` in Laravel.
+  /// Clears all local cache/data and re-navigates to the appropriate dashboard.
+  Future<void> _switchSchool(Map<String, dynamic> school) async {
+    // Show Loading Indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final response = await ApiService.switchSchool(school['school_id']);
+
+      // Close Loading Indicator
+      if (mounted) Navigator.pop(context);
+
+      // 1. Check for Multiple Roles (`pilih_role`)
+      if (response['pilih_role'] == true && response['role_list'] is List) {
+        final roleList = List<String>.from(response['role_list']);
+
+        if (!mounted) return;
+
+        final selectedRole = await showDialog<String>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => SimpleDialog(
+            title: Text('Pilih Peran Anda'),
+            children: roleList.map((role) {
+              // Normalize for display
+              final normalizedForDisplay = role == 'parent'
+                  ? 'wali'
+                  : (role == 'teacher' ? 'guru' : role);
+              return SimpleDialogOption(
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                onPressed: () => Navigator.pop(
+                  context,
+                  role,
+                ), // Return original string 'parent'/'admin'
+                child: Row(
+                  children: [
+                    _buildRoleIcon(normalizedForDisplay),
+                    SizedBox(width: 12),
+                    Text(
+                      _getRoleDisplayName(normalizedForDisplay),
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        );
+
+        if (selectedRole == null) return;
+
+        // Proceed with selectedRole
+        await _processSchoolSwitch(response, school, selectedRole);
+        return;
+      }
+
+      // 2. Single Role Case (Backend assigned role automatically)
+      await _processSchoolSwitch(response, school, null);
+    } catch (e) {
+      // Close Loading Indicator if error occurs
+      if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal pindah sekolah: ${ErrorUtils.getFriendlyMessage(e)}',
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _processSchoolSwitch(
+    Map<String, dynamic> response,
+    Map<String, dynamic> schoolInfo,
+    String? selectedRole,
+  ) async {
+    // Clear all cache to prevent stale data from previous school
+    await LocalCacheService.clearAll();
+    if (mounted) {
+      Provider.of<TeacherProvider>(context, listen: false).clear();
+    }
+
+    // Update token
+    if (response['token'] != null) {
+      await SecureStorageService().saveToken(response['token']);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    if (response['token'] != null) {
+      await prefs.setString('token', response['token']);
+    }
+
+    // Update user data from backend response
+    Map<String, dynamic> updatedUserData;
+
+    if (response['user'] != null) {
+      final backendUser = Map<String, dynamic>.from(response['user']);
+      updatedUserData = {..._userData, ...backendUser};
+
+      // If "pilih_role" case (selectedRole != null), we must construct some fields manually
+      // because backend raw user object in this case might not have 'role' set,
+      // nor 'nama_sekolah' (which comes in 'school' object).
+      if (selectedRole != null) {
+        updatedUserData['role'] = selectedRole;
+
+        // Backend sends 'school' object in pilih_role response
+        if (response['school'] != null) {
+          final schoolObj = response['school'];
+          updatedUserData['school_id'] = schoolObj['id'];
+          updatedUserData['nama_sekolah'] =
+              schoolObj['school_name'] ?? schoolObj['nama_sekolah'];
+          updatedUserData['sekolah_alamat'] =
+              schoolObj['address'] ?? schoolObj['alamat'];
+          // ... other fields if needed
+        }
+      }
+    } else {
+      // Fallback manual update (should not happen with correct backend)
+      updatedUserData = Map<String, dynamic>.from(_userData);
+      updatedUserData['school_id'] = schoolInfo['school_id'];
+      updatedUserData['nama_sekolah'] =
+          schoolInfo['school_name'] ?? schoolInfo['nama_sekolah'];
+    }
+
+    await SecureStorageService().saveUserData(updatedUserData);
+    await prefs.setString('user', json.encode(updatedUserData));
+
+    if (!mounted) return;
+
+    var newRole = updatedUserData['role'];
+
+    // Normalize role values
+    if (newRole == 'teacher') newRole = 'guru';
+    if (newRole == 'parent') newRole = 'wali';
+
+    // Update 'role' in userData to normalized value?
+    // Better to strictly use normalized for Frontend routing.
+    updatedUserData['role'] = newRole;
+    await prefs.setString(
+      'user',
+      json.encode(updatedUserData),
+    ); // Save normalized
+
+    if (newRole != null) {
+      // Always navigate to new dashboard to refresh state completely
+      Navigator.pushNamedAndRemoveUntil(context, '/$newRole', (route) => false);
+    } else {
+      // Role same, just reload data
+      await _initializeData();
+      setState(() {
+        _userData = updatedUserData;
+      });
+    }
+  }
+
+  /// Like Vue's `beforeUnmount()` / `unmounted()` lifecycle hook.
+  /// Cleans up listeners, animation controllers, and provider subscriptions
+  /// to prevent memory leaks. Always pair addListener with removeListener.
+  @override
+  void dispose() {
+    FCMService().syncTrigger.removeListener(_handleSyncTrigger);
+    _animationController.dispose();
+    try {
+      Provider.of<AcademicYearProvider>(
+        context,
+        listen: false,
+      ).removeListener(_onYearChanged);
+    } catch (e) {
+      if (kDebugMode) print('Error removing AcademicYearProvider listener: $e');
+    }
+    super.dispose();
+  }
+
+  /// Handles real-time sync triggers from FCM (Firebase Cloud Messaging).
+  /// Like a Vue WebSocket/Pusher listener that refreshes data when the
+  /// backend sends a push notification (e.g., new student added, schedule changed).
+  void _handleSyncTrigger() {
+    final trigger = FCMService().syncTrigger.value;
+    if (trigger != null) {
+      if (trigger['type'] == 'refresh_announcements') {
+        if (kDebugMode) {
+          print(
+            '🔄 Dashboard flushing announcement cache due to background/foreground sync',
+          );
+        }
+        // Reload announcements count
+        if (_effectiveRole == 'wali' ||
+            _effectiveRole == 'admin' ||
+            _effectiveRole == 'guru') {
+          ApiService.getUnreadAnnouncementCount().then((count) {
+            if (mounted) {
+              setState(() {
+                _stats['unread_announcements'] = count;
+              });
+            }
+          });
+        }
+      }
+    }
+  }
+
+  /// Main build method - like Vue's `<template>` section.
+  /// Renders a CustomScrollView with role-specific sliver sections:
+  /// app bar, hero stats, quick actions, overview cards, and menu grid.
+  /// Uses `Consumer<LanguageProvider>` to react to language changes
+  /// (like a Vue `computed` property depending on an i18n store).
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        return Scaffold(
+          backgroundColor: ColorUtils.slate50,
+          body: CustomScrollView(
+            physics: BouncingScrollPhysics(),
+            slivers: [
+              // Modern App Bar
+              _buildModernAppBar(context, languageProvider),
+
+              // Hero Section with Stats Overlay
+              SliverToBoxAdapter(child: _buildHeroSection()),
+
+              // Quick Actions
+              SliverToBoxAdapter(child: _buildQuickActions()),
+
+              // Today's Overview
+              SliverToBoxAdapter(child: _buildTodaysOverview()),
+
+              // Section Divider
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(12, 12, 12, 10),
+                  child: Text(
+                    AppLocalizations.menu.tr,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate900,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Navigation Menu
+              _buildSliverGridMenu(context),
+
+              // Bottom Padding
+              SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ==================== SKELETON SHIMMER HELPERS ====================
+
+  Widget _buildShimmerBox({
+    double width = double.infinity,
+    double height = 16,
+    double borderRadius = 8,
+  }) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+    );
+  }
+
+  Widget _buildHeroStatSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.white.withValues(alpha: 0.15),
+      highlightColor: Colors.white.withValues(alpha: 0.35),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 35,
+            height: 35,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          SizedBox(height: 6),
+          Container(
+            width: 28,
+            height: 17,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          SizedBox(height: 4),
+          Container(
+            width: 36,
+            height: 9,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewCardSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: ColorUtils.shimmerBaseColor,
+      highlightColor: ColorUtils.shimmerHighlightColor,
+      child: Container(
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ColorUtils.slate200, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildShimmerBox(width: 36, height: 36, borderRadius: 10),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildShimmerBox(width: 40, height: 20, borderRadius: 4),
+                      SizedBox(height: 4),
+                      _buildShimmerBox(width: 70, height: 11, borderRadius: 4),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            _buildShimmerBox(width: 100, height: 10, borderRadius: 4),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: ColorUtils.shimmerBaseColor,
+      highlightColor: ColorUtils.shimmerHighlightColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 65,
+            height: 54,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          SizedBox(height: 6),
+          Container(
+            width: 50,
+            height: 11,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== NEW MODERN UI COMPONENTS ====================
+
+  Widget _buildModernAppBar(
+    BuildContext context,
+    LanguageProvider languageProvider,
+  ) {
+    return SliverAppBar(
+      floating: false,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      toolbarHeight: 50,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            bottom: BorderSide(color: ColorUtils.slate200, width: 1),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                // Logo - simpler design
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: _getPrimaryColor(),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.school, color: Colors.white, size: 18),
+                ),
+                SizedBox(width: 12),
+
+                // Title - single line
+                Expanded(
+                  child: Text(
+                    _userData['nama_sekolah'] ?? AppLocalizations.appTitle.tr,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: ColorUtils.slate900,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                // Actions - more compact
+                IconButton(
+                  icon: Icon(
+                    Icons.language,
+                    size: 20,
+                    color: ColorUtils.slate600,
+                  ),
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  splashRadius: 18,
+                  onPressed: () =>
+                      _showLanguageDialog(context, languageProvider),
+                ),
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.notifications_outlined,
+                        size: 20,
+                        color: ColorUtils.slate600,
+                      ),
+                      iconSize: 20,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      splashRadius: 18,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                NotificationListScreen(role: widget.role),
+                          ),
+                        );
+                      },
+                    ),
+                    if (_stats['unread_announcements'] != null &&
+                        _stats['unread_announcements'] > 0)
+                      Positioned(
+                        right: 4,
+                        top: 2,
+                        child: Container(
+                          padding: EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: ColorUtils.error600,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          child: Text(
+                            _stats['unread_announcements'] > 9
+                                ? '9+'
+                                : _stats['unread_announcements'].toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 7,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                IconButton(
+                  key: _profileHeaderKey,
+                  icon: Icon(
+                    Icons.account_circle,
+                    size: 20,
+                    color: ColorUtils.slate600,
+                  ),
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  splashRadius: 18,
+                  onPressed: () => _showAccountBottomSheet(context),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Builds the hero section with key stats (total students, teachers, etc.).
+  /// Like a Vue dashboard header component showing KPI cards.
+  Widget _buildHeroSection() {
+    final primaryColor = _getPrimaryColor();
+
+    return Container(
+      key: _heroSectionKey,
+      margin: EdgeInsets.fromLTRB(12, 8, 12, 0),
+      decoration: BoxDecoration(
+        gradient: ColorUtils.heroGradient(primaryColor: primaryColor),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Decorative circle - top right
+            Positioned(
+              top: -40,
+              right: -30,
+              child: Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            // Decorative circle - bottom left
+            Positioned(
+              bottom: -25,
+              left: 15,
+              child: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            // Small accent dot
+            Positioned(
+              top: 20,
+              right: 70,
+              child: Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+
+            // Academic Year & Semester - Top Right
+            Positioned(
+              top: 10,
+              right: 12,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showAcademicYearDialog(context),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.calendar_today_outlined,
+                            size: 12,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Consumer<AcademicYearProvider>(
+                          builder: (context, provider, _) {
+                            final academicYear =
+                                provider.selectedAcademicYear?['year'] ?? '-';
+                            final semester = _currentSemesterLabel ?? '-';
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  academicYear,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.1,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  semester,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Main content
+            Padding(
+              padding: EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Greeting
+                  Row(
+                    children: [
+                      Text(
+                        _getGreeting(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Text(_getGreetingEmoji(), style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    _userData['nama'] ?? 'User',
+                    style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 14),
+
+                  // 4-Column Stats Grid
+                  Row(
+                    children: _isStatsLoaded
+                        ? _buildFourColumnStats()
+                              .map((stat) => Expanded(child: stat))
+                              .toList()
+                        : List.generate(
+                            4,
+                            (_) => Expanded(child: _buildHeroStatSkeleton()),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAcademicYearDialog(BuildContext context) {
+    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final years = provider.academicYears;
+
+    showDialog(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Pilih Tahun Ajaran'),
+        children: years.map((year) {
+          final isSelected = provider.selectedAcademicYear?['id'] == year['id'];
+          return SimpleDialogOption(
+            onPressed: () {
+              provider.setSelectedYear(year['id'].toString());
+              Navigator.pop(context);
+            },
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  year['year'] ?? '-',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: isSelected
+                        ? ColorUtils.corporateBlue600
+                        : ColorUtils.slate900,
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check,
+                    color: ColorUtils.corporateBlue600,
+                    size: 20,
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  String _getGreetingEmoji() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return '🌅';
+    if (hour < 17) return '☀️';
+    return '🌙';
+  }
+
+  List<Widget> _buildFourColumnStats() {
+    if (_effectiveRole == 'admin') {
+      return [
+        _buildHeroStat(
+          Icons.people_outline,
+          _stats['total_siswa']?.toString() ?? '0',
+          'Siswa',
+        ),
+        _buildHeroStat(
+          Icons.school_outlined,
+          _stats['total_guru']?.toString() ?? '0',
+          'Guru',
+        ),
+        _buildHeroStat(
+          Icons.class_outlined,
+          _stats['total_kelas']?.toString() ?? '0',
+          'Kelas',
+        ),
+        _buildHeroStat(
+          Icons.book_outlined,
+          _stats['total_mapel']?.toString() ?? '0',
+          'Mapel',
+        ),
+      ];
+    } else if (_effectiveRole == 'guru') {
+      return [
+        _buildHeroStat(
+          Icons.people_outline,
+          _stats['total_siswa']?.toString() ?? '0',
+          'Siswa',
+        ),
+        _buildHeroStat(
+          Icons.class_outlined,
+          _stats['total_kelas']?.toString() ?? '0',
+          'Kelas',
+        ),
+        _buildHeroStat(
+          Icons.schedule_outlined,
+          _stats['kelas_hari_ini']?.toString() ?? '0',
+          'Hari Ini',
+        ),
+        _buildHeroStat(
+          Icons.assignment_outlined,
+          _stats['total_rpp']?.toString() ?? '0',
+          'RPP',
+        ),
+      ];
+    } else {
+      return [
+        _buildHeroStat(
+          Icons.child_care_outlined,
+          _stats['anak_terdaftar']?.toString() ?? '0',
+          'Anak',
+        ),
+        _buildHeroStat(
+          Icons.announcement_outlined,
+          _stats['pengumuman_terbaru']?.toString() ?? '0',
+          'Info',
+        ),
+        _buildHeroStat(
+          Icons.grade_outlined,
+          _stats['unread_grades']?.toString() ?? '0',
+          'Nilai',
+        ),
+        _buildHeroStat(
+          Icons.calendar_today_outlined,
+          _stats['unread_presence']?.toString() ?? '0',
+          'Absen',
+        ),
+      ];
+    }
+  }
+
+  Widget _buildHeroStat(IconData icon, String value, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Icon with glass morphism effect
+        Container(
+          padding: EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
+          ),
+          child: Icon(icon, color: Colors.white, size: 17),
+        ),
+        SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: -0.3,
+          ),
+        ),
+        SizedBox(height: 1),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.white.withValues(alpha: 0.85),
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  /// Builds quick action buttons (shortcuts to common tasks).
+  /// Like a Vue component rendering a row of action buttons based on role.
+  Widget _buildQuickActions() {
+    List<Widget> actions = _getQuickActions();
+
+    if (actions.isEmpty && _isStatsLoaded) {
+      return SizedBox.shrink();
+    }
+
+    return Padding(
+      key: _quickActionsKey,
+      padding: EdgeInsets.fromLTRB(12, 12, 12, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Section header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppLocalizations.quickAccess.tr,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: ColorUtils.slate900,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          // Action buttons or skeleton
+          SizedBox(
+            height: 85,
+            child: _isStatsLoaded
+                ? ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: BouncingScrollPhysics(),
+                    itemCount: actions.length,
+                    separatorBuilder: (context, index) => SizedBox(width: 10),
+                    itemBuilder: (context, index) => actions[index],
+                  )
+                : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: 4,
+                    separatorBuilder: (context, index) => SizedBox(width: 10),
+                    itemBuilder: (context, index) =>
+                        _buildQuickActionSkeleton(),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds today's overview section with schedule slider, attendance, and charts.
+  /// Renders different content per role using conditional logic (like Vue `v-if`).
+  Widget _buildTodaysOverview() {
+    return Padding(
+      key: _statsSectionKey,
+      padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppLocalizations.todaysOverview.tr,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate900,
+            ),
+          ),
+          GridView.count(
+            padding: EdgeInsets.only(top: 12),
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1.4,
+            children: _isStatsLoaded
+                ? _getTodaysOverviewCards()
+                : List.generate(4, (_) => _buildOverviewCardSkeleton()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _getTodaysOverviewCards() {
+    if (_effectiveRole == 'admin') {
+      return [
+        if (_financeChartData.isNotEmpty)
+          FinanceBarChartCard(
+            title: AppLocalizations.finance.tr,
+            icon: Icons.account_balance_wallet_outlined,
+            accentColor: ColorUtils.success600,
+            semestersData: _financeChartData,
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) =>
+                    _FinancePopupDialog(semestersData: _financeChartData),
+              );
+            },
+          ),
+        if (_attendanceChartData.isNotEmpty)
+          AttendanceBarChartCard(
+            title: AppLocalizations.attendance.tr,
+            icon: Icons.ssid_chart_outlined,
+            accentColor: ColorUtils.warning600,
+            classesData: _attendanceChartData,
+            onTap: () {
+              // Extract the selected academic year right before showing dialog
+              final selectedYearId = Provider.of<AcademicYearProvider>(
+                context,
+                listen: false,
+              ).selectedAcademicYear?['id']?.toString();
+
+              showDialog(
+                context: context,
+                builder: (context) => _AttendancePopupDialog(
+                  semesterLabel: _currentSemesterLabel,
+                  initialData: _attendanceChartData,
+                  academicYearId: selectedYearId,
+                ),
+              );
+            },
+          ),
+        OverviewCard(
+          title: AppLocalizations.activeTeachers.tr,
+          value: _stats['total_guru']?.toString() ?? '0',
+          subtitle: AppLocalizations.currentlyTeaching.tr,
+          icon: Icons.people_alt_outlined,
+          accentColor: ColorUtils.success600,
+          onTap: () {
+            // Navigate to teachers
+          },
+        ),
+        OverviewCard(
+          title: AppLocalizations.announcements.tr,
+          value: _stats['pengumuman_terbaru']?.toString() ?? '0',
+          subtitle: AppLocalizations.recentUpdates.tr,
+          icon: Icons.campaign_outlined,
+          accentColor: ColorUtils.info600,
+          onTap: () {
+            // Navigate to announcements
+          },
+        ),
+      ];
+    } else if (_effectiveRole == 'guru') {
+      return [
+        ScheduleSliderCard(
+          key: _scheduleSectionKey,
+          schedules: _todaysScheduleList,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
+            );
+          },
+        ),
+        AttendanceOverviewCard(
+          hadir: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['hadir'] ?? 0)
+              : 0,
+          izin: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['izin'] ?? 0)
+              : 0,
+          sakit: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['sakit'] ?? 0)
+              : 0,
+          alpha: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['alpha'] ?? 0)
+              : 0,
+          total: (_stats['attendance_summary'] is Map)
+              ? (_stats['attendance_summary']['total'] ?? 0)
+              : 0,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PresencePage(teacher: _userData),
+              ),
+            );
+          },
+        ),
+        MaterialSliderCard(
+          materials: _materialOverview,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MateriPage(teacher: _userData),
+              ),
+            );
+          },
+        ),
+        LessonPlanStatusCard(
+          approved: _stats['rpp_approved'] ?? 0,
+          rejected: _stats['rpp_rejected'] ?? 0,
+          pending: _stats['rpp_pending'] ?? 0,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RppScreen(
+                  teacherId: _userData['id'].toString(),
+                  teacherName: _userData['name'] ?? 'Guru',
+                ),
+              ),
+            );
+          },
+        ),
+      ];
+    } else {
+      return [
+        OverviewCard(
+          title: AppLocalizations.myChildren.tr,
+          value: _stats['anak_terdaftar']?.toString() ?? '0',
+          subtitle: AppLocalizations.registeredStudents.tr,
+          icon: Icons.family_restroom_outlined,
+          accentColor: ColorUtils.corporateBlue600,
+          onTap: () {
+            // Navigate to children
+          },
+        ),
+        OverviewCard(
+          title: AppLocalizations.newGrades.tr,
+          value: _stats['unread_grades']?.toString() ?? '0',
+          subtitle: AppLocalizations.recentUpdates.tr,
+          icon: Icons.grade_outlined,
+          accentColor: ColorUtils.success600,
+          onTap: () {
+            // Navigate to grades
+          },
+        ),
+        if (_attendanceChartData.isNotEmpty)
+          AttendanceBarChartCard(
+            title: AppLocalizations.childAttendance.tr,
+            icon: Icons.ssid_chart_outlined,
+            accentColor: ColorUtils.warning600,
+            classesData: _attendanceChartData,
+            hideSubtitle:
+                true, // Requested by user to hide the child's name on the card
+            onTap: () {
+              final selectedYearId = Provider.of<AcademicYearProvider>(
+                context,
+                listen: false,
+              ).selectedAcademicYear?['id']?.toString();
+
+              showDialog(
+                context: context,
+                builder: (context) => _AttendancePopupDialog(
+                  semesterLabel: _currentSemesterLabel,
+                  initialData: _attendanceChartData,
+                  academicYearId: selectedYearId,
+                ),
+              );
+            },
+          )
+        else
+          OverviewCard(
+            title: AppLocalizations.attendance.tr,
+            value: _stats['unread_presence']?.toString() ?? '0',
+            subtitle: AppLocalizations.newRecords.tr,
+            icon: Icons.calendar_month_outlined,
+            accentColor: ColorUtils.warning600,
+            onTap: () {
+              // Navigate to attendance
+            },
+          ),
+        OverviewCard(
+          title: AppLocalizations.announcements.tr,
+          value: _stats['pengumuman_terbaru']?.toString() ?? '0',
+          subtitle: AppLocalizations.latestInformation.tr,
+          icon: Icons.announcement_outlined,
+          accentColor: ColorUtils.info600,
+          onTap: () {
+            // Navigate to announcements
+          },
+        ),
+      ];
+    }
+  }
+
+  List<Widget> _getQuickActions() {
+    final primaryColor = _getPrimaryColor();
+
+    if (_effectiveRole == 'admin') {
+      return [
+        QuickActionButton(
+          label: AppLocalizations.data.tr,
+          icon: Icons.folder_outlined,
+          color: primaryColor,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminDataManagementScreen(),
+            ),
+          ),
+        ),
+        QuickActionButton(
+          label: AppLocalizations.schedule.tr,
+          icon: Icons.schedule_outlined,
+          color: ColorUtils.info600,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TeachingScheduleManagementScreen(),
+            ),
+          ),
+        ),
+        QuickActionButton(
+          label: AppLocalizations.finance.tr,
+          icon: Icons.account_balance_wallet_outlined,
+          color: ColorUtils.success600,
+          badgeCount: _unverifiedPaymentCount > 0
+              ? _unverifiedPaymentCount
+              : null,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FinanceScreen()),
+          ),
+        ),
+        QuickActionButton(
+          label: AppLocalizations.announcements.tr,
+          icon: Icons.announcement_outlined,
+          color: ColorUtils.warning600,
+          badgeCount: _stats['unread_announcements'],
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminAnnouncementScreen(),
+              ),
+            );
+            _loadStats();
+          },
+        ),
+      ];
+    } else if (_effectiveRole == 'guru') {
+      return [
+        QuickActionButton(
+          label: AppLocalizations.schedule.tr,
+          icon: Icons.schedule_outlined,
+          color: primaryColor,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
+          ),
+        ),
+        QuickActionButton(
+          label: AppLocalizations.attendance.tr,
+          icon: Icons.how_to_reg_outlined,
+          color: ColorUtils.warning600,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PresencePage(teacher: _userData),
+            ),
+          ),
+        ),
+        QuickActionButton(
+          label: AppLocalizations.activity.tr,
+          icon: Icons.local_activity_outlined,
+          color: ColorUtils.info600,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ClassActifityScreen()),
+          ),
+        ),
+        QuickActionButton(
+          label: AppLocalizations.inputGrades.tr,
+          icon: Icons.edit_note_outlined,
+          color: ColorUtils.success600,
+          onTap: () async {
+            final prefs = await SharedPreferences.getInstance();
+            final userData = json.decode(prefs.getString('user') ?? '{}');
+            final teacherData = {
+              'id': userData['id'] ?? '',
+              'nama': userData['nama'] ?? 'Teacher',
+              'email': userData['email'] ?? '',
+              'role': _effectiveRole,
+            };
+            if (teacherData['id']!.isEmpty) return;
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GradePage(teacher: teacherData),
+              ),
+            );
+          },
+        ),
+      ];
+    } else {
+      return [
+        QuickActionButton(
+          label: AppLocalizations.announcements.tr,
+          icon: Icons.announcement_outlined,
+          color: primaryColor,
+          badgeCount: _stats['unread_announcements'],
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+            );
+            _loadStats();
+          },
+        ),
+        QuickActionButton(
+          label: AppLocalizations.billing.tr,
+          icon: Icons.account_balance_wallet_outlined,
+          color: ColorUtils.error600,
+          badgeCount: _stats['unread_billing'],
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ParentBillingScreen()),
+            );
+            _loadStats();
+          },
+        ),
+      ];
+    }
+  }
+
+  // ==================== END NEW UI COMPONENTS ====================
+
+  /// Builds the main navigation menu grid with role-specific items.
+  /// Like a Vue component rendering a grid of `<MenuItemCard>` with `v-for`,
+  /// where each card navigates to a different admin/teacher/parent feature screen.
+  Widget _buildSliverGridMenu(BuildContext context) {
+    // All roles now use professional MenuItemCard design
+    return SliverPadding(
+      key: _menuGridKey,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList(
+        delegate: SliverChildListDelegate(_buildCategorizedMenu(context)),
+      ),
+    );
+  }
+
+  List<Widget> _buildCategorizedMenu(BuildContext context) {
+    final primaryColor = _getPrimaryColor();
+
+    if (_effectiveRole == 'admin') {
+      return [
+        CategorySection(
+          title: '📊 ${AppLocalizations.categoryDataManagement.tr}',
+          icon: Icons.folder_shared,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getAdminDataManagementItems(context),
+        ),
+        CategorySection(
+          title: '📢 ${AppLocalizations.categoryAcademicCommunication.tr}',
+          icon: Icons.school,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getAdminAcademicItems(context),
+        ),
+        CategorySection(
+          title: '💰 ${AppLocalizations.categoryFinanceSettings.tr}',
+          icon: Icons.settings,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getAdminFinanceItems(context),
+        ),
+      ];
+    } else if (_effectiveRole == 'guru') {
+      return [
+        CategorySection(
+          title: '📚 ${AppLocalizations.categoryTeaching.tr}',
+          icon: Icons.school,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getTeacherTeachingItems(context),
+        ),
+        CategorySection(
+          title: '✏️ ${AppLocalizations.categoryAssessmentPlanning.tr}',
+          icon: Icons.edit_note,
+          accentColor: ColorUtils.slate700,
+          primaryColor: primaryColor,
+          items: _getTeacherAssessmentItems(context),
+        ),
+      ];
+    } else if (_effectiveRole == 'wali') {
+      // Parent role: Simple list without categories (only 5 items)
+      final items = _getParentMenuItems(context);
+      return items
+          .map(
+            (item) => Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: MenuItemCard(
+                title: item.title,
+                icon: item.icon,
+                onTap: item.onTap,
+                badgeCount: item.badgeCount,
+                primaryColor: primaryColor,
+              ),
+            ),
+          )
+          .toList();
+    }
+
+    return [];
+  }
+
+  // Admin - Data Management Category
+  List<MenuItem> _getAdminDataManagementItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.manageData.tr,
+        icon: Icons.folder_shared_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminDataManagementScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.manageTeachingSchedule.tr,
+        icon: Icons.schedule_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TeachingScheduleManagementScreen(),
+          ),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.inputGrades.tr,
+        icon: Icons.edit_note_outlined,
+        onTap: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          final adminData = {
+            'id': userData['id'] ?? '',
+            'nama': userData['nama'] ?? 'Admin',
+            'email': userData['email'] ?? '',
+            'role': _effectiveRole,
+          };
+          if (adminData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Admin ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GradePage(teacher: adminData),
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
+  // Admin - Academic & Communication Category
+  List<MenuItem> _getAdminAcademicItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.announcements.tr,
+        icon: Icons.announcement_outlined,
+        badgeCount: _stats['unread_announcements'],
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AdminAnnouncementScreen()),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.classActivities.tr,
+        icon: Icons.local_activity_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminClassActivityScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.presenceReport.tr,
+        icon: Icons.check_circle_outline,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminPresenceReportScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.manageRpp.tr,
+        icon: Icons.description_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminRppScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.studentReport.tr,
+        icon: Icons.assignment_turned_in_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminRaportScreen()),
+        ),
+      ),
+    ];
+  }
+
+  // Admin - Finance & Settings Category
+  List<MenuItem> _getAdminFinanceItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.finance.tr,
+        icon: Icons.account_balance_wallet_outlined,
+        badgeCount: _unverifiedPaymentCount > 0
+            ? _unverifiedPaymentCount
+            : null,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => FinanceScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.schoolSettings.tr,
+        icon: Icons.settings_applications,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SchoolSettingsScreen()),
+        ),
+      ),
+    ];
+  }
+
+  // Teacher - Teaching Category
+  List<MenuItem> _getTeacherTeachingItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.teachingSchedule.tr,
+        icon: Icons.schedule_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.classActivities.tr,
+        icon: Icons.local_activity_outlined,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ClassActifityScreen()),
+        ),
+      ),
+      MenuItem(
+        title: AppLocalizations.studentAttendance.tr,
+        icon: Icons.check_circle_outline,
+        onTap: () async {
+          final Map<String, String> guruData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
+            'role': _effectiveRole,
+          };
+          if (guruData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PresencePage(teacher: guruData),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.learningMaterials.tr,
+        icon: Icons.book_outlined,
+        onTap: () async {
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'name': _userData['name'] ?? _userData['nama'] ?? 'Teacher',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MateriPage(teacher: teacherData),
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
+  // Teacher - Assessment & Planning Category
+  List<MenuItem> _getTeacherAssessmentItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.inputGrades.tr,
+        icon: Icons.edit_note_outlined,
+        onTap: () async {
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GradePage(teacher: teacherData),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.gradeRecap.tr,
+        icon: Icons.assessment_outlined,
+        onTap: () async {
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RekapNilaiPage(teacher: teacherData),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.reportCard.tr,
+        icon: Icons.contact_page_outlined,
+        onTap: () async {
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RaportScreen(teacher: teacherData),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.myRpp.tr,
+        icon: Icons.description_outlined,
+        onTap: () async {
+          final Map<String, String> teacherData = {
+            'id':
+                (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
+            'nama': _userData['nama']?.toString() ?? 'Teacher',
+            'email': _userData['email']?.toString() ?? '',
+            'role': _effectiveRole,
+          };
+          if (teacherData['id']!.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Teacher ID not found')),
+              );
+            }
+            return;
+          }
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RppScreen(
+                teacherId: teacherData['id']!,
+                teacherName: teacherData['nama']!,
+              ),
+            ),
+          );
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.announcements.tr,
+        icon: Icons.announcement_outlined,
+        badgeCount: _stats['unread_announcements'],
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+          );
+          _loadStats();
+        },
+      ),
+      if (_homeroomClasses.isNotEmpty)
+        MenuItem(
+          title: AppLocalizations.learningRecommendation.tr,
+          icon: Icons.auto_awesome_outlined,
+          onTap: () async {
+            final Map<String, String> teacherData = {
+              'id':
+                  (_userData['teacher_id'] ?? _userData['id'])?.toString() ??
+                  '',
+              'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
+              'email': _userData['email']?.toString() ?? '',
+              'role': _effectiveRole,
+            };
+            if (!context.mounted) return;
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LearningRecommendationClassScreen(
+                  teacher: teacherData,
+                  classes: _homeroomClasses,
+                ),
+              ),
+            );
+          },
+        ),
+    ];
+  }
+
+  // Parent - Menu Items (Simple list, no categories)
+  List<MenuItem> _getParentMenuItems(BuildContext context) {
+    return [
+      MenuItem(
+        title: AppLocalizations.announcements.tr,
+        icon: Icons.announcement_outlined,
+        badgeCount: _stats['unread_announcements'],
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.classActivities.tr,
+        icon: Icons.local_activity_outlined,
+        badgeCount: _stats['unread_class_activities'],
+        onTap: () async {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ParentClassActivityScreen(academicYearId: academicYearId),
+            ),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.grades.tr,
+        icon: Icons.grade_outlined,
+        badgeCount: _stats['unread_grades'],
+        onTap: () async {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ParentGradeScreen(academicYearId: academicYearId),
+            ),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.presence.tr,
+        icon: Icons.check_circle_outline,
+        badgeCount: _stats['unread_presence'],
+        onTap: () async {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+
+          final prefs = await SharedPreferences.getInstance();
+          final userData = json.decode(prefs.getString('user') ?? '{}');
+          // Load students
+          final studentsData = await _getStudentDataForParent(
+            userData['id'] ?? '',
+          );
+
+          if (studentsData.isEmpty) {
+            if (context.mounted) {
+              _showNoStudentsDialog(context);
+            }
+            return;
+          }
+
+          if (!context.mounted) return;
+
+          if (studentsData.length == 1) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PresenceParentPage(
+                  parent: userData,
+                  studentId: studentsData[0]['id'],
+                  academicYearId: academicYearId,
+                ),
+              ),
+            );
+            _loadStats();
+          } else {
+            await _showStudentSelectionDialog(
+              context,
+              userData,
+              studentsData,
+              academicYearId: academicYearId,
+            );
+            _loadStats();
+          }
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.billing.tr,
+        icon: Icons.account_balance_wallet_outlined,
+        badgeCount: _stats['unread_billing'],
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ParentBillingScreen()),
+          );
+          _loadStats();
+        },
+      ),
+      MenuItem(
+        title: AppLocalizations.eRaport.tr,
+        icon: Icons.assignment_turned_in_outlined,
+        onTap: () async {
+          final academicYearId = Provider.of<AcademicYearProvider>(
+            context,
+            listen: false,
+          ).selectedAcademicYear?['id']?.toString();
+
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ParentRaportScreen(academicYearId: academicYearId),
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
+  void _showLanguageDialog(
+    BuildContext context,
+    LanguageProvider languageProvider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          AppLocalizations.chooseLanguage.tr,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: _getPrimaryColor(),
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLanguageOption(
+              context,
+              languageProvider,
+              'Indonesia',
+              'id',
+              Colors.green,
+            ),
+            SizedBox(height: 12),
+            _buildLanguageOption(
+              context,
+              languageProvider,
+              'English',
+              'en',
+              Colors.blue,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(
+    BuildContext context,
+    LanguageProvider languageProvider,
+    String language,
+    String code,
+    Color color,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          Navigator.pop(context);
+          await languageProvider.setLanguage(code);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.language, color: color),
+              SizedBox(width: 12),
+              Text(
+                language,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              Spacer(),
+              if (languageProvider.currentLanguage == code)
+                Icon(Icons.check_circle, color: color),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Shows the account bottom sheet with profile info, school/role switching, and logout.
+  /// Like a Vue modal/drawer component for user account management.
+  void _showAccountBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          margin: EdgeInsets.all(20),
+          child: Wrap(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 60,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+
+                      // User Info
+                      Row(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              gradient: _getCardGradient(),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.account_circle,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _userData['nama'] ?? _getRoleTitle(),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey.shade800,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  _userData['email'] ?? '',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  _userData['nama_sekolah'] ?? '',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 24),
+
+                      if (_availableRoles.length > 1) ...[
+                        SizedBox(height: 16),
+                        Text(
+                          AppLocalizations.switchRole.tr,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        ..._availableRoles.map((role) {
+                          final isCurrent = role == widget.role;
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: isCurrent
+                                  ? null
+                                  : () {
+                                      Navigator.pop(context);
+                                      _switchRole(role);
+                                    },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(12),
+                                margin: EdgeInsets.only(bottom: 8),
+                                decoration: BoxDecoration(
+                                  color: isCurrent
+                                      ? _getPrimaryColor().withValues(alpha: 0.1)
+                                      : Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isCurrent
+                                        ? _getPrimaryColor().withValues(alpha: 0.3)
+                                        : Colors.transparent,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    _buildRoleIcon(role),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        _getRoleDisplayName(role),
+                                        style: TextStyle(
+                                          fontWeight: isCurrent
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                          color: Colors.grey.shade800,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isCurrent)
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: _getPrimaryColor(),
+                                        size: 20,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                        SizedBox(height: 16),
+                        Divider(),
+                        SizedBox(height: 16),
+                      ],
+
+                      // Switch Sekolah Button
+                      if (_accessibleSchools.length > 1) ...[
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pop(context);
+                              _showSchoolSelectionDialog(context);
+                            },
+                            borderRadius: BorderRadius.circular(15),
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: _getPrimaryColor().withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: _getPrimaryColor().withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.school_rounded,
+                                    color: _getPrimaryColor(),
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    AppLocalizations.switchSchool.tr,
+                                    style: TextStyle(
+                                      color: _getPrimaryColor(),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Divider(),
+                        SizedBox(height: 16),
+                      ],
+
+                      // Settings Button — shown for all roles
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsScreen(),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(15),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.settings,
+                                  color: ColorUtils.getRoleColor(
+                                    _effectiveRole,
+                                  ),
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.settings.tr,
+                                  style: TextStyle(
+                                    color: ColorUtils.getRoleColor(
+                                      _effectiveRole,
+                                    ),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+
+                      // Logout Button
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
+                            await TokenService().logout();
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/login',
+                                (route) => false,
+                              );
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(15),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(color: Colors.red.shade100),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.logout_rounded,
+                                  color: Colors.redAccent,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.logout.tr,
+                                  style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRoleIcon(String role) {
+    switch (role) {
+      case 'admin':
+        return Icon(
+          Icons.admin_panel_settings,
+          color: _getPrimaryColor(),
+          size: 20,
+        );
+      case 'guru':
+        return Icon(Icons.school, color: _getPrimaryColor(), size: 20);
+      case 'wali':
+        return Icon(Icons.family_restroom, color: _getPrimaryColor(), size: 20);
+      case 'staff':
+        return Icon(Icons.work, color: _getPrimaryColor(), size: 20);
+      default:
+        return Icon(Icons.person, color: _getPrimaryColor(), size: 20);
+    }
+  }
+
+  String _getRoleDisplayName(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+      case 'administrator':
+        return AppLocalizations.adminRole.tr;
+      case 'guru':
+      case 'teacher':
+        return AppLocalizations.teacherRole.tr;
+      case 'wali':
+      case 'parent':
+      case 'walimurid':
+      case 'wali murid':
+        return AppLocalizations.parentRole.tr;
+      case 'staff':
+        return AppLocalizations.staffRole.tr;
+      default:
+        if (role.isNotEmpty) {
+          return role[0].toUpperCase() + role.substring(1);
+        }
+        return role;
+    }
+  }
+
+  void _showSchoolSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.school_rounded, color: _getPrimaryColor()),
+            SizedBox(width: 8),
+            Text(
+              AppLocalizations.selectSchool.tr,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isLoadingSchools)
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
+                )
+              else
+                ..._accessibleSchools.map((school) {
+                  final isCurrent =
+                      school['school_id'] == _userData['school_id'];
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: isCurrent
+                          ? null
+                          : () {
+                              Navigator.pop(
+                                dialogContext,
+                              ); // Close dialog immediately
+                              _switchSchool(school);
+                            },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: EdgeInsets.all(12),
+                        margin: EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: isCurrent
+                              ? _getPrimaryColor().withValues(alpha: 0.1)
+                              : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isCurrent
+                                ? _getPrimaryColor().withValues(alpha: 0.3)
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.school,
+                              color: isCurrent
+                                  ? _getPrimaryColor()
+                                  : Colors.grey,
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    school['school_name'],
+                                    style: TextStyle(
+                                      fontWeight: isCurrent
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    school['address'] ?? '',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isCurrent)
+                              Icon(
+                                Icons.check_circle,
+                                color: _getPrimaryColor(),
+                                size: 20,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(AppLocalizations.cancel.tr, style: TextStyle(color: Colors.grey.shade600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper methods untuk colors dan gradients
+  Color _getPrimaryColor() {
+    switch (_effectiveRole) {
+      case 'admin':
+        return Color(0xFF2563EB); // Blue
+      case 'guru':
+        return Color(0xFF16A34A); // Teal
+      case 'staff':
+        return Color(0xFFFF9F1C); // Orange
+      case 'wali':
+        return Color(0xFF9333EA); // Purple
+      default:
+        return Color.fromARGB(255, 17, 19, 29);
+    }
+  }
+
+  LinearGradient _getCardGradient() {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.7)],
+    );
+  }
+
+  String _getRoleTitle() {
+    switch (_effectiveRole) {
+      case 'admin':
+        return AppLocalizations.adminRole.tr;
+      case 'guru':
+        return AppLocalizations.teacherRole.tr;
+      case 'staff':
+        return AppLocalizations.staffRole.tr;
+      case 'wali':
+        return AppLocalizations.parentRole.tr;
+      default:
+        return 'User';
+    }
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return AppLocalizations.goodMorning.tr;
+    } else if (hour < 17) {
+      return AppLocalizations.goodAfternoon.tr;
+    } else {
+      return AppLocalizations.goodEvening.tr;
+    }
+  }
+
+  Future<void> _showStudentSelectionDialog(
+    BuildContext context,
+    Map<String, dynamic> parent,
+    List<dynamic> studentData, {
+    String? academicYearId,
+  }) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Pilih Anak',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: studentData.length,
+            itemBuilder: (context, index) {
+              final student = studentData[index];
+              return Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blue.shade50,
+                    child: Text(
+                      student['name'][0].toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    student['name'],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    student['kelas_nama'] ?? 'Kelas tidak tersedia',
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PresenceParentPage(
+                          parent: parent,
+                          studentId: student['id'],
+                          academicYearId: academicYearId,
+                        ),
+                      ),
+                    );
+                    _loadStats();
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNoStudentsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Informasi'),
+        content: Text(
+          'Tidak ada data siswa yang terhubung dengan akun wali murid ini. Silakan hubungi administrator.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FinancePopupDialog extends StatefulWidget {
+  final List<Map<String, dynamic>> semestersData;
+
+  const _FinancePopupDialog({required this.semestersData});
+
+  @override
+  State<_FinancePopupDialog> createState() => _FinancePopupDialogState();
+}
+
+class _FinancePopupDialogState extends State<_FinancePopupDialog> {
+  final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 380, // Fixed height for page view
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: widget.semestersData.length,
+                itemBuilder: (context, index) {
+                  final item = widget.semestersData[index];
+                  final subtitle = item['subtitle'] as String;
+                  final title = 'Detail $subtitle';
+                  final chartData = List<double>.from(
+                    (item['data'] as List).map((e) => (e as num).toDouble()),
+                  );
+                  final isGenap = subtitle.toLowerCase().contains('genap');
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: ColorUtils.slate800,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Geser ke kiri/kanan untuk melihat riwayat',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate500,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Use an explicit container without ScrollView so PageView catches horizontal swipe gestures
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            alignment: Alignment.center,
+                            height: 200,
+                            child: MiniBarChart(
+                              data: chartData,
+                              color: ColorUtils.success600,
+                              height: 200,
+                              width:
+                                  chartData.length *
+                                  44.0, // Reduced from 50 to 44 to better fit small screens without scrolling
+                              barWidth: 28.0,
+                              barSpacing: 16.0,
+                              cornerRadius: 4.0,
+                              showLabels: true,
+                              labelStyle: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: ColorUtils.slate700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              chartData.length,
+                              (idx) => Container(
+                                width:
+                                    44.0, // Matching the new total width unit
+                                alignment: Alignment.center,
+                                child: Text(
+                                  [
+                                    'Jan',
+                                    'Feb',
+                                    'Mar',
+                                    'Apr',
+                                    'Mei',
+                                    'Jun',
+                                    'Jul',
+                                    'Ags',
+                                    'Sep',
+                                    'Okt',
+                                    'Nov',
+                                    'Des',
+                                  ][isGenap ? idx : (idx + 6)],
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: ColorUtils.slate600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            SmoothPageIndicator(
+              controller: _pageController,
+              count: widget.semestersData.length,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorUtils.success600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Tutup'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AttendancePopupDialog extends StatefulWidget {
+  final String? semesterLabel;
+  final List<Map<String, dynamic>>? initialData;
+  final String? academicYearId;
+
+  const _AttendancePopupDialog({
+    this.semesterLabel,
+    this.initialData,
+    this.academicYearId,
+  });
+
+  @override
+  State<_AttendancePopupDialog> createState() => _AttendancePopupDialogState();
+}
+
+class _AttendancePopupDialogState extends State<_AttendancePopupDialog> {
+  final PageController _pageController = PageController();
+
+  bool _isWeekly = true;
+  late String _selectedMonth;
+  String _selectedWeek = 'Pekan 1';
+
+  late List<String> _months;
+  final List<String> _weeks = [
+    'Pekan 1',
+    'Pekan 2',
+    'Pekan 3',
+    'Pekan 4',
+    'Pekan 5',
+  ];
+
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _classesData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Default to Ganjil (Juli-Desember) if semester isn't identified
+    final isGenap =
+        widget.semesterLabel?.toLowerCase().contains('genap') ?? false;
+
+    if (isGenap) {
+      _months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni'];
+    } else {
+      _months = [
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+    }
+
+    final now = DateTime.now();
+    final allMonths = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    final currentMonthName = allMonths[now.month - 1];
+
+    // Check if the current month is applicable for the chosen semester
+    if (_months.contains(currentMonthName)) {
+      _selectedMonth = currentMonthName;
+    } else {
+      _selectedMonth = _months.first;
+    }
+
+    int currentWeek = (now.day / 7).ceil();
+    if (currentWeek > 5) currentWeek = 5;
+    _selectedWeek = 'Pekan $currentWeek';
+
+    // Load initial data if available, or fetch fresh
+    if (widget.initialData != null && widget.initialData!.isNotEmpty) {
+      _classesData = List.from(widget.initialData!);
+    } else {
+      _fetchData();
+    }
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final fetchedData = await ApiService.getAttendanceDashboardChart(
+        academicYearId: widget.academicYearId,
+        month: _selectedMonth,
+        week: _selectedWeek,
+      );
+
+      if (mounted) {
+        setState(() {
+          _classesData = List<Map<String, dynamic>>.from(fetchedData);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // You could show a snackbar here
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _isLoading
+                ? SizedBox(
+                    height: 380,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: ColorUtils.warning600,
+                      ),
+                    ),
+                  )
+                : _classesData.isEmpty
+                ? const SizedBox(
+                    height: 380,
+                    child: Center(
+                      child: Text('Tidak ada data absensi untuk periode ini'),
+                    ),
+                  )
+                : SizedBox(
+                    height: 380, // Fixed height for page view
+                    child: PageView.builder(
+                      controller: _pageController,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: _classesData.length,
+                      itemBuilder: (context, index) {
+                        final item = _classesData[index];
+                        final title = item['title'] as String;
+                        final List<double> chartData = _isWeekly
+                            ? List<double>.from(
+                                (item['weekly_data'] as List).map(
+                                  (e) => (e as num).toDouble(),
+                                ),
+                              )
+                            : List<double>.from(
+                                (item['daily_data'] as List).map(
+                                  (e) => (e as num).toDouble(),
+                                ),
+                              );
+
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    title,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: ColorUtils.slate800,
+                                    ),
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    _buildTypeDropdown(),
+                                    const SizedBox(height: 8),
+                                    _isWeekly
+                                        ? _buildMonthDropdown()
+                                        : _buildWeekDropdown(),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Geser ke kiri/kanan untuk berpindah kelas',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: ColorUtils.slate500,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            if (title == 'Absensi Belum Ada Data' ||
+                                chartData.every((val) => val == 0.0))
+                              SizedBox(
+                                height:
+                                    212, // match the height of 200 MiniBarChart + 12 spaces
+                                child: Center(
+                                  child: Text(
+                                    'Belum ada data kehadiran siswa pada periode ini',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: ColorUtils.slate400,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    alignment: Alignment.center,
+                                    height: 200,
+                                    child: MiniBarChart(
+                                      data: chartData,
+                                      color: ColorUtils.warning600,
+                                      height: 200,
+                                      width: chartData.length * 44.0,
+                                      barWidth: 22.0,
+                                      barSpacing: 22.0,
+                                      cornerRadius: 4.0,
+                                      showLabels: true,
+                                      labelStyle: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: ColorUtils.slate700,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      chartData.length,
+                                      (idx) => Container(
+                                        width:
+                                            44.0, // Matching the new total width unit
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          _isWeekly
+                                              ? 'Pekan ${idx + 1}'
+                                              : [
+                                                  'Sen',
+                                                  'Sel',
+                                                  'Rab',
+                                                  'Kam',
+                                                  'Jum',
+                                                  'Sab',
+                                                ][idx],
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: ColorUtils.slate600,
+                                          ),
+                                          maxLines: 1, // Prevent wrapping
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+            const SizedBox(height: 16),
+            SmoothPageIndicator(
+              controller: _pageController,
+              count: _classesData.length,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorUtils.warning600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Tutup'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeDropdown() {
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: ColorUtils.slate200),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _isWeekly ? 'Pekanan' : 'Harian',
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 16,
+            color: ColorUtils.slate500,
+          ),
+          isDense: true,
+          style: TextStyle(
+            fontSize: 12,
+            color: ColorUtils.slate700,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _isWeekly = newValue == 'Pekanan';
+              });
+            }
+          },
+          items: ['Harian', 'Pekanan'].map<DropdownMenuItem<String>>((
+            String value,
+          ) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMonthDropdown() {
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: ColorUtils.slate200),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedMonth,
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 14,
+            color: ColorUtils.slate500,
+          ),
+          isDense: true,
+          style: TextStyle(
+            fontSize: 10,
+            color: ColorUtils.slate700,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: (String? newValue) {
+            if (newValue != null && newValue != _selectedMonth) {
+              setState(() {
+                _selectedMonth = newValue;
+              });
+              _fetchData();
+            }
+          },
+          items: _months.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeekDropdown() {
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: ColorUtils.slate200),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedWeek,
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 14,
+            color: ColorUtils.slate500,
+          ),
+          isDense: true,
+          style: TextStyle(
+            fontSize: 10,
+            color: ColorUtils.slate700,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: (String? newValue) {
+            if (newValue != null && newValue != _selectedWeek) {
+              setState(() {
+                _selectedWeek = newValue;
+              });
+              _fetchData();
+            }
+          },
+          items: _weeks.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
