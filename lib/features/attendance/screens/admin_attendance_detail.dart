@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
 class AdminAbsensiDetailPage extends StatefulWidget {
@@ -78,7 +79,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
       // 2. Load students by class ID (from widget parameter)
       List<dynamic> siswaData;
       if (widget.classId.isNotEmpty) {
-        siswaData = await ApiStudentService.getStudentByClass(
+        siswaData = await getIt<ApiStudentService>().getStudentByClass(
           widget.classId,
           academicYearId: widget.academicYearId,
         );
@@ -88,17 +89,17 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
         if (absensiData.isNotEmpty) {
           final classIdFromData = absensiData.first['class_id']?.toString();
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
-            siswaData = await ApiStudentService.getStudentByClass(
+            siswaData = await getIt<ApiStudentService>().getStudentByClass(
               classIdFromData,
               academicYearId: widget.academicYearId,
             );
             AppLogger.info('attendance', 'Loaded ${siswaData.length} students for class: $classIdFromData (from attendance data)',);
           } else {
-            siswaData = await ApiStudentService.getStudent();
+            siswaData = await getIt<ApiStudentService>().getStudent();
             AppLogger.info('attendance', 'Loaded all students (no class ID available)');
           }
         } else {
-          siswaData = await ApiStudentService.getStudent();
+          siswaData = await getIt<ApiStudentService>().getStudent();
           AppLogger.info('attendance', 'Loaded all students (no attendance data)');
         }
       }

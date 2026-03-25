@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// School settings hub screen - navigates to sub-settings pages.
 ///
@@ -79,13 +80,13 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_school_settings_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_school_settings_admin', {'should_show': false});
         return true;

@@ -35,9 +35,9 @@ class TeacherDetailScreen extends StatefulWidget {
 /// - [_subjects] - all subjects for reference/mapping
 /// - [_isLoading] / [_errorMessage] - loading and error states
 class TeacherDetailScreenState extends State<TeacherDetailScreen> {
-  final ApiTeacherService apiTeacherService = ApiTeacherService();
+  final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
   final ApiClassService apiClassService = getIt<ApiClassService>();
-  final ApiSubjectService apiSubjectService = ApiSubjectService();
+  final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
 
   Map<String, dynamic>? _teacherDetail;
   List<dynamic> _subjects = [];

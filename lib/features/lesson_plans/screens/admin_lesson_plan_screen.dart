@@ -27,6 +27,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Admin lesson plan (RPP) review screen with drill-down navigation.
 ///
@@ -534,7 +535,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
       }
 
       // Step 2: Fetch fresh from API
-      final result = await ApiTeacherService.getTeachersPaginated(
+      final result = await getIt<ApiTeacherService>().getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         search: _searchController.text.isNotEmpty
@@ -1607,13 +1608,13 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_rpp_screen_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_rpp_screen_admin', {'should_show': false});
         return true;

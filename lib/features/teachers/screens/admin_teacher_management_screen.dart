@@ -57,8 +57,8 @@ class TeacherAdminScreen extends StatefulWidget {
 /// Listens to AcademicYearProvider and FCM sync triggers.
 /// setState() triggers re-render like Vue's reactivity system.
 class TeacherAdminScreenState extends State<TeacherAdminScreen> {
-  final ApiTeacherService _teacherService = ApiTeacherService();
-  final ApiSubjectService _subjectService = ApiSubjectService();
+  final ApiTeacherService _teacherService = getIt<ApiTeacherService>();
+  final ApiSubjectService _subjectService = getIt<ApiSubjectService>();
   List<dynamic> _teachers = [];
   List<dynamic> _subjects = [];
   List<dynamic> _classes = [];
@@ -203,7 +203,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         AppLogger.error('teacher', 'Teacher filter cache load failed: $e');
       }
 
-      final response = await ApiTeacherService.getTeacherFilterOptions(
+      final response = await getIt<ApiTeacherService>().getTeacherFilterOptions(
         academicYearId: academicYearId,
       );
 
@@ -958,7 +958,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       // If showing all teachers, ignore academic year
       final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
 
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedHomeroomFilter == 'wali_kelas'
@@ -1066,7 +1066,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
 
       // Load next page
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedHomeroomFilter == 'wali_kelas'
@@ -1129,7 +1129,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
 
       // Fetch all teachers with current filters
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         page: 1,
         limit: 10000, // Fetch all data
         classId: _selectedClassId,
@@ -1181,7 +1181,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         AppLogger.debug('teacher', 'Import teachers - picked file: ${pickedFile.path}, size: ${await pickedFile.length()} bytes',);
 
         try {
-          final response = await ApiTeacherService.importTeachersFromExcel(
+          final response = await getIt<ApiTeacherService>().importTeachersFromExcel(
             pickedFile,
           );
           AppLogger.debug('teacher', 'Import response: $response');
@@ -2936,13 +2936,13 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_teacher_admin_screen_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_teacher_admin_screen_admin', {'should_show': false});
         }
         return true;

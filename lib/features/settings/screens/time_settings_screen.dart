@@ -53,7 +53,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
     setState(() => _isLoadingTime = true);
     try {
       final futures = await Future.wait([
-        ApiScheduleService.getHari(),
+        getIt<ApiScheduleService>().getHari(),
         getIt<ApiSettingsService>().getLessonHourSettings(),
       ]);
 

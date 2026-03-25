@@ -19,6 +19,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// RPP detail viewer with inline editing and AI regeneration.
 ///
@@ -138,7 +139,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
     setState(() => _isLoadingLimits = true);
     try {
-      final result = await ApiSubjectService.getRppRegenLimits(rppId);
+      final result = await getIt<ApiSubjectService>().getRppRegenLimits(rppId);
       if (mounted) {
         setState(() {
           _regenLimits = (result is Map<String, dynamic>)
@@ -352,7 +353,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     setState(() => _regeneratingField = fieldKey);
 
     try {
-      final response = await ApiSubjectService.regenRppFieldRaw(
+      final response = await getIt<ApiSubjectService>().regenRppFieldRaw(
         rppId,
         fieldKey,
         additionalText: additionalText.isNotEmpty ? additionalText : null,
@@ -462,7 +463,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       }
 
       try {
-        final response = await ApiSubjectService.regenRppFieldRaw(
+        final response = await getIt<ApiSubjectService>().regenRppFieldRaw(
           rppId,
           fieldKey,
           additionalText: additionalText.isNotEmpty ? additionalText : null,
@@ -522,7 +523,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       if (!mounted) return;
 
       try {
-        final response = await ApiSubjectService.pollAiJob(jobId, token);
+        final response = await getIt<ApiSubjectService>().pollAiJob(jobId, token);
         // Dio auto-decodes JSON
         final body = response.data is Map<String, dynamic>
             ? response.data as Map<String, dynamic>
@@ -582,7 +583,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       if (!mounted) return;
 
       try {
-        final response = await ApiSubjectService.pollAiJob(jobId, token);
+        final response = await getIt<ApiSubjectService>().pollAiJob(jobId, token);
         // Dio auto-decodes JSON
         final body = response.data is Map<String, dynamic>
             ? response.data as Map<String, dynamic>
@@ -974,7 +975,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         return '';
       }
 
-      await ApiSubjectService.saveRPP({
+      await getIt<ApiSubjectService>().saveRPP({
         'teacher_id': fallback(['teacher_id', 'guru_id']),
         'subject_id': fallback(['subject_id', 'mata_pelajaran_id']),
         'class_id': fallback(['class_id']),

@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Shows AI-generated learning recommendations for a student in a class.
 ///
@@ -114,7 +115,7 @@ class _LearningRecommendationResultScreenState
 
       AppLogger.debug('recommendation', 'Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId');
 
-      final response = await ApiRecommendationService.getRecommendations(
+      final response = await getIt<ApiRecommendationService>().getRecommendations(
         teacherId: teacherId,
         classId: classId,
         studentId: studentId,
@@ -211,13 +212,13 @@ class _LearningRecommendationResultScreenState
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_recommendation_result_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_recommendation_result_screen_guru', {'should_show': false});
         }
         return true;

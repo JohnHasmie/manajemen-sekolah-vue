@@ -69,6 +69,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
 ///
@@ -259,7 +260,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   /// Pre-fetch tour status early (called in parallel with data loading).
   Future<void> _prefetchTourStatus() async {
     try {
-      final status = await ApiTourService.getTourStatus(
+      final status = await getIt<ApiTourService>().getTourStatus(
         platform: 'mobile',
         role: _effectiveRole,
         name: 'dashboard_tour',
@@ -286,7 +287,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       if (_effectiveRole == 'admin') {
         // Student management tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'student_management_tour',
@@ -300,7 +301,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Teacher admin tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'teacher_admin_tour',
@@ -314,7 +315,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Class management tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'admin_class_management_tour',
@@ -328,7 +329,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Subject management tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'subject_management_tour',
@@ -342,7 +343,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Teaching schedule management tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'teaching_schedule_management_tour',
@@ -356,7 +357,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Announcement tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'admin_announcement_tour',
@@ -370,7 +371,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Class activity tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'admin_class_activity_tour',
@@ -384,7 +385,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Presence report tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'admin_presence_report_tour',
@@ -398,7 +399,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // RPP screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'admin_rpp_screen_tour',
@@ -412,7 +413,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Raport screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'admin_raport_screen_tour',
@@ -426,7 +427,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Finance screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'admin_finance_screen_tour',
@@ -440,7 +441,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // School settings tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'admin',
             name: 'admin_school_settings_tour',
@@ -457,7 +458,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       if (_effectiveRole == 'guru') {
         // Input grade tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'input_grade_tour',
@@ -471,7 +472,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Teaching schedule tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'teaching_schedule_tour',
@@ -485,7 +486,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Class activity tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'class_activity_tour',
@@ -499,7 +500,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Presence teacher tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'presence_teacher_tour',
@@ -513,7 +514,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Materi screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'materi_screen_tour',
@@ -527,7 +528,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Rekap nilai tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'rekap_nilai_tour',
@@ -541,7 +542,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Raport screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'raport_screen_tour',
@@ -555,7 +556,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Raport detail screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'raport_detail_screen_tour',
@@ -569,7 +570,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // RPP screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'rpp_screen_tour',
@@ -583,7 +584,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Announcement screen tour (guru)
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'walimurid',
             name: 'announcement_screen_tour',
@@ -597,7 +598,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Learning recommendation class screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'learning_recommendation_class_tour',
@@ -611,7 +612,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Learning recommendation student screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'learning_recommendation_student_tour',
@@ -625,7 +626,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Learning recommendation result screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'guru',
             name: 'learning_recommendation_result_tour',
@@ -642,7 +643,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       if (_effectiveRole == 'wali') {
         // Announcement screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'walimurid',
             name: 'announcement_screen_tour',
@@ -656,7 +657,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Parent class activity screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'wali',
             name: 'parent_class_activity_screen_tour',
@@ -670,7 +671,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Parent grade screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'wali',
             name: 'parent_grade_screen_tour',
@@ -684,7 +685,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Parent billing screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'wali',
             name: 'parent_billing_screen_tour',
@@ -698,7 +699,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         // Parent presence screen tour
         futures.add(
-          ApiTourService.getTourStatus(
+          getIt<ApiTourService>().getTourStatus(
             platform: 'mobile',
             role: 'wali',
             name: 'parent_presence_screen_tour',
@@ -741,7 +742,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
       },
       onClickTarget: (target) {
@@ -749,7 +750,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         return true;
       },
@@ -954,7 +955,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<void> _loadSemesterLabel() async {
     try {
-      final result = await ApiScheduleService.getDateBasedSemester();
+      final result = await getIt<ApiScheduleService>().getDateBasedSemester();
       if (mounted && result.containsKey('label')) {
         setState(() {
           _currentSemesterLabel = result['label'];
@@ -979,7 +980,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ttl: const Duration(hours: 12),
       );
       if (cachedSemester == null) {
-        final semesterData = await ApiScheduleService.getSemester();
+        final semesterData = await getIt<ApiScheduleService>().getSemester();
         if (semesterData.isNotEmpty) {
           LocalCacheService.save('school_semester_data', semesterData);
           AppLogger.debug('dashboard', 'Pre-cached semester data');
@@ -992,7 +993,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ttl: const Duration(hours: 24),
       );
       if (cachedDays == null) {
-        final dayData = await ApiScheduleService.getHari();
+        final dayData = await getIt<ApiScheduleService>().getHari();
         if (dayData.isNotEmpty) {
           LocalCacheService.save('school_day_data', dayData);
           AppLogger.debug('dashboard', 'Pre-cached day data');
@@ -1124,7 +1125,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         try {
           // Fetch Teacher Record
-          final teacherData = await ApiTeacherService.getGuruByUserId(
+          final teacherData = await getIt<ApiTeacherService>().getGuruByUserId(
             userId,
             academicYearId: academicYearId,
           );
@@ -1159,7 +1160,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             // Fetch Homeroom Classes using specialized Teacher ID endpoint
             // This is more robust as it handles both User/Teacher IDs and returns is_homeroom flag.
             AppLogger.debug('dashboard', 'Fetching Classes via Teacher endpoint for ID: $teacherId',);
-            final classesResponse = await ApiTeacherService.getTeacherClasses(
+            final classesResponse = await getIt<ApiTeacherService>().getTeacherClasses(
               teacherId,
               academicYearId: academicYearId,
             );
@@ -1501,7 +1502,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       final userData = _userData;
       final guardianEmail = userData['email'];
 
-      final allStudents = await ApiStudentService.getStudent(
+      final allStudents = await getIt<ApiStudentService>().getStudent(
         userId: parentId,
         guardianEmail: guardianEmail,
       );

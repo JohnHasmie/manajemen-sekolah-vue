@@ -32,6 +32,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// The grade book table page (Step 2) -- displays and edits student grades
 /// in a spreadsheet-like view.
@@ -342,7 +343,7 @@ class GradeBookPageState extends State<GradeBookPage> {
 
       // ─── Step 2: No cache — fetch fresh from API ───
       // 1. Load siswa berdasarkan kelas
-      final siswaData = await ApiStudentService.getStudentByClass(
+      final siswaData = await getIt<ApiStudentService>().getStudentByClass(
         widget.classData['id'],
       );
 
@@ -2487,13 +2488,13 @@ class GradeBookPageState extends State<GradeBookPage> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_input_grade_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_input_grade_screen_guru', {'should_show': false});
         }
         return true;

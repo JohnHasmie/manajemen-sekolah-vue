@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Caches teacher-related data fetched by the dashboard so other screens
 /// can consume it without making redundant API calls.
@@ -131,7 +132,7 @@ class TeacherProvider extends ChangeNotifier {
         resolvedTeacherId = userData['teacher_id'].toString();
       } else {
         // Fetch from API
-        final teacherRecord = await ApiTeacherService.getGuruByUserId(
+        final teacherRecord = await getIt<ApiTeacherService>().getGuruByUserId(
           id,
           academicYearId: academicYearId,
         );
@@ -145,7 +146,7 @@ class TeacherProvider extends ChangeNotifier {
         _teacherId = resolvedTeacherId;
 
         // Fetch classes
-        final classes = await ApiTeacherService.getTeacherClasses(
+        final classes = await getIt<ApiTeacherService>().getTeacherClasses(
           resolvedTeacherId,
           academicYearId: academicYearId,
         );

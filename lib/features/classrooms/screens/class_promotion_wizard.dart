@@ -202,7 +202,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
 
   Future<void> _fetchTeachers() async {
     try {
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         limit: 1000,
       );
       if (!mounted) return;

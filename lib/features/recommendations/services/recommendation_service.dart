@@ -30,15 +30,15 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 class ApiRecommendationService {
   /// Base URL for the AI microservice. Separate from the main Laravel API.
   /// Like having a second `API_BASE_URL` in your Laravel `.env` file.
-  static const String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
+  final String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
 
   /// Lazily-initialized Dio instance dedicated to the AI microservice.
   /// Configured with Bearer-token-only auth (no X-School-ID).
-  static Dio? _aiDioInstance;
+  Dio? _aiDioInstance;
 
   /// Returns the AI-specific Dio instance, creating it on first call.
   /// Like a Laravel Http::withOptions() macro for the AI service.
-  static Dio get _aiDio {
+  Dio get _aiDio {
     _aiDioInstance ??= Dio(
       BaseOptions(
         baseUrl: _aiBaseUrl,
@@ -60,7 +60,7 @@ class ApiRecommendationService {
 
   /// Generate recommendations for a class
   /// Returns 202 with job_id for async processing, or 200 with data
-  static Future<Map<String, dynamic>> generateForClass({
+  Future<Map<String, dynamic>> generateForClass({
     required String teacherId,
     required String classId,
     required String subjectId,
@@ -112,7 +112,7 @@ class ApiRecommendationService {
   }
 
   /// Generate recommendations for a single student
-  static Future<Map<String, dynamic>> generateForStudent({
+  Future<Map<String, dynamic>> generateForStudent({
     required String teacherId,
     required String classId,
     required String subjectId,
@@ -156,7 +156,7 @@ class ApiRecommendationService {
   }
 
   /// List recommendations with filters (paginated)
-  static Future<Map<String, dynamic>> getRecommendations({
+  Future<Map<String, dynamic>> getRecommendations({
     String? teacherId,
     String? classId,
     String? studentId,
@@ -197,7 +197,7 @@ class ApiRecommendationService {
   }
 
   /// Get recommendation detail
-  static Future<Map<String, dynamic>> getRecommendationDetail(
+  Future<Map<String, dynamic>> getRecommendationDetail(
     String recommendationId,
   ) async {
     final response = await _aiDio.get(
@@ -211,7 +211,7 @@ class ApiRecommendationService {
   }
 
   /// Update recommendation status
-  static Future<Map<String, dynamic>> updateStatus({
+  Future<Map<String, dynamic>> updateStatus({
     required String recommendationId,
     required String status, // pending, in_progress, completed, dismissed
     String? teacherNotes,
@@ -231,7 +231,7 @@ class ApiRecommendationService {
   }
 
   /// Get class summary (aggregated recommendations by category/priority/status)
-  static Future<Map<String, dynamic>> getClassSummary(String classId) async {
+  Future<Map<String, dynamic>> getClassSummary(String classId) async {
     try {
       final response = await _aiDio.get(
         '/recommendations/class/$classId/summary',
@@ -260,7 +260,7 @@ class ApiRecommendationService {
 
   /// Poll an AI job until completion
   /// Returns the completed job data or throws on failure
-  static Future<Map<String, dynamic>> pollJobUntilComplete(
+  Future<Map<String, dynamic>> pollJobUntilComplete(
     String jobId, {
     Duration interval = const Duration(seconds: 5),
     int maxAttempts = 60,

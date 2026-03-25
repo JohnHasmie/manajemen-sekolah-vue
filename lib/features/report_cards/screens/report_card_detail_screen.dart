@@ -149,7 +149,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       }
       return '1';
     }
-    final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+    final dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
     if (dateBasedSemester.isNotEmpty) {
       await LocalCacheService.save('school_day_data', dateBasedSemester);
     }
@@ -1332,13 +1332,13 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_raport_detail_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_raport_detail_screen_guru', {'should_show': false});
         }
         return true;

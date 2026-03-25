@@ -32,6 +32,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Teaching material browser with subject, chapter, and sub-chapter navigation.
 ///
@@ -288,7 +289,7 @@ class MateriPageState extends State<MateriPage> {
 
     // Fetch from API with classId filter
     try {
-      final apiTeacherService = ApiTeacherService();
+      final apiTeacherService = getIt<ApiTeacherService>();
       final subjects = await apiTeacherService.getSubjectByTeacher(teacherId, classId: classId);
       if (!mounted) return;
 
@@ -427,7 +428,7 @@ class MateriPageState extends State<MateriPage> {
         setState(() => _isLoading = true);
       }
 
-      final ApiTeacherService apiTeacherService = ApiTeacherService();
+      final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
 
       // ─── Step 4: No cache — fetch from API ───
       // Parallelize getTeacherClasses + getTeacherById when both needed
@@ -471,7 +472,7 @@ class MateriPageState extends State<MateriPage> {
 
         if (stillNeedClasses || stillNeedProfile) {
           final List<Future> teacherFutures = [];
-          if (stillNeedClasses) teacherFutures.add(ApiTeacherService.getTeacherClasses(teacherId));
+          if (stillNeedClasses) teacherFutures.add(getIt<ApiTeacherService>().getTeacherClasses(teacherId));
           if (stillNeedProfile) teacherFutures.add(apiTeacherService.getTeacherById(teacherId));
 
           final results = await Future.wait(teacherFutures);
@@ -538,7 +539,7 @@ class MateriPageState extends State<MateriPage> {
       // Fetch subjects filtered by selected class + materi in parallel
       final List<Future> futures = [
         apiTeacherService.getSubjectByTeacher(teacherId, classId: selectedClassId),
-        ApiSubjectService.getMateri(teacherId: teacherId),
+        getIt<ApiSubjectService>().getMateri(teacherId: teacherId),
       ];
 
       final results = await Future.wait(futures);
@@ -653,7 +654,7 @@ class MateriPageState extends State<MateriPage> {
         return;
       }
 
-      final babMateri = await ApiSubjectService.getBabMateri(
+      final babMateri = await getIt<ApiSubjectService>().getBabMateri(
         subjectId: masterSubjectId,
       );
       if (!mounted) return;
@@ -796,7 +797,7 @@ class MateriPageState extends State<MateriPage> {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null) return;
 
-      final progress = await ApiSubjectService.getMateriProgress(
+      final progress = await getIt<ApiSubjectService>().getMateriProgress(
         teacherId: teacherId,
         subjectId: subjectId,
         classId: _selectedClassId,
@@ -870,7 +871,7 @@ class MateriPageState extends State<MateriPage> {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null || _selectedSubject == null) return;
 
-      await ApiSubjectService.saveMateriProgress({
+      await getIt<ApiSubjectService>().saveMateriProgress({
         'teacher_id': teacherId,
         'subject_id': _selectedSubject,
         'class_id': _selectedClassId,
@@ -928,7 +929,7 @@ class MateriPageState extends State<MateriPage> {
       }
 
       // Batch save
-      await ApiSubjectService.batchSaveMateriProgress({
+      await getIt<ApiSubjectService>().batchSaveMateriProgress({
         'guru_id': teacherId,
         'mata_pelajaran_id': _selectedSubject,
         'class_id': _selectedClassId,
@@ -1804,13 +1805,13 @@ class MateriPageState extends State<MateriPage> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_materi_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_materi_screen_guru', {'should_show': false});
         }
         return true;
@@ -1975,7 +1976,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
     if (mounted) setState(() => _isLoading = true);
 
     try {
-      final kontenMateri = await ApiSubjectService.getContentMateri(
+      final kontenMateri = await getIt<ApiSubjectService>().getContentMateri(
         subBabId: widget.subBab['id'].toString(),
       );
       if (!mounted) return;
@@ -2018,7 +2019,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
       Map<String, dynamic>? aiData;
 
       try {
-        final cacheResult = await ApiSubjectService.checkMaterialCache(
+        final cacheResult = await getIt<ApiSubjectService>().checkMaterialCache(
           teacherId: widget.teacherId,
           chapterId: widget.bab['id'].toString(),
           subChapterId: widget.subBab['id'].toString(),
@@ -2036,7 +2037,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
 
           if (isCached && materialId != null) {
             final materialResult =
-                await ApiSubjectService.getGeneratedMaterial(materialId);
+                await getIt<ApiSubjectService>().getGeneratedMaterial(materialId);
             if (!mounted) return;
 
             final data = materialResult is Map
@@ -2054,7 +2055,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
       // Fallback: use list endpoint if check-cache failed
       if (aiData == null && mounted) {
         try {
-          final listResult = await ApiSubjectService.listGeneratedMaterials(
+          final listResult = await getIt<ApiSubjectService>().listGeneratedMaterials(
             teacherId: widget.teacherId,
             chapterId: widget.bab['id'].toString(),
           );
@@ -2083,7 +2084,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
               final materialId = match['id']?.toString();
               if (materialId != null) {
                 final materialResult =
-                    await ApiSubjectService.getGeneratedMaterial(materialId);
+                    await getIt<ApiSubjectService>().getGeneratedMaterial(materialId);
                 if (!mounted) return;
 
                 final data = materialResult is Map

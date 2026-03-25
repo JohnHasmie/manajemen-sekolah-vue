@@ -18,6 +18,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Parent's report card list -- shows children with semester selector.
 ///
@@ -76,7 +77,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
     if (cached != null && cached is Map<String, dynamic>) {
       dateBasedSemester = cached;
     } else {
-      dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
       // Non-blocking save
       LocalCacheService.save('school_day_data', dateBasedSemester);
     }

@@ -198,7 +198,7 @@ class ScheduleFormDialogState extends State<ScheduleFormDialog> {
     }
 
     try {
-      final response = await ApiScheduleService.getSchedulesPaginated(
+      final response = await getIt<ApiScheduleService>().getSchedulesPaginated(
         classId: _selectedClass,
         hariId: _selectedDayIds.first,
         semesterId: _selectedSemester,

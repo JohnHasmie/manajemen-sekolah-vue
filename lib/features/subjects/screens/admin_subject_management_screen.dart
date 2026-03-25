@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Admin subject management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -127,7 +128,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
   Future<void> _loadMasterSubjects() async {
     try {
-      final data = await ApiSubjectService.getAllMasterSubjects();
+      final data = await getIt<ApiSubjectService>().getAllMasterSubjects();
       if (kDebugMode) {
         AppLogger.info('subject', 'Master Subjects Loaded: ${data.length} items');
         if (data.isNotEmpty) {
@@ -165,7 +166,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
   Future<void> _loadFilterOptions() async {
     try {
-      final response = await ApiSubjectService.getSubjectFilterOptions();
+      final response = await getIt<ApiSubjectService>().getSubjectFilterOptions();
 
       if (!mounted) return;
 
@@ -858,7 +859,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       }
 
       // ─── Step 2: Fetch fresh data from API ───
-      final response = await ApiSubjectService.getSubjectsPaginated(
+      final response = await getIt<ApiSubjectService>().getSubjectsPaginated(
         page: _currentPage,
         limit: _perPage,
         status: _selectedStatusFilter,
@@ -933,7 +934,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
     try {
       _currentPage++;
 
-      final response = await ApiSubjectService.getSubjectsPaginated(
+      final response = await getIt<ApiSubjectService>().getSubjectsPaginated(
         page: _currentPage,
         limit: _perPage,
         status: _selectedStatusFilter,
@@ -1016,7 +1017,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       );
 
       if (result != null && result.files.single.path != null) {
-        await ApiSubjectService.importSubjectFromExcel(
+        await getIt<ApiSubjectService>().importSubjectFromExcel(
           File(result.files.single.path!),
         );
 
@@ -1489,7 +1490,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
                                         try {
                                           if (subject == null) {
-                                            await ApiSubjectService.addSubject({
+                                            await getIt<ApiSubjectService>().addSubject({
                                               'name': nameController.text,
                                               'code': codeController.text,
                                               'description':
@@ -1499,7 +1500,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                                               'is_active': isActive,
                                             });
                                           } else {
-                                            await ApiSubjectService.updateSubject(
+                                            await getIt<ApiSubjectService>().updateSubject(
                                               subject['id'],
                                               {
                                                 'name': nameController.text,
@@ -1669,7 +1670,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
     if (confirmed == true) {
       try {
-        await ApiSubjectService.deleteSubject(subject['id']);
+        await getIt<ApiSubjectService>().deleteSubject(subject['id']);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -2398,12 +2399,12 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         return true;
       },
@@ -2683,7 +2684,7 @@ class SubjectClassManagementPageState
 
   Future<void> addClassToSubject(Map<String, dynamic> kelas) async {
     try {
-      await ApiSubjectService.attachClass(
+      await getIt<ApiSubjectService>().attachClass(
         widget.subject['id'].toString(),
         kelas['id'].toString(),
       );
@@ -2721,7 +2722,7 @@ class SubjectClassManagementPageState
 
     if (confirmed == true) {
       try {
-        await ApiSubjectService.detachClass(
+        await getIt<ApiSubjectService>().detachClass(
           widget.subject['id'].toString(),
           kelas['id'].toString(),
         );

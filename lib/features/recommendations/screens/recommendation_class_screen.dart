@@ -20,6 +20,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_student_screen.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
@@ -123,7 +124,7 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final apiTeacherService = ApiTeacherService();
+      final apiTeacherService = getIt<ApiTeacherService>();
       final profileData = await apiTeacherService.getTeacherById(userId);
       if (profileData != null) {
         _teacherProfileId = profileData['id']?.toString();
@@ -164,7 +165,7 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final summary = await ApiRecommendationService.getClassSummary(classId);
+      final summary = await getIt<ApiRecommendationService>().getClassSummary(classId);
       if (mounted) {
         setState(() {
           _classSummaries[classId] = summary['data'] ?? {};
@@ -206,7 +207,7 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final result = await ApiRecommendationService.getRecommendations(
+      final result = await getIt<ApiRecommendationService>().getRecommendations(
         teacherId: _effectiveTeacherId,
         classId: classId,
         perPage: 50,
@@ -304,7 +305,7 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final schedules = await ApiScheduleService.getScheduleByTeacher(
+      final schedules = await getIt<ApiScheduleService>().getScheduleByTeacher(
         teacherId: teacherIdForSchedule,
       );
       if (mounted) {
@@ -395,7 +396,7 @@ class _LearningRecommendationClassScreenState
     AppLogger.debug('recommendation', '   className: $className');
 
     try {
-      final result = await ApiRecommendationService.generateForClass(
+      final result = await getIt<ApiRecommendationService>().generateForClass(
         teacherId: _effectiveTeacherId,
         classId: classId,
         subjectId: selectedSubject['id'] ?? '',
@@ -413,7 +414,7 @@ class _LearningRecommendationClassScreenState
           );
 
           try {
-            await ApiRecommendationService.pollJobUntilComplete(
+            await getIt<ApiRecommendationService>().pollJobUntilComplete(
               jobId,
               onProgress: (status, attempt) {
                 AppLogger.debug('recommendation', 'Job $jobId: $status (attempt $attempt)');
@@ -650,13 +651,13 @@ class _LearningRecommendationClassScreenState
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_recommendation_class_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_recommendation_class_screen_guru', {'should_show': false});
         }
         return true;

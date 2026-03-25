@@ -186,13 +186,13 @@ class FinanceScreenState extends State<FinanceScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_finance_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_finance_admin', {'should_show': false});
         return true;

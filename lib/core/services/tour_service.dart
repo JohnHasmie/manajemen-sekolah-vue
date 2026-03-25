@@ -7,17 +7,13 @@
 library;
 
 import 'package:manajemensekolah/core/network/dio_client.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 
 /// Service for onboarding tour API calls.
 /// Like a small Laravel controller with status/complete/save-progress actions.
 /// In Vue terms, this is a simple store module for managing first-time user guidance.
 class ApiTourService {
-  /// Base URL from central config.
-  static String get baseUrl => ApiService.baseUrl;
-
   /// Check if the authenticated user should see the tour.
-  static Future<Map<String, dynamic>> getTourStatus({
+  Future<Map<String, dynamic>> getTourStatus({
     required String platform,
     required String role,
     required String name,
@@ -35,7 +31,7 @@ class ApiTourService {
   }
 
   /// Mark tour as completed.
-  static Future<Map<String, dynamic>> completeTour({
+  Future<Map<String, dynamic>> completeTour({
     required String tourId,
     required String platform,
   }) async {
@@ -48,7 +44,7 @@ class ApiTourService {
   }
 
   /// Save tour progress (last step reached).
-  static Future<Map<String, dynamic>> saveTourProgress({
+  Future<Map<String, dynamic>> saveTourProgress({
     required String tourId,
     required String platform,
     required int lastStep,

@@ -235,7 +235,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
 
     try {
       final results = await Future.wait([
-        ApiSubjectService()
+        getIt<ApiSubjectService>()
             .getSubject()
             .then((value) {
               AppLogger.info('attendance', 'Subjects loaded: ${value.length}');
@@ -259,11 +259,11 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
               AppLogger.error('attendance', 'Error loading classes: $e');
               return [];
             }),
-        ApiTeacherService().getTeacher().catchError((e) {
+        getIt<ApiTeacherService>().getTeacher().catchError((e) {
           AppLogger.error('attendance', 'Error loading teachers: $e');
           return [];
         }),
-        ApiScheduleService.getJamPelajaran().catchError((e) {
+        getIt<ApiScheduleService>().getJamPelajaran().catchError((e) {
           AppLogger.error('attendance', 'Error loading lesson hours: $e');
           return [];
         }),
@@ -3031,7 +3031,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_presence_report_admin', {'should_show': false});
       },
@@ -3040,7 +3040,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_presence_report_admin', {'should_show': false});
         return true;
@@ -3298,7 +3298,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
       // 2. Load students by class ID (from widget parameter)
       List<dynamic> siswaData;
       if (widget.classId.isNotEmpty) {
-        siswaData = await ApiStudentService.getStudentByClass(
+        siswaData = await getIt<ApiStudentService>().getStudentByClass(
           widget.classId,
           academicYearId: widget.academicYearId,
         );
@@ -3308,17 +3308,17 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
         if (absensiData.isNotEmpty) {
           final classIdFromData = absensiData.first['class_id']?.toString();
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
-            siswaData = await ApiStudentService.getStudentByClass(
+            siswaData = await getIt<ApiStudentService>().getStudentByClass(
               classIdFromData,
               academicYearId: widget.academicYearId,
             );
             AppLogger.info('attendance', 'Loaded ${siswaData.length} students for class: $classIdFromData (from attendance data)',);
           } else {
-            siswaData = await ApiStudentService.getStudent();
+            siswaData = await getIt<ApiStudentService>().getStudent();
             AppLogger.info('attendance', 'Loaded all students (no class ID available)');
           }
         } else {
-          siswaData = await ApiStudentService.getStudent();
+          siswaData = await getIt<ApiStudentService>().getStudent();
           AppLogger.info('attendance', 'Loaded all students (no attendance data)');
         }
       }

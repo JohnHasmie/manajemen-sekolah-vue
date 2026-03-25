@@ -724,7 +724,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                 resolvedTeacherId = teacherProvider.teacherId;
               } else {
                 // Last resort: direct API call
-                final teacherData = await ApiTeacherService.getGuruByUserId(
+                final teacherData = await getIt<ApiTeacherService>().getGuruByUserId(
                   userId,
                   academicYearId: academicYearId,
                 );
@@ -844,7 +844,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         );
         classes = response['data'] ?? [];
       } else {
-        classes = await ApiTeacherService.getTeacherClasses(
+        classes = await getIt<ApiTeacherService>().getTeacherClasses(
           teacherId,
           academicYearId: academicYearId,
         );
@@ -889,7 +889,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final scheduleData = await ApiScheduleService.getScheduleByTeacher(
+      final scheduleData = await getIt<ApiScheduleService>().getScheduleByTeacher(
         teacherId: teacherId,
         academicYear: academicYearId,
       );
@@ -967,7 +967,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       final isAdmin = userRole == 'admin';
 
       // 1. Fetch MY subjects (subjects I teach in this class)
-      final mySchedules = await ApiScheduleService.getSchedulesPaginated(
+      final mySchedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
         limit: 100,
         teacherId: _teacherId,
         classId: _selectedClassId,
@@ -1361,7 +1361,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
     if (confirmed == true) {
       try {
-        await ApiClassActivityService.deleteKegiatan(activity['id'].toString());
+        await getIt<ApiClassActivityService>().deleteKegiatan(activity['id'].toString());
 
         if (!mounted) return;
 
@@ -1391,7 +1391,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         ) async {
           try {
             final response =
-                await ApiClassActivityService.getClassActivityPaginated(
+                await getIt<ApiClassActivityService>().getClassActivityPaginated(
                   page: 1,
                   limit: 1,
                   teacherId: _teacherId,
@@ -1430,7 +1430,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             // we need to check EACH sub-chapter in that chapter.
             else {
               // Get all sub-chapters for this chapter
-              final subChapters = await ApiSubjectService.getSubBabMateri(
+              final subChapters = await getIt<ApiSubjectService>().getSubBabMateri(
                 babId: activity['chapter_id'].toString(),
               );
 
@@ -1507,7 +1507,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
         if (progressItems.isNotEmpty) {
           try {
-            await ApiSubjectService.batchSaveMateriProgress({
+            await getIt<ApiSubjectService>().batchSaveMateriProgress({
               'guru_id': _teacherId,
               'mata_pelajaran_id':
                   activity['subject_id'] ?? activity['mata_pelajaran_id'],
@@ -2801,7 +2801,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   // Method helpers for API to avoid errors if they were deleted
   Future<void> _loadMaterials(String subjectId) async {
     try {
-      final materials = await ApiSubjectService.getMateri();
+      final materials = await getIt<ApiSubjectService>().getMateri();
       setState(() {
         _chapterList = materials;
         _subChapterList = [];
@@ -2813,7 +2813,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   Future<void> _loadSubChapterMaterials(String chapterId) async {
     try {
-      final subMaterials = await ApiSubjectService.getSubBabMateri(
+      final subMaterials = await getIt<ApiSubjectService>().getSubBabMateri(
         babId: chapterId,
       );
       setState(() {
@@ -2839,7 +2839,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiClassActivityService.getClassActivityPaginated(
+      final response = await getIt<ApiClassActivityService>().getClassActivityPaginated(
         page: _currentPage,
         limit: _perPage,
         teacherId: _teacherId,
@@ -2932,13 +2932,13 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_activity_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_activity_screen_guru', {'should_show': false});
         }
         return true;
@@ -3275,7 +3275,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     AppLogger.debug('class_activity', '[_loadStudents] Starting load for class: $_selectedClassId');
 
     try {
-      final students = await ApiClassActivityService.getSiswaByKelas(
+      final students = await getIt<ApiClassActivityService>().getSiswaByKelas(
         _selectedClassId!,
       );
 
@@ -3332,7 +3332,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         return;
       }
 
-      final babList = await ApiSubjectService.getBabMateri(
+      final babList = await getIt<ApiSubjectService>().getBabMateri(
         subjectId: masterSubjectId,
       );
 
@@ -3384,7 +3384,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       AppLogger.debug('class_activity', '===== LOADING SUB BAB MATERI =====');
       AppLogger.debug('class_activity', 'Bab ID: $babId');
 
-      final subBabList = await ApiSubjectService.getSubBabMateri(babId: babId);
+      final subBabList = await getIt<ApiSubjectService>().getSubBabMateri(babId: babId);
 
       if (kDebugMode) {
         AppLogger.debug('class_activity', 'API Response - Sub Bab count: ${subBabList.length}');
@@ -3712,13 +3712,13 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       // Call appropriate API based on mode
       if (widget.isEditMode && widget.activityData != null) {
         // Update existing activity
-        await ApiClassActivityService.updateKegiatan(
+        await getIt<ApiClassActivityService>().updateKegiatan(
           widget.activityData['id'].toString(),
           requestData,
         );
       } else {
         // Create new activity
-        await ApiClassActivityService.tambahKegiatan(requestData);
+        await getIt<ApiClassActivityService>().tambahKegiatan(requestData);
       }
 
       // Automatically mark material as generated (checked)
@@ -3727,9 +3727,9 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           // Construct items list for batchSaveMateriProgress
           // Auto-mark as checked (is_checked: true)
           // Note: batchSaveMateriProgress expects different key structure ('progress_items')
-          // but ApiSubjectService.batchSaveMateriProgress helper handles the mapping from our app structure
+          // but getIt<ApiSubjectService>().batchSaveMateriProgress helper handles the mapping from our app structure
           // We just need to match what the internal helper expects or call the API endpoint params directly?
-          // Let's check ApiSubjectService.batchSaveMateriProgress implementation again.
+          // Let's check getIt<ApiSubjectService>().batchSaveMateriProgress implementation again.
           // It takes {guru_id, mata_pelajaran_id, progress_items: [{bab_id, sub_bab_id, is_checked}]}
 
           final List<Map<String, dynamic>> progressItems = [
@@ -3777,7 +3777,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           AppLogger.debug('class_activity', 'Progress items: ${progressItems.length}');
           AppLogger.debug('class_activity', 'First item: ${progressItems.first}');
 
-          await ApiSubjectService.batchSaveMateriProgress({
+          await getIt<ApiSubjectService>().batchSaveMateriProgress({
             'guru_id': widget.teacherId,
             'mata_pelajaran_id': _selectedSubjectId,
             'class_id': _selectedClassId,

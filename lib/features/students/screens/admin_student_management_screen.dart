@@ -63,7 +63,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
   List<dynamic> _classList = [];
   bool _isLoading = true;
   String? _errorMessage;
-  final ApiStudentService apiStudentService = ApiStudentService();
+  final ApiStudentService apiStudentService = getIt<ApiStudentService>();
 
   final ScrollController _scrollController = ScrollController();
 
@@ -137,7 +137,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         return;
       }
 
-      final response = await ApiStudentService.getStudentFilterOptions();
+      final response = await getIt<ApiStudentService>().getStudentFilterOptions();
 
       if (!mounted) return;
 
@@ -205,7 +205,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         ),
       );
 
-      final response = await ApiStudentService.getStudentPaginated(
+      final response = await getIt<ApiStudentService>().getStudentPaginated(
         page: 1,
         limit: 10000, // Fetch all students (up to 10000)
         classId: _selectedClassIds.isNotEmpty ? _selectedClassIds.first : null,
@@ -252,7 +252,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       );
 
       if (result != null && result.files.single.path != null) {
-        await ApiStudentService.importStudentsFromExcel(
+        await getIt<ApiStudentService>().importStudentsFromExcel(
           File(result.files.single.path!),
         );
 
@@ -368,7 +368,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiStudentService.getStudentPaginated(
+      final response = await getIt<ApiStudentService>().getStudentPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedClassIds.isNotEmpty ? _selectedClassIds.first : null,
@@ -470,7 +470,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiStudentService.getStudentPaginated(
+      final response = await getIt<ApiStudentService>().getStudentPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedClassIds.isNotEmpty ? _selectedClassIds.first : null,
@@ -743,7 +743,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                   if (textEditingValue.text.length < 2) {
                                     return const Iterable<String>.empty();
                                   }
-                                  return await ApiStudentService.getGuardians(
+                                  return await getIt<ApiStudentService>().getGuardians(
                                     textEditingValue.text,
                                   );
                                 },
@@ -1669,7 +1669,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                       };
 
                                       if (isEdit) {
-                                        await ApiStudentService.updateStudent(
+                                        await getIt<ApiStudentService>().updateStudent(
                                           student['id'],
                                           data,
                                         );
@@ -1703,7 +1703,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                           Navigator.pop(context);
                                         }
                                       } else {
-                                        await ApiStudentService.addStudent(
+                                        await getIt<ApiStudentService>().addStudent(
                                           data,
                                         );
                                         await _loadData();
@@ -1931,7 +1931,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
 
     if (confirmed == true) {
       try {
-        await ApiStudentService.deleteStudent(student['id']);
+        await getIt<ApiStudentService>().deleteStudent(student['id']);
         await _loadData();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -2637,13 +2637,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_student_management_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_student_management_admin', {'should_show': false});
         }
         return true;

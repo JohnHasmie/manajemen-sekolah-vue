@@ -30,6 +30,7 @@ import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// RPP (lesson plan) list screen with CRUD, search, filter, and AI generation.
 ///
@@ -1465,13 +1466,13 @@ class RppScreenState extends State<RppScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_rpp_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_rpp_screen_guru', {'should_show': false});
         }
         return true;
@@ -2571,7 +2572,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
 
   Future<void> _loadBabByMataPelajaran(String subjectId) async {
     try {
-      final result = await ApiSubjectService.getBabMateri(subjectId: subjectId);
+      final result = await getIt<ApiSubjectService>().getBabMateri(subjectId: subjectId);
       setState(() {
         _babList = result;
       });
@@ -2584,7 +2585,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
 
   Future<void> _loadSubBabByBab(String babId) async {
     try {
-      final result = await ApiSubjectService.getSubBabMateri(babId: babId);
+      final result = await getIt<ApiSubjectService>().getSubBabMateri(babId: babId);
       setState(() {
         _subBabList = result;
       });

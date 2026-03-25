@@ -22,6 +22,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
 ///
@@ -159,7 +160,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
       }
 
       // Step 2: Fetch fresh from API
-      final apiTeacherService = ApiTeacherService();
+      final apiTeacherService = getIt<ApiTeacherService>();
       final teachers = await apiTeacherService.getTeacher();
 
       if (!mounted) return;
@@ -272,7 +273,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
+      final response = await getIt<ApiTeacherService>().getSubjectsByTeacherPaginated(
         teacherId: teacherId,
         academicYearId: academicYearId,
       );
@@ -349,7 +350,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiClassActivityService.getClassActivityPaginated(
+      final response = await getIt<ApiClassActivityService>().getClassActivityPaginated(
         teacherId: _selectedTeacherId,
         subjectId: subjectId,
         academicYearId: academicYearId,
@@ -1433,7 +1434,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_activity_admin', {'should_show': false});
         }
       },
@@ -1442,7 +1443,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_activity_admin', {'should_show': false});
         }
         return true;

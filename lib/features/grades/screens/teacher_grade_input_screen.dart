@@ -59,8 +59,8 @@ class GradePage extends StatefulWidget {
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class GradePageState extends State<GradePage> {
   // Services
-  final ApiSubjectService apiSubjectService = ApiSubjectService();
-  final ApiTeacherService apiTeacherService = ApiTeacherService();
+  final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
+  final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
 
   // State
   int _currentStep = 0; // 0: Class List, 1: Subject List, 2: Grade Book
@@ -260,7 +260,7 @@ class GradePageState extends State<GradePage> {
       List<dynamic> loadedClasses = [];
 
       if (isGuru) {
-        final response = await ApiTeacherService.getTeacherClasses(
+        final response = await getIt<ApiTeacherService>().getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
         );
@@ -400,7 +400,7 @@ class GradePageState extends State<GradePage> {
           !isGuru; // Assuming non-guru is admin/staff with higher privs
 
       // 1. Fetch subjects taught by THIS teacher in this class
-      final mySchedules = await ApiScheduleService.getSchedulesPaginated(
+      final mySchedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
         limit: 100,
         teacherId: widget.teacher['id'],
         classId: _selectedClass!['id'].toString(),
@@ -518,7 +518,7 @@ class GradePageState extends State<GradePage> {
         }
       } catch (_) {}
       if (days.isEmpty) {
-        days = await ApiScheduleService.getHari();
+        days = await getIt<ApiScheduleService>().getHari();
         if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
       }
 
@@ -573,7 +573,7 @@ class GradePageState extends State<GradePage> {
 
       // Fallback to API
       if (allSchedules.isEmpty) {
-        final schedules = await ApiScheduleService.getSchedulesPaginated(
+        final schedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
           limit: 100,
           teacherId: widget.teacher['id'],
           tahunAjaran: academicYearId,

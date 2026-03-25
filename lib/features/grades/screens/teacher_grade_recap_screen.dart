@@ -55,8 +55,8 @@ class RekapNilaiPage extends StatefulWidget {
 /// `setState()` is like Vue's reactivity -- triggers UI rebuild.
 class _RekapNilaiPageState extends State<RekapNilaiPage> {
   // Services
-  final ApiSubjectService apiSubjectService = ApiSubjectService();
-  final ApiTeacherService apiTeacherService = ApiTeacherService();
+  final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
+  final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
 
   // State
   int _currentStep = 0; // 0: Class List, 1: Subject List, 2: Recap Table
@@ -155,7 +155,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         }
       } catch (_) {}
       if (days.isEmpty) {
-        days = await ApiScheduleService.getHari();
+        days = await getIt<ApiScheduleService>().getHari();
         if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
       }
 
@@ -212,7 +212,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
       // Fallback to API
       if (allSchedules.isEmpty) {
-        final schedules = await ApiScheduleService.getSchedulesPaginated(
+        final schedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
           limit: 100,
           teacherId: widget.teacher['id'],
           tahunAjaran: academicYearId,
@@ -409,7 +409,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       List<dynamic> loadedClasses = [];
 
       if (isGuru) {
-        loadedClasses = await ApiTeacherService.getTeacherClasses(
+        loadedClasses = await getIt<ApiTeacherService>().getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
         );
@@ -661,7 +661,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         _loadWithCache(
           cacheKey: babCacheKey,
           ttl: const Duration(hours: 12),
-          apiFetcher: () => ApiSubjectService.getBabMateri(subjectId: masterSubjectId),
+          apiFetcher: () => getIt<ApiSubjectService>().getBabMateri(subjectId: masterSubjectId),
           useCache: useCache,
         ),
         _loadGradesWithCache(
@@ -3016,13 +3016,13 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_rekap_nilai_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_rekap_nilai_screen_guru', {'should_show': false});
         }
         return true;

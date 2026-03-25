@@ -28,6 +28,7 @@ import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// School announcements list with automatic read tracking.
 ///
@@ -1113,13 +1114,13 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_announcement_screen_$_userRole', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_announcement_screen_$_userRole', {'should_show': false});
         }
         return true;

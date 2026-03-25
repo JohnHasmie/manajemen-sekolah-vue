@@ -22,6 +22,7 @@ import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Parent's read-only view of class activities with read tracking.
 ///
@@ -71,7 +72,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
   Future<void> _flushMarkReadSilently(List<String> ids) async {
     try {
-      await ApiClassActivityService.markAsRead(ids);
+      await getIt<ApiClassActivityService>().markAsRead(ids);
     } catch (e) {
       AppLogger.error('class_activity', "Error silent auto-marking read: $e");
     }
@@ -122,7 +123,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       final cacheKey = _buildActivitiesCacheKey();
       await LocalCacheService.save(cacheKey, _activityList);
 
-      await ApiClassActivityService.markAsRead(ids);
+      await getIt<ApiClassActivityService>().markAsRead(ids);
     } catch (e) {
       AppLogger.error('class_activity', "Error auto-marking read: $e");
     }
@@ -198,7 +199,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       final userId = userData['id']?.toString() ?? '';
       final guardianEmail = userData['email']?.toString();
 
-      final allStudents = await ApiStudentService.getStudent(
+      final allStudents = await getIt<ApiStudentService>().getStudent(
         academicYearId: widget.academicYearId,
         userId: userId,
         guardianEmail: guardianEmail,
@@ -281,7 +282,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           selectedStudent['class_id'] ?? selectedStudent['class']?['id'];
 
       if (selectedStudent.isNotEmpty && classId != null) {
-        final activities = await ApiClassActivityService.getKegiatanByKelas(
+        final activities = await getIt<ApiClassActivityService>().getKegiatanByKelas(
           classId,
           siswaId: _selectedStudentId,
           academicYearId: widget.academicYearId,
@@ -360,13 +361,13 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_parent_class_activity_screen_wali', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_parent_class_activity_screen_wali', {'should_show': false});
         }
         return true;

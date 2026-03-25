@@ -30,6 +30,7 @@ import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_detail.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Data model for an attendance summary row.
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
@@ -317,7 +318,7 @@ class PresencePageState extends State<PresencePage>
           : _loadWithCache(
               cacheKey: 'presence_classes_${teacherId}_$academicYearId',
               ttl: const Duration(hours: 6),
-              apiFetcher: () => ApiTeacherService.getTeacherClasses(
+              apiFetcher: () => getIt<ApiTeacherService>().getTeacherClasses(
                 teacherId,
                 academicYearId: academicYearId,
               ),
@@ -327,14 +328,14 @@ class PresencePageState extends State<PresencePage>
       final studentFuture = _loadWithCache(
         cacheKey: 'school_student_data_$academicYearId',
         ttl: const Duration(hours: 6),
-        apiFetcher: () => ApiStudentService.getStudent(academicYearId: academicYearId),
+        apiFetcher: () => getIt<ApiStudentService>().getStudent(academicYearId: academicYearId),
         useCache: useCache,
       );
 
       final lessonHourFuture = _loadWithCache(
         cacheKey: 'school_lesson_hour_data',
         ttl: const Duration(hours: 24),
-        apiFetcher: () => ApiScheduleService.getJamPelajaran(),
+        apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
         useCache: useCache,
       );
 
@@ -426,7 +427,7 @@ class PresencePageState extends State<PresencePage>
     String? classId,
   }) async {
     try {
-      final result = await ApiTeacherService().getSubjectByTeacher(
+      final result = await getIt<ApiTeacherService>().getSubjectByTeacher(
         teacherId,
         classId: classId,
       );
@@ -596,7 +597,7 @@ class PresencePageState extends State<PresencePage>
       // ─── Fallback: fetch from API only if no cache available ───
       if (todaySchedules == null) {
         AppLogger.debug('attendance', 'No schedule cache, fetching from API');
-        todaySchedules = await ApiScheduleService.getSchedule(
+        todaySchedules = await getIt<ApiScheduleService>().getSchedule(
           teacherId: teacherId,
           dayId: dayId,
           semesterId: semester,
@@ -3480,13 +3481,13 @@ class PresencePageState extends State<PresencePage>
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_presence_teacher_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_presence_teacher_screen_guru', {'should_show': false});
         }
         return true;

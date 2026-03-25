@@ -28,6 +28,7 @@ import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Teacher's weekly schedule screen with card and table view modes.
 ///
@@ -290,7 +291,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             if (teacherProvider.teacherId != null) {
               resolvedTeacherId = teacherProvider.teacherId;
             } else {
-              final teacherData = await ApiTeacherService.getGuruByUserId(
+              final teacherData = await getIt<ApiTeacherService>().getGuruByUserId(
                 userId,
                 academicYearId: academicYearId,
               );
@@ -333,7 +334,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
               }
             } catch (e) {}
 
-            final allTeacherClasses = await ApiTeacherService.getTeacherClasses(
+            final allTeacherClasses = await getIt<ApiTeacherService>().getTeacherClasses(
               resolvedTeacherId,
               academicYearId: academicYearId,
             );
@@ -391,7 +392,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         dayData = List<dynamic>.from(cached);
         AppLogger.info('schedule', 'Day data loaded from cache');
       } else {
-        dayData = await ApiScheduleService.getHari();
+        dayData = await getIt<ApiScheduleService>().getHari();
         if (dayData.isNotEmpty) {
           LocalCacheService.save('school_day_data', dayData);
         }
@@ -436,7 +437,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         semesterData = List<dynamic>.from(cachedSemester);
         AppLogger.info('schedule', 'Semester list loaded from cache');
       } else {
-        semesterData = await ApiScheduleService.getSemester();
+        semesterData = await getIt<ApiScheduleService>().getSemester();
         if (semesterData.isNotEmpty) {
           LocalCacheService.save('school_semester_data', semesterData);
         }
@@ -460,7 +461,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           result = Map<String, dynamic>.from(cachedDateBased);
           AppLogger.info('schedule', 'Current semester loaded from cache');
         } else {
-          result = await ApiScheduleService.getDateBasedSemester();
+          result = await getIt<ApiScheduleService>().getDateBasedSemester();
           if (result.isNotEmpty) {
             LocalCacheService.save('school_current_semester', result);
           }
@@ -653,7 +654,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       if (_isHomeroomView && _selectedHomeroomClass != null) {
         // Fetch schedule for the homeroom class
         final classId = _selectedHomeroomClass!['id'].toString();
-        final result = await ApiScheduleService.getSchedulesPaginated(
+        final result = await getIt<ApiScheduleService>().getSchedulesPaginated(
           classId: classId,
           semesterId: semesterToUse,
           tahunAjaran: academicYearToUse,
@@ -662,7 +663,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         jadwalData = result['data'] ?? [];
       } else {
         // Fetch teaching schedule for the teacher
-        jadwalData = await ApiScheduleService.getFilteredSchedule(
+        jadwalData = await getIt<ApiScheduleService>().getFilteredSchedule(
           teacherId: _teacherId,
           semester: semesterToUse,
           academicYear: academicYearToUse,
@@ -1498,13 +1499,13 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
         }
         return true;

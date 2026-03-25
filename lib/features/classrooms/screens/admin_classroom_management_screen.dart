@@ -247,7 +247,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       }
 
       // Fetch all teachers (limit 1000) to ensure we have the homeroom teacher in the list
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         limit: 1000,
       );
       if (!mounted) return;
@@ -2720,13 +2720,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_management_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_management_admin', {'should_show': false});
         }
         return true;

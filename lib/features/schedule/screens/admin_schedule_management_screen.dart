@@ -68,8 +68,8 @@ class TeachingScheduleManagementScreen extends StatefulWidget {
 class TeachingScheduleManagementScreenState
     extends State<TeachingScheduleManagementScreen> {
   final ApiService _apiService = ApiService();
-  final ApiSubjectService _apiSubjectService = ApiSubjectService();
-  final ApiTeacherService apiTeacherService = ApiTeacherService();
+  final ApiSubjectService _apiSubjectService = getIt<ApiSubjectService>();
+  final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
 
   List<dynamic> _scheduleList = [];
   List<dynamic> _subjectList = [];
@@ -278,7 +278,7 @@ class TeachingScheduleManagementScreenState
     } else {
       // 2. Fetch from Backend API (Sync with Dashboard)
       try {
-        final result = await ApiScheduleService.getDateBasedSemester();
+        final result = await getIt<ApiScheduleService>().getDateBasedSemester();
         if (result.isNotEmpty && result.containsKey('semester')) {
           final targetSemesterName = result['semester']
               .toString(); // 'Ganjil' or 'Genap'
@@ -371,7 +371,7 @@ class TeachingScheduleManagementScreenState
         AppLogger.error('schedule', e);
       }
 
-      final response = await ApiScheduleService.getScheduleFilterOptions(
+      final response = await getIt<ApiScheduleService>().getScheduleFilterOptions(
         academicYearId: _selectedAcademicYear,
       );
 
@@ -529,14 +529,14 @@ class TeachingScheduleManagementScreenState
       // Load with pagination and backend filtering
       final results = await Future.wait([
         _showTableView
-            ? ApiScheduleService.getAllSchedules(
+            ? getIt<ApiScheduleService>().getAllSchedules(
                 semesterId: semesterToUse,
                 tahunAjaran: academicYearToUse,
               ).catchError((e) {
                 AppLogger.error('schedule', e);
                 throw e;
               })
-            : ApiScheduleService.getSchedulesPaginated(
+            : getIt<ApiScheduleService>().getSchedulesPaginated(
                 page: _currentPage,
                 limit: _perPage,
                 teacherId: _selectedTeacherId,
@@ -566,15 +566,15 @@ class TeachingScheduleManagementScreenState
           AppLogger.error('schedule', e);
           throw e;
         }),
-        ApiScheduleService.getHari().catchError((e) {
+        getIt<ApiScheduleService>().getHari().catchError((e) {
           AppLogger.error('schedule', e);
           throw e;
         }),
-        ApiScheduleService.getSemester().catchError((e) {
+        getIt<ApiScheduleService>().getSemester().catchError((e) {
           AppLogger.error('schedule', e);
           throw e;
         }),
-        ApiScheduleService.getJamPelajaran().catchError((e) {
+        getIt<ApiScheduleService>().getJamPelajaran().catchError((e) {
           AppLogger.error('schedule', e);
           throw e;
         }),
@@ -671,7 +671,7 @@ class TeachingScheduleManagementScreenState
       final academicYearToUse = _selectedAcademicYear;
 
       // Load next page
-      final response = await ApiScheduleService.getSchedulesPaginated(
+      final response = await getIt<ApiScheduleService>().getSchedulesPaginated(
         page: _currentPage,
         limit: _perPage,
         teacherId: _selectedTeacherId,
@@ -724,12 +724,12 @@ class TeachingScheduleManagementScreenState
       if (result != null && result.files.single.path != null) {
         setState(() => _isLoading = true);
 
-        await ApiScheduleService.importSchedulesFromExcel(
+        await getIt<ApiScheduleService>().importSchedulesFromExcel(
           File(result.files.single.path!),
         );
 
         // Force invalidation of cache to ensure fresh data
-        ApiScheduleService.invalidateCache();
+        getIt<ApiScheduleService>().invalidateCache();
 
         // Reload data fresh from API
         _loadData(resetPage: true, useCache: false);
@@ -1106,7 +1106,7 @@ class TeachingScheduleManagementScreenState
 
     if (confirmed == true) {
       try {
-        await ApiScheduleService.deleteSchedule(id);
+        await getIt<ApiScheduleService>().deleteSchedule(id);
         _showSuccessSnackBar('Schedule successfully deleted');
         _loadData(resetPage: true, useCache: false);
       } catch (e) {
@@ -1120,7 +1120,7 @@ class TeachingScheduleManagementScreenState
     String? editingScheduleId,
   }) async {
     try {
-      final conflicts = await ApiScheduleService.getConflictingSchedules(
+      final conflicts = await getIt<ApiScheduleService>().getConflictingSchedules(
         days_ids:
             (newScheduleData['days_ids'] as List<dynamic>?)
                 ?.map((e) => e.toString())
@@ -1148,16 +1148,16 @@ class TeachingScheduleManagementScreenState
 
         if (result != null) {
           // Delete conflicting schedule directly via API (skip UI confirmation dialog)
-          await ApiScheduleService.deleteSchedule(result);
+          await getIt<ApiScheduleService>().deleteSchedule(result);
 
           try {
             if (editingScheduleId != null) {
-              await ApiScheduleService.updateSchedule(
+              await getIt<ApiScheduleService>().updateSchedule(
                 editingScheduleId,
                 newScheduleData,
               );
             } else {
-              await ApiScheduleService.addSchedule(newScheduleData);
+              await getIt<ApiScheduleService>().addSchedule(newScheduleData);
             }
             _showSuccessSnackBar('Schedule successfully saved');
           } catch (e) {
@@ -1169,12 +1169,12 @@ class TeachingScheduleManagementScreenState
       } else {
         try {
           if (editingScheduleId != null) {
-            await ApiScheduleService.updateSchedule(
+            await getIt<ApiScheduleService>().updateSchedule(
               editingScheduleId,
               newScheduleData,
             );
           } else {
-            await ApiScheduleService.addSchedule(newScheduleData);
+            await getIt<ApiScheduleService>().addSchedule(newScheduleData);
           }
           _showSuccessSnackBar('Schedule successfully saved');
         } catch (e) {
@@ -3236,7 +3236,7 @@ class TeachingScheduleManagementScreenState
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_schedule_management_admin', {'should_show': false});
         }
       },
@@ -3245,7 +3245,7 @@ class TeachingScheduleManagementScreenState
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_schedule_management_admin', {'should_show': false});
         }
         return true;

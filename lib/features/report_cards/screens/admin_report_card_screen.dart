@@ -208,7 +208,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      final dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
       String semesterId = '1';
       if (dateBasedSemester.containsKey('semester') &&
           dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
@@ -266,7 +266,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      final dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
       String semesterId = '1';
       if (dateBasedSemester.containsKey('semester') &&
           dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
@@ -334,7 +334,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      final dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
       String semesterId = '1';
       if (dateBasedSemester.containsKey('semester') &&
           dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
@@ -391,7 +391,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
       final academicYearId =
           academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      final dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
       String semesterId = '1';
       if (dateBasedSemester.containsKey('semester') &&
           dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
@@ -514,7 +514,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
       final academicYearId =
           academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
 
-      final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      final dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
       String semesterId = '1';
       if (dateBasedSemester.containsKey('semester') &&
           dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
@@ -1021,13 +1021,13 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_raport_screen_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_raport_screen_admin', {'should_show': false});
         return true;

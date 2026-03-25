@@ -12,6 +12,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Student detail screen - displays full profile for a single student.
 ///
@@ -62,7 +63,7 @@ class StudentDetailScreenState extends State<StudentDetailScreen> {
         _errorMessage = null;
       });
 
-      final studentDetail = await ApiStudentService.getStudentById(
+      final studentDetail = await getIt<ApiStudentService>().getStudentById(
         widget.student['id'].toString(),
       );
 

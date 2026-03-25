@@ -244,7 +244,7 @@ class RaportScreenState extends State<RaportScreen> {
         }
         AppLogger.debug('report_card', 'RaportScreen: Semester from school_day_data cache');
       } else {
-        final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+        final dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
         if (dateBasedSemester.containsKey('semester') &&
             dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
           semester = '2';
@@ -292,7 +292,7 @@ class RaportScreenState extends State<RaportScreen> {
       }
       return '1';
     }
-    final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+    final dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
     if (dateBasedSemester.isNotEmpty) {
       await LocalCacheService.save('school_day_data', dateBasedSemester);
     }
@@ -842,13 +842,13 @@ class RaportScreenState extends State<RaportScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_raport_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_raport_screen_guru', {'should_show': false});
         }
         return true;

@@ -10,6 +10,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 class AddActivityDialog extends StatefulWidget {
   final String teacherId;
@@ -218,7 +219,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     AppLogger.debug('class_activity', '[_loadStudents] Starting load for class: $_selectedClassId');
 
     try {
-      final students = await ApiClassActivityService.getSiswaByKelas(
+      final students = await getIt<ApiClassActivityService>().getSiswaByKelas(
         _selectedClassId!,
       );
 
@@ -275,7 +276,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         return;
       }
 
-      final babList = await ApiSubjectService.getBabMateri(
+      final babList = await getIt<ApiSubjectService>().getBabMateri(
         subjectId: masterSubjectId,
       );
 
@@ -327,7 +328,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       AppLogger.debug('class_activity', '===== LOADING SUB BAB MATERI =====');
       AppLogger.debug('class_activity', 'Bab ID: $babId');
 
-      final subBabList = await ApiSubjectService.getSubBabMateri(babId: babId);
+      final subBabList = await getIt<ApiSubjectService>().getSubBabMateri(babId: babId);
 
       if (kDebugMode) {
         AppLogger.debug('class_activity', 'API Response - Sub Bab count: ${subBabList.length}');
@@ -655,13 +656,13 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       // Call appropriate API based on mode
       if (widget.isEditMode && widget.activityData != null) {
         // Update existing activity
-        await ApiClassActivityService.updateKegiatan(
+        await getIt<ApiClassActivityService>().updateKegiatan(
           widget.activityData['id'].toString(),
           requestData,
         );
       } else {
         // Create new activity
-        await ApiClassActivityService.tambahKegiatan(requestData);
+        await getIt<ApiClassActivityService>().tambahKegiatan(requestData);
       }
 
       // Automatically mark material as generated (checked)
@@ -670,9 +671,9 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           // Construct items list for batchSaveMateriProgress
           // Auto-mark as checked (is_checked: true)
           // Note: batchSaveMateriProgress expects different key structure ('progress_items')
-          // but ApiSubjectService.batchSaveMateriProgress helper handles the mapping from our app structure
+          // but getIt<ApiSubjectService>().batchSaveMateriProgress helper handles the mapping from our app structure
           // We just need to match what the internal helper expects or call the API endpoint params directly?
-          // Let's check ApiSubjectService.batchSaveMateriProgress implementation again.
+          // Let's check getIt<ApiSubjectService>().batchSaveMateriProgress implementation again.
           // It takes {guru_id, mata_pelajaran_id, progress_items: [{bab_id, sub_bab_id, is_checked}]}
 
           final List<Map<String, dynamic>> progressItems = [
@@ -720,7 +721,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           AppLogger.debug('class_activity', 'Progress items: ${progressItems.length}');
           AppLogger.debug('class_activity', 'First item: ${progressItems.first}');
 
-          await ApiSubjectService.batchSaveMateriProgress({
+          await getIt<ApiSubjectService>().batchSaveMateriProgress({
             'guru_id': widget.teacherId,
             'mata_pelajaran_id': _selectedSubjectId,
             'class_id': _selectedClassId,

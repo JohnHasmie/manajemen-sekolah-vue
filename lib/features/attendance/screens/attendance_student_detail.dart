@@ -58,7 +58,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     try {
       // Load siswa, absensi, dan kelas data
       final [studentData, absensiData, classData] = await Future.wait([
-        ApiStudentService.getStudent(),
+        getIt<ApiStudentService>().getStudent(),
         ApiService.getAttendance(
           teacherId: widget.teacher['id'],
           subjectId: widget.subjectId,

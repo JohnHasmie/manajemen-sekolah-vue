@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
 class TeacherAbsensiDetailPage extends StatefulWidget {
@@ -71,7 +72,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
       // 2. Load students by class ID
       List<dynamic> siswaData;
       if (_detectedClassId != null && _detectedClassId!.isNotEmpty) {
-        siswaData = await ApiStudentService.getStudentByClass(
+        siswaData = await getIt<ApiStudentService>().getStudentByClass(
           _detectedClassId!,
         );
       } else {
@@ -83,14 +84,14 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
 
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
             _detectedClassId = classIdFromData;
-            siswaData = await ApiStudentService.getStudentByClass(
+            siswaData = await getIt<ApiStudentService>().getStudentByClass(
               classIdFromData,
             );
           } else {
-            siswaData = await ApiStudentService.getStudent();
+            siswaData = await getIt<ApiStudentService>().getStudent();
           }
         } else {
-          siswaData = await ApiStudentService.getStudent();
+          siswaData = await getIt<ApiStudentService>().getStudent();
         }
       }
 

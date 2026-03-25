@@ -29,6 +29,7 @@ import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Parent billing screen with payment status, upload, and filtering.
 ///
@@ -191,7 +192,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
       final userId = userData['id'].toString();
       final guardianEmail = userData['email'];
 
-      final allStudents = await ApiStudentService.getStudent(
+      final allStudents = await getIt<ApiStudentService>().getStudent(
         userId: userId,
         guardianEmail: guardianEmail,
       );
@@ -291,13 +292,13 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_parent_billing_screen_wali', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_parent_billing_screen_wali', {'should_show': false});
         }
         return true;
