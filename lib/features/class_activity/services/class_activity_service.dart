@@ -35,6 +35,8 @@ class ApiClassActivityService {
     String? chapterId,
     String? subChapterId,
     String? academicYearId,
+    String? startDate,
+    String? endDate,
   }) async {
     // Build query parameters
     Map<String, dynamic> queryParams = {
@@ -72,6 +74,12 @@ class ApiClassActivityService {
     }
     if (academicYearId != null && academicYearId.isNotEmpty) {
       queryParams['academic_year_id'] = academicYearId;
+    }
+    if (startDate != null && startDate.isNotEmpty) {
+      queryParams['start_date'] = startDate;
+    }
+    if (endDate != null && endDate.isNotEmpty) {
+      queryParams['end_date'] = endDate;
     }
 
     // Build URI with query parameters

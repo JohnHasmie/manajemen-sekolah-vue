@@ -2838,6 +2838,16 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           .selectedAcademicYear?['id']
           ?.toString();
 
+      // Calculate current semester date range (Ganjil: Jul-Dec, Genap: Jan-Jun)
+      final now = DateTime.now();
+      final isGenap = now.month >= 1 && now.month <= 6;
+      final semesterStartDate = isGenap
+          ? '${now.year}-01-01'
+          : '${now.year}-07-01';
+      final semesterEndDate = isGenap
+          ? '${now.year}-06-30'
+          : '${now.year}-12-31';
+
       final response = await ApiClassActivityService.getClassActivityPaginated(
         page: _currentPage,
         limit: _perPage,
@@ -2850,6 +2860,8 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             : null,
         tanggal: _selectedDateFilter,
         academicYearId: academicYearId,
+        startDate: semesterStartDate,
+        endDate: semesterEndDate,
       );
 
       // if (kDebugMode) {

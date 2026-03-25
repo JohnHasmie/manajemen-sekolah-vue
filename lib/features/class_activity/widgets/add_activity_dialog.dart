@@ -1377,11 +1377,21 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                       ),
                       trailing: Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () async {
+                        // Allow selecting dates within the current semester
+                        final now = DateTime.now();
+                        final isGenap = now.month >= 1 && now.month <= 6;
+                        final semesterStart = isGenap
+                            ? DateTime(now.year, 1, 1)
+                            : DateTime(now.year, 7, 1);
+                        final semesterEnd = isGenap
+                            ? DateTime(now.year, 6, 30)
+                            : DateTime(now.year, 12, 31);
+
                         final date = await showDatePicker(
                           context: context,
                           initialDate: _selectedDate ?? DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(Duration(days: 365)),
+                          firstDate: semesterStart,
+                          lastDate: semesterEnd,
                         );
                         if (date != null) {
                           setState(() {
