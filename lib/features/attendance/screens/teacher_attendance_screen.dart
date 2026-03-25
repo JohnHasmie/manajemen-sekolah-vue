@@ -76,6 +76,9 @@ class PresencePage extends StatefulWidget {
   final String? initialSubjectName;
   final String? initialclassId;
   final String? initialClassName;
+  final int? initialLessonHourNumber;
+  final String? initialStartTime;
+  final int initialTabIndex;
 
   const PresencePage({
     super.key,
@@ -85,6 +88,9 @@ class PresencePage extends StatefulWidget {
     this.initialSubjectName,
     this.initialclassId,
     this.initialClassName,
+    this.initialLessonHourNumber,
+    this.initialStartTime,
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -165,7 +171,11 @@ class PresencePageState extends State<PresencePage>
       _selectedClassId = widget.initialclassId;
     }
 
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
     _tabController.addListener(() {
       // TabController listener fires twice (animation start + end).
       // Only react once — after the animation settles.
@@ -524,11 +534,33 @@ class PresencePageState extends State<PresencePage>
     }
   }
 
-  /// Auto-detects the current lesson hour based on the device time.
-  /// Like a Vue `computed` that determines which lesson period is active now.
+  /// Auto-detects the current lesson hour based on the device time,
+  /// or uses the initial lesson hour from schedule navigation.
   void _detectCurrentLessonHour() {
     if (_lessonHours.isEmpty) return;
 
+    // Priority 1: Match by initialLessonHourNumber from schedule navigation
+    if (widget.initialLessonHourNumber != null) {
+      for (var lh in _lessonHours) {
+        final hourNum = int.tryParse(lh['hour_number']?.toString() ?? '');
+        if (hourNum == widget.initialLessonHourNumber) {
+          setState(() => _selectedLessonHourId = lh['id']?.toString());
+          return;
+        }
+      }
+      // Fallback: match by start_time if hour_number didn't match
+      if (widget.initialStartTime != null) {
+        for (var lh in _lessonHours) {
+          final lhStart = lh['start_time']?.toString() ?? '';
+          if (lhStart.isNotEmpty && widget.initialStartTime!.startsWith(lhStart.split('.')[0])) {
+            setState(() => _selectedLessonHourId = lh['id']?.toString());
+            return;
+          }
+        }
+      }
+    }
+
+    // Priority 2: Auto-detect based on current time
     for (var lh in _lessonHours) {
       final startTime = lh['start_time']?.toString() ?? '';
       final endTime = lh['end_time']?.toString() ?? '';

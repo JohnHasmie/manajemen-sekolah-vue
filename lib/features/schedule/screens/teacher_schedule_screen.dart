@@ -2754,6 +2754,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                               jadwal['kelas_nama'] ??
                               jadwal['class']?['name'])
                           ?.toString(),
+                  initialLessonHourNumber:
+                      int.tryParse(jadwal['jam_ke']?.toString() ?? ''),
+                  initialStartTime:
+                      jadwal['jam_mulai']?.toString(),
+                  initialTabIndex: 1,
                 ),
               ),
             );
