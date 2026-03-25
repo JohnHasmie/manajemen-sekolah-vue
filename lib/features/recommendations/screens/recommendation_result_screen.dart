@@ -4,7 +4,6 @@
 // Shows the recommendation cards with HTML content (rendered via
 // flutter_widget_from_html) and allows navigation to the edit screen.
 // In Laravel terms, this is like `RecommendationController@show`.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -16,6 +15,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Shows AI-generated learning recommendations for a student in a class.
 ///
@@ -91,7 +91,7 @@ class _LearningRecommendationResultScreenState
           _isLoading = false;
           _errorMessage = '';
         });
-        if (kDebugMode) print('📦 RecommendationResult: from cache (${cached.length})');
+        AppLogger.debug('recommendation', 'RecommendationResult: from cache (${cached.length})');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _checkAndShowTour();
         });
@@ -112,9 +112,7 @@ class _LearningRecommendationResultScreenState
       final studentId = widget.student['student_id']?.toString() ??
           widget.student['id']?.toString() ?? '';
 
-      if (kDebugMode) {
-        print('📥 Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId');
-      }
+      AppLogger.debug('recommendation', 'Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId');
 
       final response = await ApiRecommendationService.getRecommendations(
         teacherId: teacherId,
@@ -133,9 +131,7 @@ class _LearningRecommendationResultScreenState
           recommendations = [];
         }
 
-        if (kDebugMode) {
-          print('📥 Recommendations count: ${recommendations.length}');
-        }
+        AppLogger.debug('recommendation', 'Recommendations count: ${recommendations.length}');
 
         await LocalCacheService.save(cacheKey, recommendations);
 
@@ -193,7 +189,7 @@ class _LearningRecommendationResultScreenState
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('recommendation', e);
     }
   }
 

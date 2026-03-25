@@ -7,7 +7,6 @@
 // In Laravel terms: `AiLessonPlanController@show` + `@update`.
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
@@ -17,6 +16,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
@@ -107,7 +107,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   Future<void> _startPolling() async {
     // Validate we have a poll URL or job ID
     if (widget.pollUrl == null && widget.jobId == null) {
-      if (kDebugMode) print('❌ No poll_url or job_id available');
+      AppLogger.error('lesson_plan', 'No poll_url or job_id available');
       if (mounted) {
         setState(() {
           _isPolling = false;
@@ -134,7 +134,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       return;
     }
 
-    if (kDebugMode) print('🔄 Starting polling for job: $jobIdForPoll');
+    AppLogger.debug('lesson_plan', 'Starting polling for job: $jobIdForPoll');
 
     int attempts = 0;
     const maxAttempts = 60; // 5 minutes (60 * 5s)
@@ -144,7 +144,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       attempts++;
 
       try {
-        if (kDebugMode) print('🔄 Poll attempt #$attempts');
+        AppLogger.debug('lesson_plan', 'Poll attempt #$attempts');
 
         final response = await ApiSubjectService.pollAiJob(
           jobIdForPoll,
@@ -153,10 +153,8 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
         if (!mounted) return;
 
-        if (kDebugMode) {
-          print('📥 Poll response status: ${response.statusCode}');
-          print('📥 Poll response data: ${response.data}');
-        }
+        AppLogger.debug('lesson_plan', 'Poll response status: ${response.statusCode}');
+        AppLogger.debug('lesson_plan', 'Poll response data: ${response.data}');
 
         if (response.statusCode == 200) {
           final resultBody = response.data is Map<String, dynamic>
@@ -201,7 +199,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           });
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ Polling error attempt #$attempts: $e');
+        AppLogger.error('lesson_plan', e);
         // Don't fail immediately on network errors, keep retrying
       }
 
@@ -756,9 +754,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         'is_ai_generated': true, // Flaging backend untuk AI
       };
 
-      if (kDebugMode) {
-        print("Menyimpan RPP Payload: \$payloadData");
-      }
+      AppLogger.debug('lesson_plan', "Menyimpan RPP Payload: \$payloadData");
 
       await ApiSubjectService.saveRPP(payloadData);
 
@@ -772,7 +768,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         Navigator.pop(context); // Kembali ke list RPP (PopScope triggers onSaved)
       }
     } catch (e) {
-      if (kDebugMode) print('Save AI RPP error: $e');
+      AppLogger.error('lesson_plan', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

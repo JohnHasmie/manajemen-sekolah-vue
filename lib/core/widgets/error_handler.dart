@@ -9,6 +9,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/services/log_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Singleton global error handler. Like Laravel's `App\Exceptions\Handler`
 /// combined with a logging middleware.
@@ -46,10 +47,8 @@ class AppErrorHandler {
 
     // Handle Dart errors
     PlatformDispatcher.instance.onError = (error, stack) {
-      if (kDebugMode) {
-        print('Dart Error: $error');
-        print('Stack: $stack');
-      }
+      AppLogger.error('error', error);
+      AppLogger.debug('error', 'Stack: $stack');
 
       // Kirim error ke stream
       _errorController.add(Exception(error.toString()));
@@ -64,12 +63,8 @@ class AppErrorHandler {
   /// Logs an error to the console (debug) and sends it to the remote logging
   /// backend. Like Laravel's `Handler::report()` sending to Sentry/Bugsnag.
   static void _logError(String type, dynamic error, StackTrace? stack) {
-    if (kDebugMode) {
-      print('$type: $error');
-      if (stack != null) {
-        print('Stack: $stack');
-      }
-    }
+    AppLogger.error('error', error);
+    AppLogger.debug('error', 'Stack: $stack');
 
     // Send to Logging Backend
     LogService.sendError(error, stack);

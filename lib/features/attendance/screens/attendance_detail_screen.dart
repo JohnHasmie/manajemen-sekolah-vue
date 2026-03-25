@@ -5,13 +5,13 @@
 // state via `data() { return {...} }`).  It loads a list of students and their
 // attendance status, allows the teacher to change each status via a dropdown,
 // and submits updates to the backend API.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Attendance detail page where a teacher can view and update each student's
 /// attendance status (hadir/terlambat/izin/sakit/alpha) for a given subject
@@ -139,7 +139,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         _isLoading = false;
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading absensi detail: $e');
+      AppLogger.error('attendance', e);
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -292,7 +292,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (kDebugMode) print('Error updating absensi: $e');
+      AppLogger.error('attendance', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

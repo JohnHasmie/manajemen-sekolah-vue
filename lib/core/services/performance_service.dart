@@ -3,7 +3,7 @@
 // Tracks screen load times, API latency, and custom operation durations.
 
 import 'package:firebase_performance/firebase_performance.dart';
-import 'package:flutter/foundation.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Singleton service wrapping Firebase Performance for monitoring app speed.
 /// Like Laravel Telescope or Debugbar for tracking performance metrics,
@@ -32,13 +32,9 @@ class PerformanceService {
       _performance = FirebasePerformance.instance;
       await _performance!.setPerformanceCollectionEnabled(true);
 
-      if (kDebugMode) {
-        print('✅ Firebase Performance initialized');
-      }
+      AppLogger.info('performance', 'Firebase Performance initialized');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Firebase Performance init failed: $e');
-      }
+      AppLogger.error('performance', e);
     }
   }
 
@@ -53,14 +49,10 @@ class PerformanceService {
     try {
       final trace = _performance?.newTrace(name);
       await trace?.start();
-      if (kDebugMode) {
-        print('⏱️ Trace started: $name');
-      }
+      AppLogger.debug('performance', '️ Trace started: $name');
       return trace;
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ startTrace failed: $e');
-      }
+      AppLogger.error('performance', e);
       return null;
     }
   }
@@ -71,9 +63,7 @@ class PerformanceService {
     try {
       await trace?.stop();
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ stopTrace failed: $e');
-      }
+      AppLogger.error('performance', e);
     }
   }
 
@@ -92,14 +82,10 @@ class PerformanceService {
       final trace = _performance?.newTrace('screen_load_$screenName');
       await trace?.start();
       trace?.putAttribute('screen_name', screenName);
-      if (kDebugMode) {
-        print('⏱️ Screen trace started: $screenName');
-      }
+      AppLogger.debug('performance', '️ Screen trace started: $screenName');
       return trace;
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ startScreenTrace failed: $e');
-      }
+      AppLogger.error('performance', e);
       return null;
     }
   }
@@ -119,9 +105,7 @@ class PerformanceService {
       await metric?.start();
       return metric;
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ startHttpMetric failed: $e');
-      }
+      AppLogger.error('performance', e);
       return null;
     }
   }
@@ -152,9 +136,7 @@ class PerformanceService {
         await metric.stop();
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ stopHttpMetric failed: $e');
-      }
+      AppLogger.error('performance', e);
     }
   }
 

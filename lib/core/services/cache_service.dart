@@ -14,7 +14,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Local cache service using SharedPreferences with TTL (time-to-live).
@@ -60,15 +60,11 @@ class LocalCacheService {
         .where((key) => key.startsWith(fullPrefix))
         .toList();
 
-    if (kDebugMode) {
-      print('🗑️ Clearing cache keys starting with: $fullPrefix');
-      print('🗑️ Found ${keys.length} keys to clear');
-    }
+    AppLogger.debug('cache', 'Clearing cache keys starting with: $fullPrefix');
+    AppLogger.debug('cache', 'Found ${keys.length} keys to clear');
 
     for (final key in keys) {
-      if (kDebugMode) {
-        print('🗑️ Removing cache key: $key');
-      }
+      AppLogger.debug('cache', 'Removing cache key: $key');
       await prefs.remove(key);
     }
   }
@@ -89,9 +85,7 @@ class LocalCacheService {
       };
       await prefs.setString('$_prefix$key', json.encode(cacheData));
     } catch (e) {
-      if (kDebugMode) {
-        print('Error saving to local cache ($key): $e');
-      }
+      AppLogger.error('cache', 'Error saving to local cache ($key): $e');
     }
   }
 
@@ -116,9 +110,7 @@ class LocalCacheService {
 
       return cachedMap['data'];
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading from local cache ($key): $e');
-      }
+      AppLogger.error('cache', 'Error loading from local cache ($key): $e');
       return null;
     }
   }

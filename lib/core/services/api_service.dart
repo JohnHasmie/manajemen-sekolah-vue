@@ -24,7 +24,8 @@ import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/main.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// The central API service class -- the backbone of all HTTP communication.
 /// Like Laravel's `Http` facade combined with auth middleware and a service container.
@@ -61,9 +62,7 @@ class ApiService {
 
     if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
       baseUrl = envBaseUrl;
-      if (kDebugMode) {
-        print('📡 API Base URL from .env: $baseUrl');
-      }
+      AppLogger.debug('api', 'API Base URL from .env: $baseUrl');
       return;
     }
   }
@@ -136,7 +135,7 @@ class ApiService {
 
       return [];
     } catch (e) {
-      print('Error fetching nilai: $e');
+      AppLogger.error('api', 'Error fetching nilai: $e');
       return [];
     }
   }
@@ -163,9 +162,7 @@ class ApiService {
       );
       return Uint8List.fromList(response.data!);
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('❌ Download Error on $endpoint: $e');
-      }
+      AppLogger.error('api', 'Download Error on $endpoint: $e');
       if (e.error is Exception) throw e.error as Exception;
       rethrow;
     }
@@ -174,7 +171,7 @@ class ApiService {
   /// Retrieves the stored auth token from SharedPreferences.
   /// Like `auth()->token()` in Laravel Sanctum.
   static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     return prefs.getString('token');
   }
 
@@ -187,7 +184,7 @@ class ApiService {
   /// - Bearer token: from SharedPreferences (like session-based auth)
   /// - X-School-ID: multi-tenant school identifier (like Laravel tenant middleware)
   static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final token = prefs.getString('token');
     final userJson = prefs.getString('user');
 
@@ -203,31 +200,23 @@ class ApiService {
     // Add school_id header if available
     if (userJson != null) {
       try {
-        if (kDebugMode) {
-          print('🔍 Checking headers - UserJson length: ${userJson.length}');
-          print(
-            '🔍 UserJson snippet: ${userJson.substring(0, userJson.length > 100 ? 100 : userJson.length)}',
-          );
-        }
+        AppLogger.debug('api', 'Checking headers - UserJson length: ${userJson.length}');
+        AppLogger.debug('api', 'UserJson snippet: ${userJson.substring(0, userJson.length > 100 ? 100 : userJson.length)}',);
 
         final user = json.decode(userJson);
 
         if (user['school_id'] != null) {
           headers['X-School-ID'] = user['school_id'].toString();
-          if (kDebugMode) {
-            print('✅ Injected X-School-ID: ${headers['X-School-ID']}');
-          }
+          AppLogger.info('api', 'Injected X-School-ID: ${headers['X-School-ID']}');
         } else {
-          if (kDebugMode) print('⚠️ school_id missing in user object');
+          AppLogger.warning('api', 'school_id missing in user object');
         }
       } catch (e) {
         // Ignore JSON parse errors
-        if (kDebugMode) {
-          print('⚠️ Failed to parse user JSON for school_id: $e');
-        }
+        AppLogger.error('api', 'Failed to parse user JSON for school_id: $e');
       }
     } else {
-      if (kDebugMode) print('⚠️ User JSON is null in SharedPreferences');
+      AppLogger.warning('api', 'User JSON is null in SharedPreferences');
     }
 
     return headers;
@@ -245,12 +234,10 @@ class ApiService {
     String errorMessage,
   ) async {
     try {
-      if (kDebugMode) {
-        print('🔴 Handling authentication error: $errorMessage');
-      }
+      AppLogger.error('api', 'Handling authentication error: $errorMessage');
 
       // Clear all stored data
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       await prefs.clear();
 
       // Delay sedikit untuk memastikan context sudah ready
@@ -267,17 +254,13 @@ class ApiService {
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error during authentication cleanup: $e');
-      }
+      AppLogger.error('api', 'Error during authentication cleanup: $e');
       // Fallback ke named route
       try {
         navigatorKey.currentState?.pushReplacementNamed('/auth/login');
       } catch (_) {
         // If all navigation fails, we're likely in a bad state
-        if (kDebugMode) {
-          print('🚨 Critical: Unable to navigate to login');
-        }
+        AppLogger.info('api', '🚨 Critical: Unable to navigate to login');
       }
     }
   }
@@ -294,9 +277,7 @@ class ApiService {
       final result = response.data;
       return result is List ? result : [];
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ getData Error on $endpoint: $e');
-      }
+      AppLogger.error('api', 'getData Error on $endpoint: $e');
       return [];
     }
   }
@@ -325,40 +306,30 @@ class ApiService {
         body['role'] = role;
       }
 
-      if (kDebugMode) {
-        print('📤 Login request: ${body.keys}');
-      }
+      AppLogger.debug('api', 'Login request: ${body.keys}');
 
       final response = await dioClient.post('/auth/login', data: body);
       final responseData = response.data;
 
-      if (kDebugMode) {
-        print('📥 Login response status: ${response.statusCode}');
-        print('📥 Login response data: $responseData');
-      }
+      AppLogger.debug('api', '📥 Login response status: ${response.statusCode}');
+      AppLogger.debug('api', '📥 Login response data: $responseData');
 
       // Handle semua kemungkinan flow
       if (responseData['pilih_sekolah'] == true) {
-        if (kDebugMode) {
-          print('🔄 Login flow: Need to select school');
-        }
+        AppLogger.debug('api', 'Login flow: Need to select school');
         return Map<String, dynamic>.from(responseData);
       }
 
       // PERBAIKAN: Handle jika setelah pilih sekolah, perlu pilih role
       if (responseData['pilih_role'] == true) {
-        if (kDebugMode) {
-          print('🔄 Login flow: Need to select role after school selection');
-        }
+        AppLogger.debug('api', 'Login flow: Need to select role after school selection');
         return Map<String, dynamic>.from(responseData);
       }
 
       if (responseData['require_otp'] == true ||
           responseData['otp_debug'] != null ||
           responseData['message'] == 'OTP sent to email') {
-        if (kDebugMode) {
-          print('🔄 Login flow: OTP required');
-        }
+        AppLogger.debug('api', 'Login flow: OTP required');
         return Map<String, dynamic>.from(responseData);
       }
 
@@ -373,9 +344,7 @@ class ApiService {
 
       return Map<String, dynamic>.from(responseData);
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('❌ ApiService login error: $e');
-      }
+      AppLogger.error('api', 'ApiService login error: $e');
       // Extract error message from DioException response if available
       final responseData = e.response?.data;
       if (responseData is Map) {
@@ -388,9 +357,7 @@ class ApiService {
       if (e.error is Exception) throw e.error as Exception;
       rethrow;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ ApiService login error: $e');
-      }
+      AppLogger.error('api', 'ApiService login error: $e');
       rethrow;
     }
   }
@@ -414,22 +381,16 @@ class ApiService {
         body['role'] = role;
       }
 
-      if (kDebugMode) {
-        print('📤 Verify OTP request: ${body.keys}');
-      }
+      AppLogger.debug('api', 'Verify OTP request: ${body.keys}');
 
       final response = await dioClient.post('/auth/verify-otp', data: body);
 
-      if (kDebugMode) {
-        print('📥 Verify OTP response status: ${response.statusCode}');
-        print('📥 Verify OTP response data: ${response.data}');
-      }
+      AppLogger.debug('api', '📥 Verify OTP response status: ${response.statusCode}');
+      AppLogger.debug('api', '📥 Verify OTP response data: ${response.data}');
 
       return Map<String, dynamic>.from(response.data);
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('❌ ApiService Verify OTP error: $e');
-      }
+      AppLogger.error('api', 'ApiService Verify OTP error: $e');
       final responseData = e.response?.data;
       if (responseData is Map) {
         throw Exception(
@@ -440,9 +401,7 @@ class ApiService {
       if (e.error is Exception) throw e.error as Exception;
       rethrow;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ ApiService Verify OTP error: $e');
-      }
+      AppLogger.error('api', 'ApiService Verify OTP error: $e');
       rethrow;
     }
   }
@@ -465,22 +424,16 @@ class ApiService {
             idToken, // Backend verifies this against Google tokeninfo API
       };
 
-      if (kDebugMode) {
-        print('📤 Google Login request: $email');
-      }
+      AppLogger.debug('api', 'Google Login request: $email');
 
       final response = await dioClient.post('/auth/google-login', data: body);
 
-      if (kDebugMode) {
-        print('📥 Google Login response status: ${response.statusCode}');
-        print('📥 Google Login response data: ${response.data}');
-      }
+      AppLogger.debug('api', '📥 Google Login response status: ${response.statusCode}');
+      AppLogger.debug('api', '📥 Google Login response data: ${response.data}');
 
       return Map<String, dynamic>.from(response.data);
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('❌ ApiService Google login error: $e');
-      }
+      AppLogger.error('api', 'ApiService Google login error: $e');
       final responseData = e.response?.data;
       if (responseData is Map) {
         throw Exception(
@@ -492,9 +445,7 @@ class ApiService {
       if (e.error is Exception) throw e.error as Exception;
       rethrow;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ ApiService Google login error: $e');
-      }
+      AppLogger.error('api', 'ApiService Google login error: $e');
       rethrow;
     }
   }
@@ -510,7 +461,7 @@ class ApiService {
   /// Switches the user's active role within the same school.
   /// Reuses [switchSchool] logic. Like changing the active guard in Laravel.
   static Future<Map<String, dynamic>> switchRole(String role) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final userJson = prefs.getString('user');
     if (userJson == null) throw Exception('User data not found');
 
@@ -554,7 +505,7 @@ class ApiService {
       }
       return {};
     } catch (e) {
-      if (kDebugMode) print('Error fetching dashboard stats: $e');
+      AppLogger.error('api', 'Error fetching dashboard stats: $e');
       return {};
     }
   }
@@ -567,7 +518,7 @@ class ApiService {
       final data = response.data;
       return data['count'] ?? 0;
     } catch (e) {
-      if (kDebugMode) print('Error fetching unread count: $e');
+      AppLogger.error('api', 'Error fetching unread count: $e');
       return 0;
     }
   }
@@ -577,7 +528,7 @@ class ApiService {
       await dioClient.post('/announcement/mark-read', data: {'ids': ids});
       return true;
     } catch (e) {
-      if (kDebugMode) print('Error marking announcement read: $e');
+      AppLogger.error('api', 'Error marking announcement read: $e');
       return false;
     }
   }
@@ -841,16 +792,12 @@ class ApiService {
 
       final response = await dioClient.post('/upload/rpp', data: formData);
 
-      if (kDebugMode) {
-        print('Upload Response Status: ${response.statusCode}');
-        print('Upload Response Data: ${response.data}');
-      }
+      AppLogger.debug('api', 'Upload Response Status: ${response.statusCode}');
+      AppLogger.debug('api', 'Upload Response Data: ${response.data}');
 
       return response.data;
     } catch (e) {
-      if (kDebugMode) {
-        print('Upload error details: $e');
-      }
+      AppLogger.error('api', 'Upload error details: $e');
       throw Exception('Upload error: $e');
     }
   }
@@ -876,9 +823,7 @@ class ApiService {
     if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
     if (lessonHourId != null) queryParams['lesson_hour_id'] = lessonHourId;
 
-    if (kDebugMode) {
-      print('📍 Calling getAbsensi: /attendance with params: $queryParams');
-    }
+    AppLogger.debug('api', '📍 Calling getAbsensi: /attendance with params: $queryParams');
 
     final response = await dioClient.get(
       '/attendance',
@@ -888,15 +833,15 @@ class ApiService {
     final result = response.data;
 
     if (kDebugMode) {
-      print('📦 Absensi response type: ${result.runtimeType}');
+      AppLogger.debug('api', 'Absensi response type: ${result.runtimeType}');
       if (result is Map) {
-        print('📦 Response has data field: ${result.containsKey('data')}');
+        AppLogger.debug('api', 'Response has data field: ${result.containsKey('data')}');
         if (result.containsKey('data')) {
-          print('📦 Data is List: ${result['data'] is List}');
-          print('📦 Data length: ${(result['data'] as List?)?.length ?? 0}');
+          AppLogger.debug('api', 'Data is List: ${result['data'] is List}');
+          AppLogger.debug('api', 'Data length: ${(result['data'] as List?)?.length ?? 0}');
         }
       } else if (result is List) {
-        print('📦 Direct array, length: ${result.length}');
+        AppLogger.debug('api', 'Direct array, length: ${result.length}');
       }
     }
 
@@ -906,9 +851,7 @@ class ApiService {
     } else if (result is List) {
       return result;
     } else {
-      if (kDebugMode) {
-        print('⚠️ Unexpected response format for absensi');
-      }
+      AppLogger.warning('api', 'Unexpected response format for absensi');
       return [];
     }
   }
@@ -999,7 +942,7 @@ class ApiService {
 
       return {'success': false};
     } catch (e) {
-      if (kDebugMode) print('Error getAbsensiPaginated: $e');
+      AppLogger.error('api', 'Error getAbsensiPaginated: $e');
       rethrow;
     }
   }
@@ -1094,7 +1037,7 @@ class ApiService {
         },
       };
     } catch (e) {
-      if (kDebugMode) print('Error getAbsensiSummaryPaginated: $e');
+      AppLogger.error('api', 'Error getAbsensiSummaryPaginated: $e');
       rethrow;
     }
   }
@@ -1125,7 +1068,7 @@ class ApiService {
       );
       return response.data;
     } catch (e) {
-      if (kDebugMode) print('ApiService.deleteAbsensi error: $e');
+      AppLogger.error('api', 'ApiService.deleteAbsensi error: $e');
       rethrow;
     }
   }
@@ -1140,9 +1083,7 @@ class ApiService {
           ? result.cast<int>()
           : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting grade levels: $e');
-      }
+      AppLogger.error('api', 'Error getting grade levels: $e');
       return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // fallback
     }
   }
@@ -1167,7 +1108,7 @@ class ApiService {
       // Handle List format (direct response)
       return result is List ? result : [];
     } catch (e) {
-      print('Error getting kelas by mata pelajaran: $e');
+      AppLogger.error('api', 'Error getting kelas by mata pelajaran: $e');
       return [];
     }
   }
@@ -1206,7 +1147,7 @@ class ApiService {
       final result = await get('/subject-with-class');
       return result is List ? result : [];
     } catch (e) {
-      print('Error getting mata pelajaran with kelas: $e');
+      AppLogger.error('api', 'Error getting mata pelajaran with kelas: $e');
       return [];
     }
   }
@@ -1240,11 +1181,9 @@ class ApiService {
           mimeType = 'image/jpeg'; // fallback
       }
 
-      if (kDebugMode) {
-        print('Uploading file: ${file.path}');
-        print('File extension: $extension');
-        print('MIME type: $mimeType');
-      }
+      AppLogger.debug('api', 'Uploading file: ${file.path}');
+      AppLogger.debug('api', 'File extension: $extension');
+      AppLogger.debug('api', 'MIME type: $mimeType');
 
       final formMap = <String, dynamic>{
         fileField: await MultipartFile.fromFile(
@@ -1262,23 +1201,17 @@ class ApiService {
 
       final formData = FormData.fromMap(formMap);
 
-      if (kDebugMode) {
-        print('Request fields: ${formData.fields}');
-        print('Request files: ${formData.files.length}');
-      }
+      AppLogger.debug('api', 'Request fields: ${formData.fields}');
+      AppLogger.debug('api', 'Request files: ${formData.files.length}');
 
       final response = await dioClient.post(endpoint, data: formData);
 
-      if (kDebugMode) {
-        print('Upload Response Status: ${response.statusCode}');
-        print('Upload Response Data: ${response.data}');
-      }
+      AppLogger.debug('api', 'Upload Response Status: ${response.statusCode}');
+      AppLogger.debug('api', 'Upload Response Data: ${response.data}');
 
       return response.data;
     } catch (error) {
-      if (kDebugMode) {
-        print('Upload error: $error');
-      }
+      AppLogger.error('api', 'Upload error: $error');
       throw Exception('Upload error: $error');
     }
   }
@@ -1290,9 +1223,7 @@ class ApiService {
         data: {'student_id': studentId},
       );
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error marking attendance read: $e');
-      }
+      AppLogger.error('api', 'Error marking attendance read: $e');
     }
   }
 
@@ -1306,9 +1237,7 @@ class ApiService {
         if (billIds != null) 'bill_ids': billIds,
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error marking bills read: $e');
-      }
+      AppLogger.error('api', 'Error marking bills read: $e');
     }
   }
 
@@ -1319,9 +1248,7 @@ class ApiService {
         data: {'bill_id': billId},
       );
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error marking bill read: $e');
-      }
+      AppLogger.error('api', 'Error marking bill read: $e');
     }
   }
 
@@ -1331,9 +1258,7 @@ class ApiService {
       final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error getting unread billing count: $e');
-      }
+      AppLogger.error('api', 'Error getting unread billing count: $e');
       return 0;
     }
   }
@@ -1368,9 +1293,7 @@ class ApiService {
     try {
       return await post('/payment/manual', data);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error input pembayaran manual: $e');
-      }
+      AppLogger.error('api', 'Error input pembayaran manual: $e');
       rethrow;
     }
   }
@@ -1392,9 +1315,7 @@ class ApiService {
       final apiService = ApiService();
       return await apiService.post('/generate-bill', body);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error generating bills: $e');
-      }
+      AppLogger.error('api', 'Error generating bills: $e');
       rethrow;
     }
   }
@@ -1409,9 +1330,7 @@ class ApiService {
       }
       return {};
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error getting finance stats: $e');
-      }
+      AppLogger.error('api', 'Error getting finance stats: $e');
       return {};
     }
   }
@@ -1431,9 +1350,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error getting generated months: $e');
-      }
+      AppLogger.error('api', 'Error getting generated months: $e');
       return [];
     }
   }
@@ -1451,9 +1368,7 @@ class ApiService {
       }
       return await apiService.delete(url);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error deleting bills by type: $e');
-      }
+      AppLogger.error('api', 'Error deleting bills by type: $e');
       rethrow;
     }
   }
@@ -1465,34 +1380,28 @@ class ApiService {
     String deviceType,
   ) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final authToken = prefs.getString('token');
 
       if (authToken == null) {
         throw Exception('No auth token found');
       }
 
-      if (kDebugMode) {
-        print('📤 Sending to: /fcm/token');
-        print('📤 Device type: $deviceType');
-        print('📤 FCM Token length: ${token.length}');
-      }
+      AppLogger.debug('api', 'Sending to: /fcm/token');
+      AppLogger.debug('api', 'Device type: $deviceType');
+      AppLogger.debug('api', 'FCM Token length: ${token.length}');
 
       final response = await dioClient.post(
         '/fcm/token',
         data: {'token': token, 'device_type': deviceType},
       );
 
-      if (kDebugMode) {
-        print('📥 FCM Response Status: ${response.statusCode}');
-        print('📥 FCM Response Data: ${response.data}');
-      }
+      AppLogger.debug('api', '📥 FCM Response Status: ${response.statusCode}');
+      AppLogger.debug('api', '📥 FCM Response Data: ${response.data}');
 
       return Map<String, dynamic>.from(response.data);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error sending FCM token: $e');
-      }
+      AppLogger.error('api', 'Error sending FCM token: $e');
       rethrow;
     }
   }
@@ -1501,7 +1410,7 @@ class ApiService {
   /// Like unregistering from a Laravel notification channel.
   static Future<Map<String, dynamic>> deleteFCMToken(String token) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final authToken = prefs.getString('token');
 
       if (authToken == null) {
@@ -1515,9 +1424,7 @@ class ApiService {
 
       return Map<String, dynamic>.from(response.data);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error deleting FCM token: $e');
-      }
+      AppLogger.error('api', 'Error deleting FCM token: $e');
       rethrow;
     }
   }
@@ -1553,7 +1460,7 @@ class ApiService {
       final result = response.data;
       return result['data'] ?? {};
     } catch (e) {
-      if (kDebugMode) print('Error fetching attendance stats: $e');
+      AppLogger.error('api', 'Error fetching attendance stats: $e');
       return {};
     }
   }
@@ -1585,7 +1492,7 @@ class ApiService {
       final result = response.data;
       return result['data'] ?? {};
     } catch (e) {
-      if (kDebugMode) print('Error fetching finance bill stats: $e');
+      AppLogger.error('api', 'Error fetching finance bill stats: $e');
       return {};
     }
   }
@@ -1596,7 +1503,7 @@ class ApiService {
       final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
-      if (kDebugMode) print('Error fetching unread grade count: $e');
+      AppLogger.error('api', 'Error fetching unread grade count: $e');
       return 0;
     }
   }
@@ -1606,7 +1513,7 @@ class ApiService {
     try {
       await dioClient.post('/grade/mark-read', data: {'grade_ids': gradeIds});
     } catch (e) {
-      if (kDebugMode) print('Error marking grades as read: $e');
+      AppLogger.error('api', 'Error marking grades as read: $e');
     }
   }
 
@@ -1616,7 +1523,7 @@ class ApiService {
       final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
-      if (kDebugMode) print('Error fetching unread presence count: $e');
+      AppLogger.error('api', 'Error fetching unread presence count: $e');
       return 0;
     }
   }
@@ -1629,7 +1536,7 @@ class ApiService {
         data: {'attendance_ids': attendanceIds},
       );
     } catch (e) {
-      if (kDebugMode) print('Error marking presence as read: $e');
+      AppLogger.error('api', 'Error marking presence as read: $e');
     }
   }
 
@@ -1655,7 +1562,7 @@ class ApiService {
       if (result is List) return result;
       return [];
     } catch (e) {
-      if (kDebugMode) print('Error fetching attendance dashboard chart: $e');
+      AppLogger.error('api', 'Error fetching attendance dashboard chart: $e');
       return [];
     }
   }
@@ -1676,7 +1583,7 @@ class ApiService {
       if (result is List) return result;
       return [];
     } catch (e) {
-      if (kDebugMode) print('Error fetching finance dashboard chart: $e');
+      AppLogger.error('api', 'Error fetching finance dashboard chart: $e');
       return [];
     }
   }

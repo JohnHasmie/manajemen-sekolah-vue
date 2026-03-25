@@ -7,7 +7,8 @@ import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'dart:convert';
 
 /// Singleton service that wraps Firebase Analytics for the entire app.
@@ -42,13 +43,9 @@ class AnalyticsService {
       // Enable analytics collection
       await _analytics!.setAnalyticsCollectionEnabled(true);
 
-      if (kDebugMode) {
-        print('✅ Firebase Analytics initialized');
-      }
+      AppLogger.info('analytics', 'Firebase Analytics initialized');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Firebase Analytics init failed: $e');
-      }
+      AppLogger.warning('analytics', 'Firebase Analytics init failed: $e');
     }
   }
 
@@ -86,13 +83,9 @@ class AnalyticsService {
         value: kIsWeb ? 'web' : Platform.operatingSystem,
       );
 
-      if (kDebugMode) {
-        print('📊 Analytics user set: $email ($role)');
-      }
+      AppLogger.info('analytics', 'Analytics user set: $email ($role)');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics setUser failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics setUser failed: $e');
     }
   }
 
@@ -101,7 +94,7 @@ class AnalyticsService {
   /// SharedPreferences is Flutter's equivalent of `session()` / cookies.
   static Future<void> setUserFromPrefs() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userJson = prefs.getString('user');
       if (userJson != null) {
         final user = json.decode(userJson);
@@ -114,9 +107,7 @@ class AnalyticsService {
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics setUserFromPrefs failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics setUserFromPrefs failed: $e');
     }
   }
 
@@ -125,13 +116,9 @@ class AnalyticsService {
   static Future<void> clearUser() async {
     try {
       await _analytics?.setUserId(id: null);
-      if (kDebugMode) {
-        print('📊 Analytics user cleared');
-      }
+      AppLogger.info('analytics', 'Analytics user cleared');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics clearUser failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics clearUser failed: $e');
     }
   }
 
@@ -156,13 +143,9 @@ class AnalyticsService {
           'timestamp': DateTime.now().toIso8601String(),
         },
       );
-      if (kDebugMode) {
-        print('📊 Login tracked: $email ($role)');
-      }
+      AppLogger.info('analytics', 'Login tracked: $email ($role)');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics logLogin failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics logLogin failed: $e');
     }
   }
 
@@ -172,13 +155,9 @@ class AnalyticsService {
     try {
       await _analytics?.logEvent(name: 'user_logout');
       await clearUser();
-      if (kDebugMode) {
-        print('📊 Logout tracked');
-      }
+      AppLogger.info('analytics', 'Logout tracked');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics logLogout failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics logLogout failed: $e');
     }
   }
 
@@ -195,13 +174,9 @@ class AnalyticsService {
         screenName: screenName,
         screenClass: screenClass,
       );
-      if (kDebugMode) {
-        print('📊 Screen view: $screenName');
-      }
+      AppLogger.info('analytics', 'Screen view: $screenName');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics logScreenView failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics logScreenView failed: $e');
     }
   }
 
@@ -220,13 +195,9 @@ class AnalyticsService {
           ...?parameters,
         },
       );
-      if (kDebugMode) {
-        print('📊 Feature used: $featureName');
-      }
+      AppLogger.info('analytics', 'Feature used: $featureName');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics logFeatureUsed failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics logFeatureUsed failed: $e');
     }
   }
 
@@ -250,9 +221,7 @@ class AnalyticsService {
         },
       );
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics logApiCall failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics logApiCall failed: $e');
     }
   }
 
@@ -274,9 +243,7 @@ class AnalyticsService {
         },
       );
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics logError failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics logError failed: $e');
     }
   }
 
@@ -295,9 +262,7 @@ class AnalyticsService {
         },
       );
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics logSchoolSwitch failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics logSchoolSwitch failed: $e');
     }
   }
 
@@ -311,9 +276,7 @@ class AnalyticsService {
     try {
       await _analytics?.logEvent(name: name, parameters: parameters);
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Analytics logEvent failed: $e');
-      }
+      AppLogger.warning('analytics', 'Analytics logEvent failed: $e');
     }
   }
 }

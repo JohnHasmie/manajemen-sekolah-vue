@@ -39,6 +39,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// The class/subject selection screen (Steps 0-1) before entering the grade book.
 ///
@@ -214,7 +215,7 @@ class GradePageState extends State<GradePage> {
             _hasMoreData = false;
             _isLoading = false;
           });
-          if (kDebugMode) print('⚡ Grade classes from TeacherProvider (${providerClasses.length})');
+          AppLogger.debug('grades', 'Grade classes from TeacherProvider (${providerClasses.length})');
           return; // ✅ Provider hit — no API needed
         }
       }
@@ -237,12 +238,12 @@ class GradePageState extends State<GradePage> {
                   _hasMoreData = cachedData['hasMoreData'] ?? false;
                   _isLoading = false;
                 });
-                if (kDebugMode) print('⚡ Grade classes loaded from cache');
+                AppLogger.info('grades', 'Grade classes loaded from cache');
                 return; // ✅ Cache hit — no API needed
               }
             }
           } catch (e) {
-            if (kDebugMode) print('⚠️ Grade class cache load failed: $e');
+            AppLogger.error('grades', e);
           }
         }
       }
@@ -310,7 +311,7 @@ class GradePageState extends State<GradePage> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading classes: $e');
+      AppLogger.error('grades', e);
       if (mounted) {
         if (_classList.isEmpty) {
           setState(() => _isLoading = false);
@@ -372,12 +373,12 @@ class GradePageState extends State<GradePage> {
                 _subjectList = cachedSubjects;
                 _isLoading = false;
               });
-              if (kDebugMode) print('⚡ Grade subjects loaded from cache — skipping API');
+              AppLogger.info('grades', 'Grade subjects loaded from cache — skipping API');
               return; // ✅ Cache hit — no API needed
             }
           }
         } catch (e) {
-          if (kDebugMode) print('⚠️ Grade subject cache load failed: $e');
+          AppLogger.error('grades', e);
         }
       }
     }
@@ -497,7 +498,7 @@ class GradePageState extends State<GradePage> {
         });
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading subjects: $e');
+      AppLogger.error('grades', e);
       if (mounted) {
         if (_subjectList.isEmpty) {
           setState(() => _isLoading = false);
@@ -521,7 +522,7 @@ class GradePageState extends State<GradePage> {
         final cachedDays = await LocalCacheService.load('school_day_data', ttl: const Duration(hours: 24));
         if (cachedDays != null) {
           days = List<dynamic>.from(cachedDays);
-          if (kDebugMode) print('⚡ Grade: days from cache');
+          AppLogger.debug('grades', 'Grade: days from cache');
         }
       } catch (_) {}
       if (days.isEmpty) {
@@ -574,7 +575,7 @@ class GradePageState extends State<GradePage> {
         if (cached != null) {
           final cachedData = Map<String, dynamic>.from(cached);
           allSchedules = List<dynamic>.from(cachedData['jadwal'] ?? []);
-          if (kDebugMode) print('⚡ Grade: schedules from teaching_schedule cache (${allSchedules.length})');
+          AppLogger.debug('grades', 'Grade: schedules from teaching_schedule cache (${allSchedules.length})');
         }
       } catch (_) {}
 
@@ -609,7 +610,7 @@ class GradePageState extends State<GradePage> {
         });
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading today schedules: $e');
+      AppLogger.error('grades', e);
     }
   }
 
@@ -1617,12 +1618,12 @@ class GradeBookPageState extends State<GradeBookPage> {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) _checkAndShowTour();
               });
-              if (kDebugMode) print('⚡ Grade book loaded from cache — skipping API');
+              AppLogger.info('grades', 'Grade book loaded from cache — skipping API');
               return; // ✅ Cache hit — no API needed
             }
           }
         } catch (e) {
-          if (kDebugMode) print('⚠️ Grade book cache load failed: $e');
+          AppLogger.error('grades', e);
         }
       }
 
@@ -1647,7 +1648,7 @@ class GradeBookPageState extends State<GradeBookPage> {
       final url =
           '/grades/teacher?subject_id=$subjectId&limit=500${academicYearId != null ? "&academic_year_id=$academicYearId" : ""}';
 
-      if (kDebugMode) print('DEBUG: Loading grades from $url');
+      AppLogger.debug('grades', 'DEBUG: Loading grades from $url');
 
       final response = await ApiService().get(url);
 
@@ -1659,9 +1660,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         rawNilaiItems = response;
       }
 
-      if (kDebugMode) {
-        print('DEBUG: Received ${rawNilaiItems.length} grade items');
-      }
+      AppLogger.debug('grades', 'DEBUG: Received ${rawNilaiItems.length} grade items');
 
       if (!mounted) return;
 
@@ -1684,7 +1683,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         }
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading grade data: $e');
+      AppLogger.error('grades', e);
       if (!mounted) return;
       if (_siswaList.isEmpty) {
         setState(() => _isLoading = false);
@@ -2245,7 +2244,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         _loadData(showLoading: false);
       }
     } catch (e) {
-      if (kDebugMode) print('Error saving inline grade: $e');
+      AppLogger.error('grades', e);
       _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     }
   }
@@ -2338,7 +2337,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                       _isLoading = false;
                     });
                   } catch (e) {
-                    if (kDebugMode) print('Finish edit error: $e');
+                    AppLogger.error('grades', e);
                     setState(() => _isLoading = false);
                     _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
                   }
@@ -2899,7 +2898,7 @@ class GradeBookPageState extends State<GradeBookPage> {
       _showSuccessSnackBar('Assessment deleted successfully');
       _loadData(); // Reload to refresh the table
     } catch (e) {
-      if (kDebugMode) print('Delete assessment error: $e');
+      AppLogger.error('grades', e);
       setState(() => _isLoading = false);
       _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     }
@@ -2989,7 +2988,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         }),
       );
     } catch (e) {
-      if (kDebugMode) print('Export error: $e');
+      AppLogger.error('grades', e);
       _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
     } finally {
       setState(() => _isLoading = false);
@@ -3764,7 +3763,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('grades', e);
     }
   }
 
@@ -4036,7 +4035,7 @@ class GradeInputFormState extends State<GradeInputForm> {
 
         Navigator.pop(context);
       } catch (e) {
-        if (kDebugMode) print('Submit grade error: $e');
+        AppLogger.error('grades', e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorUtils.getFriendlyMessage(e)),
@@ -4699,7 +4698,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
 
         Navigator.pop(context);
       } catch (e) {
-        if (kDebugMode) print('Submit grades batch error: $e');
+        AppLogger.error('grades', e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorUtils.getFriendlyMessage(e)),

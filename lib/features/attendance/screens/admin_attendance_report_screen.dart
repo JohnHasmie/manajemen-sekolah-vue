@@ -7,7 +7,6 @@
 //
 // In Laravel terms, this consumes AttendanceController with complex query filters,
 // similar to `Attendance::with(['student','subject'])->filter(...)->paginate()`.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -31,6 +30,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Data model for a single attendance summary record.
 /// Like a Laravel Eloquent model or a TypeScript interface in Vue.
@@ -212,7 +212,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
               _lessonHours = cachedLessonHours;
               _isLoadingClasses = false;
             });
-            if (kDebugMode) print('Filter data loaded from cache');
+            AppLogger.info('attendance', 'Filter data loaded from cache');
             // Trigger tour from cache path
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _checkAndShowTour();
@@ -237,11 +237,11 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         ApiSubjectService()
             .getSubject()
             .then((value) {
-              if (kDebugMode) print('Subjects loaded: ${value.length}');
+              AppLogger.info('attendance', 'Subjects loaded: ${value.length}');
               return value;
             })
             .catchError((e) {
-              if (kDebugMode) print('Error loading subjects: $e');
+              AppLogger.error('attendance', 'Error loading subjects: $e');
               return [];
             }),
         ApiClassService.getClass(
@@ -251,19 +251,19 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
                   ?.toString(),
             )
             .then((value) {
-              if (kDebugMode) print('Classes loaded: ${value.length}');
+              AppLogger.info('attendance', 'Classes loaded: ${value.length}');
               return value;
             })
             .catchError((e) {
-              if (kDebugMode) print('Error loading classes: $e');
+              AppLogger.error('attendance', 'Error loading classes: $e');
               return [];
             }),
         ApiTeacherService().getTeacher().catchError((e) {
-          if (kDebugMode) print('Error loading teachers: $e');
+          AppLogger.error('attendance', 'Error loading teachers: $e');
           return [];
         }),
         ApiScheduleService.getJamPelajaran().catchError((e) {
-          if (kDebugMode) print('Error loading lesson hours: $e');
+          AppLogger.error('attendance', 'Error loading lesson hours: $e');
           return [];
         }),
       ]);
@@ -293,9 +293,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading filter data (critical): $e');
-      }
+      AppLogger.error('attendance', 'Error loading filter data (critical): $e');
       if (mounted && _classList.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -488,7 +486,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
               _hasMoreData = cached['hasMoreData'] ?? false;
               _isLoadingSummary = false;
             });
-            if (kDebugMode) print('Summary data loaded from cache');
+            AppLogger.info('attendance', 'Summary data loaded from cache');
             return;
           }
         }
@@ -634,9 +632,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         _isLoadingMore = false;
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading absensi summary: $e');
-      }
+      AppLogger.error('attendance', 'Error loading absensi summary: $e');
       if (mounted) {
         setState(() {
           _isLoadingSummary = false;
@@ -1538,7 +1534,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         _isTableLoading = false;
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading table data: $e');
+      AppLogger.error('attendance', 'Error loading table data: $e');
       if (mounted) {
         setState(() => _isTableLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3006,7 +3002,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('attendance', 'Error checking tour status: $e');
     }
   }
 
@@ -3305,11 +3301,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
           widget.classId,
           academicYearId: widget.academicYearId,
         );
-        if (kDebugMode) {
-          print(
-            'Loaded ${siswaData.length} students for class: ${widget.classId} in year: ${widget.academicYearId}',
-          );
-        }
+        AppLogger.info('attendance', 'Loaded ${siswaData.length} students for class: ${widget.classId} in year: ${widget.academicYearId}',);
       } else {
         // Fallback: if no classId provided, try to get from attendance data
         if (absensiData.isNotEmpty) {
@@ -3319,28 +3311,18 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
               classIdFromData,
               academicYearId: widget.academicYearId,
             );
-            if (kDebugMode) {
-              print(
-                'Loaded ${siswaData.length} students for class: $classIdFromData (from attendance data)',
-              );
-            }
+            AppLogger.info('attendance', 'Loaded ${siswaData.length} students for class: $classIdFromData (from attendance data)',);
           } else {
             siswaData = await ApiStudentService.getStudent();
-            if (kDebugMode) {
-              print('Loaded all students (no class ID available)');
-            }
+            AppLogger.info('attendance', 'Loaded all students (no class ID available)');
           }
         } else {
           siswaData = await ApiStudentService.getStudent();
-          if (kDebugMode) {
-            print('Loaded all students (no attendance data)');
-          }
+          AppLogger.info('attendance', 'Loaded all students (no attendance data)');
         }
       }
 
-      if (kDebugMode) {
-        print('Loaded ${absensiData.length} attendance records');
-      }
+      AppLogger.info('attendance', 'Loaded ${absensiData.length} attendance records');
 
       setState(() {
         _siswaList = siswaData.map((s) => Student.fromJson(s)).toList();
@@ -3355,7 +3337,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading absensi detail for admin: $e');
+      AppLogger.error('attendance', 'Error loading absensi detail for admin: $e');
       setState(() {
         _isLoading = false;
       });
@@ -3383,7 +3365,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
         context: context,
       );
     } catch (e) {
-      print('Error exporting activities: $e');
+      AppLogger.error('attendance', 'Error exporting activities: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -3485,7 +3467,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
         } catch (e) {
           errorCount++;
           lastError = e.toString();
-          print('Error saving for student ${siswa.name}: $e');
+          AppLogger.error('attendance', 'Error saving for student ${siswa.name}: $e');
         }
       }
 

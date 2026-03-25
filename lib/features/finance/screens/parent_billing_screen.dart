@@ -11,7 +11,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -27,8 +26,9 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Parent billing screen with payment status, upload, and filtering.
 ///
@@ -184,7 +184,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
 
     // Step 3: Fetch fresh from API
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userString = prefs.getString('user');
       if (userString == null) throw Exception('User not logged in');
       final userData = json.decode(userString);
@@ -238,7 +238,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         _errorMessage = '';
       });
     } catch (error) {
-      if (kDebugMode) print('Load initial billing data error: $error');
+      AppLogger.error('finance', error);
       if (!mounted) return;
       // Only show error if no cached data
       if (_students.isEmpty) {
@@ -270,7 +270,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('finance', e);
     }
   }
 
@@ -448,9 +448,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
       // Mark read only if there are unread items
       _markBillReadIfNeeded();
     } catch (error) {
-      if (kDebugMode) {
-        print('Error loading tagihan: $error');
-      }
+      AppLogger.error('finance', error);
     }
   }
 
@@ -494,7 +492,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         billIds: ids,
       );
     } catch (e) {
-      if (kDebugMode) print('Error marking bills read: $e');
+      AppLogger.error('finance', e);
     }
   }
 
@@ -531,9 +529,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         _isLoadingMore = false;
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading more tagihan: $e');
-      }
+      AppLogger.error('finance', e);
       setState(() {
         _isLoadingMore = false;
       });
@@ -1002,15 +998,11 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
             selectedFile = File(file.path);
           });
 
-          if (kDebugMode) {
-            print('File selected: ${file.path}');
-          }
+          AppLogger.debug('finance', 'File selected: ${file.path}');
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error picking image: $e');
-      }
+      AppLogger.error('finance', e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1039,14 +1031,10 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
           selectedFile = file;
         });
 
-        if (kDebugMode) {
-          print('PDF selected: ${file.path}');
-        }
+        AppLogger.debug('finance', 'PDF selected: ${file.path}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error picking PDF: $e');
-      }
+      AppLogger.error('finance', e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1085,9 +1073,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         await _pickPDF(setDialogState);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error picking file: $e');
-      }
+      AppLogger.error('finance', e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1889,9 +1875,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
         },
       );
     } catch (error) {
-      if (kDebugMode) {
-        print('Error upload pembayaran: $error');
-      }
+      AppLogger.error('finance', error);
       rethrow;
     }
   }

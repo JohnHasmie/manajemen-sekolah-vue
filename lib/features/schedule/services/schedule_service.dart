@@ -9,11 +9,11 @@ library;
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for teaching schedule (jadwal mengajar) API calls with caching.
 /// Like a comprehensive Laravel Resource Controller with additional actions for
@@ -30,9 +30,7 @@ class ApiScheduleService {
   /// Like Laravel's `Cache::tags('schedules')->flush()`.
   static Future<void> invalidateCache() async {
     await LocalCacheService.clearStartingWith('schedule_');
-    if (kDebugMode) {
-      print('DEBUG: Schedule cache invalidated (persistent)');
-    }
+    AppLogger.debug('schedule', 'DEBUG: Schedule cache invalidated (persistent)');
   }
 
   /// Fetches the list of school days (hari). Like `Day::all()` in Laravel.
@@ -98,9 +96,7 @@ class ApiScheduleService {
         'data': {'teachers': [], 'classes': [], 'days': [], 'semesters': []},
       };
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting schedule filter options: $e');
-      }
+      AppLogger.error('schedule', 'Error getting schedule filter options: $e');
       rethrow;
     }
   }
@@ -165,15 +161,11 @@ class ApiScheduleService {
           ttl: const Duration(minutes: 30),
         );
         if (cachedData != null) {
-          if (kDebugMode) {
-            print('DEBUG: Returning cached schedule data for $cacheKey');
-          }
+          AppLogger.debug('schedule', 'DEBUG: Returning cached schedule data for $cacheKey');
           return cachedData;
         }
       } else {
-        if (kDebugMode) {
-          print('DEBUG: Skipping cache for $cacheKey (skipCache=true)');
-        }
+        AppLogger.debug('schedule', 'DEBUG: Skipping cache for $cacheKey (skipCache=true)');
       }
 
       // 2. Fetch from API
@@ -181,11 +173,7 @@ class ApiScheduleService {
         '/teaching-schedule?$queryString',
       );
 
-      if (kDebugMode) {
-        print(
-          'GET /teaching-schedule?$queryString - Status: ${response.statusCode}',
-        );
-      }
+      AppLogger.debug('schedule', 'GET /teaching-schedule?$queryString - Status: ${response.statusCode}',);
 
       final result = response.data;
 
@@ -214,9 +202,7 @@ class ApiScheduleService {
 
       return fallbackResult;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting paginated schedules: $e');
-      }
+      AppLogger.error('schedule', 'Error getting paginated schedules: $e');
       rethrow;
     }
   }
@@ -246,18 +232,14 @@ class ApiScheduleService {
   /// Creates a new teaching schedule entry. Invalidates cache after mutation.
   /// Like `TeachingSchedule::create($data)` in Laravel.
   static Future<dynamic> addSchedule(Map<String, dynamic> data) async {
-    if (kDebugMode) {
-      print('DEBUG: addSchedule request body: $data');
-    }
+    AppLogger.debug('schedule', 'DEBUG: addSchedule request body: $data');
 
     final response = await dioClient.post(
       '/teaching-schedule',
       data: data,
     );
 
-    if (kDebugMode) {
-      print('DEBUG: addSchedule response: ${response.statusCode} - ${response.data}');
-    }
+    AppLogger.debug('schedule', 'DEBUG: addSchedule response: ${response.statusCode} - ${response.data}');
 
     // Always invalidate cache after POST, even if response is an error
     // (backend may have saved the data despite returning 500)
@@ -320,27 +302,21 @@ class ApiScheduleService {
       url += '?$qs';
     }
 
-    print('DEBUG: Calling getAllSchedules with URL: $url');
+    AppLogger.debug('schedule', 'DEBUG: Calling getAllSchedules with URL: $url');
     final response = await dioClient.get(url);
 
-    print('DEBUG: getAllSchedules Response Status: ${response.statusCode}');
+    AppLogger.debug('schedule', 'DEBUG: getAllSchedules Response Status: ${response.statusCode}');
     final dynamic data = response.data;
 
     if (data is List) {
-      print(
-        'DEBUG: getAllSchedules received List, wrapping in data object. Count: ${data.length}',
-      );
+      AppLogger.debug('schedule', 'DEBUG: getAllSchedules received List, wrapping in data object. Count: ${data.length}',);
       return {'data': data};
     } else if (data is Map<String, dynamic>) {
-      print(
-        'DEBUG: getAllSchedules received Map. Data count: ${(data['data'] as List?)?.length ?? 0}',
-      );
+      AppLogger.debug('schedule', 'DEBUG: getAllSchedules received Map. Data count: ${(data['data'] as List?)?.length ?? 0}',);
       return data;
     }
 
-    print(
-      'DEBUG: getAllSchedules received unexpected type: ${data.runtimeType}',
-    );
+    AppLogger.debug('schedule', 'DEBUG: getAllSchedules received unexpected type: ${data.runtimeType}',);
     return {'data': []};
   }
 
@@ -375,9 +351,7 @@ class ApiScheduleService {
       final result = response.data;
       return result is List ? result : [];
     } catch (e) {
-      if (kDebugMode) {
-        print('Error checking conflicts: $e');
-      }
+      AppLogger.error('schedule', 'Error checking conflicts: $e');
       return [];
     }
   }
@@ -401,9 +375,7 @@ class ApiScheduleService {
       final result = response.data;
       return result is List ? result : [];
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading schedule by guru: $e');
-      }
+      AppLogger.error('schedule', 'Error loading schedule by guru: $e');
       return [];
     }
   }
@@ -426,9 +398,7 @@ class ApiScheduleService {
       final result = response.data;
       return result is List ? result : [];
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading current user schedule: $e');
-      }
+      AppLogger.error('schedule', 'Error loading current user schedule: $e');
       return [];
     }
   }
@@ -467,9 +437,7 @@ class ApiScheduleService {
 
       return result is List ? result : [];
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading filtered schedule: $e');
-      }
+      AppLogger.error('schedule', 'Error loading filtered schedule: $e');
       return [];
     }
   }
@@ -514,13 +482,13 @@ class ApiScheduleService {
         data: formData,
       );
 
-      print('Import Schedule Response Status: ${response.statusCode}');
-      print('Import Schedule Response Body: ${response.data}');
+      AppLogger.debug('schedule', 'Import Schedule Response Status: ${response.statusCode}');
+      AppLogger.debug('schedule', 'Import Schedule Response Body: ${response.data}');
 
       await invalidateCache(); // Force refresh data after import
       return response.data;
     } catch (e) {
-      print('Import schedule error details: $e');
+      AppLogger.error('schedule', 'Import schedule error details: $e');
       throw Exception('Import error: $e');
     }
   }
@@ -591,9 +559,7 @@ class ApiScheduleService {
       final result = response.data;
       return result is Map<String, dynamic> ? result : {};
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting date based semester: $e');
-      }
+      AppLogger.error('schedule', 'Error getting date based semester: $e');
       return {};
     }
   }

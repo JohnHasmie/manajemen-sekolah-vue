@@ -13,7 +13,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 
 /// Manages the app's current language and notifies listeners on change.
 /// Like a Vuex store module - holds reactive global state that widgets can listen to.
@@ -42,7 +42,7 @@ class LanguageProvider with ChangeNotifier {
     _currentLanguage = language;
 
     // Save to shared preferences
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     await prefs.setString('language', language);
 
     notifyListeners(); // Notify all listeners about the change
@@ -52,7 +52,7 @@ class LanguageProvider with ChangeNotifier {
   /// Called once at app startup. Defaults to Indonesian if no preference is saved.
   /// Like reading `session('locale')` in Laravel.
   Future<void> loadSavedLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final savedLanguage = prefs.getString('language') ?? indonesian;
     _currentLanguage = savedLanguage;
     notifyListeners();

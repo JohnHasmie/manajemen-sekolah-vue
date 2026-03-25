@@ -8,7 +8,6 @@
 // Supports auto-detection of current lesson hour, class-based filtering,
 // bulk status setting, and multi-layer caching. In Laravel terms, this
 // combines AttendanceController@index, @store, and @summary.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -30,6 +29,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Data model for an attendance summary row.
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
@@ -232,11 +232,11 @@ class PresencePageState extends State<PresencePage>
       try {
         final cached = await LocalCacheService.load(cacheKey, ttl: ttl);
         if (cached != null) {
-          if (kDebugMode) print('⚡ Cache hit: $cacheKey');
+          AppLogger.debug('attendance', 'Cache hit: $cacheKey');
           return List<dynamic>.from(cached);
         }
       } catch (e) {
-        if (kDebugMode) print('Cache load error ($cacheKey): $e');
+        AppLogger.error('attendance', 'Cache load error ($cacheKey): $e');
       }
     }
 
@@ -270,7 +270,7 @@ class PresencePageState extends State<PresencePage>
       List<dynamic>? providerClassList;
       if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
         providerClassList = teacherProvider.allClasses;
-        if (kDebugMode) print('⚡ Using TeacherProvider classList (${providerClassList.length} classes)');
+        AppLogger.debug('attendance', 'Using TeacherProvider classList (${providerClassList.length} classes)');
       }
 
       // Step 2: Try composite local cache for instant display
@@ -291,10 +291,10 @@ class PresencePageState extends State<PresencePage>
               }
               if (_classList.isNotEmpty) _isLoadingInput = false;
             });
-            if (kDebugMode) print('⚡ Loaded presence composite cache');
+            AppLogger.info('attendance', 'Loaded presence composite cache');
           }
         } catch (e) {
-          if (kDebugMode) print('Presence cache load error: $e');
+          AppLogger.error('attendance', 'Presence cache load error: $e');
         }
       }
 
@@ -393,7 +393,7 @@ class PresencePageState extends State<PresencePage>
       // Load summary data untuk mode view
       _loadAbsensiSummary();
     } catch (e) {
-      if (kDebugMode) print('PresencePage initial data error: $e');
+      AppLogger.error('attendance', 'PresencePage initial data error: $e');
       if (!mounted) return;
 
       // Only show error if no cached data
@@ -432,7 +432,7 @@ class PresencePageState extends State<PresencePage>
       );
       return result;
     } catch (e) {
-      print('Error getting mata pelajaran by guru: $e');
+      AppLogger.error('attendance', 'Error getting mata pelajaran by guru: $e');
       return [];
     }
   }
@@ -459,7 +459,7 @@ class PresencePageState extends State<PresencePage>
         }
       });
     } catch (e) {
-      print('Error loading subjects by class: $e');
+      AppLogger.error('attendance', 'Error loading subjects by class: $e');
       setState(() {
         _isLoadingInput = false;
       });
@@ -519,7 +519,7 @@ class PresencePageState extends State<PresencePage>
 
       return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
     } catch (e) {
-      print('Error parsing time: $e');
+      AppLogger.error('attendance', 'Error parsing time: $e');
       return false;
     }
   }
@@ -584,18 +584,18 @@ class PresencePageState extends State<PresencePage>
                 return false;
               }).toList();
 
-              if (kDebugMode) print('⚡ Detected today schedule from teaching_schedule cache (${todaySchedules.length} items)');
+              AppLogger.debug('attendance', 'Detected today schedule from teaching_schedule cache (${todaySchedules.length} items)');
               break;
             }
           }
         } catch (e) {
-          if (kDebugMode) print('Cache read error ($key): $e');
+          AppLogger.error('attendance', 'Cache read error ($key): $e');
         }
       }
 
       // ─── Fallback: fetch from API only if no cache available ───
       if (todaySchedules == null) {
-        if (kDebugMode) print('📡 No schedule cache, fetching from API');
+        AppLogger.debug('attendance', 'No schedule cache, fetching from API');
         todaySchedules = await ApiScheduleService.getSchedule(
           teacherId: teacherId,
           dayId: dayId,
@@ -627,7 +627,7 @@ class PresencePageState extends State<PresencePage>
         }
       });
     } catch (e) {
-      if (kDebugMode) print('Error detecting current schedule: $e');
+      AppLogger.error('attendance', 'Error detecting current schedule: $e');
     }
   }
 
@@ -664,10 +664,10 @@ class PresencePageState extends State<PresencePage>
             }).toList();
             _isLoadingSummary = false;
           });
-          if (kDebugMode) print('Loaded ${_absensiSummaryList.length} summaries from cache');
+          AppLogger.info('attendance', 'Loaded ${_absensiSummaryList.length} summaries from cache');
         }
       } catch (e) {
-        if (kDebugMode) print('Summary cache load error: $e');
+        AppLogger.error('attendance', 'Summary cache load error: $e');
       }
     }
 
@@ -744,13 +744,9 @@ class PresencePageState extends State<PresencePage>
         await LocalCacheService.save(summaryCacheKey, cacheData);
       }
 
-      if (kDebugMode) {
-        print('Loaded ${_absensiSummaryList.length} absensi summaries');
-      }
+      AppLogger.info('attendance', 'Loaded ${_absensiSummaryList.length} absensi summaries');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading absensi summary: $e');
-      }
+      AppLogger.error('attendance', 'Error loading absensi summary: $e');
       if (mounted) {
         if (_absensiSummaryList.isEmpty) {
           setState(() => _isLoadingSummary = false);
@@ -3133,9 +3129,7 @@ class PresencePageState extends State<PresencePage>
         } catch (e) {
           errorCount++;
           // Debug logging as requested
-          if (kDebugMode) {
-            print('❌ Attendance save error for ${student.name}: $e');
-          }
+          AppLogger.error('attendance', 'Attendance save error for ${student.name}: $e');
 
           // Clean user-friendly message
           String cleanerMessage = e.toString().replaceAll('Exception: ', '');
@@ -3412,7 +3406,7 @@ class PresencePageState extends State<PresencePage>
       // Reload summary data
       _loadAbsensiSummary();
     } catch (e) {
-      if (kDebugMode) print('Delete attendance error: $e');
+      AppLogger.error('attendance', 'Delete attendance error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -3470,7 +3464,7 @@ class PresencePageState extends State<PresencePage>
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('attendance', 'Error checking tour status: $e');
     }
   }
 
@@ -3663,11 +3657,9 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
         _isLoading = false;
       });
 
-      print(
-        'Loaded ${_absensiData.length} absensi records for ${_studentList.length} students in class ${widget.classId ?? "all"}',
-      );
+      AppLogger.info('attendance', 'Loaded ${_absensiData.length} absensi records for ${_studentList.length} students in class ${widget.classId ?? "all"}',);
     } catch (e) {
-      print('Error loading absensi detail: $e');
+      AppLogger.error('attendance', 'Error loading absensi detail: $e');
       setState(() {
         _isLoading = false;
       });
@@ -4296,7 +4288,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
         });
       }
     } catch (e) {
-      print('Error loading absensi detail for teacher: $e');
+      AppLogger.error('attendance', 'Error loading absensi detail for teacher: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -4332,7 +4324,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
       // OR I can add the import.
       // Let's check imports in presence_teacher.dart.
     } catch (e) {
-      print('Error exporting activities: $e');
+      AppLogger.error('attendance', 'Error exporting activities: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -4392,25 +4384,13 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
                 );
                 targetLessonHourId = existingRecord['lesson_hour_id']
                     ?.toString();
-                if (kDebugMode) {
-                  print(
-                    '🔍 Found existing record for ${siswa.name}, resolved lesson_hour_id: $targetLessonHourId',
-                  );
-                }
+                AppLogger.debug('attendance', 'Found existing record for ${siswa.name}, resolved lesson_hour_id: $targetLessonHourId',);
               } catch (_) {
-                if (kDebugMode) {
-                  print(
-                    '⚠️ No existing record found for ${siswa.name} in _absensiData',
-                  );
-                }
+                AppLogger.warning('attendance', 'No existing record found for ${siswa.name} in _absensiData',);
               }
             }
 
-            if (kDebugMode) {
-              print(
-                '🚀 Saving attendance for ${siswa.name} with lesson_hour_id: $targetLessonHourId',
-              );
-            }
+            AppLogger.debug('attendance', 'Saving attendance for ${siswa.name} with lesson_hour_id: $targetLessonHourId',);
 
             await ApiService.createAttendance({
               'student_id': siswa.id,
@@ -4425,7 +4405,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
             successCount++;
           } catch (e) {
             errorCount++;
-            print('Error updating attendance for ${siswa.name}: $e');
+            AppLogger.error('attendance', 'Error updating attendance for ${siswa.name}: $e');
           }
         }
       }
@@ -4464,7 +4444,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
         }
       }
     } catch (e) {
-      print('Error saving changes: $e');
+      AppLogger.error('attendance', 'Error saving changes: $e');
       if (mounted) {
         setState(() {
           _isSaving = false;

@@ -8,7 +8,6 @@
 // In Laravel terms: `ScheduleController@index` with multiple view formats.
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -26,8 +25,9 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Teacher's weekly schedule screen with card and table view modes.
 ///
@@ -133,7 +133,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       _jadwalList = _memCachedJadwal!;
       _availableClasses = _memCachedClasses!;
       _isLoading = false;
-      if (kDebugMode) print('⚡ Instant restore from static memory cache');
+      AppLogger.debug('schedule', 'Instant restore from static memory cache');
     }
 
     _setDefaultAcademicPeriod();
@@ -147,7 +147,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     final trigger = FCMService().syncTrigger.value;
     if (trigger != null && trigger['type'] == 'refresh_schedules') {
       if (mounted) {
-        if (kDebugMode) print('📦 Sync triggered: refresh_schedules');
+        AppLogger.debug('schedule', 'Sync triggered: refresh_schedules');
         _loadJadwal();
       }
     }
@@ -187,11 +187,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   /// Loads the current teacher profile and triggers schedule loading.
   /// Uses a multi-layer cache: SharedPreferences -> LocalCacheService -> API.
   Future<void> _loadUserData() async {
-    if (kDebugMode) {
-      print(
-        '===== TeachingScheduleScreen: _loadUserData STARTED =====',
-      );
-    }
+    AppLogger.debug('schedule', '===== TeachingScheduleScreen: _loadUserData STARTED =====',);
     try {
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
       final teacherProvider = Provider.of<TeacherProvider>(
@@ -200,7 +196,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       );
 
       // Early cache load for instant display (while provider/API resolves)
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final lastCacheKey = prefs.getString(_prefKeyLastCacheKey);
       if (lastCacheKey != null) {
         try {
@@ -219,18 +215,16 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                       [];
               _isLoading = false;
             });
-            if (kDebugMode) print('⚡ Early schedule cache loaded (key: $lastCacheKey)');
+            AppLogger.info('schedule', 'Early schedule cache loaded (key: $lastCacheKey)');
           }
         } catch (e) {
-          if (kDebugMode) print('⚠️ Early schedule cache failed: $e');
+          AppLogger.error('schedule', 'Early schedule cache failed: $e');
         }
       }
 
       if (teacherProvider.isLoaded && teacherProvider.teacherId != null) {
         // ✅ Use cached data from provider — no API calls needed
-        if (kDebugMode) {
-          print('⚡ Using TeacherProvider cache (teacherId=${teacherProvider.teacherId})');
-        }
+        AppLogger.debug('schedule', 'Using TeacherProvider cache (teacherId=${teacherProvider.teacherId})');
 
         setState(() {
           _teacherId = teacherProvider.teacherId!;
@@ -256,9 +250,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       }
 
       // ─── Step 2: Fallback — fetch from API (direct navigation, deep link, etc.) ───
-      if (kDebugMode) {
-        print('📡 TeacherProvider empty, falling back to API');
-      }
+      AppLogger.debug('schedule', 'TeacherProvider empty, falling back to API');
 
       final userDataStr = prefs.getString('user');
       final userData = json.decode(userDataStr ?? '{}');
@@ -280,9 +272,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
           if (looksLikeTeacher) {
             resolvedTeacherId = userId;
-            if (kDebugMode) {
-              print('Use ID from prefs directly: $resolvedTeacherId');
-            }
+            AppLogger.debug('schedule', 'Use ID from prefs directly: $resolvedTeacherId');
           } else {
             String? academicYearId;
             try {
@@ -310,11 +300,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             }
           }
         } catch (e) {
-          if (kDebugMode) print('Error resolving teacher ID: $e');
+          AppLogger.error('schedule', 'Error resolving teacher ID: $e');
         }
 
         if (resolvedTeacherId != null) {
-          if (kDebugMode) print('✅ Resolved Teacher ID: $resolvedTeacherId');
+          AppLogger.info('schedule', 'Resolved Teacher ID: $resolvedTeacherId');
           setState(() {
             _teacherId = resolvedTeacherId!;
           });
@@ -369,7 +359,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             });
           }
         } else {
-          if (kDebugMode) print('❌ Failed to resolve Teacher ID');
+          AppLogger.error('schedule', 'Failed to resolve Teacher ID');
         }
 
         // Load reference data in parallel, then fetch schedule
@@ -383,9 +373,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error in _loadUserData: $e');
-      }
+      AppLogger.error('schedule', 'Error in _loadUserData: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -401,7 +389,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       List<dynamic> dayData;
       if (cached != null) {
         dayData = List<dynamic>.from(cached);
-        if (kDebugMode) print('⚡ Day data loaded from cache');
+        AppLogger.info('schedule', 'Day data loaded from cache');
       } else {
         dayData = await ApiScheduleService.getHari();
         if (dayData.isNotEmpty) {
@@ -431,9 +419,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading day data: $e');
-      }
+      AppLogger.error('schedule', 'Error loading day data: $e');
     }
   }
 
@@ -448,7 +434,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
       if (cachedSemester != null) {
         semesterData = List<dynamic>.from(cachedSemester);
-        if (kDebugMode) print('⚡ Semester list loaded from cache');
+        AppLogger.info('schedule', 'Semester list loaded from cache');
       } else {
         semesterData = await ApiScheduleService.getSemester();
         if (semesterData.isNotEmpty) {
@@ -472,7 +458,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
         if (cachedDateBased != null) {
           result = Map<String, dynamic>.from(cachedDateBased);
-          if (kDebugMode) print('⚡ Current semester loaded from cache');
+          AppLogger.info('schedule', 'Current semester loaded from cache');
         } else {
           result = await ApiScheduleService.getDateBasedSemester();
           if (result.isNotEmpty) {
@@ -493,9 +479,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           }
         }
       } catch (e) {
-        if (kDebugMode) {
-          print('Error fetching date based semester: $e');
-        }
+        AppLogger.error('schedule', 'Error fetching date based semester: $e');
       }
 
       // 2. Fallback to backend 'current' flag
@@ -524,9 +508,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading semester data: $e');
-      }
+      AppLogger.error('schedule', 'Error loading semester data: $e');
     }
   }
 
@@ -542,11 +524,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
       // Fallback: if provider is empty (e.g. deep link), fetch from API
       if (academicYears.isEmpty) {
-        if (kDebugMode) print('📡 AcademicYearProvider empty, fetching from API');
+        AppLogger.debug('schedule', 'AcademicYearProvider empty, fetching from API');
         await academicYearProvider.fetchAcademicYears();
         academicYears = academicYearProvider.academicYears;
       } else {
-        if (kDebugMode) print('⚡ Academic years loaded from provider (${academicYears.length} items)');
+        AppLogger.info('schedule', 'Academic years loaded from provider (${academicYears.length} items)');
       }
 
       final globalSelectedYear = academicYearProvider.selectedAcademicYear;
@@ -579,9 +561,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         }
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading academic year data: $e');
-      }
+      AppLogger.error('schedule', 'Error loading academic year data: $e');
     }
   }
 
@@ -644,10 +624,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                 [];
             _isLoading = false;
           });
-          if (kDebugMode) print('⚡ Schedule loaded from cache');
+          AppLogger.info('schedule', 'Schedule loaded from cache');
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ Schedule cache load failed: $e');
+        AppLogger.error('schedule', 'Schedule cache load failed: $e');
       }
     }
 
@@ -663,12 +643,10 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
       final academicYearToUse = _selectedAcademicYear;
 
-      if (kDebugMode) {
-        print('FETCHING SCHEDULE WITH:');
-        print('- Teacher ID: $_teacherId');
-        print('- Semester: $semesterToUse');
-        print('- Academic Year: $academicYearToUse');
-      }
+      AppLogger.debug('schedule', 'FETCHING SCHEDULE WITH:');
+      AppLogger.debug('schedule', '- Teacher ID: $_teacherId');
+      AppLogger.debug('schedule', '- Semester: $semesterToUse');
+      AppLogger.debug('schedule', '- Academic Year: $academicYearToUse');
 
       dynamic jadwalData;
 
@@ -693,9 +671,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
 
       final jadwal = jadwalData is List ? jadwalData : [];
 
-      if (kDebugMode) {
-        print('Total schedule items loaded: ${jadwal.length}');
-      }
+      AppLogger.info('schedule', 'Total schedule items loaded: ${jadwal.length}');
 
       // Extract unique classes for filter
       final uniqueClasses = <String, String>{};
@@ -733,9 +709,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           'jadwal': jadwal,
           'availableClasses': classes,
         });
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setString(_prefKeyLastCacheKey, cacheKey);
-        });
+        PreferencesService().setString(_prefKeyLastCacheKey, cacheKey);
       }
 
       // Show tour
@@ -745,9 +719,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         }
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load jadwal: $e');
-      }
+      AppLogger.error('schedule', 'Error load jadwal: $e');
 
       if (mounted) {
         setState(() {
@@ -1510,7 +1482,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('schedule', 'Error checking tour status: $e');
     }
   }
 

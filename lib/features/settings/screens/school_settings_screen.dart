@@ -5,7 +5,6 @@
 // 2. Time settings (lesson hours per day)
 //
 // Includes a guided tour feature (tutorial coach marks) for first-time users.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/settings/screens/school_level_settings_screen.dart';
 import 'package:manajemensekolah/features/settings/screens/time_settings_screen.dart';
@@ -15,6 +14,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// School settings hub screen - navigates to sub-settings pages.
 ///
@@ -58,7 +58,7 @@ class _SchoolSettingsScreenState extends State<SchoolSettingsScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('settings', e);
     }
   }
 

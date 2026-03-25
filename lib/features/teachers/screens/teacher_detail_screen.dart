@@ -4,7 +4,6 @@
 // all teacher information (personal data, subjects taught, classes, schedule).
 //
 // In Laravel terms, this calls `GET /api/teachers/{id}` (TeacherController@show).
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
@@ -13,6 +12,7 @@ import 'package:manajemensekolah/features/teachers/services/teacher_service.dart
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Teacher detail screen - displays full profile for a single teacher.
 ///
@@ -88,7 +88,7 @@ class TeacherDetailScreenState extends State<TeacherDetailScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      if (kDebugMode) print('Load teacher detail error: $e');
+      AppLogger.error('teacher', e);
       setState(() {
         _isLoading = false;
         _errorMessage = ErrorUtils.getFriendlyMessage(e);

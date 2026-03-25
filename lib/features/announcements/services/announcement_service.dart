@@ -9,9 +9,9 @@ library;
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for announcement-related API calls.
 /// Like a Laravel Resource Controller (index, store, update) combined with
@@ -31,9 +31,7 @@ class ApiAnnouncementService {
     try {
       final response = await dioClient.get('/announcement/filter-options');
 
-      if (kDebugMode) {
-        print('GET /announcement/filter-options - Status: ${response.statusCode}');
-      }
+      AppLogger.debug('announcement', 'GET /announcement/filter-options - Status: ${response.statusCode}');
 
       final result = response.data;
 
@@ -51,9 +49,7 @@ class ApiAnnouncementService {
         },
       };
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting announcement filter options: $e');
-      }
+      AppLogger.error('announcement', 'Error getting announcement filter options: $e');
       rethrow;
     }
   }
@@ -96,9 +92,7 @@ class ApiAnnouncementService {
     try {
       final response = await dioClient.get('/announcement?$queryString');
 
-      if (kDebugMode) {
-        print('GET /announcement?$queryString - Status: ${response.statusCode}');
-      }
+      AppLogger.debug('announcement', 'GET /announcement?$queryString - Status: ${response.statusCode}');
 
       final result = response.data;
 
@@ -136,9 +130,7 @@ class ApiAnnouncementService {
         },
       };
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting paginated announcements: $e');
-      }
+      AppLogger.error('announcement', 'Error getting paginated announcements: $e');
       rethrow;
     }
   }
@@ -153,24 +145,14 @@ class ApiAnnouncementService {
     // Debug legacy result shape
     try {
       if (result is List) {
-        if (kDebugMode) {
-          print('Legacy getAnnouncements: List with ${result.length} items');
-        }
+        AppLogger.debug('announcement', 'Legacy getAnnouncements: List with ${result.length} items');
       } else if (result is Map) {
-        if (kDebugMode) {
-          print('Legacy getAnnouncements: Map keys = ${result.keys.toList()}');
-        }
+        AppLogger.debug('announcement', 'Legacy getAnnouncements: Map keys = ${result.keys.toList()}');
       } else {
-        if (kDebugMode) {
-          print(
-            'Legacy getAnnouncements: unexpected type ${result.runtimeType}',
-          );
-        }
+        AppLogger.debug('announcement', 'Legacy getAnnouncements: unexpected type ${result.runtimeType}',);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error logging legacy getAnnouncements result: $e');
-      }
+      AppLogger.error('announcement', 'Error logging legacy getAnnouncements result: $e');
     }
 
     // Handle new pagination format
@@ -205,13 +187,11 @@ class ApiAnnouncementService {
 
       final response = await dioClient.post('/announcement', data: formData);
 
-      if (kDebugMode) {
-        print('POST /announcement - Status: ${response.statusCode}');
-      }
+      AppLogger.debug('announcement', 'POST /announcement - Status: ${response.statusCode}');
 
       return response.data;
     } catch (e) {
-      if (kDebugMode) print('Error creating announcement: $e');
+      AppLogger.error('announcement', 'Error creating announcement: $e');
       rethrow;
     }
   }
@@ -245,13 +225,11 @@ class ApiAnnouncementService {
         data: formData,
       );
 
-      if (kDebugMode) {
-        print('POST (PUT) /announcement/$id - Status: ${response.statusCode}');
-      }
+      AppLogger.debug('announcement', 'POST (PUT) /announcement/$id - Status: ${response.statusCode}');
 
       return response.data;
     } catch (e) {
-      if (kDebugMode) print('Error updating announcement: $e');
+      AppLogger.error('announcement', 'Error updating announcement: $e');
       rethrow;
     }
   }

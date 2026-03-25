@@ -6,13 +6,13 @@
 //
 // In Laravel terms, this consumes `GET /api/settings/lesson-hours` and
 // `PUT /api/settings/lesson-hours` with per-day session definitions.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Time settings screen - configure lesson hour sessions for each school day.
 ///
@@ -69,7 +69,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
         _isLoadingTime = false;
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading settings data: $e');
+      AppLogger.error('settings', e);
       if (mounted) {
         setState(() => _isLoadingTime = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -383,7 +383,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       if (mounted) setState(() => _sessions = updated);
       widget.onSave();
     } catch (e) {
-      if (kDebugMode) print('Error refreshing sessions: $e');
+      AppLogger.error('settings', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -686,9 +686,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 navigator.pop();
                                 await _refreshSessions();
                               } catch (e) {
-                                if (kDebugMode) {
-                                  print('Save/Update lesson session error: $e');
-                                }
+                                AppLogger.error('settings', e);
                                 messenger.showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -763,7 +761,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
         );
       }
     } catch (e) {
-      if (kDebugMode) print('Copy schedule error: $e');
+      AppLogger.error('settings', e);
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1031,7 +1029,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       await ApiSettingsService.deleteLessonSession(id);
       await _refreshSessions();
     } catch (e) {
-      if (kDebugMode) print('Delete session error: $e');
+      AppLogger.error('settings', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

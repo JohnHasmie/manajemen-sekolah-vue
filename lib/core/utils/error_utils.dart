@@ -4,7 +4,7 @@
 /// interceptor that translates API errors into localized toast messages.
 library;
 
-import 'package:flutter/foundation.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Maps raw error objects to localized, user-friendly Indonesian error messages.
 /// Like a Laravel Helper function class, or the `render()` method in Laravel's
@@ -25,9 +25,7 @@ class ErrorUtils {
   ///
   /// Returns a localized Indonesian string suitable for showing in a SnackBar or dialog.
   static String getFriendlyMessage(dynamic error) {
-    if (kDebugMode) {
-      print('🔍 Raw Error: $error');
-    }
+    AppLogger.error('error', error);
 
     final String errorStr = error.toString().toLowerCase();
 

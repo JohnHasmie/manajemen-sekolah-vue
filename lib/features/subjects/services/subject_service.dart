@@ -13,12 +13,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for subject, material, and AI content management API calls.
 /// Like a combined Laravel controller handling subjects, materials, and AI endpoints.
@@ -35,7 +35,7 @@ class ApiSubjectService {
   /// Cache is scoped by school_id to prevent cross-school data leaks.
   static Future<Map<String, dynamic>> getSubjectFilterOptions() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userJson = prefs.getString('user');
       String schoolId = 'global';
       if (userJson != null) {
@@ -67,7 +67,7 @@ class ApiSubjectService {
         'data': {'status_options': []},
       };
     } catch (e) {
-      print('Error getting filter options: $e');
+      AppLogger.error('subject', e);
       rethrow;
     }
   }
@@ -107,7 +107,7 @@ class ApiSubjectService {
     String queryString = Uri(queryParameters: queryParams).query;
 
     // Get school_id context for cache key
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final userJson = prefs.getString('user');
     String schoolId = 'global';
     if (userJson != null) {
@@ -126,19 +126,15 @@ class ApiSubjectService {
         ttl: Duration(minutes: 30),
       );
       if (cachedData != null) {
-        if (kDebugMode) {
-          print('✅ Loading subjects from CACHE: $cacheKey');
-        }
+        AppLogger.info('subject', 'Loading subjects from CACHE: $cacheKey');
         return cachedData;
       }
 
       // 2. Jika tidak ada di cache, ambil dari API
-      if (kDebugMode) {
-        print('🌐 Fetching subjects from API for School: $schoolId');
-      }
+      AppLogger.debug('subject', 'Fetching subjects from API for School: $schoolId');
       final response = await dioClient.get('/subject?$queryString');
 
-      print('GET /subject?$queryString - Status: ${response.statusCode}');
+      AppLogger.debug('subject', 'GET /subject?$queryString - Status: ${response.statusCode}');
 
       final result = response.data;
 
@@ -167,7 +163,7 @@ class ApiSubjectService {
       ); // Save fallback to cache
       return fallbackResult;
     } catch (e) {
-      print('Error getting paginated subjects: $e');
+      AppLogger.error('subject', e);
       rethrow;
     }
   }
@@ -377,15 +373,15 @@ class ApiSubjectService {
 
       final response = await dioClient.post('/subject/import', data: formData);
 
-      print('Import Response Status: ${response.statusCode}');
-      print('Import Response Body: ${response.data}');
+      AppLogger.debug('subject', 'Import Response Status: ${response.statusCode}');
+      AppLogger.debug('subject', 'Import Response Body: ${response.data}');
 
       await LocalCacheService.clearStartingWith(
         'subject_',
       ); // Invalidate cache
       return response.data;
     } catch (e) {
-      print('Import error details: $e');
+      AppLogger.error('subject', e);
       throw Exception('Import error: $e');
     }
   }
@@ -406,10 +402,10 @@ class ApiSubjectService {
 
       await file.writeAsBytes(bytes);
 
-      print('Template downloaded to: $filePath');
+      AppLogger.info('subject', 'Template downloaded to: $filePath');
       return filePath;
     } catch (e) {
-      print('Download template error: $e');
+      AppLogger.error('subject', e);
       throw Exception('Failed to download template: $e');
     }
   }
@@ -449,7 +445,7 @@ class ApiSubjectService {
     )..interceptors.add(
         InterceptorsWrapper(
           onRequest: (options, handler) async {
-            final prefs = await SharedPreferences.getInstance();
+            final prefs = PreferencesService();
             final token = prefs.getString('token');
             if (token != null) {
               options.headers['Authorization'] = 'Bearer $token';
@@ -510,15 +506,11 @@ class ApiSubjectService {
 
   /// Get generated material by ID from KamillLabs Edu AI
   static Future<dynamic> getGeneratedMaterial(String materialId) async {
-    if (kDebugMode) {
-      print('🔍 Getting material: $_aiBaseUrl/generated-materials/$materialId');
-    }
+    AppLogger.debug('subject', 'Getting material: $_aiBaseUrl/generated-materials/$materialId');
     final response = await _aiDio.get(
       '/generated-materials/$materialId',
     );
-    if (kDebugMode) {
-      print('🔍 Get material response: ${response.statusCode}');
-    }
+    AppLogger.debug('subject', 'Get material response: ${response.statusCode}');
     return _handleAiResponse(response);
   }
 
@@ -533,16 +525,12 @@ class ApiSubjectService {
       'chapter_id': chapterId,
       if (subChapterId != null) 'sub_chapter_id': subChapterId,
     };
-    if (kDebugMode) {
-      print('🔍 Check cache params: $queryParams');
-    }
+    AppLogger.debug('subject', 'Check cache params: $queryParams');
     final response = await _aiDio.get(
       '/generated-materials/check-cache',
       queryParameters: queryParams,
     );
-    if (kDebugMode) {
-      print('🔍 Check cache response: ${response.statusCode} - ${response.data}');
-    }
+    AppLogger.debug('subject', 'Check cache response: ${response.statusCode} - ${response.data}');
     return _handleAiResponse(response);
   }
 
@@ -557,16 +545,12 @@ class ApiSubjectService {
       if (subjectId != null) 'subject_id': subjectId,
       if (chapterId != null) 'chapter_id': chapterId,
     };
-    if (kDebugMode) {
-      print('🔍 List materials params: $queryParams');
-    }
+    AppLogger.debug('subject', 'List materials params: $queryParams');
     final response = await _aiDio.get(
       '/generated-materials',
       queryParameters: queryParams,
     );
-    if (kDebugMode) {
-      print('🔍 List materials response: ${response.statusCode}');
-    }
+    AppLogger.debug('subject', 'List materials response: ${response.statusCode}');
     return _handleAiResponse(response);
   }
 
@@ -603,28 +587,24 @@ class ApiSubjectService {
     if (additionalText != null && additionalText.trim().isNotEmpty) {
       body['additional_text'] = additionalText.trim();
     }
-    if (kDebugMode) {
-      print('🔄 Regen RPP field: /lesson-plans/$rppId/regen/$field');
-      print('🔄 Regen RPP body: $body');
-    }
+    AppLogger.debug('subject', 'Regen RPP field: /lesson-plans/$rppId/regen/$field');
+    AppLogger.debug('subject', 'Regen RPP body: $body');
     final response = await _aiDio.post(
       '/lesson-plans/$rppId/regen/$field',
       data: body,
     );
-    if (kDebugMode) {
-      print('🔄 Regen RPP response: ${response.statusCode}');
-    }
+    AppLogger.debug('subject', 'Regen RPP response: ${response.statusCode}');
     return response;
   }
 
   /// Get RPP regen limits per field (Section 5.7)
   /// GET /api/lesson-plans/{id}/regen-limits
   static Future<dynamic> getRppRegenLimits(String rppId) async {
-    if (kDebugMode) print('🔄 Regen limits: /lesson-plans/$rppId/regen-limits');
+    AppLogger.debug('subject', 'Regen limits: /lesson-plans/$rppId/regen-limits');
     final response = await _aiDio.get(
       '/lesson-plans/$rppId/regen-limits',
     );
-    if (kDebugMode) print('🔄 Regen limits response: ${response.statusCode}');
+    AppLogger.debug('subject', 'Regen limits response: ${response.statusCode}');
     // Check for HTML error page from proxy/CDN
     if (response.data is String) {
       final bodyStr = response.data as String;

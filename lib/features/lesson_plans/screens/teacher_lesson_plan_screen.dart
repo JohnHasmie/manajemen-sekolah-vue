@@ -27,8 +27,9 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// RPP (lesson plan) list screen with CRUD, search, filter, and AI generation.
 ///
@@ -434,7 +435,7 @@ class RppScreenState extends State<RppScreen> {
           });
           _checkAndShowTour();
         }
-        if (kDebugMode) print('📦 RppScreen: Data from cache (${cached.length})');
+        AppLogger.debug('lesson_plan', 'RppScreen: Data from cache (${cached.length})');
         return;
       }
     }
@@ -470,7 +471,7 @@ class RppScreenState extends State<RppScreen> {
         await LocalCacheService.save(rppCacheKey, rppData);
       }
     } catch (e) {
-      if (kDebugMode) print('Load RPP error: $e');
+      AppLogger.error('lesson_plan', 'Load RPP error: $e');
       if (mounted && _rppList.isEmpty) {
         setState(() {
           _isLoading = false;
@@ -733,7 +734,7 @@ class RppScreenState extends State<RppScreen> {
           );
         }
       } catch (e) {
-        if (kDebugMode) print('Delete RPP error: $e');
+        AppLogger.error('lesson_plan', 'Delete RPP error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -771,7 +772,7 @@ class RppScreenState extends State<RppScreen> {
         ),
       );
     } catch (e) {
-      if (kDebugMode) print('Fetch RPP detail error: $e');
+      AppLogger.error('lesson_plan', 'Fetch RPP detail error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ErrorUtils.getFriendlyMessage(e)),
@@ -1443,7 +1444,7 @@ class RppScreenState extends State<RppScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('lesson_plan', 'Error checking tour status: $e');
     }
   }
 
@@ -1661,15 +1662,13 @@ class _RppFormDialogState extends State<RppFormDialog> {
         }
       });
       if (kDebugMode) {
-        print('Loaded ${_mataPelajaranList.length} mata pelajaran');
+        AppLogger.info('lesson_plan', 'Loaded ${_mataPelajaranList.length} mata pelajaran');
         if (_mataPelajaranList.isNotEmpty) {
-          print('DEBUG SUBJECT ITEM: ${_mataPelajaranList.first}');
+          AppLogger.debug('lesson_plan', 'DEBUG SUBJECT ITEM: ${_mataPelajaranList.first}');
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading mata pelajaran by guru: $e');
-      }
+      AppLogger.error('lesson_plan', 'Error loading mata pelajaran by guru: $e');
       _loadAllMataPelajaran();
     }
   }
@@ -1689,9 +1688,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
         }
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading all mata pelajaran: $e');
-      }
+      AppLogger.error('lesson_plan', 'Error loading all mata pelajaran: $e');
     }
   }
 
@@ -1712,16 +1709,14 @@ class _RppFormDialogState extends State<RppFormDialog> {
         }
       });
       if (kDebugMode) {
-        print(
-          'Loaded ${_kelasList.length} kelas for mata pelajaran $subjectId',
-        );
+        AppLogger.info('lesson_plan', 'Loaded ${_kelasList.length} kelas for mata pelajaran $subjectId',);
         if (_kelasList.isNotEmpty) {
-          print('DEBUG CLASS ITEM: ${_kelasList.first}');
+          AppLogger.debug('lesson_plan', 'DEBUG CLASS ITEM: ${_kelasList.first}');
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading kelas by mata pelajaran: $e');
+        AppLogger.error('lesson_plan', 'Error loading kelas by mata pelajaran: $e');
         setState(() {
           _kelasList = [];
         });
@@ -1744,10 +1739,10 @@ class _RppFormDialogState extends State<RppFormDialog> {
         File selectedFile = File(file.path!);
         bool fileExists = await selectedFile.exists();
 
-        print('File picked: ${file.name}');
-        print('File path: ${file.path}');
-        print('File exists: $fileExists');
-        print('File size: ${file.size} bytes');
+        AppLogger.debug('lesson_plan', 'File picked: ${file.name}');
+        AppLogger.debug('lesson_plan', 'File path: ${file.path}');
+        AppLogger.debug('lesson_plan', 'File exists: $fileExists');
+        AppLogger.debug('lesson_plan', 'File size: ${file.size} bytes');
 
         if (fileExists) {
           setState(() {
@@ -1757,7 +1752,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error picking file: $e');
+      AppLogger.error('lesson_plan', 'Error picking file: $e');
     }
   }
 
@@ -1789,9 +1784,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
 
       final fullUrl = '$rootUrl$cleanPath';
 
-      if (kDebugMode) {
-        print('Downloading file from: $fullUrl');
-      }
+      AppLogger.debug('lesson_plan', 'Downloading file from: $fullUrl');
 
       final languageProvider = context.read<LanguageProvider>();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1818,15 +1811,11 @@ class _RppFormDialogState extends State<RppFormDialog> {
 
       await file.writeAsBytes(response.data!);
 
-      if (kDebugMode) {
-        print('File saved to: ${file.path}');
-      }
+      AppLogger.info('lesson_plan', 'File saved to: ${file.path}');
 
       await OpenFile.open(file.path);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error opening file: $e');
-      }
+      AppLogger.error('lesson_plan', 'Error opening file: $e');
 
       String message = e.toString().replaceFirst('Exception: ', '');
 
@@ -1849,33 +1838,33 @@ class _RppFormDialogState extends State<RppFormDialog> {
       String? filePath;
 
       // Debug: Cek apakah file ada
-      print('File selected: $_selectedFile');
-      print('File name: $_selectedFileName');
+      AppLogger.debug('lesson_plan', 'File selected: $_selectedFile');
+      AppLogger.debug('lesson_plan', 'File name: $_selectedFileName');
 
       if (_selectedFile != null) {
         try {
-          print('Starting file upload...');
+          AppLogger.debug('lesson_plan', 'Starting file upload...');
           final uploadResult = await ApiService.uploadLessonPlanFile(_selectedFile!);
-          print('Upload result: $uploadResult');
+          AppLogger.debug('lesson_plan', 'Upload result: $uploadResult');
 
           filePath = uploadResult['file_path'];
-          print('File uploaded successfully: $filePath');
+          AppLogger.info('lesson_plan', 'File uploaded successfully: $filePath');
         } catch (uploadError) {
-          print('Error during file upload: $uploadError');
+          AppLogger.error('lesson_plan', 'Error during file upload: $uploadError');
           // Tetap lanjut tanpa file jika upload gagal
           filePath = null;
         }
       } else {
-        print('No file selected for upload');
+        AppLogger.debug('lesson_plan', 'No file selected for upload');
       }
 
       // Debug data yang akan dikirim
-      print('Submitting RPP data:');
-      print('- Guru ID: ${widget.teacherId}');
-      print('- Mata Pelajaran ID: $_selectedMataPelajaranId');
-      print('- Kelas ID: $_selectedClassId');
-      print('- Judul: ${_judulController.text}');
-      print('- File Path: $filePath');
+      AppLogger.debug('lesson_plan', 'Submitting RPP data:');
+      AppLogger.debug('lesson_plan', '- Guru ID: ${widget.teacherId}');
+      AppLogger.debug('lesson_plan', '- Mata Pelajaran ID: $_selectedMataPelajaranId');
+      AppLogger.debug('lesson_plan', '- Kelas ID: $_selectedClassId');
+      AppLogger.debug('lesson_plan', '- Judul: ${_judulController.text}');
+      AppLogger.debug('lesson_plan', '- File Path: $filePath');
 
       final rppData = {
         'subject_id': _selectedMataPelajaranId,
@@ -1890,12 +1879,12 @@ class _RppFormDialogState extends State<RppFormDialog> {
       if (widget.rppData != null) {
         // Mode edit
         await ApiService.updateRPP(widget.rppData!['id'], rppData);
-        print('RPP updated successfully');
+        AppLogger.info('lesson_plan', 'RPP updated successfully');
       } else {
         // Mode tambah baru
         rppData['teacher_id'] = widget.teacherId;
         await ApiService.createLessonPlan(rppData);
-        print('RPP created successfully');
+        AppLogger.info('lesson_plan', 'RPP created successfully');
       }
 
       if (!mounted) return;
@@ -1919,7 +1908,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
         ),
       );
     } catch (e) {
-      print('Error creating RPP: $e');
+      AppLogger.error('lesson_plan', 'Error creating RPP: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -2554,7 +2543,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
         }
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading all mata pelajaran: $e');
+      AppLogger.error('lesson_plan', 'Error loading all mata pelajaran: $e');
     }
   }
 
@@ -2636,9 +2625,9 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
   }
 
   Future<void> _submitForm() async {
-    if (kDebugMode) print('🚀 _submitForm called');
+    AppLogger.debug('lesson_plan', '_submitForm called');
     if (!_formKey.currentState!.validate()) {
-      if (kDebugMode) print('❌ Validation failed');
+      AppLogger.error('lesson_plan', 'Validation failed');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Mohon lengkapi semua field yang wajib diisi'),
@@ -2648,14 +2637,14 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       return;
     }
 
-    if (kDebugMode) print('✅ Validation passed, starting API call');
+    AppLogger.info('lesson_plan', 'Validation passed, starting API call');
     setState(() {
       _isAutoGenerating = true;
       _generationStatus = 'Sedang menghubungi AI KamillLabs...';
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final token = prefs.getString('token');
       final userJson = prefs.getString('user');
       String? schoolId;
@@ -2666,14 +2655,12 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       }
 
       if (kDebugMode) {
-        print('📡 Current ApiService.baseUrl: ${ApiService.baseUrl}');
-        print('🔑 Using Token: ${token != null ? "Available" : "NULL"}');
+        AppLogger.debug('lesson_plan', 'Current ApiService.baseUrl: ${ApiService.baseUrl}');
+        AppLogger.debug('lesson_plan', 'Using Token: ${token != null ? "Available" : "NULL"}');
         if (token != null && token.length > 5) {
-          print('🔑 Token Prefix: ${token.substring(0, 5)}...');
+          AppLogger.debug('lesson_plan', 'Token Prefix: ${token.substring(0, 5)}...');
         }
-        print(
-          '🏫 Using School ID: ${schoolId ?? "NULL"} (Removed from AI request headers)',
-        );
+        AppLogger.debug('lesson_plan', 'Using School ID: ${schoolId ?? "NULL"} (Removed from AI request headers)',);
       }
 
       final requestBody = {
@@ -2687,10 +2674,8 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
         'teacher_id': widget.teacherId,
       };
 
-      if (kDebugMode) {
-        print('🌐 Sending POST request to KamillLabs...');
-        print('📦 Payload: ${json.encode(requestBody)}');
-      }
+      AppLogger.debug('lesson_plan', '🌐 Sending POST request to KamillLabs...');
+      AppLogger.debug('lesson_plan', 'Payload: ${json.encode(requestBody)}');
 
       // Panggilan API asli ke KamillLabs Edu AI via Dio
       final aiDio = Dio(BaseOptions(
@@ -2709,7 +2694,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
         data: requestBody,
       );
 
-      if (kDebugMode) print('📥 Response Status: ${response.statusCode}');
+      AppLogger.debug('lesson_plan', '📥 Response Status: ${response.statusCode}');
 
       // Dio auto-decodes JSON, so response.data is already a Map
       final resultBody = response.data is Map<String, dynamic>
@@ -2718,7 +2703,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
 
       if (response.statusCode == 202) {
         // Async Mode - navigate to result screen with polling
-        if (kDebugMode) print('📋 Full 202 Response: ${response.data}');
+        AppLogger.debug('lesson_plan', 'Full 202 Response: ${response.data}');
 
         // Try multiple field names for poll_url and job_id
         final pollUrl =
@@ -2734,7 +2719,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
                     resultBody['data']?['job_id'])
                 as String?;
 
-        if (kDebugMode) print('⏳ Job Queued: $jobId | Polling at: $pollUrl');
+        AppLogger.debug('lesson_plan', '⏳ Job Queued: $jobId | Polling at: $pollUrl');
 
         // Build metadata for the result screen
         final pollingMetadata = await _buildPollingMetadata();
@@ -2758,7 +2743,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       }
 
       if (response.statusCode == 429) {
-        if (kDebugMode) print('⚠️ Rate limit reached');
+        AppLogger.warning('lesson_plan', 'Rate limit reached');
         final message =
             resultBody['message'] ??
             'Batas pembuatan RPP AI harian/bulanan telah tercapai.';
@@ -2806,7 +2791,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
       }
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        if (kDebugMode) print('❌ API Error Body: ${response.data}');
+        AppLogger.error('lesson_plan', 'API Error Body: ${response.data}');
         final message = resultBody['message'] ?? 'Gagal generate RPP';
         throw Exception(message);
       }
@@ -2815,16 +2800,14 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
 
       await _processAndNavigate(rppResponse);
     } catch (e) {
-      if (kDebugMode) print('🚨 _submitForm error: $e');
+      AppLogger.error('lesson_plan', '🚨 _submitForm error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${AppLocalizations.error.tr}: $e')),
         );
       }
     } finally {
-      if (kDebugMode) {
-        print('🏁 _submitForm finished (isAutoGenerating: false)');
-      }
+      AppLogger.debug('lesson_plan', '🏁 _submitForm finished (isAutoGenerating: false)');
       if (mounted) {
         setState(() {
           _isAutoGenerating = false;

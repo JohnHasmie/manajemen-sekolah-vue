@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/features/settings/services/academic_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Manages the list of academic years and tracks which one is currently selected.
 /// Like a Vuex store module - holds reactive global state that widgets can listen to.
@@ -101,9 +102,7 @@ class AcademicYearProvider with ChangeNotifier {
         _selectedAcademicYear = _academicYears.first;
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching academic years: $e');
-      }
+      AppLogger.error('academic_year', e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -116,25 +115,23 @@ class AcademicYearProvider with ChangeNotifier {
   /// [yearId] - The ID of the academic year to select (matched as string).
   /// Side effects: Calls [notifyListeners] to trigger UI rebuilds in all consuming widgets.
   void setSelectedYear(String yearId) {
-    print('Searching for year ID: $yearId in ${_academicYears.length} years');
+    AppLogger.debug('academic_year', 'Searching for year ID: $yearId in ${_academicYears.length} years');
     try {
       final year = _academicYears.firstWhere(
         (y) => y['id'].toString() == yearId.toString(),
         orElse: () => null,
       );
 
-      print('Found year: $year');
+      AppLogger.debug('academic_year', 'Found year: $year');
 
       if (year != null) {
         _selectedAcademicYear = year;
-        print(
-          'Selected year set to: ${_selectedAcademicYear?['year']} (ID: ${_selectedAcademicYear?['id']})',
-        );
-        print('Is Read Only: $isReadOnly');
+        AppLogger.debug('academic_year', 'Selected year set to: ${_selectedAcademicYear?['year']} (ID: ${_selectedAcademicYear?['id']})',);
+        AppLogger.debug('academic_year', 'Is Read Only: $isReadOnly');
         notifyListeners();
       }
     } catch (e) {
-      print('Error selecting year: $e');
+      AppLogger.error('academic_year', e);
     }
   }
 
@@ -146,7 +143,7 @@ class AcademicYearProvider with ChangeNotifier {
       _activeAcademicYear = await ApiAcademicServices.getActiveAcademicYear();
       notifyListeners();
     } catch (e) {
-      print('Error refreshing active year: $e');
+      AppLogger.error('academic_year', e);
     }
   }
 }

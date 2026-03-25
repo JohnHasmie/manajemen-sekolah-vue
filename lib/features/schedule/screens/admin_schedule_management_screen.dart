@@ -29,7 +29,7 @@ import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/schedule/exports/schedule_export_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -37,6 +37,7 @@ import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin teaching schedule management with full CRUD, timetable grid, and conflict detection.
 ///
@@ -166,7 +167,7 @@ class TeachingScheduleManagementScreenState
   /// Load cached schedule data for instant display before any API calls
   Future<void> _loadCachedScheduleData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       _lastCachedAcademicYear = prefs.getString('schedule_last_year_id');
       _lastCachedSemester = prefs.getString('schedule_last_semester_id');
 
@@ -198,9 +199,9 @@ class TeachingScheduleManagementScreenState
         );
       });
       _updateGridData();
-      if (kDebugMode) print('⚡ Schedules loaded from persisted cache (early)');
+      AppLogger.info('schedule', 'Schedules loaded from persisted cache (early)');
     } catch (e) {
-      if (kDebugMode) print('⚠️ Early schedule cache load failed: $e');
+      AppLogger.error('schedule', e);
     }
   }
 
@@ -208,7 +209,7 @@ class TeachingScheduleManagementScreenState
     final trigger = FCMService().syncTrigger.value;
     if (trigger != null && trigger['type'] == 'refresh_schedules') {
       if (mounted) {
-        if (kDebugMode) print('📦 Sync triggered: refresh_schedules');
+        AppLogger.debug('schedule', 'Sync triggered: refresh_schedules');
         _loadData(resetPage: true, useCache: false);
       }
     }
@@ -291,9 +292,7 @@ class TeachingScheduleManagementScreenState
           }
         }
       } catch (e) {
-        if (kDebugMode) {
-          print('Error fetching date based semester: $e');
-        }
+        AppLogger.error('schedule', e);
       }
 
       // Fallback
@@ -301,9 +300,7 @@ class TeachingScheduleManagementScreenState
     }
 
     if (semesterId != _selectedSemester) {
-      if (kDebugMode) {
-        print('DEBUG: Auto-switching to semester: $semesterId');
-      }
+      AppLogger.debug('schedule', 'DEBUG: Auto-switching to semester: $semesterId');
       setState(() {
         _selectedSemester = semesterId!;
       });
@@ -366,11 +363,11 @@ class TeachingScheduleManagementScreenState
             _availableSemesters = List<dynamic>.from(cachedData['semesters'] ?? []);
             _availableAcademicYears = List<dynamic>.from(cachedData['academic_years'] ?? []);
           });
-          if (kDebugMode) print('⚡ Schedule filter options loaded from cache');
+          AppLogger.info('schedule', 'Schedule filter options loaded from cache');
           return;
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ Schedule filter cache load failed: $e');
+        AppLogger.error('schedule', e);
       }
 
       final response = await ApiScheduleService.getScheduleFilterOptions(
@@ -395,12 +392,10 @@ class TeachingScheduleManagementScreenState
           'semesters': response['data']['semesters'] ?? [],
           'academic_years': response['data']['academic_years'] ?? [],
         });
-        if (kDebugMode) print('✅ Schedule filter options loaded');
+        AppLogger.info('schedule', 'Schedule filter options loaded');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading filter options: $e');
-      }
+      AppLogger.error('schedule', e);
       // Continue with empty options - not critical error
     }
   }
@@ -436,10 +431,9 @@ class TeachingScheduleManagementScreenState
         _selectedSemester != _lastCachedSemester) {
       _lastCachedAcademicYear = _selectedAcademicYear;
       _lastCachedSemester = _selectedSemester;
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.setString('schedule_last_year_id', _selectedAcademicYear);
-        prefs.setString('schedule_last_semester_id', _selectedSemester);
-      });
+      final prefs = PreferencesService();
+      prefs.setString('schedule_last_year_id', _selectedAcademicYear);
+      prefs.setString('schedule_last_semester_id', _selectedSemester);
     }
 
     return key;
@@ -501,7 +495,7 @@ class TeachingScheduleManagementScreenState
                   );
                 });
                 _updateGridData();
-                if (kDebugMode) print('⚡ Schedules loaded from cache');
+                AppLogger.info('schedule', 'Schedules loaded from cache');
                 // Cache hit → return early, no background API refresh
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _checkAndShowTour();
@@ -513,7 +507,7 @@ class TeachingScheduleManagementScreenState
                 return;
               }
             } catch (e) {
-              if (kDebugMode) print('⚠️ Schedule cache load failed: $e');
+              AppLogger.error('schedule', e);
             }
           }
         }
@@ -538,7 +532,7 @@ class TeachingScheduleManagementScreenState
                 semesterId: semesterToUse,
                 tahunAjaran: academicYearToUse,
               ).catchError((e) {
-                print('Error getAllSchedules: $e');
+                AppLogger.error('schedule', e);
                 throw e;
               })
             : ApiScheduleService.getSchedulesPaginated(
@@ -556,31 +550,31 @@ class TeachingScheduleManagementScreenState
                 hourNumber: _selectedJamPelajaran,
                 skipCache: !useCache,
               ).catchError((e) {
-                print('Error getSchedulesPaginated: $e');
+                AppLogger.error('schedule', e);
                 throw e;
               }),
         apiTeacherService.getTeacher().catchError((e) {
-          print('Error getTeacher: $e');
+          AppLogger.error('schedule', e);
           throw e;
         }),
         _apiSubjectService.getSubject().catchError((e) {
-          print('Error getSubject: $e');
+          AppLogger.error('schedule', e);
           throw e;
         }),
         ApiClassService.getClass().catchError((e) {
-          print('Error getClass: $e');
+          AppLogger.error('schedule', e);
           throw e;
         }),
         ApiScheduleService.getHari().catchError((e) {
-          print('Error getHari: $e');
+          AppLogger.error('schedule', e);
           throw e;
         }),
         ApiScheduleService.getSemester().catchError((e) {
-          print('Error getSemester: $e');
+          AppLogger.error('schedule', e);
           throw e;
         }),
         ApiScheduleService.getJamPelajaran().catchError((e) {
-          print('Error getJamPelajaran: $e');
+          AppLogger.error('schedule', e);
           throw e;
         }),
       ]);
@@ -631,9 +625,7 @@ class TeachingScheduleManagementScreenState
         _updateCurrentSemester();
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading data: $e');
-      }
+      AppLogger.error('schedule', e);
 
       if (!mounted) return;
 
@@ -705,13 +697,9 @@ class TeachingScheduleManagementScreenState
       // Update grid data
       _updateGridData();
 
-      print(
-        '✅ Loaded more schedules: Page $_currentPage, Total items: ${_scheduleList.length}',
-      );
+      AppLogger.info('schedule', 'Loaded more schedules: Page $_currentPage, Total items: ${_scheduleList.length}');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading more data: $e');
-      }
+      AppLogger.error('schedule', e);
 
       if (!mounted) return;
 
@@ -754,7 +742,7 @@ class TeachingScheduleManagementScreenState
         );
       }
     } catch (e) {
-      if (kDebugMode) print('Import schedules error: $e');
+      AppLogger.error('schedule', e);
       if (!mounted) return;
       _showErrorSnackBar(
         '${languageProvider.getTranslatedText({'en': 'Failed to import file: ', 'id': 'Gagal mengimpor file: '})}${ErrorUtils.getFriendlyMessage(e)}',
@@ -798,7 +786,7 @@ class TeachingScheduleManagementScreenState
         context: context,
       );
     } catch (e) {
-      if (kDebugMode) print('Export schedules error: $e');
+      AppLogger.error('schedule', e);
       _showErrorSnackBar(
         '${context.read<LanguageProvider>().getTranslatedText({'en': 'Export failed: ', 'id': 'Export gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
       );
@@ -810,7 +798,7 @@ class TeachingScheduleManagementScreenState
     try {
       await ExcelScheduleService.downloadTemplate(context);
     } catch (e) {
-      if (kDebugMode) print('Download template error: $e');
+      AppLogger.error('schedule', e);
       _showErrorSnackBar(
         '${context.read<LanguageProvider>().getTranslatedText({'en': 'Download template failed: ', 'id': 'Gagal download template: '})}${ErrorUtils.getFriendlyMessage(e)}',
       );
@@ -1172,7 +1160,7 @@ class TeachingScheduleManagementScreenState
             }
             _showSuccessSnackBar('Schedule successfully saved');
           } catch (e) {
-            if (kDebugMode) print('Save after conflict resolution error: $e');
+            AppLogger.error('schedule', e);
             _showSuccessSnackBar('Schedule successfully saved');
           }
           _loadData(resetPage: true, useCache: false);
@@ -1189,7 +1177,7 @@ class TeachingScheduleManagementScreenState
           }
           _showSuccessSnackBar('Schedule successfully saved');
         } catch (e) {
-          if (kDebugMode) print('Save schedule error: $e');
+          AppLogger.error('schedule', e);
           _showSuccessSnackBar('Schedule successfully saved');
         }
         _loadData(resetPage: true, useCache: false);
@@ -2852,7 +2840,7 @@ class TeachingScheduleManagementScreenState
             daysIds.addAll(parsed.map((e) => e.trim()));
           }
         } catch (e) {
-          print('Error parsing days_ids: $e');
+          AppLogger.error('schedule', e);
         }
       }
     }
@@ -3219,7 +3207,7 @@ class TeachingScheduleManagementScreenState
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('schedule', e);
     }
   }
 

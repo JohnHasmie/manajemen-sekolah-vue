@@ -5,7 +5,6 @@
 // mark-as-read, delete (swipe-to-dismiss), and navigation to related screens.
 //
 // In Laravel terms, this consumes the NotificationController endpoints.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -17,6 +16,7 @@ import 'package:manajemensekolah/features/notifications/services/notification_se
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Notification list screen - shared across admin, teacher (guru), and parent (wali) roles.
 ///
@@ -70,7 +70,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         });
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading notifications: $e');
+      AppLogger.error('notification', e);
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -84,7 +84,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         _notifications.removeWhere((n) => n['id'].toString() == id);
       });
     } catch (e) {
-      if (kDebugMode) print('Error marking as read: $e');
+      AppLogger.error('notification', e);
     }
   }
 
@@ -95,7 +95,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         () => _notifications.removeWhere((n) => n['id'].toString() == id),
       );
     } catch (e) {
-      if (kDebugMode) print('Error deleting notification: $e');
+      AppLogger.error('notification', e);
     }
   }
 
@@ -108,7 +108,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         _notifications.clear();
       });
     } catch (e) {
-      if (kDebugMode) print('Error marking all read: $e');
+      AppLogger.error('notification', e);
     }
   }
 

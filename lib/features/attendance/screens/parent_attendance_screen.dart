@@ -7,7 +7,6 @@
 // In Laravel terms: `AttendanceController@parentIndex`.
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -22,6 +21,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Parent's read-only view of a child's attendance with monthly summaries
 /// and read tracking.
@@ -91,7 +91,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     try {
       await ApiService.markPresenceAsRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error silent auto-marking read: $e");
+      AppLogger.error('attendance', e);
     }
   }
 
@@ -123,9 +123,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
   Future<void> _flushMarkRead(List<String> ids) async {
     try {
-      if (kDebugMode) {
-        print('📨 Auto-marking ${ids.length} visible presence as read...');
-      }
+      AppLogger.debug('attendance', 'Auto-marking ${ids.length} visible presence as read...');
 
       // Optimistic Update (update local list UI immediately)
       if (!mounted) return;
@@ -139,7 +137,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
       await ApiService.markPresenceAsRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error auto-marking read: $e");
+      AppLogger.error('attendance', e);
     }
   }
 
@@ -175,7 +173,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
             _calculateMonthlySummary();
             _isLoading = false;
           });
-          if (kDebugMode) print('📦 PresenceParent: from cache (${_absensiData.length})');
+          AppLogger.debug('attendance', 'PresenceParent: from cache (${_absensiData.length})');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && _student != null) _checkAndShowTour();
           });
@@ -227,7 +225,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         ApiService.markAttendanceRead(studentId: widget.studentId);
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading parent presence data: $e');
+      AppLogger.error('attendance', e);
       if (!mounted) return;
       setState(() => _isLoading = false);
 
@@ -262,7 +260,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('attendance', e);
     }
   }
 

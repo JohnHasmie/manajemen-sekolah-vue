@@ -6,7 +6,6 @@
 // or generate personalized learning recommendations. The flow is:
 // ClassScreen -> StudentScreen -> ResultScreen -> (optional) EditScreen.
 // In Laravel terms, this is like `RecommendationController@classIndex`.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/features/recommendations/services/recommendation_service.dart';
@@ -20,6 +19,7 @@ import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_student_screen.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
@@ -132,7 +132,7 @@ class _LearningRecommendationClassScreenState
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Could not resolve teacher profile ID: $e');
+      AppLogger.debug('recommendation', 'Could not resolve teacher profile ID: $e');
     }
   }
 
@@ -154,7 +154,7 @@ class _LearningRecommendationClassScreenState
             _loadingSummaries[classId] = false;
           });
         }
-        if (kDebugMode) print('📦 ClassSummary $classId: from cache');
+        AppLogger.debug('recommendation', 'ClassSummary $classId: from cache');
         return;
       }
     }
@@ -173,7 +173,7 @@ class _LearningRecommendationClassScreenState
       }
       await LocalCacheService.save(cacheKey, summary['data'] ?? {});
     } catch (e) {
-      if (kDebugMode) print('Error loading summary for $classId: $e');
+      AppLogger.error('recommendation', e);
       if (mounted) {
         setState(() => _loadingSummaries[classId] = false);
       }
@@ -196,7 +196,7 @@ class _LearningRecommendationClassScreenState
             _loadingHistory[classId] = false;
           });
         }
-        if (kDebugMode) print('📦 ClassHistory $classId: from cache');
+        AppLogger.debug('recommendation', 'ClassHistory $classId: from cache');
         return;
       }
     }
@@ -273,7 +273,7 @@ class _LearningRecommendationClassScreenState
       // Save grouped history to cache
       await LocalCacheService.save(cacheKey, history);
     } catch (e) {
-      if (kDebugMode) print('Error loading history for $classId: $e');
+      AppLogger.error('recommendation', e);
       if (mounted && !_classHistory.containsKey(classId)) {
         setState(() {
           _classHistory[classId] = [];
@@ -298,7 +298,7 @@ class _LearningRecommendationClassScreenState
             _schedulesLoaded = true;
           });
         }
-        if (kDebugMode) print('📦 TeacherSchedules: from cache');
+        AppLogger.debug('recommendation', 'TeacherSchedules: from cache');
         return;
       }
     }
@@ -315,7 +315,7 @@ class _LearningRecommendationClassScreenState
       }
       await LocalCacheService.save(cacheKey, schedules);
     } catch (e) {
-      if (kDebugMode) print('Error loading schedules: $e');
+      AppLogger.error('recommendation', e);
       if (mounted) setState(() => _schedulesLoaded = true);
     }
   }
@@ -386,15 +386,13 @@ class _LearningRecommendationClassScreenState
     // Step 3: Generate
     setState(() => _generating[classId] = true);
 
-    if (kDebugMode) {
-      print('🚀 Generate Recommendation Params:');
-      print('   teacherId: $_effectiveTeacherId');
-      print('   classId: $classId');
-      print('   subjectId: ${selectedSubject['id']}');
-      print('   subjectName: ${selectedSubject['name']}');
-      print('   includeOnTrack: $includeOnTrack');
-      print('   className: $className');
-    }
+    AppLogger.debug('recommendation', 'Generate Recommendation Params:');
+    AppLogger.debug('recommendation', '   teacherId: $_effectiveTeacherId');
+    AppLogger.debug('recommendation', '   classId: $classId');
+    AppLogger.debug('recommendation', '   subjectId: ${selectedSubject['id']}');
+    AppLogger.debug('recommendation', '   subjectName: ${selectedSubject['name']}');
+    AppLogger.debug('recommendation', '   includeOnTrack: $includeOnTrack');
+    AppLogger.debug('recommendation', '   className: $className');
 
     try {
       final result = await ApiRecommendationService.generateForClass(
@@ -418,9 +416,7 @@ class _LearningRecommendationClassScreenState
             await ApiRecommendationService.pollJobUntilComplete(
               jobId,
               onProgress: (status, attempt) {
-                if (kDebugMode) {
-                  print('Job $jobId: $status (attempt $attempt)');
-                }
+                AppLogger.debug('recommendation', 'Job $jobId: $status (attempt $attempt)');
               },
             );
             if (mounted) {
@@ -632,7 +628,7 @@ class _LearningRecommendationClassScreenState
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('recommendation', e);
     }
   }
 

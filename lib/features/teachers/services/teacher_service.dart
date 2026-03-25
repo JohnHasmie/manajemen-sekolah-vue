@@ -12,11 +12,11 @@ library;
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for teacher (guru) management API calls with caching.
 /// Like a Laravel Resource Controller + pivot table management (teacher-subject).
@@ -152,7 +152,7 @@ class ApiTeacherService {
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null) {
-        if (kDebugMode) print('📦 Using cached teachers for $cacheKey');
+        AppLogger.debug('teacher', 'Using cached teachers for $cacheKey');
         return cached;
       }
     }
@@ -215,7 +215,7 @@ class ApiTeacherService {
       final result = response.data;
       return result['data'] ?? {};
     } catch (e) {
-      if (kDebugMode) print('Error fetching teacher stats: $e');
+      AppLogger.error('teacher', e);
       return {};
     }
   }
@@ -224,7 +224,7 @@ class ApiTeacherService {
   /// Like Laravel's `Cache::tags('teachers')->flush()`.
   static Future<void> _clearTeacherCache() async {
     await LocalCacheService.clearStartingWith('teacher_');
-    if (kDebugMode) print('🧹 Teacher cache cleared due to changes');
+    AppLogger.info('teacher', 'Teacher cache cleared due to changes');
   }
 
   /// Fetches all teachers as a flat list (instance method).
@@ -307,7 +307,7 @@ class ApiTeacherService {
       }
       return [];
     } catch (e) {
-      if (kDebugMode) print('Error getTeacherClasses: $e');
+      AppLogger.error('teacher', e);
       return [];
     }
   }

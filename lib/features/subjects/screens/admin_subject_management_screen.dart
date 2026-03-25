@@ -30,6 +30,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin subject management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -117,9 +118,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
   void _onSyncTriggered() {
     if (FCMService().syncTrigger.value == 'refresh_subjects') {
-      if (kDebugMode) {
-        print('♻️ Refreshing subjects due to FCM sync trigger');
-      }
+      AppLogger.debug('subject', 'Refreshing subjects due to FCM sync trigger');
       _loadSubjects(resetPage: true, useCache: false).then((_) {
         // Optional: show a small snackbar if item count changed
       });
@@ -130,18 +129,16 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
     try {
       final data = await ApiSubjectService.getAllMasterSubjects();
       if (kDebugMode) {
-        print('✅ Master Subjects Loaded: ${data.length} items');
+        AppLogger.info('subject', 'Master Subjects Loaded: ${data.length} items');
         if (data.isNotEmpty) {
-          print('First item: ${data[0]}');
+          AppLogger.debug('subject', 'First item: ${data[0]}');
         }
       }
       setState(() {
         _availableMasterSubjects = data;
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error loading master subjects: $e');
-      }
+      AppLogger.error('subject', 'Error loading master subjects: $e');
     }
   }
 
@@ -173,14 +170,10 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
       if (!mounted) return;
 
       if (response['success'] == true && response['data'] != null) {
-        if (kDebugMode) {
-          print('✅ Filter options loaded');
-        }
+        AppLogger.info('subject', 'Filter options loaded');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading filter options: $e');
-      }
+      AppLogger.error('subject', 'Error loading filter options: $e');
       // Continue with empty options - not critical error
     }
   }
@@ -847,10 +840,10 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                   _isLoading = false;
                   _errorMessage = '';
                 });
-                if (kDebugMode) print('⚡ Subjects loaded from cache');
+                AppLogger.info('subject', 'Subjects loaded from cache');
               }
             } catch (e) {
-              if (kDebugMode) print('⚠️ Subject cache load failed: $e');
+              AppLogger.error('subject', 'Subject cache load failed: $e');
             }
           }
         }
@@ -879,9 +872,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
       final data = response['data'] ?? [];
 
-      if (kDebugMode) {
-        print('✅ Subjects received: ${data.length} items');
-      }
+      AppLogger.info('subject', 'Subjects received: ${data.length} items');
 
       _applySubjectExtractedData(data);
 
@@ -901,7 +892,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         });
       }
     } catch (error) {
-      if (kDebugMode) print('Load subjects error: $error');
+      AppLogger.error('subject', 'Load subjects error: $error');
       if (!mounted) return;
 
       // Only show error if we don't have cached data displayed
@@ -995,15 +986,9 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         _isLoadingMore = false;
       });
 
-      if (kDebugMode) {
-        print(
-          '✅ Loaded more subjects: Page $_currentPage, Total: ${_subjectList.length}',
-        );
-      }
+      AppLogger.info('subject', 'Loaded more subjects: Page $_currentPage, Total: ${_subjectList.length}',);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading more data: $e');
-      }
+      AppLogger.error('subject', 'Error loading more data: $e');
       if (!mounted) return;
 
       setState(() {
@@ -1053,7 +1038,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Import subjects error: $e');
+      AppLogger.error('subject', 'Import subjects error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1557,11 +1542,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
                                             );
                                           }
                                         } catch (error) {
-                                          if (kDebugMode) {
-                                            print(
-                                              'Save/Update subject error: $error',
-                                            );
-                                          }
+                                          AppLogger.error('subject', 'Save/Update subject error: $error',);
                                           setDialogState(() {
                                             isSaving = false;
                                           });
@@ -1705,7 +1686,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         }
         _loadSubjects();
       } catch (error) {
-        if (kDebugMode) print('Delete subject error: $error');
+        AppLogger.error('subject', 'Delete subject error: $error');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -2396,7 +2377,7 @@ class SubjectManagementScreenState extends State<SubjectManagementScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('subject', 'Error checking tour status: $e');
     }
   }
 
@@ -2686,7 +2667,7 @@ class SubjectClassManagementPageState
       });
 
       if (allClasses.isNotEmpty) {
-        print('First class data: ${allClasses[0]}');
+        AppLogger.debug('subject', 'First class data: ${allClasses[0]}');
       }
     } catch (error) {
       setState(() {

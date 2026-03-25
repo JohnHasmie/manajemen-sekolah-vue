@@ -7,6 +7,7 @@ library;
 
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for user profile and school settings API calls.
 /// Like a combined Laravel controller handling /profile and /school/settings routes.
@@ -43,7 +44,7 @@ class ApiSettingsService {
       final response = await dioClient.get('/profile');
       return response.data;
     } catch (e) {
-      print('Error getting profile: $e');
+      AppLogger.error('settings', e);
       rethrow;
     }
   }
@@ -65,7 +66,7 @@ class ApiSettingsService {
         },
       );
     } catch (e) {
-      print('Error updating profile: $e');
+      AppLogger.error('settings', e);
       rethrow;
     }
   }
@@ -82,7 +83,7 @@ class ApiSettingsService {
       }
       return [];
     } catch (e) {
-      print('Error getting lesson hour settings: $e');
+      AppLogger.error('settings', e);
       rethrow;
     }
   }
@@ -106,7 +107,7 @@ class ApiSettingsService {
         },
       );
     } catch (e) {
-      print('Error creating lesson session: $e');
+      AppLogger.error('settings', e);
       rethrow;
     }
   }
@@ -129,7 +130,7 @@ class ApiSettingsService {
         },
       );
     } catch (e) {
-      print('Error updating lesson session: $e');
+      AppLogger.error('settings', e);
       rethrow;
     }
   }
@@ -140,7 +141,7 @@ class ApiSettingsService {
     try {
       await dioClient.delete('/lesson-hour-settings/$id');
     } catch (e) {
-      print('Error deleting lesson session: $e');
+      AppLogger.error('settings', e);
       rethrow;
     }
   }
@@ -152,7 +153,7 @@ class ApiSettingsService {
       final response = await dioClient.get('/school/settings');
       return response.data;
     } catch (e) {
-      print('Error getting school settings: $e');
+      AppLogger.error('settings', e);
       rethrow;
     }
   }
@@ -173,7 +174,7 @@ class ApiSettingsService {
 
       await dioClient.post('/school/settings', data: body);
     } catch (e) {
-      print('Error updating school settings: $e');
+      AppLogger.error('settings', e);
       rethrow;
     }
   }

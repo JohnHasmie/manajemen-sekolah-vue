@@ -5,7 +5,6 @@
 // Teacher list -> Subject list -> Activity list.
 //
 // In Laravel terms, this consumes ClassActivityController with teacher/subject filtering.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
@@ -22,6 +21,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
 ///
@@ -140,7 +140,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
                 _teacherList = cachedList;
                 _isLoading = false;
               });
-              if (kDebugMode) print('⚡ Class activity teachers loaded from cache');
+              AppLogger.info('class_activity', 'Class activity teachers loaded from cache');
               // Cache hit → return early
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) _checkAndShowTour();
@@ -220,9 +220,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         context: context,
       );
     } catch (e) {
-      if (kDebugMode) {
-        print('Error exporting activities: $e');
-      }
+      AppLogger.error('class_activity', e);
     } finally {
       setState(() {
         _isLoading = false;
@@ -254,7 +252,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
                 _subjectList = cachedList;
                 _isLoading = false;
               });
-              if (kDebugMode) print('⚡ Class activity subjects loaded from cache');
+              AppLogger.info('class_activity', 'Class activity subjects loaded from cache');
               return;
             }
           }
@@ -331,7 +329,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
                 _activityList = cachedList;
                 _isLoading = false;
               });
-              if (kDebugMode) print('⚡ Class activities loaded from cache');
+              AppLogger.info('class_activity', 'Class activities loaded from cache');
               return;
             }
           }
@@ -1407,7 +1405,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('class_activity', e);
     }
   }
 

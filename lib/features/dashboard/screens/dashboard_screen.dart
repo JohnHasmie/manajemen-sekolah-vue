@@ -64,9 +64,10 @@ import 'package:manajemensekolah/features/dashboard/widgets/overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/quick_action_button.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
 ///
@@ -232,7 +233,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       await _loadSemesterLabel();
       _preCacheSchoolData(); // Non-blocking pre-cache for child screens
     } catch (e) {
-      if (kDebugMode) print('❌ Error during initialization: $e');
+      AppLogger.error('dashboard', 'Error during initialization: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -270,7 +271,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _tryShowPendingTour();
       }
     } catch (e) {
-      if (kDebugMode) print('Error pre-fetching tour status: $e');
+      AppLogger.error('dashboard', 'Error pre-fetching tour status: $e');
     }
   }
 
@@ -290,9 +291,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'student_management_tour',
           ).then((status) {
             LocalCacheService.save('tour_student_management_admin', status);
-            if (kDebugMode) print('Pre-cached student management tour status');
+            AppLogger.debug('dashboard', 'Pre-cached student management tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache student tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache student tour failed: $e');
           }),
         );
 
@@ -304,9 +305,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'teacher_admin_tour',
           ).then((status) {
             LocalCacheService.save('tour_teacher_admin_screen_admin', status);
-            if (kDebugMode) print('Pre-cached teacher admin tour status');
+            AppLogger.debug('dashboard', 'Pre-cached teacher admin tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache teacher tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache teacher tour failed: $e');
           }),
         );
 
@@ -318,9 +319,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'admin_class_management_tour',
           ).then((status) {
             LocalCacheService.save('tour_class_management_admin', status);
-            if (kDebugMode) print('Pre-cached class management tour status');
+            AppLogger.debug('dashboard', 'Pre-cached class management tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache class management tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache class management tour failed: $e');
           }),
         );
 
@@ -332,9 +333,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'subject_management_tour',
           ).then((status) {
             LocalCacheService.save('tour_subject_management_admin', status);
-            if (kDebugMode) print('Pre-cached subject management tour status');
+            AppLogger.debug('dashboard', 'Pre-cached subject management tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache subject management tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache subject management tour failed: $e');
           }),
         );
 
@@ -346,9 +347,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'teaching_schedule_management_tour',
           ).then((status) {
             LocalCacheService.save('tour_schedule_management_admin', status);
-            if (kDebugMode) print('Pre-cached schedule management tour status');
+            AppLogger.debug('dashboard', 'Pre-cached schedule management tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache schedule management tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache schedule management tour failed: $e');
           }),
         );
 
@@ -360,9 +361,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'admin_announcement_tour',
           ).then((status) {
             LocalCacheService.save('tour_announcement_admin', status);
-            if (kDebugMode) print('Pre-cached announcement tour status');
+            AppLogger.debug('dashboard', 'Pre-cached announcement tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache announcement tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache announcement tour failed: $e');
           }),
         );
 
@@ -374,9 +375,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'admin_class_activity_tour',
           ).then((status) {
             LocalCacheService.save('tour_class_activity_admin', status);
-            if (kDebugMode) print('Pre-cached class activity tour status');
+            AppLogger.debug('dashboard', 'Pre-cached class activity tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache class activity tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache class activity tour failed: $e');
           }),
         );
 
@@ -388,9 +389,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'admin_presence_report_tour',
           ).then((status) {
             LocalCacheService.save('tour_presence_report_admin', status);
-            if (kDebugMode) print('Pre-cached presence report tour status');
+            AppLogger.debug('dashboard', 'Pre-cached presence report tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache presence report tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache presence report tour failed: $e');
           }),
         );
 
@@ -402,9 +403,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'admin_rpp_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_rpp_screen_admin', status);
-            if (kDebugMode) print('Pre-cached RPP screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached RPP screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache RPP screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache RPP screen tour failed: $e');
           }),
         );
 
@@ -416,9 +417,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'admin_raport_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_raport_screen_admin', status);
-            if (kDebugMode) print('Pre-cached raport screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached raport screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache raport screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache raport screen tour failed: $e');
           }),
         );
 
@@ -430,9 +431,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'admin_finance_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_finance_admin', status);
-            if (kDebugMode) print('Pre-cached finance screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached finance screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache finance screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache finance screen tour failed: $e');
           }),
         );
 
@@ -444,9 +445,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'admin_school_settings_tour',
           ).then((status) {
             LocalCacheService.save('tour_school_settings_admin', status);
-            if (kDebugMode) print('Pre-cached school settings tour status');
+            AppLogger.debug('dashboard', 'Pre-cached school settings tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache school settings tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache school settings tour failed: $e');
           }),
         );
       } // end admin tours
@@ -461,9 +462,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'input_grade_tour',
           ).then((status) {
             LocalCacheService.save('tour_input_grade_screen_guru', status);
-            if (kDebugMode) print('Pre-cached input grade tour status');
+            AppLogger.debug('dashboard', 'Pre-cached input grade tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache input grade tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache input grade tour failed: $e');
           }),
         );
 
@@ -475,9 +476,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'teaching_schedule_tour',
           ).then((status) {
             LocalCacheService.save('tour_teaching_schedule_screen_guru', status);
-            if (kDebugMode) print('Pre-cached teaching schedule tour status');
+            AppLogger.debug('dashboard', 'Pre-cached teaching schedule tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache teaching schedule tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache teaching schedule tour failed: $e');
           }),
         );
 
@@ -489,9 +490,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'class_activity_tour',
           ).then((status) {
             LocalCacheService.save('tour_class_activity_screen_guru', status);
-            if (kDebugMode) print('Pre-cached class activity tour status');
+            AppLogger.debug('dashboard', 'Pre-cached class activity tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache class activity tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache class activity tour failed: $e');
           }),
         );
 
@@ -503,9 +504,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'presence_teacher_tour',
           ).then((status) {
             LocalCacheService.save('tour_presence_teacher_screen_guru', status);
-            if (kDebugMode) print('Pre-cached presence teacher tour status');
+            AppLogger.debug('dashboard', 'Pre-cached presence teacher tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache presence teacher tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache presence teacher tour failed: $e');
           }),
         );
 
@@ -517,9 +518,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'materi_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_materi_screen_guru', status);
-            if (kDebugMode) print('Pre-cached materi screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached materi screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache materi screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache materi screen tour failed: $e');
           }),
         );
 
@@ -531,9 +532,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'rekap_nilai_tour',
           ).then((status) {
             LocalCacheService.save('tour_rekap_nilai_screen_guru', status);
-            if (kDebugMode) print('Pre-cached rekap nilai tour status');
+            AppLogger.debug('dashboard', 'Pre-cached rekap nilai tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache rekap nilai tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache rekap nilai tour failed: $e');
           }),
         );
 
@@ -545,9 +546,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'raport_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_raport_screen_guru', status);
-            if (kDebugMode) print('Pre-cached raport screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached raport screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache raport screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache raport screen tour failed: $e');
           }),
         );
 
@@ -559,9 +560,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'raport_detail_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_raport_detail_screen_guru', status);
-            if (kDebugMode) print('Pre-cached raport detail screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached raport detail screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache raport detail screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache raport detail screen tour failed: $e');
           }),
         );
 
@@ -573,9 +574,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'rpp_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_rpp_screen_guru', status);
-            if (kDebugMode) print('Pre-cached RPP screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached RPP screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache RPP screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache RPP screen tour failed: $e');
           }),
         );
 
@@ -587,9 +588,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'announcement_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_announcement_screen_guru', status);
-            if (kDebugMode) print('Pre-cached announcement screen tour status (guru)');
+            AppLogger.debug('dashboard', 'Pre-cached announcement screen tour status (guru)');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache announcement screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache announcement screen tour failed: $e');
           }),
         );
 
@@ -601,9 +602,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'learning_recommendation_class_tour',
           ).then((status) {
             LocalCacheService.save('tour_recommendation_class_screen_guru', status);
-            if (kDebugMode) print('Pre-cached recommendation class screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached recommendation class screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache recommendation class screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache recommendation class screen tour failed: $e');
           }),
         );
 
@@ -615,9 +616,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'learning_recommendation_student_tour',
           ).then((status) {
             LocalCacheService.save('tour_recommendation_student_screen_guru', status);
-            if (kDebugMode) print('Pre-cached recommendation student screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached recommendation student screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache recommendation student screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache recommendation student screen tour failed: $e');
           }),
         );
 
@@ -629,9 +630,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'learning_recommendation_result_tour',
           ).then((status) {
             LocalCacheService.save('tour_recommendation_result_screen_guru', status);
-            if (kDebugMode) print('Pre-cached recommendation result screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached recommendation result screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache recommendation result screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache recommendation result screen tour failed: $e');
           }),
         );
       } // end guru tours
@@ -646,9 +647,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'announcement_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_announcement_screen_wali', status);
-            if (kDebugMode) print('Pre-cached announcement screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached announcement screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache announcement screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache announcement screen tour failed: $e');
           }),
         );
 
@@ -660,9 +661,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'parent_class_activity_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_parent_class_activity_screen_wali', status);
-            if (kDebugMode) print('Pre-cached parent class activity screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached parent class activity screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache parent class activity screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache parent class activity screen tour failed: $e');
           }),
         );
 
@@ -674,9 +675,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'parent_grade_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_parent_grade_screen_wali', status);
-            if (kDebugMode) print('Pre-cached parent grade screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached parent grade screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache parent grade screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache parent grade screen tour failed: $e');
           }),
         );
 
@@ -688,9 +689,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'parent_billing_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_parent_billing_screen_wali', status);
-            if (kDebugMode) print('Pre-cached parent billing screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached parent billing screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache parent billing screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache parent billing screen tour failed: $e');
           }),
         );
 
@@ -702,16 +703,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             name: 'parent_presence_screen_tour',
           ).then((status) {
             LocalCacheService.save('tour_parent_presence_screen_wali', status);
-            if (kDebugMode) print('Pre-cached parent presence screen tour status');
+            AppLogger.debug('dashboard', 'Pre-cached parent presence screen tour status');
           }).catchError((e) {
-            if (kDebugMode) print('Pre-cache parent presence screen tour failed: $e');
+            AppLogger.error('dashboard', 'Pre-cache parent presence screen tour failed: $e');
           }),
         );
       } // end wali tours
 
       await Future.wait(futures);
     } catch (e) {
-      if (kDebugMode) print('Pre-cache child tours failed: $e');
+      AppLogger.error('dashboard', 'Pre-cache child tours failed: $e');
     }
   }
 
@@ -963,9 +964,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         LocalCacheService.save('school_current_semester', result);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading semester label: $e');
-      }
+      AppLogger.error('dashboard', 'Error loading semester label: $e');
     }
   }
 
@@ -982,7 +981,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final semesterData = await ApiScheduleService.getSemester();
         if (semesterData.isNotEmpty) {
           LocalCacheService.save('school_semester_data', semesterData);
-          if (kDebugMode) print('📦 Pre-cached semester data');
+          AppLogger.debug('dashboard', 'Pre-cached semester data');
         }
       }
 
@@ -995,11 +994,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final dayData = await ApiScheduleService.getHari();
         if (dayData.isNotEmpty) {
           LocalCacheService.save('school_day_data', dayData);
-          if (kDebugMode) print('📦 Pre-cached day data');
+          AppLogger.debug('dashboard', 'Pre-cached day data');
         }
       }
     } catch (e) {
-      if (kDebugMode) print('⚠️ Pre-cache school data failed (non-critical): $e');
+      AppLogger.error('dashboard', 'Pre-cache school data failed (non-critical): $e');
     }
   }
 
@@ -1025,9 +1024,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _availableRoles = roles;
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading roles: $e');
-      }
+      AppLogger.error('dashboard', 'Error loading roles: $e');
     }
   }
 
@@ -1040,7 +1037,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
       // Update token dan user data
       await SecureStorageService().saveToken(response['token']);
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       await prefs.setString('token', response['token']);
 
       // Prefer response data if available, otherwise manual fallback
@@ -1090,7 +1087,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   /// Like reading from localStorage/Vuex persisted state in a Vue app.
   /// Called early in init to display user info before API responds.
   Future<void> _loadCachedUserData() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final userString = prefs.getString('user');
     if (userString != null) {
       if (!mounted) return;
@@ -1122,9 +1119,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         final String userId = (_userData['user_id'] ?? _userData['id'])
             .toString();
 
-        if (kDebugMode) {
-          print('🔍 Fetching data for User ID: $userId, Year: $academicYearId');
-        }
+        AppLogger.debug('dashboard', 'Fetching data for User ID: $userId, Year: $academicYearId');
 
         try {
           // Fetch Teacher Record
@@ -1135,11 +1130,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
           if (teacherData != null && mounted) {
             final String teacherId = teacherData['id']?.toString() ?? '';
-            if (kDebugMode) {
-              print('✅ Teacher Record Found: ID=$teacherId');
-              print('👤 User Data Role: ${widget.role}');
-              print('🗓️ Academic Year ID: $academicYearId');
-            }
+            AppLogger.info('dashboard', 'Teacher Record Found: ID=$teacherId');
+            AppLogger.debug('dashboard', 'User Data Role: ${widget.role}');
+            AppLogger.debug('dashboard', '🗓️ Academic Year ID: $academicYearId');
 
             setState(() {
               // EXTREMELY IMPORTANT: We MUST NOT overwrite 'id' with teacher ID.
@@ -1159,16 +1152,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
             // Persist the clean state with separate IDs immediately
             await SecureStorageService().saveUserData(_userData);
-            final prefs = await SharedPreferences.getInstance();
+            final prefs = PreferencesService();
             await prefs.setString('user', json.encode(_userData));
 
             // Fetch Homeroom Classes using specialized Teacher ID endpoint
             // This is more robust as it handles both User/Teacher IDs and returns is_homeroom flag.
-            if (kDebugMode) {
-              print(
-                '🔍 Fetching Classes via Teacher endpoint for ID: $teacherId',
-              );
-            }
+            AppLogger.debug('dashboard', 'Fetching Classes via Teacher endpoint for ID: $teacherId',);
             final classesResponse = await ApiTeacherService.getTeacherClasses(
               teacherId,
               academicYearId: academicYearId,
@@ -1184,10 +1173,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               }).toList();
 
               if (kDebugMode) {
-                print('📋 Total Classes Found: ${fetchedClasses.length}');
-                print('🏠 Homeroom Classes: ${homeroomOnly.length}');
+                AppLogger.debug('dashboard', 'Total Classes Found: ${fetchedClasses.length}');
+                AppLogger.debug('dashboard', 'Homeroom Classes: ${homeroomOnly.length}');
                 for (var cls in homeroomOnly) {
-                  print('   - Class: ${cls['name']} (ID: ${cls['id']})');
+                  AppLogger.debug('dashboard', '   - Class: ${cls['name']} (ID: ${cls['id']})');
                 }
               }
               setState(() {
@@ -1208,16 +1197,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               }
             }
           } else {
-            if (kDebugMode) {
-              print('⚠️ No Teacher Record found for User ID: $userId');
-            }
+            AppLogger.warning('dashboard', 'No Teacher Record found for User ID: $userId');
           }
         } catch (e) {
-          if (kDebugMode) print('❌ Error in _loadFreshTeacherData: $e');
+          AppLogger.error('dashboard', 'Error in _loadFreshTeacherData: $e');
         }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error loading fresh teacher data: $e');
+      AppLogger.error('dashboard', 'Error loading fresh teacher data: $e');
     }
   }
 
@@ -1243,9 +1230,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         _isLoadingSchools = false;
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading schools: $e');
-      }
+      AppLogger.error('dashboard', 'Error loading schools: $e');
       if (!mounted) return;
       setState(() {
         _isLoadingSchools = false;
@@ -1261,7 +1246,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   Future<void> _loadCachedStats() async {
     try {
       // Restore last known academic year ID so cache key matches
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       _lastAcademicYearId = prefs.getString('dashboard_last_year_id');
 
       if (_lastAcademicYearId == null) return; // First launch, no cache yet
@@ -1281,7 +1266,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ttl: const Duration(hours: 6),
       );
 
-      if (kDebugMode) print('⚡ Dashboard displaying cached stats (yearId=$_lastAcademicYearId)');
+      AppLogger.debug('dashboard', 'Dashboard displaying cached stats (yearId=$_lastAcademicYearId)');
 
       _applyStatsData(
         Map<String, dynamic>.from(cachedStats),
@@ -1297,7 +1282,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             : null,
       );
     } catch (e) {
-      if (kDebugMode) print('⚠️ Early cache load failed (non-critical): $e');
+      AppLogger.error('dashboard', 'Early cache load failed (non-critical): $e');
     }
   }
 
@@ -1318,9 +1303,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     // Persist whenever we get a real ID from the provider
     if (academicYearId != null && academicYearId != _lastAcademicYearId) {
       _lastAcademicYearId = academicYearId;
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.setString('dashboard_last_year_id', academicYearId!);
-      });
+      PreferencesService().setString('dashboard_last_year_id', academicYearId);
     }
 
     return 'dashboard_${_effectiveRole}_${yearKey}_$suffix';
@@ -1419,7 +1402,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         academicYearId: academicYearId,
       );
 
-      if (kDebugMode) print('📊 Dashboard fresh stats loaded');
+      AppLogger.info('dashboard', 'Dashboard fresh stats loaded');
 
       // Fetch chart data for admin/wali
       List<Map<String, dynamic>>? freshAttendance;
@@ -1475,12 +1458,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         await _loadFinanceStats();
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error loading fresh stats: $e');
-      }
+      AppLogger.error('dashboard', 'Error loading fresh stats: $e');
       // Only show fallback if we don't already have cached data displayed
       if (!_isStatsLoaded && mounted) {
-        if (kDebugMode) print('🔄 Menggunakan fallback data (no cache available)');
+        AppLogger.warning('dashboard', 'Menggunakan fallback data (no cache available)');
         setState(() {
           _isStatsLoaded = true;
           if (_effectiveRole == 'guru') {
@@ -1514,9 +1495,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   // Method untuk mendapatkan data siswa untuk parent/wali murid
   Future<List<dynamic>> _getStudentDataForParent(String parentId) async {
     try {
-      if (kDebugMode) {
-        print('👤 Mencari data siswa untuk parent: $parentId');
-      }
+      AppLogger.debug('dashboard', 'Mencari data siswa untuk parent: $parentId');
 
       final userData = _userData;
       final guardianEmail = userData['email'];
@@ -1526,31 +1505,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         guardianEmail: guardianEmail,
       );
 
-      if (kDebugMode) {
-        print(
-          '🎒 Total siswa ditemukan untuk user $parentId (Email: $guardianEmail): ${allStudents.length}',
-        );
-      }
+      AppLogger.debug('dashboard', 'Total siswa ditemukan untuk user $parentId (Email: $guardianEmail): ${allStudents.length}',);
 
-      if (kDebugMode) {
-        print(
-          '📧 Email wali: ${userData['email']}, Nama wali: ${userData['name']}',
-        );
-      }
+      AppLogger.debug('dashboard', 'Email wali: ${userData['email']}, Nama wali: ${userData['name']}',);
 
       // Cek berdasarkan siswa_id di user data
       if (userData['siswa_id'] != null && userData['siswa_id'].isNotEmpty) {
-        if (kDebugMode) {
-          print('🔍 Mencari siswa dengan ID: ${userData['siswa_id']}');
-        }
+        AppLogger.debug('dashboard', 'Mencari siswa dengan ID: ${userData['siswa_id']}');
         final student = allStudents.firstWhere(
           (student) => student['id'] == userData['siswa_id'],
           orElse: () => null,
         );
         if (student != null) {
-          if (kDebugMode) {
-            print('✅ Siswa ditemukan via siswa_id: ${student['nama']}');
-          }
+          AppLogger.info('dashboard', 'Siswa ditemukan via siswa_id: ${student['nama']}');
           return [student];
         }
       }
@@ -1565,9 +1532,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         if (kDebugMode) {
           // Verbose debug only if needed, or just log matches
           if (emailMatch || nameMatch || userIdMatch) {
-            print(
-              '✅ Siswa cocok: ${student['name']} (By: ${emailMatch ? 'Email' : ''} ${nameMatch ? 'Name' : ''} ${userIdMatch ? 'UserID' : ''})',
-            );
+            AppLogger.info('dashboard', 'Siswa cocok: ${student['name']} (By: ${emailMatch ? 'Email' : ''} ${nameMatch ? 'Name' : ''} ${userIdMatch ? 'UserID' : ''})',);
           } else {
             // print('❌ Skip: ${student['name']} (GuardEmail: ${student['guardian_email']}, GuardName: ${student['guardian_name']}, UserID: ${student['user_id']})');
           }
@@ -1580,14 +1545,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         return studentsWithThisParent;
       }
 
-      if (kDebugMode) {
-        print('⚠️ Tidak ada data siswa ditemukan untuk parent ini');
-      }
+      AppLogger.warning('dashboard', 'Tidak ada data siswa ditemukan untuk parent ini');
       return []; // Fix: Return empty list instead of allStudents for security/correctness
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error getting student data for parent: $e');
-      }
+      AppLogger.error('dashboard', 'Error getting student data for parent: $e');
       return [];
     }
   }
@@ -1601,14 +1562,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           _unverifiedPaymentCount =
               int.tryParse(financeStats['pembayaran_pending'].toString()) ?? 0;
         });
-        if (kDebugMode) {
-          print('💰 Unverified Payments: $_unverifiedPaymentCount');
-        }
+        AppLogger.debug('dashboard', 'Unverified Payments: $_unverifiedPaymentCount');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error loading finance stats: $e');
-      }
+      AppLogger.error('dashboard', 'Error loading finance stats: $e');
     }
   }
 
@@ -1707,7 +1664,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     if (response['token'] != null) {
       await SecureStorageService().saveToken(response['token']);
     }
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     if (response['token'] != null) {
       await prefs.setString('token', response['token']);
     }
@@ -1788,7 +1745,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         listen: false,
       ).removeListener(_onYearChanged);
     } catch (e) {
-      if (kDebugMode) print('Error removing AcademicYearProvider listener: $e');
+      AppLogger.error('dashboard', 'Error removing AcademicYearProvider listener: $e');
     }
     super.dispose();
   }
@@ -1800,11 +1757,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     final trigger = FCMService().syncTrigger.value;
     if (trigger != null) {
       if (trigger['type'] == 'refresh_announcements') {
-        if (kDebugMode) {
-          print(
-            '🔄 Dashboard flushing announcement cache due to background/foreground sync',
-          );
-        }
+        AppLogger.debug('dashboard', 'Dashboard flushing announcement cache due to background/foreground sync',);
         // Reload announcements count
         if (_effectiveRole == 'wali' ||
             _effectiveRole == 'admin' ||
@@ -2883,7 +2836,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           icon: Icons.edit_note_outlined,
           color: ColorUtils.success600,
           onTap: () async {
-            final prefs = await SharedPreferences.getInstance();
+            final prefs = PreferencesService();
             final userData = json.decode(prefs.getString('user') ?? '{}');
             final teacherData = {
               'id': userData['id'] ?? '',
@@ -3041,7 +2994,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         title: AppLocalizations.inputGrades.tr,
         icon: Icons.edit_note_outlined,
         onTap: () async {
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = PreferencesService();
           final userData = json.decode(prefs.getString('user') ?? '{}');
           final adminData = {
             'id': userData['id'] ?? '',
@@ -3443,7 +3396,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             listen: false,
           ).selectedAcademicYear?['id']?.toString();
 
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = PreferencesService();
           final userData = json.decode(prefs.getString('user') ?? '{}');
           // Load students
           final studentsData = await _getStudentDataForParent(

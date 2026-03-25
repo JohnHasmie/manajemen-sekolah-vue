@@ -7,7 +7,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -19,8 +18,9 @@ import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Parent's read-only view of student grades with read tracking.
 ///
@@ -68,7 +68,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     try {
       await ApiService.markGradeAsRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error silent auto-marking read: $e");
+      AppLogger.error('grades', e);
     }
   }
 
@@ -100,9 +100,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
   Future<void> _flushMarkRead(List<String> ids) async {
     try {
-      if (kDebugMode) {
-        print('📨 Auto-marking ${ids.length} visible grades as read...');
-      }
+      AppLogger.debug('grades', 'Auto-marking ${ids.length} visible grades as read...');
 
       // Optimistic Update (update local list UI immediately)
       setState(() {
@@ -115,7 +113,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
       await ApiService.markGradeAsRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error auto-marking read: $e");
+      AppLogger.error('grades', e);
     }
   }
 
@@ -148,9 +146,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     try {
       await _loadStudentsForParent(useCache: useCache);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load user data: $e');
-      }
+      AppLogger.error('grades', e);
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -174,7 +170,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
           _selectedStudentId = _studentList[0]['id'];
           await _loadGrades(useCache: true);
         }
-        if (kDebugMode) print('📦 ParentGradeStudents: from cache (${cached.length})');
+        AppLogger.debug('grades', 'ParentGradeStudents: from cache (${cached.length})');
         return;
       }
     }
@@ -185,7 +181,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userData = json.decode(prefs.getString('user') ?? '{}');
       final userId = userData['id']?.toString() ?? '';
       final guardianEmail = userData['email']?.toString();
@@ -225,7 +221,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      if (kDebugMode) print('Error load students for parent grade: $e');
+      AppLogger.error('grades', e);
       if (!mounted) return;
       if (_studentList.isEmpty) {
         setState(() => _isLoading = false);
@@ -250,7 +246,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
           _gradeList = cached;
           _isLoading = false;
         });
-        if (kDebugMode) print('📦 ParentGrades: from cache (${cached.length})');
+        AppLogger.debug('grades', 'ParentGrades: from cache (${cached.length})');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _studentList.isNotEmpty) _checkAndShowTour();
         });
@@ -278,7 +274,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      if (kDebugMode) print('Error load grades: $e');
+      AppLogger.error('grades', e);
       if (!mounted) return;
       if (_gradeList.isEmpty) {
         setState(() => _isLoading = false);
@@ -312,7 +308,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('grades', e);
     }
   }
 

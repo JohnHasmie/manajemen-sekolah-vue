@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Teaching material browser with subject, chapter, and sub-chapter navigation.
 ///
@@ -155,19 +156,13 @@ class MateriPageState extends State<MateriPage> {
       selectedSubBabId = firstSubBab['id']?.toString();
       selectedBabId = firstSubBab['bab_id']?.toString();
 
-      if (kDebugMode) {
-        print(
-          'Selected sub bab: $selectedSubBabId, parent bab: $selectedBabId',
-        );
-      }
+      AppLogger.debug('material', 'Selected sub bab: $selectedSubBabId, parent bab: $selectedBabId',);
     }
     // If only bab is selected (no sub bab)
     else if (checkedBab.isNotEmpty) {
       selectedBabId = checkedBab.first['id']?.toString();
 
-      if (kDebugMode) {
-        print('Selected bab only: $selectedBabId');
-      }
+      AppLogger.debug('material', 'Selected bab only: $selectedBabId');
     }
 
     // Prepare additional materials (all checked sub-chapters)
@@ -234,12 +229,8 @@ class MateriPageState extends State<MateriPage> {
   void initState() {
     super.initState();
 
-    if (kDebugMode) {
-      print('Teacher data received: ${widget.teacher}');
-    }
-    if (kDebugMode) {
-      print('Teacher ID: ${widget.teacher['id']}');
-    }
+    AppLogger.debug('material', 'Teacher data received: ${widget.teacher}');
+    AppLogger.debug('material', 'Teacher ID: ${widget.teacher['id']}');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
@@ -286,12 +277,12 @@ class MateriPageState extends State<MateriPage> {
           final subjects = List<dynamic>.from(cached);
           if (subjects.isNotEmpty) {
             _applySubjectList(subjects);
-            if (kDebugMode) print('⚡ Loaded subjects for class $classId from cache');
+            AppLogger.info('material', 'Loaded subjects for class $classId from cache');
             return;
           }
         }
       } catch (e) {
-        if (kDebugMode) print('Subject cache error: $e');
+        AppLogger.error('material', 'Subject cache error: $e');
       }
     }
 
@@ -308,7 +299,7 @@ class MateriPageState extends State<MateriPage> {
         await LocalCacheService.save(cacheKey, subjects);
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading subjects for class: $e');
+      AppLogger.error('material', 'Error loading subjects for class: $e');
     }
   }
 
@@ -344,9 +335,7 @@ class MateriPageState extends State<MateriPage> {
       if (!mounted) return;
 
       final String? teacherId = widget.teacher['id'];
-      if (kDebugMode) {
-        print('Loading data for teacher ID: $teacherId');
-      }
+      AppLogger.debug('material', 'Loading data for teacher ID: $teacherId');
 
       if (teacherId == null || teacherId.isEmpty) {
         if (!mounted) return;
@@ -370,13 +359,13 @@ class MateriPageState extends State<MateriPage> {
       // Resolve teacher profile ID from provider (skip /api/teacher/{id})
       if (teacherProvider.isLoaded && teacherProvider.teacherId != null) {
         _teacherProfileId = teacherProvider.teacherId;
-        if (kDebugMode) print('⚡ TeacherProvider: profileId=$_teacherProfileId');
+        AppLogger.debug('material', 'TeacherProvider: profileId=$_teacherProfileId');
       }
 
       List<dynamic>? providerClassList;
       if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
         providerClassList = teacherProvider.allClasses;
-        if (kDebugMode) print('⚡ Using TeacherProvider classList (${providerClassList.length} classes)');
+        AppLogger.debug('material', 'Using TeacherProvider classList (${providerClassList.length} classes)');
       }
 
       // ─── Step 2: Resolve classList early (for subject filtering) ───
@@ -424,12 +413,12 @@ class MateriPageState extends State<MateriPage> {
 
               _applySubjectList(subjects);
 
-              if (kDebugMode) print('⚡ Loaded from cache (classes + subjects for $selectedClassId) — skipping API');
+              AppLogger.info('material', 'Loaded from cache (classes + subjects for $selectedClassId) — skipping API');
               return; // ✅ Cache hit — no API calls needed
             }
           }
         } catch (e) {
-          if (kDebugMode) print('Subject cache load error: $e');
+          AppLogger.error('material', 'Subject cache load error: $e');
         }
       }
 
@@ -461,7 +450,7 @@ class MateriPageState extends State<MateriPage> {
                 String nameB = (b['name'] ?? b['nama'] ?? '').toString();
                 return nameA.compareTo(nameB);
               });
-              if (kDebugMode) print('📦 TeacherClasses: from cache (${classes.length})');
+              AppLogger.debug('material', 'TeacherClasses: from cache (${classes.length})');
             }
           } catch (_) {}
         }
@@ -471,7 +460,7 @@ class MateriPageState extends State<MateriPage> {
             final cachedProfile = await LocalCacheService.load(profileCacheKey, ttl: const Duration(hours: 6));
             if (cachedProfile != null && cachedProfile is Map) {
               _teacherProfileId = cachedProfile['id']?.toString();
-              if (kDebugMode) print('📦 TeacherProfile: from cache (id=$_teacherProfileId)');
+              AppLogger.debug('material', 'TeacherProfile: from cache (id=$_teacherProfileId)');
             }
           } catch (_) {}
         }
@@ -510,7 +499,7 @@ class MateriPageState extends State<MateriPage> {
                 await LocalCacheService.save(profileCacheKey, profileData);
               }
             } catch (e) {
-              if (kDebugMode) print('Could not resolve teacher profile ID: $e');
+              AppLogger.debug('material', 'Could not resolve teacher profile ID: $e');
             }
           }
         }
@@ -557,10 +546,8 @@ class MateriPageState extends State<MateriPage> {
 
       final subject = results[0] as List<dynamic>;
 
-      if (kDebugMode) {
-        print('Mata pelajaran found: ${subject.length} (class: $selectedClassId)');
-        print('Classes found: ${classes.length}');
-      }
+      AppLogger.debug('material', 'Mata pelajaran found: ${subject.length} (class: $selectedClassId)');
+      AppLogger.debug('material', 'Classes found: ${classes.length}');
 
       if (subject.isEmpty) {
         setState(() {
@@ -580,11 +567,9 @@ class MateriPageState extends State<MateriPage> {
       if (subject.isNotEmpty) {
         LocalCacheService.save('materi_subjects_${teacherId}_$effectiveClassKey', subject);
       }
-      if (kDebugMode) print('Saved materi data to cache');
+      AppLogger.info('material', 'Saved materi data to cache');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading MateriPage data: $e');
-      }
+      AppLogger.error('material', 'Error loading MateriPage data: $e');
       if (!mounted) return;
 
       setState(() {
@@ -645,12 +630,12 @@ class MateriPageState extends State<MateriPage> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _checkAndShowTour();
             });
-            if (kDebugMode) print('⚡ Loaded bab materi from cache — skipping API');
+            AppLogger.info('material', 'Loaded bab materi from cache — skipping API');
             return; // ✅ Cache hit — no API calls for bab-material
           }
         }
       } catch (e) {
-        if (kDebugMode) print('Bab cache load error: $e');
+        AppLogger.error('material', 'Bab cache load error: $e');
       }
     }
 
@@ -663,9 +648,7 @@ class MateriPageState extends State<MateriPage> {
       final masterSubjectId = subject?['subject_id']?.toString();
 
       if (masterSubjectId == null) {
-        if (kDebugMode) {
-          print('Error: Master Subject ID not found for subject $subjectId');
-        }
+        AppLogger.error('material', 'Error: Master Subject ID not found for subject $subjectId');
         if (mounted) setState(() => _isLoadingBab = false);
         return;
       }
@@ -727,9 +710,7 @@ class MateriPageState extends State<MateriPage> {
         }
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading bab and sub-bab: $e');
-      }
+      AppLogger.error('material', 'Error loading bab and sub-bab: $e');
       if (!mounted) return;
       setState(() => _isLoadingBab = false);
       if (_babMateriList.isEmpty) {
@@ -767,10 +748,8 @@ class MateriPageState extends State<MateriPage> {
         // Update status ceklis bab
         _checkedBab[babId] = allChecked;
 
-        if (kDebugMode) {
-          print('SubBab check changed: $subBabId -> $value');
-          print('Bab $babId auto-check status: $allChecked');
-        }
+        AppLogger.debug('material', 'SubBab check changed: $subBabId -> $value');
+        AppLogger.debug('material', 'Bab $babId auto-check status: $allChecked');
       }
     });
 
@@ -825,12 +804,12 @@ class MateriPageState extends State<MateriPage> {
       if (!mounted) return;
 
       if (kDebugMode) {
-        print('=== LOADING MATERI PROGRESS ===');
-        print('Teacher ID: $teacherId');
-        print('Subject ID: $subjectId');
-        print('API Response Items: ${progress.length}');
+        AppLogger.debug('material', '=== LOADING MATERI PROGRESS ===');
+        AppLogger.debug('material', 'Teacher ID: $teacherId');
+        AppLogger.debug('material', 'Subject ID: $subjectId');
+        AppLogger.debug('material', 'API Response Items: ${progress.length}');
         if (progress.isNotEmpty) {
-          print('First item sample: ${progress.first}');
+          AppLogger.debug('material', 'First item sample: ${progress.first}');
         }
       }
 
@@ -877,9 +856,7 @@ class MateriPageState extends State<MateriPage> {
         }
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading progress: $e');
-      }
+      AppLogger.error('material', 'Error loading progress: $e');
     }
   }
 
@@ -902,15 +879,9 @@ class MateriPageState extends State<MateriPage> {
         'is_checked': isChecked ? 1 : 0,
       });
 
-      if (kDebugMode) {
-        print(
-          'Progress saved: bab=$babId, sub_bab=$subBabId, checked=$isChecked',
-        );
-      }
+      AppLogger.info('material', 'Progress saved: bab=$babId, sub_bab=$subBabId, checked=$isChecked',);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error saving progress: $e');
-      }
+      AppLogger.error('material', 'Error saving progress: $e');
     }
   }
 
@@ -928,9 +899,7 @@ class MateriPageState extends State<MateriPage> {
           .where((sb) => sb['bab_id'].toString() == babId.toString())
           .toList();
 
-      if (kDebugMode) {
-        print('Found ${subBabsForThisBab.length} sub-babs for bab $babId');
-      }
+      AppLogger.debug('material', 'Found ${subBabsForThisBab.length} sub-babs for bab $babId');
 
       // Add bab itself ONLY if it has NO sub-chapters
       // If it has sub-chapters, its status is derived and shouldn't be saved explicitly
@@ -966,13 +935,9 @@ class MateriPageState extends State<MateriPage> {
         'progress_items': progressItems,
       });
 
-      if (kDebugMode) {
-        print('Batch progress saved: ${progressItems.length} items');
-      }
+      AppLogger.info('material', 'Batch progress saved: ${progressItems.length} items');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error batch saving progress: $e');
-      }
+      AppLogger.error('material', 'Error batch saving progress: $e');
     }
   }
 
@@ -1823,7 +1788,7 @@ class MateriPageState extends State<MateriPage> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('material', 'Error checking tour status: $e');
     }
   }
 
@@ -1999,11 +1964,11 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
           _contentMateriList = List<dynamic>.from(cached);
           _isLoading = false;
         });
-        if (kDebugMode) print('📦 ContentMateri ${widget.subBab['id']}: from cache');
+        AppLogger.debug('material', 'ContentMateri ${widget.subBab['id']}: from cache');
         return;
       }
     } catch (e) {
-      if (kDebugMode) print('Content cache load error: $e');
+      AppLogger.error('material', 'Content cache load error: $e');
     }
 
     // No cache — fetch from API
@@ -2022,7 +1987,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
 
       await LocalCacheService.save(contentCacheKey, kontenMateri);
     } catch (e) {
-      if (kDebugMode) print('Error loading content materi: $e');
+      AppLogger.error('material', 'Error loading content materi: $e');
       if (!mounted) return;
       setState(() => _isLoading = false);
     }
@@ -2039,11 +2004,11 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
           _aiGeneratedData = Map<String, dynamic>.from(cached);
           _isLoadingAi = false;
         });
-        if (kDebugMode) print('📦 AI content ${widget.subBab['id']}: from cache');
+        AppLogger.debug('material', 'AI content ${widget.subBab['id']}: from cache');
         return;
       }
     } catch (e) {
-      if (kDebugMode) print('AI local cache load error: $e');
+      AppLogger.error('material', 'AI local cache load error: $e');
     }
 
     // No cache — fetch from API
@@ -2083,9 +2048,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
           }
         }
       } catch (cacheError) {
-        if (kDebugMode) {
-          print('Check-cache failed: $cacheError, trying list fallback...');
-        }
+        AppLogger.error('material', 'Check-cache failed: $cacheError, trying list fallback...');
       }
 
       // Fallback: use list endpoint if check-cache failed
@@ -2133,9 +2096,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
             }
           }
         } catch (listError) {
-          if (kDebugMode) {
-            print('List materials fallback also failed: $listError');
-          }
+          AppLogger.error('material', 'List materials fallback also failed: $listError');
         }
       }
 
@@ -2149,7 +2110,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
         await LocalCacheService.save(aiCacheKey, aiData);
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading AI content: $e');
+      AppLogger.error('material', 'Error loading AI content: $e');
       if (!mounted) return;
       setState(() => _isLoadingAi = false);
     }

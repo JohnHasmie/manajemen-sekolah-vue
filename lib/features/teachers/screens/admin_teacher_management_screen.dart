@@ -32,6 +32,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin teacher management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -124,7 +125,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         (trigger['type'] == 'refresh_teachers' ||
             trigger['type'] == 'refresh_schedules')) {
       if (mounted) {
-        if (kDebugMode) print('📦 Sync triggered: ${trigger['type']}');
+        AppLogger.debug('teacher', 'Sync triggered: ${trigger['type']}');
         _loadData(useCache: false);
       }
     }
@@ -194,11 +195,11 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
             _availableEmploymentStatus =
                 List<dynamic>.from(cachedData['employment_status_options'] ?? []);
           });
-          if (kDebugMode) print('⚡ Teacher filter options loaded from cache');
+          AppLogger.info('teacher', 'Teacher filter options loaded from cache');
           return;
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ Teacher filter cache load failed: $e');
+        AppLogger.error('teacher', 'Teacher filter cache load failed: $e');
       }
 
       final response = await ApiTeacherService.getTeacherFilterOptions(
@@ -220,16 +221,10 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
           'gender_options': response['data']['gender_options'] ?? [],
           'employment_status_options': response['data']['employment_status_options'] ?? [],
         });
-        if (kDebugMode) {
-          print(
-            '✅ Filter options loaded: ${_availableClass.length} kelas, ${_availableGenders.length} gender, ${_availableEmploymentStatus.length} employment status',
-          );
-        }
+        AppLogger.info('teacher', 'Filter options loaded: ${_availableClass.length} kelas, ${_availableGenders.length} gender, ${_availableEmploymentStatus.length} employment status',);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading filter options: $e');
-      }
+      AppLogger.error('teacher', 'Error loading filter options: $e');
       // Continue with empty options - not critical error
     }
   }
@@ -925,13 +920,13 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                   _isLoading = false;
                   _errorMessage = null;
                 });
-                if (kDebugMode) print('⚡ Teachers loaded from cache');
+                AppLogger.info('teacher', 'Teachers loaded from cache');
                 // Cache hit → trigger tour immediately (cache pre-fetched by dashboard)
                 _checkAndShowTour();
                 return;
               }
             } catch (e) {
-              if (kDebugMode) print('⚠️ Teacher cache load failed: $e');
+              AppLogger.error('teacher', 'Teacher cache load failed: $e');
             }
           }
         }
@@ -999,7 +994,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         });
       }
     } catch (e) {
-      if (kDebugMode) print('Load teachers error: $e');
+      AppLogger.error('teacher', 'Load teachers error: $e');
       if (!mounted) return;
 
       // Only show error if no cached data displayed
@@ -1094,13 +1089,9 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         _isLoadingMore = false;
       });
 
-      print(
-        '✅ Loaded more data: Page $_currentPage, Total items: ${_teachers.length}',
-      );
+      AppLogger.info('teacher', 'Loaded more data: Page $_currentPage, Total items: ${_teachers.length}',);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading more data: $e');
-      }
+      AppLogger.error('teacher', 'Error loading more data: $e');
       if (!mounted) return;
 
       setState(() {
@@ -1157,7 +1148,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         context: context,
       );
     } catch (e) {
-      if (kDebugMode) print('Export teachers error: $e');
+      AppLogger.error('teacher', 'Export teachers error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1186,17 +1177,13 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
 
       if (result != null && result.files.single.path != null) {
         final pickedFile = File(result.files.single.path!);
-        if (kDebugMode) {
-          print(
-            'Import teachers - picked file: ${pickedFile.path}, size: ${await pickedFile.length()} bytes',
-          );
-        }
+        AppLogger.debug('teacher', 'Import teachers - picked file: ${pickedFile.path}, size: ${await pickedFile.length()} bytes',);
 
         try {
           final response = await ApiTeacherService.importTeachersFromExcel(
             pickedFile,
           );
-          if (kDebugMode) print('Import response: $response');
+          AppLogger.debug('teacher', 'Import response: $response');
 
           // If backend returned structured errors, show them to user
           // show errors array if present
@@ -1237,7 +1224,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
           // Refresh data setelah import
           await _loadData();
         } catch (apiError) {
-          if (kDebugMode) print('Error calling import API: $apiError');
+          AppLogger.error('teacher', 'Error calling import API: $apiError');
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1255,7 +1242,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Import from Excel picker/process error: $e');
+      AppLogger.error('teacher', 'Import from Excel picker/process error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1367,7 +1354,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         }
       }
     } catch (error) {
-      if (kDebugMode) print('Update teacher subjects error: $error');
+      AppLogger.error('teacher', 'Update teacher subjects error: $error');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -2070,11 +2057,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
                                         }
                                         _loadData();
                                       } catch (error) {
-                                        if (kDebugMode) {
-                                          print(
-                                            'Save/Update teacher error: $error',
-                                          );
-                                        }
+                                        AppLogger.error('teacher', 'Save/Update teacher error: $error',);
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(
                                             context,
@@ -2249,7 +2232,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
           _loadData();
         }
       } catch (error) {
-        if (kDebugMode) print('Delete teacher error: $error');
+        AppLogger.error('teacher', 'Delete teacher error: $error');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -2931,7 +2914,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('teacher', 'Error checking tour status: $e');
     }
   }
 
