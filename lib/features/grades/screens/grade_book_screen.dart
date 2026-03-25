@@ -661,7 +661,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         ),
       ),
     ).then((_) {
-      _loadData();
+      _loadData(useCache: false);
     });
   }
 
@@ -1604,7 +1604,7 @@ class GradeBookPageState extends State<GradeBookPage> {
       await apiService.delete('/grades/batch?$queryString');
 
       _showSuccessSnackBar('Assessment deleted successfully');
-      _loadData(); // Reload to refresh the table
+      _loadData(useCache: false); // Reload to refresh the table
     } catch (e) {
       AppLogger.error('grades', e);
       setState(() => _isLoading = false);
@@ -1714,7 +1714,7 @@ class GradeBookPageState extends State<GradeBookPage> {
         ),
       ),
     ).then((_) {
-      _loadData();
+      _loadData(useCache: false);
     });
   }
 
@@ -2230,7 +2230,7 @@ class GradeBookPageState extends State<GradeBookPage> {
                     SizedBox(width: 8),
                     // Refresh button
                     GestureDetector(
-                      onTap: _loadData,
+                      onTap: () => _loadData(useCache: false),
                       child: Container(
                         width: 40,
                         height: 40,
