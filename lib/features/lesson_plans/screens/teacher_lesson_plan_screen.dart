@@ -1809,7 +1809,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
       final fileName = cleanPath.split('/').last;
       final file = File('${dir.path}/$fileName');
 
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       AppLogger.info('lesson_plan', 'File saved to: ${file.path}');
 

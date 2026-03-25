@@ -393,7 +393,7 @@ class ApiSubjectService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      final bytes = response.data!;
+      final bytes = response.data ?? [];
 
       // Save file locally
       final directory = await getExternalStorageDirectory();

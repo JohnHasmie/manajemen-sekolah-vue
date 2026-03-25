@@ -1218,7 +1218,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       final directory = await getTemporaryDirectory();
       final fileName = _getFileName(filePath);
       final localFile = File('${directory.path}/$fileName');
-      await localFile.writeAsBytes(response.data!, flush: true);
+      await localFile.writeAsBytes(response.data ?? [], flush: true);
 
       await OpenFile.open(localFile.path);
 

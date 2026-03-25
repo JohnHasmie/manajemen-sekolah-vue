@@ -56,7 +56,7 @@ class ExcelPresenceService {
           '${directory.path}/Data_Absensi_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
       final File file = File(filePath);
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       AppLogger.info('attendance', 'File saved to: $filePath');
 

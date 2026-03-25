@@ -1092,7 +1092,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
                             children: _availableClasses.map((cls) {
                               final selected = tempClassId == cls['id'];
                               return buildChip(
-                                cls['name']!,
+                                cls['name'] ?? '',
                                 selected,
                                 () => setSheetState(() {
                                   tempClassId = selected ? null : cls['id'];

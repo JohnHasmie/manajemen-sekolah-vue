@@ -34,7 +34,7 @@ class ApiTeacherService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      final bytes = response.data!;
+      final bytes = response.data ?? [];
       final directory = await getApplicationDocumentsDirectory();
       final filePath = '${directory.path}/template_import_guru.xlsx';
       final file = File(filePath);

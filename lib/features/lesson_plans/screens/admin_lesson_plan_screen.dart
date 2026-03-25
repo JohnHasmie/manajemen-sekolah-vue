@@ -2659,7 +2659,7 @@ class RppAdminDetailPage extends StatelessWidget {
       final fileName = filePath.split('/').last;
       final file = File('${directory.path}/$fileName');
 
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(

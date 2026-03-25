@@ -89,7 +89,7 @@ class ApiStudentService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      final bytes = response.data!;
+      final bytes = response.data ?? [];
       final directory = await getExternalStorageDirectory();
       final filePath = '${directory?.path}/template_import_siswa.xlsx';
       final file = File(filePath);

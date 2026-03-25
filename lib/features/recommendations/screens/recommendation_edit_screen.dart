@@ -136,7 +136,7 @@ class _LearningRecommendationEditScreenState
         _materialControllers[recId] = {};
         for (var mat in rec['materials']) {
           final matId = mat['id']?.toString() ?? UniqueKey().toString();
-          _materialControllers[recId]![matId] = quill.QuillController(
+          _materialControllers[recId]?[matId] = quill.QuillController(
             document: _convertHtmlToQuill(mat['content'] ?? ''),
             selection: const TextSelection.collapsed(offset: 0),
           );
@@ -471,7 +471,8 @@ class _LearningRecommendationEditScreenState
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildQuillSection(_descriptionControllers[recId]!),
+                if (_descriptionControllers[recId] != null)
+                  _buildQuillSection(_descriptionControllers[recId]!),
               ],
             ),
           ),
@@ -523,7 +524,8 @@ class _LearningRecommendationEditScreenState
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildQuillSection(_materialControllers[recId]![matId]!),
+                    if (_materialControllers[recId]?[matId] != null)
+                      _buildQuillSection(_materialControllers[recId]![matId]!),
                   ],
                 ),
               );

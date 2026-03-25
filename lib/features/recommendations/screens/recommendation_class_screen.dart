@@ -398,7 +398,7 @@ class _LearningRecommendationClassScreenState
       final result = await ApiRecommendationService.generateForClass(
         teacherId: _effectiveTeacherId,
         classId: classId,
-        subjectId: selectedSubject['id']!,
+        subjectId: selectedSubject['id'] ?? '',
         includeOnTrack: includeOnTrack,
       );
 

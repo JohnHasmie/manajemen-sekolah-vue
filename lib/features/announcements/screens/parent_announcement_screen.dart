@@ -649,7 +649,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/$fileName');
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       final result = await OpenFile.open(file.path);
 

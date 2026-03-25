@@ -280,7 +280,7 @@ class ErrorInterceptor extends Interceptor {
       await Future.delayed(const Duration(milliseconds: 300));
 
       if (navigatorKey.currentState != null &&
-          navigatorKey.currentState!.mounted) {
+          (navigatorKey.currentState?.mounted ?? false)) {
         navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => LoginScreen(initialError: errorMessage),

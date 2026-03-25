@@ -3221,8 +3221,8 @@ class FinanceScreenState extends State<FinanceScreen> {
 
         final response = await ApiService.generateBills(
           paymentTypeId: jenisPembayaran['id'].toString(),
-          month: result['month']!,
-          academicYearId: result['academicYearId']!,
+          month: result['month'] ?? '',
+          academicYearId: result['academicYearId'] ?? '',
         );
 
         if (mounted) {

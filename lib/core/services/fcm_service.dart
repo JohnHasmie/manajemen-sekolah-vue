@@ -506,14 +506,14 @@ class FCMService {
 
       if (navigatorKey.currentState != null) {
         if (role == 'admin') {
-          navigatorKey.currentState!.push(
+          navigatorKey.currentState?.push(
             MaterialPageRoute(
               builder: (context) => const AdminAnnouncementScreen(),
             ),
           );
         } else {
           // For guru, wali, staff
-          navigatorKey.currentState!.push(
+          navigatorKey.currentState?.push(
             MaterialPageRoute(builder: (context) => const AnnouncementScreen()),
           );
         }
@@ -527,7 +527,7 @@ class FCMService {
   Future<void> _navigateToClassActivityScreen() async {
     try {
       if (navigatorKey.currentState != null) {
-        navigatorKey.currentState!.push(
+        navigatorKey.currentState?.push(
           MaterialPageRoute(
             builder: (context) => const ParentClassActivityScreen(),
           ),
@@ -542,7 +542,7 @@ class FCMService {
   Future<void> _navigateToGradeScreen() async {
     try {
       if (navigatorKey.currentState != null) {
-        navigatorKey.currentState!.push(
+        navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (context) => const ParentGradeScreen()),
         );
       }
@@ -566,7 +566,7 @@ class FCMService {
 
         if (studentId == null) return;
 
-        navigatorKey.currentState!.push(
+        navigatorKey.currentState?.push(
           MaterialPageRoute(
             builder: (context) =>
                 PresenceParentPage(parent: userData, studentId: studentId),

@@ -160,7 +160,7 @@ class ApiService {
         endpoint,
         options: Options(responseType: ResponseType.bytes),
       );
-      return Uint8List.fromList(response.data!);
+      return Uint8List.fromList(response.data ?? []);
     } on DioException catch (e) {
       AppLogger.error('api', 'Download Error on $endpoint: $e');
       if (e.error is Exception) throw e.error as Exception;
@@ -245,7 +245,7 @@ class ApiService {
 
       // Navigate to login with error message
       if (navigatorKey.currentState != null &&
-          navigatorKey.currentState!.mounted) {
+          (navigatorKey.currentState?.mounted ?? false)) {
         navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => LoginScreen(initialError: errorMessage),

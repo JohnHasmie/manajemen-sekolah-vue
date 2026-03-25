@@ -451,7 +451,7 @@ class ApiScheduleService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      final bytes = response.data!;
+      final bytes = response.data ?? [];
       final directory = await getApplicationDocumentsDirectory();
       final filePath =
           '${directory.path}/template_import_jadwal_mengajar.xlsx';
@@ -537,7 +537,7 @@ class ApiScheduleService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      final bytes = response.data!;
+      final bytes = response.data ?? [];
       final directory = await getApplicationDocumentsDirectory();
       final filePath =
           '${directory.path}/jadwal_mengajar_export_${DateTime.now().millisecondsSinceEpoch}.xlsx';

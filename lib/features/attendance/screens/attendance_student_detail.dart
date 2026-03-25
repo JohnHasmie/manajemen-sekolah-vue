@@ -318,7 +318,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       int successCount = 0;
 
       for (var student in _studentList) {
-        final status = _absensiStatus[student.id]!;
+        final status = _absensiStatus[student.id] ?? 'hadir';
 
         await ApiService.createAttendance({
           'student_id': student.id,

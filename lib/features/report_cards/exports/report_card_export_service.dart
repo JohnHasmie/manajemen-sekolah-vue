@@ -60,7 +60,7 @@ class ExcelRaportService {
 
       // Save file
       final File file = File(filePath);
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       // Open the file
       await OpenFile.open(filePath);
@@ -126,7 +126,7 @@ class ExcelRaportService {
 
       // Save file
       final File file = File(filePath);
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       // Open the file
       await OpenFile.open(filePath);
@@ -191,7 +191,7 @@ class ExcelRaportService {
 
       // Save file
       final File file = File(filePath);
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       // Open the file
       await OpenFile.open(filePath);

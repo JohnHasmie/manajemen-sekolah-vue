@@ -45,7 +45,7 @@ class ExcelTeacherService {
           '${directory.path}/Data_Guru_${DateTime.now().millisecondsSinceEpoch}.xlsx';
       final file = File(filePath);
 
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       // Open the file
       await OpenFile.open(filePath);
@@ -94,7 +94,7 @@ class ExcelTeacherService {
       final filePath = '${directory.path}/Template_Import_Guru.xlsx';
       final file = File(filePath);
 
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       // Open the file
       await OpenFile.open(filePath);
