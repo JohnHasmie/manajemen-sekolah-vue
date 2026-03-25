@@ -16,11 +16,13 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
-class AdminAbsensiDetailPage extends StatefulWidget {
+class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
   final String subjectId;
   final String classId;
   final DateTime date;
@@ -43,10 +45,10 @@ class AdminAbsensiDetailPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AdminAbsensiDetailPage> createState() => _AdminAbsensiDetailPageState();
+  ConsumerState<AdminAbsensiDetailPage> createState() => _AdminAbsensiDetailPageState();
 }
 
-class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
+class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage> {
   List<dynamic> _absensiData = [];
   List<Student> _siswaList = [];
   bool _isLoading = true;
@@ -199,10 +201,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
   }
 
   Future<void> _saveChanges() async {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     setState(() => _isSaving = true);
 

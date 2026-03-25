@@ -17,7 +17,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -27,7 +28,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 ///
 /// Uses the same debounced visibility-based "mark as read" pattern.
 /// Props: optional [academicYearId].
-class ParentGradeScreen extends StatefulWidget {
+class ParentGradeScreen extends ConsumerStatefulWidget {
   final String? academicYearId;
 
   const ParentGradeScreen({super.key, this.academicYearId});
@@ -40,7 +41,7 @@ class ParentGradeScreen extends StatefulWidget {
 ///
 /// Like a Vue page component with `data() { return {...} }`.
 /// Key state: grade list, student selector, visibility-based read tracking.
-class ParentGradeScreenState extends State<ParentGradeScreen> {
+class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
   List<dynamic> _gradeList = [];
   List<dynamic> _studentList = [];
   String? _selectedStudentId;
@@ -317,7 +318,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -346,7 +347,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

@@ -20,6 +20,8 @@ import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -28,7 +30,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 /// and read tracking.
 ///
 /// Props (like Vue props): [parent] data, [studentId], optional [academicYearId].
-class PresenceParentPage extends StatefulWidget {
+class PresenceParentPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> parent;
   final String studentId; // ID siswa yang merupakan anak dari wali murid
   final String? academicYearId;
@@ -53,7 +55,7 @@ class PresenceParentPage extends StatefulWidget {
 /// - Month/semester filters and visibility-based read tracking
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render.
-class PresenceParentPageState extends State<PresenceParentPage> {
+class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   List<dynamic> _absensiData = [];
   Student? _student;
   bool _isLoading = true;
@@ -269,7 +271,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -298,7 +300,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -443,10 +445,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     String? tempMonthFilter = _selectedMonthFilter;
     String? tempSemesterFilter = _selectedSemesterFilter;
@@ -863,7 +862,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
   }
 
   Widget _buildMonthlySummary() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final totalDays = _monthlySummary.values.reduce((a, b) => a + b);
     final presentaseAbsensi = totalDays > 0
         ? ((_monthlySummary['hadir']! + _monthlySummary['terlambat']!) /
@@ -1368,7 +1367,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
   // Pattern #7: Gradient header
   Widget _buildHeader() {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
@@ -1606,7 +1605,7 @@ class PresenceParentPageState extends State<PresenceParentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(

@@ -7,7 +7,6 @@
 // In Laravel terms, this calls `POST /api/classes/promote` with selected student IDs
 // and target class/year configuration.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/widgets/promotion_step_indicator.dart';
 import 'package:manajemensekolah/features/settings/services/academic_service.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
@@ -18,6 +17,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Multi-step wizard for promoting students to the next class/academic year.
@@ -25,11 +26,11 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// Like a Vuetify `<v-stepper>` component with 4 steps.
 /// This is a [StatefulWidget] with step navigation, student selection, and
 /// target class configuration state.
-class ClassPromotionWizard extends StatefulWidget {
+class ClassPromotionWizard extends ConsumerStatefulWidget {
   const ClassPromotionWizard({super.key});
 
   @override
-  State<ClassPromotionWizard> createState() => _ClassPromotionWizardState();
+  ConsumerState<ClassPromotionWizard> createState() => _ClassPromotionWizardState();
 }
 
 /// Mutable state for [ClassPromotionWizard].
@@ -39,7 +40,7 @@ class ClassPromotionWizard extends StatefulWidget {
 /// - [_classes] / [_academicYears] / [_students] - data lists from API
 /// - [_selectedSourceClassId] / [_selectedTargetYearId] / [_selectedTargetClassId] - user selections
 /// - [_selectedStudentIds] - Set of student IDs selected for promotion (like Vue `v-model` on checkboxes)
-class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
+class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
   int _currentStep = 0;
   bool _isLoading = false;
 
@@ -90,10 +91,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
     try {
       final yearsData = await getIt<ApiAcademicServices>().getAcademicYears();
 
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYear = academicYearProvider.selectedAcademicYear;
 
       List<dynamic> classesData = [];
@@ -1627,7 +1625,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   // STEP NAVIGATION
   // ==============================
   void _onStepContinue() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     if (_currentStep == 0) {
       if (_selectedSourceClassId == null) return;
       if (_students.isEmpty) await _loadStudents(_selectedSourceClassId!);
@@ -1702,7 +1700,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   }
 
   Future<void> _submitPromotion() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     setState(() => _isLoading = true);
     try {
       final data = {
@@ -1758,7 +1756,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
   // CREATE CLASS DIALOG
   // ==============================
   void _showCreateClassDialog() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final nameController = TextEditingController();
     String? selectedGradeLevel;
     String? selectedHomeroomTeacherId;

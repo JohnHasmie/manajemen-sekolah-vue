@@ -8,11 +8,12 @@ import 'package:manajemensekolah/features/subjects/services/subject_service.dart
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 
-class AddActivityDialog extends StatefulWidget {
+class AddActivityDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final String teacherName;
   final List<dynamic> scheduleList;
@@ -60,10 +61,10 @@ class AddActivityDialog extends StatefulWidget {
   final List<Map<String, dynamic>>? materialsToMarkAsGenerated;
 
   @override
-  State<AddActivityDialog> createState() => _AddActivityDialogState();
+  ConsumerState<AddActivityDialog> createState() => _AddActivityDialogState();
 }
 
-class _AddActivityDialogState extends State<AddActivityDialog> {
+class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
   final _deskripsiController = TextEditingController();
@@ -559,10 +560,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     setState(() => _isSubmitting = true);
 
     try {
-      final languageProvider = Provider.of<LanguageProvider>(
-        context,
-        listen: false,
-      );
+      final languageProvider = ref.read(languageRiverpod);
 
       final Map<String, dynamic> data = {
         'teacher_id': widget.teacherId,
@@ -835,7 +833,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
     final isAssignment = widget.activityType == 'tugas';
     final primaryColor = isAssignment
         ? ColorUtils.warning600

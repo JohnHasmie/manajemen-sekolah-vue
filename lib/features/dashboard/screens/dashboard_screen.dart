@@ -18,7 +18,6 @@ import 'package:manajemensekolah/features/dashboard/widgets/material_slider_card
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/announcements/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/class_activity/screens/admin_class_activity_screen.dart';
 import 'package:manajemensekolah/features/settings/screens/data_management_screen.dart';
@@ -65,6 +64,8 @@ import 'package:manajemensekolah/features/dashboard/widgets/overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/quick_action_button.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -76,13 +77,13 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 /// Takes a [role] prop ('admin', 'guru'/'teacher', 'wali'/'parent') which determines
 /// what menu items, stats, and content are shown. This is similar to a Vue page
 /// that renders different sections with `v-if="role === 'admin'"`.
-class Dashboard extends StatefulWidget {
+class Dashboard extends ConsumerStatefulWidget {
   final String role;
 
   const Dashboard({super.key, required this.role});
 
   @override
-  State<Dashboard> createState() => _DashboardState();
+  ConsumerState<Dashboard> createState() => _DashboardState();
 }
 
 /// The mutable state for [Dashboard].
@@ -104,7 +105,7 @@ class Dashboard extends StatefulWidget {
 /// - Provider pattern: uses Provider (like Vuex/Pinia) for shared state
 ///   (AcademicYearProvider, TeacherProvider, LanguageProvider)
 /// - FCM sync: listens for push notification triggers to refresh data in real-time
-class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
+class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateMixin {
   String get _effectiveRole {
     if (widget.role == 'teacher') return 'guru';
     if (widget.role == 'parent') return 'wali';
@@ -194,10 +195,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     // Listen for changes immediately after loading cache
     // This ensures we catch the notification from fetchAcademicYears below
     if (mounted) {
-      Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).addListener(_onYearChanged);
+      ref.read(academicYearRiverpod).addListener(_onYearChanged);
     }
 
     setState(() {});
@@ -222,10 +220,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
       // Fetch academic years
       if (mounted) {
-        await Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        ).fetchAcademicYears();
+        await ref.read(academicYearRiverpod).fetchAcademicYears();
       }
 
       // Only load stats if _onYearChanged hasn't already triggered it
@@ -1108,10 +1103,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     try {
       String? academicYearId;
       if (mounted) {
-        final academicYearProvider = Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        );
+        final academicYearProvider = ref.read(academicYearRiverpod);
         academicYearId = academicYearProvider.selectedAcademicYear?['id']
             ?.toString();
       }
@@ -1187,7 +1179,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
               // Populate TeacherProvider so other screens can reuse
               if (mounted) {
-                Provider.of<TeacherProvider>(context, listen: false)
+                ref.read(teacherRiverpod)
                     .setTeacherData(
                   userId: userId,
                   teacherId: teacherId,
@@ -1293,10 +1285,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   String _dashboardCacheKey(String suffix) {
     String? academicYearId;
     if (mounted) {
-      final provider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final provider = ref.read(academicYearRiverpod);
       academicYearId = provider.selectedAcademicYear?['id']?.toString();
     }
     // Use provider value if available, otherwise fallback to last known
@@ -1391,10 +1380,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     try {
       String? academicYearId;
       if (mounted) {
-        final academicYearProvider = Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        );
+        final academicYearProvider = ref.read(academicYearRiverpod);
         academicYearId = academicYearProvider.selectedAcademicYear?['id']
             ?.toString();
       }
@@ -1659,7 +1645,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     // Clear all cache to prevent stale data from previous school
     await LocalCacheService.clearAll();
     if (mounted) {
-      Provider.of<TeacherProvider>(context, listen: false).clear();
+      ref.read(teacherRiverpod).clear();
     }
 
     // Update token
@@ -1742,10 +1728,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     FCMService().syncTrigger.removeListener(_handleSyncTrigger);
     _animationController.dispose();
     try {
-      Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).removeListener(_onYearChanged);
+      ref.read(academicYearRiverpod).removeListener(_onYearChanged);
     } catch (e) {
       AppLogger.error('dashboard', 'Error removing AcademicYearProvider listener: $e');
     }
@@ -2294,7 +2277,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   void _showAcademicYearDialog(BuildContext context) {
-    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final provider = ref.read(academicYearRiverpod);
     final years = provider.academicYears;
 
     showDialog(
@@ -2575,10 +2558,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             classesData: _attendanceChartData,
             onTap: () {
               // Extract the selected academic year right before showing dialog
-              final selectedYearId = Provider.of<AcademicYearProvider>(
-                context,
-                listen: false,
-              ).selectedAcademicYear?['id']?.toString();
+              final selectedYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
               showDialog(
                 context: context,
@@ -2707,10 +2687,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             hideSubtitle:
                 true, // Requested by user to hide the child's name on the card
             onTap: () {
-              final selectedYearId = Provider.of<AcademicYearProvider>(
-                context,
-                listen: false,
-              ).selectedAcademicYear?['id']?.toString();
+              final selectedYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
               showDialog(
                 context: context,
@@ -3355,10 +3332,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         icon: Icons.local_activity_outlined,
         badgeCount: _stats['unread_class_activities'],
         onTap: () async {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
+          final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
           await Navigator.push(
             context,
             MaterialPageRoute(
@@ -3374,10 +3348,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         icon: Icons.grade_outlined,
         badgeCount: _stats['unread_grades'],
         onTap: () async {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
+          final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
           await Navigator.push(
             context,
             MaterialPageRoute(
@@ -3393,10 +3364,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         icon: Icons.check_circle_outline,
         badgeCount: _stats['unread_presence'],
         onTap: () async {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
+          final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
           final prefs = PreferencesService();
           final userData = json.decode(prefs.getString('user') ?? '{}');
@@ -3453,10 +3421,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         title: AppLocalizations.eRaport.tr,
         icon: Icons.assignment_turned_in_outlined,
         onTap: () async {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
+          final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
           await Navigator.push(
             context,

@@ -27,6 +27,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -34,7 +36,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 ///
 /// This is a [StatefulWidget] - like a Vue page component with its own local state
 /// (`data() { return { announcements: [], isLoading: true, ... } }`).
-class AdminAnnouncementScreen extends StatefulWidget {
+class AdminAnnouncementScreen extends ConsumerStatefulWidget {
   const AdminAnnouncementScreen({super.key});
 
   @override
@@ -54,7 +56,7 @@ class AdminAnnouncementScreen extends StatefulWidget {
 /// into view, they're batched and sent to the API after 1 second of inactivity.
 ///
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
-class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
+class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen> {
   final ApiService _apiService = ApiService();
   File? _selectedFile;
   List<dynamic> _announcements = [];
@@ -328,7 +330,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Temporary state for bottom sheet
     String? tempSelectedPrioritas = _selectedPriorityFilter;
@@ -929,7 +931,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal memuat data pengumuman', 'id': 'Gagal memuat data pengumuman'})}: ${ErrorUtils.getFriendlyMessage(e)}',
+            '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal memuat data pengumuman', 'id': 'Gagal memuat data pengumuman'})}: ${ErrorUtils.getFriendlyMessage(e)}',
           ),
           backgroundColor: ColorUtils.error600,
         ),
@@ -1725,7 +1727,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   Future<void> _deleteAnnouncement(
     Map<String, dynamic> announcementData,
   ) async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
@@ -1880,7 +1882,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
+                ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Announcement successfully deleted',
                   'id': 'Pengumuman berhasil dihapus',
                 }),
@@ -1894,7 +1896,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
+                ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Failed to delete announcement: $e',
                   'id': 'Gagal menghapus pengumuman: $e',
                 }),
@@ -1911,7 +1913,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     Map<String, dynamic> announcementData,
     int index,
   ) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
     final isUnread =
         announcementData['is_read'] != null &&
@@ -2120,7 +2122,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
   }
 
   void _showAnnouncementDetail(Map<String, dynamic> announcementData) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     showDialog(
       context: context,
@@ -3101,7 +3103,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
     List<TargetFocus> targets = createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -3130,7 +3132,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
   List<TargetFocus> createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

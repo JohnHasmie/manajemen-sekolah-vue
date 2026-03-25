@@ -18,8 +18,6 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
@@ -31,6 +29,8 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/grades/screens/grade_book_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// The class/subject selection screen (Steps 0-1) before entering the grade book.
@@ -38,7 +38,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// This StatefulWidget acts as a navigation wizard. In Vue terms, it is like
 /// a parent page component that conditionally renders child components based
 /// on `currentStep`. Props: [teacher] -- the logged-in teacher's data map.
-class GradePage extends StatefulWidget {
+class GradePage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
 
   const GradePage({super.key, required this.teacher});
@@ -57,7 +57,7 @@ class GradePage extends StatefulWidget {
 /// - [_todaySchedules] -- used to highlight today's scheduled classes/subjects
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
-class GradePageState extends State<GradePage> {
+class GradePageState extends ConsumerState<GradePage> {
   // Services
   final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
   final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
@@ -161,10 +161,7 @@ class GradePageState extends State<GradePage> {
     if (_currentPage != 1) return null;
     if (_searchController.text.trim().isNotEmpty) return null;
 
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
     final teacherId = widget.teacher['id']?.toString() ?? 'unknown';
     return 'grade_classes_${teacherId}_$yearId';
@@ -173,10 +170,7 @@ class GradePageState extends State<GradePage> {
   String? _buildSubjectCacheKey() {
     if (_selectedClass == null) return null;
 
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
     final teacherId = widget.teacher['id']?.toString() ?? 'unknown';
     final classId = _selectedClass!['id']?.toString() ?? 'unknown';
@@ -198,7 +192,7 @@ class GradePageState extends State<GradePage> {
 
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
       if (isGuru && useCache) {
-        final teacherProvider = Provider.of<TeacherProvider>(context, listen: false);
+        final teacherProvider = ref.read(teacherRiverpod);
         if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
           List<dynamic> providerClasses = List.from(teacherProvider.allClasses);
           _sortClassesByTodaySchedule(providerClasses);
@@ -250,10 +244,7 @@ class GradePageState extends State<GradePage> {
 
     // ─── Step 3: No cache — fetch fresh from API ───
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -384,10 +375,7 @@ class GradePageState extends State<GradePage> {
 
     // ─── Step 2: No cache — fetch fresh from API ───
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -549,10 +537,7 @@ class GradePageState extends State<GradePage> {
       });
 
       // 3. Load Teacher Schedules — try teaching_schedule's cache first
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']?.toString();
       final semesterProvider = academicYearProvider.selectedAcademicYear;
       final semester = semesterProvider?['semester']?.toString() ?? '1';

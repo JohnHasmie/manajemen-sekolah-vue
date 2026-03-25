@@ -13,7 +13,6 @@ import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -25,6 +24,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -33,14 +34,14 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 ///
 /// Optionally accepts [teacherId]/[teacherName] to skip the teacher selection step.
 /// This is like a Vue page with optional route params (`/admin/rpp?teacherId=123`).
-class AdminRppScreen extends StatefulWidget {
+class AdminRppScreen extends ConsumerStatefulWidget {
   final String? teacherId;
   final String? teacherName;
 
   const AdminRppScreen({super.key, this.teacherId, this.teacherName});
 
   @override
-  State<AdminRppScreen> createState() => _AdminRppScreenState();
+  ConsumerState<AdminRppScreen> createState() => _AdminRppScreenState();
 }
 
 /// Mutable state for [AdminRppScreen].
@@ -52,7 +53,7 @@ class AdminRppScreen extends StatefulWidget {
 /// - Pagination state for infinite scroll
 ///
 /// setState() triggers re-render like Vue's reactivity system.
-class _AdminRppScreenState extends State<AdminRppScreen> {
+class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
   List<dynamic> _rppList = [];
   List<dynamic> _teacherList = [];
   bool _showTeacherList = true;
@@ -154,7 +155,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Temporary state for bottom sheet
     String? tempSelectedStatus = _selectedStatusFilter;
@@ -440,7 +441,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
         _searchController.text.trim().isNotEmpty) {
       return null;
     }
-    final yearId = Provider.of<AcademicYearProvider>(context, listen: false)
+    final yearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString() ?? 'default';
     return 'rpp_list_${_selectedTeacherId}_$yearId';
@@ -636,10 +637,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
       }
 
       // Step 2: Fetch fresh from API
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -1595,7 +1593,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -1624,7 +1622,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -1763,7 +1761,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
 }
 
 // ... (UpdateStatusDialog dan RppAdminDetailPage tetap sama seperti sebelumnya)
-class UpdateStatusDialog extends StatefulWidget {
+class UpdateStatusDialog extends ConsumerStatefulWidget {
   final String rppId;
   final String currentStatus;
   final String? currentNote;
@@ -1778,10 +1776,10 @@ class UpdateStatusDialog extends StatefulWidget {
   });
 
   @override
-  State<UpdateStatusDialog> createState() => _UpdateStatusDialogState();
+  ConsumerState<UpdateStatusDialog> createState() => _UpdateStatusDialogState();
 }
 
-class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
+class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
   bool isUpdating = false;
   late TextEditingController catatanController;
   String selectedStatus = 'Pending';

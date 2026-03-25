@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/lesson_plans/screens/lesson_plan_ai_result_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/screens/lesson_plan_detail_screen.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -27,6 +26,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -36,7 +37,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 ///
 /// Props (like Vue props): [teacherId], [teacherName].
 /// Contains the main list view and navigation to detail/AI screens.
-class RppScreen extends StatefulWidget {
+class RppScreen extends ConsumerStatefulWidget {
   final String teacherId;
   final String teacherName;
 
@@ -54,7 +55,7 @@ class RppScreen extends StatefulWidget {
 ///
 /// Like a Vue page component with `data() { return { rppList, isLoading, ... } }`.
 /// Manages the RPP list, search, status filter, and CRUD operations.
-class RppScreenState extends State<RppScreen> {
+class RppScreenState extends ConsumerState<RppScreen> {
   List<dynamic> _rppList = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -108,7 +109,7 @@ class RppScreenState extends State<RppScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Temporary state for bottom sheet
     String? tempSelectedStatus = _selectedStatusFilter;
@@ -404,7 +405,7 @@ class RppScreenState extends State<RppScreen> {
   }
 
   String? _getAcademicYearId() {
-    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final provider = ref.read(academicYearRiverpod);
     return (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString();
   }
 
@@ -491,7 +492,7 @@ class RppScreenState extends State<RppScreen> {
   /// Opens the RPP creation form dialog.
   /// Like clicking a "Add New" button that opens a Vue modal/dialog.
   void _tambahRpp() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -669,7 +670,7 @@ class RppScreenState extends State<RppScreen> {
   /// Deletes an RPP after confirmation dialog.
   /// Like `axios.delete('/api/rpp/{id}')` in Vue with a confirm modal.
   Future<void> _deleteRpp(Map<String, dynamic> rpp) async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1129,7 +1130,7 @@ class RppScreenState extends State<RppScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
     final filteredRpp = _rppList;
 
     return Scaffold(
@@ -1453,7 +1454,7 @@ class RppScreenState extends State<RppScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -1482,7 +1483,7 @@ class RppScreenState extends State<RppScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -1583,7 +1584,7 @@ class RppScreenState extends State<RppScreen> {
 /// Like a Vue `<RppFormModal>` component. When [rppData] is null, it creates
 /// a new RPP; when provided, it edits the existing one.
 /// Props: [teacherId], [onSaved] callback, optional [rppData] for editing.
-class RppFormDialog extends StatefulWidget {
+class RppFormDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final VoidCallback onSaved;
   final Map<String, dynamic>? rppData;
@@ -1596,10 +1597,10 @@ class RppFormDialog extends StatefulWidget {
   });
 
   @override
-  State<RppFormDialog> createState() => _RppFormDialogState();
+  ConsumerState<RppFormDialog> createState() => _RppFormDialogState();
 }
 
-class _RppFormDialogState extends State<RppFormDialog> {
+class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
   final _tahunAjaranController = TextEditingController();
@@ -1787,7 +1788,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
 
       AppLogger.debug('lesson_plan', 'Downloading file from: $fullUrl');
 
-      final languageProvider = context.read<LanguageProvider>();
+      final languageProvider = ref.read(languageRiverpod);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -1892,7 +1893,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
       Navigator.pop(context);
       widget.onSaved();
 
-      final languageProvider = context.read<LanguageProvider>();
+      final languageProvider = ref.read(languageRiverpod);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -2471,7 +2472,7 @@ class _RppFormDialogState extends State<RppFormDialog> {
   }
 }
 
-class GenerateRppFormDialog extends StatefulWidget {
+class GenerateRppFormDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final VoidCallback onSaved;
 
@@ -2482,10 +2483,10 @@ class GenerateRppFormDialog extends StatefulWidget {
   });
 
   @override
-  State<GenerateRppFormDialog> createState() => _GenerateRppFormDialogState();
+  ConsumerState<GenerateRppFormDialog> createState() => _GenerateRppFormDialogState();
 }
 
-class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
+class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
   final _tahunAjaranController = TextEditingController();
@@ -2877,7 +2878,7 @@ class _GenerateRppFormDialogState extends State<GenerateRppFormDialog> {
     if (!mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     final userData = await TokenService().getUserData();
     final schoolObj = userData?['school'] as Map<String, dynamic>?;

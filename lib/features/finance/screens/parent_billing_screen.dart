@@ -26,6 +26,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -35,7 +37,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 ///
 /// A StatefulWidget with no constructor params -- reads parent/student data
 /// from SharedPreferences. Supports multiple children (student selector).
-class ParentBillingScreen extends StatefulWidget {
+class ParentBillingScreen extends ConsumerStatefulWidget {
   const ParentBillingScreen({super.key});
 
   @override
@@ -51,7 +53,7 @@ class ParentBillingScreen extends StatefulWidget {
 /// - Pagination, search, and filter state
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render.
-class ParentBillingScreenState extends State<ParentBillingScreen> {
+class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   final ApiService _apiService = ApiService();
   List<dynamic> _billingList = [];
   bool _isLoading = true;
@@ -279,7 +281,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -308,7 +310,7 @@ class ParentBillingScreenState extends State<ParentBillingScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

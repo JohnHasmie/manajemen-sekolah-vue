@@ -19,7 +19,6 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/tab_switcher.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/class_activity/services/class_activity_service.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
@@ -31,6 +30,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -44,7 +45,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// Supports deep linking via optional initial* parameters, allowing other
 /// screens to navigate here with pre-selected class/subject/chapter.
 /// In Vue Router terms, these are like route query params (`?classId=...`).
-class ClassActifityScreen extends StatefulWidget {
+class ClassActifityScreen extends ConsumerStatefulWidget {
   final DateTime? initialDate;
   final String? initialSubjectId;
   final String? initialSubjectName;
@@ -91,7 +92,7 @@ class ClassActifityScreen extends StatefulWidget {
 /// The `TickerProviderStateMixin` is needed for TabController animations.
 /// In Vue, you would just use CSS transitions; in Flutter, animations
 /// need a "ticker" (frame callback provider).
-class ClassActifityScreenState extends State<ClassActifityScreen>
+class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
     with TickerProviderStateMixin {
   static const String _prefKeyLastCacheKey = 'class_activity_last_cache_key';
 
@@ -624,10 +625,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     AppLogger.debug('class_activity', '===== _loadUserData STARTED =====');
     try {
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
-      final teacherProvider = Provider.of<TeacherProvider>(
-        context,
-        listen: false,
-      );
+      final teacherProvider = ref.read(teacherRiverpod);
 
       final prefs = PreferencesService();
       final userData = json.decode(prefs.getString('user') ?? '{}');
@@ -711,10 +709,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               String? academicYearId;
               try {
                 if (mounted) {
-                  academicYearId = Provider.of<AcademicYearProvider>(
-                    context,
-                    listen: false,
-                  ).selectedAcademicYear?['id']?.toString();
+                  academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
                 }
               } catch (e) {}
 
@@ -1062,10 +1057,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   }
 
   void _showActivityTypeDialog() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
 
     showModalBottomSheet(
@@ -1651,10 +1643,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   // ========== FILTER SHEET MENGGUNAKAN KOMPONEN ==========
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     String? tempDateFilter = _selectedDateFilter;
 
     showModalBottomSheet(
@@ -2134,10 +2123,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     final accentColor = isAssignment
         ? ColorUtils.warning600
         : ColorUtils.success600;
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
 
     return Container(
@@ -2327,10 +2313,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   }
 
   void _showActivityDetail(dynamic activity) {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
     final isAssignment =
         activity['jenis'] == 'tugas' ||
@@ -2594,7 +2577,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   @override
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
 
     return WillPopScope(
       onWillPop: _handleWillPop,
@@ -3068,7 +3051,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   }
 }
 
-class AddActivityDialog extends StatefulWidget {
+class AddActivityDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final String teacherName;
   final List<dynamic> scheduleList;
@@ -3116,10 +3099,10 @@ class AddActivityDialog extends StatefulWidget {
   final List<Map<String, dynamic>>? materialsToMarkAsGenerated;
 
   @override
-  State<AddActivityDialog> createState() => _AddActivityDialogState();
+  ConsumerState<AddActivityDialog> createState() => _AddActivityDialogState();
 }
 
-class _AddActivityDialogState extends State<AddActivityDialog> {
+class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
   final _deskripsiController = TextEditingController();
@@ -3615,10 +3598,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     setState(() => _isSubmitting = true);
 
     try {
-      final languageProvider = Provider.of<LanguageProvider>(
-        context,
-        listen: false,
-      );
+      final languageProvider = ref.read(languageRiverpod);
 
       final Map<String, dynamic> data = {
         'teacher_id': widget.teacherId,
@@ -3891,7 +3871,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
     final isAssignment = widget.activityType == 'tugas';
     final primaryColor = isAssignment
         ? ColorUtils.warning600

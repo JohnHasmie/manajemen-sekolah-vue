@@ -18,7 +18,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -28,7 +29,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 ///
 /// Uses the same debounced visibility-based "mark as read" pattern as
 /// [AnnouncementScreen]. Props: optional [academicYearId].
-class ParentClassActivityScreen extends StatefulWidget {
+class ParentClassActivityScreen extends ConsumerStatefulWidget {
   final String? academicYearId;
 
   const ParentClassActivityScreen({super.key, this.academicYearId});
@@ -43,7 +44,7 @@ class ParentClassActivityScreen extends StatefulWidget {
 /// Like a Vue page component with `data() { return {...} }`.
 /// Key state: activity list, student selector, visibility tracking for
 /// auto-marking read items. Uses the same pattern as announcements.
-class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
+class ParentClassActivityScreenState extends ConsumerState<ParentClassActivityScreen> {
   List<dynamic> _activityList = [];
   List<dynamic> _studentList = [];
   String? _selectedStudentId;
@@ -348,7 +349,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -377,7 +378,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -603,7 +604,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   void _showActivityDetail(Map<String, dynamic> activity) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
     final isAssignment = activity['jenis'] == 'tugas';
 
@@ -881,7 +882,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Widget _buildActivityList() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     if (_selectedStudentId == null) {
       return _buildEmptyState(AppLocalizations.selectChildToViewActivity.tr);
@@ -1177,7 +1178,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Widget _buildHeader() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(

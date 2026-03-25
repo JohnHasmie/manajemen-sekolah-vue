@@ -29,6 +29,8 @@ import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -71,11 +73,11 @@ class AttendanceSummary {
 ///
 /// This is a [StatefulWidget] - like a Vue page with extensive local state
 /// for filters, pagination, and two view modes (list vs table/grid).
-class AdminPresenceReportScreen extends StatefulWidget {
+class AdminPresenceReportScreen extends ConsumerStatefulWidget {
   const AdminPresenceReportScreen({super.key});
 
   @override
-  State<AdminPresenceReportScreen> createState() =>
+  ConsumerState<AdminPresenceReportScreen> createState() =>
       _AdminPresenceReportScreenState();
 }
 
@@ -89,7 +91,7 @@ class AdminPresenceReportScreen extends StatefulWidget {
 /// - [_studentList] / [_attendanceMap] - raw student attendance data for table view
 ///
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
-class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
+class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportScreen> {
   // Data untuk mode View Results
   List<AttendanceSummary> _absensiSummaryList = [];
   bool _isLoadingSummary = false;
@@ -664,10 +666,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   void _showTeacherSelectionDialog() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     showModalBottomSheet(
       context: context,
@@ -751,10 +750,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     String? tempSelectedDate = _selectedDateFilter;
     List<String> tempSelectedSubjects = List.from(_selectedSubjectIds);
@@ -1373,10 +1369,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            Provider.of<LanguageProvider>(
-              context,
-              listen: false,
-            ).getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': 'Please select a class first',
               'id': 'Mohon pilih kelas terlebih dahulu',
             }),
@@ -1546,7 +1539,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   Widget _buildTableView() {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
 
     if (_isTableLoading) {
       return SkeletonListLoading(
@@ -2005,14 +1998,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   void _showExportDialog() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final activeYearName =
         academicYearProvider.selectedAcademicYear?['name'] ??
         '${DateTime.now().year}/${DateTime.now().year + 1}';
@@ -2127,10 +2114,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   Future<void> _processExport(List<DateTime> months) async {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     // Sort months
     months.sort();
@@ -2188,10 +2172,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     final classId = _selectedClassData!['id'];
     final className = _selectedClassData!['name'];
 
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final academicYearId = academicYearProvider.selectedAcademicYear?['id']
         ?.toString();
     final academicYearName =
@@ -3011,7 +2992,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     setState(() {
       _isTourShowing = true;
@@ -3053,7 +3034,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -3239,7 +3220,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
 }
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
-class AdminAbsensiDetailPage extends StatefulWidget {
+class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
   final String subjectId;
   final String classId;
   final DateTime date;
@@ -3262,10 +3243,10 @@ class AdminAbsensiDetailPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AdminAbsensiDetailPage> createState() => _AdminAbsensiDetailPageState();
+  ConsumerState<AdminAbsensiDetailPage> createState() => _AdminAbsensiDetailPageState();
 }
 
-class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
+class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage> {
   List<dynamic> _absensiData = [];
   List<Student> _siswaList = [];
   bool _isLoading = true;
@@ -3418,10 +3399,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
   }
 
   Future<void> _saveChanges() async {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     setState(() => _isSaving = true);
 
