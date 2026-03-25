@@ -18,7 +18,6 @@ import 'package:manajemensekolah/features/dashboard/widgets/material_slider_card
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/announcements/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/class_activity/screens/admin_class_activity_screen.dart';
 import 'package:manajemensekolah/features/settings/screens/data_management_screen.dart';
@@ -65,23 +64,26 @@ import 'package:manajemensekolah/features/dashboard/widgets/overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/quick_action_button.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
 ///
 /// Takes a [role] prop ('admin', 'guru'/'teacher', 'wali'/'parent') which determines
 /// what menu items, stats, and content are shown. This is similar to a Vue page
 /// that renders different sections with `v-if="role === 'admin'"`.
-class Dashboard extends StatefulWidget {
+class Dashboard extends ConsumerStatefulWidget {
   final String role;
 
   const Dashboard({super.key, required this.role});
 
   @override
-  State<Dashboard> createState() => _DashboardState();
+  ConsumerState<Dashboard> createState() => _DashboardState();
 }
 
 /// The mutable state for [Dashboard].
@@ -103,7 +105,7 @@ class Dashboard extends StatefulWidget {
 /// - Provider pattern: uses Provider (like Vuex/Pinia) for shared state
 ///   (AcademicYearProvider, TeacherProvider, LanguageProvider)
 /// - FCM sync: listens for push notification triggers to refresh data in real-time
-class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
+class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateMixin {
   String get _effectiveRole {
     if (widget.role == 'teacher') return 'guru';
     if (widget.role == 'parent') return 'wali';
@@ -193,10 +195,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     // Listen for changes immediately after loading cache
     // This ensures we catch the notification from fetchAcademicYears below
     if (mounted) {
-      Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).addListener(_onYearChanged);
+      ref.read(academicYearRiverpod).addListener(_onYearChanged);
     }
 
     setState(() {});
@@ -221,10 +220,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
       // Fetch academic years
       if (mounted) {
-        await Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        ).fetchAcademicYears();
+        await ref.read(academicYearRiverpod).fetchAcademicYears();
       }
 
       // Only load stats if _onYearChanged hasn't already triggered it
@@ -259,7 +255,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   /// Pre-fetch tour status early (called in parallel with data loading).
   Future<void> _prefetchTourStatus() async {
     try {
-      final status = await ApiTourService.getTourStatus(
+      final status = await getIt<ApiTourService>().getTourStatus(
         platform: 'mobile',
         role: _effectiveRole,
         name: 'dashboard_tour',
@@ -276,83 +272,442 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
-  /// Pre-fetch tour statuses for child screens in a single batch API call,
-  /// then cache each result individually for child screens to read.
+  /// Pre-fetch tour statuses for child screens (student management, teacher admin)
+  /// so they're cached and ready when the user navigates to those screens.
   Future<void> _prefetchChildScreenTours() async {
     try {
-      // Build tour requests and cache key mapping based on role.
-      // Each entry: {role, name} for the API + cacheKey for local storage.
-      final tourEntries = <({String role, String name, String cacheKey})>[];
+      final futures = <Future>[];
 
       // ─── Admin tours ───
       if (_effectiveRole == 'admin') {
-        tourEntries.addAll([
-          (role: 'admin', name: 'student_management_tour', cacheKey: 'tour_student_management_admin'),
-          (role: 'admin', name: 'teacher_admin_tour', cacheKey: 'tour_teacher_admin_screen_admin'),
-          (role: 'admin', name: 'admin_class_management_tour', cacheKey: 'tour_class_management_admin'),
-          (role: 'admin', name: 'subject_management_tour', cacheKey: 'tour_subject_management_admin'),
-          (role: 'admin', name: 'teaching_schedule_management_tour', cacheKey: 'tour_schedule_management_admin'),
-          (role: 'admin', name: 'admin_announcement_tour', cacheKey: 'tour_announcement_admin'),
-          (role: 'admin', name: 'admin_class_activity_tour', cacheKey: 'tour_class_activity_admin'),
-          (role: 'admin', name: 'admin_presence_report_tour', cacheKey: 'tour_presence_report_admin'),
-          (role: 'admin', name: 'admin_rpp_screen_tour', cacheKey: 'tour_rpp_screen_admin'),
-          (role: 'admin', name: 'admin_raport_screen_tour', cacheKey: 'tour_raport_screen_admin'),
-          (role: 'admin', name: 'admin_finance_screen_tour', cacheKey: 'tour_finance_admin'),
-          (role: 'admin', name: 'admin_school_settings_tour', cacheKey: 'tour_school_settings_admin'),
-        ]);
-      }
+        // Student management tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'student_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_student_management_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached student management tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache student tour failed: $e');
+          }),
+        );
+
+        // Teacher admin tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'teacher_admin_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_teacher_admin_screen_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached teacher admin tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache teacher tour failed: $e');
+          }),
+        );
+
+        // Class management tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_class_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_management_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached class management tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache class management tour failed: $e');
+          }),
+        );
+
+        // Subject management tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'subject_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_subject_management_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached subject management tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache subject management tour failed: $e');
+          }),
+        );
+
+        // Teaching schedule management tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'teaching_schedule_management_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_schedule_management_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached schedule management tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache schedule management tour failed: $e');
+          }),
+        );
+
+        // Announcement tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_announcement_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached announcement tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache announcement tour failed: $e');
+          }),
+        );
+
+        // Class activity tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_class_activity_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_activity_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached class activity tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache class activity tour failed: $e');
+          }),
+        );
+
+        // Presence report tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_presence_report_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_presence_report_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached presence report tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache presence report tour failed: $e');
+          }),
+        );
+
+        // RPP screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_rpp_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rpp_screen_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached RPP screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache RPP screen tour failed: $e');
+          }),
+        );
+
+        // Raport screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_raport_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_screen_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached raport screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache raport screen tour failed: $e');
+          }),
+        );
+
+        // Finance screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_finance_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_finance_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached finance screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache finance screen tour failed: $e');
+          }),
+        );
+
+        // School settings tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'admin',
+            name: 'admin_school_settings_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_school_settings_admin', status);
+            AppLogger.debug('dashboard', 'Pre-cached school settings tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache school settings tour failed: $e');
+          }),
+        );
+      } // end admin tours
 
       // ─── Guru tours ───
       if (_effectiveRole == 'guru') {
-        tourEntries.addAll([
-          (role: 'guru', name: 'input_grade_tour', cacheKey: 'tour_input_grade_screen_guru'),
-          (role: 'guru', name: 'teaching_schedule_tour', cacheKey: 'tour_teaching_schedule_screen_guru'),
-          (role: 'guru', name: 'class_activity_tour', cacheKey: 'tour_class_activity_screen_guru'),
-          (role: 'guru', name: 'presence_teacher_tour', cacheKey: 'tour_presence_teacher_screen_guru'),
-          (role: 'guru', name: 'materi_screen_tour', cacheKey: 'tour_materi_screen_guru'),
-          (role: 'guru', name: 'rekap_nilai_tour', cacheKey: 'tour_rekap_nilai_screen_guru'),
-          (role: 'guru', name: 'raport_screen_tour', cacheKey: 'tour_raport_screen_guru'),
-          (role: 'guru', name: 'raport_detail_screen_tour', cacheKey: 'tour_raport_detail_screen_guru'),
-          (role: 'guru', name: 'rpp_screen_tour', cacheKey: 'tour_rpp_screen_guru'),
-          (role: 'walimurid', name: 'announcement_screen_tour', cacheKey: 'tour_announcement_screen_guru'),
-          (role: 'guru', name: 'learning_recommendation_class_tour', cacheKey: 'tour_recommendation_class_screen_guru'),
-          (role: 'guru', name: 'learning_recommendation_student_tour', cacheKey: 'tour_recommendation_student_screen_guru'),
-          (role: 'guru', name: 'learning_recommendation_result_tour', cacheKey: 'tour_recommendation_result_screen_guru'),
-        ]);
-      }
+        // Input grade tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'input_grade_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_input_grade_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached input grade tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache input grade tour failed: $e');
+          }),
+        );
+
+        // Teaching schedule tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'teaching_schedule_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_teaching_schedule_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached teaching schedule tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache teaching schedule tour failed: $e');
+          }),
+        );
+
+        // Class activity tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'class_activity_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_class_activity_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached class activity tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache class activity tour failed: $e');
+          }),
+        );
+
+        // Presence teacher tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'presence_teacher_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_presence_teacher_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached presence teacher tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache presence teacher tour failed: $e');
+          }),
+        );
+
+        // Materi screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'materi_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_materi_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached materi screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache materi screen tour failed: $e');
+          }),
+        );
+
+        // Rekap nilai tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'rekap_nilai_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rekap_nilai_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached rekap nilai tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache rekap nilai tour failed: $e');
+          }),
+        );
+
+        // Raport screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'raport_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached raport screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache raport screen tour failed: $e');
+          }),
+        );
+
+        // Raport detail screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'raport_detail_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_raport_detail_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached raport detail screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache raport detail screen tour failed: $e');
+          }),
+        );
+
+        // RPP screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'rpp_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_rpp_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached RPP screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache RPP screen tour failed: $e');
+          }),
+        );
+
+        // Announcement screen tour (guru)
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'walimurid',
+            name: 'announcement_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached announcement screen tour status (guru)');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache announcement screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation class screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_class_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_class_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached recommendation class screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache recommendation class screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation student screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_student_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_student_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached recommendation student screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache recommendation student screen tour failed: $e');
+          }),
+        );
+
+        // Learning recommendation result screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'guru',
+            name: 'learning_recommendation_result_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_recommendation_result_screen_guru', status);
+            AppLogger.debug('dashboard', 'Pre-cached recommendation result screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache recommendation result screen tour failed: $e');
+          }),
+        );
+      } // end guru tours
 
       // ─── Wali tours ───
       if (_effectiveRole == 'wali') {
-        tourEntries.addAll([
-          (role: 'walimurid', name: 'announcement_screen_tour', cacheKey: 'tour_announcement_screen_wali'),
-          (role: 'wali', name: 'parent_class_activity_screen_tour', cacheKey: 'tour_parent_class_activity_screen_wali'),
-          (role: 'wali', name: 'parent_grade_screen_tour', cacheKey: 'tour_parent_grade_screen_wali'),
-          (role: 'wali', name: 'parent_billing_screen_tour', cacheKey: 'tour_parent_billing_screen_wali'),
-          (role: 'wali', name: 'parent_presence_screen_tour', cacheKey: 'tour_parent_presence_screen_wali'),
-        ]);
-      }
+        // Announcement screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'walimurid',
+            name: 'announcement_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_announcement_screen_wali', status);
+            AppLogger.debug('dashboard', 'Pre-cached announcement screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache announcement screen tour failed: $e');
+          }),
+        );
 
-      if (tourEntries.isEmpty) return;
+        // Parent class activity screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_class_activity_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_class_activity_screen_wali', status);
+            AppLogger.debug('dashboard', 'Pre-cached parent class activity screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache parent class activity screen tour failed: $e');
+          }),
+        );
 
-      // Single batch API call for all tours
-      final tourRequests = tourEntries
-          .map((e) => {'role': e.role, 'name': e.name})
-          .toList();
+        // Parent grade screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_grade_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_grade_screen_wali', status);
+            AppLogger.debug('dashboard', 'Pre-cached parent grade screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache parent grade screen tour failed: $e');
+          }),
+        );
 
-      final results = await ApiTourService.getBatchTourStatuses(
-        platform: 'mobile',
-        tours: tourRequests,
-      );
+        // Parent billing screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_billing_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_billing_screen_wali', status);
+            AppLogger.debug('dashboard', 'Pre-cached parent billing screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache parent billing screen tour failed: $e');
+          }),
+        );
 
-      // Cache each result individually — child screens read by cache key
-      for (int i = 0; i < tourEntries.length && i < results.length; i++) {
-        final status = results[i];
-        if (status is Map<String, dynamic>) {
-          LocalCacheService.save(tourEntries[i].cacheKey, status);
-        }
-      }
+        // Parent presence screen tour
+        futures.add(
+          getIt<ApiTourService>().getTourStatus(
+            platform: 'mobile',
+            role: 'wali',
+            name: 'parent_presence_screen_tour',
+          ).then((status) {
+            LocalCacheService.save('tour_parent_presence_screen_wali', status);
+            AppLogger.debug('dashboard', 'Pre-cached parent presence screen tour status');
+          }).catchError((e) {
+            AppLogger.error('dashboard', 'Pre-cache parent presence screen tour failed: $e');
+          }),
+        );
+      } // end wali tours
 
-      AppLogger.debug('dashboard', 'Pre-cached ${results.length} tour statuses in 1 batch call');
+      await Future.wait(futures);
     } catch (e) {
       AppLogger.error('dashboard', 'Pre-cache child tours failed: $e');
     }
@@ -382,7 +737,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
       },
       onClickTarget: (target) {
@@ -390,7 +745,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         return true;
       },
@@ -595,7 +950,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<void> _loadSemesterLabel() async {
     try {
-      final result = await ApiScheduleService.getDateBasedSemester();
+      final result = await getIt<ApiScheduleService>().getDateBasedSemester();
       if (mounted && result.containsKey('label')) {
         setState(() {
           _currentSemesterLabel = result['label'];
@@ -620,7 +975,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ttl: const Duration(hours: 12),
       );
       if (cachedSemester == null) {
-        final semesterData = await ApiScheduleService.getSemester();
+        final semesterData = await getIt<ApiScheduleService>().getSemester();
         if (semesterData.isNotEmpty) {
           LocalCacheService.save('school_semester_data', semesterData);
           AppLogger.debug('dashboard', 'Pre-cached semester data');
@@ -633,7 +988,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ttl: const Duration(hours: 24),
       );
       if (cachedDays == null) {
-        final dayData = await ApiScheduleService.getHari();
+        final dayData = await getIt<ApiScheduleService>().getHari();
         if (dayData.isNotEmpty) {
           LocalCacheService.save('school_day_data', dayData);
           AppLogger.debug('dashboard', 'Pre-cached day data');
@@ -748,10 +1103,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     try {
       String? academicYearId;
       if (mounted) {
-        final academicYearProvider = Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        );
+        final academicYearProvider = ref.read(academicYearRiverpod);
         academicYearId = academicYearProvider.selectedAcademicYear?['id']
             ?.toString();
       }
@@ -765,7 +1117,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         try {
           // Fetch Teacher Record
-          final teacherData = await ApiTeacherService.getGuruByUserId(
+          final teacherData = await getIt<ApiTeacherService>().getGuruByUserId(
             userId,
             academicYearId: academicYearId,
           );
@@ -800,7 +1152,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             // Fetch Homeroom Classes using specialized Teacher ID endpoint
             // This is more robust as it handles both User/Teacher IDs and returns is_homeroom flag.
             AppLogger.debug('dashboard', 'Fetching Classes via Teacher endpoint for ID: $teacherId',);
-            final classesResponse = await ApiTeacherService.getTeacherClasses(
+            final classesResponse = await getIt<ApiTeacherService>().getTeacherClasses(
               teacherId,
               academicYearId: academicYearId,
             );
@@ -827,7 +1179,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
               // Populate TeacherProvider so other screens can reuse
               if (mounted) {
-                Provider.of<TeacherProvider>(context, listen: false)
+                ref.read(teacherRiverpod)
                     .setTeacherData(
                   userId: userId,
                   teacherId: teacherId,
@@ -933,10 +1285,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   String _dashboardCacheKey(String suffix) {
     String? academicYearId;
     if (mounted) {
-      final provider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final provider = ref.read(academicYearRiverpod);
       academicYearId = provider.selectedAcademicYear?['id']?.toString();
     }
     // Use provider value if available, otherwise fallback to last known
@@ -1031,10 +1380,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     try {
       String? academicYearId;
       if (mounted) {
-        final academicYearProvider = Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        );
+        final academicYearProvider = ref.read(academicYearRiverpod);
         academicYearId = academicYearProvider.selectedAcademicYear?['id']
             ?.toString();
       }
@@ -1142,7 +1488,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       final userData = _userData;
       final guardianEmail = userData['email'];
 
-      final allStudents = await ApiStudentService.getStudent(
+      final allStudents = await getIt<ApiStudentService>().getStudent(
         userId: parentId,
         guardianEmail: guardianEmail,
       );
@@ -1299,7 +1645,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     // Clear all cache to prevent stale data from previous school
     await LocalCacheService.clearAll();
     if (mounted) {
-      Provider.of<TeacherProvider>(context, listen: false).clear();
+      ref.read(teacherRiverpod).clear();
     }
 
     // Update token
@@ -1382,10 +1728,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     FCMService().syncTrigger.removeListener(_handleSyncTrigger);
     _animationController.dispose();
     try {
-      Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).removeListener(_onYearChanged);
+      ref.read(academicYearRiverpod).removeListener(_onYearChanged);
     } catch (e) {
       AppLogger.error('dashboard', 'Error removing AcademicYearProvider listener: $e');
     }
@@ -1934,7 +2277,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   void _showAcademicYearDialog(BuildContext context) {
-    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final provider = ref.read(academicYearRiverpod);
     final years = provider.academicYears;
 
     showDialog(
@@ -2215,10 +2558,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             classesData: _attendanceChartData,
             onTap: () {
               // Extract the selected academic year right before showing dialog
-              final selectedYearId = Provider.of<AcademicYearProvider>(
-                context,
-                listen: false,
-              ).selectedAcademicYear?['id']?.toString();
+              final selectedYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
               showDialog(
                 context: context,
@@ -2347,10 +2687,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             hideSubtitle:
                 true, // Requested by user to hide the child's name on the card
             onTap: () {
-              final selectedYearId = Provider.of<AcademicYearProvider>(
-                context,
-                listen: false,
-              ).selectedAcademicYear?['id']?.toString();
+              final selectedYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
               showDialog(
                 context: context,
@@ -2995,10 +3332,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         icon: Icons.local_activity_outlined,
         badgeCount: _stats['unread_class_activities'],
         onTap: () async {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
+          final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
           await Navigator.push(
             context,
             MaterialPageRoute(
@@ -3014,10 +3348,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         icon: Icons.grade_outlined,
         badgeCount: _stats['unread_grades'],
         onTap: () async {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
+          final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
           await Navigator.push(
             context,
             MaterialPageRoute(
@@ -3033,10 +3364,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         icon: Icons.check_circle_outline,
         badgeCount: _stats['unread_presence'],
         onTap: () async {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
+          final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
           final prefs = PreferencesService();
           final userData = json.decode(prefs.getString('user') ?? '{}');
@@ -3093,10 +3421,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         title: AppLocalizations.eRaport.tr,
         icon: Icons.assignment_turned_in_outlined,
         onTap: () async {
-          final academicYearId = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).selectedAcademicYear?['id']?.toString();
+          final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
           await Navigator.push(
             context,

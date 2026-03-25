@@ -12,16 +12,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/models/student.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 // Form Input Nilai Baru untuk Multiple Siswa
-class GradeInputFormNew extends StatefulWidget {
+class GradeInputFormNew extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
   final List<Student> siswaList;
@@ -37,12 +38,12 @@ class GradeInputFormNew extends StatefulWidget {
   GradeInputFormNewState createState() => GradeInputFormNewState();
 }
 
-class GradeInputFormNewState extends State<GradeInputFormNew> {
+class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
   final _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime.now();
 
   bool get _isReadOnly {
-    return Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
+    return ref.read(academicYearRiverpod).isReadOnly;
   }
 
   // Variabel untuk state
@@ -105,7 +106,7 @@ class GradeInputFormNewState extends State<GradeInputFormNew> {
   }
 
   Future<void> _submitNilai() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     if (_formKey.currentState!.validate()) {
       if (_selectedJenisNilai == null) {

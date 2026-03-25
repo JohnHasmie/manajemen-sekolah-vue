@@ -27,13 +27,10 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// In Vue terms, this is a large Pinia store combining subject state management
 /// with AI generation actions and curriculum material tree operations.
 class ApiSubjectService {
-  /// Base URL from central config.
-  static String get baseUrl => ApiService.baseUrl;
-
   /// Fetches filter dropdown options for subject listing, with 24-hour cache.
   /// Like a Laravel endpoint returning distinct filter values for Vue selects.
   /// Cache is scoped by school_id to prevent cross-school data leaks.
-  static Future<Map<String, dynamic>> getSubjectFilterOptions() async {
+  Future<Map<String, dynamic>> getSubjectFilterOptions() async {
     try {
       final prefs = PreferencesService();
       final userJson = prefs.getString('user');
@@ -75,7 +72,7 @@ class ApiSubjectService {
   /// Fetches subjects with server-side pagination, filters, and local caching.
   /// Like `Subject::filter($request)->paginate()` in Laravel.
   /// Cache is scoped by school_id with 30-minute TTL.
-  static Future<Map<String, dynamic>> getSubjectsPaginated({
+  Future<Map<String, dynamic>> getSubjectsPaginated({
     int page = 1,
     int limit = 10,
     String? status, // 'active', 'inactive', 'all'
@@ -189,13 +186,13 @@ class ApiSubjectService {
 
   /// Creates a new subject. Invalidates subject cache.
   /// Like `Subject::create($data)` in Laravel.
-  static Future<dynamic> addSubject(Map<String, dynamic> data) async {
+  Future<dynamic> addSubject(Map<String, dynamic> data) async {
     final response = await ApiService().post('/subject', data);
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
     return response;
   }
 
-  static Future<void> updateSubject(
+  Future<void> updateSubject(
     String id,
     Map<String, dynamic> data,
   ) async {
@@ -203,14 +200,14 @@ class ApiSubjectService {
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 
-  static Future<void> deleteSubject(String id) async {
+  Future<void> deleteSubject(String id) async {
     await ApiService().delete('/subject/$id');
     await LocalCacheService.clearStartingWith('subject_'); // Invalidate cache
   }
 
   /// Attaches a class to a subject (many-to-many pivot).
   /// Like `$subject->classes()->attach($classId)` in Laravel.
-  static Future<void> attachClass(String subjectId, String classId) async {
+  Future<void> attachClass(String subjectId, String classId) async {
     await ApiService().post('/subject-class', {
       'subject_id': subjectId,
       'class_id': classId,
@@ -220,7 +217,7 @@ class ApiSubjectService {
 
   /// Detaches a class from a subject (removes pivot record).
   /// Like `$subject->classes()->detach($classId)` in Laravel.
-  static Future<void> detachClass(String subjectId, String classId) async {
+  Future<void> detachClass(String subjectId, String classId) async {
     await ApiService().delete(
       '/subject-class?subject_id=$subjectId&class_id=$classId',
     );
@@ -229,7 +226,7 @@ class ApiSubjectService {
 
   /// Fetches the master list of all available subjects (system-wide, not school-specific).
   /// Like `MasterSubject::all()` in Laravel -- used for template/reference data.
-  static Future<List<dynamic>> getAllMasterSubjects() async {
+  Future<List<dynamic>> getAllMasterSubjects() async {
     final response = await dioClient.get('/master-subjects');
     final result = response.data;
     return result is List ? result : [];
@@ -237,7 +234,7 @@ class ApiSubjectService {
 
   /// Fetches content materials for a specific sub-chapter (sub-bab).
   /// Part of the material hierarchy: Subject > Bab > Sub-Bab > Content.
-  static Future<List<dynamic>> getContentMateri({
+  Future<List<dynamic>> getContentMateri({
     required String subBabId,
   }) async {
     final response = await dioClient.get(
@@ -252,7 +249,7 @@ class ApiSubjectService {
 
   /// Fetches chapters (bab) for a subject. Top level of the material hierarchy.
   /// Like `Chapter::where('subject_id', $id)->get()` in Laravel.
-  static Future<List<dynamic>> getBabMateri({String? subjectId}) async {
+  Future<List<dynamic>> getBabMateri({String? subjectId}) async {
     String url = '/bab-material?';
     if (subjectId != null) url += 'subject_id=$subjectId&';
 
@@ -264,7 +261,7 @@ class ApiSubjectService {
 
   /// Fetches sub-chapters (sub-bab) for a given chapter.
   /// Like `SubChapter::where('chapter_id', $babId)->get()` in Laravel.
-  static Future<List<dynamic>> getSubBabMateri({required String babId}) async {
+  Future<List<dynamic>> getSubBabMateri({required String babId}) async {
     final response = await dioClient.get(
       '/sub-bab-material?chapter_id=$babId',
     );
@@ -274,25 +271,25 @@ class ApiSubjectService {
   }
 
   // Tambah Bab Materi
-  static Future<dynamic> addBabMateri(Map<String, dynamic> data) async {
+  Future<dynamic> addBabMateri(Map<String, dynamic> data) async {
     final response = await dioClient.post('/bab-material', data: data);
     return response.data;
   }
 
   // Tambah Sub Bab Materi
-  static Future<dynamic> addSubBabMateri(Map<String, dynamic> data) async {
+  Future<dynamic> addSubBabMateri(Map<String, dynamic> data) async {
     final response = await dioClient.post('/sub-bab-material', data: data);
     return response.data;
   }
 
   // Tambah Konten Materi
-  static Future<dynamic> addContentMateri(Map<String, dynamic> data) async {
+  Future<dynamic> addContentMateri(Map<String, dynamic> data) async {
     final response = await dioClient.post('/content-material', data: data);
     return response.data;
   }
 
   // Update Bab Materi
-  static Future<void> updateBabMateri(
+  Future<void> updateBabMateri(
     String id,
     Map<String, dynamic> data,
   ) async {
@@ -300,7 +297,7 @@ class ApiSubjectService {
   }
 
   // Update Sub Bab Materi
-  static Future<void> updateSubBabMateri(
+  Future<void> updateSubBabMateri(
     String id,
     Map<String, dynamic> data,
   ) async {
@@ -308,7 +305,7 @@ class ApiSubjectService {
   }
 
   // Update Konten Materi
-  static Future<void> updateContentMateri(
+  Future<void> updateContentMateri(
     String id,
     Map<String, dynamic> data,
   ) async {
@@ -316,22 +313,22 @@ class ApiSubjectService {
   }
 
   // Delete Bab Materi
-  static Future<void> deleteBabMateri(String id) async {
+  Future<void> deleteBabMateri(String id) async {
     await dioClient.delete('/bab-material/$id');
   }
 
   // Delete Sub Bab Materi
-  static Future<void> deleteSubBabMateri(String id) async {
+  Future<void> deleteSubBabMateri(String id) async {
     await dioClient.delete('/sub-bab-material/$id');
   }
 
   // Delete Konten Materi
-  static Future<void> deleteContentMateri(String id) async {
+  Future<void> deleteContentMateri(String id) async {
     await dioClient.delete('/content-material/$id');
   }
 
   // Materi
-  static Future<List<dynamic>> getMateri({
+  Future<List<dynamic>> getMateri({
     String? teacherId,
     String? subjectId,
   }) async {
@@ -345,24 +342,24 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  static Future<dynamic> addMateri(Map<String, dynamic> data) async {
+  Future<dynamic> addMateri(Map<String, dynamic> data) async {
     final response = await dioClient.post('/materials', data: data);
     return response.data;
   }
 
-  static Future<dynamic> saveRPP(Map<String, dynamic> data) async {
+  Future<dynamic> saveRPP(Map<String, dynamic> data) async {
     final response = await dioClient.post('/rpp', data: data);
     return response.data;
   }
 
-  static Future<List<dynamic>> getRPPByTeacher(String teacherId) async {
+  Future<List<dynamic>> getRPPByTeacher(String teacherId) async {
     final response = await dioClient.get('/rpp?teacher_id=$teacherId');
 
     final result = response.data;
     return result is List ? result : [];
   }
 
-  static Future<Map<String, dynamic>> importSubjectFromExcel(File file) async {
+  Future<Map<String, dynamic>> importSubjectFromExcel(File file) async {
     try {
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
@@ -386,7 +383,7 @@ class ApiSubjectService {
     }
   }
 
-  static Future<String> downloadTemplate() async {
+  Future<String> downloadTemplate() async {
     try {
       final response = await dioClient.get<List<int>>(
         '/subject/template',
@@ -422,13 +419,13 @@ class ApiSubjectService {
   //   codes without Dio throwing (matching the old http package behavior).
 
   /// Base URL for the AI microservice. Separate from the main Laravel API.
-  static const String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
+  final String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
 
   /// Lazy-initialized Dio instance for KamillLabs AI API calls.
   /// Like a second Axios instance in Vue pointing to a different base URL.
   /// Does NOT throw on non-2xx so callers can check statusCode themselves.
-  static Dio? _aiDioInstance;
-  static Dio get _aiDio {
+  Dio? _aiDioInstance;
+  Dio get _aiDio {
     _aiDioInstance ??= Dio(
       BaseOptions(
         baseUrl: _aiBaseUrl,
@@ -458,7 +455,7 @@ class ApiSubjectService {
   }
 
   /// Returns a raw Dio Response so callers can inspect statusCode (202, 429, etc.).
-  static Future<Response<dynamic>> generateMaterialRaw(
+  Future<Response<dynamic>> generateMaterialRaw(
       Map<String, dynamic> data) async {
     final response = await _aiDio.post(
       '/generated-materials/generate',
@@ -468,7 +465,7 @@ class ApiSubjectService {
   }
 
   /// Parses Dio AI response and throws on non-2xx status.
-  static dynamic _handleAiResponse(Response<dynamic> response) {
+  dynamic _handleAiResponse(Response<dynamic> response) {
     final responseBody = response.data;
 
     if (response.statusCode != null &&
@@ -483,14 +480,14 @@ class ApiSubjectService {
     }
   }
 
-  static Future<dynamic> generateMaterial(Map<String, dynamic> data) async {
+  Future<dynamic> generateMaterial(Map<String, dynamic> data) async {
     final response = await generateMaterialRaw(data);
     return _handleAiResponse(response);
   }
 
   /// Poll AI job status from KamillLabs Edu AI.
   /// Returns raw Dio Response so callers can inspect statusCode.
-  static Future<Response<dynamic>> pollAiJob(String jobId, String token) async {
+  Future<Response<dynamic>> pollAiJob(String jobId, String token) async {
     final response = await _aiDio.get(
       '/ai-jobs/$jobId',
       options: Options(
@@ -505,7 +502,7 @@ class ApiSubjectService {
   }
 
   /// Get generated material by ID from KamillLabs Edu AI
-  static Future<dynamic> getGeneratedMaterial(String materialId) async {
+  Future<dynamic> getGeneratedMaterial(String materialId) async {
     AppLogger.debug('subject', 'Getting material: $_aiBaseUrl/generated-materials/$materialId');
     final response = await _aiDio.get(
       '/generated-materials/$materialId',
@@ -515,7 +512,7 @@ class ApiSubjectService {
   }
 
   /// Check cache for generated material
-  static Future<dynamic> checkMaterialCache({
+  Future<dynamic> checkMaterialCache({
     required String teacherId,
     required String chapterId,
     String? subChapterId,
@@ -535,7 +532,7 @@ class ApiSubjectService {
   }
 
   /// List generated materials with filters (fallback when check-cache fails)
-  static Future<dynamic> listGeneratedMaterials({
+  Future<dynamic> listGeneratedMaterials({
     required String teacherId,
     String? subjectId,
     String? chapterId,
@@ -555,7 +552,7 @@ class ApiSubjectService {
   }
 
   /// Regenerate quiz for generated material
-  static Future<dynamic> regenerateQuiz(String materialId) async {
+  Future<dynamic> regenerateQuiz(String materialId) async {
     final response = await _aiDio.post(
       '/generated-materials/$materialId/regenerate-quiz',
     );
@@ -563,7 +560,7 @@ class ApiSubjectService {
   }
 
   /// Regenerate references for generated material
-  static Future<dynamic> regenerateReferences(String materialId) async {
+  Future<dynamic> regenerateReferences(String materialId) async {
     final response = await _aiDio.post(
       '/generated-materials/$materialId/regenerate-reference',
     );
@@ -578,7 +575,7 @@ class ApiSubjectService {
   /// POST /api/lesson-plans/{id}/regen/{field}
   /// Max 2 regenerations per field.
   /// Returns raw Dio Response so callers can inspect statusCode (200, 202, 429).
-  static Future<Response<dynamic>> regenRppFieldRaw(
+  Future<Response<dynamic>> regenRppFieldRaw(
     String rppId,
     String field, {
     String? additionalText,
@@ -599,7 +596,7 @@ class ApiSubjectService {
 
   /// Get RPP regen limits per field (Section 5.7)
   /// GET /api/lesson-plans/{id}/regen-limits
-  static Future<dynamic> getRppRegenLimits(String rppId) async {
+  Future<dynamic> getRppRegenLimits(String rppId) async {
     AppLogger.debug('subject', 'Regen limits: /lesson-plans/$rppId/regen-limits');
     final response = await _aiDio.get(
       '/lesson-plans/$rppId/regen-limits',
@@ -617,7 +614,7 @@ class ApiSubjectService {
 
   /// Update RPP fields / auto-save (Section 5.5)
   /// PATCH /api/lesson-plans/{id}
-  static Future<dynamic> updateRppFields(
+  Future<dynamic> updateRppFields(
     String rppId,
     Map<String, dynamic> fields,
   ) async {
@@ -631,7 +628,7 @@ class ApiSubjectService {
 
   /// Get RPP detail from AI API (Section 5.4)
   /// GET /api/lesson-plans/{id}
-  static Future<dynamic> getRppDetail(String rppId) async {
+  Future<dynamic> getRppDetail(String rppId) async {
     final response = await _aiDio.get(
       '/lesson-plans/$rppId',
     );
@@ -644,7 +641,7 @@ class ApiSubjectService {
 
   /// Fetches material progress (checked/generated state) for a teacher + subject combo.
   /// Like `MaterialProgress::where('teacher_id', ...)->where('subject_id', ...)->get()`.
-  static Future<List<dynamic>> getMateriProgress({
+  Future<List<dynamic>> getMateriProgress({
     required String teacherId,
     required String subjectId,
     String? classId,
@@ -661,7 +658,7 @@ class ApiSubjectService {
 
   /// Saves or toggles the checked state for a single material progress item.
   /// Like `MaterialProgress::updateOrCreate()` in Laravel.
-  static Future<dynamic> saveMateriProgress(Map<String, dynamic> data) async {
+  Future<dynamic> saveMateriProgress(Map<String, dynamic> data) async {
     final response = await dioClient.post('/material-progress', data: data);
     return response.data;
   }
@@ -669,7 +666,7 @@ class ApiSubjectService {
   /// Batch-saves multiple material progress items at once.
   /// Remaps frontend keys (guru_id, bab_id) to backend keys (teacher_id, chapter_id).
   /// Like a Laravel batch upsert with key remapping middleware.
-  static Future<dynamic> batchSaveMateriProgress(
+  Future<dynamic> batchSaveMateriProgress(
     Map<String, dynamic> data,
   ) async {
     // Remap keys to match backend expectations
@@ -696,7 +693,7 @@ class ApiSubjectService {
 
   /// Marks specific materials as AI-generated (after RPP/activity generation).
   /// Prevents accidental re-generation. Like setting a `generated_at` timestamp.
-  static Future<dynamic> markMateriGenerated(Map<String, dynamic> data) async {
+  Future<dynamic> markMateriGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
       'teacher_id': data['teacher_id'],
@@ -719,7 +716,7 @@ class ApiSubjectService {
 
   /// Resets the generated status to allow re-generation.
   /// Like clearing the `generated_at` flag so the AI can regenerate content.
-  static Future<dynamic> resetMateriGenerated(Map<String, dynamic> data) async {
+  Future<dynamic> resetMateriGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
       'teacher_id': data['teacher_id'],
@@ -740,7 +737,7 @@ class ApiSubjectService {
     return response.data;
   }
 
-  static Future<Directory?> getExternalStorageDirectory() async {
+  Future<Directory?> getExternalStorageDirectory() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
       return directory;

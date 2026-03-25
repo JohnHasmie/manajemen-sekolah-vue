@@ -17,16 +17,18 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Parent's read-only view of student grades with read tracking.
 ///
 /// Uses the same debounced visibility-based "mark as read" pattern.
 /// Props: optional [academicYearId].
-class ParentGradeScreen extends StatefulWidget {
+class ParentGradeScreen extends ConsumerStatefulWidget {
   final String? academicYearId;
 
   const ParentGradeScreen({super.key, this.academicYearId});
@@ -39,7 +41,7 @@ class ParentGradeScreen extends StatefulWidget {
 ///
 /// Like a Vue page component with `data() { return {...} }`.
 /// Key state: grade list, student selector, visibility-based read tracking.
-class ParentGradeScreenState extends State<ParentGradeScreen> {
+class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
   List<dynamic> _gradeList = [];
   List<dynamic> _studentList = [];
   String? _selectedStudentId;
@@ -186,7 +188,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
       final userId = userData['id']?.toString() ?? '';
       final guardianEmail = userData['email']?.toString();
 
-      final allStudents = await ApiStudentService.getStudent(
+      final allStudents = await getIt<ApiStudentService>().getStudent(
         academicYearId: widget.academicYearId,
         userId: userId,
         guardianEmail: guardianEmail,
@@ -316,7 +318,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -329,13 +331,13 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_parent_grade_screen_wali', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_parent_grade_screen_wali', {'should_show': false});
         }
         return true;
@@ -345,7 +347,7 @@ class ParentGradeScreenState extends State<ParentGradeScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

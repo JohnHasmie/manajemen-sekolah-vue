@@ -20,6 +20,7 @@ import 'package:manajemensekolah/features/classrooms/screens/class_promotion_wiz
 import 'package:manajemensekolah/features/students/screens/admin_student_management_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/classrooms/exports/classroom_export_service.dart';
@@ -29,6 +30,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -36,7 +39,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 ///
 /// This is a [StatefulWidget] - like a Vue page component with local state for
 /// class list, pagination, filters, and FAB (Floating Action Button) animations.
-class AdminClassManagementScreen extends StatefulWidget {
+class AdminClassManagementScreen extends ConsumerStatefulWidget {
   const AdminClassManagementScreen({super.key});
 
   @override
@@ -54,7 +57,7 @@ class AdminClassManagementScreen extends StatefulWidget {
 ///
 /// Uses [SingleTickerProviderStateMixin] for FAB animation (like Vue `<transition>`).
 /// Listens to FCM sync triggers for real-time updates from other users.
-class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
+class AdminClassManagementScreenState extends ConsumerState<AdminClassManagementScreen>
     with SingleTickerProviderStateMixin {
   List<dynamic> _classes = [];
   List<dynamic> _teachers = [];
@@ -183,7 +186,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         AppLogger.error('classroom', 'School settings cache load failed: $e');
       }
 
-      final settings = await ApiSettingsService.getSchoolSettings();
+      final settings = await getIt<ApiSettingsService>().getSchoolSettings();
       if (!mounted) return;
 
       setState(() {
@@ -246,7 +249,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       }
 
       // Fetch all teachers (limit 1000) to ensure we have the homeroom teacher in the list
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         limit: 1000,
       );
       if (!mounted) return;
@@ -331,7 +334,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   }
 
   void _showFilterSheet() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Temporary state for bottom sheet
     String? tempSelectedClass = _selectedGradeFilter;
@@ -670,10 +673,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       return null;
     }
 
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
     return 'class_list_$yearId';
   }
@@ -724,14 +724,11 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       }
 
       // ─── Step 2: Fetch fresh data from API ───
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiClassService.getClassPaginated(
+      final response = await getIt<ApiClassService>().getClassPaginated(
         page: _currentPage,
         limit: _perPage,
         gradeLevel: _selectedGradeFilter,
@@ -776,7 +773,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
+            '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
           ),
           backgroundColor: Colors.red,
         ),
@@ -817,14 +814,11 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     try {
       _currentPage++;
 
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiClassService.getClassPaginated(
+      final response = await getIt<ApiClassService>().getClassPaginated(
         page: _currentPage,
         limit: _perPage,
         gradeLevel: _selectedGradeFilter,
@@ -867,7 +861,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   // Import classes from Excel
   Future<void> _importFromExcel() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -877,7 +871,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       );
 
       if (result != null && result.files.single.path != null) {
-        await ApiClassService.importClassesFromExcel(
+        await getIt<ApiClassService>().importClassesFromExcel(
           File(result.files.single.path!),
         );
 
@@ -910,7 +904,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     if (classData != null) {
       try {
         // Show loading indicator if needed, or just await (fast usually)
-        final freshData = await ApiClassService.getClassById(
+        final freshData = await getIt<ApiClassService>().getClassById(
           classData['id'].toString(),
         );
         if (freshData != null && freshData is Map<String, dynamic>) {
@@ -1224,17 +1218,14 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
                                     try {
                                       final academicYearProvider =
-                                          Provider.of<AcademicYearProvider>(
-                                            context,
-                                            listen: false,
-                                          );
+                                          ref.read(academicYearRiverpod);
                                       final selectedYearId =
                                           academicYearProvider
                                               .selectedAcademicYear?['id']
                                               ?.toString();
 
                                       if (isEdit) {
-                                        await ApiClassService.updateClass(
+                                        await getIt<ApiClassService>().updateClass(
                                           classData!['id'].toString(),
                                           {
                                             'name': nameController.text,
@@ -1263,7 +1254,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                                           Navigator.pop(context);
                                         }
                                       } else {
-                                        await ApiClassService.addClass({
+                                        await getIt<ApiClassService>().addClass({
                                           'name': nameController.text,
                                           'grade_level': selectedGradeLevel,
                                           'homeroom_teacher_id':
@@ -1531,15 +1522,15 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     final confirmed = await showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: context.read<LanguageProvider>().getTranslatedText({
+        title: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Delete Class',
           'id': 'Hapus Kelas',
         }),
-        content: context.read<LanguageProvider>().getTranslatedText({
+        content: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Are you sure you want to delete this class?',
           'id': 'Yakin ingin menghapus kelas ini?',
         }),
-        confirmText: context.read<LanguageProvider>().getTranslatedText({
+        confirmText: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Delete',
           'id': 'Hapus',
         }),
@@ -1549,13 +1540,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
     if (confirmed == true) {
       try {
-        await ApiClassService.deleteClass(classData['id'].toString());
+        await getIt<ApiClassService>().deleteClass(classData['id'].toString());
         _loadData();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<LanguageProvider>().getTranslatedText({
+                ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Class successfully deleted',
                   'id': 'Kelas berhasil dihapus',
                 }),
@@ -1569,7 +1560,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${context.read<LanguageProvider>().getTranslatedText({'en': 'Gagal menghapus kelas', 'id': 'Gagal menghapus kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
+                '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal menghapus kelas', 'id': 'Gagal menghapus kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
               ),
               backgroundColor: Colors.red,
             ),
@@ -1580,7 +1571,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   }
 
   Widget _buildClassCard(Map<String, dynamic> classData, int index) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final avatarColor = ColorUtils.getColorForIndex(index);
     final className = classData['name'] ?? 'Class';
     final gradeText = _getGradeLevelText(
@@ -1789,7 +1780,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
   }
 
   void _showClassDetail(Map<String, dynamic> classData) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     showDialog(
       context: context,
@@ -2046,10 +2037,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                               ),
                             ),
                           ),
-                          if (!Provider.of<AcademicYearProvider>(
-                            context,
-                            listen: false,
-                          ).isReadOnly) ...[
+                          if (!ref.read(academicYearRiverpod).isReadOnly) ...[
                             SizedBox(width: 12),
                             Expanded(
                               child: ElevatedButton.icon(
@@ -2544,7 +2532,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           ),
           floatingActionButton: Consumer<AcademicYearProvider>(
             builder: (context, academicYearProvider, child) {
-              final languageProvider = context.read<LanguageProvider>();
+              final languageProvider = ref.read(languageRiverpod);
 
               if (academicYearProvider.isReadOnly) return SizedBox.shrink();
 
@@ -2706,7 +2694,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -2719,13 +2707,13 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_management_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_management_admin', {'should_show': false});
         }
         return true;
@@ -2735,7 +2723,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

@@ -19,8 +19,8 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/tab_switcher.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/class_activity/services/class_activity_service.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -30,6 +30,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -43,7 +45,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// Supports deep linking via optional initial* parameters, allowing other
 /// screens to navigate here with pre-selected class/subject/chapter.
 /// In Vue Router terms, these are like route query params (`?classId=...`).
-class ClassActifityScreen extends StatefulWidget {
+class ClassActifityScreen extends ConsumerStatefulWidget {
   final DateTime? initialDate;
   final String? initialSubjectId;
   final String? initialSubjectName;
@@ -90,7 +92,7 @@ class ClassActifityScreen extends StatefulWidget {
 /// The `TickerProviderStateMixin` is needed for TabController animations.
 /// In Vue, you would just use CSS transitions; in Flutter, animations
 /// need a "ticker" (frame callback provider).
-class ClassActifityScreenState extends State<ClassActifityScreen>
+class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
     with TickerProviderStateMixin {
   static const String _prefKeyLastCacheKey = 'class_activity_last_cache_key';
 
@@ -623,10 +625,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     AppLogger.debug('class_activity', '===== _loadUserData STARTED =====');
     try {
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
-      final teacherProvider = Provider.of<TeacherProvider>(
-        context,
-        listen: false,
-      );
+      final teacherProvider = ref.read(teacherRiverpod);
 
       final prefs = PreferencesService();
       final userData = json.decode(prefs.getString('user') ?? '{}');
@@ -710,10 +709,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               String? academicYearId;
               try {
                 if (mounted) {
-                  academicYearId = Provider.of<AcademicYearProvider>(
-                    context,
-                    listen: false,
-                  ).selectedAcademicYear?['id']?.toString();
+                  academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
                 }
               } catch (e) {}
 
@@ -723,7 +719,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                 resolvedTeacherId = teacherProvider.teacherId;
               } else {
                 // Last resort: direct API call
-                final teacherData = await ApiTeacherService.getGuruByUserId(
+                final teacherData = await getIt<ApiTeacherService>().getGuruByUserId(
                   userId,
                   academicYearId: academicYearId,
                 );
@@ -837,13 +833,13 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       List<dynamic> classes = [];
 
       if (isAdmin) {
-        final response = await ApiClassService.getClassPaginated(
+        final response = await getIt<ApiClassService>().getClassPaginated(
           limit: 100,
           academicYearId: academicYearId,
         );
         classes = response['data'] ?? [];
       } else {
-        classes = await ApiTeacherService.getTeacherClasses(
+        classes = await getIt<ApiTeacherService>().getTeacherClasses(
           teacherId,
           academicYearId: academicYearId,
         );
@@ -888,7 +884,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final scheduleData = await ApiScheduleService.getScheduleByTeacher(
+      final scheduleData = await getIt<ApiScheduleService>().getScheduleByTeacher(
         teacherId: teacherId,
         academicYear: academicYearId,
       );
@@ -966,7 +962,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       final isAdmin = userRole == 'admin';
 
       // 1. Fetch MY subjects (subjects I teach in this class)
-      final mySchedules = await ApiScheduleService.getSchedulesPaginated(
+      final mySchedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
         limit: 100,
         teacherId: _teacherId,
         classId: _selectedClassId,
@@ -1061,10 +1057,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   }
 
   void _showActivityTypeDialog() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
 
     showModalBottomSheet(
@@ -1360,7 +1353,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
     if (confirmed == true) {
       try {
-        await ApiClassActivityService.deleteKegiatan(activity['id'].toString());
+        await getIt<ApiClassActivityService>().deleteKegiatan(activity['id'].toString());
 
         if (!mounted) return;
 
@@ -1390,7 +1383,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         ) async {
           try {
             final response =
-                await ApiClassActivityService.getClassActivityPaginated(
+                await getIt<ApiClassActivityService>().getClassActivityPaginated(
                   page: 1,
                   limit: 1,
                   teacherId: _teacherId,
@@ -1429,7 +1422,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             // we need to check EACH sub-chapter in that chapter.
             else {
               // Get all sub-chapters for this chapter
-              final subChapters = await ApiSubjectService.getSubBabMateri(
+              final subChapters = await getIt<ApiSubjectService>().getSubBabMateri(
                 babId: activity['chapter_id'].toString(),
               );
 
@@ -1506,7 +1499,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
         if (progressItems.isNotEmpty) {
           try {
-            await ApiSubjectService.batchSaveMateriProgress({
+            await getIt<ApiSubjectService>().batchSaveMateriProgress({
               'guru_id': _teacherId,
               'mata_pelajaran_id':
                   activity['subject_id'] ?? activity['mata_pelajaran_id'],
@@ -1650,10 +1643,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   // ========== FILTER SHEET MENGGUNAKAN KOMPONEN ==========
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     String? tempDateFilter = _selectedDateFilter;
 
     showModalBottomSheet(
@@ -2133,10 +2123,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
     final accentColor = isAssignment
         ? ColorUtils.warning600
         : ColorUtils.success600;
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
 
     return Container(
@@ -2326,10 +2313,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   }
 
   void _showActivityDetail(dynamic activity) {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
     final isAssignment =
         activity['jenis'] == 'tugas' ||
@@ -2593,7 +2577,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   @override
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
 
     return WillPopScope(
       onWillPop: _handleWillPop,
@@ -2800,7 +2784,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   // Method helpers for API to avoid errors if they were deleted
   Future<void> _loadMaterials(String subjectId) async {
     try {
-      final materials = await ApiSubjectService.getMateri();
+      final materials = await getIt<ApiSubjectService>().getMateri();
       setState(() {
         _chapterList = materials;
         _subChapterList = [];
@@ -2812,7 +2796,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
   Future<void> _loadSubChapterMaterials(String chapterId) async {
     try {
-      final subMaterials = await ApiSubjectService.getSubBabMateri(
+      final subMaterials = await getIt<ApiSubjectService>().getSubBabMateri(
         babId: chapterId,
       );
       setState(() {
@@ -2838,7 +2822,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiClassActivityService.getClassActivityPaginated(
+      final response = await getIt<ApiClassActivityService>().getClassActivityPaginated(
         page: _currentPage,
         limit: _perPage,
         teacherId: _teacherId,
@@ -2931,13 +2915,13 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_activity_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_activity_screen_guru', {'should_show': false});
         }
         return true;
@@ -3067,7 +3051,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   }
 }
 
-class AddActivityDialog extends StatefulWidget {
+class AddActivityDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final String teacherName;
   final List<dynamic> scheduleList;
@@ -3115,10 +3099,10 @@ class AddActivityDialog extends StatefulWidget {
   final List<Map<String, dynamic>>? materialsToMarkAsGenerated;
 
   @override
-  State<AddActivityDialog> createState() => _AddActivityDialogState();
+  ConsumerState<AddActivityDialog> createState() => _AddActivityDialogState();
 }
 
-class _AddActivityDialogState extends State<AddActivityDialog> {
+class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
   final _deskripsiController = TextEditingController();
@@ -3274,7 +3258,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     AppLogger.debug('class_activity', '[_loadStudents] Starting load for class: $_selectedClassId');
 
     try {
-      final students = await ApiClassActivityService.getSiswaByKelas(
+      final students = await getIt<ApiClassActivityService>().getSiswaByKelas(
         _selectedClassId!,
       );
 
@@ -3331,7 +3315,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         return;
       }
 
-      final babList = await ApiSubjectService.getBabMateri(
+      final babList = await getIt<ApiSubjectService>().getBabMateri(
         subjectId: masterSubjectId,
       );
 
@@ -3383,7 +3367,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       AppLogger.debug('class_activity', '===== LOADING SUB BAB MATERI =====');
       AppLogger.debug('class_activity', 'Bab ID: $babId');
 
-      final subBabList = await ApiSubjectService.getSubBabMateri(babId: babId);
+      final subBabList = await getIt<ApiSubjectService>().getSubBabMateri(babId: babId);
 
       if (kDebugMode) {
         AppLogger.debug('class_activity', 'API Response - Sub Bab count: ${subBabList.length}');
@@ -3614,10 +3598,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     setState(() => _isSubmitting = true);
 
     try {
-      final languageProvider = Provider.of<LanguageProvider>(
-        context,
-        listen: false,
-      );
+      final languageProvider = ref.read(languageRiverpod);
 
       final Map<String, dynamic> data = {
         'teacher_id': widget.teacherId,
@@ -3711,13 +3692,13 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       // Call appropriate API based on mode
       if (widget.isEditMode && widget.activityData != null) {
         // Update existing activity
-        await ApiClassActivityService.updateKegiatan(
+        await getIt<ApiClassActivityService>().updateKegiatan(
           widget.activityData['id'].toString(),
           requestData,
         );
       } else {
         // Create new activity
-        await ApiClassActivityService.tambahKegiatan(requestData);
+        await getIt<ApiClassActivityService>().tambahKegiatan(requestData);
       }
 
       // Automatically mark material as generated (checked)
@@ -3726,9 +3707,9 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           // Construct items list for batchSaveMateriProgress
           // Auto-mark as checked (is_checked: true)
           // Note: batchSaveMateriProgress expects different key structure ('progress_items')
-          // but ApiSubjectService.batchSaveMateriProgress helper handles the mapping from our app structure
+          // but getIt<ApiSubjectService>().batchSaveMateriProgress helper handles the mapping from our app structure
           // We just need to match what the internal helper expects or call the API endpoint params directly?
-          // Let's check ApiSubjectService.batchSaveMateriProgress implementation again.
+          // Let's check getIt<ApiSubjectService>().batchSaveMateriProgress implementation again.
           // It takes {guru_id, mata_pelajaran_id, progress_items: [{bab_id, sub_bab_id, is_checked}]}
 
           final List<Map<String, dynamic>> progressItems = [
@@ -3776,7 +3757,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           AppLogger.debug('class_activity', 'Progress items: ${progressItems.length}');
           AppLogger.debug('class_activity', 'First item: ${progressItems.first}');
 
-          await ApiSubjectService.batchSaveMateriProgress({
+          await getIt<ApiSubjectService>().batchSaveMateriProgress({
             'guru_id': widget.teacherId,
             'mata_pelajaran_id': _selectedSubjectId,
             'class_id': _selectedClassId,
@@ -3890,7 +3871,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
     final isAssignment = widget.activityType == 'tugas';
     final primaryColor = isAssignment
         ? ColorUtils.warning600

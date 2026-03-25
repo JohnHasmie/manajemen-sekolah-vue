@@ -1,4 +1,6 @@
 // Teaching material (materi) management screen for teachers.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Like `pages/teacher/Material/Index.vue` in a Vue app.
 //
 // A large screen that lets teachers browse subjects, chapters (bab), and
@@ -20,7 +22,6 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/screens/teacher_class_activity_screen.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/materials/screens/material_ai_result_screen.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -32,6 +33,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Teaching material browser with subject, chapter, and sub-chapter navigation.
 ///
@@ -40,7 +42,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// it is like a page component with deeply nested reactive data.
 ///
 /// Props (like Vue props): [teacher], optional initial* for deep linking.
-class MateriPage extends StatefulWidget {
+class MateriPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final String? initialSubjectId;
   final String? initialSubjectName;
@@ -69,7 +71,7 @@ class MateriPage extends StatefulWidget {
 /// - Progress tracking (generated, used status) per chapter
 ///
 /// `setState()` is like Vue's reactivity -- triggers UI rebuild.
-class MateriPageState extends State<MateriPage> {
+class MateriPageState extends ConsumerState<MateriPage> {
   String? _selectedSubject;
   String? _selectedClassId;
   String? _selectedClassName;
@@ -288,7 +290,7 @@ class MateriPageState extends State<MateriPage> {
 
     // Fetch from API with classId filter
     try {
-      final apiTeacherService = ApiTeacherService();
+      final apiTeacherService = getIt<ApiTeacherService>();
       final subjects = await apiTeacherService.getSubjectByTeacher(teacherId, classId: classId);
       if (!mounted) return;
 
@@ -351,10 +353,7 @@ class MateriPageState extends State<MateriPage> {
       final cacheKey = _buildMateriCacheKey();
 
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
-      final teacherProvider = Provider.of<TeacherProvider>(
-        context,
-        listen: false,
-      );
+      final teacherProvider = ref.read(teacherRiverpod);
 
       // Resolve teacher profile ID from provider (skip /api/teacher/{id})
       if (teacherProvider.isLoaded && teacherProvider.teacherId != null) {
@@ -427,7 +426,7 @@ class MateriPageState extends State<MateriPage> {
         setState(() => _isLoading = true);
       }
 
-      final ApiTeacherService apiTeacherService = ApiTeacherService();
+      final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
 
       // ─── Step 4: No cache — fetch from API ───
       // Parallelize getTeacherClasses + getTeacherById when both needed
@@ -471,7 +470,7 @@ class MateriPageState extends State<MateriPage> {
 
         if (stillNeedClasses || stillNeedProfile) {
           final List<Future> teacherFutures = [];
-          if (stillNeedClasses) teacherFutures.add(ApiTeacherService.getTeacherClasses(teacherId));
+          if (stillNeedClasses) teacherFutures.add(getIt<ApiTeacherService>().getTeacherClasses(teacherId));
           if (stillNeedProfile) teacherFutures.add(apiTeacherService.getTeacherById(teacherId));
 
           final results = await Future.wait(teacherFutures);
@@ -538,7 +537,7 @@ class MateriPageState extends State<MateriPage> {
       // Fetch subjects filtered by selected class + materi in parallel
       final List<Future> futures = [
         apiTeacherService.getSubjectByTeacher(teacherId, classId: selectedClassId),
-        ApiSubjectService.getMateri(teacherId: teacherId),
+        getIt<ApiSubjectService>().getMateri(teacherId: teacherId),
       ];
 
       final results = await Future.wait(futures);
@@ -653,7 +652,7 @@ class MateriPageState extends State<MateriPage> {
         return;
       }
 
-      final babMateri = await ApiSubjectService.getBabMateri(
+      final babMateri = await getIt<ApiSubjectService>().getBabMateri(
         subjectId: masterSubjectId,
       );
       if (!mounted) return;
@@ -796,7 +795,7 @@ class MateriPageState extends State<MateriPage> {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null) return;
 
-      final progress = await ApiSubjectService.getMateriProgress(
+      final progress = await getIt<ApiSubjectService>().getMateriProgress(
         teacherId: teacherId,
         subjectId: subjectId,
         classId: _selectedClassId,
@@ -870,7 +869,7 @@ class MateriPageState extends State<MateriPage> {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null || _selectedSubject == null) return;
 
-      await ApiSubjectService.saveMateriProgress({
+      await getIt<ApiSubjectService>().saveMateriProgress({
         'teacher_id': teacherId,
         'subject_id': _selectedSubject,
         'class_id': _selectedClassId,
@@ -928,7 +927,7 @@ class MateriPageState extends State<MateriPage> {
       }
 
       // Batch save
-      await ApiSubjectService.batchSaveMateriProgress({
+      await getIt<ApiSubjectService>().batchSaveMateriProgress({
         'guru_id': teacherId,
         'mata_pelajaran_id': _selectedSubject,
         'class_id': _selectedClassId,
@@ -1804,13 +1803,13 @@ class MateriPageState extends State<MateriPage> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_materi_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_materi_screen_guru', {'should_show': false});
         }
         return true;
@@ -1907,7 +1906,7 @@ class MateriPageState extends State<MateriPage> {
 /// AI material generation. Contains both static content and AI-generated content
 /// loaded asynchronously. Props include the sub-chapter data, parent chapter,
 /// teacher/subject IDs, and a checkbox callback.
-class SubBabDetailPage extends StatefulWidget {
+class SubBabDetailPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subBab;
   final Map<String, dynamic> bab;
   final String teacherId;
@@ -1929,7 +1928,7 @@ class SubBabDetailPage extends StatefulWidget {
   SubBabDetailPageState createState() => SubBabDetailPageState();
 }
 
-class SubBabDetailPageState extends State<SubBabDetailPage>
+class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     with SingleTickerProviderStateMixin {
   late bool _isChecked;
   List<dynamic> _contentMateriList = [];
@@ -1975,7 +1974,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
     if (mounted) setState(() => _isLoading = true);
 
     try {
-      final kontenMateri = await ApiSubjectService.getContentMateri(
+      final kontenMateri = await getIt<ApiSubjectService>().getContentMateri(
         subBabId: widget.subBab['id'].toString(),
       );
       if (!mounted) return;
@@ -2018,7 +2017,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
       Map<String, dynamic>? aiData;
 
       try {
-        final cacheResult = await ApiSubjectService.checkMaterialCache(
+        final cacheResult = await getIt<ApiSubjectService>().checkMaterialCache(
           teacherId: widget.teacherId,
           chapterId: widget.bab['id'].toString(),
           subChapterId: widget.subBab['id'].toString(),
@@ -2036,7 +2035,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
 
           if (isCached && materialId != null) {
             final materialResult =
-                await ApiSubjectService.getGeneratedMaterial(materialId);
+                await getIt<ApiSubjectService>().getGeneratedMaterial(materialId);
             if (!mounted) return;
 
             final data = materialResult is Map
@@ -2054,7 +2053,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
       // Fallback: use list endpoint if check-cache failed
       if (aiData == null && mounted) {
         try {
-          final listResult = await ApiSubjectService.listGeneratedMaterials(
+          final listResult = await getIt<ApiSubjectService>().listGeneratedMaterials(
             teacherId: widget.teacherId,
             chapterId: widget.bab['id'].toString(),
           );
@@ -2083,7 +2082,7 @@ class SubBabDetailPageState extends State<SubBabDetailPage>
               final materialId = match['id']?.toString();
               if (materialId != null) {
                 final materialResult =
-                    await ApiSubjectService.getGeneratedMaterial(materialId);
+                    await getIt<ApiSubjectService>().getGeneratedMaterial(materialId);
                 if (!mounted) return;
 
                 final data = materialResult is Map

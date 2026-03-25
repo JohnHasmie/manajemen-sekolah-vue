@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Displays AI-generated teaching materials with tabbed content and
 /// regeneration capability.
@@ -146,7 +147,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
         payload['prompt'] = prompt;
       }
 
-      final response = await ApiSubjectService.generateMaterialRaw(payload);
+      final response = await getIt<ApiSubjectService>().generateMaterialRaw(payload);
 
       if (!mounted) return;
 
@@ -260,7 +261,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
         // Use the AI service's pollAiJob which returns a Dio Response
         // (with validateStatus: (_) => true, so it won't throw on non-2xx)
         final jobIdForPoll = jobId ?? fullUrl.split('/').last;
-        final response = await ApiSubjectService.pollAiJob(jobIdForPoll, token);
+        final response = await getIt<ApiSubjectService>().pollAiJob(jobIdForPoll, token);
 
         if (!mounted) return;
 
@@ -346,7 +347,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
     setState(() => _isRegenerating = true);
     try {
       final response =
-          await ApiSubjectService.regenerateQuiz(_materialId!);
+          await getIt<ApiSubjectService>().regenerateQuiz(_materialId!);
 
       if (!mounted) return;
 
@@ -383,7 +384,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
     setState(() => _isRegenerating = true);
     try {
       final response =
-          await ApiSubjectService.regenerateReferences(_materialId!);
+          await getIt<ApiSubjectService>().regenerateReferences(_materialId!);
 
       if (!mounted) return;
 

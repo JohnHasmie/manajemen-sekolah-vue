@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Service responsible for exporting class activity data (kegiatan kelas) to Excel.
 /// Similar to a Laravel Maatwebsite/Excel export class that implements `FromCollection`.
@@ -48,7 +49,7 @@ class ExcelClassActivityService {
       final validatedData = await _validateAndPrepareData(formattedData);
 
       // Gunakan ApiService yang sudah ada
-      final response = await ApiClassActivityService.exportClassActivities(
+      final response = await getIt<ApiClassActivityService>().exportClassActivities(
         validatedData,
       );
 

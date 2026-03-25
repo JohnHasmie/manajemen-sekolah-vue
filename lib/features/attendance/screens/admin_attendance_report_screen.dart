@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -28,6 +29,8 @@ import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -70,11 +73,11 @@ class AttendanceSummary {
 ///
 /// This is a [StatefulWidget] - like a Vue page with extensive local state
 /// for filters, pagination, and two view modes (list vs table/grid).
-class AdminPresenceReportScreen extends StatefulWidget {
+class AdminPresenceReportScreen extends ConsumerStatefulWidget {
   const AdminPresenceReportScreen({super.key});
 
   @override
-  State<AdminPresenceReportScreen> createState() =>
+  ConsumerState<AdminPresenceReportScreen> createState() =>
       _AdminPresenceReportScreenState();
 }
 
@@ -88,7 +91,7 @@ class AdminPresenceReportScreen extends StatefulWidget {
 /// - [_studentList] / [_attendanceMap] - raw student attendance data for table view
 ///
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
-class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
+class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportScreen> {
   // Data untuk mode View Results
   List<AttendanceSummary> _absensiSummaryList = [];
   bool _isLoadingSummary = false;
@@ -234,7 +237,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
 
     try {
       final results = await Future.wait([
-        ApiSubjectService()
+        getIt<ApiSubjectService>()
             .getSubject()
             .then((value) {
               AppLogger.info('attendance', 'Subjects loaded: ${value.length}');
@@ -244,7 +247,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
               AppLogger.error('attendance', 'Error loading subjects: $e');
               return [];
             }),
-        ApiClassService.getClass(
+        getIt<ApiClassService>().getClass(
               academicYearId: context
                   .read<AcademicYearProvider>()
                   .selectedAcademicYear?['id']
@@ -258,11 +261,11 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
               AppLogger.error('attendance', 'Error loading classes: $e');
               return [];
             }),
-        ApiTeacherService().getTeacher().catchError((e) {
+        getIt<ApiTeacherService>().getTeacher().catchError((e) {
           AppLogger.error('attendance', 'Error loading teachers: $e');
           return [];
         }),
-        ApiScheduleService.getJamPelajaran().catchError((e) {
+        getIt<ApiScheduleService>().getJamPelajaran().catchError((e) {
           AppLogger.error('attendance', 'Error loading lesson hours: $e');
           return [];
         }),
@@ -663,10 +666,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   void _showTeacherSelectionDialog() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     showModalBottomSheet(
       context: context,
@@ -750,10 +750,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     String? tempSelectedDate = _selectedDateFilter;
     List<String> tempSelectedSubjects = List.from(_selectedSubjectIds);
@@ -1372,10 +1369,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            Provider.of<LanguageProvider>(
-              context,
-              listen: false,
-            ).getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': 'Please select a class first',
               'id': 'Mohon pilih kelas terlebih dahulu',
             }),
@@ -1425,7 +1419,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
       }
 
       // 1. Fetch Students
-      final students = await ApiClassService.getStudentsByClassId(classId);
+      final students = await getIt<ApiClassService>().getStudentsByClassId(classId);
 
       // 2. Fetch Attendance
       // We use a large limit to get all records for the range.
@@ -1545,7 +1539,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   Widget _buildTableView() {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final languageProvider = ref.read(languageRiverpod);
 
     if (_isTableLoading) {
       return SkeletonListLoading(
@@ -2004,14 +1998,8 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   void _showExportDialog() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final activeYearName =
         academicYearProvider.selectedAcademicYear?['name'] ??
         '${DateTime.now().year}/${DateTime.now().year + 1}';
@@ -2126,10 +2114,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
   }
 
   Future<void> _processExport(List<DateTime> months) async {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     // Sort months
     months.sort();
@@ -2187,17 +2172,14 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     final classId = _selectedClassData!['id'];
     final className = _selectedClassData!['name'];
 
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final academicYearId = academicYearProvider.selectedAcademicYear?['id']
         ?.toString();
     final academicYearName =
         academicYearProvider.selectedAcademicYear?['year']?.toString() ?? '-';
 
     // 1. Fetch Data
-    final students = await ApiClassService.getStudentsByClassId(classId);
+    final students = await getIt<ApiClassService>().getStudentsByClassId(classId);
 
     final attendanceResult = await ApiService.getAttendancePaginated(
       page: 1,
@@ -3010,7 +2992,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     setState(() {
       _isTourShowing = true;
@@ -3030,7 +3012,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_presence_report_admin', {'should_show': false});
       },
@@ -3039,7 +3021,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_presence_report_admin', {'should_show': false});
         return true;
@@ -3052,7 +3034,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -3238,7 +3220,7 @@ class _AdminPresenceReportScreenState extends State<AdminPresenceReportScreen> {
 }
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
-class AdminAbsensiDetailPage extends StatefulWidget {
+class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
   final String subjectId;
   final String classId;
   final DateTime date;
@@ -3261,10 +3243,10 @@ class AdminAbsensiDetailPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AdminAbsensiDetailPage> createState() => _AdminAbsensiDetailPageState();
+  ConsumerState<AdminAbsensiDetailPage> createState() => _AdminAbsensiDetailPageState();
 }
 
-class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
+class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage> {
   List<dynamic> _absensiData = [];
   List<Student> _siswaList = [];
   bool _isLoading = true;
@@ -3297,7 +3279,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
       // 2. Load students by class ID (from widget parameter)
       List<dynamic> siswaData;
       if (widget.classId.isNotEmpty) {
-        siswaData = await ApiStudentService.getStudentByClass(
+        siswaData = await getIt<ApiStudentService>().getStudentByClass(
           widget.classId,
           academicYearId: widget.academicYearId,
         );
@@ -3307,17 +3289,17 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
         if (absensiData.isNotEmpty) {
           final classIdFromData = absensiData.first['class_id']?.toString();
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
-            siswaData = await ApiStudentService.getStudentByClass(
+            siswaData = await getIt<ApiStudentService>().getStudentByClass(
               classIdFromData,
               academicYearId: widget.academicYearId,
             );
             AppLogger.info('attendance', 'Loaded ${siswaData.length} students for class: $classIdFromData (from attendance data)',);
           } else {
-            siswaData = await ApiStudentService.getStudent();
+            siswaData = await getIt<ApiStudentService>().getStudent();
             AppLogger.info('attendance', 'Loaded all students (no class ID available)');
           }
         } else {
-          siswaData = await ApiStudentService.getStudent();
+          siswaData = await getIt<ApiStudentService>().getStudent();
           AppLogger.info('attendance', 'Loaded all students (no attendance data)');
         }
       }
@@ -3417,10 +3399,7 @@ class _AdminAbsensiDetailPageState extends State<AdminAbsensiDetailPage> {
   }
 
   Future<void> _saveChanges() async {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     setState(() => _isSaving = true);
 

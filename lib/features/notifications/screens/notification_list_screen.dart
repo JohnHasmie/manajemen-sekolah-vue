@@ -13,6 +13,7 @@ import 'package:manajemensekolah/features/announcements/screens/parent_announcem
 import 'package:manajemensekolah/features/finance/screens/parent_billing_screen.dart';
 import 'package:manajemensekolah/features/class_activity/screens/parent_class_activity_screen.dart';
 import 'package:manajemensekolah/features/notifications/services/notification_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
@@ -42,7 +43,7 @@ class NotificationListScreen extends StatefulWidget {
 ///
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
 class _NotificationListScreenState extends State<NotificationListScreen> {
-  final ApiNotificationService _apiService = ApiNotificationService();
+  final ApiNotificationService _apiService = getIt<ApiNotificationService>();
   List<dynamic> _notifications = [];
   bool _isLoading = true;
 

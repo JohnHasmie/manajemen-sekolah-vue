@@ -1,4 +1,6 @@
 // Admin teacher management screen - full CRUD for teachers.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/teachers.vue` - manages school teachers with create, edit,
 // delete, search, multi-filter (class, gender, homeroom status, employment status),
@@ -17,9 +19,9 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/teachers/screens/teacher_detail_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -38,7 +40,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 ///
 /// This is a [StatefulWidget] - like a Vue page component with extensive local state
 /// for teacher list, pagination, filters, and real-time sync via FCM.
-class TeacherAdminScreen extends StatefulWidget {
+class TeacherAdminScreen extends ConsumerStatefulWidget {
   const TeacherAdminScreen({super.key});
 
   @override
@@ -55,9 +57,9 @@ class TeacherAdminScreen extends StatefulWidget {
 ///
 /// Listens to AcademicYearProvider and FCM sync triggers.
 /// setState() triggers re-render like Vue's reactivity system.
-class TeacherAdminScreenState extends State<TeacherAdminScreen> {
-  final ApiTeacherService _teacherService = ApiTeacherService();
-  final ApiSubjectService _subjectService = ApiSubjectService();
+class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
+  final ApiTeacherService _teacherService = getIt<ApiTeacherService>();
+  final ApiSubjectService _subjectService = getIt<ApiSubjectService>();
   List<dynamic> _teachers = [];
   List<dynamic> _subjects = [];
   List<dynamic> _classes = [];
@@ -106,10 +108,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
     // _searchController.addListener(_onSearchChanged); // Removed auto-search listener
 
     // Listen to academic year changes
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     academicYearProvider.addListener(_onAcademicYearChanged);
 
     _loadFilterOptions();
@@ -169,10 +168,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       String? academicYearId;
       if (mounted) {
         try {
-          final academicYearProvider = Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          );
+          final academicYearProvider = ref.read(academicYearRiverpod);
           academicYearId = academicYearProvider.selectedAcademicYear?['id']
               ?.toString();
         } catch (e) {
@@ -202,7 +198,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         AppLogger.error('teacher', 'Teacher filter cache load failed: $e');
       }
 
-      final response = await ApiTeacherService.getTeacherFilterOptions(
+      final response = await getIt<ApiTeacherService>().getTeacherFilterOptions(
         academicYearId: academicYearId,
       );
 
@@ -345,7 +341,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Temporary state for bottom sheet
     String? tempSelectedHomeroom = _selectedHomeroomFilter;
@@ -888,10 +884,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         _searchController.text.trim().isNotEmpty) {
       return null;
     }
-    final yearId = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    ).selectedAcademicYear?['id']?.toString() ?? 'default';
+    final yearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString() ?? 'default';
     return 'teacher_list_$yearId';
   }
 
@@ -941,23 +934,20 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       }
 
       // ─── Step 2: Fetch fresh data from API ───
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
       // Load subjects and classes (untuk dropdown/reference)
       final subjectData = await _subjectService.getSubject();
-      final classData = await ApiClassService.getClass(
+      final classData = await getIt<ApiClassService>().getClass(
         academicYearId: selectedYearId,
       );
 
       // If showing all teachers, ignore academic year
       final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
 
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedHomeroomFilter == 'wali_kelas'
@@ -1010,7 +1000,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': 'Failed to load data: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
@@ -1031,10 +1021,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       await LocalCacheService.invalidate(cacheKey);
     }
     await LocalCacheService.clearStartingWith('tour_teacher_admin_');
-    final yearId = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    ).selectedAcademicYear?['id']?.toString() ?? 'default';
+    final yearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString() ?? 'default';
     await LocalCacheService.invalidate('teacher_filter_options_$yearId');
     await _loadData(resetPage: true, useCache: false);
   }
@@ -1054,10 +1041,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       _currentPage++;
 
       // Load next page
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -1065,7 +1049,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
 
       // Load next page
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         page: _currentPage,
         limit: _perPage,
         classId: _selectedHomeroomFilter == 'wali_kelas'
@@ -1108,7 +1092,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': 'Preparing export...',
               'id': 'Menyiapkan export...',
             }),
@@ -1117,10 +1101,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         ),
       );
 
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -1128,7 +1109,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       final effectiveAcademicYearId = _showAllTeachers ? null : selectedYearId;
 
       // Fetch all teachers with current filters
-      final response = await ApiTeacherService.getTeachersPaginated(
+      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
         page: 1,
         limit: 10000, // Fetch all data
         classId: _selectedClassId,
@@ -1153,7 +1134,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': 'Failed to export: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
@@ -1166,7 +1147,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
 
   // Import teachers from Excel
   Future<void> importFromExcel() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -1180,7 +1161,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         AppLogger.debug('teacher', 'Import teachers - picked file: ${pickedFile.path}, size: ${await pickedFile.length()} bytes',);
 
         try {
-          final response = await ApiTeacherService.importTeachersFromExcel(
+          final response = await getIt<ApiTeacherService>().importTeachersFromExcel(
             pickedFile,
           );
           AppLogger.debug('teacher', 'Import response: $response');
@@ -1359,7 +1340,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en':
                   'Failed to update teacher subjects: ${ErrorUtils.getFriendlyMessage(error)}',
               'id':
@@ -1971,10 +1952,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
 
                                       try {
                                         final academicYearProvider =
-                                            Provider.of<AcademicYearProvider>(
-                                              context,
-                                              listen: false,
-                                            );
+                                            ref.read(academicYearRiverpod);
                                         final selectedYearId =
                                             academicYearProvider
                                                 .selectedAcademicYear?['id']
@@ -2195,15 +2173,15 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
     final confirmed = await showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: context.read<LanguageProvider>().getTranslatedText({
+        title: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Delete Teacher',
           'id': 'Hapus Guru',
         }),
-        content: context.read<LanguageProvider>().getTranslatedText({
+        content: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Are you sure you want to delete this teacher?',
           'id': 'Apakah Anda yakin ingin menghapus guru ini?',
         }),
-        confirmText: context.read<LanguageProvider>().getTranslatedText({
+        confirmText: ref.read(languageRiverpod).getTranslatedText({
           'en': 'Delete',
           'id': 'Hapus',
         }),
@@ -2220,7 +2198,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  context.read<LanguageProvider>().getTranslatedText({
+                  ref.read(languageRiverpod).getTranslatedText({
                     'en': 'Teacher successfully deleted',
                     'id': 'Guru berhasil dihapus',
                   }),
@@ -2237,7 +2215,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${context.read<LanguageProvider>().getTranslatedText({'en': 'Failed to delete teacher: ', 'id': 'Gagal menghapus guru: '})}${ErrorUtils.getFriendlyMessage(error)}',
+                '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to delete teacher: ', 'id': 'Gagal menghapus guru: '})}${ErrorUtils.getFriendlyMessage(error)}',
               ),
               backgroundColor: Colors.red,
             ),
@@ -2257,7 +2235,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
   }
 
   Widget buildTeacherCard(Map<String, dynamic> teacher, int index) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final isHomeroomTeacher =
         (teacher['homeroom_class'] != null &&
             teacher['homeroom_class'] is! List) ||
@@ -2271,10 +2249,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
         : (teacher['homeroom_class_name'] ?? '-');
     final email = teacher['user']?['email'] ?? teacher['email'] ?? '-';
     final avatarColor = ColorUtils.getColorForIndex(index);
-    final isReadOnly = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    ).isReadOnly;
+    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
@@ -2878,7 +2853,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
             ],
           ),
           floatingActionButton:
-              Provider.of<AcademicYearProvider>(context).isReadOnly
+              ref.read(academicYearRiverpod).isReadOnly
               ? null
               : FloatingActionButton(
                   key: _fabKey,
@@ -2922,7 +2897,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -2935,13 +2910,13 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_teacher_admin_screen_admin', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_teacher_admin_screen_admin', {'should_show': false});
         }
         return true;
@@ -2951,7 +2926,7 @@ class TeacherAdminScreenState extends State<TeacherAdminScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

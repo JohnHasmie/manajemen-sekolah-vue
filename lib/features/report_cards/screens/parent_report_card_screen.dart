@@ -1,4 +1,6 @@
 // Parent report card list screen -- shows children and their raport status.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Like `pages/parent/Raport/Index.vue` in a Vue app.
 //
 // Displays the parent's children with their report card availability
@@ -10,32 +12,31 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/report_cards/screens/parent_report_card_detail_screen.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Parent's report card list -- shows children with semester selector.
 ///
 /// Props: optional [academicYearId].
 /// Navigates to [ParentRaportDetailScreen] on student tap.
-class ParentRaportScreen extends StatefulWidget {
+class ParentRaportScreen extends ConsumerStatefulWidget {
   final String? academicYearId;
   const ParentRaportScreen({super.key, this.academicYearId});
 
   @override
-  State<ParentRaportScreen> createState() => _ParentRaportScreenState();
+  ConsumerState createState() => _ParentRaportScreenState();
 }
 
 /// State for [ParentRaportScreen].
 ///
 /// Like a Vue component with `data() { return { isLoading, studentsData, selectedSemesterId } }`.
 /// Auto-resolves the current semester and loads student raport data.
-class _ParentRaportScreenState extends State<ParentRaportScreen> {
+class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
   List<dynamic> _studentsData = [];
@@ -54,10 +55,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
   String _buildCacheKey() {
     final yearId =
         widget.academicYearId ??
-        Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        ).selectedAcademicYear?['id']?.toString() ??
+        ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString() ??
         'unknown';
     return 'parent_raport_${yearId}_$_selectedSemesterId';
   }
@@ -76,7 +74,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
     if (cached != null && cached is Map<String, dynamic>) {
       dateBasedSemester = cached;
     } else {
-      dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
+      dateBasedSemester = await getIt<ApiScheduleService>().getDateBasedSemester();
       // Non-blocking save
       LocalCacheService.save('school_day_data', dateBasedSemester);
     }
@@ -145,10 +143,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
   Future<void> _fetchParentRaports() async {
     final yearId =
         widget.academicYearId ??
-        Provider.of<AcademicYearProvider>(
-          context,
-          listen: false,
-        ).selectedAcademicYear?['id']?.toString();
+        ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
     if (yearId == null) throw Exception("Tahun ajaran belum dipilih.");
 

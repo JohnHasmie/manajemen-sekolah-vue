@@ -9,7 +9,6 @@ library;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for class activity (kegiatan kelas) API interactions.
@@ -23,7 +22,7 @@ class ApiClassActivityService {
   /// Like `ClassActivity::filter($request)->paginate()` in Laravel.
   /// Similar to a Vuex action that calls the paginated index endpoint.
   /// Returns a Map with 'data' (list) and 'pagination' metadata.
-  static Future<Map<String, dynamic>> getClassActivityPaginated({
+  Future<Map<String, dynamic>> getClassActivityPaginated({
     int page = 1,
     int limit = 10,
     String? teacherId,
@@ -105,13 +104,10 @@ class ApiClassActivityService {
     };
   }
 
-  /// Base URL from central config. Like `config('app.url')` in Laravel.
-  static String get baseUrl => ApiService.baseUrl;
-
   /// Exports class activities to a downloadable format.
   /// Like Laravel's export endpoint that returns a file response.
   /// Returns raw Response so the caller can handle the file bytes.
-  static Future<Response> exportClassActivities(
+  Future<Response> exportClassActivities(
     List<Map<String, dynamic>> activities,
   ) async {
     final response = await dioClient.post<List<int>>(
@@ -125,7 +121,7 @@ class ApiClassActivityService {
   /// Fetches activities created by a specific teacher.
   /// Like `ClassActivity::where('teacher_id', $teacherId)->get()` in Laravel.
   /// [teacherId] - The teacher's UUID.
-  static Future<List<dynamic>> getActivityByGuru(String teacherId) async {
+  Future<List<dynamic>> getActivityByGuru(String teacherId) async {
     try {
       final response = await dioClient.get(
         '/class-activity/teacher/$teacherId',
@@ -154,7 +150,7 @@ class ApiClassActivityService {
   /// Fetches activities for a specific class, optionally filtered by student and academic year.
   /// Used by students/parents to see what happened in their class.
   /// Like `ClassActivity::where('class_id', $classId)->get()` in Laravel.
-  static Future<List<dynamic>> getKegiatanByKelas(
+  Future<List<dynamic>> getKegiatanByKelas(
     String classId, {
     String? siswaId,
     String? academicYearId,
@@ -195,7 +191,7 @@ class ApiClassActivityService {
   /// Creates a new class activity record.
   /// Like `ClassActivity::create($data)` in Laravel or a Vuex `store` action.
   /// [data] - Activity fields (teacher_id, class_id, subject_id, date, description, etc.).
-  static Future<dynamic> tambahKegiatan(Map<String, dynamic> data) async {
+  Future<dynamic> tambahKegiatan(Map<String, dynamic> data) async {
     try {
       final response = await dioClient.post('/class-activity', data: data);
       return response.data;
@@ -207,7 +203,7 @@ class ApiClassActivityService {
 
   /// Updates an existing class activity by ID.
   /// Like `ClassActivity::find($id)->update($data)` in Laravel.
-  static Future<dynamic> updateKegiatan(
+  Future<dynamic> updateKegiatan(
     String id,
     Map<String, dynamic> data,
   ) async {
@@ -222,7 +218,7 @@ class ApiClassActivityService {
 
   /// Deletes a class activity by ID.
   /// Like `ClassActivity::find($id)->delete()` in Laravel.
-  static Future<dynamic> deleteKegiatan(String id) async {
+  Future<dynamic> deleteKegiatan(String id) async {
     try {
       final response = await dioClient.delete('/class-activity/$id');
       return response.data;
@@ -235,7 +231,7 @@ class ApiClassActivityService {
   /// Fetches the teacher's schedule to populate form dropdowns.
   /// Like loading relationship data for a Laravel form (e.g., `Teacher::find($id)->schedules`).
   /// Used to show which class/subject/day options are available when creating activities.
-  static Future<List<dynamic>> getJadwalForForm({
+  Future<List<dynamic>> getJadwalForForm({
     required String teacherId,
     String? hari,
     String? tahunAjaran,
@@ -270,7 +266,7 @@ class ApiClassActivityService {
   /// Fetches students belonging to a specific class.
   /// Like `Student::where('class_id', $classId)->get()` in Laravel.
   /// Used to select which students an activity targets.
-  static Future<List<dynamic>> getSiswaByKelas(String classId) async {
+  Future<List<dynamic>> getSiswaByKelas(String classId) async {
     try {
       final response = await dioClient.get('/student/class/$classId');
 
@@ -294,7 +290,7 @@ class ApiClassActivityService {
 
   /// Tests API connectivity by hitting the health endpoint.
   /// Like Laravel's `/api/health` route. Useful for debugging connection issues.
-  static Future<dynamic> testConnection() async {
+  Future<dynamic> testConnection() async {
     try {
       final response = await dioClient.get('/health');
       return response.data;
@@ -307,7 +303,7 @@ class ApiClassActivityService {
   /// Fetches filter dropdown options for the activity list screen.
   /// Like a Laravel endpoint returning distinct values for filter selects.
   /// Similar to a Vue composable that loads filter metadata on mount.
-  static Future<Map<String, dynamic>> getKegiatanFilterOptions({
+  Future<Map<String, dynamic>> getKegiatanFilterOptions({
     String? teacherId,
     String? classId,
     String? tanggal,
@@ -346,7 +342,7 @@ class ApiClassActivityService {
 
   /// Gets the count of unread class activities for badge display.
   /// Like a Laravel notification count endpoint. Returns 0 on error.
-  static Future<int> getUnreadCount() async {
+  Future<int> getUnreadCount() async {
     try {
       final response = await dioClient.get('/class-activity/unread-count');
 
@@ -363,7 +359,7 @@ class ApiClassActivityService {
 
   /// Marks specific class activities as read (like Laravel's notification markAsRead).
   /// [activityIds] - List of activity UUIDs to mark. Returns true on success.
-  static Future<bool> markAsRead(List<String> activityIds) async {
+  Future<bool> markAsRead(List<String> activityIds) async {
     try {
       final response = await dioClient.post(
         '/class-activity/mark-read',

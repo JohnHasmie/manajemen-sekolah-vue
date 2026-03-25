@@ -12,6 +12,7 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Attendance detail page where a teacher can view and update each student's
 /// attendance status (hadir/terlambat/izin/sakit/alpha) for a given subject
@@ -113,7 +114,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     try {
       // Load siswa dan absensi data
       final [studentData, absensiData] = await Future.wait([
-        ApiStudentService.getStudent(),
+        getIt<ApiStudentService>().getStudent(),
         ApiService.getAttendance(
           teacherId: widget.teacher['id'],
           subjectId: widget.subjectId,

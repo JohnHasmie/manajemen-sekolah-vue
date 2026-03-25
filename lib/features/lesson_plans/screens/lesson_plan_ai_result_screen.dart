@@ -17,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
@@ -120,7 +121,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
 
     // Per docs Section 2.2: GET /api/ai-jobs/{id}
-    // Extract the job ID for polling via ApiSubjectService.pollAiJob
+    // Extract the job ID for polling via getIt<ApiSubjectService>().pollAiJob
     final jobIdForPoll = widget.jobId ??
         (widget.pollUrl != null ? widget.pollUrl!.split('/').last : null);
 
@@ -146,7 +147,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       try {
         AppLogger.debug('lesson_plan', 'Poll attempt #$attempts');
 
-        final response = await ApiSubjectService.pollAiJob(
+        final response = await getIt<ApiSubjectService>().pollAiJob(
           jobIdForPoll,
           widget.token ?? '',
         );
@@ -756,7 +757,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
       AppLogger.debug('lesson_plan', "Menyimpan RPP Payload: \$payloadData");
 
-      await ApiSubjectService.saveRPP(payloadData);
+      await getIt<ApiSubjectService>().saveRPP(payloadData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

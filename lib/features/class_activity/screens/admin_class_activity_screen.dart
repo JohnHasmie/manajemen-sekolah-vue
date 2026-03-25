@@ -20,15 +20,18 @@ import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
 ///
 /// This is a [StatefulWidget] with drill-down navigation:
 /// 1. Shows teacher list -> 2. Shows subjects for that teacher -> 3. Shows activities.
 /// Like a Vue page with nested views controlled by local state flags.
-class AdminClassActivityScreen extends StatefulWidget {
+class AdminClassActivityScreen extends ConsumerStatefulWidget {
   const AdminClassActivityScreen({super.key});
 
   @override
@@ -45,7 +48,7 @@ class AdminClassActivityScreen extends StatefulWidget {
 ///
 /// Uses cache-first pattern with [LocalCacheService] for instant display.
 /// setState() triggers re-render, like Vue's reactivity system.
-class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
+class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScreen> {
   List<dynamic> _teacherList = [];
   List<dynamic> _subjectList = [];
   List<dynamic> _activityList = [];
@@ -159,7 +162,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
       }
 
       // Step 2: Fetch fresh from API
-      final apiTeacherService = ApiTeacherService();
+      final apiTeacherService = getIt<ApiTeacherService>();
       final teachers = await apiTeacherService.getTeacher();
 
       if (!mounted) return;
@@ -272,7 +275,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiTeacherService.getSubjectsByTeacherPaginated(
+      final response = await getIt<ApiTeacherService>().getSubjectsByTeacherPaginated(
         teacherId: teacherId,
         academicYearId: academicYearId,
       );
@@ -349,7 +352,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final response = await ApiClassActivityService.getClassActivityPaginated(
+      final response = await getIt<ApiClassActivityService>().getClassActivityPaginated(
         teacherId: _selectedTeacherId,
         subjectId: subjectId,
         academicYearId: academicYearId,
@@ -801,7 +804,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
 
   // ─── Pattern #10: Activity Detail Dialog ──────────────────────────────────
   void _showActivityDetail(Map<String, dynamic> activity) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final isAssignment = activity['jenis'] == 'tugas';
     final isSpecificTarget = activity['target'] == 'khusus';
 
@@ -1413,7 +1416,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     setState(() {
       _isTourShowing = true;
@@ -1433,7 +1436,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_activity_admin', {'should_show': false});
         }
       },
@@ -1442,7 +1445,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
           _isTourShowing = false;
         });
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_class_activity_admin', {'should_show': false});
         }
         return true;
@@ -1455,7 +1458,7 @@ class AdminClassActivityScreenState extends State<AdminClassActivityScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

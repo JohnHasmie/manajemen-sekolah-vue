@@ -21,13 +21,10 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// - Multipart file uploads (similar to Laravel's `$request->file('file')`)
 /// - Paginated responses transformed from Laravel's `LengthAwarePaginator`
 class ApiAnnouncementService {
-  /// Base URL from central config. Like `config('app.url')` in Laravel.
-  static String get baseUrl => ApiService.baseUrl;
-
   /// Fetches available filter options (priority, target, status) for announcement listing.
   /// Like a Laravel endpoint that returns dropdown options for a Vue filter component.
   /// Similar to a Vuex action that populates filter select options.
-  static Future<Map<String, dynamic>> getAnnouncementFilterOptions() async {
+  Future<Map<String, dynamic>> getAnnouncementFilterOptions() async {
     try {
       final response = await dioClient.get('/announcement/filter-options');
 
@@ -59,7 +56,7 @@ class ApiAnnouncementService {
   /// Transforms Laravel's standard `LengthAwarePaginator` JSON into a
   /// frontend-friendly format with `pagination.has_next_page` etc.
   /// Similar to a Vuex action that calls `api.get('/announcements', { params })`.
-  static Future<Map<String, dynamic>> getAnnouncementsPaginated({
+  Future<Map<String, dynamic>> getAnnouncementsPaginated({
     int page = 1,
     int limit = 10,
     String? prioritas,
@@ -139,7 +136,7 @@ class ApiAnnouncementService {
   /// Kept for backward compatibility -- new code should use [getAnnouncementsPaginated].
   /// Handles both old (List) and new (paginated Map) response formats.
   /// Like a deprecated Laravel route that still works but points to the new controller.
-  static Future<List<dynamic>> getAnnouncements() async {
+  Future<List<dynamic>> getAnnouncements() async {
     final result = await ApiService().get('/announcement');
 
     // Debug legacy result shape
@@ -169,7 +166,7 @@ class ApiAnnouncementService {
   /// on the backend. Similar to a Vue form submission with `FormData`.
   /// [data] - String key-value pairs for the announcement fields.
   /// [file] - Optional file attachment (image, PDF, doc).
-  static Future<dynamic> createAnnouncement(
+  Future<dynamic> createAnnouncement(
     Map<String, String> data,
     File? file,
   ) async {
@@ -200,7 +197,7 @@ class ApiAnnouncementService {
   /// Uses POST with `_method=PUT` (Laravel's method spoofing for multipart)
   /// because HTML/HTTP multipart forms cannot send PUT directly with files.
   /// This is the same pattern as `@method('PUT')` in a Laravel Blade form.
-  static Future<dynamic> updateAnnouncement(
+  Future<dynamic> updateAnnouncement(
     String id,
     Map<String, String> data,
     File? file,
@@ -236,7 +233,7 @@ class ApiAnnouncementService {
 
   /// Maps file extension to MIME type for multipart uploads.
   /// Like Laravel's `$file->getMimeType()` but done client-side.
-  static String _getMimeType(String path) {
+  String _getMimeType(String path) {
     if (path.toLowerCase().endsWith('.jpg') ||
         path.toLowerCase().endsWith('.jpeg')) {
       return 'image/jpeg';

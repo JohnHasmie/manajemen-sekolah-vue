@@ -14,12 +14,13 @@ import 'package:manajemensekolah/features/teachers/services/teacher_service.dart
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_student_screen.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
@@ -30,7 +31,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// Props (like Vue props):
 /// - [teacher] -- current teacher info
 /// - [classes] -- list of classes assigned to this teacher
-class LearningRecommendationClassScreen extends StatefulWidget {
+class LearningRecommendationClassScreen extends ConsumerStatefulWidget {
   final Map<String, String> teacher;
   final List<dynamic> classes;
 
@@ -41,7 +42,7 @@ class LearningRecommendationClassScreen extends StatefulWidget {
   });
 
   @override
-  State<LearningRecommendationClassScreen> createState() =>
+  ConsumerState<LearningRecommendationClassScreen> createState() =>
       _LearningRecommendationClassScreenState();
 }
 
@@ -53,7 +54,7 @@ class LearningRecommendationClassScreen extends StatefulWidget {
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class _LearningRecommendationClassScreenState
-    extends State<LearningRecommendationClassScreen> {
+    extends ConsumerState<LearningRecommendationClassScreen> {
   final GlobalKey _classListKey = GlobalKey();
   String? _tourId;
 
@@ -123,7 +124,7 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final apiTeacherService = ApiTeacherService();
+      final apiTeacherService = getIt<ApiTeacherService>();
       final profileData = await apiTeacherService.getTeacherById(userId);
       if (profileData != null) {
         _teacherProfileId = profileData['id']?.toString();
@@ -164,7 +165,7 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final summary = await ApiRecommendationService.getClassSummary(classId);
+      final summary = await getIt<ApiRecommendationService>().getClassSummary(classId);
       if (mounted) {
         setState(() {
           _classSummaries[classId] = summary['data'] ?? {};
@@ -206,7 +207,7 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final result = await ApiRecommendationService.getRecommendations(
+      final result = await getIt<ApiRecommendationService>().getRecommendations(
         teacherId: _effectiveTeacherId,
         classId: classId,
         perPage: 50,
@@ -304,7 +305,7 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final schedules = await ApiScheduleService.getScheduleByTeacher(
+      final schedules = await getIt<ApiScheduleService>().getScheduleByTeacher(
         teacherId: teacherIdForSchedule,
       );
       if (mounted) {
@@ -395,7 +396,7 @@ class _LearningRecommendationClassScreenState
     AppLogger.debug('recommendation', '   className: $className');
 
     try {
-      final result = await ApiRecommendationService.generateForClass(
+      final result = await getIt<ApiRecommendationService>().generateForClass(
         teacherId: _effectiveTeacherId,
         classId: classId,
         subjectId: selectedSubject['id'] ?? '',
@@ -413,7 +414,7 @@ class _LearningRecommendationClassScreenState
           );
 
           try {
-            await ApiRecommendationService.pollJobUntilComplete(
+            await getIt<ApiRecommendationService>().pollJobUntilComplete(
               jobId,
               onProgress: (status, attempt) {
                 AppLogger.debug('recommendation', 'Job $jobId: $status (attempt $attempt)');
@@ -636,7 +637,7 @@ class _LearningRecommendationClassScreenState
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -650,13 +651,13 @@ class _LearningRecommendationClassScreenState
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_recommendation_class_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_recommendation_class_screen_guru', {'should_show': false});
         }
         return true;
@@ -666,7 +667,7 @@ class _LearningRecommendationClassScreenState
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

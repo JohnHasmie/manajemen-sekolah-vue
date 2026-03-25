@@ -7,11 +7,12 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_result_screen.dart';
@@ -21,7 +22,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 ///
 /// Props (like Vue props): [teacher], [classData].
 /// Navigates to [LearningRecommendationResultScreen] on student tap.
-class LearningRecommendationStudentScreen extends StatefulWidget {
+class LearningRecommendationStudentScreen extends ConsumerStatefulWidget {
   final Map<String, String> teacher;
   final Map<String, dynamic> classData;
 
@@ -32,7 +33,7 @@ class LearningRecommendationStudentScreen extends StatefulWidget {
   });
 
   @override
-  State<LearningRecommendationStudentScreen> createState() =>
+  ConsumerState<LearningRecommendationStudentScreen> createState() =>
       _LearningRecommendationStudentScreenState();
 }
 
@@ -40,7 +41,7 @@ class LearningRecommendationStudentScreen extends StatefulWidget {
 ///
 /// Like a Vue component with `data() { return { isLoading, students, errorMessage } }`.
 class _LearningRecommendationStudentScreenState
-    extends State<LearningRecommendationStudentScreen> {
+    extends ConsumerState<LearningRecommendationStudentScreen> {
   bool _isLoading = true;
   List<dynamic> _students = [];
   String _errorMessage = '';
@@ -96,7 +97,7 @@ class _LearningRecommendationStudentScreenState
     }
 
     try {
-      final students = await ApiClassService.getStudentsByClassId(
+      final students = await getIt<ApiClassService>().getStudentsByClassId(
         widget.classData['id'].toString(),
       );
       if (!mounted) return;
@@ -149,7 +150,7 @@ class _LearningRecommendationStudentScreenState
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -163,13 +164,13 @@ class _LearningRecommendationStudentScreenState
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_recommendation_student_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_recommendation_student_screen_guru', {'should_show': false});
         }
         return true;
@@ -179,7 +180,7 @@ class _LearningRecommendationStudentScreenState
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(

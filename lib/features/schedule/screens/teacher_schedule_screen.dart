@@ -1,4 +1,6 @@
 // Teaching schedule screen -- the teacher's timetable/calendar view.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Like `pages/teacher/Schedule.vue` in a Vue app.
 //
 // Displays the teacher's weekly schedule with two view modes: card view
@@ -11,8 +13,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/class_activity/screens/teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/materials/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_screen.dart';
@@ -28,12 +28,13 @@ import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Teacher's weekly schedule screen with card and table view modes.
 ///
 /// A StatefulWidget with no constructor params -- it reads teacher data from
 /// SharedPreferences and TeacherProvider internally.
-class TeachingScheduleScreen extends StatefulWidget {
+class TeachingScheduleScreen extends ConsumerStatefulWidget {
   const TeachingScheduleScreen({super.key});
 
   @override
@@ -51,7 +52,7 @@ class TeachingScheduleScreen extends StatefulWidget {
 /// - Onboarding tour
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
-class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
+class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> {
   // Static in-memory cache for instant display on revisit (no async needed)
   static List<dynamic>? _memCachedJadwal;
   static List<Map<String, String>>? _memCachedClasses;
@@ -190,10 +191,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
     AppLogger.debug('schedule', '===== TeachingScheduleScreen: _loadUserData STARTED =====',);
     try {
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
-      final teacherProvider = Provider.of<TeacherProvider>(
-        context,
-        listen: false,
-      );
+      final teacherProvider = ref.read(teacherRiverpod);
 
       // Early cache load for instant display (while provider/API resolves)
       final prefs = PreferencesService();
@@ -277,10 +275,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             String? academicYearId;
             try {
               if (mounted) {
-                academicYearId = Provider.of<AcademicYearProvider>(
-                  context,
-                  listen: false,
-                ).selectedAcademicYear?['id']?.toString();
+                academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
               }
             } catch (e) {}
 
@@ -290,7 +285,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             if (teacherProvider.teacherId != null) {
               resolvedTeacherId = teacherProvider.teacherId;
             } else {
-              final teacherData = await ApiTeacherService.getGuruByUserId(
+              final teacherData = await getIt<ApiTeacherService>().getGuruByUserId(
                 userId,
                 academicYearId: academicYearId,
               );
@@ -326,14 +321,11 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
             String? academicYearId;
             try {
               if (mounted) {
-                academicYearId = Provider.of<AcademicYearProvider>(
-                  context,
-                  listen: false,
-                ).selectedAcademicYear?['id']?.toString();
+                academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
               }
             } catch (e) {}
 
-            final allTeacherClasses = await ApiTeacherService.getTeacherClasses(
+            final allTeacherClasses = await getIt<ApiTeacherService>().getTeacherClasses(
               resolvedTeacherId,
               academicYearId: academicYearId,
             );
@@ -391,7 +383,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         dayData = List<dynamic>.from(cached);
         AppLogger.info('schedule', 'Day data loaded from cache');
       } else {
-        dayData = await ApiScheduleService.getHari();
+        dayData = await getIt<ApiScheduleService>().getHari();
         if (dayData.isNotEmpty) {
           LocalCacheService.save('school_day_data', dayData);
         }
@@ -436,7 +428,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         semesterData = List<dynamic>.from(cachedSemester);
         AppLogger.info('schedule', 'Semester list loaded from cache');
       } else {
-        semesterData = await ApiScheduleService.getSemester();
+        semesterData = await getIt<ApiScheduleService>().getSemester();
         if (semesterData.isNotEmpty) {
           LocalCacheService.save('school_semester_data', semesterData);
         }
@@ -460,7 +452,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
           result = Map<String, dynamic>.from(cachedDateBased);
           AppLogger.info('schedule', 'Current semester loaded from cache');
         } else {
-          result = await ApiScheduleService.getDateBasedSemester();
+          result = await getIt<ApiScheduleService>().getDateBasedSemester();
           if (result.isNotEmpty) {
             LocalCacheService.save('school_current_semester', result);
           }
@@ -515,10 +507,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   Future<void> _loadAcademicYearData() async {
     try {
       // ─── Read from AcademicYearProvider (already fetched by Dashboard) ───
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
 
       List<dynamic> academicYears = academicYearProvider.academicYears;
 
@@ -653,7 +642,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       if (_isHomeroomView && _selectedHomeroomClass != null) {
         // Fetch schedule for the homeroom class
         final classId = _selectedHomeroomClass!['id'].toString();
-        final result = await ApiScheduleService.getSchedulesPaginated(
+        final result = await getIt<ApiScheduleService>().getSchedulesPaginated(
           classId: classId,
           semesterId: semesterToUse,
           tahunAjaran: academicYearToUse,
@@ -662,7 +651,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
         jadwalData = result['data'] ?? [];
       } else {
         // Fetch teaching schedule for the teacher
-        jadwalData = await ApiScheduleService.getFilteredSchedule(
+        jadwalData = await getIt<ApiScheduleService>().getFilteredSchedule(
           teacherId: _teacherId,
           semester: semesterToUse,
           academicYear: academicYearToUse,
@@ -738,7 +727,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': message,
               'id': message.replaceAll(
                 'Failed to load schedule data:',
@@ -854,10 +843,7 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
     final primary = _getPrimaryColor();
 
     String getLocalizedDay(String dayRaw) {
@@ -1498,13 +1484,13 @@ class TeachingScheduleScreenState extends State<TeachingScheduleScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
         }
         return true;

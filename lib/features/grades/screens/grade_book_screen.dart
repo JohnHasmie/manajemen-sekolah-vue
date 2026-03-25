@@ -17,7 +17,6 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/models/student.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -30,8 +29,11 @@ import 'package:manajemensekolah/features/grades/screens/grade_input_form_new.da
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// The grade book table page (Step 2) -- displays and edits student grades
 /// in a spreadsheet-like view.
@@ -46,7 +48,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// - [subject] -- the selected subject
 /// - [classData] -- the selected class
 /// - [onBack] -- callback to navigate back (like Vue `$emit('back')`)
-class GradeBookPage extends StatefulWidget {
+class GradeBookPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
   final Map<String, dynamic> classData;
@@ -72,7 +74,7 @@ class GradeBookPage extends StatefulWidget {
 /// - [_assessmentHeaders] -- column headers organized by grade type
 /// - [_isEditMode] -- whether inline editing is active
 /// - [_jenisNilaiFilter] -- which grade types are visible (like Vue checkbox filters)
-class GradeBookPageState extends State<GradeBookPage> {
+class GradeBookPageState extends ConsumerState<GradeBookPage> {
   List<Student> _siswaList = [];
   List<Student> _filteredSiswaList = [];
   List<Map<String, dynamic>> _nilaiList = [];
@@ -119,10 +121,7 @@ class GradeBookPageState extends State<GradeBookPage> {
   }
 
   bool get _isReadOnly {
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     return academicYearProvider.isReadOnly;
   }
 
@@ -132,10 +131,7 @@ class GradeBookPageState extends State<GradeBookPage> {
   String? _tourId;
 
   String _buildGradeCacheKey() {
-    final academicYearId = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    ).selectedAcademicYear?['id']?.toString() ?? 'default';
+    final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString() ?? 'default';
     final subjectId = widget.subject['id']?.toString() ?? 'unknown';
     final classId = widget.classData['id']?.toString() ?? 'unknown';
     return 'grade_book_${subjectId}_${classId}_$academicYearId';
@@ -342,15 +338,12 @@ class GradeBookPageState extends State<GradeBookPage> {
 
       // ─── Step 2: No cache — fetch fresh from API ───
       // 1. Load siswa berdasarkan kelas
-      final siswaData = await ApiStudentService.getStudentByClass(
+      final siswaData = await getIt<ApiStudentService>().getStudentByClass(
         widget.classData['id'],
       );
 
       // 2. Load nilai yang sudah ada
-      final academicYearId = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).selectedAcademicYear?['id'];
+      final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id'];
 
       final subjectId = widget.subject['id'];
       final url =
@@ -417,7 +410,7 @@ class GradeBookPageState extends State<GradeBookPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.read<LanguageProvider>().getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': message,
               'id': message.replaceAll('successfully', 'berhasil'),
             }),
@@ -1661,10 +1654,7 @@ class GradeBookPageState extends State<GradeBookPage> {
   Future<void> _exportGrades(LanguageProvider languageProvider) async {
     setState(() => _isLoading = true);
     try {
-      final academicYearId = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      ).selectedAcademicYear?['id'];
+      final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id'];
       final endpoint =
           '/grades/export?class_id=${widget.classData['id']}&subject_id=${widget.subject['id']}&teacher_id=${widget.teacher['id']}&academic_year_id=$academicYearId';
 
@@ -2487,13 +2477,13 @@ class GradeBookPageState extends State<GradeBookPage> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_input_grade_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_input_grade_screen_guru', {'should_show': false});
         }
         return true;

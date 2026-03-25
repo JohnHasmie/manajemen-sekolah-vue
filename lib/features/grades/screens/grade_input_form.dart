@@ -9,16 +9,17 @@
 // - [GradeInputForm] -- individual grade input/edit dialog
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/models/student.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 // Form Input Nilai Individual
-class GradeInputForm extends StatefulWidget {
+class GradeInputForm extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
   final Student siswa;
@@ -44,7 +45,7 @@ class GradeInputForm extends StatefulWidget {
   GradeInputFormState createState() => GradeInputFormState();
 }
 
-class GradeInputFormState extends State<GradeInputForm> {
+class GradeInputFormState extends ConsumerState<GradeInputForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nilaiController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
@@ -52,7 +53,7 @@ class GradeInputFormState extends State<GradeInputForm> {
   DateTime _selectedDate = DateTime.now();
 
   bool get _isReadOnly {
-    return Provider.of<AcademicYearProvider>(context, listen: false).isReadOnly;
+    return ref.read(academicYearRiverpod).isReadOnly;
   }
 
   @override
@@ -106,10 +107,7 @@ class GradeInputFormState extends State<GradeInputForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            Provider.of<LanguageProvider>(
-              context,
-              listen: false,
-            ).getTranslatedText({
+            ref.read(languageRiverpod).getTranslatedText({
               'en': 'Cannot submit grades for inactive academic year',
               'id':
                   'Tidak dapat menyimpan nilai untuk tahun ajaran yang tidak aktif',
@@ -159,7 +157,7 @@ class GradeInputFormState extends State<GradeInputForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              context.read<LanguageProvider>().getTranslatedText({
+              ref.read(languageRiverpod).getTranslatedText({
                 'en': widget.existingNilai != null
                     ? 'Grade successfully updated'
                     : 'Grade successfully saved',

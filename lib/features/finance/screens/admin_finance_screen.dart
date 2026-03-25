@@ -20,9 +20,9 @@ import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/finance/screens/class_finance_report_screen.dart';
 import 'package:manajemensekolah/features/settings/services/academic_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -31,13 +31,15 @@ import 'package:manajemensekolah/core/utils/currency_formatter.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin finance management screen with tabbed layout for payment types, bills, and verifications.
 ///
 /// This is a [StatefulWidget] - like a Vue page component with tabs (`<v-tabs>`).
-class FinanceScreen extends StatefulWidget {
+class FinanceScreen extends ConsumerStatefulWidget {
   const FinanceScreen({super.key});
 
   @override
@@ -55,7 +57,7 @@ class FinanceScreen extends StatefulWidget {
 /// - Pagination and search state for each tab
 ///
 /// setState() triggers re-render like Vue's reactivity system.
-class FinanceScreenState extends State<FinanceScreen> {
+class FinanceScreenState extends ConsumerState<FinanceScreen> {
   final ApiService _apiService = ApiService();
 
   String _formatCurrency(dynamic amount) {
@@ -172,7 +174,7 @@ class FinanceScreenState extends State<FinanceScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -185,13 +187,13 @@ class FinanceScreenState extends State<FinanceScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_finance_admin', {'should_show': false});
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
         LocalCacheService.save('tour_finance_admin', {'should_show': false});
         return true;
@@ -201,7 +203,7 @@ class FinanceScreenState extends State<FinanceScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -381,7 +383,7 @@ class FinanceScreenState extends State<FinanceScreen> {
   }
 
   void _showFilterSheet() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Temporary state for bottom sheet
     String? tempSelectedStatus = _selectedStatusFilter;
@@ -725,10 +727,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         _searchController.text.isNotEmpty) {
       return null;
     }
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final yearId =
         academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'all';
     return 'finance_data_$yearId';
@@ -845,10 +844,7 @@ class FinanceScreenState extends State<FinanceScreen> {
   // Tambahkan method baru untuk load data kelas dan siswa
   Future<void> _loadKelasData() async {
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -1599,10 +1595,7 @@ class FinanceScreenState extends State<FinanceScreen> {
     int totalPending = 0;
     int totalBelumBayar = 0;
 
-    final academicYearProvider = Provider.of<AcademicYearProvider>(
-      context,
-      listen: false,
-    );
+    final academicYearProvider = ref.read(academicYearRiverpod);
     final selectedAcademicYearId = academicYearProvider
         .selectedAcademicYear?['id']
         ?.toString();
@@ -1838,10 +1831,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         _pendingPage++;
       }
 
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -1921,10 +1911,7 @@ class FinanceScreenState extends State<FinanceScreen> {
 
   Future<void> _loadDashboardData() async {
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
@@ -2032,7 +2019,7 @@ class FinanceScreenState extends State<FinanceScreen> {
               ? 'bulanan'
               : periodeController.text;
           final isEdit = jenisPembayaran != null;
-          final languageProvider = context.read<LanguageProvider>();
+          final languageProvider = ref.read(languageRiverpod);
 
           Widget buildPeriodeChip(String value, String label, IconData icon) {
             final isSelected = selectedPeriode == value;
@@ -2827,7 +2814,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         builder: (context, setDialogState) {
           // Fetch Academic Years once
           if (isLoadingYears && academicYears.isEmpty) {
-            ApiAcademicServices.getAcademicYears()
+            getIt<ApiAcademicServices>().getAcademicYears()
                 .then((years) {
                   if (context.mounted) {
                     setDialogState(() {
@@ -4468,7 +4455,7 @@ class FinanceScreenState extends State<FinanceScreen> {
                                         scrollDirection: Axis.horizontal,
                                         children: [
                                           ..._buildFilterChips(
-                                            context.read<LanguageProvider>(),
+                                            ref.read(languageRiverpod),
                                           ).map((filter) {
                                             return Container(
                                               margin: EdgeInsets.only(right: 6),
@@ -4857,10 +4844,7 @@ class FinanceScreenState extends State<FinanceScreen> {
               ),
             ],
           ),
-          if (!Provider.of<AcademicYearProvider>(
-            context,
-            listen: false,
-          ).isReadOnly) ...[
+          if (!ref.read(academicYearRiverpod).isReadOnly) ...[
             SizedBox(height: 14),
             Builder(
               builder: (context) {
@@ -5155,10 +5139,7 @@ class FinanceScreenState extends State<FinanceScreen> {
                 ],
 
                 // Verifikasi button
-                if (!Provider.of<AcademicYearProvider>(
-                  context,
-                  listen: false,
-                ).isReadOnly) ...[
+                if (!ref.read(academicYearRiverpod).isReadOnly) ...[
                   SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
@@ -5197,7 +5178,7 @@ class FinanceScreenState extends State<FinanceScreen> {
   }
 
   Widget? _getFloatingActionButton() {
-    if (Provider.of<AcademicYearProvider>(context).isReadOnly) return null;
+    if (ref.read(academicYearRiverpod).isReadOnly) return null;
 
     if (_currentTabIndex == 1) {
       // Tab Jenis Pembayaran
@@ -5368,7 +5349,7 @@ class FinanceScreenState extends State<FinanceScreen> {
   String _getTranslatedPeriode(String? periode) {
     if (periode == null) return '-';
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final lower = periode.toLowerCase();
 
     if (lower == 'once' || lower == 'sekali') {

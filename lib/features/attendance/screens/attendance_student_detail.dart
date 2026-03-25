@@ -7,10 +7,13 @@ import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 // ========== HELPER FUNCTIONS UNTUK STYLING ==========
@@ -19,7 +22,7 @@ Color _getPrimaryColor() {
 }
 
 // ========== ABSENSI DETAIL PAGE ==========
-class AbsensiDetailPage extends StatefulWidget {
+class AbsensiDetailPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final String subjectId;
   final String subjectName;
@@ -36,10 +39,10 @@ class AbsensiDetailPage extends StatefulWidget {
   });
 
   @override
-  State<AbsensiDetailPage> createState() => _AbsensiDetailPageState();
+  ConsumerState<AbsensiDetailPage> createState() => _AbsensiDetailPageState();
 }
 
-class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
+class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
   List<dynamic> _absensiData = [];
   List<Student> _studentList = [];
   List<dynamic> _classList = [];
@@ -57,13 +60,13 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     try {
       // Load siswa, absensi, dan kelas data
       final [studentData, absensiData, classData] = await Future.wait([
-        ApiStudentService.getStudent(),
+        getIt<ApiStudentService>().getStudent(),
         ApiService.getAttendance(
           teacherId: widget.teacher['id'],
           subjectId: widget.subjectId,
           date: DateFormat('yyyy-MM-dd').format(widget.date),
         ),
-        ApiClassService.getClass(),
+        getIt<ApiClassService>().getClass(),
       ]);
 
       setState(() {
@@ -308,7 +311,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   }
 
   Future<void> _updateAbsensi() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     setState(() {
       _isSubmitting = true;

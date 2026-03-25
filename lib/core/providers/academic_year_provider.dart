@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/features/settings/services/academic_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Manages the list of academic years and tracks which one is currently selected.
@@ -66,10 +67,10 @@ class AcademicYearProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _academicYears = await ApiAcademicServices.getAcademicYears();
+      _academicYears = await getIt<ApiAcademicServices>().getAcademicYears();
 
       // Also fetch active year to ensure sync
-      _activeAcademicYear = await ApiAcademicServices.getActiveAcademicYear();
+      _activeAcademicYear = await getIt<ApiAcademicServices>().getActiveAcademicYear();
 
       // Calculate date-based year first
       // Indonesian school year starts in July, so month >= 7 means "currentYear/nextYear"
@@ -140,7 +141,7 @@ class AcademicYearProvider with ChangeNotifier {
   /// check if the backend's active year has changed.
   Future<void> refreshActiveYear() async {
     try {
-      _activeAcademicYear = await ApiAcademicServices.getActiveAcademicYear();
+      _activeAcademicYear = await getIt<ApiAcademicServices>().getActiveAcademicYear();
       notifyListeners();
     } catch (e) {
       AppLogger.error('academic_year', e);

@@ -10,10 +10,13 @@ import 'package:manajemensekolah/features/students/services/student_service.dart
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
-class TeacherAbsensiDetailPage extends StatefulWidget {
+class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
   const TeacherAbsensiDetailPage({
     super.key,
     required this.subjectId,
@@ -36,11 +39,11 @@ class TeacherAbsensiDetailPage extends StatefulWidget {
   final String? lessonHourName;
 
   @override
-  State<TeacherAbsensiDetailPage> createState() =>
+  ConsumerState<TeacherAbsensiDetailPage> createState() =>
       _TeacherAbsensiDetailPageState();
 }
 
-class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
+class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailPage> {
   List<dynamic> _absensiData = [];
   List<Student> _siswaList = [];
   bool _isLoading = true;
@@ -71,7 +74,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
       // 2. Load students by class ID
       List<dynamic> siswaData;
       if (_detectedClassId != null && _detectedClassId!.isNotEmpty) {
-        siswaData = await ApiStudentService.getStudentByClass(
+        siswaData = await getIt<ApiStudentService>().getStudentByClass(
           _detectedClassId!,
         );
       } else {
@@ -83,14 +86,14 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
 
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
             _detectedClassId = classIdFromData;
-            siswaData = await ApiStudentService.getStudentByClass(
+            siswaData = await getIt<ApiStudentService>().getStudentByClass(
               classIdFromData,
             );
           } else {
-            siswaData = await ApiStudentService.getStudent();
+            siswaData = await getIt<ApiStudentService>().getStudent();
           }
         } else {
-          siswaData = await ApiStudentService.getStudent();
+          siswaData = await getIt<ApiStudentService>().getStudent();
         }
       }
 
@@ -182,7 +185,7 @@ class _TeacherAbsensiDetailPageState extends State<TeacherAbsensiDetailPage> {
     });
 
     try {
-      final languageProvider = context.read<LanguageProvider>();
+      final languageProvider = ref.read(languageRiverpod);
       int successCount = 0;
       int errorCount = 0;
 

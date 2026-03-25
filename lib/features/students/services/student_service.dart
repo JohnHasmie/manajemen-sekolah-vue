@@ -24,14 +24,11 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// - Laravel validation error parsing (422 with 'errors' map)
 /// - Excel import with row-level error extraction
 class ApiStudentService {
-  /// Base URL from central config.
-  static String get baseUrl => ApiService.baseUrl;
-
   /// Imports students from an Excel file via multipart upload.
   /// Like Laravel's `Excel::import()` with Maatwebsite. Handles row-level errors
   /// by stripping "Row N:" prefixes for cleaner UI messages.
   /// Clears student cache after successful import. Side effect: modifies DB.
-  static Future<Map<String, dynamic>> importStudentsFromExcel(File file) async {
+  Future<Map<String, dynamic>> importStudentsFromExcel(File file) async {
     try {
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
@@ -82,7 +79,7 @@ class ApiStudentService {
 
   /// Downloads the student Excel import template to local storage.
   /// Like Laravel's file download response. Returns the saved file path.
-  static Future<String> downloadTemplate() async {
+  Future<String> downloadTemplate() async {
     try {
       final response = await dioClient.get<List<int>>(
         '/student/template',
@@ -104,7 +101,7 @@ class ApiStudentService {
     }
   }
 
-  static Future<Directory?> getExternalStorageDirectory() async {
+  Future<Directory?> getExternalStorageDirectory() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
       return directory;
@@ -116,7 +113,7 @@ class ApiStudentService {
   /// Fetches the parent/guardian user account linked to a student.
   /// Like `User::where('student_id', $id)->first()` in Laravel.
   /// Returns null if no parent account is linked.
-  static Future<Map<String, dynamic>?> getParentUser(String studentId) async {
+  Future<Map<String, dynamic>?> getParentUser(String studentId) async {
     try {
       final response = await ApiService().get('users?student_id=$studentId');
       if (response != null && response is List && response.isNotEmpty) {
@@ -131,7 +128,7 @@ class ApiStudentService {
 
   /// Fetches students with optional filters (academic year, user, guardian).
   /// Like `Student::filter($request)->get()` in Laravel.
-  static Future<List<dynamic>> getStudent({
+  Future<List<dynamic>> getStudent({
     String? academicYearId,
     String? userId,
     String? guardianEmail,
@@ -163,7 +160,7 @@ class ApiStudentService {
   }
 
   /// Fetches a single student by UUID. Like `Student::findOrFail($id)` in Laravel.
-  static Future<dynamic> getStudentById(String id) async {
+  Future<dynamic> getStudentById(String id) async {
     final response = await dioClient.get('/student/$id');
     final result = response.data;
     if (result is Map<String, dynamic> && result.containsKey('data')) {
@@ -174,7 +171,7 @@ class ApiStudentService {
 
   /// Fetches filter dropdown options (grade levels, classes, gender, status).
   /// Like a Laravel endpoint returning distinct values for Vue filter selects.
-  static Future<Map<String, dynamic>> getStudentFilterOptions() async {
+  Future<Map<String, dynamic>> getStudentFilterOptions() async {
     try {
       final response = await dioClient.get('/student/filter-options');
 
@@ -208,7 +205,7 @@ class ApiStudentService {
   /// Fetches students with server-side pagination, filters, and local caching.
   /// Like `Student::filter($request)->paginate()` in Laravel.
   /// Set [useCache] to false to bypass cache.
-  static Future<Map<String, dynamic>> getStudentPaginated({
+  Future<Map<String, dynamic>> getStudentPaginated({
     int page = 1,
     int limit = 10,
     String? classId,
@@ -289,7 +286,7 @@ class ApiStudentService {
 
   /// Fetches aggregated student statistics (counts by class, gender, etc.).
   /// Like a Laravel endpoint with `DB::select()` aggregate queries.
-  static Future<Map<String, dynamic>> getStudentStats({
+  Future<Map<String, dynamic>> getStudentStats({
     String? classId,
     String? gender,
     String? search,
@@ -322,7 +319,7 @@ class ApiStudentService {
 
   /// Clears all student-related cache entries from SharedPreferences.
   /// Called after any mutation. Like Laravel's `Cache::tags('students')->flush()`.
-  static Future<void> _clearStudentCache() async {
+  Future<void> _clearStudentCache() async {
     final prefs = PreferencesService();
     final keys = prefs.prefs
         .getKeys()
@@ -336,7 +333,7 @@ class ApiStudentService {
 
   /// Creates a new student record. Clears cache after success.
   /// Like `Student::create($data)` in Laravel.
-  static Future<dynamic> addStudent(Map<String, dynamic> data) async {
+  Future<dynamic> addStudent(Map<String, dynamic> data) async {
     final response = await dioClient.post('/student', data: data);
     final result = response.data;
     await _clearStudentCache();
@@ -345,7 +342,7 @@ class ApiStudentService {
 
   /// Updates a student record by ID. Clears cache after success.
   /// Like `Student::find($id)->update($data)` in Laravel.
-  static Future<void> updateStudent(
+  Future<void> updateStudent(
     String id,
     Map<String, dynamic> data,
   ) async {
@@ -355,14 +352,14 @@ class ApiStudentService {
 
   /// Deletes a student by ID. Clears cache after success.
   /// Like `Student::find($id)->delete()` in Laravel.
-  static Future<void> deleteStudent(String id) async {
+  Future<void> deleteStudent(String id) async {
     await dioClient.delete('/student/$id');
     await _clearStudentCache();
   }
 
   /// Fetches students belonging to a specific class, optionally for an academic year.
   /// Like `Student::where('class_id', $classId)->get()` in Laravel.
-  static Future<List<dynamic>> getStudentByClass(
+  Future<List<dynamic>> getStudentByClass(
     String classId, {
     String? academicYearId,
   }) async {
@@ -387,7 +384,7 @@ class ApiStudentService {
   /// Searches guardian names for autocomplete suggestions.
   /// Like a Laravel endpoint returning `DISTINCT guardian_name` matches.
   /// [query] - Search term for guardian name lookup.
-  static Future<List<String>> getGuardians(String query) async {
+  Future<List<String>> getGuardians(String query) async {
     try {
       final response = await ApiService().get(
         '/student/guardians?search=${Uri.encodeComponent(query)}',

@@ -15,7 +15,6 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/tab_switcher.dart';
 import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
@@ -27,9 +26,12 @@ import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_detail.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Data model for an attendance summary row.
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
@@ -69,7 +71,7 @@ class AbsensiSummary {
 /// This is a StatefulWidget with complex local state. Props (like Vue props):
 /// - [teacher] -- current teacher info
 /// - [initialDate] / [initialSubjectId] / etc. -- optional deep-link params
-class PresencePage extends StatefulWidget {
+class PresencePage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final DateTime? initialDate;
   final String? initialSubjectId;
@@ -103,7 +105,7 @@ class PresencePage extends StatefulWidget {
 /// - Various filter states for both modes
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
-class PresencePageState extends State<PresencePage>
+class PresencePageState extends ConsumerState<PresencePage>
     with TickerProviderStateMixin {
   // Tab Controller for TabSwitcher
   late TabController _tabController;
@@ -262,10 +264,7 @@ class PresencePageState extends State<PresencePage>
       final teacherId = widget.teacher['id']?.toString() ?? '';
 
       // ─── Step 1: Try TeacherProvider for classList (populated by Dashboard) ───
-      final teacherProvider = Provider.of<TeacherProvider>(
-        context,
-        listen: false,
-      );
+      final teacherProvider = ref.read(teacherRiverpod);
 
       List<dynamic>? providerClassList;
       if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
@@ -317,7 +316,7 @@ class PresencePageState extends State<PresencePage>
           : _loadWithCache(
               cacheKey: 'presence_classes_${teacherId}_$academicYearId',
               ttl: const Duration(hours: 6),
-              apiFetcher: () => ApiTeacherService.getTeacherClasses(
+              apiFetcher: () => getIt<ApiTeacherService>().getTeacherClasses(
                 teacherId,
                 academicYearId: academicYearId,
               ),
@@ -327,14 +326,14 @@ class PresencePageState extends State<PresencePage>
       final studentFuture = _loadWithCache(
         cacheKey: 'school_student_data_$academicYearId',
         ttl: const Duration(hours: 6),
-        apiFetcher: () => ApiStudentService.getStudent(academicYearId: academicYearId),
+        apiFetcher: () => getIt<ApiStudentService>().getStudent(academicYearId: academicYearId),
         useCache: useCache,
       );
 
       final lessonHourFuture = _loadWithCache(
         cacheKey: 'school_lesson_hour_data',
         ttl: const Duration(hours: 24),
-        apiFetcher: () => ApiScheduleService.getJamPelajaran(),
+        apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
         useCache: useCache,
       );
 
@@ -426,7 +425,7 @@ class PresencePageState extends State<PresencePage>
     String? classId,
   }) async {
     try {
-      final result = await ApiTeacherService().getSubjectByTeacher(
+      final result = await getIt<ApiTeacherService>().getSubjectByTeacher(
         teacherId,
         classId: classId,
       );
@@ -596,7 +595,7 @@ class PresencePageState extends State<PresencePage>
       // ─── Fallback: fetch from API only if no cache available ───
       if (todaySchedules == null) {
         AppLogger.debug('attendance', 'No schedule cache, fetching from API');
-        todaySchedules = await ApiScheduleService.getSchedule(
+        todaySchedules = await getIt<ApiScheduleService>().getSchedule(
           teacherId: teacherId,
           dayId: dayId,
           semesterId: semester,
@@ -1521,10 +1520,7 @@ class PresencePageState extends State<PresencePage>
 
   // ========== FILTER SHEET SEPERTI ADMIN ==========
   void _showFilterSheet() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     String? tempDateFilter = _selectedDateFilter;
     List<String> tempSubjectIds = List.from(_selectedSubjectIds);
@@ -3046,7 +3042,7 @@ class PresencePageState extends State<PresencePage>
   /// for each student. Shows progress, handles errors, and displays
   /// success/failure summary. In Laravel: `AttendanceController@store`.
   Future<void> _submitAbsensi() async {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     // Validasi guru_id
     final teacherId = widget.teacher['id'];
@@ -3480,13 +3476,13 @@ class PresencePageState extends State<PresencePage>
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_presence_teacher_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_presence_teacher_screen_guru', {'should_show': false});
         }
         return true;

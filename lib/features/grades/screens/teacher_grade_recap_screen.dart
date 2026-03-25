@@ -12,9 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/grades/services/grade_recap_service.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
@@ -26,6 +26,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -33,13 +35,13 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 ///
 /// A StatefulWidget with complex spreadsheet-like editing capabilities.
 /// Props (like Vue props): [teacher] -- current teacher info.
-class RekapNilaiPage extends StatefulWidget {
+class RekapNilaiPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
 
   const RekapNilaiPage({super.key, required this.teacher});
 
   @override
-  State<RekapNilaiPage> createState() => _RekapNilaiPageState();
+  ConsumerState<RekapNilaiPage> createState() => _RekapNilaiPageState();
 }
 
 /// State for [RekapNilaiPage].
@@ -52,10 +54,10 @@ class RekapNilaiPage extends StatefulWidget {
 /// - Excel export and unsaved change tracking
 ///
 /// `setState()` is like Vue's reactivity -- triggers UI rebuild.
-class _RekapNilaiPageState extends State<RekapNilaiPage> {
+class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   // Services
-  final ApiSubjectService apiSubjectService = ApiSubjectService();
-  final ApiTeacherService apiTeacherService = ApiTeacherService();
+  final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
+  final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
 
   // State
   int _currentStep = 0; // 0: Class List, 1: Subject List, 2: Recap Table
@@ -154,7 +156,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         }
       } catch (_) {}
       if (days.isEmpty) {
-        days = await ApiScheduleService.getHari();
+        days = await getIt<ApiScheduleService>().getHari();
         if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
       }
 
@@ -187,10 +189,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       if (!mounted) return;
 
       // 3. Load Teacher Schedules — try teaching_schedule's cache first
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']?.toString();
       final semesterProvider = academicYearProvider.selectedAcademicYear;
       final semester = semesterProvider?['semester']?.toString() ?? '1';
@@ -211,7 +210,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
       // Fallback to API
       if (allSchedules.isEmpty) {
-        final schedules = await ApiScheduleService.getSchedulesPaginated(
+        final schedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
           limit: 100,
           teacherId: widget.teacher['id'],
           tahunAjaran: academicYearId,
@@ -324,7 +323,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   }
 
   String _buildRecapCacheKey() {
-    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
+    final provider = ref.read(academicYearRiverpod);
     final academicYearId =
         (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString() ?? '';
     final classId = _selectedClass?['id']?.toString() ?? '';
@@ -355,7 +354,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
       if (isGuru && useCache) {
-        final teacherProvider = Provider.of<TeacherProvider>(context, listen: false);
+        final teacherProvider = ref.read(teacherRiverpod);
         if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
           setState(() {
             _classList = List.from(teacherProvider.allClasses);
@@ -398,23 +397,20 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
 
     // ─── Step 3: No cache — fetch fresh from API ───
     try {
-      final academicYearProvider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
       List<dynamic> loadedClasses = [];
 
       if (isGuru) {
-        loadedClasses = await ApiTeacherService.getTeacherClasses(
+        loadedClasses = await getIt<ApiTeacherService>().getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
         );
         _hasMoreData = false;
       } else {
-        final response = await ApiClassService.getClassPaginated(
+        final response = await getIt<ApiClassService>().getClassPaginated(
           page: _currentPage,
           limit: _perPage,
           academicYearId: academicYearId,
@@ -578,10 +574,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   /// an editable table structure.
   Future<void> _loadRecapData({bool useCache = true}) async {
     try {
-      final provider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final provider = ref.read(academicYearRiverpod);
       final academicYearId =
           (provider.selectedAcademicYear?['id'] ??
                   provider.activeAcademicYear?['id'])
@@ -654,13 +647,13 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         _loadWithCache(
           cacheKey: studentCacheKey,
           ttl: const Duration(hours: 6),
-          apiFetcher: () => ApiClassService.getStudentsByClassId(classId),
+          apiFetcher: () => getIt<ApiClassService>().getStudentsByClassId(classId),
           useCache: useCache,
         ),
         _loadWithCache(
           cacheKey: babCacheKey,
           ttl: const Duration(hours: 12),
-          apiFetcher: () => ApiSubjectService.getBabMateri(subjectId: masterSubjectId),
+          apiFetcher: () => getIt<ApiSubjectService>().getBabMateri(subjectId: masterSubjectId),
           useCache: useCache,
         ),
         _loadGradesWithCache(
@@ -674,7 +667,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         _loadWithCache(
           cacheKey: recapsCacheKey,
           ttl: const Duration(hours: 3),
-          apiFetcher: () => ApiGradeRecapService.getGradeRecaps(
+          apiFetcher: () => getIt<ApiGradeRecapService>().getGradeRecaps(
             classId: classId,
             subjectId: subjectId,
             academicYearId: academicYearId,
@@ -1427,10 +1420,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     final TextEditingController tempController = TextEditingController(
       text: _deskripsiControllers[studentClassId]?.text ?? '',
     );
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
+    final languageProvider = ref.read(languageRiverpod);
 
     showDialog(
       context: context,
@@ -1747,10 +1737,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
   Future<void> _saveRecaps() async {
     setState(() => _isSaving = true);
     try {
-      final provider = Provider.of<AcademicYearProvider>(
-        context,
-        listen: false,
-      );
+      final provider = ref.read(academicYearRiverpod);
       final academicYearId =
           (provider.selectedAcademicYear?['id'] ??
                   provider.activeAcademicYear?['id'])
@@ -1784,7 +1771,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         });
       }
 
-      await ApiGradeRecapService.batchSaveGradeRecap(payload);
+      await getIt<ApiGradeRecapService>().batchSaveGradeRecap(payload);
 
       if (mounted) {
         setState(() => _hasUnsavedChanges = false);
@@ -1845,10 +1832,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
-        final languageProvider = Provider.of<LanguageProvider>(
-          context,
-          listen: false,
-        );
+        final languageProvider = ref.read(languageRiverpod);
         return AlertDialog(
           title: Text(
             languageProvider.getTranslatedText({
@@ -3015,13 +2999,13 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_rekap_nilai_screen_guru', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_rekap_nilai_screen_guru', {'should_show': false});
         }
         return true;

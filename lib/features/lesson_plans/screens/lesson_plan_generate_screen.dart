@@ -10,6 +10,7 @@ import 'package:manajemensekolah/features/subjects/services/subject_service.dart
 import 'package:manajemensekolah/features/lesson_plans/services/ai_lesson_plan_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Pre-generation form for AI RPP creation.
 ///
@@ -140,7 +141,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           _statusMessage = 'Mengambil konten sub bab...';
         });
 
-        final konten = await ApiSubjectService.getContentMateri(
+        final konten = await getIt<ApiSubjectService>().getContentMateri(
           subBabId: subBab['id'],
         );
 
@@ -162,12 +163,12 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           _statusMessage = 'Mengambil konten bab...';
         });
 
-        final subBabs = await ApiSubjectService.getSubBabMateri(
+        final subBabs = await getIt<ApiSubjectService>().getSubBabMateri(
           babId: bab['id'],
         );
 
         for (var subBab in subBabs) {
-          final konten = await ApiSubjectService.getContentMateri(
+          final konten = await getIt<ApiSubjectService>().getContentMateri(
             subBabId: subBab['id'],
           );
 

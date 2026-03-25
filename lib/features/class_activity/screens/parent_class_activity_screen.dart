@@ -18,16 +18,18 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Parent's read-only view of class activities with read tracking.
 ///
 /// Uses the same debounced visibility-based "mark as read" pattern as
 /// [AnnouncementScreen]. Props: optional [academicYearId].
-class ParentClassActivityScreen extends StatefulWidget {
+class ParentClassActivityScreen extends ConsumerStatefulWidget {
   final String? academicYearId;
 
   const ParentClassActivityScreen({super.key, this.academicYearId});
@@ -42,7 +44,7 @@ class ParentClassActivityScreen extends StatefulWidget {
 /// Like a Vue page component with `data() { return {...} }`.
 /// Key state: activity list, student selector, visibility tracking for
 /// auto-marking read items. Uses the same pattern as announcements.
-class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
+class ParentClassActivityScreenState extends ConsumerState<ParentClassActivityScreen> {
   List<dynamic> _activityList = [];
   List<dynamic> _studentList = [];
   String? _selectedStudentId;
@@ -71,7 +73,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
   Future<void> _flushMarkReadSilently(List<String> ids) async {
     try {
-      await ApiClassActivityService.markAsRead(ids);
+      await getIt<ApiClassActivityService>().markAsRead(ids);
     } catch (e) {
       AppLogger.error('class_activity', "Error silent auto-marking read: $e");
     }
@@ -122,7 +124,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       final cacheKey = _buildActivitiesCacheKey();
       await LocalCacheService.save(cacheKey, _activityList);
 
-      await ApiClassActivityService.markAsRead(ids);
+      await getIt<ApiClassActivityService>().markAsRead(ids);
     } catch (e) {
       AppLogger.error('class_activity', "Error auto-marking read: $e");
     }
@@ -198,7 +200,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       final userId = userData['id']?.toString() ?? '';
       final guardianEmail = userData['email']?.toString();
 
-      final allStudents = await ApiStudentService.getStudent(
+      final allStudents = await getIt<ApiStudentService>().getStudent(
         academicYearId: widget.academicYearId,
         userId: userId,
         guardianEmail: guardianEmail,
@@ -281,7 +283,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           selectedStudent['class_id'] ?? selectedStudent['class']?['id'];
 
       if (selectedStudent.isNotEmpty && classId != null) {
-        final activities = await ApiClassActivityService.getKegiatanByKelas(
+        final activities = await getIt<ApiClassActivityService>().getKegiatanByKelas(
           classId,
           siswaId: _selectedStudentId,
           academicYearId: widget.academicYearId,
@@ -347,7 +349,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     TutorialCoachMark(
       targets: targets,
@@ -360,13 +362,13 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
       opacityShadow: 0.8,
       onFinish: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_parent_class_activity_screen_wali', {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
-          ApiTourService.completeTour(tourId: _tourId!, platform: 'mobile');
+          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
           LocalCacheService.save('tour_parent_class_activity_screen_wali', {'should_show': false});
         }
         return true;
@@ -376,7 +378,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
   List<TargetFocus> _createTourTargets() {
     List<TargetFocus> targets = [];
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
       TargetFocus(
@@ -602,7 +604,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   void _showActivityDetail(Map<String, dynamic> activity) {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
     final isAssignment = activity['jenis'] == 'tugas';
 
@@ -880,7 +882,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Widget _buildActivityList() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
 
     if (_selectedStudentId == null) {
       return _buildEmptyState(AppLocalizations.selectChildToViewActivity.tr);
@@ -1176,7 +1178,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
   }
 
   Widget _buildHeader() {
-    final languageProvider = context.read<LanguageProvider>();
+    final languageProvider = ref.read(languageRiverpod);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
