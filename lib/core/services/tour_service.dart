@@ -34,6 +34,27 @@ class ApiTourService {
     return response.data as Map<String, dynamic>;
   }
 
+  /// Batch-fetch multiple tour statuses in a single API call.
+  ///
+  /// [tours] is a list of `{role, name}` maps.
+  /// Returns `{data: [{should_show, tour}, ...]}` in the same order as input.
+  /// Backend endpoint: `POST /tours/batch-status`.
+  static Future<List<dynamic>> getBatchTourStatuses({
+    required String platform,
+    required List<Map<String, String>> tours,
+  }) async {
+    final response = await dioClient.post(
+      '/tours/batch-status',
+      data: {
+        'platform': platform,
+        'tours': tours,
+      },
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return (responseData['data'] as List<dynamic>?) ?? [];
+  }
+
   /// Mark tour as completed.
   static Future<Map<String, dynamic>> completeTour({
     required String tourId,
