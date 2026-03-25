@@ -15,10 +15,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/api_exceptions.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/main.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 
 /// Global Dio instance. Initialized once via [createDioClient].
 /// Like a singleton Axios instance in Vue or a Http facade in Laravel.
@@ -268,20 +269,18 @@ class ErrorInterceptor extends Interceptor {
   /// Mirrors the exact behavior of ApiService._handleAuthenticationErrorWithMessage().
   Future<void> _handleAuthenticationError(String errorMessage) async {
     try {
-      if (kDebugMode) {
-        print('🔴 Dio ErrorInterceptor: $errorMessage');
-      }
+      AppLogger.error('dio', errorMessage);
 
       // Clear secure storage (tokens, user data)
       await SecureStorageService().clearAll();
       // Also clear SharedPreferences (cache, prefs)
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       await prefs.clear();
 
       await Future.delayed(const Duration(milliseconds: 300));
 
       if (navigatorKey.currentState != null &&
-          navigatorKey.currentState!.mounted) {
+          (navigatorKey.currentState?.mounted ?? false)) {
         navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => LoginScreen(initialError: errorMessage),
@@ -290,9 +289,7 @@ class ErrorInterceptor extends Interceptor {
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error during Dio auth cleanup: $e');
-      }
+      AppLogger.error('dio', e);
       try {
         navigatorKey.currentState?.pushReplacementNamed('/auth/login');
       } catch (_) {}
@@ -305,25 +302,19 @@ class ErrorInterceptor extends Interceptor {
 class LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (kDebugMode) {
-      print('📡 ${options.method} ${options.uri}');
-    }
+    AppLogger.network(options.method, options.uri.toString());
     handler.next(options);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    if (kDebugMode) {
-      print('✅ ${response.statusCode} ${response.requestOptions.uri}');
-    }
+    AppLogger.network(response.requestOptions.method, response.requestOptions.uri.toString(), response.statusCode);
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (kDebugMode) {
-      print('❌ ${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}');
-    }
+    AppLogger.error('dio', '${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}');
     handler.next(err);
   }
 }

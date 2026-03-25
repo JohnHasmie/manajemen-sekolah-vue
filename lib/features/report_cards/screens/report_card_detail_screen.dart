@@ -5,7 +5,6 @@
 // teachers fill in grades, descriptions, attendance counts, and promotion
 // decisions. Supports draft saving and finalization.
 // In Laravel terms: `RaportController@show` + `@update`.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/report_cards/screens/report_card_print_screen.dart';
@@ -18,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Report card detail form for a single student.
 ///
@@ -196,7 +196,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
             _errorMessage = '';
           });
           _checkAndShowTour();
-          if (kDebugMode) print('📦 RaportDetailScreen: Data from cache');
+          AppLogger.debug('report_card', 'RaportDetailScreen: Data from cache');
           return;
         }
       }
@@ -1315,7 +1315,7 @@ class _RaportDetailScreenState extends State<RaportDetailScreen>
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('report_card', e);
     }
   }
 

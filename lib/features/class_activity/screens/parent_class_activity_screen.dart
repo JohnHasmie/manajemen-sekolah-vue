@@ -8,7 +8,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/services/class_activity_service.dart';
@@ -20,8 +19,9 @@ import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Parent's read-only view of class activities with read tracking.
 ///
@@ -73,7 +73,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     try {
       await ApiClassActivityService.markAsRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error silent auto-marking read: $e");
+      AppLogger.error('class_activity', "Error silent auto-marking read: $e");
     }
   }
 
@@ -107,11 +107,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
   Future<void> _flushMarkRead(List<String> ids) async {
     try {
-      if (kDebugMode) {
-        print(
-          '📨 Auto-marking ${ids.length} visible class activities as read...',
-        );
-      }
+      AppLogger.debug('class_activity', 'Auto-marking ${ids.length} visible class activities as read...',);
 
       // Optimistic Update (update local list UI immediately)
       setState(() {
@@ -128,7 +124,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
       await ApiClassActivityService.markAsRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error auto-marking read: $e");
+      AppLogger.error('class_activity', "Error auto-marking read: $e");
     }
   }
 
@@ -152,7 +148,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
   Future<void> _loadUserData({bool useCache = true}) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userData = json.decode(prefs.getString('user') ?? '{}');
 
       setState(() {
@@ -162,9 +158,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
 
       await _loadStudentsForParent(useCache: useCache);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load user data: $e');
-      }
+      AppLogger.error('class_activity', 'Error load user data: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -189,7 +183,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           _selectedStudentId = _studentList[0]['id'];
           await _loadActivities(useCache: true);
         }
-        if (kDebugMode) print('📦 ParentStudents: from cache (${cached.length})');
+        AppLogger.debug('class_activity', 'ParentStudents: from cache (${cached.length})');
         return;
       }
     }
@@ -199,7 +193,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
     }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userData = json.decode(prefs.getString('user') ?? '{}');
       final userId = userData['id']?.toString() ?? '';
       final guardianEmail = userData['email']?.toString();
@@ -239,9 +233,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load students for parent: $e');
-      }
+      AppLogger.error('class_activity', 'Error load students for parent: $e');
       if (!mounted) return;
       if (_studentList.isEmpty) {
         setState(() => _isLoading = false);
@@ -267,7 +259,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
           _hasFreshData = false; // Don't show unread dots from stale cache
           _isLoading = false;
         });
-        if (kDebugMode) print('📦 ParentActivities: from cache (${cached.length})');
+        AppLogger.debug('class_activity', 'ParentActivities: from cache (${cached.length})');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _studentList.isNotEmpty) _checkAndShowTour();
         });
@@ -313,9 +305,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load activities: $e');
-      }
+      AppLogger.error('class_activity', 'Error load activities: $e');
       if (!mounted) return;
       if (_activityList.isEmpty) {
         setState(() => _isLoading = false);
@@ -349,7 +339,7 @@ class ParentClassActivityScreenState extends State<ParentClassActivityScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('class_activity', 'Error checking tour status: $e');
     }
   }
 

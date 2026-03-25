@@ -4,7 +4,6 @@
 // view student report cards, export to Excel, and publish/unpublish raports.
 //
 // In Laravel terms, this consumes RaportController with class-based filtering.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
@@ -20,6 +19,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin report card screen - select class, view students, export/publish raports.
 ///
@@ -109,7 +109,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
               _classes = cachedList;
               _isLoading = false;
             });
-            if (kDebugMode) print('Classes loaded from cache');
+            AppLogger.info('report_card', 'Classes loaded from cache');
             return;
           }
         }
@@ -180,7 +180,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
               _students = cachedList;
               _isLoadingStudents = false;
             });
-            if (kDebugMode) print('Students loaded from cache');
+            AppLogger.info('report_card', 'Students loaded from cache');
             // Trigger tour from cache path
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && _students.isNotEmpty) _checkAndShowTour();
@@ -1001,7 +1001,7 @@ class _AdminRaportScreenState extends State<AdminRaportScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('report_card', e);
     }
   }
 

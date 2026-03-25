@@ -9,7 +9,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -31,6 +30,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin class management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -146,11 +146,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
     if (trigger != null &&
         (trigger['type'] == 'refresh_classes' ||
             trigger['type'] == 'refresh_teachers')) {
-      if (kDebugMode) {
-        print(
-          '🔄 Real-time sync triggered (${trigger['type']}): Reloading classes',
-        );
-      }
+      AppLogger.debug('classroom', 'Real-time sync triggered (${trigger['type']}): Reloading classes',);
       _loadData(resetPage: true, useCache: false);
     }
   }
@@ -180,11 +176,11 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
             _schoolJenjang = cached['jenjang'];
             _generateGradeLevels();
           });
-          if (kDebugMode) print('⚡ School settings loaded from cache');
+          AppLogger.info('classroom', 'School settings loaded from cache');
           return;
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ School settings cache load failed: $e');
+        AppLogger.error('classroom', 'School settings cache load failed: $e');
       }
 
       final settings = await ApiSettingsService.getSchoolSettings();
@@ -197,9 +193,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       // Non-blocking cache save
       LocalCacheService.save(cacheKey, settings);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading school settings: $e');
-      }
+      AppLogger.error('classroom', 'Error loading school settings: $e');
       // Fallback if failed
       setState(() {
         _generateGradeLevels();
@@ -244,11 +238,11 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           setState(() {
             _teachers = List<dynamic>.from(cached);
           });
-          if (kDebugMode) print('⚡ Teachers list loaded from cache (${_teachers.length})');
+          AppLogger.info('classroom', 'Teachers list loaded from cache (${_teachers.length})');
           return;
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ Teachers list cache load failed: $e');
+        AppLogger.error('classroom', 'Teachers list cache load failed: $e');
       }
 
       // Fetch all teachers (limit 1000) to ensure we have the homeroom teacher in the list
@@ -262,13 +256,9 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
       });
       // Non-blocking cache save
       LocalCacheService.save(cacheKey, response['data'] ?? []);
-      if (kDebugMode) {
-        print('✅ Loaded ${_teachers.length} teachers for wali kelas selection');
-      }
+      AppLogger.info('classroom', 'Loaded ${_teachers.length} teachers for wali kelas selection');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading teachers: $e');
-      }
+      AppLogger.error('classroom', 'Error loading teachers: $e');
       // Continue with empty list - not critical error
     }
   }
@@ -711,7 +701,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                   _isLoading = false;
                   _errorMessage = null;
                 });
-                if (kDebugMode) print('⚡ Classes loaded from cache');
+                AppLogger.info('classroom', 'Classes loaded from cache');
                 // Cache hit → return early, no background API refresh
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _checkAndShowTour();
@@ -719,7 +709,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
                 return;
               }
             } catch (e) {
-              if (kDebugMode) print('⚠️ Class cache load failed: $e');
+              AppLogger.error('classroom', 'Class cache load failed: $e');
             }
           }
         }
@@ -770,7 +760,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         });
       }
     } catch (e) {
-      if (kDebugMode) print('Load classes error: $e');
+      AppLogger.error('classroom', 'Load classes error: $e');
       if (!mounted) return;
 
       // Only show error if we don't have cached data displayed
@@ -854,11 +844,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         _isLoadingMore = false;
       });
 
-      if (kDebugMode) {
-        print(
-          '✅ Loaded more data: Page $_currentPage, Total items: ${_classes.length}',
-        );
-      }
+      AppLogger.info('classroom', 'Loaded more data: Page $_currentPage, Total items: ${_classes.length}',);
     } catch (e) {
       if (!mounted) return;
 
@@ -867,9 +853,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         _currentPage--; // Revert page increment on error
       });
 
-      if (kDebugMode) {
-        print('Error loading more data: $e');
-      }
+      AppLogger.error('classroom', 'Error loading more data: $e');
     }
   }
 
@@ -967,7 +951,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
           }
         }
       } catch (e) {
-        print('Error fetching fresh class data: $e');
+        AppLogger.error('classroom', 'Error fetching fresh class data: $e');
         // Fallback to existing classData
       }
     }
@@ -2714,7 +2698,7 @@ class AdminClassManagementScreenState extends State<AdminClassManagementScreen>
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('classroom', 'Error checking tour status: $e');
     }
   }
 

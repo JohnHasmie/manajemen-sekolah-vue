@@ -8,13 +8,13 @@
 // (similar to checking a Laravel Queue job status repeatedly).
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/loading_screen.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Displays AI-generated teaching materials with tabbed content and
 /// regeneration capability.
@@ -113,7 +113,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
   }
 
   Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     return prefs.getString('token');
   }
 
@@ -150,10 +150,8 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
 
       if (!mounted) return;
 
-      if (kDebugMode) {
-        print('📥 Generate Material Response: ${response.statusCode}');
-        print('📥 Body: ${response.data}');
-      }
+      AppLogger.debug('material', 'Generate Material Response: ${response.statusCode}');
+      AppLogger.debug('material', 'Body: ${response.data}');
 
       // Dio auto-decodes JSON, so response.data is already a Map/List
       final resultBody = response.data is Map<String, dynamic>
@@ -173,7 +171,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                 resultBody['data']?['job_id'])
             as String?;
 
-        if (kDebugMode) print('⏳ Job Queued: $jobId | Polling at: $pollUrl');
+        AppLogger.debug('material', 'Job Queued: $jobId | Polling at: $pollUrl');
 
         setState(() {
           _isPolling = true;
@@ -209,7 +207,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
       throw Exception(resultBody['message'] ?? 'Gagal generate materi');
     } catch (e) {
       if (!mounted) return;
-      if (kDebugMode) print('❌ Generate error: $e');
+      AppLogger.error('material', e);
 
       setState(() {
         _isLoading = false;
@@ -247,7 +245,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
     final pollPath = pollUrl ?? '/api/ai-jobs/$jobId';
     final fullUrl = 'https://edu-ai-api.kamillabs.com$pollPath';
 
-    if (kDebugMode) print('🔄 Starting polling at: $fullUrl');
+    AppLogger.debug('material', 'Starting polling at: $fullUrl');
 
     int attempts = 0;
     const maxAttempts = 60; // 5 minutes max (60 * 5s)
@@ -257,7 +255,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
       attempts++;
 
       try {
-        if (kDebugMode) print('🔄 Poll attempt #$attempts');
+        AppLogger.debug('material', 'Poll attempt #$attempts');
 
         // Use the AI service's pollAiJob which returns a Dio Response
         // (with validateStatus: (_) => true, so it won't throw on non-2xx)
@@ -266,9 +264,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
 
         if (!mounted) return;
 
-        if (kDebugMode) {
-          print('📥 Poll status: ${response.statusCode}');
-        }
+        AppLogger.debug('material', 'Poll status: ${response.statusCode}');
 
         if (response.statusCode == 200) {
           final resultBody = response.data is Map<String, dynamic>
@@ -304,7 +300,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           }
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ Poll error: $e');
+        AppLogger.error('material', e);
       }
 
       // Wait 5 seconds before next poll

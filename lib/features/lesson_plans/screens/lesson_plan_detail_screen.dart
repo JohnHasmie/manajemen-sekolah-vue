@@ -8,7 +8,6 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart'; // Required for kDebugMode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:manajemensekolah/features/lesson_plans/screens/lesson_plan_ai_result_screen.dart';
@@ -17,8 +16,9 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// RPP detail viewer with inline editing and AI regeneration.
 ///
@@ -148,7 +148,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         });
       }
     } catch (e) {
-      if (kDebugMode) print('Load regen limits error: $e');
+      AppLogger.error('lesson_plan', e);
       if (mounted) setState(() => _isLoadingLimits = false);
     }
   }
@@ -344,11 +344,9 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   /// Uses polling to wait for the AI job to complete.
   Future<void> _regenerateField(String fieldKey, String fieldLabel, String additionalText) async {
     final rppId = _rppId;
-    if (kDebugMode) {
-      print('🔄 Regen field: $fieldKey, rppId: $rppId');
-      print('🔄 RPP data keys: ${_rppData.keys.toList()}');
-      print('🔄 RPP id fields: id=${_rppData['id']}, rpp_id=${_rppData['rpp_id']}, lesson_plan_id=${_rppData['lesson_plan_id']}');
-    }
+    AppLogger.debug('lesson_plan', 'Regen field: $fieldKey, rppId: $rppId');
+    AppLogger.debug('lesson_plan', 'RPP data keys: ${_rppData.keys.toList()}');
+    AppLogger.debug('lesson_plan', 'RPP id fields: id=${_rppData['id']}, rpp_id=${_rppData['rpp_id']}, lesson_plan_id=${_rppData['lesson_plan_id']}');
     if (rppId == null) return;
 
     setState(() => _regeneratingField = fieldKey);
@@ -367,7 +365,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       if (response.data is String) {
         final bodyStr = (response.data as String).trimLeft();
         if (bodyStr.startsWith('<!DOCTYPE') || bodyStr.startsWith('<html')) {
-          if (kDebugMode) print('🔄 Got HTML response (status ${response.statusCode}) - server error');
+          AppLogger.error('lesson_plan', 'Got HTML response (status ${response.statusCode}) - server error');
           setState(() => _regeneratingField = null);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -432,7 +430,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         );
       }
     } catch (e) {
-      if (kDebugMode) print('Regen field error: $e');
+      AppLogger.error('lesson_plan', e);
       if (mounted) {
         setState(() => _regeneratingField = null);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -497,7 +495,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           failCount++;
         }
       } catch (e) {
-        if (kDebugMode) print('Regen all field $fieldKey error: $e');
+        AppLogger.error('lesson_plan', e);
         failCount++;
       }
     }
@@ -516,7 +514,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Future<void> _pollRegenJob(String jobId, String? pollUrl, String fieldKey, String fieldLabel) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final token = prefs.getString('token') ?? '';
 
     for (int i = 0; i < 60; i++) {
@@ -562,7 +560,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           return;
         }
       } catch (e) {
-        if (kDebugMode) print('Poll regen error: $e');
+        AppLogger.error('lesson_plan', e);
       }
     }
 
@@ -576,7 +574,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Future<void> _pollRegenJobSync(String jobId, String fieldKey) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final token = prefs.getString('token') ?? '';
 
     for (int i = 0; i < 60; i++) {
@@ -604,7 +602,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           return;
         }
       } catch (e) {
-        if (kDebugMode) print('Poll regen sync error: $e');
+        AppLogger.error('lesson_plan', e);
       }
     }
   }
@@ -1018,7 +1016,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         context,
       ).showSnackBar(SnackBar(content: Text('RPP berhasil disimpan')));
     } catch (e) {
-      if (kDebugMode) print('Save RPP error: $e');
+      AppLogger.error('lesson_plan', e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ErrorUtils.getFriendlyMessage(e)),
@@ -1106,7 +1104,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ).showSnackBar(SnackBar(content: Text('RPP berhasil diexport ke PDF')));
       }
     } catch (e) {
-      if (kDebugMode) print('Export PDF error: $e');
+      AppLogger.error('lesson_plan', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1136,7 +1134,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         );
       }
     } catch (e) {
-      if (kDebugMode) print('Text export error: $e');
+      AppLogger.error('lesson_plan', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1220,7 +1218,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       final directory = await getTemporaryDirectory();
       final fileName = _getFileName(filePath);
       final localFile = File('${directory.path}/$fileName');
-      await localFile.writeAsBytes(response.data!, flush: true);
+      await localFile.writeAsBytes(response.data ?? [], flush: true);
 
       await OpenFile.open(localFile.path);
 
@@ -1230,7 +1228,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         );
       }
     } catch (e) {
-      if (kDebugMode) print('Download file error: $e');
+      AppLogger.error('lesson_plan', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -4,7 +4,6 @@
 // Displays students in a selected class. Tapping a student navigates to
 // the recommendation result screen. Part of the recommendation flow:
 // ClassScreen -> StudentScreen (this) -> ResultScreen.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
@@ -16,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_result_screen.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Lists students in a class for the learning recommendation flow.
 ///
@@ -80,7 +80,7 @@ class _LearningRecommendationStudentScreenState
           _isLoading = false;
           _errorMessage = '';
         });
-        if (kDebugMode) print('📦 RecommendationStudents: from cache (${cached.length})');
+        AppLogger.debug('recommendation', 'RecommendationStudents: from cache (${cached.length})');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _checkAndShowTour();
         });
@@ -141,7 +141,7 @@ class _LearningRecommendationStudentScreenState
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('recommendation', e);
     }
   }
 

@@ -6,7 +6,6 @@
 //
 // In Laravel terms, this calls `POST /api/classes/promote` with selected student IDs
 // and target class/year configuration.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/widgets/promotion_step_indicator.dart';
@@ -18,6 +17,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Multi-step wizard for promoting students to the next class/academic year.
 ///
@@ -120,7 +120,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         _academicYears = yearsData;
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading data: $e');
+      AppLogger.error('classroom', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -148,7 +148,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
             .toSet();
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading students: $e');
+      AppLogger.error('classroom', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -181,7 +181,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         }
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading target classes: $e');
+      AppLogger.error('classroom', e);
       setState(() => _targetClasses = []);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -209,7 +209,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         _teachers = response['data'] ?? [];
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading teachers: $e');
+      AppLogger.error('classroom', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -303,7 +303,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
         _generateGradeLevels();
       });
     } catch (e) {
-      if (kDebugMode) print('Error loading school settings: $e');
+      AppLogger.error('classroom', e);
       setState(() {
         _generateGradeLevels();
       });
@@ -1728,7 +1728,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
       );
       Navigator.pop(context, true);
     } catch (e) {
-      if (kDebugMode) print('Promotion error: $e');
+      AppLogger.error('classroom', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1931,7 +1931,7 @@ class _ClassPromotionWizardState extends State<ClassPromotionWizard> {
                                   ),
                                 );
                               } catch (e) {
-                                if (kDebugMode) print('Create class error: $e');
+                                AppLogger.error('classroom', e);
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(

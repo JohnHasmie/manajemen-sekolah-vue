@@ -30,8 +30,9 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Teacher's class activity (teaching journal) management screen.
 ///
@@ -219,7 +220,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   /// or hitting a "refresh" button that bypasses browser cache.
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('class_activity_');
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     await prefs.remove(_prefKeyLastCacheKey);
     if (_currentStep == 0) {
       setState(() => _isLoading = true);
@@ -619,9 +620,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
   /// 2. Try LocalCacheService (with TTL)
   /// 3. Fall back to API call
   Future<void> _loadUserData() async {
-    if (kDebugMode) {
-      print('===== _loadUserData STARTED =====');
-    }
+    AppLogger.debug('class_activity', '===== _loadUserData STARTED =====');
     try {
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
       final teacherProvider = Provider.of<TeacherProvider>(
@@ -629,7 +628,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         listen: false,
       );
 
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userData = json.decode(prefs.getString('user') ?? '{}');
       final role = userData['role']?.toString().toLowerCase() ?? '';
       final isAdmin = role == 'admin' || role == 'super_admin';
@@ -647,21 +646,17 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                 _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
                 if (_classList.isNotEmpty) _isLoading = false;
               });
-              if (kDebugMode) {
-                print('⚡ Loaded ${_classList.length} classes from early cache');
-              }
+              AppLogger.info('class_activity', 'Loaded ${_classList.length} classes from early cache');
             }
           } catch (e) {
-            if (kDebugMode) print('Early cache load error: $e');
+            AppLogger.error('class_activity', 'Early cache load error: $e');
           }
         }
       }
 
       if (!isAdmin && teacherProvider.isLoaded && teacherProvider.teacherId != null) {
         // ✅ Use cached data from provider — no API calls needed
-        if (kDebugMode) {
-          print('⚡ Using TeacherProvider cache (teacherId=${teacherProvider.teacherId})');
-        }
+        AppLogger.debug('class_activity', 'Using TeacherProvider cache (teacherId=${teacherProvider.teacherId})');
 
         setState(() {
           _teacherId = teacherProvider.teacherId!;
@@ -680,9 +675,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       }
 
       // ─── Step 2: Fallback — fetch from API (direct navigation, deep link, etc.) ───
-      if (kDebugMode) {
-        print('📡 TeacherProvider empty, falling back to API');
-      }
+      AppLogger.debug('class_activity', 'TeacherProvider empty, falling back to API');
 
       final userId = userData['id']?.toString() ?? '';
 
@@ -691,17 +684,13 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _teacherName = userData['nama']?.toString() ?? 'Guru';
       });
 
-      if (kDebugMode) {
-        print('User ID from prefs: $userId');
-        print('User Role: $role');
-      }
+      AppLogger.debug('class_activity', 'User ID from prefs: $userId');
+      AppLogger.debug('class_activity', 'User Role: $role');
 
       if (userId.isNotEmpty) {
         if (isAdmin) {
           // Admin Case: Load ALL classes
-          if (kDebugMode) {
-            print('User is Admin/Super Admin. Loading all classes.');
-          }
+          AppLogger.debug('class_activity', 'User is Admin/Super Admin. Loading all classes.');
           await _loadClasses(userId, isAdmin: true);
         } else {
           // Teacher Case: Resolve Teacher ID
@@ -714,11 +703,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                 userData.containsKey('user_id');
 
             if (looksLikeTeacher) {
-              if (kDebugMode) {
-                print(
-                  'userData appears to be a teacher record. Using ID: $userId',
-                );
-              }
+              AppLogger.debug('class_activity', 'userData appears to be a teacher record. Using ID: $userId',);
               resolvedTeacherId = userId;
             } else {
               // Try TeacherProvider.ensureLoaded first
@@ -749,7 +734,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             }
 
             if (resolvedTeacherId != null) {
-              if (kDebugMode) print('✅ Resolved Teacher ID: $resolvedTeacherId');
+              AppLogger.info('class_activity', 'Resolved Teacher ID: $resolvedTeacherId');
               setState(() {
                 _teacherId = resolvedTeacherId!;
               });
@@ -762,31 +747,19 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               await _handleInitialNavigation();
             } else {
               // FALLBACK: Teacher resolution failed.
-              if (kDebugMode) {
-                print(
-                  '❌ Failed to resolve Teacher ID. Attempting fallback as Admin...',
-                );
-              }
+              AppLogger.error('class_activity', 'Failed to resolve Teacher ID. Attempting fallback as Admin...',);
 
               await _loadClasses(userId, isAdmin: true);
 
               if (_classList.isNotEmpty) {
-                if (kDebugMode) {
-                  print('✅ Fallback successful: Loaded classes as Admin');
-                }
+                AppLogger.warning('class_activity', 'Fallback successful: Loaded classes as Admin');
               } else {
-                if (kDebugMode) {
-                  print(
-                    '❌ Fallback failed: No classes loaded or not authorized',
-                  );
-                }
+                AppLogger.error('class_activity', 'Fallback failed: No classes loaded or not authorized',);
                 setState(() => _isLoading = false);
               }
             }
           } catch (e) {
-            if (kDebugMode) {
-              print('Error during teacher resolution: $e');
-            }
+            AppLogger.error('class_activity', 'Error during teacher resolution: $e');
             if (mounted) {
               _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
             }
@@ -797,9 +770,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error in _loadUserData: $e');
-      }
+      AppLogger.error('class_activity', 'Error in _loadUserData: $e');
       if (mounted) {
         _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
@@ -850,10 +821,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
               _isLoading = false;
             });
-            if (kDebugMode) print('Loaded ${_classList.length} classes from cache');
+            AppLogger.info('class_activity', 'Loaded ${_classList.length} classes from cache');
           }
         } catch (e) {
-          if (kDebugMode) print('Cache load error: $e');
+          AppLogger.error('class_activity', 'Cache load error: $e');
         }
       }
 
@@ -891,14 +862,12 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         'classes': classes,
         'schedules': _scheduleList,
       });
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       await prefs.setString(_prefKeyLastCacheKey, cacheKey);
 
-      if (kDebugMode) print('Saved ${classes.length} classes to cache ($cacheKey)');
+      AppLogger.info('class_activity', 'Saved ${classes.length} classes to cache ($cacheKey)');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading classes: $e');
-      }
+      AppLogger.error('class_activity', 'Error loading classes: $e');
 
       if (!mounted) return;
 
@@ -931,11 +900,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         setState(() {
           _scheduleList = schedules;
         });
-        if (kDebugMode) {
-          print(
-            'Loaded ${_scheduleList.length} schedules for teacher $teacherId',
-          );
-        }
+        AppLogger.info('class_activity', 'Loaded ${_scheduleList.length} schedules for teacher $teacherId',);
 
         // Update cache with schedules data
         final cacheKey = _buildClassesCacheKey();
@@ -947,9 +912,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading schedule: $e');
-      }
+      AppLogger.error('class_activity', 'Error loading schedule: $e');
     }
   }
 
@@ -967,10 +930,10 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             _subjectList = List<dynamic>.from(cached);
             _isLoading = false;
           });
-          if (kDebugMode) print('Loaded ${_subjectList.length} subjects from cache');
+          AppLogger.info('class_activity', 'Loaded ${_subjectList.length} subjects from cache');
         }
       } catch (e) {
-        if (kDebugMode) print('Subject cache load error: $e');
+        AppLogger.error('class_activity', 'Subject cache load error: $e');
       }
     }
 
@@ -993,7 +956,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
       final isHomeroom = selectedClass['is_homeroom'] == true;
 
       // Get user role from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userJson = prefs.getString('user');
       String userRole = '';
       if (userJson != null) {
@@ -1067,11 +1030,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
 
       // Save to cache
       await LocalCacheService.save(subjectCacheKey, subjects);
-      if (kDebugMode) print('Saved ${subjects.length} subjects to cache');
+      AppLogger.info('class_activity', 'Saved ${subjects.length} subjects to cache');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading subjects: $e');
-      }
+      AppLogger.error('class_activity', 'Error loading subjects: $e');
       if (mounted) {
         if (_subjectList.isEmpty) {
           _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
@@ -1441,7 +1402,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
             final totalItems = response['pagination']?['total_items'] ?? 0;
             return totalItems > 0;
           } catch (e) {
-            if (kDebugMode) print('Error checking material usage: $e');
+            AppLogger.error('class_activity', 'Error checking material usage: $e');
             return true;
           }
         }
@@ -1498,15 +1459,9 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               }
             }
 
-            if (kDebugMode) {
-              print(
-                'Activities check complete. Unchecking ${progressItems.length} items.',
-              );
-            }
+            AppLogger.debug('class_activity', 'Activities check complete. Unchecking ${progressItems.length} items.',);
           } catch (e) {
-            if (kDebugMode) {
-              print('Error fetching sub-chapters for uncheck: $e');
-            }
+            AppLogger.error('class_activity', 'Error fetching sub-chapters for uncheck: $e');
           }
         }
 
@@ -1545,9 +1500,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
               }
             }
           } catch (e) {
-            if (kDebugMode) {
-              print('Error parsing additional materials: $e');
-            }
+            AppLogger.error('class_activity', 'Error parsing additional materials: $e');
           }
         }
 
@@ -1559,17 +1512,13 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
                   activity['subject_id'] ?? activity['mata_pelajaran_id'],
               'progress_items': progressItems,
             });
-            if (kDebugMode) {
-              print('Auto-unchecked ${progressItems.length} materials.');
-            }
+            AppLogger.debug('class_activity', 'Auto-unchecked ${progressItems.length} materials.');
           } catch (e) {
-            if (kDebugMode) {
-              print('Error auto-unchecking materials: $e');
-            }
+            AppLogger.error('class_activity', 'Error auto-unchecking materials: $e');
           }
         }
       } catch (e) {
-        if (kDebugMode) print('Delete activity error: $e');
+        AppLogger.error('class_activity', 'Delete activity error: $e');
         if (!mounted) return;
 
         _showErrorSnackBar(
@@ -2857,9 +2806,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _subChapterList = [];
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load materials: $e');
-      }
+      AppLogger.error('class_activity', 'Error load materials: $e');
     }
   }
 
@@ -2872,9 +2819,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         _subChapterList = subMaterials;
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load sub chapter materials: $e');
-      }
+      AppLogger.error('class_activity', 'Error load sub chapter materials: $e');
     }
   }
 
@@ -2943,9 +2888,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error load activities: $e');
-      }
+      AppLogger.error('class_activity', 'Error load activities: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -2972,7 +2915,7 @@ class ClassActifityScreenState extends State<ClassActifityScreen>
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('class_activity', 'Error checking tour status: $e');
     }
   }
 
@@ -3282,18 +3225,14 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
     // If initial subject is provided, load its data
     if (_selectedSubjectId != null) {
       Future.delayed(Duration.zero, () {
-        if (kDebugMode) {
-          print('Loading initial data for subject: $_selectedSubjectId');
-        }
+        AppLogger.debug('class_activity', 'Loading initial data for subject: $_selectedSubjectId');
 
         widget.onSubjectSelected(_selectedSubjectId!);
         // Load bab materi for the initial subject
         _loadBabMateri(_selectedSubjectId!).then((_) {
           // After bab list loaded, load sub bab if initial bab is provided
           if (_selectedBabId != null) {
-            if (kDebugMode) {
-              print('Loading sub bab for bab: $_selectedBabId');
-            }
+            AppLogger.debug('class_activity', 'Loading sub bab for bab: $_selectedBabId');
             _loadSubBabMateri(_selectedBabId!).then((_) {
               // After sub bab loaded, update title
               _updateTitleFromMateri();
@@ -3306,21 +3245,15 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
         // If initial class is provided and target is 'khusus', load students
         if (_selectedClassId != null && widget.initialTarget == 'khusus') {
-          if (kDebugMode) {
-            print('Loading students for class: $_selectedClassId');
-          }
+          AppLogger.debug('class_activity', 'Loading students for class: $_selectedClassId');
           _loadStudents();
         }
       });
     } else {
-      if (kDebugMode) {
-        print('No initial subject ID - waiting for user selection');
-      }
+      AppLogger.debug('class_activity', 'No initial subject ID - waiting for user selection');
     }
 
-    if (kDebugMode) {
-      print('=====================================');
-    }
+    AppLogger.debug('class_activity', '=====================================');
   }
 
   @override
@@ -3338,9 +3271,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       _studentList = []; // Clear previous list
     });
 
-    if (kDebugMode) {
-      print('[_loadStudents] Starting load for class: $_selectedClassId');
-    }
+    AppLogger.debug('class_activity', '[_loadStudents] Starting load for class: $_selectedClassId');
 
     try {
       final students = await ApiClassActivityService.getSiswaByKelas(
@@ -3348,9 +3279,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       );
 
       if (!mounted) {
-        if (kDebugMode) {
-          print('[_loadStudents] Widget unmounted, skipping setState');
-        }
+        AppLogger.debug('class_activity', '[_loadStudents] Widget unmounted, skipping setState');
         return;
       }
 
@@ -3363,10 +3292,8 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         _isLoadingStudents = false;
       });
     } catch (e, stackTrace) {
-      if (kDebugMode) {
-        print('Error loading students: $e');
-        print(stackTrace);
-      }
+      AppLogger.error('class_activity', 'Error loading students: $e');
+      AppLogger.error('class_activity', stackTrace);
       if (mounted) {
         setState(() {
           _studentList = [];
@@ -3382,10 +3309,8 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
   Future<void> _loadBabMateri(String subjectId) async {
     try {
-      if (kDebugMode) {
-        print('===== LOADING BAB MATERI =====');
-        print('Subject ID: $subjectId');
-      }
+      AppLogger.debug('class_activity', '===== LOADING BAB MATERI =====');
+      AppLogger.debug('class_activity', 'Subject ID: $subjectId');
 
       setState(() {
         _isLoadingBab = true;
@@ -3402,9 +3327,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
           : subject['subject_id']?.toString();
 
       if (masterSubjectId == null) {
-        if (kDebugMode) {
-          print('Error: Master Subject ID not found for subject $subjectId');
-        }
+        AppLogger.error('class_activity', 'Error: Master Subject ID not found for subject $subjectId');
         return;
       }
 
@@ -3413,11 +3336,11 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       );
 
       if (kDebugMode) {
-        print('API Response - Bab count: ${babList.length}');
+        AppLogger.debug('class_activity', 'API Response - Bab count: ${babList.length}');
         if (babList.isNotEmpty) {
-          print('First item structure: ${babList[0]}');
-          print('Available fields: ${babList[0].keys}');
-          print('Judul Bab: ${babList[0]['judul_bab']}');
+          AppLogger.debug('class_activity', 'First item structure: ${babList[0]}');
+          AppLogger.debug('class_activity', 'Available fields: ${babList[0].keys}');
+          AppLogger.debug('class_activity', 'Judul Bab: ${babList[0]['judul_bab']}');
         }
       }
 
@@ -3437,19 +3360,13 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         _isLoadingBab = false;
       });
 
-      if (kDebugMode) {
-        print(
-          'State updated - _babMateriList.length: ${_babMateriList.length}',
-        );
-        print('Current _selectedBabId: $_selectedBabId');
-        print('Current _selectedSubBabId: $_selectedSubBabId');
-        print('=============================');
-      }
+      AppLogger.debug('class_activity', 'State updated - _babMateriList.length: ${_babMateriList.length}',);
+      AppLogger.debug('class_activity', 'Current _selectedBabId: $_selectedBabId');
+      AppLogger.debug('class_activity', 'Current _selectedSubBabId: $_selectedSubBabId');
+      AppLogger.debug('class_activity', '=============================');
     } catch (e) {
-      if (kDebugMode) {
-        print('ERROR loading bab materi: $e');
-        print('Stack trace: ${StackTrace.current}');
-      }
+      AppLogger.error('class_activity', 'ERROR loading bab materi: $e');
+      AppLogger.debug('class_activity', 'Stack trace: ${StackTrace.current}');
       if (mounted) {
         setState(() {
           _isLoadingBab = false;
@@ -3463,19 +3380,17 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
 
   Future<void> _loadSubBabMateri(String babId) async {
     try {
-      if (kDebugMode) {
-        print('===== LOADING SUB BAB MATERI =====');
-        print('Bab ID: $babId');
-      }
+      AppLogger.debug('class_activity', '===== LOADING SUB BAB MATERI =====');
+      AppLogger.debug('class_activity', 'Bab ID: $babId');
 
       final subBabList = await ApiSubjectService.getSubBabMateri(babId: babId);
 
       if (kDebugMode) {
-        print('API Response - Sub Bab count: ${subBabList.length}');
+        AppLogger.debug('class_activity', 'API Response - Sub Bab count: ${subBabList.length}');
         if (subBabList.isNotEmpty) {
-          print('First item structure: ${subBabList[0]}');
-          print('Available fields: ${subBabList[0].keys}');
-          print('Judul Sub Bab: ${subBabList[0]['judul_sub_bab']}');
+          AppLogger.debug('class_activity', 'First item structure: ${subBabList[0]}');
+          AppLogger.debug('class_activity', 'Available fields: ${subBabList[0].keys}');
+          AppLogger.debug('class_activity', 'Judul Sub Bab: ${subBabList[0]['judul_sub_bab']}');
         }
       }
 
@@ -3487,18 +3402,12 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         }
       });
 
-      if (kDebugMode) {
-        print(
-          'State updated - _subBabMateriList.length: ${_subBabMateriList.length}',
-        );
-        print('Current _selectedSubBabId: $_selectedSubBabId');
-        print('==================================');
-      }
+      AppLogger.debug('class_activity', 'State updated - _subBabMateriList.length: ${_subBabMateriList.length}',);
+      AppLogger.debug('class_activity', 'Current _selectedSubBabId: $_selectedSubBabId');
+      AppLogger.debug('class_activity', '==================================');
     } catch (e) {
-      if (kDebugMode) {
-        print('ERROR loading sub bab materi: $e');
-        print('Stack trace: ${StackTrace.current}');
-      }
+      AppLogger.error('class_activity', 'ERROR loading sub bab materi: $e');
+      AppLogger.debug('class_activity', 'Stack trace: ${StackTrace.current}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
@@ -3604,11 +3513,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
       final scheduleSubjectId =
           (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
 
-      if (kDebugMode) {
-        print(
-          'Checking schedule: ${schedule['id']} - Subject: $scheduleSubjectId vs Selected: $_selectedSubjectId',
-        );
-      }
+      AppLogger.debug('class_activity', 'Checking schedule: ${schedule['id']} - Subject: $scheduleSubjectId vs Selected: $_selectedSubjectId',);
 
       if (scheduleSubjectId == _selectedSubjectId) {
         final classId = (schedule['class_id'] ?? schedule['kelas_id'])
@@ -3633,11 +3538,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                 'id': classId,
                 'nama': schedule['kelas_nama'] ?? 'Unknown',
               };
-              if (kDebugMode) {
-                print(
-                  'Added class from initialClassId: ${schedule['kelas_nama']}',
-                );
-              }
+              AppLogger.debug('class_activity', 'Added class from initialClassId: ${schedule['kelas_nama']}',);
             }
           }
           // Filter berdasarkan waktu untuk kelas lainnya
@@ -3662,11 +3563,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
               scheduleDay = dayMap[scheduleDay]!;
             }
 
-            if (kDebugMode) {
-              print(
-                'Schedule: ${schedule['kelas_nama']}, Day: $scheduleDay vs Target: $targetDay',
-              );
-            }
+            AppLogger.debug('class_activity', 'Schedule: ${schedule['kelas_nama']}, Day: $scheduleDay vs Target: $targetDay',);
 
             // Check if schedule is on the selected day
             if (scheduleDay == targetDay) {
@@ -3678,10 +3575,10 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
                   'nama': schedule['kelas_nama'] ?? 'Unknown',
                 };
               } else {
-                if (kDebugMode) print('Class already added: $classId');
+                AppLogger.debug('class_activity', 'Class already added: $classId');
               }
             } else {
-              if (kDebugMode) print('Day mismatch: $scheduleDay != $targetDay');
+              AppLogger.debug('class_activity', 'Day mismatch: $scheduleDay != $targetDay');
             }
           }
         }
@@ -3701,7 +3598,7 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
         );
       }).toList();
     } catch (e) {
-      if (kDebugMode) print('Error generating class dropdown items: $e');
+      AppLogger.error('class_activity', 'Error generating class dropdown items: $e');
       return [];
     }
   }
@@ -3875,11 +3772,9 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
             }
           }
 
-          if (kDebugMode) {
-            print('=== BATCH SAVE PROGRESS ===');
-            print('Progress items: ${progressItems.length}');
-            print('First item: ${progressItems.first}');
-          }
+          AppLogger.debug('class_activity', '=== BATCH SAVE PROGRESS ===');
+          AppLogger.debug('class_activity', 'Progress items: ${progressItems.length}');
+          AppLogger.debug('class_activity', 'First item: ${progressItems.first}');
 
           await ApiSubjectService.batchSaveMateriProgress({
             'guru_id': widget.teacherId,
@@ -3887,13 +3782,9 @@ class _AddActivityDialogState extends State<AddActivityDialog> {
             'class_id': _selectedClassId,
             'progress_items': progressItems,
           });
-          if (kDebugMode) {
-            print('Auto-marked material as generated: ${data['chapter_id']}');
-          }
+          AppLogger.debug('class_activity', 'Auto-marked material as generated: ${data['chapter_id']}');
         } catch (e) {
-          if (kDebugMode) {
-            print('Error auto-marking material: $e');
-          }
+          AppLogger.error('class_activity', 'Error auto-marking material: $e');
         }
       }
 

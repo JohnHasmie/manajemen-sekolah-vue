@@ -13,7 +13,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -33,6 +32,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin finance management screen with tabbed layout for payment types, bills, and verifications.
 ///
@@ -164,7 +164,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('finance', e);
     }
   }
 
@@ -778,12 +778,12 @@ class FinanceScreenState extends State<FinanceScreen> {
               _isLoading = false;
               _errorMessage = '';
             });
-            if (kDebugMode) print('Finance data loaded from cache');
+            AppLogger.info('finance', 'Finance data loaded from cache');
             return;
           }
         }
       } catch (e) {
-        if (kDebugMode) print('Error loading finance cache: $e');
+        AppLogger.error('finance', e);
       }
     }
 
@@ -829,7 +829,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         });
       }
     } catch (error) {
-      if (kDebugMode) print('Error loading data: $error');
+      AppLogger.error('finance', error);
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -907,7 +907,7 @@ class FinanceScreenState extends State<FinanceScreen> {
       // Load tagihan untuk setiap siswa
       await _loadTagihanForSiswa(allSiswa);
     } catch (error) {
-      if (kDebugMode) print('Error loading kelas data: $error');
+      AppLogger.error('finance', error);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -951,7 +951,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         });
       }
     } catch (error) {
-      if (kDebugMode) print('Error loading tagihan for siswa: $error');
+      AppLogger.error('finance', error);
     }
   }
 
@@ -969,7 +969,7 @@ class FinanceScreenState extends State<FinanceScreen> {
       try {
         return json.decode(tujuanData) as Map<String, dynamic>;
       } catch (e) {
-        print('Error parsing tujuan JSON: $e');
+        AppLogger.error('finance', e);
         return {};
       }
     }
@@ -1731,7 +1731,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         });
       }
     } catch (error) {
-      if (kDebugMode) print('Error loading jenis pembayaran: $error');
+      AppLogger.error('finance', error);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1789,7 +1789,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         }
       }
     } catch (error) {
-      if (kDebugMode) print('Error loading tagihan (paginated): $error');
+      AppLogger.error('finance', error);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1913,7 +1913,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         });
       }
     } catch (error) {
-      if (kDebugMode) print('Error loading pembayaran pending: $error');
+      AppLogger.error('finance', error);
       // Revert page if error
       if (loadMore) _pendingPage--;
     }
@@ -1955,7 +1955,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         });
       }
     } catch (error) {
-      if (kDebugMode) print('Error loading dashboard data: $error');
+      AppLogger.error('finance', error);
     }
   }
 
@@ -2612,9 +2612,7 @@ class FinanceScreenState extends State<FinanceScreen> {
                                   );
                                 }
                               } catch (error) {
-                                if (kDebugMode) {
-                                  print('Error saving payment type: $error');
-                                }
+                                AppLogger.error('finance', error);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -2781,7 +2779,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         }
         _loadData(useCache: false);
       } catch (error) {
-        if (kDebugMode) print('Error deleting payment type: $error');
+        AppLogger.error('finance', error);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -3223,8 +3221,8 @@ class FinanceScreenState extends State<FinanceScreen> {
 
         final response = await ApiService.generateBills(
           paymentTypeId: jenisPembayaran['id'].toString(),
-          month: result['month']!,
-          academicYearId: result['academicYearId']!,
+          month: result['month'] ?? '',
+          academicYearId: result['academicYearId'] ?? '',
         );
 
         if (mounted) {
@@ -3250,7 +3248,7 @@ class FinanceScreenState extends State<FinanceScreen> {
           _loadData(useCache: false);
         }
       } catch (error) {
-        if (kDebugMode) print('Error generating bills: $error');
+        AppLogger.error('finance', error);
         if (mounted) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -3498,9 +3496,7 @@ class FinanceScreenState extends State<FinanceScreen> {
                                   );
                                 }
                               } catch (error) {
-                                if (kDebugMode) {
-                                  print('Error verifying payment: $error');
-                                }
+                                AppLogger.error('finance', error);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(

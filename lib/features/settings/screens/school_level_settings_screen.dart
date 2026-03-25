@@ -4,12 +4,12 @@
 // editing the school's basic information (name, address, education level: SD/SMP/SMA/SMK).
 //
 // In Laravel terms, this calls `GET /api/settings/school` and `PUT /api/settings/school`.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// School info settings screen - edit school name, address, and education level (jenjang).
 ///
@@ -54,7 +54,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      if (kDebugMode) print('Load settings error: $e');
+      AppLogger.error('settings', e);
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -277,9 +277,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                   );
                                 }
                               } catch (e) {
-                                if (kDebugMode) {
-                                  print('Update settings error: $e');
-                                }
+                                AppLogger.error('settings', e);
                                 if (mounted) {
                                   messenger.showSnackBar(
                                     SnackBar(

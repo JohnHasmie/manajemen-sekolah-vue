@@ -10,6 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for class activity (kegiatan kelas) API interactions.
 /// Like a Laravel Resource Controller with additional custom actions
@@ -78,9 +79,9 @@ class ApiClassActivityService {
 
     final response = await dioClient.get('/class-activity?$queryString');
 
-    print('GET /class-activity?$queryString - Status: ${response.statusCode}');
+    AppLogger.debug('class_activity', 'GET /class-activity?$queryString - Status: ${response.statusCode}');
     if (kDebugMode && response.statusCode != 200) {
-      print('Response Body (Error): ${response.data}');
+      AppLogger.error('class_activity', 'Response Body (Error): ${response.data}');
     }
     final result = response.data;
 
@@ -145,9 +146,7 @@ class ApiClassActivityService {
         return [];
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error get kegiatan by guru: $e');
-      }
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -171,16 +170,12 @@ class ApiClassActivityService {
         url += '?$qs';
       }
 
-      if (kDebugMode) {
-        print('📤 Request: GET $url');
-      }
+      AppLogger.debug('class_activity', 'Request: GET $url');
 
       final response = await dioClient.get(url);
 
-      if (kDebugMode) {
-        print('📥 Response Status: ${response.statusCode}');
-        print('📥 Response Body: ${response.data}');
-      }
+      AppLogger.debug('class_activity', 'Response Status: ${response.statusCode}');
+      AppLogger.debug('class_activity', 'Response Body: ${response.data}');
 
       final result = response.data;
 
@@ -192,9 +187,7 @@ class ApiClassActivityService {
         return [];
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error get kegiatan by kelas: $e');
-      }
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -207,9 +200,7 @@ class ApiClassActivityService {
       final response = await dioClient.post('/class-activity', data: data);
       return response.data;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error tambah kegiatan: $e');
-      }
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -224,9 +215,7 @@ class ApiClassActivityService {
       final response = await dioClient.put('/class-activity/$id', data: data);
       return response.data;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error update kegiatan: $e');
-      }
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -238,9 +227,7 @@ class ApiClassActivityService {
       final response = await dioClient.delete('/class-activity/$id');
       return response.data;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error delete kegiatan: $e');
-      }
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -275,9 +262,7 @@ class ApiClassActivityService {
         return [];
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error get jadwal for form: $e');
-      }
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -289,10 +274,8 @@ class ApiClassActivityService {
     try {
       final response = await dioClient.get('/student/class/$classId');
 
-      if (kDebugMode) {
-        print('API Response Status: ${response.statusCode}');
-        print('API Response Body: ${response.data}');
-      }
+      AppLogger.debug('class_activity', 'API Response Status: ${response.statusCode}');
+      AppLogger.debug('class_activity', 'API Response Body: ${response.data}');
 
       final result = response.data;
 
@@ -304,9 +287,7 @@ class ApiClassActivityService {
         return [];
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error get siswa by kelas: $e');
-      }
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -318,9 +299,7 @@ class ApiClassActivityService {
       final response = await dioClient.get('/health');
       return response.data;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error test connection: $e');
-      }
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -360,7 +339,7 @@ class ApiClassActivityService {
 
       return {'success': false};
     } catch (e) {
-      if (kDebugMode) print('Error getKegiatanFilterOptions: $e');
+      AppLogger.error('class_activity', e);
       rethrow;
     }
   }
@@ -377,7 +356,7 @@ class ApiClassActivityService {
       }
       return 0;
     } catch (e) {
-      if (kDebugMode) print('Error getUnreadCount: $e');
+      AppLogger.error('class_activity', e);
       return 0;
     }
   }
@@ -394,7 +373,7 @@ class ApiClassActivityService {
       final result = response.data;
       return result is Map && result['success'] == true;
     } catch (e) {
-      if (kDebugMode) print('Error markAsRead: $e');
+      AppLogger.error('class_activity', e);
       return false;
     }
   }

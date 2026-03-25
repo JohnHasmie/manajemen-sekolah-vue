@@ -10,7 +10,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -30,6 +29,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin student management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -146,9 +146,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         _applyFilterOptions(response['data']);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading filter options: $e');
-      }
+      AppLogger.error('student', 'Error loading filter options: $e');
     }
   }
 
@@ -159,11 +157,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
       );
       _availableClass = data['kelas'] ?? [];
     });
-    if (kDebugMode) {
-      print(
-        '✅ Filter options loaded: ${_availableGradeLevels.length} grades, ${_availableClass.length} kelas',
-      );
-    }
+    AppLogger.info('student', 'Filter options loaded: ${_availableGradeLevels.length} grades, ${_availableClass.length} kelas',);
   }
 
   @override
@@ -230,7 +224,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         context: context,
       );
     } catch (e) {
-      if (kDebugMode) print('Export to Excel error: $e');
+      AppLogger.error('student', 'Export to Excel error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -278,7 +272,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Import from Excel error: $e');
+      AppLogger.error('student', 'Import from Excel error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -345,13 +339,13 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                   _isLoading = false;
                   _errorMessage = null;
                 });
-                if (kDebugMode) print('⚡ Students loaded from cache');
+                AppLogger.info('student', 'Students loaded from cache');
                 // Return early — trigger tour immediately (cache pre-fetched by dashboard)
                 _checkAndShowTour();
                 return;
               }
             } catch (e) {
-              if (kDebugMode) print('⚠️ Student cache load failed: $e');
+              AppLogger.error('student', 'Student cache load failed: $e');
             }
           }
         }
@@ -409,7 +403,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         });
       }
     } catch (e) {
-      if (kDebugMode) print('Load students/class error: $e');
+      AppLogger.error('student', 'Load students/class error: $e');
       if (!mounted) return;
 
       // Only show error if we don't have cached data displayed
@@ -497,13 +491,9 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         _isLoadingMore = false;
       });
 
-      if (kDebugMode) {
-        print(
-          '✅ Loaded more data: Page $_currentPage, Total items: ${_students.length}',
-        );
-      }
+      AppLogger.info('student', 'Loaded more data: Page $_currentPage, Total items: ${_students.length}',);
     } catch (e) {
-      if (kDebugMode) print('Load more students error: $e');
+      AppLogger.error('student', 'Load more students error: $e');
       if (!mounted) return;
 
       setState(() {
@@ -1746,9 +1736,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
                                         }
                                       }
                                     } catch (e) {
-                                      if (kDebugMode) {
-                                        print('Save/Update student error: $e');
-                                      }
+                                      AppLogger.error('student', 'Save/Update student error: $e');
                                       if (context.mounted) {
                                         showDialog(
                                           context: context,
@@ -1958,7 +1946,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
           );
         }
       } catch (e) {
-        if (kDebugMode) print('Delete student error: $e');
+        AppLogger.error('student', 'Delete student error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -2627,7 +2615,7 @@ class StudentManagementScreenState extends State<StudentManagementScreen>
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('student', 'Error checking tour status: $e');
     }
   }
 

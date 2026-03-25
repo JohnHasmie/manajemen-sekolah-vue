@@ -10,12 +10,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for class (kelas) management API calls with local caching.
 /// Like a Laravel Resource Controller + Repository pattern with a cache layer.
@@ -59,7 +59,7 @@ class ApiClassService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      final bytes = response.data!;
+      final bytes = response.data ?? [];
       final directory = await getApplicationDocumentsDirectory();
       final filePath = '${directory.path}/template_import_kelas.xlsx';
       final file = File(filePath);
@@ -131,7 +131,7 @@ class ApiClassService {
     String queryString = Uri(queryParameters: queryParams).query;
 
     // Get school_id context for cache key
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final userJson = prefs.getString('user');
     String schoolId = 'global';
     if (userJson != null) {
@@ -146,7 +146,7 @@ class ApiClassService {
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null) {
-        if (kDebugMode) print('📦 Using cached classes for $cacheKey');
+        AppLogger.debug('classroom', 'Using cached classes for $cacheKey');
         return cached;
       }
     }
@@ -185,7 +185,7 @@ class ApiClassService {
   /// Like Laravel's `Cache::tags('classes')->flush()`.
   static Future<void> _clearClassCache() async {
     await LocalCacheService.clearStartingWith('class_');
-    if (kDebugMode) print('🧹 Class cache cleared due to changes');
+    AppLogger.info('classroom', 'Class cache cleared due to changes');
   }
 
   /// Legacy method to fetch all classes as a flat list.

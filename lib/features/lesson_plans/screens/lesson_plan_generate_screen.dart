@@ -4,12 +4,12 @@
 // Allows teachers to configure title, objectives, and media/tools before
 // triggering AI-powered RPP generation. Shows progress during generation.
 // In Laravel terms: the form before dispatching an `GenerateRppJob`.
-import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/lesson_plans/screens/lesson_plan_detail_screen.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/lesson_plans/services/ai_lesson_plan_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Pre-generation form for AI RPP creation.
 ///
@@ -217,7 +217,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
         );
       }
     } catch (e) {
-      if (kDebugMode) print('Generate RPP error: $e');
+      AppLogger.error('lesson_plan', e);
       if (mounted) {
         setState(
           () => _isGenerating = false,

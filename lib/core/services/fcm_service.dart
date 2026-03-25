@@ -6,7 +6,6 @@
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart'; // Required for MaterialPageRoute
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manajemensekolah/main.dart'; // Import navigatorKey
@@ -17,7 +16,8 @@ import 'package:manajemensekolah/features/grades/screens/parent_grade_screen.dar
 import 'package:manajemensekolah/features/attendance/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Top-level background message handler. Must be a top-level function (not a
 /// class method) because it runs in a separate isolate when the app is killed.
@@ -26,42 +26,32 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// notifications for regular messages.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (kDebugMode) {
-    print('🔔 Background message received: ${message.messageId}');
-    print('Title: ${message.notification?.title}');
-    print('Body: ${message.notification?.body}');
-    print('Data: ${message.data}');
-  }
+  AppLogger.debug('fcm', 'Background message received: ${message.messageId}');
+  AppLogger.debug('fcm', 'Title: ${message.notification?.title}');
+  AppLogger.debug('fcm', 'Body: ${message.notification?.body}');
+  AppLogger.debug('fcm', 'Data: ${message.data}');
 
   if (message.data['type'] == 'refresh_subjects') {
     await LocalCacheService.clearStartingWith('subject_');
-    if (kDebugMode) {
-      print('♻️ Subject cache invalidated in background');
-    }
+    AppLogger.debug('fcm', 'Subject cache invalidated in background');
     return;
   }
 
   if (message.data['type'] == 'refresh_teachers') {
     await LocalCacheService.clearStartingWith('teacher_');
     await LocalCacheService.clearStartingWith('class_');
-    if (kDebugMode) {
-      print('♻️ Teacher & Class cache invalidated in background');
-    }
+    AppLogger.debug('fcm', 'Teacher & Class cache invalidated in background');
     return;
   }
 
   if (message.data['type'] == 'refresh_classes') {
     await LocalCacheService.clearStartingWith('class_');
-    if (kDebugMode) {
-      print('♻️ Class cache invalidated in background');
-    }
+    AppLogger.debug('fcm', 'Class cache invalidated in background');
     return;
   }
   if (message.data['type'] == 'refresh_schedules') {
     await LocalCacheService.clearStartingWith('schedule_');
-    if (kDebugMode) {
-      print('♻️ Schedule cache invalidated in background');
-    }
+    AppLogger.debug('fcm', 'Schedule cache invalidated in background');
     return;
   }
 
@@ -105,9 +95,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       payload: jsonEncode(message.data),
     );
 
-    if (kDebugMode) {
-      print('✅ Background notification displayed');
-    }
+    AppLogger.info('fcm', 'Background notification displayed');
   }
 }
 
@@ -152,9 +140,7 @@ class FCMService {
   /// Must be called once at app startup (in main.dart after Firebase.initializeApp).
   Future<void> initialize() async {
     try {
-      if (kDebugMode) {
-        print('🔧 Initializing FCM Service...');
-      }
+      AppLogger.debug('fcm', 'Initializing FCM Service...');
 
       // Request permission
       NotificationSettings settings = await _firebaseMessaging
@@ -168,9 +154,7 @@ class FCMService {
             sound: true,
           );
 
-      if (kDebugMode) {
-        print('✅ Permission status: ${settings.authorizationStatus}');
-      }
+      AppLogger.info('fcm', 'Permission status: ${settings.authorizationStatus}');
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
@@ -179,23 +163,19 @@ class FCMService {
 
         // Get FCM token
         _fcmToken = await _firebaseMessaging.getToken();
-        if (kDebugMode) {
-          print('📱 FCM Token: $_fcmToken');
-        }
+        AppLogger.debug('fcm', 'FCM Token: $_fcmToken');
 
         // Save token locally
         if (_fcmToken != null) {
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = PreferencesService();
           await prefs.setString('fcm_token', _fcmToken!);
         }
 
         // Listen to token refresh
         _firebaseMessaging.onTokenRefresh.listen((newToken) async {
-          if (kDebugMode) {
-            print('🔄 FCM Token refreshed: $newToken');
-          }
+          AppLogger.debug('fcm', 'FCM Token refreshed: $newToken');
           _fcmToken = newToken;
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = PreferencesService();
           await prefs.setString('fcm_token', newToken);
 
           // Send updated token to backend
@@ -210,18 +190,12 @@ class FCMService {
           _firebaseMessagingBackgroundHandler,
         );
 
-        if (kDebugMode) {
-          print('✅ FCM Service initialized successfully');
-        }
+        AppLogger.info('fcm', 'FCM Service initialized successfully');
       } else {
-        if (kDebugMode) {
-          print('❌ Notification permission denied');
-        }
+        AppLogger.error('fcm', 'Notification permission denied');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error initializing FCM: $e');
-      }
+      AppLogger.error('fcm', 'Error initializing FCM: $e');
     }
   }
 
@@ -276,9 +250,7 @@ class FCMService {
   void _setupMessageHandlers() {
     // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      if (kDebugMode) {
-        print('Data: ${message.data}');
-      }
+      AppLogger.debug('fcm', 'Data: ${message.data}');
 
       if (message.data['type'] == 'refresh_subjects') {
         await LocalCacheService.clearStartingWith('subject_');
@@ -287,9 +259,7 @@ class FCMService {
         Future.delayed(const Duration(milliseconds: 100), () {
           syncTrigger.value = null;
         });
-        if (kDebugMode) {
-          print('♻️ Subject cache invalidated in foreground');
-        }
+        AppLogger.debug('fcm', 'Subject cache invalidated in foreground');
         return;
       }
 
@@ -301,9 +271,7 @@ class FCMService {
         Future.delayed(const Duration(milliseconds: 100), () {
           syncTrigger.value = null;
         });
-        if (kDebugMode) {
-          print('♻️ Teacher & Class cache invalidated in foreground');
-        }
+        AppLogger.debug('fcm', 'Teacher & Class cache invalidated in foreground');
         return;
       }
 
@@ -314,9 +282,7 @@ class FCMService {
         Future.delayed(const Duration(milliseconds: 100), () {
           syncTrigger.value = null;
         });
-        if (kDebugMode) {
-          print('♻️ Class cache invalidated in foreground');
-        }
+        AppLogger.debug('fcm', 'Class cache invalidated in foreground');
         return;
       }
       if (message.data['type'] == 'refresh_schedules') {
@@ -326,9 +292,7 @@ class FCMService {
         Future.delayed(const Duration(milliseconds: 100), () {
           syncTrigger.value = null;
         });
-        if (kDebugMode) {
-          print('♻️ Schedule cache invalidated in foreground');
-        }
+        AppLogger.debug('fcm', 'Schedule cache invalidated in foreground');
         return;
       }
 
@@ -338,18 +302,14 @@ class FCMService {
 
     // Background messages (when app is in background but not terminated)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      if (kDebugMode) {
-        print('🔔 Background message opened: ${message.messageId}');
-      }
+      AppLogger.debug('fcm', 'Background message opened: ${message.messageId}');
       _handleNotificationTap(message.data);
     });
 
     // Check for initial message (when app is opened from terminated state)
     _firebaseMessaging.getInitialMessage().then((RemoteMessage? message) {
       if (message != null) {
-        if (kDebugMode) {
-          print('🔔 Initial message: ${message.messageId}');
-        }
+        AppLogger.debug('fcm', 'Initial message: ${message.messageId}');
         _handleNotificationTap(message.data);
       }
     });
@@ -398,9 +358,7 @@ class FCMService {
         final data = jsonDecode(response.payload!);
         _handleNotificationTap(data);
       } catch (e) {
-        if (kDebugMode) {
-          print('Error parsing notification payload: $e');
-        }
+        AppLogger.error('fcm', 'Error parsing notification payload: $e');
       }
     }
   }
@@ -410,53 +368,37 @@ class FCMService {
   /// or a Vue router that maps notification types to route names.
   /// Supported types: absensi, class_activity, pengumuman, tagihan, grade.
   void _handleNotificationTap(Map<String, dynamic> data) {
-    if (kDebugMode) {
-      print('🔔 Notification tapped with data: $data');
-    }
+    AppLogger.debug('fcm', 'Notification tapped with data: $data');
 
     // You can navigate to specific screens based on notification type
     final type = data['type'];
 
     if (type == 'absensi' || type == 'attendance') {
       _navigateToPresenceScreen(data);
-      if (kDebugMode) {
-        print('Navigate to absensi screen for siswa: ${data['student_id']}');
-      }
+      AppLogger.info('fcm', 'Navigate to absensi screen for siswa: ${data['student_id']}');
     } else if (type == 'class_activity' || type == 'class_activity_detail') {
       _navigateToClassActivityScreen();
-      if (kDebugMode) {
-        print(
-          'Navigate to class activity for kegiatan: ${data['activity_id']}',
-        );
-      }
+      AppLogger.info('fcm', 'Navigate to class activity for kegiatan: ${data['activity_id']}',);
     } else if (type == 'pengumuman' || type == 'announcement') {
       // Navigate to announcement screen
-      if (kDebugMode) {
-        print('navigating to announcement screen');
-      }
+      AppLogger.info('fcm', 'navigating to announcement screen');
 
       _navigateToAnnouncementScreen();
 
-      if (kDebugMode) {
-        print('Navigate to pengumuman: ${data['announcement_id']}');
-        print('Title: ${data['title']}, Priority: ${data['priority']}');
-        print('Target: ${data['target_role']}, Class: ${data['class_name']}');
-      }
+      AppLogger.info('fcm', 'Navigate to pengumuman: ${data['announcement_id']}');
+      AppLogger.debug('fcm', 'Title: ${data['title']}, Priority: ${data['priority']}');
+      AppLogger.debug('fcm', 'Target: ${data['target_role']}, Class: ${data['class_name']}');
     } else if (type == 'tagihan') {
       // Navigate to tagihan (billing) screen
       // This will be handled by the app's navigation system
-      if (kDebugMode) {
-        print('Navigate to tagihan: ${data['bill_id']}');
-        print('Siswa: ${data['student_name']}');
-        print('Jenis: ${data['payment_type_name']}');
-        print('Jumlah: Rp ${data['amount']}');
-        print('Jatuh Tempo: ${data['due_date']}');
-      }
+      AppLogger.info('fcm', 'Navigate to tagihan: ${data['bill_id']}');
+      AppLogger.debug('fcm', 'Siswa: ${data['student_name']}');
+      AppLogger.debug('fcm', 'Jenis: ${data['payment_type_name']}');
+      AppLogger.debug('fcm', 'Jumlah: Rp ${data['amount']}');
+      AppLogger.debug('fcm', 'Jatuh Tempo: ${data['due_date']}');
     } else if (type == 'grade') {
       _navigateToGradeScreen();
-      if (kDebugMode) {
-        print('Navigate to grade for: ${data['grade_id']}');
-      }
+      AppLogger.info('fcm', 'Navigate to grade for: ${data['grade_id']}');
     }
   }
 
@@ -465,21 +407,15 @@ class FCMService {
   /// `POST /api/fcm-token`. Returns true on success, false on failure.
   Future<bool> sendTokenToBackend(String token) async {
     try {
-      if (kDebugMode) {
-        print('📤 Sending FCM token to backend...');
-      }
+      AppLogger.debug('fcm', 'Sending FCM token to backend...');
 
       await ApiService.sendFCMToken(token, 'mobile');
 
-      if (kDebugMode) {
-        print('✅ FCM token sent to backend successfully');
-      }
+      AppLogger.info('fcm', 'FCM token sent to backend successfully');
 
       return true;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error sending FCM token to backend: $e');
-      }
+      AppLogger.error('fcm', 'Error sending FCM token to backend: $e');
       return false;
     }
   }
@@ -489,20 +425,14 @@ class FCMService {
   Future<void> deleteTokenFromBackend() async {
     try {
       if (_fcmToken != null) {
-        if (kDebugMode) {
-          print('🗑️ Deleting FCM token from backend...');
-        }
+        AppLogger.debug('fcm', 'Deleting FCM token from backend...');
 
         await ApiService.deleteFCMToken(_fcmToken!);
 
-        if (kDebugMode) {
-          print('✅ FCM token deleted from backend');
-        }
+        AppLogger.info('fcm', 'FCM token deleted from backend');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error deleting FCM token from backend: $e');
-      }
+      AppLogger.error('fcm', 'Error deleting FCM token from backend: $e');
     }
   }
 
@@ -510,12 +440,10 @@ class FCMService {
   /// Like reading from Laravel's session or cache: `Cache::get('fcm_token')`.
   Future<String?> getSavedToken() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       return prefs.getString('fcm_token');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting saved token: $e');
-      }
+      AppLogger.error('fcm', 'Error getting saved token: $e');
       return null;
     }
   }
@@ -523,13 +451,11 @@ class FCMService {
   /// Clear the locally stored FCM token. Called during logout cleanup.
   Future<void> clearLocalToken() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       await prefs.remove('fcm_token');
       _fcmToken = null;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error clearing local token: $e');
-      }
+      AppLogger.error('fcm', 'Error clearing local token: $e');
     }
   }
 
@@ -538,9 +464,7 @@ class FCMService {
   /// Side effects: saves new token locally and sends it to the backend.
   Future<String?> forceRefreshToken() async {
     try {
-      if (kDebugMode) {
-        print('🔄 Force refreshing FCM token...');
-      }
+      AppLogger.debug('fcm', 'Force refreshing FCM token...');
 
       // Delete the old token
       await _firebaseMessaging.deleteToken();
@@ -548,13 +472,11 @@ class FCMService {
       // Get new token
       _fcmToken = await _firebaseMessaging.getToken();
 
-      if (kDebugMode) {
-        print('📱 New FCM Token: $_fcmToken');
-      }
+      AppLogger.debug('fcm', 'New FCM Token: $_fcmToken');
 
       // Save new token locally
       if (_fcmToken != null) {
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = PreferencesService();
         await prefs.setString('fcm_token', _fcmToken!);
 
         // Send to backend
@@ -563,9 +485,7 @@ class FCMService {
 
       return _fcmToken;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error force refreshing token: $e');
-      }
+      AppLogger.error('fcm', 'Error force refreshing token: $e');
       return null;
     }
   }
@@ -575,7 +495,7 @@ class FCMService {
   /// Like a Laravel redirect that checks the user's role before choosing the view.
   Future<void> _navigateToAnnouncementScreen() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userDataStr = prefs.getString('user');
       String role = 'wali'; // Default
 
@@ -586,22 +506,20 @@ class FCMService {
 
       if (navigatorKey.currentState != null) {
         if (role == 'admin') {
-          navigatorKey.currentState!.push(
+          navigatorKey.currentState?.push(
             MaterialPageRoute(
               builder: (context) => const AdminAnnouncementScreen(),
             ),
           );
         } else {
           // For guru, wali, staff
-          navigatorKey.currentState!.push(
+          navigatorKey.currentState?.push(
             MaterialPageRoute(builder: (context) => const AnnouncementScreen()),
           );
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error navigating to announcement screen: $e');
-      }
+      AppLogger.error('fcm', 'Error navigating to announcement screen: $e');
     }
   }
 
@@ -609,16 +527,14 @@ class FCMService {
   Future<void> _navigateToClassActivityScreen() async {
     try {
       if (navigatorKey.currentState != null) {
-        navigatorKey.currentState!.push(
+        navigatorKey.currentState?.push(
           MaterialPageRoute(
             builder: (context) => const ParentClassActivityScreen(),
           ),
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error navigating to class activity screen: $e');
-      }
+      AppLogger.error('fcm', 'Error navigating to class activity screen: $e');
     }
   }
 
@@ -626,14 +542,12 @@ class FCMService {
   Future<void> _navigateToGradeScreen() async {
     try {
       if (navigatorKey.currentState != null) {
-        navigatorKey.currentState!.push(
+        navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (context) => const ParentGradeScreen()),
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error navigating to grade screen: $e');
-      }
+      AppLogger.error('fcm', 'Error navigating to grade screen: $e');
     }
   }
 
@@ -643,7 +557,7 @@ class FCMService {
   Future<void> _navigateToPresenceScreen(Map<String, dynamic> data) async {
     try {
       if (navigatorKey.currentState != null) {
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = PreferencesService();
         final userDataString = prefs.getString('user');
         if (userDataString == null) return;
 
@@ -652,7 +566,7 @@ class FCMService {
 
         if (studentId == null) return;
 
-        navigatorKey.currentState!.push(
+        navigatorKey.currentState?.push(
           MaterialPageRoute(
             builder: (context) =>
                 PresenceParentPage(parent: userData, studentId: studentId),
@@ -660,9 +574,7 @@ class FCMService {
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error navigating to presence screen: $e');
-      }
+      AppLogger.error('fcm', 'Error navigating to presence screen: $e');
     }
   }
 }

@@ -8,8 +8,10 @@ library;
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Caches teacher-related data fetched by the dashboard so other screens
 /// can consume it without making redundant API calls.
@@ -72,9 +74,7 @@ class TeacherProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
 
-    if (kDebugMode) {
-      print('📦 TeacherProvider: Data cached (teacherId=$teacherId, classes=${allClasses.length}, homeroom=${homeroomClasses.length})');
-    }
+    AppLogger.debug('teacher', 'TeacherProvider: Data cached (teacherId=$teacherId, classes=${allClasses.length}, homeroom=${homeroomClasses.length})');
   }
 
   /// Updates only the homeroom classes list (e.g., after the dashboard resolves them).
@@ -104,7 +104,7 @@ class TeacherProvider extends ChangeNotifier {
     _isLoading = true;
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userDataStr = prefs.getString('user');
       if (userDataStr == null) {
         _isLoading = false;
@@ -158,17 +158,13 @@ class TeacherProvider extends ChangeNotifier {
 
         _isLoaded = true;
 
-        if (kDebugMode) {
-          print('📦 TeacherProvider: Fallback load complete (teacherId=$resolvedTeacherId)');
-        }
+        AppLogger.warning('teacher', 'TeacherProvider: Fallback load complete (teacherId=$resolvedTeacherId)');
       }
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ TeacherProvider: ensureLoaded failed: $e');
-      }
+      AppLogger.error('teacher', e);
       _isLoading = false;
       notifyListeners();
     }

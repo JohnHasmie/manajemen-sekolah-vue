@@ -51,7 +51,7 @@ class ExcelNilaiService {
 
       // Simpan file yang didownload
       final File file = File(filePath);
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       // Buka file
       await OpenFile.open(filePath);

@@ -8,8 +8,8 @@ library;
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Keys for secure storage entries.
 class _Keys {
@@ -57,7 +57,7 @@ class SecureStorageService {
     try {
       return json.decode(jsonStr) as Map<String, dynamic>;
     } catch (e) {
-      if (kDebugMode) print('⚠️ Failed to parse secure user data: $e');
+      AppLogger.error('storage', e);
       return null;
     }
   }

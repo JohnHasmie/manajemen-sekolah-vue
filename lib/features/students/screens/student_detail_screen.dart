@@ -4,7 +4,6 @@
 // all student information (personal data, class, guardian, etc.).
 //
 // In Laravel terms, this calls `GET /api/students/{id}` (StudentController@show).
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -12,6 +11,7 @@ import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Student detail screen - displays full profile for a single student.
 ///
@@ -74,7 +74,7 @@ class StudentDetailScreenState extends State<StudentDetailScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      if (kDebugMode) print('Load student detail error: $e');
+      AppLogger.error('student', e);
       if (!mounted) return;
       setState(() {
         _isLoading = false;

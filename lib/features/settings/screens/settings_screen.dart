@@ -7,7 +7,6 @@
 // In Laravel terms, this calls `GET /api/profile` to fetch user details.
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/settings/services/settings_service.dart';
@@ -16,7 +15,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// User profile and settings screen - shared across all roles.
 ///
@@ -53,7 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadRole() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userJson = prefs.getString('user');
       if (userJson != null) {
         final user = jsonDecode(userJson);
@@ -65,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (mounted) setState(() => _role = normalizedRole);
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading role: $e');
+      AppLogger.error('settings', e);
     }
   }
 
@@ -108,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      if (kDebugMode) print('Load profile error: $e');
+      AppLogger.error('settings', e);
       if (!mounted) return;
       // Only show error if no cached data
       if (_profileData.isEmpty) {
@@ -295,7 +295,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 );
                               }
                             } catch (e) {
-                              if (kDebugMode) print('Update profile error: $e');
+                              AppLogger.error('settings', e);
                               if (mounted) {
                                 messenger.showSnackBar(
                                   SnackBar(
@@ -800,7 +800,7 @@ class __ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         ),
       );
     } catch (e) {
-      if (kDebugMode) print('Update password error: $e');
+      AppLogger.error('settings', e);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

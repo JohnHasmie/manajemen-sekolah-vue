@@ -17,7 +17,7 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 
 /// Parent's report card list -- shows children with semester selector.
 ///
@@ -92,7 +92,7 @@ class _ParentRaportScreenState extends State<ParentRaportScreen> {
   Future<void> _loadData({bool useCache = true}) async {
     // Load parent data
     if (_parentData.isEmpty || _parentData['id'] == null) {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       _parentData = json.decode(prefs.getString('user') ?? '{}');
     }
 

@@ -17,7 +17,8 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for AI-powered teaching recommendation API calls.
 /// Talks to a separate microservice (KamillLabs Edu AI), not the main Laravel backend.
@@ -83,12 +84,9 @@ class ApiRecommendationService {
       options: Options(validateStatus: (s) => s != null && s < 500),
     );
 
-    if (kDebugMode) {
-      print('🤖 Generate recommendations: ${response.statusCode}');
-      print('🤖 Request body sent: $requestData');
-      final bodyStr = response.data.toString();
-      print('🤖 Response body: ${bodyStr.length > 500 ? bodyStr.substring(0, 500) : bodyStr}');
-    }
+    AppLogger.debug('recommendation', 'Generate recommendations: ${response.statusCode}');
+    AppLogger.info('recommendation', 'Request body sent: $requestData');
+    AppLogger.debug('recommendation', 'Response body: ${response.data}');
 
     final body = response.data;
 
@@ -133,9 +131,7 @@ class ApiRecommendationService {
       options: Options(validateStatus: (s) => s != null && s < 500),
     );
 
-    if (kDebugMode) {
-      print('🤖 Generate student recommendation: ${response.statusCode}');
-    }
+    AppLogger.debug('recommendation', 'Generate student recommendation: ${response.statusCode}');
 
     final body = response.data;
 
@@ -189,11 +185,8 @@ class ApiRecommendationService {
       options: Options(receiveTimeout: const Duration(seconds: 30)),
     );
 
-    if (kDebugMode) {
-      print('📋 List recommendations: ${response.statusCode} - URL: ${response.requestOptions.uri}');
-      final bodyStr = response.data.toString();
-      print('📋 Response body: ${bodyStr.length > 500 ? bodyStr.substring(0, 500) : bodyStr}');
-    }
+    AppLogger.debug('recommendation', 'List recommendations: ${response.statusCode} - URL: ${response.requestOptions.uri}');
+    AppLogger.debug('recommendation', 'Response body: ${response.data}');
 
     final body = response.data;
     return {
@@ -212,9 +205,7 @@ class ApiRecommendationService {
       options: Options(receiveTimeout: const Duration(seconds: 30)),
     );
 
-    if (kDebugMode) {
-      print('📋 Recommendation detail: ${response.statusCode}');
-    }
+    AppLogger.debug('recommendation', 'Recommendation detail: ${response.statusCode}');
 
     return response.data;
   }
@@ -234,9 +225,7 @@ class ApiRecommendationService {
       options: Options(receiveTimeout: const Duration(seconds: 30)),
     );
 
-    if (kDebugMode) {
-      print('📋 Update status: ${response.statusCode}');
-    }
+    AppLogger.debug('recommendation', 'Update status: ${response.statusCode}');
 
     return response.data;
   }
@@ -249,16 +238,11 @@ class ApiRecommendationService {
         options: Options(receiveTimeout: const Duration(seconds: 30)),
       );
 
-      if (kDebugMode) {
-        final bodyStr = response.data.toString();
-        print('📊 Class summary: ${response.statusCode} - ${bodyStr.length > 200 ? bodyStr.substring(0, 200) : bodyStr}');
-      }
+      AppLogger.debug('recommendation', 'Class summary: ${response.statusCode} - ${response.data}');
 
       return response.data;
     } catch (e) {
-      if (kDebugMode) {
-        print('📊 Class summary error: $e');
-      }
+      AppLogger.error('recommendation', e);
       // Return empty summary on error (class may have no recommendations yet)
       return {
         'success': true,
@@ -289,19 +273,14 @@ class ApiRecommendationService {
           options: Options(receiveTimeout: const Duration(seconds: 15)),
         );
 
-        if (kDebugMode) {
-          final bodyStr = response.data.toString();
-          print('🔄 Poll attempt $attempt: ${response.statusCode} - ${bodyStr.length > 300 ? bodyStr.substring(0, 300) : bodyStr}');
-        }
+        AppLogger.debug('recommendation', 'Poll attempt $attempt: ${response.statusCode} - ${response.data}');
 
         if (response.statusCode == 200) {
           final body = response.data;
           final data = body['data'] ?? body;
           final status = data['status']?.toString().toLowerCase() ?? '';
 
-          if (kDebugMode) {
-            print('📌 Job $jobId: status=$status, progress=${data['progress'] ?? 'N/A'}, error=${data['error'] ?? 'none'}');
-          }
+          AppLogger.error('recommendation', 'Job $jobId: status=$status, progress=${data['progress'] ?? 'N/A'}, error=${data['error'] ?? 'none'}');
 
           onProgress?.call(status, attempt);
 
@@ -314,9 +293,7 @@ class ApiRecommendationService {
         }
       } catch (e) {
         if (e is DioException) {
-          if (kDebugMode) {
-            print('⚠️ Poll error: ${e.response?.statusCode ?? 'N/A'} - ${e.message}');
-          }
+          AppLogger.error('recommendation', '️ Poll error: ${e.response?.statusCode ?? 'N/A'} - ${e.message}');
           // Don't rethrow DioException for polling - just retry
         } else {
           // Rethrow non-Dio exceptions (e.g., job failed)
@@ -343,7 +320,7 @@ class _AiAuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final token = prefs.getString('token');
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
@@ -359,17 +336,13 @@ class _AiAuthInterceptor extends Interceptor {
 class _AiLoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (kDebugMode) {
-      print('🤖 AI ${options.method} ${options.uri}');
-    }
+    AppLogger.debug('recommendation', 'AI ${options.method} ${options.uri}');
     handler.next(options);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (kDebugMode) {
-      print('🤖 AI Error ${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}');
-    }
+    AppLogger.error('recommendation', 'AI Error ${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}');
     handler.next(err);
   }
 }

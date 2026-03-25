@@ -8,7 +8,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -27,6 +26,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin lesson plan (RPP) review screen with drill-down navigation.
 ///
@@ -514,7 +514,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                 _hasMoreData = cached['hasMoreData'] ?? true;
                 _isLoading = false;
               });
-              if (kDebugMode) print('Teacher list loaded from cache');
+              AppLogger.info('lesson_plan', 'Teacher list loaded from cache');
               return;
             }
           }
@@ -615,7 +615,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
                 _hasMoreData = cached['hasMoreData'] ?? true;
                 _isLoading = false;
               });
-              if (kDebugMode) print('RPP list loaded from cache');
+              AppLogger.info('lesson_plan', 'RPP list loaded from cache');
               return;
             }
           }
@@ -1586,7 +1586,7 @@ class _AdminRppScreenState extends State<AdminRppScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('lesson_plan', e);
     }
   }
 
@@ -2647,7 +2647,7 @@ class RppAdminDetailPage extends StatelessWidget {
         fileUrl = '$baseUrlBase/storage/$filePath';
       }
 
-      print('Downloading from: $fileUrl');
+      AppLogger.debug('lesson_plan', 'Downloading from: $fileUrl');
 
       final dio = Dio();
       final response = await dio.get<List<int>>(
@@ -2659,7 +2659,7 @@ class RppAdminDetailPage extends StatelessWidget {
       final fileName = filePath.split('/').last;
       final file = File('${directory.path}/$fileName');
 
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(

@@ -18,7 +18,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for sending client-side error logs to the logging backend.
 /// Like Laravel's `Log::error()` but sends to a remote API instead of local files.
@@ -49,11 +50,9 @@ class LogService {
   /// (5-second timeout) to avoid breaking the app.
   static Future<void> sendError(dynamic error, StackTrace? stackTrace) async {
     try {
-      if (kDebugMode) {
-        print('📤 Sending error log to backend: $error');
-      }
+      AppLogger.info('log', 'Sending error log to backend: $error');
 
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       final userJson = prefs.getString('user');
       String? userId;
       String? userEmail;
@@ -98,9 +97,7 @@ class LogService {
 
       await logDio.post(_logApiUrl, data: body);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to send error log: $e');
-      }
+      AppLogger.error('log', 'Failed to send error log: $e');
     }
   }
 }

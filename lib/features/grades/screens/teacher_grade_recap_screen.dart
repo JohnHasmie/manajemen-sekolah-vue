@@ -8,7 +8,6 @@
 // In Laravel terms: `GradeRecapController@index`, `@store`, `@export`.
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -28,6 +27,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Grade recap wizard: class selection -> subject selection -> recap table.
 ///
@@ -150,7 +150,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         final cachedDays = await LocalCacheService.load('school_day_data', ttl: const Duration(hours: 24));
         if (cachedDays != null) {
           days = List<dynamic>.from(cachedDays);
-          if (kDebugMode) print('⚡ Rekap: days from cache');
+          AppLogger.debug('grades', 'Rekap: days from cache');
         }
       } catch (_) {}
       if (days.isEmpty) {
@@ -205,7 +205,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         if (cached != null) {
           final cachedData = Map<String, dynamic>.from(cached);
           allSchedules = List<dynamic>.from(cachedData['jadwal'] ?? []);
-          if (kDebugMode) print('⚡ Rekap: schedules from teaching_schedule cache (${allSchedules.length})');
+          AppLogger.debug('grades', 'Rekap: schedules from teaching_schedule cache (${allSchedules.length})');
         }
       } catch (_) {}
 
@@ -362,7 +362,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
             _hasMoreData = false;
             _isLoading = false;
           });
-          if (kDebugMode) print('⚡ Rekap classes from TeacherProvider (${_classList.length})');
+          AppLogger.debug('grades', 'Rekap classes from TeacherProvider (${_classList.length})');
           return; // ✅ Provider hit — no API needed
         }
       }
@@ -380,12 +380,12 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
                   _classList = cachedClasses;
                   _isLoading = false;
                 });
-                if (kDebugMode) print('⚡ Rekap classes from cache (${cachedClasses.length})');
+                AppLogger.debug('grades', 'Rekap classes from cache (${cachedClasses.length})');
                 return; // ✅ Cache hit — no API needed
               }
             }
           } catch (e) {
-            if (kDebugMode) print('Classes cache load error: $e');
+            AppLogger.error('grades', e);
           }
         }
       }
@@ -476,12 +476,12 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
               _subjectList = cachedSubjects;
               _isLoading = false;
             });
-            if (kDebugMode) print('⚡ Rekap subjects from cache (${cachedSubjects.length}) — skipping API');
+            AppLogger.debug('grades', 'Rekap subjects from cache (${cachedSubjects.length}) — skipping API');
             return; // ✅ Cache hit — no API needed
           }
         }
       } catch (e) {
-        if (kDebugMode) print('Subjects cache load error: $e');
+        AppLogger.error('grades', e);
       }
     }
 
@@ -530,7 +530,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       try {
         final cached = await LocalCacheService.load(cacheKey, ttl: ttl);
         if (cached != null) {
-          if (kDebugMode) print('⚡ Cache hit: $cacheKey');
+          AppLogger.debug('grades', 'Cache hit: $cacheKey');
           return List<dynamic>.from(cached);
         }
       } catch (_) {}
@@ -553,7 +553,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
       try {
         final cached = await LocalCacheService.load(cacheKey, ttl: ttl);
         if (cached != null) {
-          if (kDebugMode) print('⚡ Cache hit: $cacheKey');
+          AppLogger.debug('grades', 'Cache hit: $cacheKey');
           return List<dynamic>.from(cached);
         }
       } catch (_) {}
@@ -629,7 +629,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
               if (mounted && _currentStep == 2) _checkAndShowTour();
             });
 
-            if (kDebugMode) print('⚡ Rekap data from cache — skipping API');
+            AppLogger.debug('grades', 'Rekap data from cache — skipping API');
             return; // ✅ Cache hit — no API needed
           }
         }
@@ -2999,7 +2999,7 @@ class _RekapNilaiPageState extends State<RekapNilaiPage> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('grades', e);
     }
   }
 

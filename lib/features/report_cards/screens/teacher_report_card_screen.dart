@@ -4,7 +4,6 @@
 // Allows homeroom teachers to select a class, view students, and navigate
 // to individual student report card details. Supports Excel export of all
 // student reports. In Laravel terms: `RaportController@index`.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/report_cards/screens/report_card_detail_screen.dart';
@@ -22,6 +21,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/core/providers/teacher_provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Report card list screen -- shows classes and their students for raport entry.
 ///
@@ -110,7 +110,7 @@ class RaportScreenState extends State<RaportScreen> {
             _loadStudentsForClass();
             _checkAndShowTour();
           }
-          if (kDebugMode) print('📦 RaportScreen: Classes from TeacherProvider (${providerClasses.length})');
+          AppLogger.debug('report_card', 'RaportScreen: Classes from TeacherProvider (${providerClasses.length})');
           return;
         }
       } catch (_) {}
@@ -130,7 +130,7 @@ class RaportScreenState extends State<RaportScreen> {
           _loadStudentsForClass();
           _checkAndShowTour();
         }
-        if (kDebugMode) print('📦 RaportScreen: Classes from cache (${cached.length})');
+        AppLogger.debug('report_card', 'RaportScreen: Classes from cache (${cached.length})');
         return;
       }
     }
@@ -208,7 +208,7 @@ class RaportScreenState extends State<RaportScreen> {
             _isLoading = false;
           });
         }
-        if (kDebugMode) print('📦 RaportScreen: Students from cache (${cached.length})');
+        AppLogger.debug('report_card', 'RaportScreen: Students from cache (${cached.length})');
         return;
       }
     }
@@ -241,7 +241,7 @@ class RaportScreenState extends State<RaportScreen> {
             cachedDayData['semester'].toString().toLowerCase() == 'genap') {
           semester = '2';
         }
-        if (kDebugMode) print('📦 RaportScreen: Semester from school_day_data cache');
+        AppLogger.debug('report_card', 'RaportScreen: Semester from school_day_data cache');
       } else {
         final dateBasedSemester = await ApiScheduleService.getDateBasedSemester();
         if (dateBasedSemester.containsKey('semester') &&
@@ -825,7 +825,7 @@ class RaportScreenState extends State<RaportScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('report_card', e);
     }
   }
 

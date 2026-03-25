@@ -10,7 +10,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -28,6 +27,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Admin announcement management screen.
 ///
@@ -151,11 +151,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
   Future<void> _flushMarkRead(List<String> ids) async {
     try {
-      if (kDebugMode) {
-        print(
-          '📨 Admin Auto-marking ${ids.length} visible announcements as read...',
-        );
-      }
+      AppLogger.debug('announcement', 'Admin Auto-marking ${ids.length} visible announcements as read...',);
 
       // Optimistic Update (update local list UI immediately)
       setState(() {
@@ -168,7 +164,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
       await ApiService.markAnnouncementRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error auto-marking read: $e");
+      AppLogger.error('announcement', "Error auto-marking read: $e");
     }
   }
 
@@ -232,11 +228,11 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           ttl: const Duration(hours: 6),
         );
         if (cached != null && mounted) {
-          if (kDebugMode) print('⚡ Announcement filter options loaded from cache');
+          AppLogger.info('announcement', 'Announcement filter options loaded from cache');
           return;
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ Announcement filter cache load failed: $e');
+        AppLogger.error('announcement', 'Announcement filter cache load failed: $e');
       }
 
       final response =
@@ -251,14 +247,10 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           'target_options': response['data']['target_options'] ?? [],
           'status_options': response['data']['status_options'] ?? [],
         });
-        if (kDebugMode) {
-          print('✅ Announcement filter options loaded');
-        }
+        AppLogger.info('announcement', 'Announcement filter options loaded');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading announcement filter options: $e');
-      }
+      AppLogger.error('announcement', 'Error loading announcement filter options: $e');
       // Continue with empty options - not critical error
     }
   }
@@ -800,7 +792,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
                 _hasMoreData = cached['pagination']?['has_next_page'] ?? false;
                 _isLoading = false;
               });
-              if (kDebugMode) print('⚡ Announcements loaded from cache');
+              AppLogger.info('announcement', 'Announcements loaded from cache');
               // Cache hit → return early, no background API refresh
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) _checkAndShowTour();
@@ -911,9 +903,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           });
         }
       } else {
-        if (kDebugMode) {
-          print('❌ Unexpected response structure');
-        }
+        AppLogger.error('announcement', 'Unexpected response structure');
         setState(() {
           _isLoading = false;
           _errorMessage = 'Unexpected response structure';
@@ -1052,9 +1042,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
           _isLoadingMore = false;
         });
       } else {
-        if (kDebugMode) {
-          print('❌ Unexpected response structure for _loadMoreAnnouncements');
-        }
+        AppLogger.error('announcement', 'Unexpected response structure for _loadMoreAnnouncements');
         setState(() {
           _isLoadingMore = false;
           _currentPage--; // Revert page increment on error
@@ -1066,11 +1054,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
       //   _markAnnouncementsAsRead(response['data']);
       // }
 
-      if (kDebugMode) {
-        print(
-          '✅ Loaded more announcements: Page $_currentPage, Total: ${_announcements.length}',
-        );
-      }
+      AppLogger.info('announcement', 'Loaded more announcements: Page $_currentPage, Total: ${_announcements.length}',);
     } catch (e) {
       if (!mounted) return;
 
@@ -1079,9 +1063,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
         _currentPage--; // Revert page increment on error
       });
 
-      if (kDebugMode) {
-        print('Error loading more announcements: $e');
-      }
+      AppLogger.error('announcement', 'Error loading more announcements: $e');
     }
   }
 
@@ -2449,9 +2431,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
   Future<void> _openFile(String url, String fileName) async {
     try {
-      if (kDebugMode) {
-        print('Downloading file from: $url');
-      }
+      AppLogger.debug('announcement', 'Downloading file from: $url');
 
       final dio = Dio();
       final response = await dio.get<List<int>>(
@@ -2461,7 +2441,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
 
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/$fileName');
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       final result = await OpenFile.open(file.path);
 
@@ -2688,9 +2668,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error picking file: $e');
-      }
+      AppLogger.error('announcement', 'Error picking file: $e');
     }
   }
 
@@ -3114,7 +3092,7 @@ class AdminAnnouncementScreenState extends State<AdminAnnouncementScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('announcement', 'Error checking tour status: $e');
     }
   }
 

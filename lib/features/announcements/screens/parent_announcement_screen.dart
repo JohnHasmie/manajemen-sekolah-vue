@@ -11,7 +11,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -26,8 +25,9 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// School announcements list with automatic read tracking.
 ///
@@ -82,7 +82,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
     try {
       await ApiService.markAnnouncementRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error silent auto-marking read: $e");
+      AppLogger.error('announcement', e);
     }
   }
 
@@ -115,9 +115,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
   Future<void> _flushMarkRead(List<String> ids) async {
     try {
-      if (kDebugMode) {
-        print('📨 Auto-marking ${ids.length} visible announcements as read...');
-      }
+      AppLogger.debug('announcement', 'Auto-marking ${ids.length} visible announcements as read...');
 
       // Optimistic Update (update local list UI immediately)
       setState(() {
@@ -130,7 +128,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
       await ApiService.markAnnouncementRead(ids);
     } catch (e) {
-      if (kDebugMode) print("Error auto-marking read: $e");
+      AppLogger.error('announcement', e);
     }
   }
 
@@ -152,7 +150,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
   /// Like `axios.get('/api/announcements')` in Vue.
   Future<void> _loadData({bool useCache = true}) async {
     // Load user role from SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     final userData = prefs.getString('user');
     if (userData != null) {
       final user = json.decode(userData);
@@ -175,7 +173,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
           });
           _checkAndShowTour();
         }
-        if (kDebugMode) print('📦 AnnouncementScreen: Data from cache (${cached.length})');
+        AppLogger.debug('announcement', 'AnnouncementScreen: Data from cache (${cached.length})');
         return;
       }
     }
@@ -208,9 +206,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
       // Save to cache
       await LocalCacheService.save(_announcementCacheKey, announcementList);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading announcements: $e');
-      }
+      AppLogger.error('announcement', e);
       if (mounted && _announcementList.isEmpty) {
         setState(() {
           _isLoading = false;
@@ -245,9 +241,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
   Color _getPrimaryColor() {
     // Use ColorUtils with dynamic role from user data
     final color = ColorUtils.getRoleColor(_userRole);
-    if (kDebugMode) {
-      print('🎨 User role: $_userRole, Color: $color');
-    }
+    AppLogger.debug('announcement', 'User role: $_userRole, Color: $color');
     return color;
   }
 
@@ -645,9 +639,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
   Future<void> _openFile(String url, String fileName) async {
     try {
-      if (kDebugMode) {
-        print('Downloading file from: $url');
-      }
+      AppLogger.debug('announcement', 'Downloading file from: $url');
 
       final dio = Dio();
       final response = await dio.get<List<int>>(
@@ -657,7 +649,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
 
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/$fileName');
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
       final result = await OpenFile.open(file.path);
 
@@ -1100,7 +1092,7 @@ class AnnouncementScreenState extends State<AnnouncementScreen> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error checking tour status: $e');
+      AppLogger.error('announcement', e);
     }
   }
 

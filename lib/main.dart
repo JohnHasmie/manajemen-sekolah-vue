@@ -29,7 +29,6 @@ library;
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -46,13 +45,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer,
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/log_service.dart';
 import 'package:manajemensekolah/core/services/performance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 /// Global navigator key that enables navigation from anywhere without a BuildContext.
 /// Like a global `$router` reference in Vue, or using `app()->make('redirect')` in Laravel.
@@ -78,49 +78,37 @@ void main() async {
       // Load environment variables
       try {
         await dotenv.load(fileName: ".env");
-        if (kDebugMode) {
-          print('✅ .env loaded');
-        }
+        AppLogger.info('init', '.env loaded');
       } catch (e, stack) {
-        if (kDebugMode) {
-          print('⚠️ Failed to load .env: $e');
-        }
+        AppLogger.warning('init', 'Failed to load .env: $e');
         LogService.sendError(e, stack);
       }
 
+      // Initialize PreferencesService (SharedPreferences wrapper)
+      await PreferencesService().init();
+      AppLogger.info('init', 'PreferencesService initialized');
+
       // Initialize ApiService FIRST (before anything else)
       await ApiService.init();
-      if (kDebugMode) {
-        print('✅ ApiService initialized');
-      }
+      AppLogger.info('init', 'ApiService initialized');
 
       // Initialize Dio HTTP client with interceptors
       createDioClient(ApiService.baseUrl);
-      if (kDebugMode) {
-        print('✅ Dio client initialized');
-      }
+      AppLogger.info('init', 'Dio client initialized');
 
       // Setup dependency injection
       await setupServiceLocator();
-      if (kDebugMode) {
-        print('✅ Service locator initialized');
-      }
+      AppLogger.info('init', 'Service locator initialized');
 
       // Initialize Firebase
       try {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
-        if (kDebugMode) {
-          print('✅ Firebase initialized');
-        }
+        AppLogger.info('init', 'Firebase initialized');
       } catch (e, stack) {
-        if (kDebugMode) {
-          print('❌ Firebase initialization error: $e');
-          print(
-            '⚠️ Please configure Firebase using FlutterFire CLI or update firebase_options.dart',
-          );
-        }
+        AppLogger.error('init', 'Firebase initialization error: $e');
+        AppLogger.warning('init', 'Please configure Firebase using FlutterFire CLI or update firebase_options.dart');
         LogService.sendError(e, stack);
       }
 
@@ -131,9 +119,7 @@ void main() async {
         // Set user jika sudah login sebelumnya
         await AnalyticsService.setUserFromPrefs();
       } catch (e) {
-        if (kDebugMode) {
-          print('⚠️ Analytics/Performance init failed (non-critical): $e');
-        }
+        AppLogger.warning('init', 'Analytics/Performance init failed (non-critical): $e');
       }
 
       await initializeDateFormatting('id_ID', null);
@@ -162,7 +148,7 @@ void _setupErrorHandling() {
   try {
     AppErrorHandler.setupErrorHandling();
   } catch (e) {
-    print('Error setting up error handling: $e');
+    AppLogger.error('init', 'Error setting up error handling: $e');
   }
 }
 
@@ -206,7 +192,7 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
   void _initializeApp() async {
     try {
       // Clear any existing force logout flag on app start
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       await prefs.setBool('force_logout', false);
 
       // Setup error handling
@@ -215,20 +201,16 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
       // Initialize FCM Service
       try {
         await FCMService().initialize();
-        if (kDebugMode) {
-          print('✅ FCM Service initialized in app');
-        }
+        AppLogger.info('init', 'FCM Service initialized in app');
       } catch (e) {
-        if (kDebugMode) {
-          print('⚠️ FCM Service initialization failed (non-critical): $e');
-        }
+        AppLogger.warning('init', 'FCM Service initialization failed (non-critical): $e');
       }
 
       setState(() {
         _isInitialized = true;
       });
     } catch (e, stack) {
-      print('App initialization error: $e');
+      AppLogger.error('init', 'App initialization error: $e');
       LogService.sendError(e, stack);
       setState(() {
         _isInitialized = true;
@@ -249,15 +231,11 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
   /// and navigates to LoginScreen. Like Laravel's `unauthenticated()` method
   /// in `Handler.php` that redirects to the login route.
   Future<void> _handleGlobalError(Exception error) async {
-    if (kDebugMode) {
-      print('🔴 Global error: $error');
-    }
+    AppLogger.error('app', error);
 
     // Hanya handle error yang terkait authentication
     if (_isAuthError(error)) {
-      if (kDebugMode) {
-        print('🔐 Auth error detected, logging out...');
-      }
+      AppLogger.warning('auth', 'Auth error detected, logging out...');
 
       await _tokenService.logout();
 
@@ -357,9 +335,7 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
                   return _buildLoadingScreen(languageProvider);
                 } else {
                   final isAuthenticated = snapshot.data ?? false;
-                  if (kDebugMode) {
-                    print('🏠 Home decision: authenticated = $isAuthenticated');
-                  }
+                  AppLogger.info('app', 'Home decision: authenticated = $isAuthenticated');
 
                   if (isAuthenticated) {
                     return _redirectToDashboard(languageProvider);
@@ -413,21 +389,15 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
   /// Used by the FutureBuilder in `build()` to decide between LoginScreen and Dashboard.
   Future<bool> _checkAuthStatus() async {
     try {
-      if (kDebugMode) {
-        print('🔐 Checking auth status...');
-      }
+      AppLogger.debug('auth', 'Checking auth status...');
 
       final isLoggedIn = await _tokenService.isLoggedIn();
 
-      if (kDebugMode) {
-        print('🔐 Auth status result: $isLoggedIn');
-      }
+      AppLogger.debug('auth', 'Auth status result: $isLoggedIn');
 
       return isLoggedIn;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Auth check error: $e');
-      }
+      AppLogger.error('auth', e);
       // Jika ada error, anggap tidak authenticated
       return false;
     }
@@ -444,9 +414,7 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
           return _buildRedirectingScreen(languageProvider);
         } else {
           final role = snapshot.data ?? 'guru';
-          if (kDebugMode) {
-            print('🎯 Redirecting to dashboard with role: $role');
-          }
+          AppLogger.info('app', 'Redirecting to dashboard with role: $role');
           return Dashboard(role: role);
         }
       },
@@ -483,15 +451,11 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
       final userData = await _tokenService.getUserData();
       final role = userData?['role']?.toString() ?? 'guru';
 
-      if (kDebugMode) {
-        print('👤 User role: $role');
-      }
+      AppLogger.debug('auth', 'User role: $role');
 
       return role;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Get user role error: $e');
-      }
+      AppLogger.error('auth', e);
       return 'guru';
     }
   }

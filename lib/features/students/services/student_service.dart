@@ -9,12 +9,12 @@ library;
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for student (siswa) management API calls with local caching.
 /// Like a Laravel Resource Controller + Repository pattern.
@@ -45,12 +45,8 @@ class ApiStudentService {
         data: formData,
       );
 
-      if (kDebugMode) {
-        print('Import Response Status: ${response.statusCode}');
-      }
-      if (kDebugMode) {
-        print('Import Response Body: ${response.data}');
-      }
+      AppLogger.debug('student', 'Import Response Status: ${response.statusCode}');
+      AppLogger.debug('student', 'Import Response Body: ${response.data}');
 
       final body = response.data;
 
@@ -79,9 +75,7 @@ class ApiStudentService {
 
       return body;
     } catch (e) {
-      if (kDebugMode) {
-        print('Import error details: $e');
-      }
+      AppLogger.error('student', e);
       throw Exception('Import error: $e');
     }
   }
@@ -95,21 +89,17 @@ class ApiStudentService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      final bytes = response.data!;
+      final bytes = response.data ?? [];
       final directory = await getExternalStorageDirectory();
       final filePath = '${directory?.path}/template_import_siswa.xlsx';
       final file = File(filePath);
 
       await file.writeAsBytes(bytes);
 
-      if (kDebugMode) {
-        print('Template downloaded to: $filePath');
-      }
+      AppLogger.info('student', 'Template downloaded to: $filePath');
       return filePath;
     } catch (e) {
-      if (kDebugMode) {
-        print('Download template error: $e');
-      }
+      AppLogger.error('student', e);
       throw Exception('Failed to download template: $e');
     }
   }
@@ -134,9 +124,7 @@ class ApiStudentService {
       }
       return null;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting parent user: $e');
-      }
+      AppLogger.error('student', e);
       return null;
     }
   }
@@ -212,9 +200,7 @@ class ApiStudentService {
         },
       };
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting filter options: $e');
-      }
+      AppLogger.error('student', e);
       rethrow;
     }
   }
@@ -267,7 +253,7 @@ class ApiStudentService {
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);
       if (cached != null) {
-        if (kDebugMode) print('📦 Using cached students for $cacheKey');
+        AppLogger.debug('student', 'Using cached students for $cacheKey');
         return cached;
       }
     }
@@ -329,7 +315,7 @@ class ApiStudentService {
       final result = response.data;
       return result['data'] ?? {};
     } catch (e) {
-      if (kDebugMode) print('Error fetching student stats: $e');
+      AppLogger.error('student', e);
       return {};
     }
   }
@@ -337,15 +323,15 @@ class ApiStudentService {
   /// Clears all student-related cache entries from SharedPreferences.
   /// Called after any mutation. Like Laravel's `Cache::tags('students')->flush()`.
   static Future<void> _clearStudentCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    final keys = prefs
+    final prefs = PreferencesService();
+    final keys = prefs.prefs
         .getKeys()
         .where((key) => key.startsWith('api_cache_student_'))
         .toList();
     for (final key in keys) {
       await prefs.remove(key);
     }
-    if (kDebugMode) print('🧹 Student cache cleared due to changes');
+    AppLogger.info('student', 'Student cache cleared due to changes');
   }
 
   /// Creates a new student record. Clears cache after success.
@@ -393,9 +379,7 @@ class ApiStudentService {
       }
       return result is List ? result : [];
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting students by class: $e');
-      }
+      AppLogger.error('student', e);
       return [];
     }
   }
@@ -413,7 +397,7 @@ class ApiStudentService {
       }
       return [];
     } catch (e) {
-      if (kDebugMode) print('Error loading guardians: $e');
+      AppLogger.error('student', e);
       return [];
     }
   }

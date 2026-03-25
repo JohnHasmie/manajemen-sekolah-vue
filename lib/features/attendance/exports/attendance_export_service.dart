@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for exporting student attendance (absensi/presence) data to Excel.
 /// Similar to Laravel's `Excel::download(new AttendanceExport, 'Absensi.xlsx')`.
@@ -34,7 +35,7 @@ class ExcelPresenceService {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      print('Starting export with ${presenceData.length} records');
+      AppLogger.debug('attendance', 'Starting export with ${presenceData.length} records');
 
       // Validasi data
       if (presenceData.isEmpty) {
@@ -47,7 +48,7 @@ class ExcelPresenceService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      print('Response status: ${response.statusCode}');
+      AppLogger.debug('attendance', 'Response status: ${response.statusCode}');
 
       // Simpan file Excel
       final Directory directory = await getApplicationDocumentsDirectory();
@@ -55,13 +56,13 @@ class ExcelPresenceService {
           '${directory.path}/Data_Absensi_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
       final File file = File(filePath);
-      await file.writeAsBytes(response.data!);
+      await file.writeAsBytes(response.data ?? []);
 
-      print('File saved to: $filePath');
+      AppLogger.info('attendance', 'File saved to: $filePath');
 
       // Buka file
       final result = await OpenFile.open(filePath);
-      print('Open file result: $result');
+      AppLogger.debug('attendance', 'Open file result: $result');
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -77,7 +78,7 @@ class ExcelPresenceService {
         );
       }
     } catch (e) {
-      print('Export error details: $e');
+      AppLogger.error('attendance', e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

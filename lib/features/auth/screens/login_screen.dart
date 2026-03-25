@@ -23,7 +23,8 @@ import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// The login page widget. Like a Vue page component (`pages/login.vue`).
 ///
@@ -157,12 +158,10 @@ class LoginScreenState extends State<LoginScreen> {
   /// Clears all persisted user data (SharedPreferences + local cache).
   /// Like clearing Vuex/Pinia store and localStorage in a Vue app during logout.
   Future<void> _clearAllData() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     await prefs.clear();
     await LocalCacheService.clearAll();
-    if (kDebugMode) {
-      print('🗑️ All local data and cache cleared');
-    }
+    AppLogger.info('login', 'All local data and cache cleared');
   }
 
 
@@ -208,19 +207,15 @@ class LoginScreenState extends State<LoginScreen> {
       );
 
       // Debug logging
-      if (kDebugMode) {
-        print('🔐 Login Response: $responseData');
-        print('📝 Response keys: ${responseData.keys}');
-        print('🏫 Pilih sekolah: ${responseData['pilih_sekolah']}');
-        print('🎭 Pilih role: ${responseData['pilih_role']}');
-      }
+      AppLogger.debug('login', 'Login Response: $responseData');
+      AppLogger.debug('login', 'Response keys: ${responseData.keys}');
+      AppLogger.debug('login', 'Pilih sekolah: ${responseData['pilih_sekolah']}');
+      AppLogger.debug('login', 'Pilih role: ${responseData['pilih_role']}');
 
       // Use refactored handler
       await _handleLoginResponse(responseData);
     } catch (error) {
-      if (kDebugMode) {
-        print('❌ Login error: $error');
-      }
+      AppLogger.error('login', 'Login error: $error');
 
       final errorStr = error.toString().toLowerCase();
 
@@ -277,7 +272,7 @@ class LoginScreenState extends State<LoginScreen> {
     await secureStorage.setForceLogout(false);
 
     // Also save to SharedPreferences (bridge for legacy reads)
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = PreferencesService();
     await prefs.setString('token', responseData['token']);
     await prefs.setString('user', json.encode(responseData['user']));
     await prefs.setBool('force_logout', false);
@@ -313,15 +308,11 @@ class LoginScreenState extends State<LoginScreen> {
     Future(() async {
       try {
         final fcmService = FCMService();
-        if (kDebugMode) print('🔄 Force refreshing FCM token in background...');
+        AppLogger.debug('login', 'Force refreshing FCM token in background...');
         await fcmService.forceRefreshToken();
-        if (kDebugMode) print('✅ FCM token refreshed in background');
+        AppLogger.info('login', 'FCM token refreshed in background');
       } catch (e) {
-        if (kDebugMode) {
-          print(
-            '⚠️ Failed to refresh FCM token in background (non-critical): $e',
-          );
-        }
+        AppLogger.error('login', 'Failed to refresh FCM token in background (non-critical): $e',);
       }
     });
   }
@@ -364,12 +355,8 @@ class LoginScreenState extends State<LoginScreen> {
         throw Exception('Gagal mendapatkan token Google. Coba lagi.');
       }
 
-      if (kDebugMode) {
-        print('📧 Google User: ${googleUser.email}');
-        print(
-          '🔑 Google ID Token: ${idToken.isNotEmpty ? "Present (${idToken.length} chars)" : "Missing"}',
-        );
-      }
+      AppLogger.debug('login', 'Google User: ${googleUser.email}');
+      AppLogger.info('login', 'Google ID Token: ${idToken.isNotEmpty ? "Present (${idToken.length} chars)" : "Missing"}',);
 
       // 2. Send to Backend — kirim id_token untuk verifikasi server-side
       final responseData = await ApiService.googleLogin(
@@ -382,9 +369,7 @@ class LoginScreenState extends State<LoginScreen> {
       // 3. Handle Response
       await _handleLoginResponse(responseData);
     } catch (error) {
-      if (kDebugMode) {
-        print('❌ Google Sign In Error: $error');
-      }
+      AppLogger.error('login', 'Google Sign In Error: $error');
 
       // Sign out from Google if app login failed to ensure fresh start next time
       try {
@@ -438,9 +423,7 @@ class LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (kDebugMode) {
-      print('🎯 Selecting school: $schoolId');
-    }
+    AppLogger.debug('login', 'Selecting school: $schoolId');
 
     setState(() {
       _isLoading = true;
@@ -468,15 +451,11 @@ class LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      if (kDebugMode) {
-        print('🔐 School Selection Response: $responseData');
-      }
+      AppLogger.debug('login', 'School Selection Response: $responseData');
 
       await _handleLoginResponse(responseData);
     } catch (error) {
-      if (kDebugMode) {
-        print('❌ School selection error: $error');
-      }
+      AppLogger.error('login', 'School selection error: $error');
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -495,9 +474,7 @@ class LoginScreenState extends State<LoginScreen> {
   /// Called when user picks a role (admin/guru/wali) from the role selection list.
   /// Re-authenticates with the selected role. Similar to [_selectSchool] but for roles.
   Future<void> _selectRole(String role) async {
-    if (kDebugMode) {
-      print('🎯 Selecting role: $role');
-    }
+    AppLogger.debug('login', 'Selecting role: $role');
 
     setState(() {
       _isLoading = true;
@@ -528,15 +505,11 @@ class LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      if (kDebugMode) {
-        print('🔐 Role Selection Response: $responseData');
-      }
+      AppLogger.debug('login', 'Role Selection Response: $responseData');
 
       await _handleLoginResponse(responseData);
     } catch (error) {
-      if (kDebugMode) {
-        print('❌ Role selection error: $error');
-      }
+      AppLogger.error('login', 'Role selection error: $error');
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -920,7 +893,7 @@ class LoginScreenState extends State<LoginScreen> {
     if (responseData['require_otp'] == true ||
         responseData['otp_debug'] != null ||
         responseData['message'] == 'OTP sent to email') {
-      if (kDebugMode) print('🔐 Need OTP verification');
+      AppLogger.debug('login', 'Need OTP verification');
       setState(() {
         _isLoading = false; // Stop loading to show dialog
       });
@@ -928,7 +901,7 @@ class LoginScreenState extends State<LoginScreen> {
       // If we have otp_debug, we might want to pre-fill or show it in debug mode
       if (responseData['otp_debug'] != null) {
         _otpCode = responseData['otp_debug']; // Save for verify call
-        print('Debug OTP: $_otpCode');
+        AppLogger.debug('login', 'Debug OTP: $_otpCode');
       }
       return;
     }
@@ -944,9 +917,9 @@ class LoginScreenState extends State<LoginScreen> {
       // This allows using switchSchool endpoint later
       if (responseData['token'] != null) {
         await SecureStorageService().saveToken(responseData['token']);
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = PreferencesService();
         await prefs.setString('token', responseData['token']);
-        if (kDebugMode) print('🔐 Token saved during school selection phase');
+        AppLogger.info('login', 'Token saved during school selection phase');
       }
 
       if (responseData['user'] == null) {
@@ -960,9 +933,9 @@ class LoginScreenState extends State<LoginScreen> {
         _isLoading = false;
       });
       if (kDebugMode) {
-        print('🏫 School List Count: ${_schoolList.length}');
+        AppLogger.debug('login', 'School List Count: ${_schoolList.length}');
         for (var s in _schoolList) {
-          print(' - ${s['school_name']} (${s['school_id']})');
+          AppLogger.debug('login', ' - ${s['school_name']} (${s['school_id']})');
         }
       }
       return;
@@ -974,9 +947,9 @@ class LoginScreenState extends State<LoginScreen> {
       // This allows using switchSchool endpoint later
       if (responseData['token'] != null) {
         await SecureStorageService().saveToken(responseData['token']);
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = PreferencesService();
         await prefs.setString('token', responseData['token']);
-        if (kDebugMode) print('🔐 Token saved during role selection phase');
+        AppLogger.info('login', 'Token saved during role selection phase');
       }
 
       if (responseData['role_list'] == null ||

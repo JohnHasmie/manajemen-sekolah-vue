@@ -9,14 +9,14 @@
 /// Tokens stored encrypted via SecureStorageService (Keychain/EncryptedSharedPreferences).
 library;
 
-import 'package:flutter/foundation.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Singleton service for managing authentication tokens and login state.
 /// Uses SecureStorageService for encrypted token/user storage.
@@ -37,31 +37,26 @@ class TokenService {
         return false;
       }
 
-      if (kDebugMode) {
-        print('🔐 Checking token validity...');
-        print('📝 Token length: ${token.length}');
-      }
+      AppLogger.debug('auth', 'Checking token validity, length: ${token.length}');
 
       if (!_isValidJWTFormat(token)) {
-        if (kDebugMode) print('❌ Token format invalid');
+        AppLogger.error('auth', 'Token format invalid');
         await logout();
         return false;
       }
 
       // Sanctum tokens (containing '|') — skip local expiration check
       if (token.contains('|')) {
-        if (kDebugMode) print('ℹ️ Sanctum token detected, skipping local expiration check');
+        AppLogger.info('auth', 'Sanctum token detected, skipping local expiration check');
         return true;
       }
 
       try {
         bool isExpired = JwtDecoder.isExpired(token);
-        if (kDebugMode) {
-          print('⏰ Token expired: $isExpired');
-          if (!isExpired) {
-            final expirationDate = JwtDecoder.getExpirationDate(token);
-            print('📅 Token expires at: $expirationDate');
-          }
+        AppLogger.debug('auth', 'Token expired: $isExpired');
+        if (!isExpired) {
+          final expirationDate = JwtDecoder.getExpirationDate(token);
+          AppLogger.debug('auth', 'Token expires at: $expirationDate');
         }
 
         if (isExpired) {
@@ -70,12 +65,12 @@ class TokenService {
         }
         return true;
       } catch (jwtError) {
-        if (kDebugMode) print('❌ JWT Decoder error: $jwtError');
+        AppLogger.error('auth', jwtError);
         await logout();
         return false;
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Token validation error: $e');
+      AppLogger.error('auth', e);
       await logout();
       return false;
     }
@@ -94,7 +89,7 @@ class TokenService {
     try {
       return await _secureStorage.getUserData();
     } catch (e) {
-      if (kDebugMode) print('❌ Get user data error: $e');
+      AppLogger.error('auth', e);
       return null;
     }
   }
@@ -108,30 +103,30 @@ class TokenService {
   /// Like `Auth::logout()` in Laravel.
   Future<void> logout() async {
     try {
-      if (kDebugMode) print('🚪 Logging out user...');
+      AppLogger.info('auth', 'Logging out user...');
 
       // Delete FCM token from backend
       try {
         await FCMService().deleteTokenFromBackend();
         await FCMService().clearLocalToken();
-        if (kDebugMode) print('✅ FCM token cleaned up');
+        AppLogger.info('auth', 'FCM token cleaned up');
       } catch (fcmError) {
-        if (kDebugMode) print('⚠️ FCM token cleanup failed (non-critical): $fcmError');
+        AppLogger.warning('auth', 'FCM token cleanup failed (non-critical): $fcmError');
       }
 
       // Revoke backend token
       try {
         await ApiService().post('/auth/logout', {});
-        if (kDebugMode) print('✅ Backend token revoked');
+        AppLogger.info('auth', 'Backend token revoked');
       } catch (authError) {
-        if (kDebugMode) print('⚠️ Backend token revocation failed (non-critical): $authError');
+        AppLogger.warning('auth', 'Backend token revocation failed (non-critical): $authError');
       }
 
       // Clear secure storage (token + user data)
       await _secureStorage.clearAll();
 
       // Also clear SharedPreferences (legacy token/user + cache)
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = PreferencesService();
       await prefs.remove('token');
       await prefs.remove('user');
 
@@ -144,9 +139,9 @@ class TokenService {
       // Set force logout flag
       await _secureStorage.setForceLogout(true);
 
-      if (kDebugMode) print('✅ Logout completed and cache cleared');
+      AppLogger.info('auth', 'Logout completed and cache cleared');
     } catch (e) {
-      if (kDebugMode) print('❌ Error during logout: $e');
+      AppLogger.error('auth', e);
     }
   }
 
@@ -156,7 +151,7 @@ class TokenService {
       // Check force logout flag
       final forceLogout = await _secureStorage.isForceLogout();
       if (forceLogout) {
-        if (kDebugMode) print('🚫 Force logout flag detected');
+        AppLogger.warning('auth', 'Force logout flag detected');
         await _secureStorage.setForceLogout(false);
         return false;
       }
@@ -165,17 +160,15 @@ class TokenService {
       final userData = await getUserData();
 
       if (token == null || token.isEmpty || userData == null) {
-        if (kDebugMode) {
-          print('🔐 Incomplete login state: token=${token != null}, user=${userData != null}');
-        }
+        AppLogger.debug('auth', 'Incomplete login state: token=${token != null}, user=${userData != null}');
         return false;
       }
 
       final isValid = await isTokenValid();
-      if (kDebugMode) print('🔐 Login status: $isValid');
+      AppLogger.debug('auth', 'Login status: $isValid');
       return isValid;
     } catch (e) {
-      if (kDebugMode) print('❌ Login check error: $e');
+      AppLogger.error('auth', e);
       return false;
     }
   }
@@ -183,6 +176,6 @@ class TokenService {
   /// Clears force logout flag (called after successful login).
   Future<void> clearForceLogout() async {
     await _secureStorage.setForceLogout(false);
-    if (kDebugMode) print('✅ Force logout flag cleared');
+    AppLogger.info('auth', 'Force logout flag cleared');
   }
 }
