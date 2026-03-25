@@ -17,7 +17,6 @@ import 'package:manajemensekolah/features/dashboard/widgets/lesson_plan_status_c
 import 'package:manajemensekolah/features/dashboard/widgets/material_slider_card.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/announcements/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/class_activity/screens/admin_class_activity_screen.dart';
 import 'package:manajemensekolah/features/settings/screens/data_management_screen.dart';
@@ -63,7 +62,6 @@ import 'package:manajemensekolah/features/dashboard/widgets/attendance_popup_dia
 import 'package:manajemensekolah/features/dashboard/widgets/overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/quick_action_button.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
@@ -1762,12 +1760,13 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   /// Main build method - like Vue's `<template>` section.
   /// Renders a CustomScrollView with role-specific sliver sections:
   /// app bar, hero stats, quick actions, overview cards, and menu grid.
-  /// Uses `Consumer<LanguageProvider>` to react to language changes
+  /// Uses `ref.watch(languageRiverpod)` to react to language changes
   /// (like a Vue `computed` property depending on an i18n store).
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
+    return Builder(
+      builder: (context) {
         return Scaffold(
           backgroundColor: ColorUtils.slate50,
           body: CustomScrollView(
@@ -2180,8 +2179,9 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                           ),
                         ),
                         SizedBox(width: 8),
-                        Consumer<AcademicYearProvider>(
-                          builder: (context, provider, _) {
+                        Builder(
+                          builder: (context) {
+                            final provider = ref.watch(academicYearRiverpod);
                             final academicYear =
                                 provider.selectedAcademicYear?['year'] ?? '-';
                             final semester = _currentSemesterLabel ?? '-';
@@ -2244,7 +2244,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                   ),
                   SizedBox(height: 3),
                   Text(
-                    _userData['nama'] ?? 'User',
+                    _userData['name'] ?? _userData['nama'] ?? 'User',
                     style: TextStyle(
                       fontSize: 21,
                       fontWeight: FontWeight.w800,
