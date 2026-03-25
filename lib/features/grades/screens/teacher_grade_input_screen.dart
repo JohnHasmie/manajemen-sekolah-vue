@@ -28,8 +28,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/grades/screens/grade_book_screen.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -1259,8 +1258,7 @@ class GradePageState extends ConsumerState<GradePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         // If Step 2, we show GradeBookPage which handles its own scaffold/body
         if (_currentStep == 2) {
           return WillPopScope(
@@ -1297,7 +1295,5 @@ class GradePageState extends ConsumerState<GradePage> {
             ),
           ),
         );
-      },
-    );
   }
 }

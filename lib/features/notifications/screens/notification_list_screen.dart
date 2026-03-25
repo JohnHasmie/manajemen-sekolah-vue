@@ -16,7 +16,6 @@ import 'package:manajemensekolah/features/notifications/services/notification_se
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Notification list screen - shared across admin, teacher (guru), and parent (wali) roles.
@@ -335,13 +334,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   }
 
   /// Main build method - like Vue's `<template>`.
-  /// Uses `Consumer<LanguageProvider>` to react to language changes -
+  /// Uses the global `languageProvider` singleton for language changes -
   /// similar to Vue's `computed` property that depends on a Vuex/Pinia store.
   /// Shows skeleton loading, empty state, or the notification list with pull-to-refresh.
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
         final unread = _unreadCount;
         final primaryColor = _getPrimaryColor();
 
@@ -374,8 +371,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildHeader(

@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Service for exporting grade recapitulation data (rekap nilai) to Excel.
 /// Similar to `Excel::download(new RekapNilaiExport($data), 'Rekap_Nilai.xlsx')` in Laravel.
@@ -36,7 +35,7 @@ class ExcelRekapNilaiService {
     required String subjectName,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final Map<String, dynamic> payload = {

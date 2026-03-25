@@ -7,7 +7,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 
 /// A search bar with a separate filter icon button that shows an active-filter badge.
 ///
@@ -48,8 +47,6 @@ class NewEnhancedSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = primaryColor ?? ColorUtils.getRoleColor("guru");
 
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
         return Container(
           margin:
               margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -141,7 +138,5 @@ class NewEnhancedSearchBar extends StatelessWidget {
             ],
           ),
         );
-      },
-    );
   }
 }

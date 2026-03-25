@@ -15,7 +15,6 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/screens/class_promotion_wizard.dart';
 import 'package:manajemensekolah/features/students/screens/admin_student_management_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
@@ -29,7 +28,6 @@ import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -988,8 +986,8 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
+      builder: (context) {
+        final languageProvider = ref.watch(languageRiverpod);
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return Padding(
@@ -1338,7 +1336,6 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
             },
           );
         },
-      ),
     );
   }
 
@@ -1686,8 +1683,9 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                         ],
                       ),
                     ),
-                    Consumer<AcademicYearProvider>(
-                      builder: (context, academicYearProvider, child) {
+                    Builder(
+                      builder: (context) {
+                        final academicYearProvider = ref.watch(academicYearRiverpod);
                         if (academicYearProvider.isReadOnly) {
                           return SizedBox.shrink();
                         }
@@ -2171,8 +2169,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         if (_errorMessage != null) {
           return ErrorScreen(errorMessage: _errorMessage!, onRetry: _loadData);
         }
@@ -2530,8 +2527,9 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
               ),
             ],
           ),
-          floatingActionButton: Consumer<AcademicYearProvider>(
-            builder: (context, academicYearProvider, child) {
+          floatingActionButton: Builder(
+            builder: (context) {
+              final academicYearProvider = ref.watch(academicYearRiverpod);
               final languageProvider = ref.read(languageRiverpod);
 
               if (academicYearProvider.isReadOnly) return SizedBox.shrink();
@@ -2655,8 +2653,6 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
             },
           ),
         );
-      },
-    );
   }
 
   void _showPromotionWizard() {

@@ -1,5 +1,5 @@
 // Schedule form dialog for creating and editing teaching schedules.
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like a Vue component `<ScheduleFormModal>` -- a large form inside a bottom
@@ -14,7 +14,6 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 
 /// A bottom sheet form for creating or editing a schedule entry.
 ///
@@ -406,8 +405,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         final uniqueTeacherList = _removeDuplicates(widget.teacherList, 'id');
         final uniqueClassList = _removeDuplicates(widget.classList, 'id');
         final uniqueHariList = _removeDuplicates(widget.hariList, 'id');
@@ -660,8 +658,6 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             ),
           ),
         );
-      },
-    );
   }
 
   String? _getSafeValue(String currentValue, List<dynamic> list) {

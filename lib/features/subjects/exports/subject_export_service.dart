@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Service for exporting subject (mata pelajaran) data to Excel and downloading
 /// import templates via the backend API.
@@ -29,7 +28,7 @@ class ExcelSubjectService {
     required List<dynamic> subjects,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       // Validasi data terlebih dahulu
@@ -81,7 +80,7 @@ class ExcelSubjectService {
 
   /// Download a subject import template from GET `/subject/template`.
   static Future<void> downloadTemplate(BuildContext context) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.get<List<int>>(

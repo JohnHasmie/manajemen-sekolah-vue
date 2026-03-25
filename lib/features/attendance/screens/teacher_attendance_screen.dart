@@ -14,7 +14,6 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/tab_switcher.dart';
 import 'package:manajemensekolah/core/models/student.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
@@ -25,8 +24,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -195,8 +193,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   String? _buildPresenceCacheKey() {
     final teacherId = widget.teacher['id']?.toString() ?? '';
     if (teacherId.isEmpty) return null;
-    final academicYearId = context
-        .read<AcademicYearProvider>()
+    final academicYearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString();
     return 'presence_initial_${teacherId}_$academicYearId';
@@ -205,8 +202,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   String? _buildSummaryCacheKey() {
     final teacherId = widget.teacher['id']?.toString() ?? '';
     if (teacherId.isEmpty) return null;
-    final academicYearId = context
-        .read<AcademicYearProvider>()
+    final academicYearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString();
     return 'presence_summary_${teacherId}_$academicYearId';
@@ -255,8 +251,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   /// calls multiple `axios.get()` in sequence.
   Future<void> _loadInitialData({bool useCache = true}) async {
     try {
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -677,8 +672,7 @@ class PresencePageState extends ConsumerState<PresencePage>
 
     // Step 3: Fetch fresh from API
     try {
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -1093,8 +1087,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   /// Builds the "View Results" tab UI with attendance summary cards.
   /// Like a Vue `<AttendanceResults>` component with filterable list.
   Widget _buildResultsMode() {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         // Show Class List first if not selected
         if (_selectedClassId == null) {
           return _buildInlineClassList(languageProvider);
@@ -1247,8 +1240,6 @@ class PresencePageState extends ConsumerState<PresencePage>
             ),
           ],
         );
-      },
-    );
   }
 
   List<AbsensiSummary> _getFilteredSummaries() {
@@ -2330,8 +2321,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   /// Like a Vue `<AttendanceInput>` component with date picker, class/subject
   /// dropdowns, and per-student status buttons.
   Widget _buildInputMode() {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         if (_isLoadingInput) {
           return SkeletonListLoading(itemCount: 4, infoTagCount: 1);
         }
@@ -2856,8 +2846,6 @@ class PresencePageState extends ConsumerState<PresencePage>
               ),
           ],
         );
-      },
-    );
   }
 
   // ========== STUDENT ITEM BUILDER BARU ==========
@@ -3422,8 +3410,7 @@ class PresencePageState extends ConsumerState<PresencePage>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         return Scaffold(
           backgroundColor:
               ColorUtils.slate50, // Background sama dengan pengumuman
@@ -3441,8 +3428,6 @@ class PresencePageState extends ConsumerState<PresencePage>
             ],
           ),
         );
-      },
-    );
   }
 
   Future<void> _checkAndShowTour() async {

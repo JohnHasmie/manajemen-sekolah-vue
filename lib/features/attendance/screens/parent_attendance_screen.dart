@@ -19,7 +19,6 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -1120,7 +1119,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
     final String statusText = _getTranslatedStatus(status);
     final String day = DateFormat(
       'EEEE',
-      context.watch<LanguageProvider>().currentLanguage == 'id'
+      ref.watch(languageRiverpod).currentLanguage == 'id'
           ? 'id_ID'
           : 'en_US',
     ).format(date);
@@ -1182,7 +1181,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                       Text(
                         DateFormat(
                           'MMM',
-                          context.watch<LanguageProvider>().currentLanguage ==
+                          ref.watch(languageRiverpod).currentLanguage ==
                                   'id'
                               ? 'id_ID'
                               : 'en_US',
@@ -1230,8 +1229,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                             Icons.calendar_today_outlined,
                             DateFormat(
                               'dd MMM yyyy',
-                              context
-                                          .watch<LanguageProvider>()
+                              ref.watch(languageRiverpod)
                                           .currentLanguage ==
                                       'id'
                                   ? 'id_ID'

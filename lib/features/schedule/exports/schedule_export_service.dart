@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Service for exporting teaching schedules (jadwal mengajar) to Excel.
 /// Similar to `Excel::download(new ScheduleExport($data), 'Jadwal.xlsx')` in Laravel.
@@ -31,7 +30,7 @@ class ExcelScheduleService {
     required List<dynamic> schedules,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       // Validasi data terlebih dahulu
@@ -90,7 +89,7 @@ class ExcelScheduleService {
   /// Download a schedule import template from GET `/teaching-schedule/template`.
   /// Like Laravel returning `Excel::download(new ScheduleTemplateExport)`.
   static Future<void> downloadTemplate(BuildContext context) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.get<List<int>>(

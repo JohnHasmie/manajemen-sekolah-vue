@@ -30,8 +30,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/currency_formatter.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -4186,8 +4185,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         if (_isLoading) {
           return Scaffold(
             backgroundColor: ColorUtils.slate50,
@@ -4602,8 +4600,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           ),
           floatingActionButton: _getFloatingActionButton(),
         );
-      },
-    );
   }
 
   Widget _buildNavigationBar(LanguageProvider languageProvider) {

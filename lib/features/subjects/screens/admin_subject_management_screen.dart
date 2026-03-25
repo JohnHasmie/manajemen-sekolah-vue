@@ -1,5 +1,5 @@
 // Admin subject (mata pelajaran) management screen - full CRUD for subjects.
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/subjects.vue` - manages school subjects with create, edit,
@@ -29,7 +29,6 @@ import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -1081,8 +1080,8 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Consumer<LanguageProvider>(
-          builder: (context, languageProvider, child) {
+        builder: (context, setDialogState) {
+          final languageProvider = ref.watch(languageRiverpod);
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -1597,7 +1596,6 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
               ),
             );
           },
-        ),
       ),
     );
   }
@@ -1643,8 +1641,8 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
   Future<void> _deleteSubject(Map<String, dynamic> subject) async {
     final confirmed = await showDialog(
       context: context,
-      builder: (context) => Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
+      builder: (context) {
+        final languageProvider = ref.watch(languageRiverpod);
           return ConfirmationDialog(
             title: languageProvider.getTranslatedText({
               'en': 'Delete Subject',
@@ -1663,7 +1661,6 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
             confirmColor: Colors.red,
           );
         },
-      ),
     );
 
     if (confirmed == true) {
@@ -2262,8 +2259,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         if (_isLoading) {
           return Scaffold(
             backgroundColor: Color(0xFFF8F9FA),
@@ -2352,8 +2348,6 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
             child: Icon(Icons.add, color: Colors.white, size: 20),
           ),
         );
-      },
-    );
   }
 
   Future<void> _checkAndShowTour() async {

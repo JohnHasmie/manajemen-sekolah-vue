@@ -26,8 +26,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -1106,8 +1105,8 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
+      builder: (context) {
+        final languageProvider = ref.watch(languageRiverpod);
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return Padding(
@@ -1525,7 +1524,6 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             },
           );
         },
-      ),
     );
   }
 
@@ -2680,8 +2678,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   /// Renders the announcement list with search bar, filter chips, FAB for creating,
   /// and infinite scroll list of announcement cards.
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         return Scaffold(
           backgroundColor: ColorUtils.slate50,
           body: Column(
@@ -3076,8 +3073,6 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             child: Icon(Icons.add),
           ),
         );
-      },
-    );
   }
 
   Future<void> _checkAndShowTour() async {

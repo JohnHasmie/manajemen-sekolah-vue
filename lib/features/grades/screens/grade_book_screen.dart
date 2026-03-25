@@ -28,8 +28,7 @@ import 'package:manajemensekolah/features/grades/screens/grade_input_form.dart';
 import 'package:manajemensekolah/features/grades/screens/grade_input_form_new.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -2064,8 +2063,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         final activeFilterCount = _jenisNilaiFilter.values
             .where((v) => v)
             .length;
@@ -2437,8 +2435,6 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   child: Icon(Icons.add),
                 ),
         );
-      },
-    );
   }
 
   Future<void> _checkAndShowTour() async {

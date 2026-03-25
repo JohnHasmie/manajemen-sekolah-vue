@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 
 /// Service for generating student data Excel files entirely on the client side.
@@ -37,7 +36,7 @@ class ExcelService {
     required List<dynamic> students,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       // Create a new Excel document
@@ -155,7 +154,7 @@ class ExcelService {
   /// a template with `WithHeadings` and sample rows for user guidance.
   /// Fields marked with `*` are required.
   static Future<void> downloadTemplate(BuildContext context) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       // Create a new Excel document
@@ -245,7 +244,7 @@ class ExcelService {
   /// Generate and download a CSV import template as a simpler alternative to Excel.
   /// Like a plain-text version of the template for users without Excel software.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final String csvContent =

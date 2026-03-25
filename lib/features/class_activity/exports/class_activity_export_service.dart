@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 
 /// Service responsible for exporting class activity data (kegiatan kelas) to Excel.
@@ -39,7 +38,7 @@ class ExcelClassActivityService {
     required List<dynamic> activities,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       // Format data terlebih dahulu

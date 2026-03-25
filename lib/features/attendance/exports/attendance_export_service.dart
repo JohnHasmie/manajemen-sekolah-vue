@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for exporting student attendance (absensi/presence) data to Excel.
@@ -32,7 +31,7 @@ class ExcelPresenceService {
     required BuildContext context,
     Map<String, dynamic> filters = const {},
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       AppLogger.debug('attendance', 'Starting export with ${presenceData.length} records');

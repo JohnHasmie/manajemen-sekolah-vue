@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/class_activity/services/class_activity_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -18,9 +17,7 @@ import 'package:manajemensekolah/features/class_activity/exports/class_activity_
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -90,8 +87,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
   String? _buildSubjectCacheKey() {
     if (_selectedTeacherId == null) return null;
     if (_searchController.text.trim().isNotEmpty) return null;
-    final yearId = context
-        .read<AcademicYearProvider>()
+    final yearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString() ?? 'default';
     return 'class_activity_subjects_${_selectedTeacherId}_$yearId';
@@ -100,8 +96,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
   String? _buildActivityCacheKey() {
     if (_selectedTeacherId == null || _selectedSubjectId == null) return null;
     if (_searchController.text.trim().isNotEmpty) return null;
-    final yearId = context
-        .read<AcademicYearProvider>()
+    final yearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString() ?? 'default';
     return 'class_activity_list_${_selectedTeacherId}_${_selectedSubjectId}_$yearId';
@@ -270,8 +265,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
       }
 
       // Step 2: Fetch fresh from API
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -347,8 +341,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
       }
 
       // Step 2: Fetch fresh from API
-      final academicYearId = context
-          .read<AcademicYearProvider>()
+      final academicYearId = ref.read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
 
@@ -1087,8 +1080,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         if (_errorMessage != null) {
           return ErrorScreen(
             errorMessage: _errorMessage!,
@@ -1388,8 +1380,6 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
             ],
           ),
         );
-      },
-    );
   }
 
   Future<void> _checkAndShowTour() async {

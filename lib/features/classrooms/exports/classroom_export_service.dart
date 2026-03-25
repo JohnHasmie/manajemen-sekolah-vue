@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Service for exporting class data to Excel and downloading import templates.
 /// Similar to a Laravel controller that uses Maatwebsite/Excel:
@@ -37,7 +36,7 @@ class ExcelClassService {
     required List<dynamic> classes,
     required BuildContext context,
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       // Validasi data terlebih dahulu
@@ -91,7 +90,7 @@ class ExcelClassService {
   /// Like a Laravel route that returns `Excel::download(new ClassTemplateExport)`.
   /// Provides users with a pre-formatted .xlsx file to fill in and import.
   static Future<void> downloadTemplate(BuildContext context) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.get<List<int>>(
@@ -139,7 +138,7 @@ class ExcelClassService {
   /// Download a CSV import template from the backend GET `/class/template/csv`.
   /// Alternative to the Excel template for users who prefer CSV format.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       final response = await dioClient.get<List<int>>(

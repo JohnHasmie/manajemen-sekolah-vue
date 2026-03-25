@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Service for exporting student grade data (nilai) to Excel via the backend.
 /// Similar to Laravel's `Excel::download(new NilaiExport($data), 'Data_Nilai.xlsx')`.
@@ -32,7 +31,7 @@ class ExcelNilaiService {
     required BuildContext context,
     Map<String, dynamic> filters = const {},
   }) async {
-    final languageProvider = context.read<LanguageProvider>();
+    
 
     try {
       // Validasi data terlebih dahulu

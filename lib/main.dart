@@ -37,11 +37,10 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/core/widgets/error_handler.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/core/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/dashboard/screens/dashboard_screen.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -52,7 +51,6 @@ import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/log_service.dart';
 import 'package:manajemensekolah/core/services/performance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 
 /// Global navigator key that enables navigation from anywhere without a BuildContext.
 /// Like a global `$router` reference in Vue, or using `app()->make('redirect')` in Laravel.
@@ -162,14 +160,14 @@ void _setupErrorHandling() {
 /// The `build()` method sets up:
 /// - [MultiProvider]: Injects global state providers (like Vue's `app.use(store)`).
 /// - [MaterialApp]: Configures theming, localization, routing, and the auth gate.
-class SchoolManagementApp extends StatefulWidget {
+class SchoolManagementApp extends ConsumerStatefulWidget {
   const SchoolManagementApp({super.key});
 
   @override
-  State<SchoolManagementApp> createState() => _SchoolManagementAppState();
+  ConsumerState<SchoolManagementApp> createState() => _SchoolManagementAppState();
 }
 
-class _SchoolManagementAppState extends State<SchoolManagementApp> {
+class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
   /// Handles token storage, validation, and logout. Like Laravel's `Auth` guard.
   final TokenService _tokenService = TokenService();
 
@@ -293,73 +291,53 @@ class _SchoolManagementAppState extends State<SchoolManagementApp> {
       );
     }
 
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider<LanguageProvider>(
-          create: (_) => languageProvider,
-        ),
-        ChangeNotifierProvider<AcademicYearProvider>(
-          create: (_) => AcademicYearProvider(),
-        ),
-        ChangeNotifierProvider<TeacherProvider>(
-          create: (_) => TeacherProvider(),
-        ),
+    final langProvider = ref.watch(languageRiverpod);
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      navigatorObservers: [
+        if (AnalyticsService.observer != null) AnalyticsService.observer!,
       ],
-      child: Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
-          return MaterialApp(
-            navigatorKey: navigatorKey,
-            navigatorObservers: [
-              if (AnalyticsService.observer != null)
-                AnalyticsService.observer!,
-            ],
-            title: languageProvider.getTranslatedText({
-              'en': 'School Management',
-              'id': 'Manajemen Sekolah',
-            }),
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-            ),
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              FlutterQuillLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('en', 'US'), Locale('id', 'ID')],
-            home: FutureBuilder(
-              future: _checkAuthStatus(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return _buildLoadingScreen(languageProvider);
-                } else {
-                  final isAuthenticated = snapshot.data ?? false;
-                  AppLogger.info('app', 'Home decision: authenticated = $isAuthenticated');
-
-                  if (isAuthenticated) {
-                    return _redirectToDashboard(languageProvider);
-                  } else {
-                    return LoginScreen();
-                  }
-                }
-              },
-            ),
-            routes: {
-              '/admin': (context) => Dashboard(role: 'admin'),
-              '/guru': (context) => Dashboard(role: 'guru'),
-              '/teacher': (context) =>
-                  Dashboard(role: 'guru'), // Alias for teacher
-              '/staff': (context) => Dashboard(role: 'staff'),
-              '/wali': (context) => Dashboard(role: 'wali'),
-              '/parent': (context) =>
-                  Dashboard(role: 'wali'), // Alias for parent
-              '/login': (context) => LoginScreen(),
-            },
-            debugShowCheckedModeBanner: false,
-          );
+      title: langProvider.getTranslatedText({
+        'en': 'School Management',
+        'id': 'Manajemen Sekolah',
+      }),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en', 'US'), Locale('id', 'ID')],
+      home: FutureBuilder(
+        future: _checkAuthStatus(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return _buildLoadingScreen(langProvider);
+          } else {
+            final isAuthenticated = snapshot.data ?? false;
+            AppLogger.info('app', 'Home decision: authenticated = $isAuthenticated');
+            if (isAuthenticated) {
+              return _redirectToDashboard(langProvider);
+            } else {
+              return LoginScreen();
+            }
+          }
         },
       ),
+      routes: {
+        '/admin': (context) => Dashboard(role: 'admin'),
+        '/guru': (context) => Dashboard(role: 'guru'),
+        '/teacher': (context) => Dashboard(role: 'guru'),
+        '/staff': (context) => Dashboard(role: 'staff'),
+        '/wali': (context) => Dashboard(role: 'wali'),
+        '/parent': (context) => Dashboard(role: 'wali'),
+        '/login': (context) => LoginScreen(),
+      },
+      debugShowCheckedModeBanner: false,
     );
   }
 

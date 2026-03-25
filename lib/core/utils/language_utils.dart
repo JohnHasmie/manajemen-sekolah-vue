@@ -22,7 +22,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 /// in the session). Supports English ('en') and Indonesian ('id').
 ///
 /// Usage: Wrap the app with `ChangeNotifierProvider<LanguageProvider>`, then use
-/// `context.watch<LanguageProvider>()` to rebuild widgets when language changes.
+/// `ref.watch(languageRiverpod)` to rebuild widgets when language changes.
 class LanguageProvider with ChangeNotifier {
   static const String english = 'en';
   static const String indonesian = 'id';

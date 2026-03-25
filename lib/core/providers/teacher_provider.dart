@@ -19,7 +19,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 /// Like a Vuex store module - holds reactive global state that widgets can listen to.
 ///
 /// Extends [ChangeNotifier] - Flutter's observable pattern (like Vue's `reactive()`).
-/// Widgets use `Provider.of<TeacherProvider>(context)` or `context.watch<TeacherProvider>()`
+/// Widgets use `Provider.of<TeacherProvider>(context)` or `ref.watch(teacherRiverpod)`
 /// to subscribe, similar to `mapState` / `useStore()` in Vuex.
 ///
 /// Data flow:
@@ -39,7 +39,7 @@ class TeacherProvider extends ChangeNotifier {
   bool _isLoading = false;
 
   /// Public getters - like Vuex getters, expose read-only access to private state.
-  /// Widgets subscribe to these via `context.watch<TeacherProvider>()`.
+  /// Widgets subscribe to these via `ref.watch(teacherRiverpod)`.
   String? get userId => _userId;
   String? get teacherId => _teacherId;
   String? get teacherName => _teacherName;

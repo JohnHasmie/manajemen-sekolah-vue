@@ -6,7 +6,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
 
 /// A filter bar widget for selecting semester and academic year.
 ///
@@ -55,8 +54,7 @@ class FilterSection extends StatelessWidget {
     );
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
+      builder: (context) {
           return AlertDialog(
             title: Text(
               languageProvider.getTranslatedText({
@@ -100,7 +98,6 @@ class FilterSection extends StatelessWidget {
             ],
           );
         },
-      ),
     );
     if (result != null && result.isNotEmpty && result != selectedAcademicYear) {
       onAcademicYearChanged(result);
@@ -177,8 +174,6 @@ class FilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
         return Container(
           width: double.infinity,
           padding: EdgeInsets.all(20),
@@ -251,7 +246,5 @@ class FilterSection extends StatelessWidget {
             ],
           ),
         );
-      },
-    );
   }
 }

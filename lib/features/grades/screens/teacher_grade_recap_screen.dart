@@ -11,7 +11,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/grades/services/grade_recap_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -25,8 +24,7 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -315,8 +313,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   String? _buildClassesCacheKey() {
     final teacherId = widget.teacher['id']?.toString() ?? '';
     if (teacherId.isEmpty) return null;
-    final academicYearId = context
-        .read<AcademicYearProvider>()
+    final academicYearId = ref.read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString();
     return 'rekap_nilai_classes_${teacherId}_$academicYearId';
@@ -1898,8 +1895,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    final languageProvider = ref.watch(languageRiverpod);
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) async {
@@ -2074,8 +2070,6 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
             ),
           ),
         );
-      },
-    );
   }
 
   Widget _buildTopControls(LanguageProvider languageProvider) {
