@@ -33,6 +33,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Teaching material browser with subject, chapter, and sub-chapter navigation.
 ///
@@ -140,11 +141,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     final checkedSubBab = _getCheckedNotGeneratedSubBab();
 
     if (checkedBab.isEmpty && checkedSubBab.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Pilih minimal 1 bab atau sub bab untuk di-generate'),
-        ),
-      );
+            SnackBarUtils.showInfo(context, 'Pilih minimal 1 bab atau sub bab untuk di-generate');
       return;
     }
 
@@ -338,9 +335,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error: ID guru tidak valid')),
-        );
+                SnackBarUtils.showInfo(context, 'Error: ID guru tidak valid');
         return;
       }
 
@@ -569,9 +564,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
         _isLoading = false;
         _isLoadingBab = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-      );
+            SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
     }
   }
 
@@ -702,9 +695,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
       if (!mounted) return;
       setState(() => _isLoadingBab = false);
       if (_babMateriList.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }

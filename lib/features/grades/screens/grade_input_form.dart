@@ -17,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 // Form Input Nilai Individual
 class GradeInputForm extends ConsumerStatefulWidget {
@@ -104,19 +105,11 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
   Future<void> _submitNilai() async {
     if (_isReadOnly) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en': 'Cannot submit grades for inactive academic year',
               'id':
                   'Tidak dapat menyimpan nilai untuk tahun ajaran yang tidak aktif',
-            }),
-          ),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            }));
       return;
     }
 
@@ -154,33 +147,19 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
         }
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              ref.read(languageRiverpod).getTranslatedText({
+                SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText({
                 'en': widget.existingNilai != null
                     ? 'Grade successfully updated'
                     : 'Grade successfully saved',
                 'id': widget.existingNilai != null
                     ? 'Nilai berhasil diupdate'
                     : 'Nilai berhasil disimpan',
-              }),
-            ),
-            backgroundColor: Colors.green.shade400,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+              }));
 
         AppNavigator.pop(context);
       } catch (e) {
         AppLogger.error('grades', e);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red.shade400,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }

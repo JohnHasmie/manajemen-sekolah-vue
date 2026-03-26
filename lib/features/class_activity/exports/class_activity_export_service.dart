@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service responsible for exporting class activity data (kegiatan kelas) to Excel.
 /// Similar to a Laravel Maatwebsite/Excel export class that implements `FromCollection`.
@@ -70,17 +71,10 @@ class ExcelClassActivityService {
         // Buka file
         await OpenFile.open(filePath);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                 'en': 'Class activities data exported successfully',
                 'id': 'Data kegiatan kelas berhasil diexport',
-              }),
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
+              }));
       } else {
         final errorData = response.data;
         throw Exception(
@@ -89,17 +83,10 @@ class ExcelClassActivityService {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to export data: $e',
               'id': 'Gagal mengexport data: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
       rethrow;
     }
   }

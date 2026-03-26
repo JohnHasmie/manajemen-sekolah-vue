@@ -33,6 +33,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin subject management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -1023,34 +1024,20 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
         await _loadSubjects();
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                languageProvider.getTranslatedText({
+                    SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                   'en': 'Subjects imported successfully',
                   'id': 'Mata pelajaran berhasil diimpor',
-                }),
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
+                }));
         }
       }
     } catch (e) {
       AppLogger.error('subject', 'Import subjects error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en':
                   'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 
@@ -1668,32 +1655,16 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
       try {
         await getIt<ApiSubjectService>().deleteSubject(subject['id']);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ref.read(languageRiverpod).getTranslatedText({
+                    SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Subject successfully deleted',
                   'id': 'Mata pelajaran berhasil dihapus',
-                }),
-              ),
-              backgroundColor: Colors.green.shade400,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+                }));
         }
         _loadSubjects();
       } catch (error) {
         AppLogger.error('subject', 'Delete subject error: $error');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to delete: ', 'id': 'Gagal menghapus: '})}${ErrorUtils.getFriendlyMessage(error)}',
-              ),
-              backgroundColor: Colors.red.shade400,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+                    SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to delete: ', 'id': 'Gagal menghapus: '})}${ErrorUtils.getFriendlyMessage(error)}');
         }
       }
     }
@@ -2663,9 +2634,7 @@ class SubjectClassManagementPageState
         isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
-        );
+                SnackBarUtils.showError(context, 'Error: $error');
       }
     }
   }
@@ -2678,20 +2647,13 @@ class SubjectClassManagementPageState
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Kelas ${kelas['name']} berhasil ditambahkan'),
-            backgroundColor: Colors.green,
-          ),
-        );
+                SnackBarUtils.showSuccess(context, 'Kelas ${kelas['name']} berhasil ditambahkan');
       }
 
       loadData();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
-        );
+                SnackBarUtils.showError(context, 'Error: $error');
       }
     }
   }
@@ -2700,10 +2662,9 @@ class SubjectClassManagementPageState
     final confirmed = await showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: 'Hapus Kelas',
+        title: AppLocalizations.removeClass.tr,
         content:
-            'Yakin ingin menghapus kelas ${kelas['name']} dari mata pelajaran ini?',
-        confirmText: 'Hapus',
+            '${languageProvider.getTranslatedText({'en': 'Are you sure you want to remove class', 'id': 'Yakin ingin menghapus kelas'})} ${kelas['name']} ${languageProvider.getTranslatedText({'en': 'from this subject?', 'id': 'dari mata pelajaran ini?'})}',
         confirmColor: Colors.red,
       ),
     );
@@ -2716,23 +2677,13 @@ class SubjectClassManagementPageState
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Kelas ${kelas['name']} berhasil dihapus'),
-              backgroundColor: Colors.green,
-            ),
-          );
+                    SnackBarUtils.showSuccess(context, 'Kelas ${kelas['name']} berhasil dihapus');
         }
 
         loadData();
       } catch (error) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
+                    SnackBarUtils.showError(context, 'Error: $error');
         }
       }
     }
@@ -2745,12 +2696,7 @@ class SubjectClassManagementPageState
     }).toList();
 
     if (unassignedClasses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Semua kelas sudah ditambahkan ke mata pelajaran ini'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+            SnackBarUtils.showWarning(context, 'Semua kelas sudah ditambahkan ke mata pelajaran ini');
       return;
     }
 
@@ -3016,7 +2962,7 @@ class SubjectClassManagementPageState
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(
                                 color: ColorUtils.slate600,
                                 fontWeight: FontWeight.w600,

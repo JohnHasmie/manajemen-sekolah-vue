@@ -20,6 +20,8 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Report card detail form for a single student.
 ///
@@ -407,14 +409,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
           setState(() {
             _hasUnsavedChanges = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                status == 'final' ? 'Raport diselesaikan!' : 'Draft disimpan!',
-              ),
-              backgroundColor: status == 'final' ? Colors.green : Colors.blue,
-            ),
-          );
+                    SnackBarUtils.showInfo(context, status == 'final' ? 'Raport diselesaikan!' : 'Draft disimpan!');
           if (status == 'final') {
             AppNavigator.pop(context, true); // Return true to indicate change
           } else {
@@ -426,12 +421,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -449,20 +439,20 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Perubahan Belum Disimpan'),
-          content: const Text(
-            'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
+          title: Text(AppLocalizations.unsavedChanges.tr),
+          content: Text(
+            AppLocalizations.unsavedChangesConfirm.tr,
           ),
           actions: [
             TextButton(
               onPressed: () => AppNavigator.pop(context, false), // Cancel
-              child: const Text('Batal'),
+              child: Text(AppLocalizations.cancel.tr),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () => AppNavigator.pop(context, true), // Leave
-              child: const Text(
-                'Keluar',
+              child: Text(
+                AppLocalizations.leave.tr,
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -729,21 +719,21 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('Selesaikan Raport?'),
-                                content: const Text(
-                                  'Raport akan disimpan secara final. Pengiriman ke wali murid akan dilakukan oleh Admin nantinya.',
+                                title: Text(AppLocalizations.finalizeReportCard.tr),
+                                content: Text(
+                                  AppLocalizations.finalizeReportCardConfirm.tr,
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => AppNavigator.pop(context),
-                                    child: const Text('Batal'),
+                                    child: Text(AppLocalizations.cancel.tr),
                                   ),
                                   ElevatedButton(
                                     onPressed: () {
                                       AppNavigator.pop(context);
                                       _saveRaport(status: 'final');
                                     },
-                                    child: const Text('Ya, Selesaikan'),
+                                    child: Text(AppLocalizations.yesFinalize.tr),
                                   ),
                                 ],
                               ),
@@ -951,7 +941,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                 _markUnsaved();
               },
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Tambah'),
+              label: Text(AppLocalizations.add.tr),
             ),
           ],
         ),
@@ -964,7 +954,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildSectionTitle('Prestasi'),
+            _buildSectionTitle(AppLocalizations.achievements.tr),
             TextButton.icon(
               onPressed: () {
                 setState(() {
@@ -977,7 +967,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                 _markUnsaved();
               },
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Tambah'),
+              label: Text(AppLocalizations.add.tr),
             ),
           ],
         ),

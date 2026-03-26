@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
 class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
@@ -121,12 +122,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
 
   Future<void> exportDetail() async {
     if (_absensiData.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tidak ada data kegiatan untuk diexport'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+            SnackBarUtils.showWarning(context, 'Tidak ada data kegiatan untuk diexport');
       return;
     }
 
@@ -239,30 +235,16 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
         });
 
         if (successCount > 0 || errorCount == 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                languageProvider.getTranslatedText({
+                    SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                   'en': 'Attendance updated successfully',
                   'id': 'Absensi berhasil diperbarui',
-                }),
-              ),
-              backgroundColor: ColorUtils.success600,
-            ),
-          );
+                }));
           _loadData(); // Reload data to reflect changes
         } else if (errorCount > 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                languageProvider.getTranslatedText({
+                    SnackBarUtils.showError(context, languageProvider.getTranslatedText({
                   'en': 'Failed to update some records',
                   'id': 'Gagal memperbarui beberapa data',
-                }),
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
+                }));
         }
       }
     } catch (e) {

@@ -6,6 +6,7 @@
 // Nova resource list item with inline actions.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A card widget that displays a single subject's information with actions.
 ///
@@ -181,7 +182,7 @@ class SubjectListItem extends StatelessWidget {
                       children: [
                         Icon(Icons.edit, size: 20, color: Colors.orange),
                         SizedBox(width: 8),
-                        Text('Edit'),
+                        Text(AppLocalizations.edit.tr),
                       ],
                     ),
                   ),
@@ -191,7 +192,7 @@ class SubjectListItem extends StatelessWidget {
                       children: [
                         Icon(Icons.delete, size: 20, color: Colors.red),
                         SizedBox(width: 8),
-                        Text('Hapus'),
+                        Text(AppLocalizations.delete.tr),
                       ],
                     ),
                   ),

@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for exporting student attendance (absensi/presence) data to Excel.
 /// Similar to Laravel's `Excel::download(new AttendanceExport, 'Absensi.xlsx')`.
@@ -64,32 +65,18 @@ class ExcelPresenceService {
       AppLogger.debug('attendance', 'Open file result: $result');
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                 'en': 'Presence data exported successfully',
                 'id': 'Data absensi berhasil diexport',
-              }),
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
+              }));
       }
     } catch (e) {
       AppLogger.error('attendance', e);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showError(context, languageProvider.getTranslatedText({
                 'en': 'Failed to export data: $e',
                 'id': 'Gagal mengexport data: $e',
-              }),
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+              }));
       }
     }
   }

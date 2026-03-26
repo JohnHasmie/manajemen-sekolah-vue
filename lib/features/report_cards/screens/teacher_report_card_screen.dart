@@ -23,6 +23,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Report card list screen -- shows classes and their students for raport entry.
 ///
@@ -327,9 +328,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) {
@@ -346,22 +345,11 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
     final status = student['raport_status'] ?? 'Belum ada';
     if (status.toLowerCase() != 'final' &&
         status.toLowerCase() != 'published') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Raport belum final, tidak dapat dicetak.'),
-        ),
-      );
+            SnackBarUtils.showInfo(context, 'Raport belum final, tidak dapat dicetak.');
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Menyiapkan file PDF untuk ${student['student_name']}...',
-        ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+        SnackBarUtils.showInfo(context, 'Menyiapkan file PDF untuk ${student['student_name']}...');
 
     try {
       final academicYearProvider = ref.read(academicYearRiverpod);
@@ -379,12 +367,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }

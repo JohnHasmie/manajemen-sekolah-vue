@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Attendance detail page where a teacher can view and update each student's
 /// attendance status (hadir/terlambat/izin/sakit/alpha) for a given subject
@@ -146,14 +147,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            SnackBarUtils.showError(context, 'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}');
     }
   }
 
@@ -285,25 +279,13 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Berhasil update $successCount absensi'),
-            backgroundColor: Colors.green,
-          ),
-        );
+                SnackBarUtils.showSuccess(context, 'Berhasil update $successCount absensi');
         AppNavigator.pop(context);
       }
     } catch (e) {
       AppLogger.error('attendance', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal update absensi: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal update absensi: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     } finally {
       if (mounted) {

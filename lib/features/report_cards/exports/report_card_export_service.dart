@@ -10,6 +10,7 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for exporting student report cards (raport) in multiple formats.
 /// Like a Laravel controller with three export actions:
@@ -64,29 +65,15 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'Raport exported successfully',
               'id': 'Raport berhasil diexport',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to export data: $e',
               'id': 'Gagal mengexport data: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 
@@ -130,29 +117,15 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'PDF downloaded successfully',
               'id': 'PDF berhasil diunduh',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to download PDF: $e',
               'id': 'Gagal mengunduh PDF: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 
@@ -195,29 +168,15 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'Certificate PDF downloaded successfully',
               'id': 'Sertifikat PDF berhasil diunduh',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to download Certificate PDF: $e',
               'id': 'Gagal mengunduh Sertifikat PDF: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 }

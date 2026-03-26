@@ -35,6 +35,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin teacher management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -997,17 +998,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         setState(() => _isLoading = false);
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en': 'Failed to load data: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     } finally {
       // Trigger tour (cache pre-fetched by dashboard, no delay needed)
       _checkAndShowTour();
@@ -1089,17 +1083,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   Future<void> exportToExcel() async {
     try {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showInfo(context, ref.read(languageRiverpod).getTranslatedText({
               'en': 'Preparing export...',
               'id': 'Menyiapkan export...',
-            }),
-          ),
-          duration: Duration(seconds: 1),
-        ),
-      );
+            }));
 
       final academicYearProvider = ref.read(academicYearRiverpod);
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
@@ -1131,17 +1118,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     } catch (e) {
       AppLogger.error('teacher', 'Export teachers error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en': 'Failed to export: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 
@@ -1173,33 +1153,16 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
               (response['errors'] as List).isNotEmpty) {
             final errors = (response['errors'] as List).take(10).join('\n');
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Import finished with errors:\n$errors'),
-                backgroundColor: Colors.orange,
-              ),
-            );
+                        SnackBarUtils.showWarning(context, 'Import finished with errors:\n$errors');
           } else if (response['error'] != null) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Import failed: ${response['error']}'),
-                backgroundColor: Colors.red,
-              ),
-            );
+                        SnackBarUtils.showError(context, 'Import failed: ${response['error']}');
           } else {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  languageProvider.getTranslatedText({
+                        SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                     'en': 'Import completed',
                     'id': 'Import selesai',
-                  }),
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
+                  }));
           }
 
           // Refresh data setelah import
@@ -1207,36 +1170,22 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         } catch (apiError) {
           AppLogger.error('teacher', 'Error calling import API: $apiError');
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                languageProvider.getTranslatedText({
+                    SnackBarUtils.showError(context, languageProvider.getTranslatedText({
                   'en':
                       'Failed to import file: ${ErrorUtils.getFriendlyMessage(apiError)}',
                   'id':
                       'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(apiError)}',
-                }),
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
+                }));
         }
       }
     } catch (e) {
       AppLogger.error('teacher', 'Import from Excel picker/process error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en':
                   'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 
@@ -1337,19 +1286,12 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     } catch (error) {
       AppLogger.error('teacher', 'Update teacher subjects error: $error');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en':
                   'Failed to update teacher subjects: ${ErrorUtils.getFriendlyMessage(error)}',
               'id':
                   'Gagal mengupdate mata pelajaran guru: ${ErrorUtils.getFriendlyMessage(error)}',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 
@@ -2194,31 +2136,17 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         if (teacherId != null && teacherId.isNotEmpty) {
           await _teacherService.deleteTeacher(teacherId);
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  ref.read(languageRiverpod).getTranslatedText({
+                        SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText({
                     'en': 'Teacher successfully deleted',
                     'id': 'Guru berhasil dihapus',
-                  }),
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
+                  }));
           }
           _loadData();
         }
       } catch (error) {
         AppLogger.error('teacher', 'Delete teacher error: $error');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to delete teacher: ', 'id': 'Gagal menghapus guru: '})}${ErrorUtils.getFriendlyMessage(error)}',
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
+                    SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to delete teacher: ', 'id': 'Gagal menghapus guru: '})}${ErrorUtils.getFriendlyMessage(error)}');
         }
       }
     }

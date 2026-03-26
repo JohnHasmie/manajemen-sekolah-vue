@@ -29,6 +29,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Teacher's weekly schedule screen with card and table view modes.
 ///
@@ -724,21 +725,13 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en': message,
               'id': message.replaceAll(
                 'Failed to load schedule data:',
                 'Gagal memuat data jadwal:',
               ),
-            }),
-          ),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            }));
     }
   }
 
@@ -1147,7 +1140,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                               ),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(
                                 color: ColorUtils.slate600,
                                 fontWeight: FontWeight.w600,

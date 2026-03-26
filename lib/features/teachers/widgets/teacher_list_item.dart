@@ -4,6 +4,7 @@
 // Blade partial `@include('teachers.card-item')`. Shows teacher name,
 // homeroom status badge, email, NIP, and a popup menu for edit/delete.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A gradient card widget that displays a single teacher's information.
 ///
@@ -139,7 +140,7 @@ class TeacherListItem extends StatelessWidget {
                                     children: [
                                       Icon(Icons.edit, size: 16, color: Colors.blue.shade600),
                                       SizedBox(width: 8),
-                                      Text('Edit'),
+                                      Text(AppLocalizations.edit.tr),
                                     ],
                                   ),
                                 ),
@@ -149,7 +150,7 @@ class TeacherListItem extends StatelessWidget {
                                     children: [
                                       Icon(Icons.delete, size: 16, color: Colors.red.shade600),
                                       SizedBox(width: 8),
-                                      Text('Delete'),
+                                      Text(AppLocalizations.delete.tr),
                                     ],
                                   ),
                                 ),

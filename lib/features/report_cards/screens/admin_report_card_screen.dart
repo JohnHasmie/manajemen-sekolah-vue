@@ -22,6 +22,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin report card screen - select class, view students, export/publish raports.
 ///
@@ -276,9 +277,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) setState(() => _isExporting = false);
@@ -292,22 +291,22 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Kirim Raport ke Wali Murid?'),
-        content: const Text(
-          'Tindakan ini akan mempublikasikan raport dengan status "Final" dan secara otomatis mengirimkan notifikasi ke wali murid terkait. Lanjutkan?',
+        title: Text(AppLocalizations.sendReportCard.tr),
+        content: Text(
+          AppLocalizations.sendReportCardConfirm.tr,
         ),
         actions: [
           TextButton(
             onPressed: () => AppNavigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(AppLocalizations.cancel.tr),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: ColorUtils.corporateBlue600,
             ),
             onPressed: () => AppNavigator.pop(context, true),
-            child: const Text(
-              'Ya, Kirim',
+            child: Text(
+              AppLocalizations.yesSend.tr,
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -340,21 +339,12 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Raport berhasil dipublikasi dan dikirim ke wali murid!',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
+                SnackBarUtils.showSuccess(context, 'Raport berhasil dipublikasi dan dikirim ke wali murid!');
         _loadStudents(useCache: false); // Reload status
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) setState(() => _isPublishing = false);
@@ -464,9 +454,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
     } catch (e) {
       if (mounted) {
         AppNavigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -474,18 +462,11 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
   Future<void> _downloadStudentPdf(Map<String, dynamic> student) async {
     final status = student['raport_status'] ?? 'draft';
     if (status == 'draft') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Raport Draft belum bisa dicetak.')),
-      );
+            SnackBarUtils.showInfo(context, 'Raport Draft belum bisa dicetak.');
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Menyiapkan PDF untuk ${student['student_name']}...'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+        SnackBarUtils.showInfo(context, 'Menyiapkan PDF untuk ${student['student_name']}...');
 
     try {
       final academicYearProvider = ref.read(academicYearRiverpod);
@@ -508,12 +489,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }

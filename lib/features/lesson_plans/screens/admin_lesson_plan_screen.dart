@@ -29,6 +29,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin lesson plan (RPP) review screen with drill-down navigation.
 ///
@@ -1855,21 +1856,11 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
       if (mounted) {
         AppNavigator.pop(context);
         widget.onStatusUpdated();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Status RPP berhasil diupdate'),
-            backgroundColor: ColorUtils.success600,
-          ),
-        );
+                SnackBarUtils.showSuccess(context, 'Status RPP berhasil diupdate');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mengupdate: $e'),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal mengupdate: $e');
       }
     } finally {
       if (mounted) {
@@ -2090,7 +2081,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                       ),
                     ),
                     child: Text(
-                      'Batal',
+                      AppLocalizations.cancel.tr,
                       style: TextStyle(color: ColorUtils.slate600),
                     ),
                   ),
@@ -2655,16 +2646,12 @@ class RppAdminDetailPage extends StatelessWidget {
       await file.writeAsBytes(response.data ?? []);
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Download berhasil! Membuka file...')),
-      );
+            SnackBarUtils.showInfo(context, 'Download berhasil! Membuka file...');
 
       final result = await OpenFile.open(file.path);
 
       if (result.type != ResultType.done) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal membuka file: ${result.message}')),
-        );
+                SnackBarUtils.showInfo(context, 'Gagal membuka file: ${result.message}');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();

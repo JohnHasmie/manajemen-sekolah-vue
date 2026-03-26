@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/data/data_dummy.dart';
 import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Displays a scrollable list of all students with basic info (NIS, class, parent).
 ///
@@ -36,9 +37,9 @@ class StaffStudentDataScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('NIS: ${student.studentNumber}'),
-                  Text('Kelas: ${student.className}'),
-                  Text('Wali: ${student.guardianName}'),
-                  Text('Alamat: ${student.address}'),
+                  Text('${AppLocalizations.classString.tr}: ${student.className}'),
+                  Text('${languageProvider.getTranslatedText({'en': 'Guardian', 'id': 'Wali'})}: ${student.guardianName}'),
+                  Text('${AppLocalizations.address.tr}: ${student.address}'),
                 ],
               ),
               trailing: IconButton(
@@ -59,22 +60,22 @@ class StaffStudentDataScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Detail ${student.name}'),
+        title: Text('${languageProvider.getTranslatedText({'en': 'Detail', 'id': 'Detail'})} ${student.name}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('NIS: ${student.studentNumber}'),
-            Text('Kelas: ${student.className}'),
-            Text('Alamat: ${student.address}'),
-            Text('Nama Wali: ${student.guardianName}'),
-            Text('No. Telepon: ${student.phoneNumber}'),
+            Text('${AppLocalizations.classString.tr}: ${student.className}'),
+            Text('${AppLocalizations.address.tr}: ${student.address}'),
+            Text('${languageProvider.getTranslatedText({'en': 'Guardian Name', 'id': 'Nama Wali'})}: ${student.guardianName}'),
+            Text('${AppLocalizations.phoneNumber.tr}: ${student.phoneNumber}'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => AppNavigator.pop(context),
-            child: Text('Tutup'),
+            child: Text(AppLocalizations.close.tr),
           ),
         ],
       ),

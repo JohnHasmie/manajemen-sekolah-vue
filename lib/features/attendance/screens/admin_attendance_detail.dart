@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
 class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
@@ -130,12 +131,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
 
   Future<void> exportDetail() async {
     if (_absensiData.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tidak ada data kegiatan untuk diexport'),
-          backgroundColor: ColorUtils.warning600,
-        ),
-      );
+            SnackBarUtils.showWarning(context, 'Tidak ada data kegiatan untuk diexport');
       return;
     }
 
@@ -214,12 +210,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
 
     if (teacherId == null) {
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: Guru ID tidak ditemukan'),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            SnackBarUtils.showError(context, 'Error: Guru ID tidak ditemukan');
       return;
     }
 
@@ -253,20 +244,11 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
       }
 
       if (successCount > 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showInfo(context, languageProvider.getTranslatedText({
                 'en':
                     'Attendance updated successfully ($successCount students)',
                 'id': 'Absensi berhasil diperbarui ($successCount siswa)',
-              }),
-            ),
-            backgroundColor: errorCount > 0
-                ? ColorUtils.warning600
-                : ColorUtils.success600,
-          ),
-        );
+              }));
 
         setState(() {
           _isEditing = false;
@@ -278,14 +260,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
       }
     } catch (e) {
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Gagal menyimpan perubahan: ${ErrorUtils.getFriendlyMessage(e)}',
-          ),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            SnackBarUtils.showError(context, 'Gagal menyimpan perubahan: ${ErrorUtils.getFriendlyMessage(e)}');
     }
   }
 

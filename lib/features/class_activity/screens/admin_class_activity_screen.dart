@@ -23,6 +23,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
 ///
@@ -200,12 +201,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
   // Method untuk export data
   Future<void> exportActivities() async {
     if (_activityList.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tidak ada data kegiatan untuk diexport'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+            SnackBarUtils.showWarning(context, 'Tidak ada data kegiatan untuk diexport');
       return;
     }
 
@@ -382,13 +378,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: ColorUtils.error600,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+        SnackBarUtils.showError(context, message);
   }
 
   void _backToTeacherList() {

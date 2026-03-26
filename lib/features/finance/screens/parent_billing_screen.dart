@@ -32,6 +32,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Parent billing screen with payment status, upload, and filtering.
 ///
@@ -537,9 +538,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         _isLoadingMore = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -986,13 +985,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
           if (!isValidFile) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(AppLocalizations.unsupportedFileFormat.tr),
-                  backgroundColor: ColorUtils.error600,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+                            SnackBarUtils.showError(context, AppLocalizations.unsupportedFileFormat.tr);
             }
             return;
           }
@@ -1007,13 +1000,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     } catch (e) {
       AppLogger.error('finance', e);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -1039,13 +1026,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     } catch (e) {
       AppLogger.error('finance', e);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -1078,13 +1059,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     } catch (e) {
       AppLogger.error('finance', e);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -1524,28 +1499,12 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
                                   if (enteredAmount == null ||
                                       enteredAmount <= 0) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Jumlah bayar tidak valid',
-                                        ),
-                                        backgroundColor: ColorUtils.error600,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
+                                                                        SnackBarUtils.showError(context, 'Jumlah bayar tidak valid');
                                     return;
                                   }
 
                                   if (enteredAmount > billAmount) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Jumlah bayar tidak boleh melebihi total tagihan (${_formatCurrency(billing['jumlah'])})',
-                                        ),
-                                        backgroundColor: ColorUtils.error600,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
+                                                                        SnackBarUtils.showError(context, 'Jumlah bayar tidak boleh melebihi total tagihan (${_formatCurrency(billing['jumlah'])})');
                                     return;
                                   }
                                   try {
@@ -1818,7 +1777,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                       ),
                     ),
                     child: Text(
-                      'Tutup',
+                      AppLocalizations.close.tr,
                       style: TextStyle(
                         color: ColorUtils.slate700,
                         fontWeight: FontWeight.w600,

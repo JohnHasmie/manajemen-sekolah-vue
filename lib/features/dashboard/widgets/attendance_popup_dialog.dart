@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class AttendancePopupDialog extends StatefulWidget {
   final String? semesterLabel;
@@ -316,7 +317,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
                   vertical: 12,
                 ),
               ),
-              child: const Text('Tutup'),
+              child: Text(AppLocalizations.close.tr),
             ),
           ],
         ),

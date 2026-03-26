@@ -1431,6 +1431,119 @@ class AppLocalizations {
     'en': 'Select School',
     'id': 'Pilih Sekolah',
   };
+
+  // Verification & OTP
+  static Map<String, String> get verify => {
+    'en': 'Verify',
+    'id': 'Verifikasi',
+  };
+
+  // AI Regeneration
+  static Map<String, String> get regenerate => {
+    'en': 'Regenerate',
+    'id': 'Regenerasi',
+  };
+
+  static Map<String, String> get regenerateAll => {
+    'en': 'Regenerate All',
+    'id': 'Regenerasi Semua',
+  };
+
+  // Unsaved Changes
+  static Map<String, String> get unsavedChanges => {
+    'en': 'Unsaved Changes',
+    'id': 'Perubahan Belum Disimpan',
+  };
+
+  static Map<String, String> get unsavedChangesConfirm => {
+    'en':
+        'You have unsaved changes. Are you sure you want to leave? Changes will be lost.',
+    'id':
+        'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
+  };
+
+  static Map<String, String> get leave => {'en': 'Leave', 'id': 'Keluar'};
+
+  // Delete Material (grade recap)
+  static Map<String, String> get deleteMaterial => {
+    'en': 'Delete Material',
+    'id': 'Hapus Materi',
+  };
+
+  static Map<String, String> get deleteColumnConfirm => {
+    'en':
+        'Are you sure you want to delete this material column along with all its grades?',
+    'id':
+        'Apakah Anda yakin ingin menghapus kolom materi ini beserta semua nilainya?',
+  };
+
+  // Subject class removal
+  static Map<String, String> get removeClass => {
+    'en': 'Remove Class',
+    'id': 'Hapus Kelas',
+  };
+
+  // Report Card
+  static Map<String, String> get sendReportCard => {
+    'en': 'Send Report Card to Parents?',
+    'id': 'Kirim Raport ke Wali Murid?',
+  };
+
+  static Map<String, String> get sendReportCardConfirm => {
+    'en':
+        'This action will publish report cards with "Final" status and automatically send notifications to the related parents. Continue?',
+    'id':
+        'Tindakan ini akan mempublikasikan raport dengan status "Final" dan secara otomatis mengirimkan notifikasi ke wali murid terkait. Lanjutkan?',
+  };
+
+  static Map<String, String> get yesSend => {
+    'en': 'Yes, Send',
+    'id': 'Ya, Kirim',
+  };
+
+  static Map<String, String> get finalizeReportCard => {
+    'en': 'Finalize Report Card?',
+    'id': 'Selesaikan Raport?',
+  };
+
+  static Map<String, String> get finalizeReportCardConfirm => {
+    'en':
+        'The report card will be saved as final. Sending to parents will be done by the Admin later.',
+    'id':
+        'Raport akan disimpan secara final. Pengiriman ke wali murid akan dilakukan oleh Admin nantinya.',
+  };
+
+  static Map<String, String> get yesFinalize => {
+    'en': 'Yes, Finalize',
+    'id': 'Ya, Selesaikan',
+  };
+
+  // Achievements
+  static Map<String, String> get achievements => {
+    'en': 'Achievements',
+    'id': 'Prestasi',
+  };
+
+  // Settings messages
+  static Map<String, String> get failedToSave => {
+    'en': 'Failed to save',
+    'id': 'Gagal menyimpan',
+  };
+
+  static Map<String, String> get settingsSavedSuccess => {
+    'en': 'Settings saved successfully',
+    'id': 'Pengaturan berhasil disimpan',
+  };
+
+  static Map<String, String> get schoolNameMinChars => {
+    'en': 'School name must be at least 3 characters',
+    'id': 'Nama sekolah minimal 3 karakter',
+  };
+
+  static Map<String, String> get enterOtp => {
+    'en': 'Enter 6-digit OTP code',
+    'id': 'Masukkan 6 digit kode OTP',
+  };
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.

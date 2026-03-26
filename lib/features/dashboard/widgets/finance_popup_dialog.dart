@@ -8,6 +8,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class FinancePopupDialog extends StatefulWidget {
   final List<Map<String, dynamic>> semestersData;
@@ -154,7 +155,7 @@ class _FinancePopupDialogState extends State<FinancePopupDialog> {
                   vertical: 12,
                 ),
               ),
-              child: const Text('Tutup'),
+              child: Text(AppLocalizations.close.tr),
             ),
           ],
         ),
