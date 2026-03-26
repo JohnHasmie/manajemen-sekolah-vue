@@ -13,6 +13,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -1070,7 +1071,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
   Future<void> _checkAndShowTour() async {
     try {
       // Cache-only: tour status pre-fetched from dashboard
-      final tourCacheKey = 'tour_announcement_screen_$_userRole';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('announcement_screen', _userRole);
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -1105,13 +1106,13 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_announcement_screen_$_userRole', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('announcement_screen', _userRole), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_announcement_screen_$_userRole', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('announcement_screen', _userRole), {'should_show': false});
         }
         return true;
       },

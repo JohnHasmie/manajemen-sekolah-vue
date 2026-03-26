@@ -6,6 +6,7 @@
 //
 // In Laravel terms, this consumes ClassActivityController with teacher/subject filtering.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -1376,7 +1377,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
   Future<void> _checkAndShowTour() async {
     if (_isTourShowing) return;
     try {
-      const tourCacheKey = 'tour_class_activity_admin';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('class_activity', 'admin');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -1418,7 +1419,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
         });
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_class_activity_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity', 'admin'), {'should_show': false});
         }
       },
       onSkip: () {
@@ -1427,7 +1428,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
         });
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_class_activity_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity', 'admin'), {'should_show': false});
         }
         return true;
       },

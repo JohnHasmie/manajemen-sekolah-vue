@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/features/grades/services/grade_recap_service.dart';
@@ -198,7 +199,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       List<dynamic> allSchedules = [];
 
       // Try teaching_schedule's cached data
-      final scheduleCacheKey = 'schedule_teacher_${teacherId}_${semester}_$academicYearId';
+      final scheduleCacheKey = CacheKeyBuilder.custom('schedule_teacher', '${teacherId}_$semester', academicYearId);
       try {
         final cached = await LocalCacheService.load(scheduleCacheKey, ttl: const Duration(hours: 3));
         if (cached != null) {
@@ -456,7 +457,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   }
 
   Future<void> _loadSubjects({bool useCache = true}) async {
-    final subjectCacheKey = 'rekap_nilai_subjects_${widget.teacher['id']}_${_selectedClass!['id']}';
+    final subjectCacheKey = CacheKeyBuilder.custom('rekap_nilai_subjects', widget.teacher['id'].toString(), _selectedClass!['id'].toString());
 
     // ─── Step 1: Try cache → return early ───
     if (useCache && _subjectList.isEmpty) {
@@ -631,10 +632,10 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       // This allows cross-screen cache reuse (e.g. students from presence,
       // bab-material from materi_screen)
 
-      final studentCacheKey = 'students_class_$classId';
-      final babCacheKey = 'bab_material_$masterSubjectId';
-      final gradesCacheKey = 'rekap_grades_${classId}_${subjectId}_$academicYearId';
-      final recapsCacheKey = 'rekap_recaps_${classId}_${subjectId}_$academicYearId';
+      final studentCacheKey = CacheKeyBuilder.studentsByClass(classId);
+      final babCacheKey = CacheKeyBuilder.custom('bab_material', masterSubjectId);
+      final gradesCacheKey = CacheKeyBuilder.custom('rekap_grades', '${classId}_$subjectId', academicYearId);
+      final recapsCacheKey = CacheKeyBuilder.custom('rekap_recaps', '${classId}_$subjectId', academicYearId);
 
       // Load all 4 sources in parallel — each checks its own cache first
       final results = await Future.wait([
@@ -2953,7 +2954,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_rekap_nilai_screen_guru';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -2983,13 +2984,13 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_rekap_nilai_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_rekap_nilai_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

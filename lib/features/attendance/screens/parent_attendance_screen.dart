@@ -9,6 +9,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -246,7 +247,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   Future<void> _checkAndShowTour() async {
     try {
       // Cache-only: tour status pre-fetched from dashboard
-      const tourCacheKey = 'tour_parent_presence_screen_wali';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('parent_presence_screen', 'wali');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -281,13 +282,13 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_parent_presence_screen_wali', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_presence_screen', 'wali'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_parent_presence_screen_wali', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_presence_screen', 'wali'), {'should_show': false});
         }
         return true;
       },

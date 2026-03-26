@@ -213,7 +213,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                   _buildQuickStatusButton(
                     'terlambat',
                     'T',
-                    const Color(0xFF7C3AED),
+                    ColorUtils.violet700,
                     student.id,
                   ),
                   _buildQuickStatusButton(

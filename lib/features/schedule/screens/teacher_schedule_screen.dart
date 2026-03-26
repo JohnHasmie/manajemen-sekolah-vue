@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/screens/teacher_class_activity_screen.dart';
@@ -115,12 +116,12 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
   };
 
   final Map<String, Color> _dayColorMap = {
-    'Senin': Color(0xFF6366F1),
-    'Selasa': Color(0xFF10B981),
-    'Rabu': Color(0xFFF59E0B),
-    'Kamis': Color(0xFFEF4444),
-    'Jumat': Color(0xFF8B5CF6),
-    'Sabtu': Color(0xFF06B6D4),
+    'Senin': ColorUtils.indigo500,
+    'Selasa': ColorUtils.emerald500,
+    'Rabu': ColorUtils.amber500,
+    'Kamis': ColorUtils.red500,
+    'Jumat': ColorUtils.violet500,
+    'Sabtu': ColorUtils.cyan500,
   };
 
   /// Like Vue's `mounted()` -- sets academic year defaults, loads teacher data,
@@ -1448,7 +1449,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_teaching_schedule_screen_guru';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('teaching_schedule_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -1478,13 +1479,13 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('teaching_schedule_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('teaching_schedule_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

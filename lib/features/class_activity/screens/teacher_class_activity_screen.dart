@@ -13,6 +13,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -912,7 +913,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   Future<void> _loadSubjectsForClass({bool useCache = true}) async {
     if (_selectedClassId == null) return;
 
-    final subjectCacheKey = 'class_activity_subjects_${_teacherId}_$_selectedClassId';
+    final subjectCacheKey = CacheKeyBuilder.custom('class_activity_subjects', _teacherId, _selectedClassId ?? '');
 
     // Step 1: Try cache first
     if (useCache && _subjectList.isEmpty) {
@@ -2209,7 +2210,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                                     'id': 'Semua',
                                   }),
                             tagColor: isSpecificTarget
-                                ? Color(0xFF7C3AED)
+                                ? ColorUtils.violet700
                                 : ColorUtils.success600,
                           ),
                           if (isAssignment && activity['batas_waktu'] != null)
@@ -2869,7 +2870,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   Future<void> _checkAndShowTour() async {
     if (_currentStep != 2) return;
     try {
-      const tourCacheKey = 'tour_class_activity_screen_guru';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('class_activity_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -2899,13 +2900,13 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_class_activity_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_class_activity_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

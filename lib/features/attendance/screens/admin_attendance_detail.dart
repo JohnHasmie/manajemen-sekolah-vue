@@ -411,7 +411,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
         return ColorUtils.error600;
       case 'terlambat':
       case 'late':
-        return Color(0xFF7C3AED);
+        return ColorUtils.violet700;
       default:
         return ColorUtils.slate400;
     }
@@ -900,7 +900,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                           'id': 'Sakit',
                         }),
                         stats['sakit']!,
-                        Color(0xFF7C3AED),
+                        ColorUtils.violet700,
                         Icons.medical_services,
                       ),
                   ],

@@ -14,6 +14,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
@@ -772,7 +773,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
     final academicYearProvider = ref.read(academicYearRiverpod);
     final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
-    return 'subject_list_$yearId';
+    return CacheKeyBuilder.custom('subject_list', yearId);
   }
 
   void _applySubjectExtractedData(List<dynamic> data) {
@@ -2229,7 +2230,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
     final languageProvider = ref.watch(languageRiverpod);
         if (_isLoading) {
           return Scaffold(
-            backgroundColor: Color(0xFFF8F9FA),
+            backgroundColor: ColorUtils.lightGray,
             body: Column(
               children: [
                 _buildHeader(context, languageProvider),
@@ -2251,7 +2252,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
         final filteredSubjects = _getFilteredSubjects();
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.lightGray,
           body: Column(
             children: [
               _buildHeader(context, languageProvider),
@@ -2319,7 +2320,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_subject_management_admin';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('subject_management', 'admin');
 
       // Only use cache (pre-fetched by dashboard), no API call
       final cached = await LocalCacheService.load(

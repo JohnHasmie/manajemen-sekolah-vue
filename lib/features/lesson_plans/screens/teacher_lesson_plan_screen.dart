@@ -12,6 +12,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/features/lesson_plans/screens/lesson_plan_ai_result_screen.dart';
@@ -1104,7 +1105,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
     final filteredRpp = _rppList;
 
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: ColorUtils.lightGray,
       body: Column(
         children: [
           // Header dengan gradient
@@ -1403,7 +1404,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
   Future<void> _checkAndShowTour() async {
     try {
       // Cache-only: tour status pre-fetched from dashboard
-      const tourCacheKey = 'tour_rpp_screen_guru';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('rpp_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -1438,13 +1439,13 @@ class RppScreenState extends ConsumerState<RppScreen> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_rpp_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('rpp_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_rpp_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('rpp_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

@@ -16,6 +16,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
@@ -547,7 +548,7 @@ class GradePageState extends ConsumerState<GradePage> {
       List<dynamic> allSchedules = [];
 
       // Try teaching_schedule's cached data
-      final scheduleCacheKey = 'schedule_teacher_${teacherId}_${semester}_$academicYearId';
+      final scheduleCacheKey = CacheKeyBuilder.custom('schedule_teacher', '${teacherId}_$semester', academicYearId);
       try {
         final cached = await LocalCacheService.load(scheduleCacheKey, ttl: const Duration(hours: 3));
         if (cached != null) {

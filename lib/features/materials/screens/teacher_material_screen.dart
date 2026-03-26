@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -260,7 +261,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     final String? teacherId = widget.teacher['id'];
     if (teacherId == null) return;
 
-    final cacheKey = 'materi_subjects_${teacherId}_$classId';
+    final cacheKey = CacheKeyBuilder.custom('materi_subjects', teacherId, classId);
 
     // Try cache first
     if (useCache) {
@@ -386,7 +387,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
       // ─── Step 3: Try subjects cache (per class) → return early if hit ───
       final effectiveClassKey = selectedClassId ?? 'no_class';
       if (useCache && _subjectList.isEmpty) {
-        final subjectCacheKey = 'materi_subjects_${teacherId}_$effectiveClassKey';
+        final subjectCacheKey = CacheKeyBuilder.custom('materi_subjects', teacherId, effectiveClassKey);
         try {
           final cachedSubjects = await LocalCacheService.load(subjectCacheKey, ttl: const Duration(hours: 6));
           if (cachedSubjects != null && mounted) {
@@ -425,8 +426,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
       if (needClasses || needProfile) {
         // Try dedicated caches first before hitting API
-        final classesCacheKey = 'teacher_classes_$teacherId';
-        final profileCacheKey = 'teacher_profile_$teacherId';
+        final classesCacheKey = CacheKeyBuilder.custom('teacher_classes', teacherId);
+        final profileCacheKey = CacheKeyBuilder.teacherProfile(teacherId);
 
         if (needClasses && useCache) {
           try {
@@ -553,7 +554,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
       // Save subjects cache in background
       if (subject.isNotEmpty) {
-        LocalCacheService.save('materi_subjects_${teacherId}_$effectiveClassKey', subject);
+        LocalCacheService.save(CacheKeyBuilder.custom('materi_subjects', teacherId, effectiveClassKey), subject);
       }
       AppLogger.info('material', 'Saved materi data to cache');
     } catch (e) {
@@ -572,7 +573,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
   /// Like `axios.get('/api/subjects/{id}/chapters')` in Vue.
   /// Also loads progress data to mark generated/used chapters.
   Future<void> _loadBabMateri(String subjectId, {bool useCache = true}) async {
-    final babCacheKey = 'materi_bab_${widget.teacher['id']}_$subjectId';
+    final babCacheKey = CacheKeyBuilder.custom('materi_bab', widget.teacher['id'].toString(), subjectId);
 
     // Show skeleton if list is empty
     if (_babMateriList.isEmpty && mounted) {
@@ -1498,11 +1499,11 @@ class MateriPageState extends ConsumerState<MateriPage> {
   Color _getCheckboxColor(String id, {bool isSubBab = false}) {
     if (isSubBab) {
       if (_usedSubBab[id] == true) return ColorUtils.info600;
-      if (_generatedSubBab[id] == true) return Color(0xFF8B5CF6);
+      if (_generatedSubBab[id] == true) return ColorUtils.violet500;
       return ColorUtils.success600;
     } else {
       if (_usedBab[id] == true) return ColorUtils.info600;
-      if (_generatedBab[id] == true) return Color(0xFF8B5CF6);
+      if (_generatedBab[id] == true) return ColorUtils.violet500;
       return ColorUtils.success600;
     }
   }
@@ -1744,7 +1745,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_materi_screen_guru';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('materi_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -1774,13 +1775,13 @@ class MateriPageState extends ConsumerState<MateriPage> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_materi_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('materi_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_materi_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('materi_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

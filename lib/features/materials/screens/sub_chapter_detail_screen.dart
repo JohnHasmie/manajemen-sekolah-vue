@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/materials/screens/material_ai_result_screen.dart';
@@ -71,7 +72,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   }
 
   Future<void> _loadContentMateri() async {
-    final contentCacheKey = 'materi_content_${widget.subBab['id']}';
+    final contentCacheKey = CacheKeyBuilder.custom('materi_content', widget.subBab['id'].toString());
 
     // Try cache — return early if hit
     try {
@@ -111,7 +112,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   }
 
   Future<void> _loadAiContent() async {
-    final aiCacheKey = 'materi_ai_${widget.teacherId}_${widget.bab['id']}_${widget.subBab['id']}';
+    final aiCacheKey = CacheKeyBuilder.custom('materi_ai', '${widget.teacherId}_${widget.bab['id']}', widget.subBab['id'].toString());
 
     // Try local cache — return early if hit
     try {
@@ -649,7 +650,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           if (parsedContent['ringkasan'] != null)
             _buildSectionCard(
               icon: Icons.summarize_rounded,
-              iconColor: Color(0xFF8B5CF6),
+              iconColor: ColorUtils.violet500,
               title: 'Ringkasan',
               child: Text(
                 parsedContent['ringkasan'] ?? '',
@@ -666,7 +667,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             SizedBox(height: 12),
             _buildSectionCard(
               icon: Icons.lightbulb_rounded,
-              iconColor: Color(0xFFF59E0B),
+              iconColor: ColorUtils.amber500,
               title: 'Poin Utama',
               child: Column(
                 children: (parsedContent['poin_utama'] as List)
@@ -688,14 +689,14 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                           height: 24,
                           margin: EdgeInsets.only(top: 2),
                           decoration: BoxDecoration(
-                            color: Color(0xFFF59E0B).withValues(alpha: 0.15),
+                            color: ColorUtils.amber500.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(7),
                           ),
                           child: Center(
                             child: Text(
                               '${entry.key + 1}',
                               style: TextStyle(
-                                color: Color(0xFFF59E0B),
+                                color: ColorUtils.amber500,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 12,
                               ),
@@ -947,7 +948,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             icon: Icons.edit_note_rounded,
             title: 'Essay',
             count: essayQuizzes.length,
-            color: Color(0xFF8B5CF6),
+            color: ColorUtils.violet500,
           ),
           SizedBox(height: 10),
           ...essayQuizzes.asMap().entries
@@ -984,9 +985,9 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
         children: [
           _buildStatItem('Total', '${quizzes.length}', _getPrimaryColor()),
           _buildStatDivider(),
-          _buildStatItem('PG', '$mc', Color(0xFF2563EB)),
+          _buildStatItem('PG', '$mc', ColorUtils.corporateBlue600),
           _buildStatDivider(),
-          _buildStatItem('Essay', '$essay', Color(0xFF8B5CF6)),
+          _buildStatItem('Essay', '$essay', ColorUtils.violet500),
           _buildStatDivider(),
           Expanded(
             child: Row(
@@ -1209,12 +1210,12 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               padding: EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isCorrect
-                    ? Color(0xFF10B981).withValues(alpha: 0.08)
+                    ? ColorUtils.emerald500.withValues(alpha: 0.08)
                     : ColorUtils.slate50,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isCorrect
-                      ? Color(0xFF10B981).withValues(alpha: 0.3)
+                      ? ColorUtils.emerald500.withValues(alpha: 0.3)
                       : ColorUtils.slate200,
                 ),
               ),
@@ -1225,19 +1226,19 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                     height: 24,
                     decoration: BoxDecoration(
                       color: isCorrect
-                          ? Color(0xFF10B981).withValues(alpha: 0.15)
+                          ? ColorUtils.emerald500.withValues(alpha: 0.15)
                           : Colors.white,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: isCorrect
-                            ? Color(0xFF10B981)
+                            ? ColorUtils.emerald500
                             : ColorUtils.slate300,
                       ),
                     ),
                     child: Center(
                       child: isCorrect
                           ? Icon(Icons.check_rounded,
-                              size: 14, color: Color(0xFF10B981))
+                              size: 14, color: ColorUtils.emerald500)
                           : Text(
                               option['label'] ?? '',
                               style: TextStyle(
@@ -1273,17 +1274,17 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               margin: EdgeInsets.fromLTRB(14, 4, 14, 14),
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFF3B82F6).withValues(alpha: 0.05),
+                color: ColorUtils.corporateBlue500.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: Color(0xFF3B82F6).withValues(alpha: 0.12)),
+                    color: ColorUtils.corporateBlue500.withValues(alpha: 0.12)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.info_outline_rounded,
                       size: 16,
-                      color: Color(0xFF3B82F6).withValues(alpha: 0.7)),
+                      color: ColorUtils.corporateBlue500.withValues(alpha: 0.7)),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1324,7 +1325,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           Container(
             padding: EdgeInsets.fromLTRB(14, 12, 14, 10),
             decoration: BoxDecoration(
-              color: Color(0xFF8B5CF6).withValues(alpha: 0.03),
+              color: ColorUtils.violet500.withValues(alpha: 0.03),
               borderRadius:
                   BorderRadius.vertical(top: Radius.circular(13)),
             ),
@@ -1334,7 +1335,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: Color(0xFF8B5CF6).withValues(alpha: 0.12),
+                    color: ColorUtils.violet500.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -1342,7 +1343,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                       '${index + 1}',
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF8B5CF6),
+                        color: ColorUtils.violet500,
                         fontSize: 13,
                       ),
                     ),
@@ -1399,10 +1400,10 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               margin: EdgeInsets.fromLTRB(14, 0, 14, 8),
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFF10B981).withValues(alpha: 0.06),
+                color: ColorUtils.emerald500.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: Color(0xFF10B981).withValues(alpha: 0.2)),
+                    color: ColorUtils.emerald500.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1410,7 +1411,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   Row(
                     children: [
                       Icon(Icons.key_rounded,
-                          size: 14, color: Color(0xFF10B981)),
+                          size: 14, color: ColorUtils.emerald500),
                       SizedBox(width: 6),
                       Text(
                         'Kunci Jawaban',
@@ -1442,17 +1443,17 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               margin: EdgeInsets.fromLTRB(14, 0, 14, 14),
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFF8B5CF6).withValues(alpha: 0.04),
+                color: ColorUtils.violet500.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: Color(0xFF8B5CF6).withValues(alpha: 0.12)),
+                    color: ColorUtils.violet500.withValues(alpha: 0.12)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.grading_rounded,
                       size: 14,
-                      color: Color(0xFF8B5CF6).withValues(alpha: 0.7)),
+                      color: ColorUtils.violet500.withValues(alpha: 0.7)),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1731,11 +1732,11 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   ({Color color, String label}) _getDifficultyConfig(String difficulty) {
     switch (difficulty) {
       case 'easy':
-        return (color: Color(0xFF10B981), label: 'Mudah');
+        return (color: ColorUtils.emerald500, label: 'Mudah');
       case 'medium':
-        return (color: Color(0xFFF59E0B), label: 'Sedang');
+        return (color: ColorUtils.amber500, label: 'Sedang');
       case 'hard':
-        return (color: Color(0xFFEF4444), label: 'Sulit');
+        return (color: ColorUtils.red500, label: 'Sulit');
       default:
         return (color: ColorUtils.slate500, label: difficulty.toUpperCase());
     }
@@ -1746,31 +1747,31 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     switch (type) {
       case 'concept_deep_dive':
         return (
-          color: Color(0xFF3B82F6),
+          color: ColorUtils.corporateBlue500,
           label: 'Pendalaman Konsep',
           icon: Icons.psychology_rounded
         );
       case 'real_world_example':
         return (
-          color: Color(0xFF10B981),
+          color: ColorUtils.emerald500,
           label: 'Contoh Nyata',
           icon: Icons.public_rounded
         );
       case 'common_misconception':
         return (
-          color: Color(0xFFF59E0B),
+          color: ColorUtils.amber500,
           label: 'Miskonsepsi Umum',
           icon: Icons.warning_amber_rounded
         );
       case 'teaching_tip':
         return (
-          color: Color(0xFF8B5CF6),
+          color: ColorUtils.violet500,
           label: 'Tips Mengajar',
           icon: Icons.tips_and_updates_rounded
         );
       default:
         return (
-          color: Color(0xFF6366F1),
+          color: ColorUtils.indigo500,
           label: type.replaceAll('_', ' ').toUpperCase(),
           icon: Icons.bookmark_rounded
         );

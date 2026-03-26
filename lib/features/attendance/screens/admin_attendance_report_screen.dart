@@ -9,6 +9,7 @@
 // similar to `Attendance::with(['student','subject'])->filter(...)->paginate()`.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/attendance/screens/admin_attendance_detail.dart';
@@ -2896,7 +2897,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   Future<void> _checkAndShowTour() async {
     if (_isTourShowing) return;
     try {
-      const tourCacheKey = 'tour_presence_report_admin';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('presence_report', 'admin');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -2939,7 +2940,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
-        LocalCacheService.save('tour_presence_report_admin', {'should_show': false});
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('presence_report', 'admin'), {'should_show': false});
       },
       onSkip: () {
         setState(() {
@@ -2948,7 +2949,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
         }
-        LocalCacheService.save('tour_presence_report_admin', {'should_show': false});
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('presence_report', 'admin'), {'should_show': false});
         return true;
       },
       onClickOverlay: (target) {

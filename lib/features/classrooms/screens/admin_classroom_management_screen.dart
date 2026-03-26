@@ -10,6 +10,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
@@ -2147,7 +2148,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
         final filteredClasses = _classes;
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.lightGray,
           body: Column(
             children: [
               // Header
@@ -2630,7 +2631,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_class_management_admin';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('class_management', 'admin');
 
       // Only use cache (pre-fetched by dashboard), no API call
       final cached = await LocalCacheService.load(
@@ -2670,13 +2671,13 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_class_management_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_management', 'admin'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_class_management_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_management', 'admin'), {'should_show': false});
         }
         return true;
       },

@@ -322,6 +322,21 @@ class ColorUtils {
   static Color get error600 => Color(0xFFDC2626);
   static Color get info600 => Color(0xFF0891B2);
 
+  // ── Common UI colors (Tailwind-inspired) ──
+  static Color get emerald500 => Color(0xFF10B981);
+  static Color get violet500 => Color(0xFF8B5CF6);
+  static Color get amber500 => Color(0xFFF59E0B);
+  static Color get red500 => Color(0xFFEF4444);
+  static Color get indigo500 => Color(0xFF6366F1);
+  static Color get blue600 => Color(0xFF4361EE);
+  static Color get darkBlue => Color(0xFF0D47A1);
+  static Color get cyan500 => Color(0xFF06B6D4);
+  static Color get violet700 => Color(0xFF7C3AED);
+  static Color get lime500 => Color(0xFF84CC16);
+  static Color get indigo600 => Color(0xFF4F46E5);
+  static Color get pink500 => Color(0xFFEC4899);
+  static Color get lightGray => Color(0xFFF8F9FA);
+
   /// Professional card decoration for corporate dashboard
   static BoxDecoration corporateCard({
     Color? accentColor,

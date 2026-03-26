@@ -19,6 +19,10 @@ class ApiEndpoints {
   static const userRoles = '/auth/roles';
   static const userSchools = '/auth/schools';
 
+  // ── User (non-auth context) ──
+  static const userRolesList = '/user/roles';
+  static const userSchoolsList = '/user/schools';
+
   // ── Dashboard ──
   static const dashboardStats = '/dashboard/stats';
   static const health = '/health';
@@ -39,11 +43,13 @@ class ApiEndpoints {
   static const classes = '/class';
   static const classTemplate = '/class/template';
   static const classImport = '/class/import';
+  static const classBySubject = '/class-by-mata-pelajaran';
 
   // ── Subjects ──
   static const subjects = '/subject';
   static const subjectTemplate = '/subject/template';
   static const subjectImport = '/subject/import';
+  static const subjectWithClass = '/subject-with-class';
 
   // ── Schedules ──
   static const schedules = '/schedule';
@@ -52,17 +58,27 @@ class ApiEndpoints {
 
   // ── Attendance ──
   static const attendance = '/attendance';
-  static const attendanceSummary = '/attendance-summary';
+  static const attendanceSummary = '/attendance/summary';
+  static const attendanceStats = '/attendance/stats';
+  static const attendanceMarkRead = '/attendance/mark-read';
+  static const attendanceUnreadCount = '/attendance/unread-count';
+  static const attendanceDashboardChart = '/attendance/dashboard-chart';
 
   // ── Grades ──
   static const grades = '/grades';
+  static const grade = '/grade';
   static const gradeRecaps = '/grade-recaps';
+  static const gradeMarkRead = '/grade/mark-read';
+  static const gradeUnreadCount = '/grade/unread-count';
 
   // ── Lesson Plans (RPP) ──
   static const lessonPlans = '/rpp';
+  static const uploadLessonPlan = '/upload/rpp';
 
   // ── Announcements ──
   static const announcements = '/announcement';
+  static const announcementUnreadCount = '/announcement/unread-count';
+  static const announcementMarkRead = '/announcement/mark-read';
 
   // ── Class Activity ──
   static const classActivity = '/class-activity';
@@ -72,6 +88,15 @@ class ApiEndpoints {
 
   // ── Finance / Billing ──
   static const bills = '/bills';
+  static const billMarkRead = '/bill/mark-read';
+  static const billMarkSingleRead = '/bill/mark-single-read';
+  static const billUnreadCount = '/bill/unread-count';
+  static const generateBill = '/generate-bill';
+  static const financeDashboard = '/finance/dashboard';
+  static const financeGeneratedMonths = '/finance/generated-months';
+  static const financeBillStats = '/finance/bills/stats';
+  static const financeDashboardChart = '/finance/dashboard-chart';
+  static const paymentManual = '/payment/manual';
 
   // ── Notifications ──
   static const notifications = '/notification';
@@ -83,12 +108,14 @@ class ApiEndpoints {
   static const academicYears = '/academic-year';
   static const gradeLevels = '/grade-level';
   static const schoolSettings = '/school-settings';
+  static const schoolConfigGradeLevels = '/school-configs/grade-levels';
 
   // ── Tour ──
   static const tour = '/tour';
 
   // ── FCM ──
   static const fcmToken = '/fcm-token';
+  static const fcmTokenEndpoint = '/fcm/token';
 
   // ── Days / Semesters ──
   static const days = '/day';

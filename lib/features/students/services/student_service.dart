@@ -10,6 +10,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -245,7 +246,7 @@ class ApiStudentService {
     }
 
     String queryString = Uri(queryParameters: queryParams).query;
-    final cacheKey = 'student_paginated_$queryString';
+    final cacheKey = CacheKeyBuilder.custom('student', 'paginated', queryString);
 
     if (useCache) {
       final cached = await LocalCacheService.load(cacheKey);

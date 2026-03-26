@@ -4,6 +4,7 @@
 // `@include('partials.empty-state')` shown with `@if($items->isEmpty())`.
 // Displays a large icon, title, subtitle, and an optional action button.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A centered empty state widget displayed when no data is available.
 ///
@@ -44,8 +45,8 @@ class EmptyState extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF4361EE).withValues(alpha: 0.1),
-                  Color(0xFF4361EE).withValues(alpha: 0.05),
+                  ColorUtils.blue600.withValues(alpha: 0.1),
+                  ColorUtils.blue600.withValues(alpha: 0.05),
                 ],
               ),
               shape: BoxShape.circle,
@@ -53,7 +54,7 @@ class EmptyState extends StatelessWidget {
             child: Icon(
               icon,
               size: 50,
-              color: Color(0xFF4361EE).withValues(alpha: 0.5),
+              color: ColorUtils.blue600.withValues(alpha: 0.5),
             ),
           ),
           SizedBox(height: 20),

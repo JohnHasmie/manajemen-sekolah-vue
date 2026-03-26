@@ -13,6 +13,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
@@ -261,7 +262,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   Future<void> _checkAndShowTour() async {
     try {
       // Cache-only: tour status pre-fetched from dashboard
-      const tourCacheKey = 'tour_parent_billing_screen_wali';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('parent_billing_screen', 'wali');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -296,13 +297,13 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_parent_billing_screen_wali', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_billing_screen', 'wali'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_parent_billing_screen_wali', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_billing_screen', 'wali'), {'should_show': false});
         }
         return true;
       },

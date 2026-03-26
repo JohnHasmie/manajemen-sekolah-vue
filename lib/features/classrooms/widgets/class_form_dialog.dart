@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A modal dialog widget for creating or editing a class (kelas).
 ///
@@ -108,7 +109,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
   }
 
   Color _getPrimaryColor() {
-    return Color(0xFF4361EE); // Blue untuk admin
+    return ColorUtils.blue600; // Blue untuk admin
   }
 
   /// Builds the dialog UI with a gradient header, form fields, and action buttons.
