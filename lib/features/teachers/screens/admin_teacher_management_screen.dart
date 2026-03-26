@@ -14,6 +14,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
@@ -178,7 +179,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       }
 
       // ─── Cache-first: return early on hit ───
-      final cacheKey = 'teacher_filter_options_${academicYearId ?? 'default'}';
+      final cacheKey = CacheKeyBuilder.custom('teacher_filter_options', academicYearId ?? 'default');
       try {
         final cached = await LocalCacheService.load(
           cacheKey,
@@ -886,7 +887,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       return null;
     }
     final yearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString() ?? 'default';
-    return 'teacher_list_$yearId';
+    return CacheKeyBuilder.custom('teacher_list', yearId);
   }
 
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
@@ -1016,7 +1017,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     }
     await LocalCacheService.clearStartingWith('tour_teacher_admin_');
     final yearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString() ?? 'default';
-    await LocalCacheService.invalidate('teacher_filter_options_$yearId');
+    await LocalCacheService.invalidate(CacheKeyBuilder.custom('teacher_filter_options', yearId));
     await _loadData(resetPage: true, useCache: false);
   }
 
@@ -2790,7 +2791,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_teacher_admin_screen_admin';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('teacher_admin_screen', 'admin');
 
       // Only use cache (pre-fetched by dashboard), no API call
       final cached = await LocalCacheService.load(
@@ -2830,13 +2831,13 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_teacher_admin_screen_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('teacher_admin_screen', 'admin'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_teacher_admin_screen_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('teacher_admin_screen', 'admin'), {'should_show': false});
         }
         return true;
       },

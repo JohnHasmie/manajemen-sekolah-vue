@@ -12,6 +12,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -190,7 +191,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       await LocalCacheService.invalidate(cacheKey);
     }
     await LocalCacheService.clearStartingWith('tour_announcement_');
-    await LocalCacheService.invalidate('announcement_filter_options');
+    await LocalCacheService.invalidate(CacheKeyBuilder.custom('announcement', 'filter_options'));
     _loadData(resetPage: true, useCache: false);
   }
 
@@ -225,7 +226,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   Future<void> _loadFilterOptions() async {
     try {
       // ─── Cache-first: return early on hit ───
-      const cacheKey = 'announcement_filter_options';
+      final cacheKey = CacheKeyBuilder.custom('announcement', 'filter_options');
       try {
         final cached = await LocalCacheService.load(
           cacheKey,
@@ -3048,7 +3049,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_announcement_admin';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('announcement', 'admin');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -3083,13 +3084,13 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_announcement_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('announcement', 'admin'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_announcement_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('announcement', 'admin'), {'should_show': false});
         }
         return true;
       },

@@ -13,6 +13,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
@@ -129,7 +130,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
   Future<void> _loadFilterOptions() async {
     try {
       // Try cache first — return early on hit
-      const cacheKey = 'student_filter_options';
+      final cacheKey = CacheKeyBuilder.custom('student', 'filter_options');
       final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 6));
       if (cached != null && cached is Map<String, dynamic>) {
         if (!mounted) return;
@@ -282,7 +283,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
 
     final academicYearProvider = ref.read(academicYearRiverpod);
     final yearId = academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'default';
-    return 'student_list_$yearId';
+    return CacheKeyBuilder.custom('student_list', yearId);
   }
 
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
@@ -404,7 +405,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
       await LocalCacheService.invalidate(cacheKey);
     }
     await LocalCacheService.clearStartingWith('tour_student_management_');
-    await LocalCacheService.invalidate('student_filter_options');
+    await LocalCacheService.invalidate(CacheKeyBuilder.custom('student', 'filter_options'));
     await _loadData(resetPage: true, useCache: false);
   }
 
@@ -2527,7 +2528,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_student_management_admin';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('student_management', 'admin');
       // Only use cache (pre-fetched by dashboard), no API call
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
@@ -2563,13 +2564,13 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_student_management_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('student_management', 'admin'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_student_management_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('student_management', 'admin'), {'should_show': false});
         }
         return true;
       },

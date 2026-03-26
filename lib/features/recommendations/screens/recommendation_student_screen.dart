@@ -5,6 +5,7 @@
 // the recommendation result screen. Part of the recommendation flow:
 // ClassScreen -> StudentScreen (this) -> ResultScreen.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -128,7 +129,7 @@ class _LearningRecommendationStudentScreenState
   }
 
   Future<void> _checkAndShowTour() async {
-    const tourCacheKey = 'tour_recommendation_student_screen_guru';
+    final tourCacheKey = CacheKeyBuilder.tourStatus('recommendation_student_screen', 'guru');
     try {
       // Cache-only: tour status pre-fetched from dashboard
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
@@ -166,13 +167,13 @@ class _LearningRecommendationStudentScreenState
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_recommendation_student_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_student_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_recommendation_student_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_student_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

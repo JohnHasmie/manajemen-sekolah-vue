@@ -13,6 +13,7 @@ import 'dart:io';
 
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/foundation.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -2417,7 +2418,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_input_grade_screen_guru';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('input_grade_screen', 'guru');
 
       // Only use cache (pre-fetched by dashboard), no API call
       final cached = await LocalCacheService.load(
@@ -2452,13 +2453,13 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_input_grade_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('input_grade_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_input_grade_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('input_grade_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

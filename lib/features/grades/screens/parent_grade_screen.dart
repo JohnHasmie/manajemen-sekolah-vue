@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -288,7 +289,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
   }
 
   Future<void> _checkAndShowTour() async {
-    const tourCacheKey = 'tour_parent_grade_screen_wali';
+    final tourCacheKey = CacheKeyBuilder.tourStatus('parent_grade_screen', 'wali');
     try {
       // Cache-only: tour status pre-fetched from dashboard
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
@@ -325,13 +326,13 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_parent_grade_screen_wali', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_grade_screen', 'wali'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_parent_grade_screen_wali', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_grade_screen', 'wali'), {'should_show': false});
         }
         return true;
       },

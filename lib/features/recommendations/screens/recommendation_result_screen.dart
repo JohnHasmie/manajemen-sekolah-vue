@@ -6,6 +6,7 @@
 // In Laravel terms, this is like `RecommendationController@show`.
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_edit_screen.dart';
 import 'package:manajemensekolah/features/recommendations/services/recommendation_service.dart';
@@ -176,7 +177,7 @@ class _LearningRecommendationResultScreenState
   }
 
   Future<void> _checkAndShowTour() async {
-    const tourCacheKey = 'tour_recommendation_result_screen_guru';
+    final tourCacheKey = CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru');
     try {
       // Cache-only: tour status pre-fetched from dashboard
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
@@ -214,13 +215,13 @@ class _LearningRecommendationResultScreenState
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_recommendation_result_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_recommendation_result_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/screens/teacher_class_activity_screen.dart';
@@ -1448,7 +1449,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
 
   Future<void> _checkAndShowTour() async {
     try {
-      const tourCacheKey = 'tour_teaching_schedule_screen_guru';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('teaching_schedule_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true && cached['tour'] != null) {
@@ -1478,13 +1479,13 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       onFinish: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('teaching_schedule_screen', 'guru'), {'should_show': false});
         }
       },
       onSkip: () {
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_teaching_schedule_screen_guru', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('teaching_schedule_screen', 'guru'), {'should_show': false});
         }
         return true;
       },

@@ -13,6 +13,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
@@ -647,7 +648,7 @@ class TeachingScheduleManagementScreenState
       await LocalCacheService.invalidate(cacheKey);
     }
     await LocalCacheService.clearStartingWith('tour_schedule_management_');
-    await LocalCacheService.invalidate('schedule_filter_options_$_selectedAcademicYear');
+    await LocalCacheService.invalidate(CacheKeyBuilder.custom('schedule_filter_options', _selectedAcademicYear));
     await _loadData(resetPage: true, useCache: false);
   }
 
@@ -3151,7 +3152,7 @@ class TeachingScheduleManagementScreenState
   Future<void> _checkAndShowTour() async {
     if (_isTourShowing) return;
     try {
-      const tourCacheKey = 'tour_schedule_management_admin';
+      final tourCacheKey = CacheKeyBuilder.tourStatus('schedule_management', 'admin');
 
       // Only use cache (pre-fetched by dashboard), no API call
       final cached = await LocalCacheService.load(
@@ -3198,7 +3199,7 @@ class TeachingScheduleManagementScreenState
         });
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_schedule_management_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('schedule_management', 'admin'), {'should_show': false});
         }
       },
       onSkip: () {
@@ -3207,7 +3208,7 @@ class TeachingScheduleManagementScreenState
         });
         if (_tourId != null) {
           getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save('tour_schedule_management_admin', {'should_show': false});
+          LocalCacheService.save(CacheKeyBuilder.tourStatus('schedule_management', 'admin'), {'should_show': false});
         }
         return true;
       },

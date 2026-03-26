@@ -13,6 +13,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -40,7 +41,7 @@ class ApiSubjectService {
         schoolId = user['school_id']?.toString() ?? 'global';
       }
 
-      String cacheKey = 'subject_filters_$schoolId';
+      String cacheKey = CacheKeyBuilder.subjectFilters(schoolId);
 
       // 1. Try cache
       final cachedData = await LocalCacheService.load(
@@ -114,7 +115,7 @@ class ApiSubjectService {
       } catch (_) {}
     }
 
-    String cacheKey = 'subject_${schoolId}_$queryString';
+    String cacheKey = CacheKeyBuilder.custom('subject', schoolId, queryString);
 
     try {
       // 1. Coba ambil dari cache

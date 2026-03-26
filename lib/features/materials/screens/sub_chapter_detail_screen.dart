@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/materials/screens/material_ai_result_screen.dart';
@@ -71,7 +72,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   }
 
   Future<void> _loadContentMateri() async {
-    final contentCacheKey = 'materi_content_${widget.subBab['id']}';
+    final contentCacheKey = CacheKeyBuilder.custom('materi_content', widget.subBab['id'].toString());
 
     // Try cache — return early if hit
     try {
@@ -111,7 +112,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   }
 
   Future<void> _loadAiContent() async {
-    final aiCacheKey = 'materi_ai_${widget.teacherId}_${widget.bab['id']}_${widget.subBab['id']}';
+    final aiCacheKey = CacheKeyBuilder.custom('materi_ai', '${widget.teacherId}_${widget.bab['id']}', widget.subBab['id'].toString());
 
     // Try local cache — return early if hit
     try {
